@@ -1,0 +1,248 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- calc/funcMath.sql
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- test MATH builtin functions
+0: jdbc:luciddb:> -- Was calc3.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table boris1
+. . . . . . . . > (
+. . . . . . . . > nnull numeric(8,0),
+. . . . . . . . > n1 numeric(8,0),
+. . . . . . . . > n2 numeric(8,0),
+. . . . . . . . > n3 numeric(8,0),
+. . . . . . . . > snull varchar(40),
+. . . . . . . . > s1 varchar(40),
+. . . . . . . . > s2 varchar(40),
+. . . . . . . . > s3 varchar(40)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into boris1 values (null,1,2,3,null,'a','ab','abc');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select asin(sin(.5)), acos(cos(.8)), atan(tan(.2))
+0: jdbc:luciddb:> -- from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select sign(n1), sign(nnull), sign(2 - 3) from boris1
+0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> select abs(-25), abs(25), abs(325.23523), abs(n1), abs(nnull) from boris1
+. . . . . . . . > ;
++---------+---------+------------+---------+---------+
+| EXPR$0  | EXPR$1  |   EXPR$2   | EXPR$3  | EXPR$4  |
++---------+---------+------------+---------+---------+
+| 25      | 25      | 325.23523  | 1       |         |
++---------+---------+------------+---------+---------+
+0: jdbc:luciddb:> select ceil(.235), ceil(n1), ceil(nnull) from boris1
+. . . . . . . . > ;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 1       | 1       |         |
++---------+---------+---------+
+0: jdbc:luciddb:> select exp(nnull), exp(0), exp(10) from boris1
+. . . . . . . . > ;
++---------+---------+---------------------+
+| EXPR$0  | EXPR$1  |       EXPR$2        |
++---------+---------+---------------------+
+|         | 1.0     | 22026.465794806718  |
++---------+---------+---------------------+
+0: jdbc:luciddb:> -- FRG-52
+0: jdbc:luciddb:> select floor(2.353425), floor(0), floor(nnull), floor(n2 / 10) from boris1
+. . . . . . . . > ;
++---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  |
++---------+---------+---------+---------+
+| 2       | 0       |         | 0       |
++---------+---------+---------+---------+
+0: jdbc:luciddb:> select ln(nnull), ln(0), ln(exp(1)) from boris1
+. . . . . . . . > ;
+Error: Invalid argument(s) for 'LN' function (state=,code=0)
+0: jdbc:luciddb:> select ln(nnull), ln(exp(1)) from boris1
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+|         | 1.0     |
++---------+---------+
+0: jdbc:luciddb:> select log10(nnull), log10(1000), log10(n2) from boris1
+. . . . . . . . > ;
++---------+---------------------+----------------------+
+| EXPR$0  |       EXPR$1        |        EXPR$2        |
++---------+---------------------+----------------------+
+|         | 2.9999999999999996  | 0.30102999566398114  |
++---------+---------------------+----------------------+
+0: jdbc:luciddb:> select ln(nnull), ln(1000), ln(n2) from boris1
+. . . . . . . . > ;
++---------+--------------------+---------------------+
+| EXPR$0  |       EXPR$1       |       EXPR$2        |
++---------+--------------------+---------------------+
+|         | 6.907755278982137  | 0.6931471805599453  |
++---------+--------------------+---------------------+
+0: jdbc:luciddb:> -- test mod()
+0: jdbc:luciddb:> select mod(nnull, 2), mod(2, nnull) from boris1
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+|         |         |
++---------+---------+
+0: jdbc:luciddb:> select mod(nnull,0) from boris1
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> select mod(2,0) from boris1
+. . . . . . . . > ;
+Error: java.lang.ArithmeticException: / by zero (state=,code=0)
+0: jdbc:luciddb:> select mod(-2,3), mod(2,-3) from boris1
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| -2      | 2       |
++---------+---------+
+0: jdbc:luciddb:> -- buggy; JIRA FRG-150 filed
+0: jdbc:luciddb:> --select mod(2.256,5) from boris1
+0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> select mod(n2,n3) from boris1
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 2       |
++---------+
+0: jdbc:luciddb:> select mod(0,3) from boris1
+. . . . . . . . > ;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select pow(10,2), pow(0,0), pow(nnull, 0), pow(0, nnull),
+. . . . . . . . >        pow(1000,5) from boris1
+. . . . . . . . > ;
++---------+---------+---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
++---------+---------+---------+---------+---------+
+| 100.0   | 1.0     |         |         | 1.0E15  |
++---------+---------+---------+---------+---------+
+0: jdbc:luciddb:> select pow(2,0.5), pow(3,0.5), pow(-2,1), pow(-2,2) from boris1
+. . . . . . . . > ;
++---------------------+---------------------+---------+---------+
+|       EXPR$0        |       EXPR$1        | EXPR$2  | EXPR$3  |
++---------------------+---------------------+---------+---------+
+| 1.4142135623730951  | 1.7320508075688772  | -2.0    | 4.0     |
++---------------------+---------------------+---------+---------+
+0: jdbc:luciddb:> select pow(-2.0,-1.0), pow(-2,-2) from boris1
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| -0.5    | 0.25    |
++---------+---------+
+0: jdbc:luciddb:> select pow(-1,-1/3), pow(-1,-1/5) from boris1
+. . . . . . . . > ;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 1.0     | 1.0     |
++---------+---------+
+0: jdbc:luciddb:> select pow(-1,-0.5) from boris1
+. . . . . . . . > ;
+Error: Invalid argument(s) for 'POW' function (state=,code=0)
+0: jdbc:luciddb:> select pow(-1,-0.25) from boris1
+. . . . . . . . > ;
+Error: Invalid argument(s) for 'POW' function (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- select round(cos(.2), 1), round(.2383, 2), round(.2313,0), round(nnull, 3) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select trunc(cos(.2), 1), trunc(.2313,2), trunc(.2313,0), trunc(nnull, 3) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select trunc(cos(.2)), trunc(.2313), trunc(.2313), trunc(nnull) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select round((-1*cos(.2)), 1), round(-.2383, 2), round(-.2313,0) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select trunc((-1 * cos(.2)), 1), trunc(-.2313,2), trunc(-.2313,0) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select sign(-34), sign(23), sign(nnull), sign(n2) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- select sqrt(n2-n1-n3), sqrt(100), sqrt(nnull) from boris1
+0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table boris1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test truncation on real values
+0: jdbc:luciddb:> --DROP TABLE bug6813;
+0: jdbc:luciddb:> --CREATE TABLE bug6813
+0: jdbc:luciddb:> --   (
+0: jdbc:luciddb:> --    rv REAL,
+0: jdbc:luciddb:> --    dv DOUBLE
+0: jdbc:luciddb:> --    );
+0: jdbc:luciddb:> --INSERT INTO bug6813
+0: jdbc:luciddb:> --values (0.987, 0.987)
+0: jdbc:luciddb:> --UNION ALL
+0: jdbc:luciddb:> --values (9.987, 9.87)
+0: jdbc:luciddb:> --UNION ALL
+0: jdbc:luciddb:> --values (99.987, 99.987)
+0: jdbc:luciddb:> --UNION ALL
+0: jdbc:luciddb:> --values (1, 1)
+0: jdbc:luciddb:> --UNION ALL
+0: jdbc:luciddb:> --values (0.9999999, 0.9999999)
+0: jdbc:luciddb:> --UNION ALL
+0: jdbc:luciddb:> --values (44444, 44444)
+0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> --SELECT rv,
+0: jdbc:luciddb:> --   TRUNC(rv, 0) T0,
+0: jdbc:luciddb:> --   TRUNC(rv, 1) T1,
+0: jdbc:luciddb:> --   TRUNC(rv, 2) T2,
+0: jdbc:luciddb:> --   TRUNC(rv, 3) T3,
+0: jdbc:luciddb:> --   TRUNC(rv, 4) T4
+0: jdbc:luciddb:> --FROM bug6813
+0: jdbc:luciddb:> --ORDER BY rv;
+0: jdbc:luciddb:> --SELECT dv,
+0: jdbc:luciddb:> --   TRUNC(dv, 0) T0,
+0: jdbc:luciddb:> --   TRUNC(dv, 1) T1,
+0: jdbc:luciddb:> --   TRUNC(dv, 2) T2,
+0: jdbc:luciddb:> --   TRUNC(dv, 3) T3,
+0: jdbc:luciddb:> --   TRUNC(dv, 4) T4
+0: jdbc:luciddb:> --FROM bug6813
+0: jdbc:luciddb:> --ORDER BY dv;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- bug 6268:  overflow detection
+0: jdbc:luciddb:> -- bunch of separate statements to keep the warning output deterministic
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 10;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 11;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 12;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 13;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 14;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 15;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 16;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 18;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select  n,to_number(to_Char(power(n,n))) from system.hundred 
+0: jdbc:luciddb:> --where n = 19;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End test calc/funcMath.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
