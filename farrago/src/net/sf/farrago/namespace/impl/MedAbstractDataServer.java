@@ -92,6 +92,20 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
     }
     
     // implement FarragoMedDataServer
+    public FarragoMedNameDirectory getNameDirectory()
+        throws SQLException
+    {
+        return null;
+    }
+    
+    // implement FarragoMedDataServer
+    public Object getRuntimeSupport(Object param)
+        throws SQLException
+    {
+        return null;
+    }
+    
+    // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {
     }
