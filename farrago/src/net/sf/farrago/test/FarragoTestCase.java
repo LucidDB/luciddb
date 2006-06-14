@@ -678,6 +678,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         {
             String name = schema.getName();
             return name.equals("SALES")
+                // FIXME jvs 13-June-2006:  Just temporary.
+                || name.equals("APPLIB")
                 || name.equals("SQLJ")
                 || name.equals("INFORMATION_SCHEMA")
                 || name.startsWith("SYS_");
