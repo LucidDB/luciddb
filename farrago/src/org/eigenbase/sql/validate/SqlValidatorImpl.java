@@ -448,7 +448,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         }
         switch (node.getKind().getOrdinal()) {
         case SqlKind.JoinORDINAL:
-            lookupJoinHints((SqlJoin) node, scope, pos);
+            lookupJoinHints((SqlJoin) node, scope, pos, hintList);
             return;
         default:
             getNamespace(node).lookupHints(pos, hintList);
@@ -459,12 +459,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private void lookupJoinHints(
         SqlJoin join,
         SqlValidatorScope scope,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        List<SqlMoniker> hintList)
     {
         SqlNode left = join.getLeft();
         SqlNode right = join.getRight();
         SqlNode condition = join.getCondition();
-        List<SqlMoniker> hintList = new ArrayList<SqlMoniker>();
         lookupFromHints(left, scope, pos, hintList);
         if (hintList.size() > 0) {
             return;
