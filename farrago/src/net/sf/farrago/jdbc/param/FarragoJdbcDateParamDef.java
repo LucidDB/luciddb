@@ -27,8 +27,7 @@ import java.util.TimeZone;
 import java.sql.Timestamp;
 
 /**
- * FarragoJdbcEngineDateParamDef defines a date parameter. Converts parameters 
- * from local time (the JVM's timezone) into system time.
+ * FarragoJdbcEngineDateParamDef defines a date parameter.
  * 
  * @author Julian Hyde
  * @version $Id$
@@ -36,7 +35,7 @@ import java.sql.Timestamp;
 class FarragoJdbcDateParamDef extends FarragoJdbcParamDef
 {
     static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
-    
+
     public FarragoJdbcDateParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
@@ -47,6 +46,13 @@ class FarragoJdbcDateParamDef extends FarragoJdbcParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
+        return scrubValue(x, Calendar.getInstance(gmtZone));
+    }
+
+    // implement FarragoSessionStmtParamDef
+    // Converts parameters from timezone in calendar into gmt time.
+    public Object scrubValue(Object x, Calendar cal)
+    {
         if (x == null) {
             checkNullable();
             return null;
@@ -54,10 +60,11 @@ class FarragoJdbcDateParamDef extends FarragoJdbcParamDef
 
         if (x instanceof String) {
             try {
+                // TODO: Does this need to take cal into account?
                 return java.sql.Date.valueOf((String) x);
             } catch (IllegalArgumentException e) {
                 throw newInvalidFormat(x);
-            }            
+            }
         }
 
         // Only java.sql.Date, java.sql.Timestamp are all OK.
@@ -72,7 +79,7 @@ class FarragoJdbcDateParamDef extends FarragoJdbcParamDef
 
         // Shift time into gmt and truncate to previous midnight.
         // (There's probably a more efficient way of doing this.)
-        Calendar cal = Calendar.getInstance();
+        cal = (Calendar) cal.clone();
         cal.setTimeInMillis(millis);
 
         // Truncate to midnight before we shift into GMT, just in case
@@ -92,4 +99,5 @@ class FarragoJdbcDateParamDef extends FarragoJdbcParamDef
 
         return new java.sql.Date(shiftedMillis);
     }
+
 }

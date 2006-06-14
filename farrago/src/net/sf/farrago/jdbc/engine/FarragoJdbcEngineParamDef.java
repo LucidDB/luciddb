@@ -27,6 +27,8 @@ import net.sf.farrago.jdbc.param.FarragoJdbcParamDef;
 
 import org.eigenbase.reltype.RelDataType;
 
+import java.util.Calendar;
+
 /**
  * Enforces constraints on parameters.
  *
@@ -75,4 +77,9 @@ class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
         return param.scrubValue(x);
     }
 
+    // implement FarragoSessionStmtParamDef
+    public Object scrubValue(Object x, Calendar cal)
+    {
+        return param.scrubValue(x, cal);
+    }
 }

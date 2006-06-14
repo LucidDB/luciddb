@@ -25,6 +25,8 @@ package net.sf.farrago.session;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.EigenbaseException;
 
+import java.util.Calendar;
+
 /**
  * FarragoSessionStmtParamDef represents the definition of a dynamic parameter
  * used within a {@link FarragoSessionStmtContext}.  Instances of 
@@ -62,4 +64,15 @@ public interface FarragoSessionStmtParamDef
      * @throws EigenbaseException if value is invalid and cannot be converted
      */
     Object scrubValue(Object value) throws EigenbaseException;
+
+    /**
+     * Checks the type of a value, and throws an error if it is invalid or
+     * cannot be converted to an acceptable type.
+     *
+     * @param value
+     * @param cal Calendar to use
+     * @return value if valid; an acceptable value if a conversion is available
+     * @throws EigenbaseException if value is invalid and cannot be converted
+     */
+    Object scrubValue(Object value, Calendar cal) throws EigenbaseException;
 }

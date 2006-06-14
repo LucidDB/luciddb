@@ -26,6 +26,7 @@ import org.eigenbase.util.EigenbaseException;
 
 import java.math.BigInteger;
 import java.sql.ParameterMetaData;
+import java.util.Calendar;
 
 /**
  * Handles data conversion for a dynamic parameter
@@ -77,6 +78,12 @@ public class FarragoJdbcParamDef
             checkNullable();
         }
         return x;
+    }
+
+    public Object scrubValue(Object x, Calendar cal)
+    {
+       return scrubValue(x);
+       //throw new UnsupportedOperationException();
     }
 
     protected void checkNullable()
