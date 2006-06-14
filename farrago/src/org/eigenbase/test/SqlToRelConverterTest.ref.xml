@@ -934,7 +934,7 @@ SortRel(sort0=[$1], dir0=[Ascending])
     </TestCase>
     <TestCase name="testOrderByOrdinalDesc">
         <Resource name="sql">
-            <![CDATA[select empno + 1, deptno, empno from emp order by 2 desc]]>
+            <![CDATA[select empno + 1, deptno, empno from emp order by 2.5 desc]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[

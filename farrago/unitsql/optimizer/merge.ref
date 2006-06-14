@@ -202,7 +202,7 @@ Error: From line 1, column 69 to line 1, column 75: Table 'TEMPEMP' not found (s
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: Column 'EMPNO' not found in table 'T' (state=,code=0)
+Error: From line 1, column 85 to line 1, column 89: Column 'EMPNO' not found in table 'T' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in update set clause
 0: jdbc:farrago:> explain plan without implementation for
@@ -228,7 +228,7 @@ Error: From line 1, column 144 to line 1, column 151: Unknown target column 'T_D
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: Column 'T_CITY' not found in table 'E' (state=,code=0)
+Error: From line 1, column 180 to line 1, column 185: Column 'T_CITY' not found in table 'E' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- ambiguous column
 0: jdbc:farrago:> explain plan without implementation for

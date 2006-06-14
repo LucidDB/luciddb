@@ -35,32 +35,7 @@ import org.eigenbase.sql.*;
  * @version $Id$
  */
 public class SqlBasicVisitor<R> implements SqlVisitor<R>
- {
-     /**
-      * Used to keep track of the current SqlNode parent of a visiting node.
-      * A value of null mean no parent.
-      * NOTE: In case of extending SqlBasicVisitor, remember that
-      * parent value might not be set depending on if and how
-      * visit(SqlCall) and visit(SqlNodeList) is implemented.
-      */
-     protected SqlNode currentParent = null;
-     
-     /**
-      *  Only valid if currentParrent is a SqlCall or SqlNodeList
-      *  Describes the offset within the parent
-      */
-     protected Integer currentOffset = null;
-
-     public SqlNode getCurrentParent()
-     {
-         return currentParent;
-     }
-
-     public Integer getCurrentOffset()
-     {
-         return currentOffset;
-     }
-     
+{
      public R visit(SqlLiteral literal)
      {
          return null;
@@ -75,12 +50,9 @@ public class SqlBasicVisitor<R> implements SqlVisitor<R>
      {
          R result = null;
          for (int i = 0; i < nodeList.size(); i++) {
-             currentParent = nodeList;
-             currentOffset = new Integer(i);
              SqlNode node = nodeList.get(i);
              result = node.accept(this);
          }
-         currentParent = null;
          return result;
      }
 
@@ -104,14 +76,36 @@ public class SqlBasicVisitor<R> implements SqlVisitor<R>
          return null;
      }
 
-     public R visitChild(SqlNode parent, int ordinal, SqlNode child)
+     public interface ArgHandler <R>
      {
-         currentParent = parent;
-         currentOffset = new Integer(ordinal);
-         R result = child.accept(this);
-         currentParent = null;
-         return result;
+         R result();
+         R visitChild(
+             SqlVisitor<R> visitor,
+             SqlNode expr, int i, SqlNode operand);
      }
+
+    /**
+     * Default implementation of {@link ArgHandler} which merely calls
+     * {@link SqlNode#accept} on each operand.
+     */
+    public static class ArgHandlerImpl<R> implements ArgHandler<R>
+    {
+        public static final ArgHandler instance = new ArgHandlerImpl();
+
+        public R result()
+        {
+            return null;
+        }
+
+        public R visitChild(
+            SqlVisitor<R> visitor, SqlNode expr, int i, SqlNode operand)
+        {
+            if (operand == null) {
+                return null;
+            }
+            return operand.accept(visitor);
+        }
+    }
 }
 
 // End SqlBasicVisitor.java
