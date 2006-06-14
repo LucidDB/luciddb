@@ -43,6 +43,10 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${company.dir}/testlog" />
 
+  <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${company.dir}/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -70,7 +74,7 @@
         <copy todir="${gensql.dir}/noidx" overwrite="true">
           <fileset dir="${company.dir}" includes="*.tmpl"/>
           <filterset id="dir.filter">
-            <filter token="DIR" value="${company.dir}"/>
+            <filter token="DIR" value="${csv.copy.dir}"/>
           </filterset>
           <globmapper from="*.tmpl" to="*"/>
         </copy>
@@ -115,15 +119,34 @@
       classpathref="test.classpath"/>
   </target>
 
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="DEPT.csv"/>
+        <include name="EMP.csv"/>
+        <include name="PRODUCTS.csv"/>
+        <include name="SALES.csv"/>
+        <include name="LOCATION.csv"/>
+        <include name="CUSTOMERS.csv"/>
+        <include name="SALES.bcp"/>
+        <include name="PRODUCTS.bcp"/>
+      </fileset>
+    </sync>
+  </target>
+
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete>
       <fileset dir="${company.dir}">
         <include name="*.err"/>
-        <include name="*.bcp"/>
+        <include name="*.bcp"/> 
       </fileset>
     </delete>
+    <delete dir="${csv.copy.dir}"/>
   </target>  
 
   <!-- Experimental -->
