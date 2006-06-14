@@ -24,17 +24,17 @@ package net.sf.farrago.jdbc.param;
 
 import java.sql.Timestamp;
 import java.util.TimeZone;
+import java.util.Calendar;
 
 /**
- * FarragoJdbcEngineTimestampParamDef defines a Timestamp parameter. Converts 
- * parameters from local time (the JVM's timezone) into system time.
+ * FarragoJdbcEngineTimestampParamDef defines a Timestamp parameter.
  * 
  * @author Julian Hyde
  * @version $Id$
  */
 class FarragoJdbcTimestampParamDef extends FarragoJdbcParamDef
 {
-    static final TimeZone defaultZone = TimeZone.getDefault();
+    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
 
     FarragoJdbcTimestampParamDef(
         String paramName,
@@ -46,6 +46,13 @@ class FarragoJdbcTimestampParamDef extends FarragoJdbcParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
+        return scrubValue(x, Calendar.getInstance(gmtZone));
+    }
+
+    // implement FarragoSessionStmtParamDef
+    // Converts parameters from timezone in calendar into gmt time.
+    public Object scrubValue(Object x, Calendar cal)
+    {
         if (x == null) {
             checkNullable();
             return x;
@@ -53,6 +60,7 @@ class FarragoJdbcTimestampParamDef extends FarragoJdbcParamDef
 
         if (x instanceof String) {
             try {
+                // TODO: Does this need to take cal into account?
                 return Timestamp.valueOf((String) x);
             } catch (IllegalArgumentException e) {
                 throw newInvalidFormat(x);
@@ -64,9 +72,10 @@ class FarragoJdbcTimestampParamDef extends FarragoJdbcParamDef
         if (!(x instanceof Timestamp) && !(x instanceof java.sql.Date)) {
             throw newInvalidType(x);
         }
+
         java.util.Date timestamp = (java.util.Date) x;
         long millis = timestamp.getTime();
-        int timeZoneOffset = defaultZone.getOffset(millis);
+        int timeZoneOffset = cal.getTimeZone().getOffset(millis);
 
         // shift the time into gmt
         return new Timestamp(millis + timeZoneOffset);

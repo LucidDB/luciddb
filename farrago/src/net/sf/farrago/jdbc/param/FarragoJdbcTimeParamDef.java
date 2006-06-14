@@ -28,8 +28,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * FarragoJdbcEngineTimeParamDef defines a time parameter. Converts parameters 
- * from local time (the JVM's timezone) into system time.
+ * FarragoJdbcEngineTimeParamDef defines a time parameter.
  * 
  * @author Julian Hyde
  * @version $Id$
@@ -48,6 +47,13 @@ class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
+        return scrubValue(x, Calendar.getInstance(gmtZone));
+    }
+
+    // implement FarragoSessionStmtParamDef
+    // Converts parameters from timezone in calendar into gmt time.
+    public Object scrubValue(Object x, Calendar cal)
+    {
         if (x == null) {
             checkNullable();
             return x;
@@ -55,6 +61,7 @@ class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
 
         if (x instanceof String) {
             try {
+                // TODO: Does this need to take cal into account?
                 return Time.valueOf((String) x);
             } catch (IllegalArgumentException e) {
                 throw newInvalidFormat(x);
@@ -66,10 +73,11 @@ class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
         if (!(x instanceof Timestamp) && !(x instanceof Time)) {
             throw newInvalidType(x);
         }
+
         java.util.Date time = (java.util.Date) x;
 
-        // create a calendar containing time in locale timezone
-        Calendar cal = Calendar.getInstance();
+        // Make a copy of the calendar
+        cal = (Calendar) cal.clone();
         cal.setTime(time);
         final int hour = cal.get(Calendar.HOUR_OF_DAY);
         final int minute = cal.get(Calendar.MINUTE);
