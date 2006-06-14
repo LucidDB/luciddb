@@ -1,0 +1,154 @@
+0: jdbc:luciddb:> -- bug1484.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Positive testing
+0: jdbc:luciddb:> values applib.convert_date('03-12-1998', 'MM-DD-YYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-12  |
++-------------+
+0: jdbc:luciddb:> -- functions not supported
+0: jdbc:luciddb:> --values applib.convert_date('03-12-1998', 'M-D-Y');
+0: jdbc:luciddb:> values applib.convert_date('*03-12-1998', '*MM-DD-YYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-12  |
++-------------+
+0: jdbc:luciddb:> values applib.convert_date('*03-12-1998*', '*MM-DD-YYYY*');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-12  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- JIRA FRG-145
+0: jdbc:luciddb:> -- FIXME: this line breaks Java code gen because */ looks like the end of a Javadoc comment
+0: jdbc:luciddb:> -- values applib.convert_date('03*/12*/1998', 'MM*/DD*/YYYY');
+0: jdbc:luciddb:> values applib.convert_date('03121998', 'MMDDYYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-12  |
++-------------+
+0: jdbc:luciddb:> values applib.convert_date('0321998', 'MMDYYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-02  |
++-------------+
+0: jdbc:luciddb:> values applib.convert_date('32-1998', 'MD-YYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1998-03-02  |
++-------------+
+0: jdbc:luciddb:> -- leap years feb 29
+0: jdbc:luciddb:> values applib.convert_date('02-29-1996', 'MM-DD-YYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 1996-02-29  |
++-------------+
+0: jdbc:luciddb:> values applib.convert_date('02-29-2000', 'MM-DD-YYYY');
++-------------+
+|   EXPR$0    |
++-------------+
+| 2000-02-29  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- month names not supported JIRA LDB-105
+0: jdbc:luciddb:> --values applib.convert_date('JAN-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('JANUARY-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('FEB-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('FEBRUARY-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('MAR-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('MARCH-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('APR-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('APRIL-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('MAY-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('MAY-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('JUN-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('JUNE-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('JUL-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('JULY-23-1998','MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('AUG-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('AUGUST-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('SEPT-23-1998', 'MM-DD-YYYY');           -- should the month be SEP?
+0: jdbc:luciddb:> --values applib.convert_date('SEPTEMBER-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('OCT-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('OCTOBER-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('NOV-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('NOVEMBER-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('DEC-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('DECEMBER-23-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('APRIL231998', 'MMMMMDDYYYY');
+0: jdbc:luciddb:> --values applib.convert_date('23SEPT1998', 'DDMMMMYYYY');            -- month is SEPT?
+0: jdbc:luciddb:> -- end of LDB-105 part 1
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- functions not supported
+0: jdbc:luciddb:> --values applib.convert_date('11-3-98', 'M-D-Y');
+0: jdbc:luciddb:> --values applib.convert_date('11-3-23', 'M-D-Y');
+0: jdbc:luciddb:> --values applib.convert_date('11-3-00', 'M-D-Y');
+0: jdbc:luciddb:> --values applib.convert_date('11-3-99', 'M-D-Y');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('Sep 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('aP 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('OctOb 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('Januar 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('august 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('febr 12 95', 'M D Y');
+0: jdbc:luciddb:> --values applib.convert_date('DECem 12 95', 'M D Y');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- negative testing
+0: jdbc:luciddb:> -- unmatched mask
+0: jdbc:luciddb:> values applib.convert_date('*03-12-1998', 'MM-DD-YYYY');
+Error: Invalid digit input string: caMask=MM-DD-YYYY caIn=*03-12-1998 (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- still not work yet, JIRA LDB-105
+0: jdbc:luciddb:> -- non leap years feb 29
+0: jdbc:luciddb:> --values applib.convert_date('02-29-1900', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('02-29-1901', 'MM-DD-YYYY');
+0: jdbc:luciddb:> -- other invalid dates
+0: jdbc:luciddb:> --values applib.convert_date('01-32-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('02-30-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('04-31-1998', 'MM-DD-YYYY');
+0: jdbc:luciddb:> -- invalid months
+0: jdbc:luciddb:> --values applib.convert_date('00-29-1900', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('13-29-1900', 'MM-DD-YYYY');
+0: jdbc:luciddb:> -- invalid years
+0: jdbc:luciddb:> --values applib.convert_date('01-23-0000', 'MM-DD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --values applib.convert_date('00-00-0000', 'MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('00-00-00', 'MM-DD-YY');
+0: jdbc:luciddb:> -- end of LDB-105 part 2
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- all are not supported ???
+0: jdbc:luciddb:> -- for performace reasons we don't disallow the following
+0: jdbc:luciddb:> --values applib.convert_date('03-12-1998*', 'M-D-Y');
+0: jdbc:luciddb:> --values applib.convert_date('1998-03-12', 'M-D-Y');
+0: jdbc:luciddb:> --values applib.convert_date('03-12-1998', '*MM-DD-YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('*03-12-1998', '*MM-DD-YYYY*');
+0: jdbc:luciddb:> --values applib.convert_date('03-12-1998', 'MM*/DD*/YYYY');
+0: jdbc:luciddb:> --values applib.convert_date('0321998', 'MMDDYYYY');
+0: jdbc:luciddb:> --values applib.convert_date('031998', 'MMDYYYY');
+0: jdbc:luciddb:> --values applib.convert_date('0312-1998', 'MD-YYYY');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
