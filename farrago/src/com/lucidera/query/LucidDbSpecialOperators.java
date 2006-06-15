@@ -25,6 +25,7 @@ import com.lucidera.farrago.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 import java.util.*;
@@ -138,17 +139,25 @@ public class LucidDbSpecialOperators
      * 
      * @param rexBuilder rex builder used to create the expression
      * @param rel the relnode that the rid expression corresponds to
+     * @param fieldNo field in the relnode to use as the argument to the rid
+     * expression
      * 
      * @return the rid expression
      */
+    public static RexNode makeRidExpr(
+        RexBuilder rexBuilder, RelNode rel, int fieldNo)
+    {
+        RexNode ridArg = rexBuilder.makeInputRef(
+            rel.getRowType().getFields()[fieldNo].getType(), fieldNo);
+        return rexBuilder.makeCall(LucidDbOperatorTable.lcsRidFunc, ridArg);
+    }
+    
     public static RexNode makeRidExpr(
         RexBuilder rexBuilder, RelNode rel)
     {
         // arbitrarily use the first column from the table as the argument
         // to the function
-        RexNode ridArg = rexBuilder.makeInputRef(
-            rel.getRowType().getFields()[0].getType(), 0);
-        return rexBuilder.makeCall(LucidDbOperatorTable.lcsRidFunc, ridArg);
+        return makeRidExpr(rexBuilder, rel, 0);
     }
     
     private class SpecialOperatorInfo

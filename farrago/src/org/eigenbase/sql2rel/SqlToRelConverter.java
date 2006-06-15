@@ -1564,28 +1564,39 @@ public class SqlToRelConverter
         SqlInsert insertCall = call.getInsertCall();
         RelNode insertRel = convertInsert(insertCall);
         
-        // there are 2 level of projections in the insert source so we also
-        // need to create 2 projects that correspond to those projects
-        RexNode[] level2InsertExprs = 
+        // there are 2 level of projections in the insert source; combine
+        // them into a single project; level1 refers to the topmost project;
+        // the level1 projection contains references to the level2 expressions,
+        // except in the case where no target expression was provided, in
+        // which case, the expression is the default value for the column
+        RexNode[] level1InsertExprs = 
             ((ProjectRel) insertRel.getInput(0)).getProjectExps();
-        RexNode[] level1InsertExprs =
+        RexNode[] level2InsertExprs =
             ((ProjectRel) insertRel.getInput(0).getInput(0)).
                 getProjectExps();
+        int nLevel1Exprs = level1InsertExprs.length;
         
-        // the first (or bottom-most) project contains the actual values
-        // expressions, target columns, and update set expressions
         JoinRel joinRel = (JoinRel) mergeSourceRel.getInput(0);
         int nSourceFields = joinRel.getLeft().getRowType().getFieldCount();
-        RelNode massagedRel = createSourceProject(
-            joinRel, level1InsertExprs, (ProjectRel) mergeSourceRel,
-            nSourceFields, false);
+        int numProjExprs =
+            nLevel1Exprs +
+            mergeSourceRel.getRowType().getFieldCount() - nSourceFields;
+        RexNode[] projExprs = new RexNode[numProjExprs];
+        for (int level1Idx= 0; level1Idx < nLevel1Exprs; level1Idx++) {
+            if (level1InsertExprs[level1Idx] instanceof RexInputRef) {
+                int level2Idx =
+                    ((RexInputRef) level1InsertExprs[level1Idx]).getIndex();
+                projExprs[level1Idx] = level2InsertExprs[level2Idx];
+            } else {
+                projExprs[level1Idx] = level1InsertExprs[level1Idx];
+            }
+        }
+        RexNode[] updateExprs =  ((ProjectRel) mergeSourceRel).getProjectExps();
+        for (int i = 0; i < numProjExprs - nLevel1Exprs; i++) {
+            projExprs[i + nLevel1Exprs] = updateExprs[nSourceFields + i];
+        }
 
-        // in the second project, everything is a reference to the
-        // bottom-most project expressions, except for the default values
-        // corresponding to unspecified insert target columns
-        massagedRel = createSourceProject(
-            massagedRel, level2InsertExprs, (ProjectRel) massagedRel,
-            level1InsertExprs.length, true);        
+        RelNode massagedRel = CalcRel.createProject(joinRel, projExprs, null);      
         
         return new TableModificationRel(cluster, targetTable, connection,
             massagedRel, TableModificationRel.Operation.MERGE,

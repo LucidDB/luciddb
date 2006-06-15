@@ -22,23 +22,13 @@
 package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.fennel.tuple.*;
-
 import openjava.ptree.*;
-
-import java.util.*;
-import java.io.*;
-import java.nio.*;
-import java.math.*;
 
 import java.util.List;
 
@@ -84,77 +74,8 @@ public class FennelValuesRel extends ValuesRelBase implements FennelRel
         FemValuesStreamDef streamDef =
             repos.newFemValuesStreamDef();
 
-        FennelTupleDescriptor tupleDesc =
-            FennelRelUtil.convertRowTypeToFennelTupleDesc(rowType);
-        FennelTupleData tupleData = new FennelTupleData(tupleDesc);
-
-        // TODO jvs 18-Feb-2006:  query Fennel to get alignment and
-        // DEBUG_TUPLE_ACCESS?  And maybe we should always use network
-        // byte order in case this plan is going to get shipped
-        // somewhere else?
-        FennelTupleAccessor tupleAccessor = new FennelTupleAccessor();
-        tupleAccessor.compute(tupleDesc);
-        ByteBuffer tupleBuffer = ByteBuffer.allocate(
-            tupleAccessor.getMaxByteCount());
-        tupleBuffer.order(ByteOrder.nativeOrder());
-
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-
-        for (List<RexLiteral> tuple : tuples) {
-            int i = 0;
-            tupleBuffer.clear();
-            for (RexLiteral literal : tuple) {
-                FennelTupleDatum datum = tupleData.getDatum(i);
-                RelDataType fieldType = rowType.getFields()[i].getType();
-                ++i;
-                // Start with a null.
-                datum.reset();
-                if (RexLiteral.isNullLiteral(literal)) {
-                    continue;
-                }
-                Comparable value = literal.getValue();
-                if (value instanceof BigDecimal) {
-                    BigDecimal bigDecimal = (BigDecimal) value;
-                    switch (fieldType.getSqlTypeName().getOrdinal()) {
-                    case SqlTypeName.Real_ordinal:
-                        datum.setFloat(bigDecimal.floatValue());
-                        break;
-                    case SqlTypeName.Float_ordinal:
-                    case SqlTypeName.Double_ordinal:
-                        datum.setDouble(bigDecimal.doubleValue());
-                        break;
-                    default:
-                        datum.setLong(bigDecimal.unscaledValue().longValue());
-                        break;
-                    }
-                } else if (value instanceof Calendar) {
-                    Calendar cal = (Calendar) value;
-                    // TODO:  eventually, timezone
-                    datum.setLong(cal.getTimeInMillis());
-                } else if (value instanceof NlsString) {
-                    NlsString nlsString = (NlsString) value;
-                    datum.setString(nlsString.getValue());
-                } else if (value instanceof Boolean) {
-                    datum.setBoolean((Boolean) value);
-                } else {
-                    assert(value instanceof ByteBuffer);
-                    ByteBuffer byteBuffer = (ByteBuffer) value;
-                    datum.setBytes(byteBuffer.array());
-                }
-            }
-            tupleAccessor.marshal(tupleData, tupleBuffer);
-            tupleBuffer.flip();
-            byteStream.write(
-                tupleBuffer.array(),
-                0,
-                tupleAccessor.getBufferByteCount(tupleBuffer));
-        }
-
-        byte [] tupleBytes = byteStream.toByteArray();
-        String base64 = RhBase64.encodeBytes(
-            tupleBytes, RhBase64.DONT_BREAK_LINES);
-
-        streamDef.setTupleBytesBase64(base64);
+        streamDef.setTupleBytesBase64(
+            FennelRelUtil.convertTuplesToBase64String(rowType, tuples));
 
         return streamDef;
     }

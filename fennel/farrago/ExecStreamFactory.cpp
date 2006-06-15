@@ -41,6 +41,7 @@
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/SortedAggExecStream.h"
 #include "fennel/exec/MockProducerExecStream.h"
+#include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/db/Database.h"
 #include "fennel/db/CheckpointThread.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -129,6 +130,7 @@ void ExecStreamFactory::visit(ProxyBarrierStreamDef &streamDef)
 {
     BarrierExecStreamParams params;
     readTupleStreamParams(params, streamDef);
+    params.rowCountInput = streamDef.getRowCountInput();
     embryo.init(new BarrierExecStream(), params);
 }
 
@@ -309,6 +311,41 @@ void ExecStreamFactory::visit(ProxyValuesStreamDef &streamDef)
         reinterpret_cast<jbyte *>(params.pTupleBuffer.get()));
     
     embryo.init(new ValuesExecStream(), params);
+}
+
+void ExecStreamFactory::visit(ProxyReshapeStreamDef &streamDef)
+{
+    ReshapeExecStreamParams params;
+    readTupleStreamParams(params, streamDef);
+
+    params.compOp = streamDef.getCompareOp();
+    if (params.compOp != COMP_NOOP) {
+        // Get the Java String object so that we can pass it to the decoder.
+        jobject tupleBytesBase64 = streamDef.pEnv->CallObjectMethod(
+            streamDef.jObject,
+            ProxyReshapeStreamDef::meth_getTupleCompareBytesBase64);
+
+        // Call back into Java again to perform the decode.
+        jbyteArray jbytes = (jbyteArray) streamDef.pEnv->CallStaticObjectMethod(
+            JniUtil::classRhBase64,
+            JniUtil::methBase64Decode,
+            tupleBytesBase64);
+
+        // Copy the bytes from Java to our tuple buffer.
+        int bufSize = streamDef.pEnv->GetArrayLength(jbytes);
+        params.pCompTupleBuffer.reset(new FixedBuffer[bufSize]);
+        streamDef.pEnv->GetByteArrayRegion(
+            jbytes, 0, bufSize,
+            reinterpret_cast<jbyte *>(params.pCompTupleBuffer.get()));
+
+        CmdInterpreter::readTupleProjection(
+            params.inputCompareProj, streamDef.getInputCompareProjection());
+    }
+
+    CmdInterpreter::readTupleProjection(
+        params.outputProj, streamDef.getOutputProjection());
+
+    embryo.init(new ReshapeExecStream(), params);
 }
 
 void ExecStreamFactory::readExecStreamParams(

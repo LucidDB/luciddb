@@ -125,7 +125,7 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
         writer.endList(frame);
     }
 
-    private void commaList(SqlWriter writer)
+    void commaList(SqlWriter writer)
     {
         for (int i = 0; i < list.size(); i++) {
             SqlNode node = list.get(i);

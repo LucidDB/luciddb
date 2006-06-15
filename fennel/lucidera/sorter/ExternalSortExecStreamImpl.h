@@ -108,19 +108,14 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
     boost::scoped_ptr<ExternalSortOutput> pOutputWriter;
 
     /**
-     * Synchronization for storedRuns and nStoredRuns.
+     * Synchronization for storedRuns.
      */
     StrictMutex storedRunMutex;
     
     /**
      * Information on runs stored externally.
      */
-    std::vector<ExternalSortStoredRun> storedRuns;
-
-    /**
-     * Number of stored runs (almost redundant with storedRuns.size()).
-     */
-    uint nStoredRuns;
+    std::vector<SharedSegStreamAllocation> storedRuns;
 
     /**
      * Whether the XO is ready to start writing results.

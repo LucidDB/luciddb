@@ -129,7 +129,8 @@ public class PushProjector
             RexNode newFilter =
                 convertRefsAndExprs(
                     rexBuilder, origFilter, scanFields, adjustments,
-                    preserveLeft, projRefs.cardinality(), null, 0);
+                    preserveLeft, projRefs.cardinality(), null, 0,
+                    newProject.getRowType().getFields());
             projChild = CalcRel.createFilter(newProject, newFilter);
         } else {
             projChild = newProject;
@@ -230,7 +231,7 @@ public class PushProjector
             if (offset > 0) {
                 newExpr = projExpr.accept(
                     new RelOptUtil.RexInputConverter(
-                        rexBuilder, joinFields, adjustments));
+                        rexBuilder, joinFields, relFields, adjustments));
             } else {
                 newExpr = projExpr;
             }
@@ -292,18 +293,20 @@ public class PushProjector
      * corresponding to expressions that need to be pushed to the right
      * @param firstRightRef index corresponding to the field reference that
      * the first expression on the right will be converted to
+     * @param projChildFields fields of the child of the project
      * 
      * @return modified expression tree
      */
     public RexNode convertRefsAndExprs(
         RexBuilder rexBuilder, RexNode rex, RelDataTypeField[] fields,
         int[] adjustments, List<RexNode> preserveLeft, int firstLeftRef,
-        List<RexNode> preserveRight, int firstRightRef)
+        List<RexNode> preserveRight, int firstRightRef,
+        RelDataTypeField[] projChildFields)
     {
         return rex.accept(
             new RefAndExprConverter(
-                rexBuilder, fields, adjustments, preserveLeft, firstLeftRef,
-                preserveRight, firstRightRef));
+                rexBuilder, fields, projChildFields, adjustments, preserveLeft,
+                firstLeftRef, preserveRight, firstRightRef));
     }
     
     /**
@@ -355,7 +358,7 @@ public class PushProjector
                     convertRefsAndExprs(
                         rexBuilder, origProjExprs[i], relFields, adjustments,
                         preserveLeft, firstLeftRef, preserveRight,
-                        firstRightRef);
+                        firstRightRef, projChild.getRowType().getFields());
                 fieldNames[i] = origProj.getRowType().getFields()[i].getName();
             }
         } else {
@@ -413,11 +416,11 @@ public class PushProjector
                 call.accept(new RelOptUtil.InputFinder(exprArgs));
                 if (exprArgs.cardinality() > 0) {
                     if (RelOptUtil.contains(leftFields, exprArgs)) {
-                        preserveLeft.add(call);
+                        addExpr(preserveLeft, call);
                         return null;
                     } else if (RelOptUtil.contains(rightFields, exprArgs)) {
                         assert(preserveRight != null);
-                        preserveRight.add(call);
+                        addExpr(preserveRight, call);
                         return null;
                     }
                 }
@@ -444,6 +447,25 @@ public class PushProjector
         {
             RexProgram.apply(this, exprs, expr);
         }
+        
+        /**
+         * Adds an expression to a list if the same expression isn't already
+         * in the list.  Expressions are identical if their digests are the
+         * same.
+         * 
+         * @param exprList current list of expressions
+         * @param newExpr new expression to be added
+         */
+        private void addExpr(List<RexNode> exprList, RexNode newExpr)
+        {
+            String newExprString = newExpr.toString();
+            for (RexNode expr : exprList) {
+                if (newExprString.compareTo(expr.toString()) == 0) {
+                    return;
+                }
+            }
+            exprList.add(newExpr);
+        }
     }
     
     /**
@@ -451,25 +473,21 @@ public class PushProjector
      * reflect projection and converting special expressions to field
      * references.
      */
-    private class RefAndExprConverter extends RexShuttle
+    private class RefAndExprConverter extends RelOptUtil.RexInputConverter
     {
-        private final RexBuilder rexBuilder;
-        private final RelDataTypeField[] fields;
-        private final int[] adjustments;
         private final List<RexNode> preserveLeft;
         private final int firstLeftRef;
         private final List<RexNode> preserveRight;
-        private final int firstRightRef;
+        private final int firstRightRef;      
         
         public RefAndExprConverter(
             RexBuilder rexBuilder,
-            RelDataTypeField[] fields, int[] adjustments,
+            RelDataTypeField[] srcFields, RelDataTypeField[] destFields,
+            int[] adjustments,
             List<RexNode> preserveLeft, int firstLeftRef,
             List<RexNode> preserveRight, int firstRightRef)
         {
-            this.rexBuilder = rexBuilder;
-            this.fields = fields;
-            this.adjustments = adjustments;
+            super(rexBuilder, srcFields, destFields, adjustments);
             this.preserveLeft = preserveLeft;
             this.firstLeftRef = firstLeftRef;
             this.preserveRight = preserveRight;
@@ -484,20 +502,10 @@ public class PushProjector
             int match = findExprInLists(
                 call, preserveLeft, firstLeftRef, preserveRight, firstRightRef);
             if (match >= 0) {
-                return rexBuilder.makeInputRef(call.getType(), match);
+                return rexBuilder.makeInputRef(
+                    destFields[match].getType(), match);
             }
             return super.visitCall(call);
-        }
-        
-        public RexNode visitInputRef(RexInputRef var)
-        {
-            int index = var.getIndex();
-            if (adjustments[index] != 0) {
-                return rexBuilder.makeInputRef(
-                    fields[index].getType(), index + adjustments[index]);
-            } else {
-                return var;
-            }
         }
         
         /**

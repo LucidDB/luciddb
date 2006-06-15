@@ -696,8 +696,11 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, THREECLUSTERS]])'
-'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[CAST($t2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t3], $f1=[$t4], $f2=[$t5])'
-'      FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[CAST($t2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t3], $f1=[$t4], $f2=[$t5])'
+'        IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER NOT NULL], expr#4=[CAST($t1):VARCHAR(50) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=[CAST($t2):CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t3], NAME=[$t4], EXTRA_FIELD=[$t5])'
+'          FennelToIteratorConverter'
+'            FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into threeclusters select * from flatfile_table;

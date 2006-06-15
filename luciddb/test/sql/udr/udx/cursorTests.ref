@@ -1,0 +1,295 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Setup
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema ct;
+0: jdbc:luciddb:> set schema 'ct';
+0: jdbc:luciddb:> set path 'ct';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1(aa int, bb varchar(20));
+0: jdbc:luciddb:> insert into t1 values (1, 'one'), (3, 'three'), (10, 'ten');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t2(a int, b varchar(20));
+0: jdbc:luciddb:> insert into t2 values (2, 'dos'), (3, 'tres');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with multiple output columns
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function get_column_types(c cursor)
+. . . . . . . . > returns table( colname varchar(65535), coltype int, coltypename varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(select * from sys_fem."Config"."FarragoConfig")))
+. . . . . . . . > order by 1;
++---------------------------+----------+--------------+
+|          COLNAME          | COLTYPE  | COLTYPENAME  |
++---------------------------+----------+--------------+
+| FennelConfig              | 12       | VARCHAR      |
+| calcVirtualMachine        | 12       | VARCHAR      |
+| checkpointInterval        | 4        | INTEGER      |
+| codeCacheMaxBytes         | -5       | BIGINT       |
+| fennelDisabled            | 16       | BOOLEAN      |
+| javaCompilerClassName     | 12       | VARCHAR      |
+| mofClassName              | 12       | VARCHAR      |
+| mofId                     | 12       | VARCHAR      |
+| name                      | 12       | VARCHAR      |
+| serverRmiRegistryPort     | 4        | INTEGER      |
+| serverSingleListenerPort  | 4        | INTEGER      |
+| userCatalogEnabled        | 16       | BOOLEAN      |
++---------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(select * from sys_fem."Config"."FennelConfig")))
+. . . . . . . . > order by 1;
++---------------------------------+----------+--------------+
+|             COLNAME             | COLTYPE  | COLTYPENAME  |
++---------------------------------+----------+--------------+
+| FarragoConfig                   | 12       | VARCHAR      |
+| cachePageSize                   | 4        | INTEGER      |
+| cachePagesInit                  | 4        | INTEGER      |
+| cachePagesMax                   | 4        | INTEGER      |
+| databaseIncrementSize           | 4        | INTEGER      |
+| databaseInitSize                | 4        | INTEGER      |
+| databaseMaxSize                 | 4        | INTEGER      |
+| databaseShadowLogIncrementSize  | 4        | INTEGER      |
+| databaseShadowLogInitSize       | 4        | INTEGER      |
+| databaseTxnLogIncrementSize     | 4        | INTEGER      |
+| databaseTxnLogInitSize          | 4        | INTEGER      |
+| groupCommitInterval             | 4        | INTEGER      |
+| jniHandleTraceFile              | 12       | VARCHAR      |
+| mofClassName                    | 12       | VARCHAR      |
+| mofId                           | 12       | VARCHAR      |
+| resourceDir                     | 12       | VARCHAR      |
+| tempIncrementSize               | 4        | INTEGER      |
+| tempInitSize                    | 4        | INTEGER      |
+| tempMaxSize                     | 4        | INTEGER      |
++---------------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(values(1,'dsfs', cast ('sdfsd' as varchar(10)), TIME'12:12:12', 1.2, cast(12.2 as float)))))
+. . . . . . . . > order by 1;
++----------+----------+--------------+
+| COLNAME  | COLTYPE  | COLTYPENAME  |
++----------+----------+--------------+
+| EXPR$0   | 4        | INTEGER      |
+| EXPR$1   | 1        | CHAR         |
+| EXPR$2   | 12       | VARCHAR      |
+| EXPR$3   | 92       | TIME         |
+| EXPR$4   | 3        | DECIMAL      |
+| EXPR$5   | 6        | FLOAT        |
++----------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX in view
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function pivot_columns_to_rows(c cursor)
+. . . . . . . . > returns table(param_name varchar(65535), param_value varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view farrago_params as
+. . . . . . . . > select * from table(
+. . . . . . . . >   pivot_columns_to_rows(
+. . . . . . . . >     cursor(select "name","calcVirtualMachine", "checkpointInterval",
+. . . . . . . . >                   "codeCacheMaxBytes", "fennelDisabled", 
+. . . . . . . . >                   "javaCompilerClassName",
+. . . . . . . . >                   "serverRmiRegistryPort", "serverSingleListenerPort", 
+. . . . . . . . >                   "userCatalogEnabled" 
+. . . . . . . . >            from sys_fem."Config"."FarragoConfig")
+. . . . . . . . > ));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create view fennel_params as
+. . . . . . . . > select * from table(
+. . . . . . . . >   pivot_columns_to_rows(
+. . . . . . . . >     cursor(select "cachePageSize", "cachePagesInit", "cachePagesMax",
+. . . . . . . . >                   "databaseIncrementSize", "databaseInitSize",
+. . . . . . . . >                   "databaseMaxSize", "databaseShadowLogIncrementSize",
+. . . . . . . . >                   "databaseShadowLogInitSize", "databaseTxnLogIncrementSize",
+. . . . . . . . >                   "databaseTxnLogInitSize", "groupCommitInterval",
+. . . . . . . . >                   "jniHandleTraceFile", "resourceDir", "tempIncrementSize",
+. . . . . . . . >                   "tempInitSize", "tempMaxSize"
+. . . . . . . . >            from sys_fem."Config"."FennelConfig")
+. . . . . . . . > ));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from farrago_params
+. . . . . . . . > union 
+. . . . . . . . > select * from fennel_params
+. . . . . . . . > order by 1;
++---------------------------------+-------------------------------------+
+|           PARAM_NAME            |             PARAM_VALUE             |
++---------------------------------+-------------------------------------+
+| cachePageSize                   | 32768                               |
+| cachePagesInit                  | 5000                                |
+| cachePagesMax                   | 5000                                |
+| calcVirtualMachine              | CALCVM_AUTO                         |
+| checkpointInterval              | 0                                   |
+| codeCacheMaxBytes               | 0                                   |
+| databaseIncrementSize           | 1000                                |
+| databaseInitSize                | 1000                                |
+| databaseMaxSize                 | 0                                   |
+| databaseShadowLogIncrementSize  | 1000                                |
+| databaseShadowLogInitSize       | 2000                                |
+| databaseTxnLogIncrementSize     | 1000                                |
+| databaseTxnLogInitSize          | 2000                                |
+| fennelDisabled                  | false                               |
+| groupCommitInterval             | 0                                   |
+| javaCompilerClassName           | org.eigenbase.javac.JaninoCompiler  |
+| jniHandleTraceFile              |                                     |
+| name                            | Current                             |
+| resourceDir                     | ${FARRAGO_HOME}/catalog/fennel      |
+| serverRmiRegistryPort           | -1                                  |
+| serverSingleListenerPort        | -1                                  |
+| tempIncrementSize               | 1000                                |
+| tempInitSize                    | 1000                                |
+| tempMaxSize                     | 0                                   |
+| userCatalogEnabled              | false                               |
++---------------------------------+-------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with two cursors
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function two_cursor_test(c1 cursor, c2 cursor)
+. . . . . . . . > returns table(col1 int, col2 varchar(20))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.TestTwoCursorUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   two_cursor_test(
+. . . . . . . . >     cursor(select * from t1),
+. . . . . . . . >     cursor(select * from t2)))
+. . . . . . . . > order by 1;
++-------+--------+
+| COL1  |  COL2  |
++-------+--------+
+| 1     | one    |
+| 2     | dos    |
+| 3     | tres   |
+| 3     | three  |
+| 10    | ten    |
++-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with another UDX as input cursor
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(select * from
+. . . . . . . . >            table(applib.time_dimension(2101, 4, 25, 2101, 5, 2)
+. . . . . . . . > ))));
++-----------------------+----------+--------------+
+|        COLNAME        | COLTYPE  | COLTYPENAME  |
++-----------------------+----------+--------------+
+| TIME_KEY_SEQ          | 4        | INTEGER      |
+| TIME_KEY              | 91       | DATE         |
+| DAY_OF_WEEK           | 12       | VARCHAR      |
+| WEEKEND               | 12       | VARCHAR      |
+| DAY_NUMBER_IN_WEEK    | 4        | INTEGER      |
+| DAY_NUMBER_IN_MONTH   | 4        | INTEGER      |
+| DAY_NUMBER_IN_YEAR    | 4        | INTEGER      |
+| DAY_NUMBER_OVERALL    | 4        | INTEGER      |
+| WEEK_NUMBER_IN_YEAR   | 4        | INTEGER      |
+| WEEK_NUMBER_OVERALL   | 4        | INTEGER      |
+| MONTH_NAME            | 12       | VARCHAR      |
+| MONTH_NUMBER_IN_YEAR  | 4        | INTEGER      |
+| MONTH_NUMBER_OVERALL  | 4        | INTEGER      |
+| QUARTER               | 4        | INTEGER      |
+| YR                    | 4        | INTEGER      |
+| CALENDAR_QUARTER      | 12       | VARCHAR      |
+| FIRST_DAY_OF_WEEK     | 91       | DATE         |
++-----------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(select * from table(
+. . . . . . . . >              pivot_columns_to_rows(
+. . . . . . . . >                cursor(select * from table(
+. . . . . . . . >                         applib.time_dimension(2000, 12, 29, 2000, 12, 29)
+. . . . . . . . > )))))));
++--------------+----------+--------------+
+|   COLNAME    | COLTYPE  | COLTYPENAME  |
++--------------+----------+--------------+
+| PARAM_NAME   | 12       | VARCHAR      |
+| PARAM_VALUE  | 12       | VARCHAR      |
++--------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Join two UDX
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select 
+. . . . . . . . >   pctr.param_name, pctr.param_value, gct.coltype, gct.coltypename
+. . . . . . . . > from 
+. . . . . . . . >   table(get_column_types(
+. . . . . . . . >     cursor(select * from sys_fem."Config"."FarragoConfig"))) gct,
+. . . . . . . . >   table(pivot_columns_to_rows(
+. . . . . . . . >     cursor(select "name","calcVirtualMachine", "checkpointInterval",
+. . . . . . . . >                   "codeCacheMaxBytes", "fennelDisabled", 
+. . . . . . . . >                   "javaCompilerClassName", "serverRmiRegistryPort", 
+. . . . . . . . >                   "serverSingleListenerPort", "userCatalogEnabled" 
+. . . . . . . . >            from sys_fem."Config"."FarragoConfig"))) pctr
+. . . . . . . . > where gct.colname = pctr.param_name
+. . . . . . . . > order by 1
+. . . . . . . . > ;
++---------------------------+-------------------------------------+----------+--------------+
+|        PARAM_NAME         |             PARAM_VALUE             | COLTYPE  | COLTYPENAME  |
++---------------------------+-------------------------------------+----------+--------------+
+| calcVirtualMachine        | CALCVM_AUTO                         | 12       | VARCHAR      |
+| checkpointInterval        | 0                                   | 4        | INTEGER      |
+| codeCacheMaxBytes         | 0                                   | -5       | BIGINT       |
+| fennelDisabled            | false                               | 16       | BOOLEAN      |
+| javaCompilerClassName     | org.eigenbase.javac.JaninoCompiler  | 12       | VARCHAR      |
+| name                      | Current                             | 12       | VARCHAR      |
+| serverRmiRegistryPort     | -1                                  | 4        | INTEGER      |
+| serverSingleListenerPort  | -1                                  | 4        | INTEGER      |
+| userCatalogEnabled        | false                               | 16       | BOOLEAN      |
++---------------------------+-------------------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX throws exception after a few records
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function test_throws_exception(c cursor)
+. . . . . . . . > returns table(junk varchar(256))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.ThrowsExceptionUdx.execute';
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   test_throws_exception(
+. . . . . . . . >     cursor(select * from t1 order by 1)
+. . . . . . . . > ));
+Error: hey, hey, it's an exception (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- 
+0: jdbc:luciddb:> -- UDX using internal query against jdbc:default:connection
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function create_table_as_select(schema_name varchar(65535), table_name varchar(65535), c cursor)
+. . . . . . . . > returns table(errors varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > modifies sql data
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.CreateTableAsSelectUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   create_table_as_select(
+. . . . . . . . >     'CT', 
+. . . . . . . . >     'MYTABLE', 
+. . . . . . . . >     cursor(select * from farrago_params)
+. . . . . . . . > ));
++---------+
+| ERRORS  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from ct.mytable order by 1;
+-- Error: Failed to acquire lock on LOCALDB.CT.MYTABLE (state=,code=0)
+0: jdbc:luciddb:> !quit

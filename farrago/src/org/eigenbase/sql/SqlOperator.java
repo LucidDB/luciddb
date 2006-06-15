@@ -349,6 +349,18 @@ public abstract class SqlOperator
         getSyntax().unparse(writer, this, operands, leftPrec, rightPrec);
     }
 
+
+    // REVIEW jvs 9-June-2006: See http://issues.eigenbase.org/browse/FRG-149
+    // for why this method exists.
+    protected void unparseListClause(SqlWriter writer, SqlNode clause)
+    {
+        if (clause instanceof SqlNodeList) {
+            ((SqlNodeList) clause).commaList(writer);
+        } else {
+            clause.unparse(writer, 0, 0);
+        }
+    }
+    
     // override Object
     public boolean equals(Object obj)
     {

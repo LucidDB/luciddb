@@ -108,12 +108,13 @@ void LhxHashGenerator::hashOneColumn(
 {
 
     uint trimmedLength = inputCol.cbData;
+    PConstBuffer pData = inputCol.pData;
 
-    if (isVarChar) {
+    if (pData && isVarChar) {
         /*
          * Only hash to the trimmed value.
          */
-        PConstBuffer charBegin = static_cast<PConstBuffer>(inputCol.pData);
+        PConstBuffer charBegin = pData;
         PConstBuffer charByte = charBegin + trimmedLength - 1;
         
         if (charBegin) {
@@ -128,19 +129,22 @@ void LhxHashGenerator::hashOneColumn(
     }
 
     /*
-     * first hash the length
+     * First hash the length
+     * However, ignore length field if pData is NULL.
      */
-    hashOneBuffer(
-        hashValue,
-        (PConstBuffer) &(trimmedLength),
-        sizeof(TupleStorageByteLength));
+    if (pData) {
+        hashOneBuffer(
+            hashValue,
+            (PConstBuffer) &(trimmedLength),
+            sizeof(TupleStorageByteLength));
+    }
 
     /*
      * then hash the data buffer
      */
     hashOneBuffer(
         hashValue,
-        inputCol.pData,
+        pData,
         trimmedLength);
 }
 

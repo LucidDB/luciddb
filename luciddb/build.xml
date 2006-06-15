@@ -847,6 +847,8 @@ ${farrago.test.jvmargs}
       value="${package.name}-${product.version.major}.${product.version.minor}.${product.version.point}"/>
     <property name="release.lib.dir" 
       location="${dist.dir}/${lucidera.release.spec}/lib"/>
+    <property name="release.bin.dir" 
+      location="${dist.dir}/${lucidera.release.spec}/bin"/>
     <property name="release.properties.target" 
       location="${release.lib.dir}/FarragoRelease.properties"/>
 
@@ -884,6 +886,23 @@ ${farrago.test.jvmargs}
       todir="${release.lib.dir}" overwrite="true"/>
     <chmod file="${release.properties.target}" perm="u+w" />
     <touch file="${release.properties.target}"/>
+
+    <if>
+        <equals arg1="${osfamily}" arg2="unix"/>
+      <then>
+        <property name="sqllineClient" value="sqllineClient"/>
+      </then>
+      <else>
+        <property name="sqllineClient" value="sqllineClient.bat"/>
+      </else>
+    </if>
+
+    <replace 
+        file="${release.bin.dir}/${sqllineClient}">
+        <replacefilter token="jdbc:farrago:rmi://localhost" value="jdbc:luciddb:rmi://localhost"/>
+        <replacefilter token="net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver" value="com.lucidera.jdbc.LucidDbRmiDriver"/>
+        <replacefilter token="guest" value="sa"/>
+    </replace>
 
     <jar update="true" 
       destfile="${release.lib.dir}/farrago.jar"

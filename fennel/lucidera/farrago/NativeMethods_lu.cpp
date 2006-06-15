@@ -139,6 +139,8 @@ class ExecStreamSubFactory_lu
             params.mode = FLATFILE_MODE_SAMPLE;
         } else if (params.numRowsScan > 0) {
             params.mode = FLATFILE_MODE_DESCRIBE;
+        } else if (params.numRowsScan == 0 && params.calcProgram.size() == 0) {
+            params.mode = FLATFILE_MODE_QUERY_TEXT;
         }
         pEmbryo->init(FlatFileExecStream::newFlatFileExecStream(), params);
     }

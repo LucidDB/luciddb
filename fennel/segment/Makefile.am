@@ -16,6 +16,7 @@ Segment.cpp \
 SegmentFactory.cpp \
 SegPageIter.cpp \
 SegStream.cpp \
+SegStreamAllocation.cpp \
 SpillOutputStream.cpp \
 TracingSegment.cpp \
 VersionedSegment.cpp \

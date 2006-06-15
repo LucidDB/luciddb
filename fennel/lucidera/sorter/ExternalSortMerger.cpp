@@ -77,8 +77,8 @@ void ExternalSortMerger::releaseResources()
 }
 
 void ExternalSortMerger::startMerge(
-    std::vector<ExternalSortStoredRun>::iterator pStoredRun,
-    uint nRunsToMerge,bool subMerge)
+    std::vector<SharedSegStreamAllocation>::iterator pStoredRun,
+    uint nRunsToMerge)
 {
     assert (nRunsToMerge < nMergeMemPages);
 
@@ -90,9 +90,7 @@ void ExternalSortMerger::startMerge(
     }
 
     for (uint i = 1; i <= nRuns; i++) {
-        ppRunAccessors[i]->startRead(
-            pStoredRun[i - 1],
-            subMerge);
+        ppRunAccessors[i]->startRead(pStoredRun[i - 1]);
         ppRunAccessors[i]->fetch(EXTSORT_FETCH_ARRAY_SIZE);
         mergeInfo[i].val = ppFetchArrays[i]->ppTupleBuffers[0];
         mergeInfo[i].runOrd = i;

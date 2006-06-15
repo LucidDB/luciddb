@@ -167,7 +167,7 @@ public class SqlSelectOperator extends SqlOperator
         }
         final SqlWriter.Frame selectListFrame =
             writer.startList(SqlWriter.FrameType.SelectList);
-        selectClause.unparse(writer, 0, 0);
+        unparseListClause(writer, selectClause);
         writer.endList(selectListFrame);
 
         writer.sep("FROM");
@@ -199,7 +199,7 @@ public class SqlSelectOperator extends SqlOperator
                     writer.startList(SqlWriter.FrameType.Simple, "(", ")");
                 writer.endList(frame);
             } else {
-                groupClause.unparse(writer, 0, 0);
+                unparseListClause(writer, groupClause);
             }
             writer.endList(groupFrame);
         }
@@ -224,7 +224,10 @@ public class SqlSelectOperator extends SqlOperator
         SqlNode orderClause = operands[SqlSelect.ORDER_OPERAND];
         if (orderClause != null) {
             writer.sep("ORDER BY");
-            orderClause.unparse(writer, 0, 0);
+            final SqlWriter.Frame orderFrame =
+                writer.startList(SqlWriter.FrameType.OrderByList);
+            unparseListClause(writer, orderClause);
+            writer.endList(orderFrame);
         }
         writer.endList(selectFrame);
     }

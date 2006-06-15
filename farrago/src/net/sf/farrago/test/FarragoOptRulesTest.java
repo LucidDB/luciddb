@@ -362,6 +362,63 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             " from sales.depts" +
             " where deptno=(7+8) and deptno=coalesce(2,null)");
     }
+    
+    public void testRemoveSemiJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e.name from sales.emps e, sales.depts d " +
+            "where e.deptno = d.deptno");
+    }	
+    	
+    public void testRemoveSemiJoinWithFilter()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e.name from sales.emps e, sales.depts d " +
+            "where e.deptno = d.deptno and e.name = 'foo'");
+    }
+    
+    public void testRemoveSemiJoinRight()
+    	throws Exception
+    {
+    	HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
+            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+    }
+    
+    public void testRemoveSemiJoinRightWithFilter()
+		throws Exception
+    {
+	    HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
+        programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
+        programBuilder.addRuleInstance(new RemoveSemiJoinRule());
+        check(
+            programBuilder.createProgram(),
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
+            "where e1.deptno = d.deptno and d.deptno = e2.deptno " +
+            "and d.name = 'foo'");
+    }
 }
 
 // End FarragoOptRulesTest.java

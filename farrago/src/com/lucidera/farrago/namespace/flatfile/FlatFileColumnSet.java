@@ -27,10 +27,13 @@ import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
 
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 
@@ -98,7 +101,36 @@ class FlatFileColumnSet extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return new FlatFileFennelRel(this, cluster, connection, schemaType);
+        FlatFileFennelRel fennelRel = 
+            new FlatFileFennelRel(
+                this, 
+                cluster, 
+                connection, 
+                schemaType);
+
+        // return the rel directly unless java data conversions are required
+        if (fennelRel.isPureFennel()) {
+            return fennelRel;
+        }
+
+        // otherwise update the rel to return text only
+        // and allow the Java calc to perform the data conversions
+        FlatFileProgramWriter pw = 
+            new FlatFileProgramWriter(fennelRel);
+        RexProgram program = pw.getProgram(fennelRel.getRowType());
+        fennelRel.setTextOnly(program.getInputRowType());
+
+        RelNode iterRel = new FennelToIteratorConverter(
+            fennelRel.getCluster(),
+            fennelRel);
+
+        IterCalcRel calcRel = new IterCalcRel(
+            iterRel.getCluster(),
+            iterRel,
+            program, 
+            ProjectRelBase.Flags.Boxed);
+        calcRel.setLoggerType("farrago.flatfile");
+        return calcRel;
     }
 
     /**

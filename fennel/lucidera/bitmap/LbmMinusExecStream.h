@@ -74,6 +74,33 @@ class LbmMinusExecStream : public LbmBitOpExecStream
     LcsRid minChildRid;
 
     /**
+     * True if a child input needs to be advanced even though all children
+     * are already positioned past the anchor's startrid
+     */
+    bool advancePending;
+
+    /**
+     * The rid that the child input needs to be advanced to when
+     * advancePending is true
+     */
+    LcsRid advanceChildRid;
+
+    /**
+     * The input containing the child that needs to be advanced
+     */
+    int advanceChildInputNo;
+
+    /**
+     * Advance a single child input to the specified rid
+     *
+     * @param inputNo input number of the child
+     * @param rid rid to be advanced to
+     *
+     * @return EXECRC_YIELD if advance was successful
+     */
+    ExecStreamResult advanceChild(int inputNo, LcsRid rid);
+
+    /**
      * Advances all children input to the desired start rid
      *
      * @param baseRid desired startrid

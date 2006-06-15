@@ -190,7 +190,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 collectionExpression));
         return IterCalcRel.implementAbstractTupleIter(
             implementor, this, adapterExp, varInputRow, inputRowType,
-            outputRowType, program);
+            outputRowType, program, null);
     }
 
     RexNode [] implementProjection(Expression inputRow)

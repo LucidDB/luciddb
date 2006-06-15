@@ -117,6 +117,7 @@ protected:
     virtual void visit(ProxySortingStreamDef &);
     virtual void visit(ProxySplitterStreamDef &);
     virtual void visit(ProxyValuesStreamDef &);
+    virtual void visit(ProxyReshapeStreamDef &);
 
     // helpers for above visitors
 

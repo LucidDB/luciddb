@@ -143,6 +143,20 @@ public class RexBuilder
      * Creates a call with 1 argument.
      */
     public RexNode makeCall(
+        RelDataType returnType,
+        SqlOperator op,
+        RexNode expr0)
+    {
+        return new RexCall(
+            returnType,
+            op,
+            new RexNode [] { expr0 });
+    }
+
+    /**
+     * Creates a call with 1 argument.
+     */
+    public RexNode makeCall(
         SqlOperator op,
         RexNode expr0)
     {
@@ -594,6 +608,29 @@ public class RexBuilder
         int index)
     {
         return new RexDynamicParam(type, index);
+    }
+    
+    /**
+     * Creates an expression corresponding to a null literal, cast to a
+     * specific type and precision
+     * 
+     * @param typeName name of the type that the null will be cast to
+     * @param precision precision of the type
+     * 
+     * @return created expression
+     */
+    public RexNode makeNullLiteral(SqlTypeName typeName, int precision)
+    {
+        RelDataType type = typeFactory.createTypeWithNullability(
+            typeFactory.createSqlType(typeName, precision), true);
+        return makeCast(type, constantNull());
+    }
+    
+    public RexNode makeNullLiteral(SqlTypeName typeName)
+    {
+        RelDataType type = typeFactory.createTypeWithNullability(
+            typeFactory.createSqlType(typeName), true);
+        return makeCast(type, constantNull());
     }
 }
 

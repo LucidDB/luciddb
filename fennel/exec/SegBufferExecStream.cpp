@@ -59,6 +59,9 @@ void SegBufferExecStream::open(bool restart)
     assert(pOutAccessor);
     assert(pOutAccessor->getProvision() == BUFPROV_PRODUCER);
 
+    // TODO jvs 1-June-2006:  generalize SegStreamAllocation to handle
+    // the multipass usage requirements here
+    
     if (restart) {
         pOutAccessor->clear();
         if (multipass) {

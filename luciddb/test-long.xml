@@ -2,6 +2,14 @@
   <target name="test-long">
     <test-suite name="test-long">
 
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="test-long"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
       <!-- tbs100K-idxtest.qor_100k_idx -->
       <test-suite-call testfile="test/sql/VI/tbs/tbs100K_idxtest.xml"/>
 
@@ -13,6 +21,15 @@
 
       <!-- sqbm.sqbmqfh2, sqbm.sqbmqfh4 -->
       <test-suite-call testfile="test/sql/sqbm/test.xml"/>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="test-long"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
     </test-suite>
   </target>
 </project>

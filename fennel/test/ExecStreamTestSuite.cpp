@@ -22,6 +22,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FemEnums.h"
 #include "fennel/test/ExecStreamTestSuite.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStream.h"
@@ -34,6 +35,7 @@
 #include "fennel/exec/SegBufferExecStream.h"
 #include "fennel/exec/CartesianJoinExecStream.h"
 #include "fennel/exec/SortedAggExecStream.h"
+#include "fennel/exec/ReshapeExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
@@ -366,5 +368,110 @@ void ExecStreamTestSuite::testGroupAggExecStreamNrows(uint nrows)
     verifyOutput(*pOutputStream, mockParams.nRows/2, expectedResultGenerator);
 }
 
+void ExecStreamTestSuite::testReshapeExecStream(
+    bool filter, bool cast, uint expectedNRows, int expectedStart)
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor nullAttrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64),
+        true, sizeof(int64_t));
+    TupleAttributeDescriptor notnullAttrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+
+    // Input consists of 6 not nullable columns
+    // - the first 4 columns will consist of sequential values, the 0th
+    //   column starting at 0, the first at 1, 2nd at 2, 3rd at 3
+    // - the 4th column will consist of sequential values starting at 0, each
+    //   value repeating 25 times
+    // - the 5th column will also consist of sequential values starting at 0,
+    //   each value repeating 10 times
+    MockProducerExecStreamParams mockParams;
+    for (int i = 0; i < 6; i++) {
+        mockParams.outputTupleDesc.push_back(notnullAttrDesc);
+    }
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    SharedInt64ColumnGenerator colGen;
+    for (int i = 0; i < 4; i++) {
+        colGen = SharedInt64ColumnGenerator(new SeqColumnGenerator(i));
+        columnGenerators.push_back(colGen);
+    }
+    colGen = SharedInt64ColumnGenerator(new DupColumnGenerator(25, 0));
+    columnGenerators.push_back(colGen);
+    colGen = SharedInt64ColumnGenerator(new DupColumnGenerator(10, 0));
+    columnGenerators.push_back(colGen);
+    mockParams.nRows = 1000;
+    mockParams.pGenerator.reset(
+        new CompositeExecStreamGenerator(columnGenerators));
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(),mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // Setup stream parameters as follows:
+    // 1. If filtering is specified, filter columns 4 and 5 against values 20
+    //    and 50
+    // 2. Project columns 3, 0, and 2; if casting is specified, project them
+    //    into nullable columns; else not nullable
+    ReshapeExecStreamParams rsParams;
+    boost::shared_array<FixedBuffer> pBuffer;
+    if (!filter) {
+        rsParams.compOp = COMP_NOOP;
+    } else {
+        rsParams.compOp = COMP_EQ;
+        pBuffer.reset(new FixedBuffer[16]);
+        int64_t key1 = 20;
+        int64_t key2 = 50;
+        TupleDescriptor compareDesc;
+        compareDesc.push_back(notnullAttrDesc);
+        compareDesc.push_back(notnullAttrDesc);
+        TupleData compareData;
+        compareData.compute(compareDesc);
+        compareData[0].pData = (PConstBuffer) &key1;
+        compareData[1].pData = (PConstBuffer) &key2;
+        TupleAccessor tupleAccessor;
+        tupleAccessor.compute(compareDesc);
+        tupleAccessor.marshal(compareData, pBuffer.get());
+    }
+    rsParams.pCompTupleBuffer = pBuffer;
+
+    TupleProjection tupleProj;
+    tupleProj.push_back(4);
+    tupleProj.push_back(5);
+    rsParams.inputCompareProj = tupleProj;
+
+    tupleProj.clear();
+    tupleProj.push_back(3);
+    tupleProj.push_back(0);
+    tupleProj.push_back(2);
+    rsParams.outputProj = tupleProj;
+
+    for (int i = 0; i < 3; i++) {
+        if (cast) {
+            rsParams.outputTupleDesc.push_back(nullAttrDesc);
+        } else {
+            rsParams.outputTupleDesc.push_back(notnullAttrDesc);
+        }
+    }
+
+    ExecStreamEmbryo rsStreamEmbryo;
+    rsStreamEmbryo.init(new ReshapeExecStream(),rsParams);
+    rsStreamEmbryo.getStream()->setName("ReshapeExecStream");    
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, rsStreamEmbryo);
+
+    columnGenerators.clear();
+    colGen = SharedInt64ColumnGenerator(
+        new SeqColumnGenerator(expectedStart + 3));
+    columnGenerators.push_back(colGen);
+    colGen = SharedInt64ColumnGenerator(
+        new SeqColumnGenerator(expectedStart));
+    columnGenerators.push_back(colGen);
+    colGen = SharedInt64ColumnGenerator(
+        new SeqColumnGenerator(expectedStart + 2));
+    columnGenerators.push_back(colGen);
+
+    CompositeExecStreamGenerator resultGenerator(columnGenerators);
+    verifyOutput(*pOutputStream, expectedNRows, resultGenerator);
+}
 
 // End ExecStreamTest.cpp

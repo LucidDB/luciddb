@@ -233,6 +233,9 @@ public interface SqlWriter
         public static final int FunCall_ordinal = 11;
         public static final int Subquery_ordinal = 12;
         public static final int Setop_ordinal = 13;
+        public static final int Identifier_ordinal = 14;
+
+        private final boolean needsIndent;
 
         /**
          * SELECT query (or UPDATE or DELETE). The items in the list are
@@ -338,11 +341,34 @@ public interface SqlWriter
             new FrameType("From", FromList_ordinal);
 
         /**
+         * Compound identifier.
+         *
+         * <p>Example:
+         * <li>"A"."B"."C"
+         */
+        public static final FrameType Identifier =
+            new FrameType("Identifier", Identifier_ordinal, false);
+        
+        /**
          * Creates a list type.
          */
         private FrameType(String name, int ordinal)
         {
+            this(name, ordinal, true);
+        }
+
+        /**
+         * Creates a list type.
+         */
+        private FrameType(String name, int ordinal, boolean needsIndent)
+        {
             super(name, ordinal, null);
+            this.needsIndent = needsIndent;
+        }
+
+        public boolean needsIndent()
+        {
+            return needsIndent;
         }
 
         public static final EnumeratedValues enumeration =
@@ -361,6 +387,7 @@ public interface SqlWriter
                     GroupByList,
                     Setop,
                     FromList,
+                    Identifier,
                 }
             );
 

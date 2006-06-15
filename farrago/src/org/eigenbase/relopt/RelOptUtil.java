@@ -707,45 +707,260 @@ public abstract class RelOptUtil
         List<Integer> leftKeys,
         List<Integer> rightKeys)
     {
-        return splitJoinCondition(left, right, condition, leftKeys, rightKeys,
-                                  false);
-    }
-
-    public static RexNode splitJoinCondition(
-        RelNode left,
-        RelNode right,
-        RexNode condition,
-        List<Integer> leftKeys,
-        List<Integer> rightKeys,
-        boolean strictTypeMatch)
-    {
-        List<RexNode> restList = new ArrayList<RexNode>();
+        List<RexNode> nonEquiList = new ArrayList<RexNode>();
+        List<Integer> leftKeysToCast = new ArrayList<Integer>();
+        List<Integer> rightKeysToCast = new ArrayList<Integer>();
+        
         splitJoinCondition(
             left.getRowType().getFieldCount(),
             condition,
             leftKeys,
             rightKeys,
-            restList,
-            strictTypeMatch);
-        // Convert the remainders into a list.
-        switch (restList.size()) {
+            leftKeysToCast,
+            rightKeysToCast,
+            nonEquiList,
+            false);
+                
+        List<RexNode> residualList = new ArrayList<RexNode>();
+        residualList.addAll(nonEquiList);
+        
+        // Convert the remainders into a list that are AND'ed together.
+        switch (residualList.size()) {
         case 0:
             return null;
         case 1:
-            return restList.get(0);
+            return residualList.get(0);
         default:
             return left.getCluster().getRexBuilder().makeCall(
                 SqlStdOperatorTable.andOperator,
-                (RexNode[]) restList.toArray(
-                    new RexNode[restList.size()]));
+                (RexNode[]) residualList.toArray(
+                    new RexNode[residualList.size()]));
         }
+    }    
+    
+    public static RexNode splitJoinCondition(
+        RelNode left,
+        RexNode condition,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys,
+        List<Integer> leftKeysToCast,
+        List<Integer> rightKeysToCast)
+    {
+        List<RexNode> nonEquiList = new ArrayList<RexNode>();
+
+        splitJoinCondition(
+            left.getRowType().getFieldCount(),
+            condition,
+            leftKeys,
+            rightKeys,
+            leftKeysToCast,
+            rightKeysToCast,
+            nonEquiList,
+            true);
+        
+        // Convert the remainders into a list that are AND'ed together.
+        switch (nonEquiList.size()) {
+        case 0:
+            return null;
+        case 1:
+            return nonEquiList.get(0);
+        default:
+            return left.getCluster().getRexBuilder().makeCall(
+                SqlStdOperatorTable.andOperator,
+                (RexNode[]) nonEquiList.toArray(
+                    new RexNode[nonEquiList.size()]));
+        }
+    }    
+    
+    public static RexNode splitJoinCondition(
+        RelNode left,
+        RexNode condition,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys,
+        List<Integer> leftKeysToCast,
+        List<Integer> rightKeysToCast,
+        List<RexNode> leftFunctionKeys,
+        List<RexNode> rightFunctionKeys)
+    {
+        List<RexNode> nonEquiList = new ArrayList<RexNode>();
+
+        splitJoinCondition(
+            left,
+            condition,
+            leftKeys,
+            rightKeys,
+            leftKeysToCast,
+            rightKeysToCast,
+            leftFunctionKeys,
+            rightFunctionKeys,
+            nonEquiList,
+            true);
+        
+        // Convert the remainders into a list that are AND'ed together.
+        switch (nonEquiList.size()) {
+        case 0:
+            return null;
+        case 1:
+            return nonEquiList.get(0);
+        default:
+            return left.getCluster().getRexBuilder().makeCall(
+                SqlStdOperatorTable.andOperator,
+                (RexNode[]) nonEquiList.toArray(
+                    new RexNode[nonEquiList.size()]));
+        }
+    }    
+
+    private static int getInputRefIndex(RexNode call)
+    {
+        int inputRefIndex = -1;
+
+        while (call instanceof RexCall &&
+               ((RexCall)call).getOperator() instanceof SqlFunction &&
+               ((RexCall)call).getOperands().length == 1) {
+            call = ((RexCall)call).getOperands()[0];
+        }
+        
+        if (call instanceof RexInputRef) {
+            inputRefIndex = ((RexInputRef)call).getIndex();
+        }
+        return inputRefIndex;
     }
     
+    private static RexNode replaceInputRef(
+        RexBuilder rexBuilder,
+        RexNode call,
+        int newInputRefIndex)
+    {
+        RexNode newCall;
+        
+        List<SqlOperator> opList = new ArrayList<SqlOperator>();
+        List<RelDataType> typeList = new ArrayList<RelDataType>();
+        
+        while (call instanceof RexCall &&
+               ((RexCall)call).getOperator() instanceof SqlFunction &&
+               ((RexCall)call).getOperands().length == 1) {
+            opList.add(((RexCall)call).getOperator());
+            typeList.add(((RexCall)call).getType());
+            call = ((RexCall)call).getOperands()[0];
+        }
+        
+        assert (call instanceof RexInputRef);
+        
+        newCall = rexBuilder.makeInputRef(
+            ((RexInputRef)call).getType(), newInputRefIndex);
+        
+        for (int i = opList.size() - 1; i >= 0 ; i --) {
+            newCall = 
+                rexBuilder.makeCall(typeList.get(i), opList.get(i), newCall);
+        }
+        
+        return newCall;
+    }
+
+    private static void splitJoinCondition(
+        RelNode left,
+        RexNode condition,
+        List<Integer> leftInputKeys,
+        List<Integer> rightInputKeys,
+        List<Integer> leftCastKeys,
+        List<Integer> rightCastKeys,
+        List<RexNode> leftFunctionKeys,
+        List<RexNode> rightFunctionKeys,
+        List<RexNode> nonEquiList,
+        boolean strictTypeMatch)
+    {
+        int leftFieldCount = left.getRowType().getFieldCount();
+        RexBuilder rexBuilder = left.getCluster().getRexBuilder();
+
+            if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator() == SqlStdOperatorTable.andOperator) {
+                for (RexNode operand : call.getOperands()) {
+                    splitJoinCondition(left, operand, leftInputKeys,
+                        rightInputKeys, leftCastKeys, rightCastKeys,
+                        leftFunctionKeys, rightFunctionKeys,
+                        nonEquiList, strictTypeMatch);
+                }
+                return;
+            }
+            
+            if (call.getOperator() == SqlStdOperatorTable.equalsOperator) {
+                final RexNode[] operands = call.getOperands();
+                RexNode op0 = operands[0];
+                RexNode op1 = operands[1];
+                int inputRefIndex0 = getInputRefIndex(op0);
+                int inputRefIndex1 = getInputRefIndex(op1);
+                
+                if (inputRefIndex0 >= 0 &&
+                    inputRefIndex1 >= 0) {                    
+                    RexNode leftKey, rightKey;
+                    int leftIndex, rightIndex;
+                    
+                    if (inputRefIndex0 < leftFieldCount &&
+                        inputRefIndex1 >= leftFieldCount) {
+                        // Arguments were of form 'op0 = op1'
+                        leftKey = op0;
+                        rightKey = op1;
+                        leftIndex = inputRefIndex0;
+                        rightIndex = inputRefIndex1;
+                    } else if (inputRefIndex1 < leftFieldCount &&
+                               inputRefIndex0 >= leftFieldCount) {
+                        // Arguments were of form 'op1 = op0'
+                        leftKey = op1;
+                        rightKey = op0;                        
+                        leftIndex = inputRefIndex1;
+                        rightIndex = inputRefIndex0;
+                    } else {
+                        // Arguments were from the same side,
+                        // so it is not a join condition
+                        nonEquiList.add(condition);                   
+                        return;
+                    }
+                    
+                    if (leftKey instanceof RexInputRef &&
+                        rightKey instanceof RexInputRef) {
+                        if (!strictTypeMatch || leftKey.getType() == rightKey.getType()) {
+                            leftInputKeys.add(leftIndex);
+                            rightInputKeys.add(rightIndex - leftFieldCount);
+                            return;
+                        } else {
+                            leftCastKeys.add(leftIndex);
+                            rightCastKeys.add(rightIndex - leftFieldCount);
+                            return;
+                        }
+                    } else if (leftKey.getType() == rightKey.getType()) {
+                        // one side of the join predicate is a function that
+                        // references the input
+                        // types have to be identical: 
+                        // no implicit casting on function keys
+                        
+                        leftFunctionKeys.add(leftKey);
+                        
+                        // the right key has to reference the input on the right side
+                        rightKey = replaceInputRef(rexBuilder, rightKey, rightIndex - leftFieldCount);
+                        rightFunctionKeys.add(rightKey);
+                        return;
+                    }
+                    // Arguments were not field references, or function keys have different types.
+                    // So we fail. Fall through.                    
+                }
+                // Arguments did not reference single input fields;
+                // So we fail. Fall through.
+            }
+            // The operator is not of RexCall type
+            // So we fail. Fall through.
+        }
+        // Add this condition to the list of non-equi-join conditions.
+        nonEquiList.add(condition);
+    }
+
     private static void splitJoinCondition(
         final int leftFieldCount,
         RexNode condition,
         List<Integer> leftKeys,
         List<Integer> rightKeys,
+        List<Integer> leftKeysToCast,
+        List<Integer> rightKeysToCast,        
         List<RexNode> nonEquiList,
         boolean strictTypeMatch)
     {
@@ -754,7 +969,8 @@ public abstract class RelOptUtil
             if (call.getOperator() == SqlStdOperatorTable.andOperator) {
                 for (RexNode operand : call.getOperands()) {
                     splitJoinCondition(leftFieldCount, operand, leftKeys,
-                        rightKeys, nonEquiList, strictTypeMatch);
+                        rightKeys, leftKeysToCast, rightKeysToCast,
+                        nonEquiList, strictTypeMatch);
                 }
                 return;
             }
@@ -765,21 +981,30 @@ public abstract class RelOptUtil
                     RexInputRef op0 = (RexInputRef) operands[0];
                     RexInputRef op1 = (RexInputRef) operands[1];
                     
-                    if (!strictTypeMatch || (op0.getType() == op1.getType())) {
-                        if (op0.getIndex() < leftFieldCount &&
-                            op1.getIndex() >= leftFieldCount) {
-                            // Arguments were of form 'leftField = rightField'
-                            leftKeys.add(op0.getIndex());
-                            rightKeys.add(op1.getIndex() - leftFieldCount);
-                            return;
-                        }
-                        if (op1.getIndex() < leftFieldCount &&
-                            op0.getIndex() >= leftFieldCount) {
-                            // Arguments were of form 'rightField = leftField'
-                            leftKeys.add(op1.getIndex());
-                            rightKeys.add(op0.getIndex() - leftFieldCount);
-                            return;
-                        }
+                    RexInputRef leftField, rightField;
+                    if (op0.getIndex() < leftFieldCount &&
+                        op1.getIndex() >= leftFieldCount) {
+                        // Arguments were of form 'op0 = op1'
+                        leftField = op0;
+                        rightField = op1;
+                    } else if (op1.getIndex() < leftFieldCount &&
+                               op0.getIndex() >= leftFieldCount) {
+                        // Arguments were of form 'op1 = op0'
+                        leftField = op1;
+                        rightField = op0;                        
+                    } else {
+                        nonEquiList.add(condition);                        
+                        return;
+                    }
+                    
+                    if (!strictTypeMatch || leftField.getType() == rightField.getType()) {
+                        leftKeys.add(leftField.getIndex());
+                        rightKeys.add(rightField.getIndex() - leftFieldCount);
+                        return;
+                    } else {
+                        leftKeysToCast.add(leftField.getIndex());
+                        rightKeysToCast.add(rightField.getIndex() - leftFieldCount);
+                        return;
                     }
                 }
                 // Arguments were not field references, one from each side, so
@@ -789,7 +1014,7 @@ public abstract class RelOptUtil
         // Add this condition to the list of non-equi-join conditions.
         nonEquiList.add(condition);
     }
-    
+
     public static void registerAbstractRels(RelOptPlanner planner)
     {
         AggregateRel.register(planner);
@@ -1240,11 +1465,17 @@ public abstract class RelOptUtil
             // filters can be pushed to the right child if the right child
             // does not generate NULLs and the only columns referenced in
             // the filter originate from the right child
-            } else if (pushRight && RelOptUtil.contains(rightBitmap, filterBitmap)) {
+            } else if (pushRight &&
+                RelOptUtil.contains(rightBitmap, filterBitmap))
+            {
                 filterPushed = true;
                 if (!filter.isAlwaysTrue()) {
                     // adjust the field references in the filter to reflect
-                    // that fields in the right now shift over to the left
+                    // that fields in the right now shift over to the left;
+                    // since we never push filters to a NULL generating
+                    // child, the types of the source should match the dest
+                    // so we don't need to explicitly pass the destination
+                    // fields to RexInputConverter
                     int[] adjustments = new int[nTotalFields];
                     for (int i = 0; i < nFieldsLeft; i++) {
                         adjustments[i] = 0;
@@ -1446,31 +1677,55 @@ public abstract class RelOptUtil
      */
     public static class RexInputConverter extends RexShuttle
     {
-        private final RexBuilder rexBuilder;
-        private final RelDataTypeField[] fields;
+        protected final RexBuilder rexBuilder;
+        private final RelDataTypeField[] srcFields;
+        protected final RelDataTypeField[] destFields;
         private final int[] adjustments;
         
         /**
          * @param rexBuilder builder for creating new RexInputRefs
-         * @param fields fields where the RexInputRefs originally originated
+         * @param srcFields fields where the RexInputRefs originally originated
          * from
+         * @param destFields fields that the new RexInputRefs will be
+         * referencing; if null, the types of the srcFields are the same as
+         * the destFields
          * @param adjustments the amount to adjust each field by
          */
         public RexInputConverter(
-            RexBuilder rexBuilder, RelDataTypeField[] fields, 
+            RexBuilder rexBuilder, RelDataTypeField[] srcFields,
+            RelDataTypeField[] destFields, int[] adjustments)
+        {
+            this.rexBuilder = rexBuilder;
+            this.srcFields = srcFields;
+            this.destFields = destFields;
+            this.adjustments = adjustments;
+        }
+        
+        public RexInputConverter(
+            RexBuilder rexBuilder, RelDataTypeField[] srcFields,
             int[] adjustments)
         {
             this.rexBuilder = rexBuilder;
-            this.fields = fields;
+            this.srcFields = srcFields;
+            this.destFields = null;
             this.adjustments = adjustments;
         }
         
         public RexNode visitInputRef(RexInputRef var)
         {
-            int index = var.getIndex();
-            if (adjustments[index] != 0) {
-                return rexBuilder.makeInputRef(
-                    fields[index].getType(), index + adjustments[index]);
+            int srcIndex = var.getIndex();
+            int destIndex = srcIndex + adjustments[srcIndex];
+          
+            RelDataType type;
+            if (destFields == null) {
+                type = srcFields[srcIndex].getType();
+            } else {
+                type = destFields[destIndex].getType();
+            }
+            if (adjustments[srcIndex] != 0 ||
+                type != srcFields[srcIndex].getType())
+            {
+                return rexBuilder.makeInputRef(type, destIndex);
             } else {
                 return var;
             }

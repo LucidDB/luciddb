@@ -1005,6 +1005,7 @@
       <include pattern="lu.lcs" />
       <include pattern="lu.opt" />
       <include pattern="lu.query" />
+      <include pattern="server" />
       <include pattern="defimpl.deps" />
     </pattern>
 
@@ -1096,6 +1097,7 @@
     <pattern name="lu.lurql.test.deps">
       <include pattern="lu.lurql.deps" />
       <include pattern="lu.lurql.test" />
+      <include pattern="namespace.mdr" />
       <include pattern="test.deps" />
     </pattern>
 
