@@ -90,6 +90,11 @@ public class SqlAsOperator extends SqlBinaryOperator
         RelDataType type = validateOperands(validator, scope, call);
         return type;
     }
+
+    public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
+    {
+        return call.operands[0].isMonotonic(scope);
+    }
 }
 
 // End SqlAsOperator.java
