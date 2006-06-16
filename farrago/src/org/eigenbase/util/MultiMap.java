@@ -241,7 +241,7 @@ public class MultiMap<K,V>
                         throw new UnsupportedOperationException();
                     }
 
-                    public Object setValue(Object value)
+                    public V setValue(V value)
                     {
                         throw new UnsupportedOperationException();
                     }
