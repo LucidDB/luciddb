@@ -8,6 +8,7 @@
             <test-suite-modifier value="company-noidx-test"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/company" target="copy-csv"/>
       </init-hook>
 
       <!-- Create schema (without indexes), load data, then run queries -->
@@ -181,6 +182,13 @@
           <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/subMult.sql"/>
+      </test>
+
+      <test name="logPrec" requiresSuccess="download">
+        <test-metadata>
+          <withIndex value="false"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/logicalPrecedence.sql"/>
       </test>
 
       <cleanup-hook>

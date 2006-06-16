@@ -8,6 +8,7 @@
             <test-suite-modifier value="company-idx-test"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/company" target="copy-csv"/>
       </init-hook>
 
       <!-- Create schema (with indexes), load data, then run queries -->
@@ -241,6 +242,13 @@
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/compIdx.sql"/>
+      </test>
+
+      <test name="logPrec" requiresSuccess="download">
+        <test-metadata>
+          <withIndex value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/logicalPrecedence.sql"/>
       </test>
 
       <cleanup-hook>

@@ -28,6 +28,7 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -976,10 +977,9 @@ public class ReduceDecimalsRule extends RelOptRule
         {
             assert SqlTypeUtil.isExactNumeric(typeA);
             assert SqlTypeUtil.isExactNumeric(typeB);
-            // TODO: throw a validator message
-            if (scaleA != 0 && scaleB != 0) {
-                throw Util.needToImplement(
-                    "Arguments to mod must have a scale of 0");
+            if (scaleA != 0 || scaleB != 0) {
+                throw EigenbaseResource.instance()
+                .ArgumentMustHaveScaleZero.ex(call.getOperator().getName());
             }
             RexNode result = builder.makeCall(
                 call.getOperator(),

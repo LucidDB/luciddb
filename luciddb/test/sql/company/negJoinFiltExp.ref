@@ -12,12 +12,13 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
+'    LhxJoinRel'
 '      LcsRowScanRel'
-'      LcsRowScanRel'
-'        LcsIndexMergeRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'          LcsIndexMergeRel'
+'            LcsIndexSearchRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this isn't worth it since the rows from emp are limited
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -27,13 +28,14 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
+'    LhxJoinRel'
 '      LcsRowScanRel'
 '        LcsIndexSearchRel'
 '          FennelValuesRel'
-'      LcsRowScanRel'
-'        LcsIndexSearchRel'
-'          FennelValuesRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'          LcsIndexSearchRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it because the filter condition's on the big table
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -41,8 +43,9 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
-'      LcsRowScanRel'
+'    LhxJoinRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
 '      FennelCalcRel'
 '        LcsRowScanRel'
 0: jdbc:luciddb:> 
@@ -76,9 +79,10 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
+'    LhxJoinRel'
 '      LcsRowScanRel'
-'      LcsRowScanRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this shouldn't do it since emp does not have an index on column hobby
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
@@ -99,11 +103,13 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
-'      LcsRowScanRel'
-'      LcsRowScanRel'
-'        LcsIndexSearchRel'
-'          FennelValuesRel'
+'    LhxJoinRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'          LcsIndexSearchRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- can't handle non-simple equi join case
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept

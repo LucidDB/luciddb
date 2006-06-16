@@ -21,9 +21,11 @@
 package com.lucidera.luciddb.test;
 
 import java.io.*;
+import junit.extensions.*;
 import junit.framework.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.test.FarragoTestCase;
+import net.sf.farrago.test.*;
+import net.sf.farrago.cwm.relational.*;
 
 
 /**
@@ -75,6 +77,43 @@ public class LucidDbSqlTest extends FarragoTestCase
         return wrappedSuite(suite);
     }
     
+    // override FarragoTestCase
+    public static Test wrappedSuite(TestSuite suite)
+    {
+        TestSetup wrapper =
+            new TestSetup(suite) {
+                protected void setUp()
+                    throws Exception
+                {
+                    staticSetUp();
+                }
+
+                protected void tearDown()
+                    throws Exception
+                {
+                    staticTearDown();
+                }
+            };
+        return wrapper;
+    }
+    
+    // override FarragoTestCase
+    public static void staticSetUp()
+        throws Exception
+    {
+        CleanupFactory.setFactory(
+            new LucidDbCleanupFactory());
+        FarragoTestCase.staticSetUp();
+    }
+    
+    // override FarragoTestCase
+    public static void staticTearDown()
+        throws Exception
+    {
+        FarragoTestCase.staticTearDown();
+        CleanupFactory.resetFactory();
+    }
+
     protected void runTest()
         throws Exception
     {
@@ -88,4 +127,37 @@ public class LucidDbSqlTest extends FarragoTestCase
         public FarragoTestCase createSqlTest(String testName)
             throws Exception;
     }
+    
+    /**
+     * Custom implementation of CleanupFactory.
+     */
+    private static class LucidDbCleanupFactory extends CleanupFactory
+    {
+        // override CleanupFactory
+        public Cleanup newCleanup(String name) throws Exception
+        {
+            return new LucidDbCleanup(name);
+        }
+    }
+    
+    /**
+     * Custom implementation of Cleanup.
+     */
+    public static class LucidDbCleanup extends Cleanup
+    {
+        public LucidDbCleanup(String name)
+            throws Exception
+        {
+            super(name);
+        }
+
+        // override Cleanup
+        protected boolean isBlessedSchema(CwmSchema schema)
+        {
+            String name = schema.getName();
+            return name.equals("APPLIB")
+                || super.isBlessedSchema(schema);
+        }
+    }
+
 }

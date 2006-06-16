@@ -110,6 +110,18 @@ public abstract class SqlTypeStrategies
             SqlTypeFamily.Numeric
         });
 
+public static final SqlSingleOperandTypeChecker
+    otcExactNumeric =
+    new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+        SqlTypeFamily.ExactNumeric });
+
+public static final SqlSingleOperandTypeChecker
+    otcExactNumericX2 =
+    new FamilyOperandTypeChecker(new SqlTypeFamily [] {
+        SqlTypeFamily.ExactNumeric,
+        SqlTypeFamily.ExactNumeric
+    });
+
     public static final SqlSingleOperandTypeChecker
         otcBinary =
         new FamilyOperandTypeChecker(new SqlTypeFamily [] {

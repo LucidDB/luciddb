@@ -24,8 +24,7 @@ package org.eigenbase.runtime;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -254,7 +253,7 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         public int getColumnDisplaySize(int column)
             throws SQLException
         {
-            return 0;
+            return getPrecision(column);
         }
 
         public String getColumnLabel(int column)
@@ -272,13 +271,13 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         public int getColumnType(int column)
             throws SQLException
         {
-            return 0;
+            return Types.VARCHAR;
         }
 
         public String getColumnTypeName(int column)
             throws SQLException
         {
-            return null;
+            return "VARCHAR";
         }
 
         public boolean isCurrency(int column)
@@ -302,7 +301,10 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         public int getPrecision(int column)
             throws SQLException
         {
-            return 0;
+            // NOTE jvs 13-June-2006:  I put this in so that EXPLAIN PLAN
+            // would work via VJDBC; but should probably do something
+            // better down at the Farrago level instead.
+            return 65535;
         }
 
         public boolean isReadOnly(int column)
