@@ -410,7 +410,10 @@ public class FarragoJdbcEngineConnection
     public void setReadOnly(boolean readOnly)
         throws SQLException
     {
-        throw new UnsupportedOperationException();
+        // TODO jvs 16-June-2006: Enforce read-only.  For now we just ignore
+        // it, since the JDBC javadoc says this is just a hint, and
+        // some clients (such as Mondrian) choke if we throw an
+        // exception.
     }
 
     public boolean isReadOnly()
