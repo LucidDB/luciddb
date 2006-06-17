@@ -92,8 +92,10 @@ public class SqlTrimFunction extends SqlFunction
 
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
+        assert functionQualifier == null;
         assert (3 == operands.length);
         if (null == operands[0]) {
             operands[0] = SqlLiteral.createSymbol(Flag.Both, pos);
@@ -102,7 +104,7 @@ public class SqlTrimFunction extends SqlFunction
         if (null == operands[1]) {
             operands[1] = SqlLiteral.createCharString(" ", pos);
         }
-        return super.createCall(operands, pos);
+        return super.createCall(operands, pos, functionQualifier);
     }
 
     public boolean checkOperandTypes(

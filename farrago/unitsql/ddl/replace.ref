@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#3 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#4 $
 0: jdbc:farrago:> -- Test create or replace DDL 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema createorreplace;
@@ -48,7 +48,7 @@ Error: Cannot replace table "FOO" because it does not support replacement (state
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail, cannot replace object if dependencies are invalidated
 0: jdbc:farrago:> create or replace view fooview as select * from foo;
-Error: From line 1, column 7 to line 1, column 15: Unknown field 'BAR2' (state=,code=0)
+Error: From line 1, column 17 to line 1, column 22: Column 'BAR2' not found in table 'FOOVIEW' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure fooview2 didn't get nuked from above
 0: jdbc:farrago:> select * from fooview2;

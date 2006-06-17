@@ -30,7 +30,6 @@ import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.resource.EigenbaseResource;
 
-
 /**
  * A <code>SqlFunction</code> is a type of operator which has conventional
  * function-call syntax.
@@ -75,7 +74,7 @@ public class SqlFunction extends SqlOperator
     {
         super(name, kind, 100, 100, returnTypeInference, operandTypeInference,
             operandTypeChecker);
-        
+
         assert !(funcType == SqlFunctionCategory.UserDefinedConstructor &&
             returnTypeInference == null);
 
@@ -185,7 +184,7 @@ public class SqlFunction extends SqlOperator
      * Returns whether this function allows a <code>DISTINCT</code> or
      * <code>ALL</code> quantifier. The default is <code>false</code>; some
      * aggregate functions return <code>true</code>.
-     */ 
+     */
     public boolean isQuantifierAllowed()
     {
         return false;
@@ -228,35 +227,29 @@ public class SqlFunction extends SqlOperator
         final SqlNode[] operands = call.operands;
         RelDataType[] argTypes = new RelDataType[operands.length];
 
+        // Scope for operands. Usually the same as 'scope'.
+        final SqlValidatorScope operandScope = scope.getOperandScope(call);
+
         for (int i = 0; i < operands.length; ++i) {
-            RelDataType nodeType = validator.deriveType(scope, operands[i]);
+            RelDataType nodeType =
+                validator.deriveType(operandScope, operands[i]);
             validator.setValidatedNodeType(operands[i], nodeType);
             argTypes[i] = nodeType;
         }
 
-        SqlFunction function;
-        if (operands.length == 0 &&
-            getSyntax() == SqlSyntax.FunctionId) {
-            // For example, "LOCALTIME()" is illegal. (It should be
-            // "LOCALTIME", which would have been handled as a
-            // SqlIdentifier.)
-            function = null;
-        } else {
-            function = SqlUtil.lookupRoutine(
+        SqlFunction function =
+            SqlUtil.lookupRoutine(
                 validator.getOperatorTable(),
                 getNameAsId(),
                 argTypes,
                 getFunctionType());
-            if (getFunctionType() ==
-                SqlFunctionCategory.UserDefinedConstructor)
-            {
-                return validator.deriveConstructorType(
-                    scope,
-                    call,
-                    this,
-                    function,
-                    argTypes);
-            }
+        if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
+            return validator.deriveConstructorType(
+                scope,
+                call,
+                this,
+                function,
+                argTypes);
         }
         if (function == null) {
             validator.handleUnresolvedFunction(
@@ -271,7 +264,7 @@ public class SqlFunction extends SqlOperator
         // choke on the unresolved function.
         call.setOperator(function);
         return function.validateOperands(
-            validator, scope, call);
+            validator, operandScope, call);
     }
 }
 

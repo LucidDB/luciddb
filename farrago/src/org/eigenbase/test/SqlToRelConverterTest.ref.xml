@@ -908,4 +908,211 @@ ProjectRel(NAME=[$0])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testOrder">
+        <Resource name="sql">
+            <![CDATA[select empno from emp order by empno]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$0], dir0=[Ascending])
+  ProjectRel(EMPNO=[$0])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByAlias">
+        <Resource name="sql">
+            <![CDATA[select empno + 1 as x, empno - 2 as y from emp order by y]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$1], dir0=[Ascending])
+  ProjectRel(X=[+($0, 1)], Y=[-($0, 2)])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByOrdinalDesc">
+        <Resource name="sql">
+            <![CDATA[select empno + 1, deptno, empno from emp order by 2.5 desc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$1], dir0=[Descending])
+  ProjectRel(EXPR$0=[+($0, 1)], DEPTNO=[$7], EMPNO=[$0])
+    TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByIdenticalExpr">
+        <Resource name="sql">
+            <![CDATA[select empno + 1 from emp order by deptno asc, empno + 1 desc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
+  SortRel(sort0=[$1], sort1=[$0], dir0=[Ascending], dir1=[Descending])
+    ProjectRel(EXPR$0=[+($0, 1)], DEPTNO=[$7])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByNegativeOrdinal">
+        <Resource name="sql">
+            <![CDATA[select empno + 1, deptno, empno from emp order by -1 desc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], DEPTNO=[$1], EMPNO=[$2])
+  SortRel(sort0=[$3], dir0=[Descending])
+    ProjectRel(EXPR$0=[+($0, 1)], DEPTNO=[$7], EMPNO=[$0], EXPR$3=[-1])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByOrdinalInExpr">
+        <Resource name="sql">
+            <![CDATA[select empno + 1, deptno, empno from emp order by 1 + 2 desc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0], DEPTNO=[$1], EMPNO=[$2])
+  SortRel(sort0=[$3], dir0=[Descending])
+    ProjectRel(EXPR$0=[+($0, 1)], DEPTNO=[$7], EMPNO=[$0], EXPR$3=[+(1, 2)])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByAliasDoesNotObscure">
+        <Resource name="sql">
+            <![CDATA[select empno + 1 as empno, empno - 2 as y from emp order by empno + 3]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], Y=[$1])
+  SortRel(sort0=[$2], dir0=[Ascending])
+    ProjectRel(EMPNO=[+($0, 1)], Y=[-($0, 2)], EXPR$2=[+($0, 3)])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByAliasInExpr">
+        <Resource name="sql">
+            <![CDATA[select empno + 1 as x, empno - 2 as y from emp order by y + 3]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(X=[$0], Y=[$1])
+  SortRel(sort0=[$2], dir0=[Ascending])
+    ProjectRel(X=[+($0, 1)], Y=[-($0, 2)], EXPR$2=[+(-($0, 2), 3)])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderByAliasOverrides">
+        <Resource name="sql">
+            <![CDATA[select empno + 1 as empno, empno - 2 as y from emp order by empno + 3]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], Y=[$1])
+  SortRel(sort0=[$2], dir0=[Ascending])
+    ProjectRel(EMPNO=[+($0, 1)], Y=[-($0, 2)], EXPR$2=[+(+($0, 1), 3)])
+      TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderUnion">
+        <Resource name="sql">
+            <![CDATA[select empno, sal from emp union all select deptno, deptno from dept order by sal desc, empno asc]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$1], sort1=[$0], dir0=[Descending], dir1=[Ascending])
+  ProjectRel(EMPNO=[$0], SAL=[$1])
+    UnionRel(all=[true])
+      ProjectRel(EMPNO=[$0], SAL=[$5])
+        TableAccessRel(table=[[SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], DEPTNO0=[$0])
+        TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderUnionExprs">
+        <Resource name="sql">
+            <![CDATA[select empno, sal from emp union all select deptno, deptno from dept order by empno * sal + 2]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], SAL=[$1])
+  SortRel(sort0=[$2], dir0=[Ascending])
+    ProjectRel(EMPNO=[$0], SAL=[$1], EXPR$2=[+(*($0, $1), 2)])
+      UnionRel(all=[true])
+        ProjectRel(EMPNO=[$0], SAL=[$5])
+          TableAccessRel(table=[[SALES, EMP]])
+        ProjectRel(DEPTNO=[$0], DEPTNO0=[$0])
+          TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderGroup">
+        <Resource name="sql">
+            <![CDATA[select deptno, count(*) from emp group by deptno order by deptno * sum(sal) desc, min(empno)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(DEPTNO=[$0], EXPR$1=[$1])
+  SortRel(sort0=[$2], sort1=[$3], dir0=[Descending], dir1=[Ascending])
+    ProjectRel(DEPTNO=[$0], EXPR$1=[$1], EXPR$2=[*($0, $2)], EXPR$3=[$3])
+      AggregateRel(groupCount=[1], agg#0=[COUNT()], agg#1=[SUM(1)], agg#2=[MIN(2)])
+        ProjectRel($f0=[$7], $f1=[$5], $f2=[$0])
+          TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderDistinct">
+        <Resource name="sql">
+            <![CDATA[select distinct empno, deptno + 1 from emp order by deptno + 1 + empno]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], EXPR$1=[$1])
+  SortRel(sort0=[$2], dir0=[Ascending])
+    AggregateRel(groupCount=[3])
+      ProjectRel(EMPNO=[$0], EXPR$1=[+($7, 1)], EXPR$2=[+(+($7, 1), $0)])
+        TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderBySameExpr">
+        <Resource name="sql">
+            <![CDATA[select empno from emp, dept order by sal + empno desc, sal * empno, sal + empno]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0])
+  SortRel(sort0=[$1], sort1=[$2], sort2=[$1], dir0=[Descending], dir1=[Ascending], dir2=[Ascending])
+    ProjectRel(EMPNO=[$0], EXPR$1=[+($5, $0)], EXPR$2=[*($5, $0)])
+      JoinRel(condition=[true], joinType=[inner])
+        TableAccessRel(table=[[SALES, EMP]])
+        TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOrderUnionOrdinal">
+        <Resource name="sql">
+            <![CDATA[select empno, sal from emp union all select deptno, deptno from dept order by 2]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+SortRel(sort0=[$1], dir0=[Ascending])
+  ProjectRel(EMPNO=[$0], SAL=[$1])
+    UnionRel(all=[true])
+      ProjectRel(EMPNO=[$0], SAL=[$5])
+        TableAccessRel(table=[[SALES, EMP]])
+      ProjectRel(DEPTNO=[$0], DEPTNO0=[$0])
+        TableAccessRel(table=[[SALES, DEPT]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

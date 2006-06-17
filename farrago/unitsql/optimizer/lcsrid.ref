@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/lcsrid.sql#2 $
+0: jdbc:farrago:> -- $Id: $
 0: jdbc:farrago:> -- Test internal rid function
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema rid;
@@ -222,7 +222,7 @@ Error: From line 1, column 8 to line 1, column 16: Invalid number of arguments t
 Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (state=,code=0)
 0: jdbc:farrago:> -- non-existent column
 0: jdbc:farrago:> select lcs_rid(c10) from tencols;
-Error: From line 1, column 16 to line 1, column 18: Unknown identifier 'C10' (state=,code=0)
+Error: From line 1, column 16 to line 1, column 18: Column 'C10' not found in any table (state=,code=0)
 0: jdbc:farrago:> -- reference > 1 table
 0: jdbc:farrago:> select lcs_rid(t1.c0 + t2.c1) from tencols t1, tencols t2;
 Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t2) (state=,code=0)

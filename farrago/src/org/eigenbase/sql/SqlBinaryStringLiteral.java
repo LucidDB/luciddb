@@ -49,6 +49,11 @@ public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
         return (BitString) value;
     }
 
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlBinaryStringLiteral((BitString) value, pos);
+    }
+
     public void unparse(
         SqlWriter writer,
         int leftPrec,

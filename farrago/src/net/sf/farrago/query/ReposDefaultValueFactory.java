@@ -43,7 +43,6 @@ import net.sf.farrago.session.FarragoSessionParser;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Iterator;
 
 /**
  * DefaultValueFactory looks up a default
@@ -146,10 +145,9 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
                 true);
             constructorToSqlMap.put(constructor.getFemRoutine(), nodeList);
         }
-        Iterator iter = nodeList.getList().iterator();
         SqlNode rhs = null;
-        while (iter.hasNext()) {
-            SqlCall call = (SqlCall) iter.next();
+        for (SqlNode node : nodeList) {
+            SqlCall call = (SqlCall) node;
             SqlIdentifier lhs = (SqlIdentifier) call.getOperands()[0];
             if (lhs.getSimple().equals(attribute.getName())) {
                 rhs = call.getOperands()[1];

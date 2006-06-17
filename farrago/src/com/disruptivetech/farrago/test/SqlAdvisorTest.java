@@ -23,7 +23,6 @@ package com.disruptivetech.farrago.test;
 
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.validate.SqlValidator;
@@ -32,7 +31,6 @@ import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.validate.SqlMonikerType;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.test.MockCatalogReader;
-import org.eigenbase.util.TestUtil;
 
 import com.disruptivetech.farrago.sql.advise.SqlAdvisor;
 import com.disruptivetech.farrago.sql.advise.SqlAdvisorValidator;
@@ -54,10 +52,15 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 {
     public final Logger logger = Logger.getLogger(getClass().getName());
 
+    public SqlAdvisorTest(String name)
+    {
+        super(name);
+    }
+
     //~ Methods ---------------------------------------------------------------
     public void testFrom() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("SALES");
         expected.add("EMP");
         expected.add("DEPT");
@@ -94,7 +97,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testJoin() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("SALES");
         expected.add("EMP");
         expected.add("DEPT");
@@ -133,7 +136,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testOnCondition() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("EMPNO");
         expected.add("ENAME");
         expected.add("JOB");
@@ -170,7 +173,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testFromWhere() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("EMPNO");
         expected.add("ENAME");
         expected.add("JOB");
@@ -212,7 +215,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testWhereList() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("SALES.EMP");
         expected.add("SALES.DEPT");
         expected.add("EMPNO");
@@ -254,7 +257,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testSelectList() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("SALES.EMP");
         expected.add("SALES.DEPT");
         expected.add("EMPNO");
@@ -308,7 +311,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testOrderByList() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("SALES.EMP");
         expected.add("EMPNO");
 
@@ -322,7 +325,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     public void testSubQuery() throws Exception {
         String sql;
-        ArrayList expected = new ArrayList();
+        List<String> expected = new ArrayList<String>();
         expected.add("X");
         expected.add("Y");
 
@@ -441,7 +444,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
      */
     protected void assertHint(
         String sql,
-        List expectedResults)
+        List<String> expectedResults)
         throws Exception
     {
         SqlValidatorWithHints validator = 
@@ -481,7 +484,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
      */
     protected void assertComplete(
         String sql,
-        List expectedResults)
+        List<String> expectedResults)
         throws Exception
     {
         SqlValidatorWithHints validator = 
@@ -495,7 +498,7 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
 
     protected void assertEquals(
         String [] actualResults,
-        List expectedResults)
+        List<String> expectedResults)
         throws Exception
     {
         HashMap uniqueResults = new HashMap();
@@ -532,14 +535,15 @@ public class SqlAdvisorTest extends SqlValidatorTestCase
         return new AdvisorTestImpl();
     }
 
-    public class AdvisorTestImpl extends TesterImpl {
+    public class AdvisorTestImpl extends TesterImpl
+    {
         // REVIEW this is the same as the base method
         public SqlValidator getValidator() {
             final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
             return new SqlAdvisorValidator(
                 SqlStdOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),
-                typeFactory);
+                typeFactory, getCompatible());
         }
     }
 }

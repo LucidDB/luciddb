@@ -21,6 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
+import static org.eigenbase.sql.validate.SqlValidatorUtil.lookupField;
 import org.eigenbase.sql.*;
 import org.eigenbase.reltype.RelDataType;
 
@@ -43,7 +44,8 @@ import java.util.List;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class OrderByScope extends DelegatingScope {
+public class OrderByScope extends DelegatingScope
+{
     private final SqlNodeList orderList;
     private final SqlSelect select;
 
@@ -57,30 +59,53 @@ class OrderByScope extends DelegatingScope {
         this.select = select;
     }
 
-    protected RelDataType validateInternal() {
-        throw new UnsupportedOperationException();
-    }
-
-    public SqlNode getNode() {
+    public SqlNode getNode()
+    {
         return orderList;
     }
 
-    public void findAllColumnNames(String parentObjName, List result) {
+    public void findAllColumnNames(
+        String parentObjName, List<SqlMoniker> result)
+    {
         final SqlValidatorNamespace ns = validator.getNamespace(select);
         addColumnNames(ns, result);
     }
 
-    public SqlIdentifier fullyQualify(SqlIdentifier identifier) {
-        if (identifier.isSimple()) {
+    public SqlIdentifier fullyQualify(SqlIdentifier identifier)
+    {
+        // If it's a simple identifier, look for an alias.
+        if (identifier.isSimple() &&
+            validator.getCompatible().isSortByAlias())
+        {
             String name = identifier.names[0];
             final SqlValidatorNamespace selectNs = validator.getNamespace(select);
             final RelDataType rowType = selectNs.getRowType();
-            final RelDataType dataType = SqlValidatorUtil.lookupField(rowType, name);
-            if (dataType != null) {
+            if (lookupField(rowType, name) >= 0) {
                 return identifier;
             }
         }
         return super.fullyQualify(identifier);
+    }
+
+    public RelDataType resolveColumn(String name, SqlNode ctx)
+    {
+        final SqlValidatorNamespace selectNs = validator.getNamespace(select);
+        final RelDataType rowType = selectNs.getRowType();
+        final RelDataType dataType =
+            SqlValidatorUtil.lookupFieldType(rowType, name);
+        if (dataType != null) {
+            return dataType;
+        }
+        final SqlValidatorScope selectScope = validator.getSelectScope(select);
+        return selectScope.resolveColumn(name, ctx);
+    }
+
+    public void validateExpr(SqlNode expr)
+    {
+        SqlNode expanded = validator.expandOrderExpr(select, expr);
+
+        // expression needs to be valid in parent scope too
+        parent.validateExpr(expanded);
     }
 }
 

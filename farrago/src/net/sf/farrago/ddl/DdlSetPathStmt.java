@@ -27,6 +27,7 @@ import java.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * DdlSetPathStmt represents a statement (SET PATH) that establishes a default
@@ -37,8 +38,8 @@ import org.eigenbase.sql.*;
  */
 public class DdlSetPathStmt extends DdlSetContextStmt
 {
-    private List schemaList;
-    
+    private List<SqlNode> schemaList;
+
     /**
      * Constructs a new DdlSetPathStmt.
      *
@@ -56,7 +57,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
     {
         visitor.visit(this);
     }
-    
+
     // implement DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
@@ -70,9 +71,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
             }
         }
         if (schemaList != null) {
-            Iterator iter = schemaList.iterator();
-            while (iter.hasNext()) {
-                Object obj = iter.next();
+            for (Object obj : schemaList) {
                 if (!(obj instanceof SqlIdentifier)) {
                     schemaList = null;
                     break;
@@ -84,13 +83,17 @@ public class DdlSetPathStmt extends DdlSetContextStmt
                 }
                 if (id.isSimple()) {
                     // fully qualify schema names
-                    FarragoSessionVariables sessionVariables = 
+                    FarragoSessionVariables sessionVariables =
                         ddlValidator.getStmtValidator().getSessionVariables();
-                    id.names = new String [] 
-                        {
-                            sessionVariables.catalogName,
-                            id.getSimple()
-                        };
+                    String[] names = {
+                        sessionVariables.catalogName,
+                        id.getSimple()
+                    };
+                    SqlParserPos[] poses = {
+                        SqlParserPos.ZERO,
+                        id.getParserPosition()
+                    };
+                    id.setNames(names, poses);
                 }
             }
         }
@@ -100,7 +103,7 @@ public class DdlSetPathStmt extends DdlSetContextStmt
         }
     }
 
-    public List getSchemaList()
+    public List<SqlNode> getSchemaList()
     {
         return schemaList;
     }

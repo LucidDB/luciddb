@@ -6,7 +6,7 @@
         </Resource>
         <Resource name="planBefore">
             <![CDATA[
-SortRel(sort0=[$0])
+SortRel(sort0=[$0], dir0=[Ascending])
   ProjectRel(DEPTNO=[$0], NAME=[$1])
     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])
 ]]>

@@ -44,6 +44,7 @@ import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.util.SqlBasicVisitor;
+import org.eigenbase.sql.util.SqlVisitor;
 
 /**
  * Miscellaneous utility functions.
@@ -73,12 +74,12 @@ public class Util extends Toolbox
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
     //~ Inner Classes ---------------------------------------------------------
+
     /**
      * Exception used to interrupt a tree walk of any kind.
      */
     public static class FoundOne extends RuntimeException {
         private final Object node;
-
 
         public FoundOne(Object node) {
             this.node = node;
@@ -326,7 +327,7 @@ public class Util extends Toolbox
     {
         return (d < Math.E) ? d : (d * Math.log(d));
     }
-    
+
     /**
      * Prints an object using reflection. We can handle <code>null</code>;
      * arrays of objects and primitive values; for regular objects, we print
@@ -690,7 +691,7 @@ public class Util extends Toolbox
     }
 
     /**
-     * @deprecated Use {@link java.util.Arrays#asList(Object[])} instead
+     * @deprecated Use {@link java.util.Arrays#asList} instead
      *
      * Converts the elements of an array into a {@link java.util.List}
      */
@@ -1008,22 +1009,23 @@ public class Util extends Toolbox
     }
 
     /**
-     * Searches recursively for a {@link SqlIdentifier}
+     * Searches recursively for a {@link SqlIdentifier}.
+     *
      * @param node in which to look in
      * @return null if no Identifier was found.
      */
     public static SqlNodeDescriptor findIdentifier(SqlNode node) {
-        SqlBasicVisitor visitor = new SqlBasicVisitor<Void>() {
+        BacktrackVisitor<Void> visitor = new BacktrackVisitor<Void>() {
             public Void visit(SqlIdentifier id)
             {
                 throw new FoundOne(id);
             }
         };
-
         try {
             node.accept(visitor);
-        } catch (FoundOne e){
-            return new SqlNodeDescriptor((SqlNode) e.getNode(),
+        } catch (FoundOne e) {
+            return new SqlNodeDescriptor(
+                (SqlNode) e.getNode(),
                 visitor.getCurrentParent(),
                 visitor.getCurrentOffset());
         }
@@ -1053,10 +1055,7 @@ public class Util extends Toolbox
             if (!contains(names, length, s)) {
                 return s;
             }
-
-            // FIXME jvs 15-Nov-2003:  If we ever get here, it's an infinite
-            // loop; should be ++n?
-            assert(false);
+            ++n;
         }
     }
 
@@ -1182,6 +1181,70 @@ public class Util extends Toolbox
             }
         } catch (SQLException ex) {
             // intentionally suppressed
+        }
+    }
+
+    private static class BacktrackVisitor<R> extends SqlBasicVisitor<R>
+    {
+        /**
+         * Used to keep track of the current SqlNode parent of a visiting node.
+         * A value of null mean no parent.
+         * NOTE: In case of extending SqlBasicVisitor, remember that
+         * parent value might not be set depending on if and how
+         * visit(SqlCall) and visit(SqlNodeList) is implemented.
+         */
+        protected SqlNode currentParent = null;
+
+        /**
+         *  Only valid if currentParrent is a SqlCall or SqlNodeList
+         *  Describes the offset within the parent
+         */
+        protected int currentOffset;
+
+        public SqlNode getCurrentParent()
+        {
+            return currentParent;
+        }
+
+        public Integer getCurrentOffset()
+        {
+            return currentOffset;
+        }
+
+        public R visit(SqlNodeList nodeList)
+        {
+            R result = null;
+            for (int i = 0; i < nodeList.size(); i++) {
+                currentParent = nodeList;
+                currentOffset = i;
+                SqlNode node = nodeList.get(i);
+                result = node.accept(this);
+            }
+            currentParent = null;
+            return result;
+        }
+
+        public R visit(final SqlCall call)
+        {
+            ArgHandler<R> argHandler = new ArgHandler<R>()
+            {
+                public R result()
+                {
+                    return null;
+                }
+
+                public R visitChild(
+                    SqlVisitor<R> visitor,
+                    SqlNode expr, int i, SqlNode operand)
+                {
+                    currentParent = call;
+                    currentOffset = i;
+                    return operand.accept(BacktrackVisitor.this);
+                }
+            };
+            call.getOperator().acceptCall(this, call, false, argHandler);
+            currentParent = null;
+            return argHandler.result();
         }
     }
 }

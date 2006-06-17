@@ -32,7 +32,6 @@ import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.test.SqlOperatorIterator;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.Util;
 import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
@@ -83,7 +82,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     {
         TestSuite suite = new TestSuite();
 
-        HashSet exclude = new HashSet();
+        Set<SqlOperator> exclude = new HashSet<SqlOperator>();
 
         // do not test operators added to exclude list.
         // Functions to be excluded are typically those that return not null if
@@ -157,11 +156,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         // Do not add a function to this exclude list unless you first add a
         // test for it elsewhere.
         // ------------
-        SqlOperatorIterator operatorIt = new SqlOperatorIterator();
-
         // iterating over all operators
-        while (operatorIt.hasNext()) {
-            SqlOperator op = (SqlOperator) operatorIt.next();
+        for (SqlOperator op : SqlStdOperatorTable.instance().getOperatorList())
+        {
             if (exclude.contains(op)) {
                 continue;
             }
@@ -185,15 +182,13 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             return;
         }
 
-        List argCountList =
+        List<Integer> argCountList =
             op.getOperandCountRange().getAllowedList();
         assert (argCountList.size() > 0);
-        Iterator it = argCountList.iterator();
 
         // iterating over possible call signatures
-        while (it.hasNext()) {
-            Integer n = (Integer) it.next();
-            SqlNode [] operands = new SqlNode[n.intValue()];
+        for (int n : argCountList) {
+            SqlNode [] operands = new SqlNode[n];
             SqlOperandTypeChecker allowedTypes =
                 op.getOperandTypeChecker();
             SqlTypeFamily [] families = findRules(allowedTypes);
@@ -203,7 +198,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                     + " and manually add test");
             }
 
-            for (int i = 0; i < n.intValue(); i++) {
+            for (int i = 0; i < n; i++) {
                 SqlTypeName typeName = (SqlTypeName)
                     families[i].getTypeNames().iterator().next();
                 if (typeName.equals(SqlTypeName.Any)) {
@@ -217,7 +212,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
                 SqlDataTypeSpec dt =
                     new SqlDataTypeSpec(
                         new SqlIdentifier(
-                            typeName.getName(), 
+                            typeName.getName(),
                             SqlParserPos.ZERO),
                         precision,
                         0,
@@ -279,7 +274,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         throws Throwable
     {
         resultSet = stmt.executeQuery(sqlToExecute);
-        Set refSet = new HashSet();
+        Set<String> refSet = new HashSet<String>();
         refSet.add(null);
         compareResultSet(refSet);
     }

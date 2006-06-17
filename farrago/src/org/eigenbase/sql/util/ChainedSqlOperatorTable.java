@@ -35,14 +35,14 @@ import java.util.*;
  */
 public class ChainedSqlOperatorTable implements SqlOperatorTable
 {
-    private final List tableList;
+    private final List<SqlOperatorTable> tableList;
 
     /**
      * Creates a new empty table.
      */
     public ChainedSqlOperatorTable()
     {
-        tableList = new ArrayList();
+        tableList = new ArrayList<SqlOperatorTable>();
     }
 
     /**
@@ -57,14 +57,14 @@ public class ChainedSqlOperatorTable implements SqlOperatorTable
     }
 
     // implement SqlOperatorTable
-    public List lookupOperatorOverloads(
+    public List<SqlOperator> lookupOperatorOverloads(
         SqlIdentifier opName,
         SqlFunctionCategory category,
         SqlSyntax syntax)
     {
-        List list = new ArrayList();
+        List<SqlOperator> list = new ArrayList<SqlOperator>();
         for (int i = 0; i < tableList.size(); ++i) {
-            SqlOperatorTable table = (SqlOperatorTable) tableList.get(i);
+            SqlOperatorTable table = tableList.get(i);
             list.addAll(
                 table.lookupOperatorOverloads(opName, category, syntax));
         }
@@ -72,11 +72,10 @@ public class ChainedSqlOperatorTable implements SqlOperatorTable
     }
     
     // implement SqlOperatorTable
-    public List getOperatorList()
+    public List<SqlOperator> getOperatorList()
     {
-        List list = new ArrayList();
-        for (int i = 0; i < tableList.size(); ++i) {
-            SqlOperatorTable table = (SqlOperatorTable) tableList.get(i);
+        List<SqlOperator> list = new ArrayList<SqlOperator>();
+        for (SqlOperatorTable table : tableList) {
             list.addAll(table.getOperatorList());
         }
         return list;

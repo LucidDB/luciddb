@@ -59,8 +59,10 @@ public class SqlJoinOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
+        assert functionQualifier == null;
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
         final SqlLiteral isNatural = (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
         assert (isNatural.getTypeName() == SqlTypeName.Boolean);
@@ -96,6 +98,13 @@ public class SqlJoinOperator extends SqlOperator
         int rightPrec)
     {
         final SqlNode left = operands[SqlJoin.LEFT_OPERAND];
+        // REVIEW jvs 16-June-2006:  I commented out this and
+        // corresponding endList below because it is redundant
+        // with enclosing FROM frame pushed by SqlSelectOperator.
+        /*
+        final SqlWriter.Frame frame0 =
+            writer.startList(SqlWriter.FrameType.FromList, "", "");
+        */
         left.unparse(writer, leftPrec, getLeftPrec());
         String natural = "";
         if (SqlLiteral.booleanValue(operands[SqlJoin.IS_NATURAL_OPERAND])) {
@@ -150,6 +159,9 @@ public class SqlJoinOperator extends SqlOperator
                 throw conditionType.unexpected();
             }
         }
+        /*
+        writer.endList(frame0);
+        */
     }
 
     //~ Inner Classes ---------------------------------------------------------

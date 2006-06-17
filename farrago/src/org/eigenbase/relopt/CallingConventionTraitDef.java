@@ -57,7 +57,7 @@ public class CallingConventionTraitDef extends RelTraitDef
      * Weak-key map of RelOptPlanner to ConversionData.  The idea is that
      * when the planner goes away, so does the map entry.
      */
-    private final WeakHashMap plannerConversionMap = new WeakHashMap();
+    private final WeakHashMap<RelOptPlanner,ConversionData> plannerConversionMap = new WeakHashMap<RelOptPlanner, ConversionData>();
 
 
     private CallingConventionTraitDef()
@@ -85,7 +85,7 @@ public class CallingConventionTraitDef extends RelTraitDef
             ConversionData conversionData = getConversionData(planner);
 
             final Graph conversionGraph = conversionData.conversionGraph;
-            final MultiMap mapArcToConverterRule =
+            final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
             final Graph.Arc arc =
@@ -104,7 +104,7 @@ public class CallingConventionTraitDef extends RelTraitDef
             ConversionData conversionData = getConversionData(planner);
 
             final Graph conversionGraph = conversionData.conversionGraph;
-            final MultiMap mapArcToConverterRule =
+            final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
             final Graph.Arc arc = conversionGraph.deleteArc(
@@ -123,7 +123,7 @@ public class CallingConventionTraitDef extends RelTraitDef
     {
         final ConversionData conversionData = getConversionData(planner);
         final Graph conversionGraph = conversionData.conversionGraph;
-        final MultiMap mapArcToConverterRule =
+        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
             conversionData.mapArcToConverterRule;
 
         final CallingConvention fromConvention = rel.getConvention();
@@ -165,17 +165,17 @@ loop:
     private RelNode changeConvention(
         RelNode rel,
         Graph.Arc arc,
-        final MultiMap mapArcToConverterRule)
+        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule)
     {
         assert (arc.from == rel.getConvention());
 
         // Try to apply each converter rule for this arc's source/target calling
         // conventions.
-        for (Iterator converterRuleIter =
+        for (Iterator<ConverterRule> converterRuleIter =
                 mapArcToConverterRule.getMulti(arc).iterator();
                 converterRuleIter.hasNext();) {
             ConverterRule converterRule =
-                (ConverterRule) converterRuleIter.next();
+                converterRuleIter.next();
             assert (converterRule.getInTraits().getTrait(this) == arc.from);
             assert (converterRule.getOutTraits().getTrait(this) == arc.to);
             RelNode converted = converterRule.convert(rel);
@@ -205,7 +205,7 @@ loop:
     private ConversionData getConversionData(RelOptPlanner planner)
     {
         if (plannerConversionMap.containsKey(planner)) {
-            return (ConversionData)plannerConversionMap.get(planner);
+            return plannerConversionMap.get(planner);
         }
 
         // Create new, empty ConversionData
@@ -224,7 +224,8 @@ loop:
          * conversion rules. Maps {@link Graph.Arc} to a collection of
          * {@link ConverterRule} objects.
          */
-        final MultiMap mapArcToConverterRule = new MultiMap();
+        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
+            new MultiMap<Graph.Arc, ConverterRule>();
     }
 }
 

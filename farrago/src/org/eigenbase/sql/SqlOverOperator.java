@@ -25,9 +25,9 @@ package org.eigenbase.sql;
 import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.reltype.RelDataType;
 
 /**
@@ -84,19 +84,27 @@ public class SqlOverOperator extends SqlBinaryOperator
      *
      * @param visitor Visitor.
      */
-    public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call)
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor, SqlCall call, boolean onlyExpressions,
+        SqlBasicVisitor.ArgHandler<R> argHandler)
     {
-        for (int i = 0; i < call.operands.length; i++) {
-            SqlNode operand = call.operands[i];
-            // if the second parm is an Identifier then it's supposed to
-            // be a name from a window clause and isn't part of the
-            // group by check
-            if ((operand == null) || (i == 1 && operand instanceof SqlIdentifier)){
-                continue;
+        if (onlyExpressions) {
+            for (int i = 0; i < call.operands.length; i++) {
+                SqlNode operand = call.operands[i];
+                // if the second parm is an Identifier then it's supposed to
+                // be a name from a window clause and isn't part of the
+                // group by check
+                if (operand == null) {
+                    continue;
+                }
+                if (i == 1 && operand instanceof SqlIdentifier) {
+                    continue;
+                }
+                argHandler.visitChild(visitor, call, i, operand);
             }
-            visitor.visitChild(call, i, operand);
+        } else {
+            super.acceptCall(visitor, call, onlyExpressions, argHandler);
         }
-        return null;
     }
 }
 

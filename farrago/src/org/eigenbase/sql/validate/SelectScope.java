@@ -26,6 +26,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
 
 import java.util.ArrayList;
 import java.util.ListIterator;
+import java.util.List;
 
 /**
  * The name-resolution scope of a SELECT clause. The objects visible are
@@ -82,7 +83,9 @@ import java.util.ListIterator;
 public class SelectScope extends ListScope
 {
     private final SqlSelect select;
-    protected final ArrayList windowNames = new ArrayList();
+    protected final List<String> windowNames = new ArrayList<String>();
+
+    private List<SqlNode> expandedSelectList = null;
 
     /**
      * List of column names which sort this scope.
@@ -168,9 +171,9 @@ public class SelectScope extends ListScope
     public boolean existingWindowName(String winName)
     {
         String listName;
-        ListIterator entry = windowNames.listIterator();
+        ListIterator<String> entry = windowNames.listIterator();
         while(entry.hasNext()) {
-            listName = (String)entry.next();
+            listName = entry.next();
             if (0 == listName.compareToIgnoreCase(winName)) {
                 return true;
             }
@@ -186,6 +189,16 @@ public class SelectScope extends ListScope
         }
 
         return false;
+    }
+
+    public List<SqlNode> getExpandedSelectList()
+    {
+        return expandedSelectList;
+    }
+
+    public void setExpandedSelectList(List<SqlNode> selectList)
+    {
+        expandedSelectList = selectList;
     }
 }
 

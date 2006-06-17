@@ -32,6 +32,7 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.util.Util;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
@@ -45,7 +46,8 @@ public class SqlCall extends SqlNode
 
     private SqlOperator operator;
     public final SqlNode [] operands;
-    public SqlLiteral functionQuantifier;
+    private final SqlLiteral functionQuantifier;
+    private final boolean expanded;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -54,10 +56,21 @@ public class SqlCall extends SqlNode
         SqlNode [] operands,
         SqlParserPos pos)
     {
+        this(operator, operands, pos, false, null);
+    }
+
+    protected SqlCall(
+        SqlOperator operator,
+        SqlNode [] operands,
+        SqlParserPos pos,
+        boolean expanded,
+        SqlLiteral functionQualifier)
+    {
         super(pos);
         this.operator = operator;
         this.operands = operands;
-        this.functionQuantifier = null;
+        this.expanded = expanded;
+        this.functionQuantifier = functionQualifier;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -70,6 +83,15 @@ public class SqlCall extends SqlNode
     public SqlKind getKind()
     {
         return operator.getKind();
+    }
+
+    /**
+     * Whether this call was created by expanding a parentheses-free call to
+     * what was syntactically an identifier.
+     */
+    public boolean isExpanded()
+    {
+        return expanded;
     }
 
     // REVIEW jvs 10-Sept-2003:  I added this to allow for some rewrite by
@@ -96,11 +118,11 @@ public class SqlCall extends SqlNode
         return operands;
     }
 
-    public Object clone()
+    public SqlNode clone(SqlParserPos pos)
     {
         return operator.createCall(
             SqlNode.cloneArray(operands),
-            getParserPosition());
+            pos);
     }
 
     public void unparse(
@@ -131,20 +153,11 @@ public class SqlCall extends SqlNode
         validator.validateCall(this, scope);
     }
 
-    /**
-     * Find out all the valid alternatives for the operand of this node's
-     * operator that matches the parse position indicated by pos
-     *
-     * @param validator Validator
-     * @param scope Validation scope
-     * @param pos SqlParserPos indicating the cursor position at which
-     * competion hints are requested for
-     * @return a {@link SqlMoniker} array of valid options
-     */
-    public SqlMoniker[] findValidOptions(
+    public void findValidOptions(
         SqlValidator validator,
         SqlValidatorScope scope,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        List<SqlMoniker> hintList)
     {
         final SqlNode[] operands = getOperands();
         for (int i = 0; i < operands.length; i++) {
@@ -152,11 +165,12 @@ public class SqlCall extends SqlNode
                 SqlIdentifier id = (SqlIdentifier) operands[i];
                 String posstring = id.getParserPosition().toString();
                 if (posstring.equals(pos.toString())) {
-                    return id.findValidOptions(validator, scope);
+                    id.findValidOptions(validator, scope, hintList);
+                    return;
                 }
             }
         }
-        return Util.emptySqlMonikerArray;
+        // no valid options
     }
 
     public <R> R accept(SqlVisitor<R> visitor)
@@ -197,8 +211,7 @@ public class SqlCall extends SqlNode
         SqlValidator validator,
         SqlValidatorScope scope)
     {
-
-        ArrayList signatureList = new ArrayList();
+        List<String> signatureList = new ArrayList<String>();
         for (int i = 0; i < operands.length; i++) {
             final SqlNode operand = operands[i];
             final RelDataType argType = validator.deriveType(scope, operand);
@@ -208,7 +221,6 @@ public class SqlCall extends SqlNode
             signatureList.add(argType.toString());
         }
         return SqlUtil.getOperatorSignature(operator, signatureList);
-
     }
 
     public boolean isMonotonic(SqlValidatorScope scope)
@@ -218,11 +230,13 @@ public class SqlCall extends SqlNode
     }
 
     /**
-     * Test operator name against supplied value
+     * Tests whether operator name matches supplied value.
+     *
      * @param name Test string
-     * @return true if operator name matches parameter
+     * @return whether operator name matches parameter
      */
-    public boolean isName(String name) {
+    public boolean isName(String name)
+    {
         return operator.isName(name);
     }
 
@@ -231,7 +245,8 @@ public class SqlCall extends SqlNode
      *
      * @return boolean true if function call to COUNT(*)
      */
-    public boolean isCountStar() {
+    public boolean isCountStar()
+    {
         if (operator.isName("COUNT") && operands.length == 1) {
             final SqlNode parm = operands[0];
             if (parm instanceof SqlIdentifier) {
@@ -243,11 +258,6 @@ public class SqlCall extends SqlNode
         }
 
         return false;
-    }
-
-    public void setFunctionQuantifier(SqlLiteral quantifier)
-    {
-        functionQuantifier = quantifier;
     }
 
     public SqlLiteral getFunctionQuantifier()

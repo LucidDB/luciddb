@@ -46,12 +46,15 @@ public class FarragoSqlValidator extends SqlValidatorImpl
 {
     //~ Constructors ----------------------------------------------------------
 
-    FarragoSqlValidator(FarragoPreparingStmt preparingStmt)
+    FarragoSqlValidator(
+        FarragoPreparingStmt preparingStmt,
+        Compatible compatible)
     {
         super(
             preparingStmt.getSqlOperatorTable(),
             preparingStmt,
-            preparingStmt.getFarragoTypeFactory());
+            preparingStmt.getFarragoTypeFactory(),
+            compatible);
     }
 
     //~ Methods ---------------------------------------------------------------

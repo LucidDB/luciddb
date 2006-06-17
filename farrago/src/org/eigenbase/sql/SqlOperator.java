@@ -31,6 +31,7 @@ import org.eigenbase.sql.test.SqlTester;
 import org.eigenbase.sql.test.SqlOperatorTests;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.Util;
 
@@ -237,19 +238,38 @@ public abstract class SqlOperator
      *
      * <p>The position of the resulting call is the union of the
      * <code>pos</code> and the positions of all of the operands.
+     *
+     * @param operands array of operands
+     * @param pos parser position of the identifier of the call
+     * @param functionQualifier function qualifier (e.g. "DISTINCT"), may be
+     *      null
      */
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
         pos = pos.plusAll(operands);
-        return new SqlCall(this, operands, pos);
+        return new SqlCall(this, operands, pos, false, functionQualifier);
+    }
+
+    /**
+     * Creates a call to this operand with an array of operands.
+     *
+     * <p>The position of the resulting call is the union of the
+     * <code>pos</code> and the positions of all of the operands.
+     */
+    public final SqlCall createCall(
+        SqlNode [] operands,
+        SqlParserPos pos)
+    {
+        return createCall(operands, pos, null);
     }
 
     /**
      * Creates a call to this operand with no operands.
      */
-    public SqlCall createCall(SqlParserPos pos)
+    public final SqlCall createCall(SqlParserPos pos)
     {
         return createCall(SqlNode.emptyArray, pos);
     }
@@ -257,7 +277,7 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with a single operand.
      */
-    public SqlCall createCall(
+    public final SqlCall createCall(
         SqlNode operand,
         SqlParserPos pos)
     {
@@ -269,7 +289,7 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with two operands.
      */
-    public SqlCall createCall(
+    public final SqlCall createCall(
         SqlNode operand1,
         SqlNode operand2,
         SqlParserPos pos)
@@ -282,7 +302,7 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with three operands.
      */
-    public SqlCall createCall(
+    public final SqlCall createCall(
         SqlNode operand1,
         SqlNode operand2,
         SqlNode operand3,
@@ -424,7 +444,7 @@ public abstract class SqlOperator
         checkOperandCount(validator, operandTypeChecker, call);
 
         SqlCallBinding opBinding =
-            new SqlCallBinding(validator,  scope, call);
+            new SqlCallBinding(validator, scope, call);
 
         checkOperandTypes(
             opBinding,
@@ -638,20 +658,48 @@ public abstract class SqlOperator
     }
 
     /**
-     * Accepts a {@link SqlVisitor}, and tells it to visit each child.
+     * Accepts a {@link SqlVisitor}, visiting each operand of a call.
+     * Returns null.
      *
-     * @param visitor Visitor.
+     * @param visitor Visitor
+     * @param call Call to visit
      */
     public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call)
     {
-        for (int i = 0; i < call.operands.length; i++) {
-            SqlNode operand = call.operands[i];
+        SqlNode[] operands = call.operands;
+        for (int i = 0; i < operands.length; i++) {
+            SqlNode operand = operands[i];
             if (operand == null) {
                 continue;
             }
-            visitor.visitChild(call, i, operand);
+            operand.accept(visitor);
         }
         return null;
+    }
+
+    /**
+     * Accepts a {@link SqlVisitor}, directing an
+     * {@link SqlBasicVisitor.ArgHandler} to visit operand of a call.
+     *
+     * The argument handler allows fine control about how
+     * the operands are visited, and how the results are combined.
+     *
+     * @param visitor Visitor
+     * @param call Call to visit
+     * @param onlyExpressions If true, ignores operands which are not
+     *   expressions. For example, in the call to the <code>AS</code> operator
+     * @param argHandler Called for each operand
+     */
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
+        SqlCall call,
+        boolean onlyExpressions,
+        SqlBasicVisitor.ArgHandler<R> argHandler)
+    {
+        SqlNode[] operands = call.operands;
+        for (int i = 0; i < operands.length; i++) {
+            argHandler.visitChild(visitor, call, i, operands[i]);
+        }
     }
 
     /**

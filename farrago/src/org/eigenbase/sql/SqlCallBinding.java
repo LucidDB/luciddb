@@ -80,13 +80,13 @@ public class SqlCallBinding extends SqlOperatorBinding
         SqlNode node = call.operands[ordinal];
         if (node instanceof SqlLiteral) {
             SqlLiteral sqlLiteral = (SqlLiteral) node;
-            return sqlLiteral.intValue();
+            return sqlLiteral.intValue(true);
         } else if (node instanceof SqlCall) {
             final SqlCall c = (SqlCall) node;
             if (c.isA(SqlKind.MinusPrefix)) {
                 SqlNode child = c.operands[0];
                 if (child instanceof SqlLiteral) {
-                    return -((SqlLiteral) child).intValue();
+                    return -((SqlLiteral) child).intValue(true);
                 }
             }
         }

@@ -35,83 +35,84 @@ import org.eigenbase.sql.*;
  * @version $Id$
  */
 public class SqlBasicVisitor<R> implements SqlVisitor<R>
- {
-     /**
-      * Used to keep track of the current SqlNode parent of a visiting node.
-      * A value of null mean no parent.
-      * NOTE: In case of extending SqlBasicVisitor, remember that
-      * parent value might not be set depending on if and how
-      * visit(SqlCall) and visit(SqlNodeList) is implemented.
-      */
-     protected SqlNode currentParent = null;
-     
-     /**
-      *  Only valid if currentParrent is a SqlCall or SqlNodeList
-      *  Describes the offset within the parent
-      */
-     protected Integer currentOffset = null;
+{
+    public R visit(SqlLiteral literal)
+    {
+        return null;
+    }
 
-     public SqlNode getCurrentParent()
-     {
-         return currentParent;
-     }
+    public R visit(SqlCall call)
+    {
+        return call.getOperator().acceptCall(this, call);
+    }
 
-     public Integer getCurrentOffset()
-     {
-         return currentOffset;
-     }
-     
-     public R visit(SqlLiteral literal)
-     {
-         return null;
-     }
+    public R visit(SqlNodeList nodeList)
+    {
+        R result = null;
+        for (int i = 0; i < nodeList.size(); i++) {
+            SqlNode node = nodeList.get(i);
+            result = node.accept(this);
+        }
+        return result;
+    }
 
-     public R visit(SqlCall call)
-     {
-         return call.getOperator().acceptCall(this, call);
-     }
+    public R visit(SqlIdentifier id)
+    {
+        return null;
+    }
 
-     public R visit(SqlNodeList nodeList)
-     {
-         R result = null;
-         for (int i = 0; i < nodeList.size(); i++) {
-             currentParent = nodeList;
-             currentOffset = new Integer(i);
-             SqlNode node = nodeList.get(i);
-             result = node.accept(this);
-         }
-         currentParent = null;
-         return result;
-     }
+    public R visit(SqlDataTypeSpec type)
+    {
+        return null;
+    }
 
-     public R visit(SqlIdentifier id)
-     {
-         return null;
-     }
+    public R visit(SqlDynamicParam param)
+    {
+        return null;
+    }
 
-     public R visit(SqlDataTypeSpec type)
-     {
-         return null;
-     }
+    public R visit(SqlIntervalQualifier intervalQualifier)
+    {
+        return null;
+    }
 
-     public R visit(SqlDynamicParam param)
-     {
-         return null;
-     }
+    // REVIEW jvs 16-June-2006:  Without javadoc, the interaction between
+    // ArgHandler and SqlBasicVisitor isn't obvious (nor why this interface
+    // belongs here instead of at top-level).  visitChild already returns
+    // R; why is a separate result() call needed?
+    public interface ArgHandler <R>
+    {
+        R result();
+        R visitChild(
+            SqlVisitor<R> visitor,
+            SqlNode expr, int i, SqlNode operand);
+    }
 
-     public R visit(SqlIntervalQualifier intervalQualifier)
-     {
-         return null;
-     }
+    /**
+     * Default implementation of {@link ArgHandler} which merely calls
+     * {@link SqlNode#accept} on each operand.
+     */
+    public static class ArgHandlerImpl<R> implements ArgHandler<R>
+    {
+        // REVIEW jvs 16-June-2006:  This doesn't actually work, because it
+        // is type-erased, and if you try to add <R>, you get the error
+        // "non-static class R cannot be referenced from a static context."
+        public static final ArgHandler instance = new ArgHandlerImpl();
 
-     public R visitChild(SqlNode parent, int ordinal, SqlNode child)
-     {
-         currentParent = parent;
-         currentOffset = new Integer(ordinal);
-         R result = child.accept(this);
-         currentParent = null;
-         return result;
-     }
+        public R result()
+        {
+            return null;
+        }
+
+        public R visitChild(
+            SqlVisitor<R> visitor, SqlNode expr, int i, SqlNode operand)
+        {
+            if (operand == null) {
+                return null;
+            }
+            return operand.accept(visitor);
+        }
+    }
 }
 
 // End SqlBasicVisitor.java

@@ -140,7 +140,7 @@ public class DdlRoutineHandler extends DdlHandler
         SqlIdentifier invocationName = prototype.getSqlIdentifier();
         invocationName.names[invocationName.names.length - 1] =
             routine.getInvocationName();
-        List list = SqlUtil.lookupSubjectRoutines(
+        List<SqlFunction> list = SqlUtil.lookupSubjectRoutines(
             lookup,
             invocationName,
             prototype.getParamTypes(),
@@ -388,8 +388,7 @@ public class DdlRoutineHandler extends DdlHandler
             throw adjustExceptionParserPosition(routine, ex);
         }
 
-        validator.createDependency(
-            routine, analyzedSql.dependencies);
+        validator.createDependency(routine, analyzedSql.dependencies);
 
         routine.getBody().setBody(
             FarragoUserDefinedRoutine.addReturnPrefix(
@@ -430,12 +429,11 @@ public class DdlRoutineHandler extends DdlHandler
                 validator,
                 routine.getBody().getBody(),
                 true);
-        Iterator iter = nodeList.getList().iterator();
         StringBuffer newBody = new StringBuffer();
         newBody.append("BEGIN ");
-        Set dependencies = new HashSet();
-        while (iter.hasNext()) {
-            SqlCall call = (SqlCall) iter.next();
+        Set<CwmModelElement> dependencies = new HashSet<CwmModelElement>();
+        for (SqlNode node : nodeList) {
+            SqlCall call = (SqlCall) node;
             SqlIdentifier lhs = (SqlIdentifier) call.getOperands()[0];
             SqlNode expr = call.getOperands()[1];
             FemSqltypeAttribute attribute = (FemSqltypeAttribute)
@@ -614,9 +612,8 @@ public class DdlRoutineHandler extends DdlHandler
                         repos.getLocalizedObjectName(routine),
                         repos.getLocalizedObjectName(orderingDef.getType())));
             }
-            Iterator iter = routine.getParameter().iterator();
-            while (iter.hasNext()) {
-                FemRoutineParameter param = (FemRoutineParameter) iter.next();
+            for (Object o : routine.getParameter()) {
+                FemRoutineParameter param = (FemRoutineParameter) o;
                 if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                     returnType = param.getType();
                 } else {

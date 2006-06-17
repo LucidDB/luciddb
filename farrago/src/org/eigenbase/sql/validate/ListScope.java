@@ -88,7 +88,8 @@ public abstract class ListScope extends DelegatingScope
         }
     }
 
-    public void findAllColumnNames(String parentObjName, List result)
+    public void findAllColumnNames(
+        String parentObjName, List<SqlMoniker> result)
     {
         if (parentObjName == null) {
             for (SqlValidatorNamespace ns : children) {
@@ -96,14 +97,15 @@ public abstract class ListScope extends DelegatingScope
             }
             parent.findAllColumnNames(parentObjName, result);
         } else {
-            final SqlValidatorNamespace ns = resolve(parentObjName, null, null);
+            final SqlValidatorNamespace ns =
+                resolve(parentObjName, null, null);
             if (ns != null) {
                 addColumnNames(ns, result);
             }
         }
     }
 
-    public void findAllTableNames(List result)
+    public void findAllTableNames(List<SqlMoniker> result)
     {
         for (SqlValidatorNamespace ns : children) {
             addTableNames(ns, result);
@@ -120,7 +122,7 @@ public abstract class ListScope extends DelegatingScope
         for (int i = 0; i < children.size(); i++) {
             SqlValidatorNamespace ns = children.get(i);
             final RelDataType rowType = ns.getRowType();
-            if (SqlValidatorUtil.lookupField(rowType, columnName) != null) {
+            if (SqlValidatorUtil.lookupField(rowType, columnName) >= 0) {
                 tableName = childrenNames.get(i);
                 count++;
             }
@@ -136,7 +138,8 @@ public abstract class ListScope extends DelegatingScope
         }
     }
 
-    public SqlValidatorNamespace resolve(String name,
+    public SqlValidatorNamespace resolve(
+        String name,
         SqlValidatorScope[] ancestorOut,
         int[] offsetOut)
     {
@@ -163,7 +166,7 @@ public abstract class ListScope extends DelegatingScope
         for (SqlValidatorNamespace childNs : children) {
             final RelDataType childRowType = childNs.getRowType();
             final RelDataType type =
-                SqlValidatorUtil.lookupField(childRowType, columnName);
+                SqlValidatorUtil.lookupFieldType(childRowType, columnName);
             if (type != null) {
                 found++;
                 theType = type;

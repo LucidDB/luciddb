@@ -140,13 +140,6 @@ public abstract class Bug
     public static final boolean Frg103Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-115">
-     * issue FRG-115: having clause with between not working</a>
-     * is fixed.
-     */
-    public static final boolean Frg115Fixed = false;
-
-    /**
      * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">
      * issue FRG-140: validator does not accept column qualified by schema name</a>
      * is fixed.

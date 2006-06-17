@@ -27,6 +27,7 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlShuttle;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeUtil;
@@ -66,7 +67,14 @@ public class SqlValidatorUtil
         }
     }
 
-    static RelDataType lookupField(
+    /**
+     * Looks up a field with a given name and if found returns its type.
+     *
+     * @param rowType Row type
+     * @param columnName Field name
+     * @return Field's type, or null if not found
+     */
+    static RelDataType lookupFieldType(
         final RelDataType rowType,
         String columnName)
     {
@@ -78,6 +86,27 @@ public class SqlValidatorUtil
             }
         }
         return null;
+    }
+
+    /**
+     * Looks up a field with a given name and if found returns its ordinal.
+     *
+     * @param rowType Row type
+     * @param columnName Field name
+     * @return Ordinal of field, or -1 if not found
+     */
+    static int lookupField(
+        final RelDataType rowType,
+        String columnName)
+    {
+        final RelDataTypeField [] fields = rowType.getFields();
+        for (int i = 0; i < fields.length; i++) {
+            RelDataTypeField field = fields[i];
+            if (field.getName().equals(columnName)) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static void checkCharsetAndCollateConsistentIfCharType(
@@ -176,9 +205,9 @@ public class SqlValidatorUtil
      *
      * @param name Suggested name, may not be unique
      * @param nameList Collection of names already used
-     * @return
+     * @return Unique name
      */
-    public static String uniquify(String name, Collection nameList)
+    public static String uniquify(String name, Collection<String> nameList)
     {
         if (name == null) {
             name = "EXPR$";
@@ -196,29 +225,60 @@ public class SqlValidatorUtil
         return name;
     }
 
-    static SqlNodeList deepCopy(SqlNodeList list) {
-        SqlNodeList copy = new SqlNodeList(list.getParserPosition());
-        for (int i = 0; i < list.size(); i++) {
-            SqlNode node = list.get(i);
-            copy.add(deepCopy(node));
+    /**
+     * Walks over an expression, copying every node, and fully-qualifying
+     * every identifier.
+     */
+    public static class DeepCopier extends SqlScopedShuttle
+    {
+        DeepCopier(SqlValidatorScope scope)
+        {
+            super(scope);
         }
-        return copy;
-    }
 
-    static SqlNode deepCopy(SqlNode node) {
-        if (node instanceof SqlCall) {
-            return deepCopy((SqlCall) node);
-        } else {
-            return (SqlNode) node.clone();
+        public SqlNode visit(SqlNodeList list)
+        {
+            SqlNodeList copy = new SqlNodeList(list.getParserPosition());
+            for (SqlNode node : list) {
+                copy.add(node.accept(this));
+            }
+            return copy;
         }
-    }
 
-    static SqlCall deepCopy(SqlCall call) {
-        SqlCall copy = (SqlCall) call.clone();
-        for (int i = 0; i < copy.operands.length; i++) {
-            copy.operands[i] = deepCopy(copy.operands[i]);
+        // Override to copy all arguments regardless of whether visitor changes
+        // them.
+        protected SqlNode visitScoped(SqlCall call)
+        {
+            ArgHandler<SqlNode> argHandler =
+                new CallCopyingArgHandler(call, true);
+            call.getOperator().acceptCall(this, call, false, argHandler);
+            return argHandler.result();
         }
-        return copy;
+
+        public SqlNode visit(SqlLiteral literal)
+        {
+            return (SqlNode) literal.clone();
+        }
+
+        public SqlNode visit(SqlIdentifier id)
+        {
+            return getScope().fullyQualify(id);
+        }
+
+        public SqlNode visit(SqlDataTypeSpec type)
+        {
+            return (SqlNode) type.clone();
+        }
+
+        public SqlNode visit(SqlDynamicParam param)
+        {
+            return (SqlNode) param.clone();
+        }
+
+        public SqlNode visit(SqlIntervalQualifier intervalQualifier)
+        {
+            return (SqlNode) intervalQualifier.clone();
+        }
     }
 
     /**
@@ -232,7 +292,8 @@ public class SqlValidatorUtil
         return new SqlValidatorImpl(
             opTab,
             catalogReader,
-            typeFactory);
+            typeFactory,
+            SqlValidator.Compatible.Default);
     }
 
     /**

@@ -738,6 +738,36 @@ public class SqlParserTest extends TestCase
             + "GROUP BY `DEPTNO`, `GENDER`");
     }
 
+    public void testGroupEmpty()
+    {
+        check("select count(*) from emp group by ()",
+            TestUtil.fold(new String[] {
+                "SELECT COUNT(*)",
+                "FROM `EMP`",
+                "GROUP BY ()"}));
+
+        check("select count(*) from emp group by () having 1 = 2 order by 3",
+            TestUtil.fold(new String[] {
+                "SELECT COUNT(*)",
+                "FROM `EMP`",
+                "GROUP BY ()",
+                "HAVING (1 = 2)",
+                "ORDER BY 3"}));
+
+        checkFails("select 1 from emp group by ()^,^ x",
+            "(?s)Encountered \\\",\\\" at .*");
+
+        checkFails("select 1 from emp group by x, (^)^",
+            "(?s)Encountered \"\\)\" at .*");
+
+        // parentheses do not an empty GROUP BY make
+        check("select 1 from emp group by (empno + deptno)",
+            TestUtil.fold(new String[] {
+                "SELECT 1",
+                "FROM `EMP`",
+                "GROUP BY (`EMPNO` + `DEPTNO`)"}));
+    }
+
     public void testHavingAfterGroup()
     {
         check("select deptno from emp group by deptno, emp having count(*) > 5 and 1 = 2 order by 5, 2",
@@ -829,6 +859,21 @@ public class SqlParserTest extends TestCase
                 "UNION",
                 "SELECT *",
                 "FROM `A`)"}));
+    }
+
+    public void testUnionOrder()
+    {
+        check("select a, b from t " +
+            "union all " +
+            "select x, y from u " +
+            "order by 1 asc, 2 desc",
+            TestUtil.fold(new String[] {
+                "(SELECT `A`, `B`",
+                "FROM `T`",
+                "UNION ALL",
+                "SELECT `X`, `Y`",
+                "FROM `U`)",
+                "ORDER BY 1, 2 DESC"}));
     }
 
     public void testUnionOfNonQueryFails()

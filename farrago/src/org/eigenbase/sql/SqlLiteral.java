@@ -141,6 +141,9 @@ import java.nio.charset.Charset;
  *   <td><{@link SqlIntervalLiteral.IntervalValue}.</td>
  * </tr>
  * </table>
+ *
+ * @version $Id$
+ * @author jhyde
  */
 public class SqlLiteral extends SqlNode
 {
@@ -237,6 +240,11 @@ public class SqlLiteral extends SqlNode
         default:
             throw typeName.unexpected();
         }
+    }
+
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlLiteral(value, typeName, pos);
     }
 
     public SqlKind getKind()
@@ -433,39 +441,79 @@ public class SqlLiteral extends SqlNode
         return (value == null) ? 0 : value.hashCode();
     }
 
-    public int intValue()
+    /**
+     * Returns the integer value of this literal.
+     *
+     * @param exact Whether the value has to be exact. If true, and the literal
+     *   is a fraction (e.g. 3.14), throws. If false, discards the fractional
+     *   part of the value.
+     *
+     * @return Integer value of this literal
+     */
+    public int intValue(boolean exact)
     {
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
-            try {
-                return bd.intValueExact();
-            } catch (ArithmeticException e) {
-                throw SqlUtil.newContextException(
-                    getParserPosition(),
-                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                        bd.toString()));
+            if (exact) {
+                try {
+                    return bd.intValueExact();
+                } catch (ArithmeticException e) {
+                    throw SqlUtil.newContextException(
+                        getParserPosition(),
+                        EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                            bd.toString()));
+                }
+            } else {
+                return bd.intValue();
             }
         default:
             throw typeName.unexpected();
         }
     }
 
-    public long longValue()
+    /**
+     * Returns the long value of this literal.
+     *
+     * @param exact Whether the value has to be exact. If true, and the literal
+     *   is a fraction (e.g. 3.14), throws. If false, discards the fractional
+     *   part of the value.
+     *
+     * @return Long value of this literal
+     */
+    public long longValue(boolean exact)
     {
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
         case SqlTypeName.Double_ordinal:
             BigDecimal bd = (BigDecimal) value;
-            try {
-                return bd.longValueExact();
-            } catch (ArithmeticException e) {
-                throw SqlUtil.newContextException(
-                    getParserPosition(),
-                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                        bd.toString()));
+            if (exact) {
+                try {
+                    return bd.longValueExact();
+                } catch (ArithmeticException e) {
+                    throw SqlUtil.newContextException(
+                        getParserPosition(),
+                        EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                            bd.toString()));
+                }
+            } else {
+                return bd.longValue();
             }
+        default:
+            throw typeName.unexpected();
+        }
+    }
+
+    /**
+     * Returns a numeric literal's value as a {@link BigDecimal}.
+     */
+    public BigDecimal bigDecimalValue()
+    {
+        switch (typeName.getOrdinal()) {
+        case SqlTypeName.Decimal_ordinal:
+        case SqlTypeName.Double_ordinal:
+            return (BigDecimal) value;
         default:
             throw typeName.unexpected();
         }

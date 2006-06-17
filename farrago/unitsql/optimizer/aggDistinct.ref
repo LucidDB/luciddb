@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/aggDistinct.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/aggDistinct.sql#1 $
 0: jdbc:farrago:> -- Test distinct aggregate queries
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -47,7 +47,7 @@
 0: jdbc:farrago:> -- expressions of distinct-aggs of expressions
 0: jdbc:farrago:> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 . . . . . . . . >  from emps group by deptno order by 1,2;
-Error: From line 1, column 23 to line 1, column 25: Unknown identifier 'SAL' (state=,code=0)
+Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------
 0: jdbc:farrago:> -- group bys
@@ -267,7 +267,7 @@ Error: From line 1, column 23 to line 1, column 25: Unknown identifier 'SAL' (st
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 . . . . . . . . >  from emps group by deptno;
-Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (state=,code=0)
+Error: From line 1, column 40 to line 1, column 42: Column 'SAL' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans for group bys
 0: jdbc:farrago:> 
@@ -465,7 +465,7 @@ Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (st
 0: jdbc:farrago:> -- expressions of distinct-aggs of expressions
 0: jdbc:farrago:> select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 . . . . . . . . >  from emps group by deptno order by 1,2;
-Error: From line 1, column 23 to line 1, column 25: Unknown identifier 'SAL' (state=,code=0)
+Error: From line 1, column 23 to line 1, column 25: Column 'SAL' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------
 0: jdbc:farrago:> -- group bys
@@ -684,7 +684,7 @@ Error: From line 1, column 23 to line 1, column 25: Unknown identifier 'SAL' (st
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select count(distinct sal + empno) + deptno, sum(distinct sal) + deptno
 . . . . . . . . >  from emps group by deptno;
-Error: From line 1, column 40 to line 1, column 42: Unknown identifier 'SAL' (state=,code=0)
+Error: From line 1, column 40 to line 1, column 42: Column 'SAL' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans for group bys
 0: jdbc:farrago:> 

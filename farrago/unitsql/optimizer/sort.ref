@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/sort.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/sort.sql#3 $
 0: jdbc:farrago:> -- Test queries which execute row-by-row filters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -56,9 +56,13 @@
 '    FennelRenameRel(fieldNames=[[A]])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME(LER-93/LER-92)
 0: jdbc:farrago:> -- order on non select list items
-0: jdbc:farrago:> -- explain plan for select city from emps order by empno;
+0: jdbc:farrago:> explain plan for select city from emps order by empno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..1=[{inputs}], CITY=[$t0])'
+'    FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- correct plan and correct result
 0: jdbc:farrago:> -- using the user provided alias to disambiguate the columns with same names
@@ -88,20 +92,17 @@
 '40','20'
 '40','30'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME(LER-92/LER-93)
-0: jdbc:farrago:> -- plan output appears correct, but the result is incorrect
-0: jdbc:farrago:> -- both deptno in the order by list are mapped to emps.deptno
+0: jdbc:farrago:> -- order by columns with same alias
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.deptno, depts.deptno from emps, depts
 . . . . . . . . > order by emps.deptno, depts.deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelSortRel(key=[[0, 0]], discardDuplicates=[false])'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- select emps.deptno, depts.deptno from emps, depts
-0: jdbc:farrago:> -- order by emps.deptno, depts.deptno;
+0: jdbc:farrago:> -- end sort.sql
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

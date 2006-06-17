@@ -308,6 +308,14 @@ public class SqlPrettyWriterTest extends TestCase
             "values (multiset (select * from t))",
             "${formatted}");
     }
+
+    public void testInnerJoin()
+    {
+        assertPrintsTo(
+            true,
+            "select * from x inner join y on x.k=y.k",
+            "${formatted}");
+    }
 }
 
 // End SqlPrettyWriterTest.java

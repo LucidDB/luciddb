@@ -27,7 +27,6 @@ import openjava.mop.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.hep.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
@@ -244,7 +243,12 @@ public class SqlToRelTestBase extends TestCase
         MockRelOptSchema createRelOptSchema(
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory);
-    };
+
+        /**
+         * Returns the SQL dialect to test.
+         */
+        SqlValidator.Compatible getCompatible();
+    }
 
     /**
      * Default implementation of {@link Tester}, using mock classes
@@ -273,7 +277,8 @@ public class SqlToRelTestBase extends TestCase
             final SqlValidatorCatalogReader catalogReader =
                 createCatalogReader(typeFactory);
             final SqlValidator validator =
-                createValidator(catalogReader, typeFactory);
+                createValidator(
+                    catalogReader, typeFactory);
             final RelOptSchema relOptSchema =
                 createRelOptSchema(catalogReader, typeFactory);
             final RelOptConnection relOptConnection =
@@ -335,6 +340,12 @@ public class SqlToRelTestBase extends TestCase
             return sqlNode;
         }
 
+        public SqlValidator.Compatible getCompatible()
+        {
+            return SqlValidator.Compatible.Default;
+
+        }
+
         public SqlValidator createValidator(
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
@@ -342,7 +353,8 @@ public class SqlToRelTestBase extends TestCase
             return new FarragoTestValidator(
                 getOperatorTable(),
                 new MockCatalogReader(typeFactory),
-                typeFactory);
+                typeFactory,
+                getCompatible());
         }
 
         public final SqlOperatorTable getOperatorTable()
@@ -375,18 +387,27 @@ public class SqlToRelTestBase extends TestCase
 
     private static class FarragoTestValidator extends SqlValidatorImpl
     {
+        private final Compatible compatible;
+
         public FarragoTestValidator(
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
-            RelDataTypeFactory typeFactory)
+            RelDataTypeFactory typeFactory,
+            Compatible compatible)
         {
-            super(opTab, catalogReader, typeFactory);
+            super(opTab, catalogReader, typeFactory, compatible);
+            this.compatible = compatible;
         }
 
         // override SqlValidator
         protected boolean shouldExpandIdentifiers()
         {
             return true;
+        }
+
+        public Compatible getCompatible()
+        {
+            return compatible;
         }
     }
 }

@@ -21,9 +21,7 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
-import org.eigenbase.util.Bug;
+import org.eigenbase.util.*;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.parser.SqlParserPos;
 
@@ -55,6 +53,11 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
     public SqlCollation getCollation()
     {
         return getNlsString().getCollation();
+    }
+
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlCharStringLiteral((NlsString) value, pos);
     }
 
     public void unparse(

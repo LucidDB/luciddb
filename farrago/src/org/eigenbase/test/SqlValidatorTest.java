@@ -24,12 +24,19 @@
 package org.eigenbase.test;
 
 import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import junit.framework.Test;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
+import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Bug;
+import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 
 
 /**
@@ -56,6 +63,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     protected final Logger logger = Logger.getLogger(getClass().getName());
 
     //~ Methods ---------------------------------------------------------------
+
+    public SqlValidatorTest(String name)
+    {
+        super(name);
+    }
 
     public void testMultipleSameAsPass()
     {
@@ -1380,7 +1392,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
         // invalid column reference
         checkWinFuncExpWithWinClause("sum(^invalidColumn^)",
-            "Unknown identifier \'INVALIDCOLUMN\'");
+            "Column 'INVALIDCOLUMN' not found in any table");
 
         // invalid window functions
         checkWinFuncExpWithWinClause("^invalidFun(sal)^",
@@ -1663,7 +1675,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // fail: lateral reference
         checkFails("select * from " + emps + " as e," + NL +
             " (select 1, ^e^.deptno from (values(true))) as d",
-            "Unknown identifier 'E'");
+            "Table 'E' not found");
     }
 
     public void testNestedFrom()
@@ -1720,21 +1732,21 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         // fail: lateral reference
         checkFails("select * from emp as e," + NL +
             " (select 1, ^e^.deptno from (values(true))) as d",
-            "Unknown identifier 'E'");
+            "Table 'E' not found");
     }
 
     public void testExpandStar()
     {
-        // dtbug 282
-        // "select r.* from sales.depts" gives NPE.
-        checkFails("select ^r.*^ from dept",
+        // dtbug 282 -- "select r.* from sales.depts" gives NPE.
+        // dtbug 318 -- error location should be ^r^ not ^r.*^.
+        checkFails("select ^r^.* from dept",
             "Unknown identifier 'R'");
 
         check("select e.* from emp as e");
         check("select emp.* from emp");
 
         // Error message could be better (EMPNO does exist, but it's a column).
-        checkFails("select ^empno .  *^ from emp",
+        checkFails("select ^empno^ .  * from emp",
             "Unknown identifier 'EMPNO'");
     }
 
@@ -1753,10 +1765,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     private final String ERR_IN_VALUES_INCOMPATIBLE =
         "Values in expression list must have compatible types";
-        
+
     private final String ERR_IN_OPERANDS_INCOMPATIBLE =
             "Values passed to IN operator must have compatible types";
-        
+
     public void testInList()
     {
         check("select * from emp where empno in (10,20)");
@@ -1796,13 +1808,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check(
             "select * from emp where (empno,deptno)"
             + " in (select deptno,deptno from dept)");
-        
+
         checkFails(
             "select * from emp where deptno in "
             + "(select deptno,deptno from dept)",
             "Values passed to IN operator must have compatible types");
     }
-    
+
     public void testDoubleNoAlias()
     {
         check("select * from emp join dept on true");
@@ -1987,7 +1999,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select * from emp having ^sum(sal)^",
             "HAVING clause must be a condition");
         checkFails("select ^*^ from emp having sum(sal) > 10",
-            "Expression '\\*' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
         // agg in select and having, no group by
         check("select sum(sal + sal) from emp having sum(sal) > 10");
         checkFails("SELECT deptno FROM emp GROUP BY deptno HAVING ^sal^ > 10",
@@ -1997,45 +2009,64 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     public void testHavingBetween()
     {
         // FRG-115: having clause with between not working
-        if (Bug.Frg115Fixed)
         check("select deptno from emp group by deptno having deptno between 10 and 12");
+
         // this worked even before FRG-115 was fixed
         check("select deptno from emp group by deptno having deptno + 5 > 10");
     }
 
+    /**
+     * Tests a large scalar expression, which will expose any O(n^2) algorithms
+     * lurking in the validation process.
+     */
+    public void testLarge()
+    {
+        // E.g. large = "deptno * 1 + deptno * 2 + deptno * 3".
+        final int x = 1000;
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < x; i++) {
+            if (i > 0) {
+                buf.append(" + ");
+            }
+            buf.append("deptno * ").append(i);
+        }
+        String large = buf.toString();
+        check("select " + large + "from emp");
+        check("select distinct " + large + "from emp");
+        check("select " + large + " from emp " + "group by deptno");
+        check("select * from emp where " + large + " > 5");
+        check("select * from emp order by " + large + " desc");
+        check("select " + large + " from emp order by 1");
+        check("select distinct " + large + " from emp order by " + large);
+    }
+
     public void testOrder()
     {
-        final Compatible compatible = getCompatible();
-        final boolean sortByOrdinal =
-            compatible == Compatible.Oracle10g ||
-            compatible == Compatible.Strict92 ||
-            compatible == Compatible.Pragmatic99;
-        final boolean sortByAlias =
-            compatible == Compatible.Default ||
-            compatible == Compatible.Oracle10g ||
-            compatible == Compatible.Strict92;
-        final boolean sortByAliasObscures =
-            compatible == Compatible.Strict92;
-
+        final SqlValidator.Compatible compatible = getCompatible();
         check("select empno as x from emp order by empno");
+
+        // invalid use of 'asc'
+        checkFails("select empno, sal from emp order by ^asc^",
+            "Column 'ASC' not found in any table");
 
         // In sql92, empno is obscured by the alias.
         // Otherwise valid.
         // Checked Oracle10G -- is it valid.
         checkFails("select empno as x from emp order by empno",
             // in sql92, empno is obscured by the alias
-            sortByAliasObscures ? "unknown column empno" :
+            compatible.isSortByAliasObscures() ? "unknown column empno" :
             // otherwise valid
             null);
-        checkFails("select empno as x from emp order by x",
-            // valid in oracle and pre-99 sql
-            sortByAlias ? null :
-            // invalid in sql:2003
-            "column 'x' not found");
 
-        checkFails("select empno as x from emp order by 10",
+        checkFails("select empno as x from emp order by ^x^",
+            // valid in oracle and pre-99 sql
+            compatible.isSortByAlias() ? null :
+            // invalid in sql:2003
+            "Column 'X' not found in any table");
+
+        checkFails("select empno as x from emp order by ^10^",
             // invalid in oracle and pre-99
-            sortByOrdinal ? "offset out of range" :
+            compatible.isSortByOrdinal() ? "Ordinal out of range" :
             // valid from sql:99 onwards (but sorting by constant achieves
             // nothing!)
             null);
@@ -2048,11 +2079,13 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkFails("select empno as x from emp, dept order by ^deptno^",
             "Column 'DEPTNO' is ambiguous");
 
+        check("select empno + 1 from emp order by deptno asc, empno + 1 desc");
+
         checkFails("select empno as deptno from emp, dept order by deptno",
             // Alias 'deptno' is closer in scope than 'emp.deptno'
             // and 'dept.deptno', and is therefore not ambiguous.
             // Checked Oracle10G -- it is valid.
-            sortByAlias ? null :
+            compatible.isSortByAlias() ? null :
             // Ambiguous in SQL:2003
             "col ambig");
 
@@ -2073,9 +2106,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "select deptno from dept" + NL +
             "union" + NL +
             "select empno from emp" + NL +
-            "order by 10",
+            "order by ^10^",
             // invalid in oracle and pre-99
-            sortByOrdinal ? "offset out of range" :
+            compatible.isSortByOrdinal() ? "Ordinal out of range" :
             null);
 
         // Sort by scalar subquery
@@ -2084,11 +2117,124 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "order by (select name from dept where deptno = emp.deptno)");
         checkFails(
             "select * from emp " + NL +
-            "order by (select name from dept where deptno = emp.foo)",
-            "Column 'FOO' not found in table EMP");
+            "order by (select name from dept where deptno = emp.^foo^)",
+            "Column 'FOO' not found in table 'EMP'");
 
         // Sort by aggregate. Oracle allows this.
         check("select 1 from emp order by sum(sal)");
+
+        // ORDER BY and SELECT *
+        check("select * from emp order by empno");
+        checkFails("select * from emp order by ^nonExistent^, deptno",
+            "Column 'NONEXISTENT' not found in any table");
+
+        // Overriding expression has different type.
+        checkFails("select 'foo' as empno from emp order by ^empno + 5^",
+            "(?s)Cannot apply '\\+' to arguments of type '<CHAR\\(3\\)> \\+ <INTEGER>'\\..*");
+    }
+
+    public void testOrderUnion()
+    {
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by empno");
+
+        checkFails("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by asc",
+            "Column 'ASC' not found in any table");
+
+        // name belongs to emp but is not projected so cannot sort on it
+        checkFails("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by ename desc",
+            "Column 'ENAME' not found in any table");
+
+        // empno is not an alias in the first select in the union
+        checkFails("select deptno, deptno from dept " +
+            "union all " +
+            "select empno, sal from emp " +
+            "order by deptno asc, ^empno^",
+            "Column 'EMPNO' not found in any table");
+
+        // ordinals ok
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by 2");
+
+        // ordinal out of range -- if 'order by <ordinal>' means something in
+        // this dialect
+        if (getCompatible().isSortByOrdinal()) {
+            checkFails("select empno, sal from emp " +
+                "union all " +
+                "select deptno, deptno from dept " +
+                "order by ^3^",
+                "Ordinal out of range");
+        }
+
+        // Expressions made up of aliases are OK.
+        // (This is illegal in Oracle 10G.)
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by empno * sal + 2");
+
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by 'foobar'");
+    }
+
+    /**
+     * Tests validation of the ORDER BY clause when GROUP BY is present.
+     */
+    public void testOrderGroup()
+    {
+        // Group by
+        checkFails("select 1 from emp group by deptno order by ^empno^",
+            "Expression 'EMPNO' is not being grouped");
+
+        // order by can contain aggregate expressions
+        check("select empno from emp " +
+            "group by empno, deptno " +
+            "order by deptno * sum(sal + 2)");
+
+        // Having
+
+        checkFails("select sum(sal) from emp having count(*) > 3 order by ^empno^",
+            "Expression 'EMPNO' is not being grouped");
+
+        check("select sum(sal) from emp having count(*) > 3 order by sum(deptno)");
+
+        // Select distinct
+
+        checkFails("select distinct deptno from emp group by deptno order by ^empno^",
+            "Expression 'EMPNO' is not being grouped");
+
+        check("select distinct deptno from emp group by deptno order by deptno");
+
+        // UNION of SELECT DISTINCT and GROUP BY behaves just like a UNION.
+        check("select distinct deptno from dept " +
+            "union all " +
+            "select empno from emp group by deptno, empno " +
+            "order by deptno");
+
+        // order by can contain a mixture of aliases and aggregate expressions
+        check("select empno as x " +
+            "from emp " +
+            "group by empno, deptno " +
+            "order by x * sum(sal + 2)");
+
+        checkFails("select empno as x " +
+            "from emp " +
+            "group by empno, deptno " +
+            "order by empno * sum(sal + 2)",
+            getCompatible().isSortByAliasObscures() ? "xxxx" :
+            null);
     }
 
     public void testGroup()
@@ -2100,7 +2246,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Expression 'EMPNO' is not being grouped");
 
         checkFails("select ^*^ from emp group by deptno",
-            "Expression '\\*' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
+
+        // If we're grouping on ALL columns, 'select *' is ok.
+        // Checked on Oracle10G.
+        check("select * from (select empno,deptno from emp) group by deptno,empno");
 
         // This query tries to reference an agg expression from within a
         // subquery as a correlating expression, but the SQL syntax rules say
@@ -2148,17 +2298,19 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select case empno when 10 then deptno else null end from emp " +
             "group by case empno when 10 then deptno else null end");
         // matches even when one column is qualified (checked on Oracle10.1)
-        if (todo)
-            check("select case empno when 10 then deptno else null end from emp " +
-                "group by case empno when 10 then emp.deptno else null end");
-        // note that expression appears unchanged in error msg
-        checkFails("select case ^emp^.empno when 10 then deptno else null end from emp " +
-            "group by case emp.empno when 10 then emp.deptno else null end",
-            "Expression 'EMP.EMPNO' is not being grouped");
-        checkFails("select case ^empno^ when 10 then deptno else null end from emp " +
-            "group by case emp.empno when 10 then emp.deptno else null end",
-            "Expression 'EMPNO' is not being grouped");
+        check("select case empno when 10 then deptno else null end from emp " +
+            "group by case empno when 10 then emp.deptno else null end");
+        check("select case empno when 10 then deptno else null end from emp " +
+            "group by case emp.empno when 10 then emp.deptno else null end");
+        check("select case emp.empno when 10 then deptno else null end from emp " +
+            "group by case empno when 10 then emp.deptno else null end");
 
+        // emp.deptno is different to dept.deptno (even though there is an '='
+        // between them)
+        checkFails("select case ^emp.empno^ when 10 then emp.deptno else null end " +
+            "from emp join dept on emp.deptno = dept.deptno " +
+            "group by case emp.empno when 10 then dept.deptno else null end",
+            "Expression 'EMP\\.EMPNO' is not being grouped");
     }
 
     // todo: enable when correlating variables work
@@ -2212,18 +2364,26 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("select case empno when 10 then 'foo bar' else null end from emp " +
             "group by case empno when 10 then 'foo bar' else null end");
 
-        if (Bug.Frg78Fixed)
-        check("select case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end from emp " +
-            "group by case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end");
+        if (Bug.Frg78Fixed) {
+            check("select case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end from emp " +
+                "group by case empno when 10 then _iso-8859-1'foo bar' collate latin1$en$1 else null end");
+        }
 
         checkFails("select case ^empno^ when 10 then _iso-8859-1'foo bar' else null end from emp " +
             "group by case empno when 10 then _iso-8859-2'foo bar' else null end",
             "Expression 'EMPNO' is not being grouped");
 
-        if (Bug.Frg78Fixed)
-        checkFails("select case ^empno^ when 10 then 'foo bar' collate latin1$en$1 else null end from emp " +
-            "group by case empno when 10 then 'foo bar' collate latin1$fr$1 else null end",
-            "Expression 'EMPNO' is not being grouped");
+        if (Bug.Frg78Fixed) {
+            checkFails("select case ^empno^ when 10 then 'foo bar' collate latin1$en$1 else null end from emp " +
+                "group by case empno when 10 then 'foo bar' collate latin1$fr$1 else null end",
+                "Expression 'EMPNO' is not being grouped");
+        }
+    }
+
+    public void testGroupAgg()
+    {
+        // alias in GROUP BY query has been known to cause problems
+        check("select deptno as d, count(*) as c from emp group by deptno");
     }
 
     public void testCorrelatingVariables()
@@ -2308,12 +2468,15 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         check("select * from emp where deptno = ?");
         check("select * from emp where deptno = ? and sal < 100000");
-        if (todoTypeInference)
-        check("select case when deptno = ? then 1 else 2 end from emp");
-        if (todoTypeInference)
-        check("select deptno from emp group by substring(name from ? for ?)");
-        if (todoTypeInference)
-        check("select deptno from emp group by case when deptno = ? then 1 else 2 end");
+        if (todoTypeInference) {
+            check("select case when deptno = ? then 1 else 2 end from emp");
+        }
+        if (todoTypeInference) {
+            check("select deptno from emp group by substring(name from ? for ?)");
+        }
+        if (todoTypeInference) {
+            check("select deptno from emp group by case when deptno = ? then 1 else 2 end");
+        }
         check("select 1 from emp having sum(sal) < ?");
     }
 
@@ -2406,9 +2569,9 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testMinMaxFunctions()
     {
-        checkFails("SELECT MIN(^true^) from emp",
+        checkFails("SELECT ^MIN(true)^ from emp",
             "The MIN function does not support the BOOLEAN data type.");
-        checkFails("SELECT MAX(^false^) from emp",
+        checkFails("SELECT ^MAX(false)^ from emp",
             "The MAX function does not support the BOOLEAN data type.");
 
         check("SELECT MIN(sal+deptno) FROM emp");
@@ -2441,7 +2604,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "Expression 'DEPTNO' is not being grouped");
         check("SELECT DISTINCT * from emp");
         checkFails("SELECT DISTINCT ^*^ from emp GROUP BY deptno",
-            "Expression '\\*' is not being grouped");
+            "Expression 'EMP\\.EMPNO' is not being grouped");
         check("SELECT DISTINCT 5, 10+5, 'string' from emp");
     }
 
@@ -2489,7 +2652,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
         checkFails("SELECT ename,(select losal,^hisal^ from salgrade where grade=1) FROM emp",
             "Only scalar subqueries allowed in select list.");
-
     }
 
     public void testRecordType()
@@ -2503,10 +2665,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
 
         // Qualifying with schema is OK.
-        if (Bug.Frg140Fixed)
-        checkResultType(
-            "SELECT customer.contact.coord.x, customer.contact.email, contact.coord.y FROM customer.contact",
-            "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+        if (Bug.Frg140Fixed) {
+            checkResultType(
+                "SELECT customer.contact.coord.x, customer.contact.email, contact.coord.y FROM customer.contact",
+                "RecordType(INTEGER NOT NULL X, INTEGER NOT NULL Y) NOT NULL");
+        }
     }
 
     public void testNew()

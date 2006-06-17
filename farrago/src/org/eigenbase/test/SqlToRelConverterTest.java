@@ -139,6 +139,137 @@ public class SqlToRelConverterTest extends SqlToRelTestBase
             "${plan}");
     }
 
+    public void testOrder()
+    {
+        check("select empno from emp order by empno",
+            "${plan}");
+
+    }
+
+    public void testOrderByOrdinalDesc()
+    {
+        // FRG-98
+        if (!tester.getCompatible().isSortByOrdinal()) {
+            return;
+        }
+        check("select empno + 1, deptno, empno from emp order by 2 desc",
+            "${plan}");
+
+        // ordinals rounded down, so 2.5 should have same effect as 2, and
+        // generate identical plan
+        check("select empno + 1, deptno, empno from emp order by 2.5 desc",
+            "${plan}");
+    }
+
+    public void testOrderDistinct()
+    {
+        // The relexp aggregates by 3 expressions - the 2 select expressions
+        // plus the one to sort on. A little inefficient, but acceptable.
+        check("select distinct empno, deptno + 1 from emp order by deptno + 1 + empno",
+            "${plan}");
+    }
+
+    public void testOrderByNegativeOrdinal()
+    {
+        // Regardless of whether sort-by-ordinals is enabled, negative ordinals
+        // are treated like ordinary numbers.
+        check("select empno + 1, deptno, empno from emp order by -1 desc",
+            "${plan}");
+    }
+
+    public void testOrderByOrdinalInExpr()
+    {
+        // Regardless of whether sort-by-ordinals is enabled, ordinals
+        // inside expressions are treated like integers.
+        check("select empno + 1, deptno, empno from emp order by 1 + 2 desc",
+            "${plan}");
+    }
+
+    public void testOrderByIdenticalExpr()
+    {
+        // Expression in ORDER BY clause is identical to expression in SELECT
+        // clause, so plan should not need an extra project.
+        check("select empno + 1 from emp order by deptno asc, empno + 1 desc",
+            "${plan}");
+    }
+
+    public void testOrderByAlias()
+    {
+        check("select empno + 1 as x, empno - 2 as y from emp order by y",
+            "${plan}");
+    }
+
+    public void testOrderByAliasInExpr()
+    {
+        check("select empno + 1 as x, empno - 2 as y from emp order by y + 3",
+            "${plan}");
+    }
+
+    public void testOrderByAliasOverrides()
+    {
+        if (!tester.getCompatible().isSortByAlias()) {
+            return;
+        }
+        // plan should contain '(empno + 1) + 3'
+        check("select empno + 1 as empno, empno - 2 as y from emp order by empno + 3",
+            "${plan}");
+    }
+
+    public void testOrderByAliasDoesNotOverride()
+    {
+        if (tester.getCompatible().isSortByAlias()) {
+            return;
+        }
+        // plan should contain 'empno + 3', not '(empno + 1) + 3'
+        check("select empno + 1 as empno, empno - 2 as y from emp order by empno + 3",
+            "${plan}");
+    }
+
+    public void testOrderBySameExpr()
+    {
+        check("select empno from emp, dept order by sal + empno desc, sal * empno, sal + empno",
+            "${plan}");
+    }
+
+    public void testOrderUnion()
+    {
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by sal desc, empno asc",
+            "${plan}");
+    }
+
+    public void testOrderUnionOrdinal()
+    {
+        if (!tester.getCompatible().isSortByOrdinal()) {
+            return;
+        }
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by 2",
+            "${plan}");
+    }
+
+    public void testOrderUnionExprs()
+    {
+        check("select empno, sal from emp " +
+            "union all " +
+            "select deptno, deptno from dept " +
+            "order by empno * sal + 2",
+            "${plan}");
+    }
+
+    public void testOrderGroup()
+    {
+        check("select deptno, count(*) " +
+            "from emp " +
+            "group by deptno " +
+            "order by deptno * sum(sal) desc, min(empno)",
+            "${plan}");
+    }
+
     public void testExplicitTable()
     {
         check("table emp",

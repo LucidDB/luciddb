@@ -43,7 +43,12 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
     private static final String FEATURE_DISABLED = "feature_disabled";
     
     private ResourceDefinition disabledFeature;
-        
+
+    public SqlValidatorFeatureTest(String name)
+    {
+        super(name);
+    }
+
     /**
      * Returns a tester. Derived classes should override this method to run
      * the same set of tests in a different testing environment.
@@ -61,7 +66,7 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
             return new FeatureValidator(
                 SqlStdOperatorTable.instance(),
                 new MockCatalogReader(typeFactory),
-                typeFactory);
+                typeFactory, getCompatible());
         }
     }
 
@@ -70,9 +75,10 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
         protected FeatureValidator(
             SqlOperatorTable opTab,
             SqlValidatorCatalogReader catalogReader,
-            RelDataTypeFactory typeFactory)
+            RelDataTypeFactory typeFactory,
+            Compatible compatible)
         {
-            super(opTab, catalogReader, typeFactory);
+            super(opTab, catalogReader, typeFactory, compatible);
         }
 
         protected void validateFeature(
@@ -82,7 +88,6 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
             if (feature == disabledFeature) {
                 EigenbaseException ex = new EigenbaseException(
                     FEATURE_DISABLED, null);
-                SqlParserPos pos = null;
                 if (context == null) {
                     throw ex;
                 }

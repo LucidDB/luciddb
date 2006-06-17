@@ -23,7 +23,6 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.type.MultisetSqlType;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.reltype.RelDataType;

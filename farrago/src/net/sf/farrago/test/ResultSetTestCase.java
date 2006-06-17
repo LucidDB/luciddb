@@ -85,10 +85,10 @@ public abstract class ResultSetTestCase extends DiffTestCase
      *
      * @throws Exception .
      */
-    protected void compareResultSet(Set refSet)
+    protected void compareResultSet(Set<String> refSet)
         throws Exception
     {
-        Set actualSet = new HashSet();
+        Set<String> actualSet = new HashSet<String>();
         while (resultSet.next()) {
             String s = resultSet.getString(1);
             actualSet.add(s);
@@ -155,7 +155,7 @@ public abstract class ResultSetTestCase extends DiffTestCase
     protected void compareResultList(List refList)
         throws Exception
     {
-        List actualSet = new ArrayList();
+        List<String> actualSet = new ArrayList<String>();
         while (resultSet.next()) {
             String s = resultSet.getString(1);
             actualSet.add(s);

@@ -22,17 +22,16 @@
 
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.AggregatingScope;
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.reltype.RelDataType;
 import openjava.mop.OJClass;
+import org.eigenbase.rel.Aggregation;
+import org.eigenbase.sql.type.SqlOperandTypeChecker;
+import org.eigenbase.sql.type.SqlOperandTypeInference;
+import org.eigenbase.sql.type.SqlReturnTypeInference;
 
 
 /**
- * Operator which aggregates sets of values into a result.
+ * Abstract base class for the definition of an aggregate function: an operator
+ * which aggregates sets of values into a result.
  *
  * @author jhyde
  * @version $Id$
@@ -61,16 +60,6 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
     public boolean isQuantifierAllowed()
     {
         return true;
-    }
-
-    public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
-    {
-        if (scope instanceof AggregatingScope) {
-            AggregatingScope aggregatingScope = (AggregatingScope) scope;
-            scope = aggregatingScope.getScopeAboveAggregation();
-        }
-        return super.deriveType(validator, scope, call);
     }
 }
 

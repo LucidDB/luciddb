@@ -22,6 +22,7 @@
 package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.SqlCall;
 import org.eigenbase.reltype.RelDataType;
 
 import java.util.Map;
@@ -40,12 +41,14 @@ import java.util.Map;
 class ParameterScope extends EmptyScope
 {
     /**
-     * Map from the simple names of the parameters (string) to types of the
+     * Map from the simple names of the parameters to types of the
      * parameters ({@link RelDataType}).
      */
-    private final Map nameToTypeMap;
+    private final Map<String, RelDataType> nameToTypeMap;
 
-    ParameterScope(SqlValidatorImpl validator, Map nameToTypeMap)
+    ParameterScope(
+        SqlValidatorImpl validator,
+        Map<String, RelDataType> nameToTypeMap)
     {
         super(validator);
         this.nameToTypeMap = nameToTypeMap;
@@ -56,13 +59,17 @@ class ParameterScope extends EmptyScope
         return identifier;
     }
 
+    public SqlValidatorScope getOperandScope(SqlCall call)
+    {
+        return this;
+    }
+
     public SqlValidatorNamespace resolve(
         String name,
         SqlValidatorScope[] ancestorOut,
         int[] offsetOut)
     {
-        final RelDataType type =
-            (RelDataType) nameToTypeMap.get(name);
+        final RelDataType type = nameToTypeMap.get(name);
         return new ParameterNamespace(validator, type);
     }
 }

@@ -100,8 +100,9 @@ public class SqlDataTypeSpec extends SqlNode
     /**
      * Creates a type specification representing a collection type.
      */
-    public SqlDataTypeSpec(final SqlIdentifier collectionsTypeName,
-        final SqlIdentifier typeName,
+    public SqlDataTypeSpec(
+        SqlIdentifier collectionsTypeName,
+        SqlIdentifier typeName,
         int precision,
         int scale,
         String charSetName,
@@ -117,6 +118,16 @@ public class SqlDataTypeSpec extends SqlNode
     }
 
     //~ Methods ---------------------------------------------------------------
+
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return collectionsTypeName == null ?
+            new SqlDataTypeSpec(
+                collectionsTypeName, typeName, precision, scale, charSetName,
+                pos) :
+            new SqlDataTypeSpec(
+                typeName, precision, scale, charSetName, timeZone, pos);
+    }
 
     public SqlIdentifier getCollectionsTypeName()
     {

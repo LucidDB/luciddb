@@ -21,10 +21,8 @@
 */
 package net.sf.farrago.rng;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
@@ -102,7 +100,7 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
     {
         final SqlWriter.Frame frame = writer.startFunCall(getName());
         SqlLiteral ceiling = (SqlLiteral) operands[0];
-        if (ceiling.intValue() == -1) {
+        if (ceiling.intValue(true) == -1) {
             writer.sep("UNBOUNDED");
         } else {
             writer.sep("CEILING");

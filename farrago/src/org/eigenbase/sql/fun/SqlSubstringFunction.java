@@ -67,7 +67,7 @@ public class SqlSubstringFunction extends SqlFunction {
             if (i > 0) {
                 ret.append(NL);
             }
-            ArrayList list = new ArrayList();
+            ArrayList<SqlTypeName> list = new ArrayList<SqlTypeName>();
             list.add(SqlTypeName.stringTypes[i]);
             list.add(SqlTypeName.Integer);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));

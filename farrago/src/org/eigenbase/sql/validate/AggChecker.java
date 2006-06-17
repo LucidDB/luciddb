@@ -21,9 +21,12 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.sql.*;
 import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.SqlBasicVisitor;
+
+import java.util.List;
+import java.util.Stack;
 
 /**
  * Visitor which throws an exception if any component of the expression is
@@ -35,26 +38,27 @@ import org.eigenbase.resource.EigenbaseResource;
  */
 class AggChecker extends SqlBasicVisitor<Void>
 {
-    private final AggregatingScope scope;
-    private final SqlNodeList groupExprs;
+    private final Stack<SqlValidatorScope> scopes =
+        new Stack<SqlValidatorScope>();
+    private final List<SqlNode> groupExprs;
     private SqlValidatorImpl validator;
 
     /**
-     * Creates an AggChecker
+     * Creates an AggChecker.
      */
     AggChecker(
         SqlValidatorImpl validator,
         AggregatingScope scope,
-        SqlNodeList groupExprs)
+        List<SqlNode> groupExprs)
     {
         this.validator = validator;
         this.groupExprs = groupExprs;
-        this.scope = scope;
+        this.scopes.push(scope);
     }
 
-    boolean isGroupExpr(SqlNode expr) {
-        for (int i = 0; i < groupExprs.size(); i++) {
-            SqlNode groupExpr = groupExprs.get(i);
+    boolean isGroupExpr(SqlNode expr)
+    {
+        for (SqlNode groupExpr : groupExprs) {
             if (groupExpr.equalsDeep(expr, false)) {
                 return true;
             }
@@ -62,9 +66,14 @@ class AggChecker extends SqlBasicVisitor<Void>
         return false;
     }
 
-    public Void visit(SqlIdentifier id) {
+    public Void visit(SqlIdentifier id)
+    {
         if (isGroupExpr(id)) {
             return null;
+        }
+        // If it '*' or 'foo.*'?
+        if (id.isStar()) {
+            assert false : "star should have been expanded";
         }
         // Is it a call to a parentheses-free function?
         SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), id);
@@ -75,16 +84,19 @@ class AggChecker extends SqlBasicVisitor<Void>
         // it fully-qualified.
         // TODO: It would be better if we always compared fully-qualified
         // to fully-qualified.
-        final SqlIdentifier fqId = scope.fullyQualify(id);
+        final SqlIdentifier fqId = scopes.peek().fullyQualify(id);
         if (isGroupExpr(fqId)) {
             return null;
         }
-        final String exprString = id.toString();
-        throw scope.getValidator().newValidationError(id,
+        SqlNode originalExpr = validator.getOriginal(id);
+        final String exprString = originalExpr.toString();
+        throw validator.newValidationError(
+            originalExpr,
             EigenbaseResource.instance().NotGroupExpr.ex(exprString));
     }
 
-    public Void visit(SqlCall call) {
+    public Void visit(SqlCall call)
+    {
         if (call.getOperator().isAggregator()) {
             // For example, 'sum(sal)' in 'SELECT sum(sal) FROM emp GROUP
             // BY deptno'
@@ -99,8 +111,18 @@ class AggChecker extends SqlBasicVisitor<Void>
             // references to forbidden columns.
             return null;
         }
-        // Visit the operands.
-        return super.visit(call);
+
+        // Switch to new scope.
+        SqlValidatorScope oldScope = scopes.peek();
+        SqlValidatorScope newScope = oldScope.getOperandScope(call);
+        scopes.push(newScope);
+
+        // Visit the operands (only expressions).
+        call.getOperator().acceptCall(this, call, true, ArgHandlerImpl.instance);
+
+        // Restore scope.
+        scopes.pop();
+        return null;
     }
 }
 

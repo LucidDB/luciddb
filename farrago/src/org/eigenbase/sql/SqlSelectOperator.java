@@ -26,6 +26,8 @@ package org.eigenbase.sql;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.SqlBasicVisitor;
 
 /**
  * An operator describing a query. (Not a query itself.)
@@ -80,8 +82,10 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlCall createCall(
         SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlLiteral functionQualifier)
     {
+        assert functionQualifier == null;
         return new SqlSelect(this, operands, pos);
     }
 
@@ -123,6 +127,20 @@ public class SqlSelectOperator extends SqlOperator
                 having, windowDecls, orderBy
             },
             pos);
+    }
+
+    public <R> void acceptCall(
+        SqlVisitor<R> visitor,
+        SqlCall call,
+        boolean onlyExpressions,
+        SqlBasicVisitor.ArgHandler<R> argHandler)
+    {
+        if (onlyExpressions) {
+            // None of the arguments to the SELECT operator are expressions.
+            return;
+        } else {
+            super.acceptCall(visitor, call, onlyExpressions, argHandler);
+        }
     }
 
     public void unparse(
@@ -170,12 +188,19 @@ public class SqlSelectOperator extends SqlOperator
             writer.sep("WHERE");
             whereClause.unparse(writer, 0, 0);
         }
-        SqlNode groupClause = operands[SqlSelect.GROUP_OPERAND];
+        SqlNodeList groupClause =
+            (SqlNodeList) operands[SqlSelect.GROUP_OPERAND];
         if (groupClause != null) {
             writer.sep("GROUP BY");
             final SqlWriter.Frame groupFrame =
                 writer.startList(SqlWriter.FrameType.GroupByList);
-            unparseListClause(writer, groupClause);
+            if (groupClause.getList().isEmpty()) {
+                final SqlWriter.Frame frame =
+                    writer.startList(SqlWriter.FrameType.Simple, "(", ")");
+                writer.endList(frame);
+            } else {
+                unparseListClause(writer, groupClause);
+            }
             writer.endList(groupFrame);
         }
         SqlNode havingClause = operands[SqlSelect.HAVING_OPERAND];

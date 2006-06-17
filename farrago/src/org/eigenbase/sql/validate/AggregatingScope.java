@@ -27,7 +27,7 @@ import org.eigenbase.sql.SqlNode;
  * An extension to the {@link SqlValidatorScope} interface which indicates that
  * the scope is aggregating.
  *
- * A scope which is aggregating must implements this interface. 
+ * <p>A scope which is aggregating must implement this interface.
  * Such a scope will return the same set of identifiers as
  * its parent scope, but some of those identifiers may not be accessible
  * because they are not in the GROUP BY clause.
@@ -38,12 +38,6 @@ import org.eigenbase.sql.SqlNode;
  */
 public interface AggregatingScope extends SqlValidatorScope 
 {
-    /**
-     * If this scope is aggregating, return the non-aggregating parent
-     * scope. Otherwise throws.
-     */
-    SqlValidatorScope getScopeAboveAggregation();
-
     /**
      * Checks whether an expression is constant within the GROUP BY clause.
      * If the expression completely matches an expression in the GROUP BY
@@ -67,8 +61,7 @@ public interface AggregatingScope extends SqlValidatorScope
      *
      * </ul>
      */
-    boolean checkAggregateExpr(SqlNode expr);
-
+    boolean checkAggregateExpr(SqlNode expr, boolean deep);
 }
 
 // End AggregatingScope.java

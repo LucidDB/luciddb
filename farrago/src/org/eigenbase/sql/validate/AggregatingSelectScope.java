@@ -21,9 +21,7 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.*;
 
 /**
  * Scope for resolving identifers within a SELECT statement which has a
@@ -36,36 +34,92 @@ import org.eigenbase.sql.SqlNode;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class AggregatingSelectScope
-    extends SelectScope
+public class AggregatingSelectScope
+    extends DelegatingScope
     implements AggregatingScope
 {
-    private final AggChecker aggChecker;
+    private final SqlNodeList groupExprs;
+    private final SqlSelect select;
 
     AggregatingSelectScope(
-        SqlValidatorScope parent,
+        SqlValidatorScope selectScope,
         SqlSelect select)
     {
-        super(parent, select);
-        SqlNodeList groupExprs = select.getGroup();
-        if (groupExprs == null) {
-            groupExprs = SqlNodeList.Empty;
+        // The select scope is the parent in the sense that all columns which
+        // are available in the select scope are available. Whether they are
+        // valid as aggregation expressions... now that's a different matter.
+        super(selectScope);
+        this.select = select;
+        if (select.getGroup() == null) {
+            this.groupExprs = SqlNodeList.Empty;
+        } else {
+            // We deep-copy the group-list in case subsequent validation
+            // modifies it and makes it no longer equivalent.
+            this.groupExprs =
+                (SqlNodeList) select.getGroup().accept(
+                    new SqlValidatorUtil.DeepCopier(selectScope));
         }
-        // We deep-copy the group-list in case subsequent validation
-        // modifies it and makes it no longer equivalent.
-        groupExprs = SqlValidatorUtil.deepCopy(groupExprs);
-        aggChecker = new AggChecker(validator, this, groupExprs);
     }
 
-    public SqlValidatorScope getScopeAboveAggregation() {
-        return parent;
+    public SqlNode getNode()
+    {
+        return select;
     }
 
-    public boolean checkAggregateExpr(SqlNode expr) {
+    public SqlValidatorScope getOperandScope(SqlCall call)
+    {
+        if (call.getOperator().isAggregator()) {
+            // If we're the 'SUM' node in 'select a + sum(b + c) from t
+            // group by a', then we should validate our arguments in
+            // the non-aggregating scope, where 'b' and 'c' are valid
+            // column references.
+            return parent;
+        } else if (call instanceof SqlWindow) {
+            return parent;
+        } else {
+            // Check whether expression is constant within the group.
+            //
+            // If not, throws. Example, 'empno' in
+            //    SELECT empno FROM emp GROUP BY deptno
+            //
+            // If it perfectly matches an expression in the GROUP BY
+            // clause, we validate its arguments in the non-aggregating
+            // scope. Example, 'empno + 1' in
+            //
+            //   SELET empno + 1 FROM emp GROUP BY empno + 1
+
+            final boolean matches = checkAggregateExpr(call, false);
+            if (matches) {
+                return parent;
+            }
+        }
+        return super.getOperandScope(call);
+    }
+
+    public boolean checkAggregateExpr(SqlNode expr, boolean deep)
+    {
+        // Fully-qualify any identifiers in expr.
+        if (deep) {
+            expr = validator.expand(expr, this);
+        }
+
         // Make sure expression is valid, throws if not.
-        expr.accept(aggChecker);
+        final AggChecker aggChecker =
+            new AggChecker(validator, this, groupExprs.getList());
+        if (deep) {
+            expr.accept(aggChecker);
+        }
+
+        // Return whether expression exactly matches one of the group
+        // expressions.
         return aggChecker.isGroupExpr(expr);
     }
+
+    public void validateExpr(SqlNode expr)
+    {
+        checkAggregateExpr(expr, true);
+    }
+
 }
 
 // End AggregatingSelectScope.java

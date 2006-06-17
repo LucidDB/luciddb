@@ -56,6 +56,12 @@ public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
         super(t, hasTZ, SqlTypeName.Time, precision, format, pos);
     }
 
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlTimeLiteral(
+            (Calendar) value, precision, hasTimeZone, formatString, pos);
+    }
+
     public String toString()
     {
         return "TIME '" + toFormattedString() + "'";

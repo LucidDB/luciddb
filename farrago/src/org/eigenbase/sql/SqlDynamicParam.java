@@ -56,6 +56,11 @@ public class SqlDynamicParam extends SqlNode
 
     //~ Methods ---------------------------------------------------------------
 
+    public SqlNode clone(SqlParserPos pos)
+    {
+        return new SqlDynamicParam(index, pos);
+    }
+
     public SqlKind getKind()
     {
         return SqlKind.DynamicParam;

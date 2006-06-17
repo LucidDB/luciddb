@@ -55,7 +55,7 @@ public class FarragoObjectCache implements FarragoAllocation
      * Map from cache key to EntryImpl.  To avoid deadlock, synchronization
      * order is always map first, entry second.
      */
-    private MultiMap mapKeyToEntry;
+    private MultiMap<Object,EntryImpl> mapKeyToEntry;
     private long bytesMax;
 
     /**
@@ -78,7 +78,7 @@ public class FarragoObjectCache implements FarragoAllocation
         FarragoAllocationOwner owner,
         long bytesMax)
     {
-        mapKeyToEntry = new MultiMap();
+        mapKeyToEntry = new MultiMap<Object, EntryImpl>();
         owner.addAllocation(this);
         this.bytesMax = bytesMax;
         bytesUsed = 0;
@@ -116,9 +116,8 @@ public class FarragoObjectCache implements FarragoAllocation
         EntryImpl entry = null;
 
         synchronized (mapKeyToEntry) {
-            Iterator iter = mapKeyToEntry.getMulti(key).iterator();
-            while (iter.hasNext()) {
-                entry = (EntryImpl) iter.next();
+            for (EntryImpl entry1 : mapKeyToEntry.getMulti(key)) {
+                entry = entry1;
                 if (exclusive && (entry.pinCount != 0)) {
                     // this one's already in use by someone else
                     entry = null;
@@ -226,7 +225,7 @@ public class FarragoObjectCache implements FarragoAllocation
 
     private void adjustMemoryUsage(long incBytes)
     {
-        List discards;
+        List<EntryImpl> discards;
 
         synchronized (mapKeyToEntry) {
             bytesUsed += incBytes;
@@ -237,7 +236,7 @@ public class FarragoObjectCache implements FarragoAllocation
                 return;
             }
 
-            discards = new ArrayList();
+            discards = new ArrayList<EntryImpl>();
 
             // TODO:  implement a non-braindead victimization policy,
             // preferably pluggable
@@ -255,10 +254,8 @@ public class FarragoObjectCache implements FarragoAllocation
         }
 
         // release map lock since actual discard could be time-consuming
-        Iterator discardIter = discards.iterator();
-        while (discardIter.hasNext()) {
-            EntryImpl entry = (EntryImpl) discardIter.next();
-            discardEntry(entry);
+        for (EntryImpl discard : discards) {
+            discardEntry(discard);
         }
 
         // REVIEW:  in some circumstances, we want to fail if overdraft is
@@ -309,14 +306,12 @@ public class FarragoObjectCache implements FarragoAllocation
      */
     public void discard(Object key)
     {
-        List list;
+        List<EntryImpl> list;
         synchronized (mapKeyToEntry) {
             list = mapKeyToEntry.getMulti(key);
             mapKeyToEntry.remove(key);
         }
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            EntryImpl entry = (EntryImpl) iter.next();
+        for (EntryImpl entry : list) {
             discardEntry(entry);
         }
     }

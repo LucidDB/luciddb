@@ -25,7 +25,8 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.SqlSelect;
 import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.Util;
+
+import java.util.List;
 
 /**
  * Namespace offered by a subquery.
@@ -57,9 +58,9 @@ public class SelectNamespace extends AbstractNamespace
         return rowType;
     }
 
-    public SqlMoniker[] lookupHints(SqlParserPos pos)
+    public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
     {
-        return validator.lookupSelectHints(select, pos);
+        validator.lookupSelectHints(select, pos, hintList);
     }
 }
 
