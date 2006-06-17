@@ -233,7 +233,7 @@ class LcsIndexSearchRel extends FennelSingleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmIndexScanStreamDef indexSearchStream = 
+        FemLbmSearchStreamDef indexSearchStream = 
             indexScanRel.lcsTable.getIndexGuide().newIndexSearch(
                 indexScanRel,
                 indexScanRel.index,

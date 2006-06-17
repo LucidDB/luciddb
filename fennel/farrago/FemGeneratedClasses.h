@@ -141,14 +141,14 @@ typedef JniProxyIter<ProxyLbmChopperStreamDef> SharedProxyLbmChopperStreamDef;
 class ProxyLbmGeneratorStreamDef;
 typedef JniProxyIter<ProxyLbmGeneratorStreamDef> SharedProxyLbmGeneratorStreamDef;
 
-class ProxyLbmIndexScanStreamDef;
-typedef JniProxyIter<ProxyLbmIndexScanStreamDef> SharedProxyLbmIndexScanStreamDef;
-
 class ProxyLbmIntersectStreamDef;
 typedef JniProxyIter<ProxyLbmIntersectStreamDef> SharedProxyLbmIntersectStreamDef;
 
 class ProxyLbmMinusStreamDef;
 typedef JniProxyIter<ProxyLbmMinusStreamDef> SharedProxyLbmMinusStreamDef;
+
+class ProxyLbmSearchStreamDef;
+typedef JniProxyIter<ProxyLbmSearchStreamDef> SharedProxyLbmSearchStreamDef;
 
 class ProxyLbmSplicerStreamDef;
 typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
@@ -273,10 +273,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -743,16 +743,6 @@ bool isCreateIndex();
 static jmethodID meth_isCreateIndex;
 };
 
-class ProxyLbmIndexScanStreamDef
-: virtual public JniProxy, virtual public ProxyIndexSearchDef
-{
-public:
-int32_t getRowLimitParamId();
-static jmethodID meth_getRowLimitParamId;
-int32_t getStartRidParamId();
-static jmethodID meth_getStartRidParamId;
-};
-
 class ProxyLbmIntersectStreamDef
 : virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
 {
@@ -763,6 +753,16 @@ class ProxyLbmMinusStreamDef
 : virtual public JniProxy, virtual public ProxyLbmBitOpStreamDef
 {
 public:
+};
+
+class ProxyLbmSearchStreamDef
+: virtual public JniProxy, virtual public ProxyIndexSearchDef
+{
+public:
+int32_t getRowLimitParamId();
+static jmethodID meth_getRowLimitParamId;
+int32_t getStartRidParamId();
+static jmethodID meth_getStartRidParamId;
 };
 
 class ProxyLbmSplicerStreamDef
@@ -1029,10 +1029,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -1167,11 +1167,11 @@ virtual void visit(ProxyLbmChopperStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmGeneratorStreamDef &)
 { unhandledVisit(); }
-virtual void visit(ProxyLbmIndexScanStreamDef &)
-{ unhandledVisit(); }
 virtual void visit(ProxyLbmIntersectStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmMinusStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmSearchStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmSplicerStreamDef &)
 { unhandledVisit(); }
