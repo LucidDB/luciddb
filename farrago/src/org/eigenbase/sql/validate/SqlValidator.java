@@ -464,6 +464,11 @@ public interface SqlValidator
 
     /**
      * Enumeration of valid SQL compatiblity modes.
+     *
+     *<p>
+     *
+     * TODO jvs 16-June-2006:  Move this to top-level as enum
+     * SqlConformance.
      */
     public class Compatible extends EnumeratedValues.BasicValue
     {
