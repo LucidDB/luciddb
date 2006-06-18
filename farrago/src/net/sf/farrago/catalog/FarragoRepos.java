@@ -30,14 +30,17 @@ import net.sf.farrago.cwm.relational.CwmCatalog;
 import net.sf.farrago.fem.config.FemFarragoConfig;
 import net.sf.farrago.util.FarragoAllocation;
 import net.sf.farrago.util.FarragoTransientTxnContext;
+import net.sf.farrago.util.FarragoProperties;
 import org.eigenbase.jmi.JmiModelGraph;
 import org.eigenbase.jmi.JmiModelView;
 import org.eigenbase.sql.parser.SqlParserUtil;
 import org.netbeans.api.mdr.MDRepository;
 
 import javax.jmi.reflect.RefClass;
+import javax.jmi.reflect.RefObject;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Collection;
 import java.nio.charset.Charset;
 
 /**
@@ -257,6 +260,24 @@ public interface FarragoRepos extends FarragoAllocation,
      * @return expanded string, if value(s) were known
      */
     public String expandProperties(String value);
+
+    /**
+     * Returns a collection of all instances of a given class.
+     *
+     * <p>This method has the same effect as {@link RefClass#refAllOfClass()},
+     * but is preferable because it returns a typed collection.
+     */
+    public <T extends RefObject>
+    Collection<T> allOfClass(Class<T> clazz);
+
+    /**
+     * Returns a collection of all instances of a given type.
+     *
+     * <p>This method has the same effect as {@link RefClass#refAllOfType()},
+     * but is preferable because it returns a typed collection.
+     */
+    public <T extends RefObject>
+    Collection<T> allOfType(Class<T> clazz);
 }
 
 

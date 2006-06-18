@@ -69,7 +69,7 @@ class FtrsTableModificationRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList)
+        List<String> updateColumnList)
     {
         super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             ftrsTable, connection, child, operation, updateColumnList, true);
@@ -101,15 +101,16 @@ class FtrsTableModificationRel
         return planner.makeTinyCost();
     }
 
-    private List getUpdateCwmColumnList()
+    private List<CwmColumn> getUpdateCwmColumnList()
     {
         int n = getUpdateColumnList().size();
-        List list = new ArrayList();
-        Collection columns = ftrsTable.getCwmColumnSet().getFeature();
+        List<CwmColumn> list = new ArrayList<CwmColumn>();
+        Collection<CwmColumn> columns =
+            ftrsTable.getCwmColumnSet().getFeature();
         for (int i = 0; i < n; i++) {
-            String columnName = (String) getUpdateColumnList().get(i);
+            String columnName = getUpdateColumnList().get(i);
             CwmColumn column =
-                (CwmColumn) FarragoCatalogUtil.getModelElementByName(
+                FarragoCatalogUtil.getModelElementByName(
                     columns, columnName);
             list.add(column);
         }
@@ -128,7 +129,7 @@ class FtrsTableModificationRel
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
-        List updateCwmColumnList = null;
+        List<CwmColumn> updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
         switch (getOperation().getOrdinal()) {
@@ -167,21 +168,18 @@ class FtrsTableModificationRel
             FarragoCatalogUtil.getClusteredIndex(repos, table);
         boolean clusteredFirst = clusteredIndex.isUnique();
 
-        List firstList = new ArrayList();
-        List secondList = new ArrayList();
+        List<FemIndexWriterDef> firstList = new ArrayList<FemIndexWriterDef>();
+        List<FemIndexWriterDef> secondList = new ArrayList<FemIndexWriterDef>();
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
-        Iterator indexIter = FarragoCatalogUtil.getTableIndexes(
-            repos, table).iterator();
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
-
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(repos, table)) {
             boolean updateInPlace = false;
 
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
-                    List coverageList =
+                    List<? extends Object> coverageList =
                         indexGuide.getUnclusteredCoverageColList(index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index
@@ -190,7 +188,7 @@ class FtrsTableModificationRel
                     }
                 }
 
-                List distinctKeyList = indexGuide.getDistinctKeyColList(index);
+                List<? extends Object> distinctKeyList = indexGuide.getDistinctKeyColList(index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -230,13 +228,11 @@ class FtrsTableModificationRel
 
         // NOTE:  can't use addAll because MDR list impl doesn't support it;
         // TODO:  make a utility method instead
-        Iterator iter = firstList.iterator();
-        while (iter.hasNext()) {
-            tableWriterDef.getIndexWriter().add(iter.next());
+        for (FemIndexWriterDef indexWriter : firstList) {
+            tableWriterDef.getIndexWriter().add(indexWriter);
         }
-        iter = secondList.iterator();
-        while (iter.hasNext()) {
-            tableWriterDef.getIndexWriter().add(iter.next());
+        for (FemIndexWriterDef indexWriter : secondList) {
+            tableWriterDef.getIndexWriter().add(indexWriter);
         }
         
         // Set up buffering if required.

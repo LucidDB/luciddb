@@ -51,14 +51,11 @@ public abstract class JmiObjUtil
      *
      * @return map with attribute names as ordering keys
      */
-    public static SortedMap getAttributeValues(RefObject src)
+    public static SortedMap<String,Object> getAttributeValues(RefObject src)
     {
         RefClass refClass = src.refClass();
-        Iterator iter =
-            getFeatures(refClass, Attribute.class, false).iterator();
-        SortedMap map = new TreeMap();
-        while (iter.hasNext()) {
-            Attribute attr = (Attribute) iter.next();
+        SortedMap<String,Object> map = new TreeMap<String, Object>();
+        for (Attribute attr : getFeatures(refClass, Attribute.class, false)) {
             map.put(
                 attr.getName(),
                 src.refGetValue(attr));
@@ -75,15 +72,11 @@ public abstract class JmiObjUtil
      */
     public static void setAttributeValues(
         RefObject dst,
-        SortedMap map)
+        SortedMap<String, Object> map)
     {
         RefClass refClass = dst.refClass();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
-        Iterator iter = getFeatures(
-            dst.refClass(), Attribute.class, false).iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
-            Attribute attr = (Attribute) obj;
+        for (Attribute attr : getFeatures(refClass, Attribute.class, false)) {
             if (!(attr.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
                 continue;
             }
@@ -96,23 +89,23 @@ public abstract class JmiObjUtil
             Object srcVal = map.get(attr.getName());
 
             Object oldVal = dst.refGetValue(attr);
-            
+
             if ((oldVal == null) && (srcVal == null)) {
-            	continue;
+                continue;
             }
             if ((oldVal != null) && (oldVal.equals(srcVal))) {
-            	continue;
+                continue;
             }
-            
+
             if (srcVal instanceof RefObject) {
                 RefObject srcValObj = (RefObject) srcVal;
                 if (srcValObj.refImmediateComposite() != null) {
-                	RefObject oldValRef = (RefObject) oldVal;
-                	
-                	if (compositeEquals(oldValRef, srcValObj)) {
-                		continue;
-                	}
-                		                	
+                    RefObject oldValRef = (RefObject) oldVal;
+
+                    if (compositeEquals(oldValRef, srcValObj)) {
+                        continue;
+                    }
+
                     // Trying to copy this directly would lead
                     // to a CompositionViolationException.  Instead,
                     // clone it and reference the clone instead.
@@ -123,7 +116,7 @@ public abstract class JmiObjUtil
 
                     // Also have to refDelete the old value if any,
                     // otherwise it will become garbage.
-                    
+
                     if (oldValRef != null) {
                         // Nullify reference before deleting oldVal,
                         // otherwise the next refSetValue complains.
@@ -161,36 +154,34 @@ public abstract class JmiObjUtil
      *
      * @return attribute list
      */
-    public static List getFeatures(
+    public static <T extends StructuralFeature> List<T> getFeatures(
         RefClass refClass,
-        Class filterClass,
+        Class<T> filterClass,
         boolean includeMultiValued)
     {
         assert (StructuralFeature.class.isAssignableFrom(filterClass));
-        List list = new ArrayList();
+        List<T> list = new ArrayList<T>();
         MofClass mofClass = (MofClass) refClass.refMetaObject();
-        List superTypes = new ArrayList(mofClass.allSupertypes());
+        List<MofClass> superTypes =
+            new ArrayList<MofClass>(mofClass.allSupertypes());
         superTypes.add(mofClass);
-        for (Object obj : superTypes) {
-            MofClass featuredClass = (MofClass) obj;
+        for (MofClass featuredClass : superTypes) {
             addFeatures(list, featuredClass, filterClass, includeMultiValued);
         }
         return list;
     }
 
-    private static void addFeatures(
-        List list,
+    private static <T extends StructuralFeature> void addFeatures(
+        List<T> list,
         MofClass mofClass,
-        Class filterClass,
+        Class<T> filterClass,
         boolean includeMultiValued)
     {
-        Iterator iter = mofClass.getContents().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
+        for (Object obj : mofClass.getContents()) {
             if (!(filterClass.isInstance(obj))) {
                 continue;
             }
-            StructuralFeature feature = (StructuralFeature) obj;
+            T feature = filterClass.cast(obj);
             if (!(feature.getScope().equals(ScopeKindEnum.INSTANCE_LEVEL))) {
                 continue;
             }
@@ -214,7 +205,7 @@ public abstract class JmiObjUtil
         RefObject dst,
         RefObject src)
     {
-        SortedMap map = getAttributeValues(src);
+        SortedMap<String, Object> map = getAttributeValues(src);
         setAttributeValues(dst, map);
     }
 
@@ -460,17 +451,44 @@ public abstract class JmiObjUtil
     {
         return TagProvider.mapEnumLiteral(enumSymbol);
     }
-    
+
     /**
-     * Finds the Java class generated for a particular RefClass.
+     * Finds the Java class generated for a particular RefClass,
+     * or {@link RefObject}.class if not found.
      *
      * @param refClass the reflective JMI class representation
      *
      * @return the generated Java class, or RefObject.class if
      * no Java class has been generated
      */
-    public static Class getClassForRefClass(RefClass refClass)
+    public static Class<? extends RefObject> getClassForRefClass(
+        RefClass refClass)
     {
+        return getClassForRefClass(
+            ClassLoader.getSystemClassLoader(), refClass, false);
+    }
+
+    /**
+     * Finds the Java class generated for a particular RefClass.
+     *
+     * @param classLoader Class loader. Must not be null: if in doubt, use
+     *   {@link ClassLoader#getSystemClassLoader()}
+     *
+     * @param refClass the reflective JMI class representation
+     *
+     * @param nullIfNotFound If true, return null if not found; if false,
+     *   return {@link RefObject}.class if not found
+     *
+     * @return the generated Java class, or RefObject.class if
+     * no Java class has been generated
+     */
+    public static Class<? extends RefObject> getClassForRefClass(
+        ClassLoader classLoader,
+        RefClass refClass,
+        boolean nullIfNotFound)
+    {
+        assert classLoader != null :
+            "require classLoader: use ClassLoader.getSystemClassLoader()";
         // Look up the Java interface generated for the class being queried.
         TagProvider tagProvider = new TagProvider();
         String className =
@@ -484,12 +502,13 @@ public abstract class JmiObjUtil
             "org\\.netbeans\\.jmiimpl\\.mof",
             "javax.jmi");
         try {
-            return Class.forName(className);
+            return (Class<? extends RefObject>)
+                Class.forName(className, true, classLoader);
         } catch (ClassNotFoundException ex) {
             // This is possible when we're querying an external repository
             // for which we don't know the class mappings.  Do everything
             // via JMI reflection instead.
-            return RefObject.class;
+            return nullIfNotFound ? null : RefObject.class;
         }
     }
 
@@ -527,10 +546,8 @@ public abstract class JmiObjUtil
         // so it is easy to invoke it ONLY if assertions are enabled.
 
         RefClass refClass = obj.refClass();
-        Iterator featureIter =
-            getFeatures(refClass, StructuralFeature.class, false).iterator();
-        while (featureIter.hasNext()) {
-            StructuralFeature feature = (StructuralFeature) featureIter.next();
+        for (StructuralFeature feature :
+            getFeatures(refClass, StructuralFeature.class, false)) {
             if (feature.getMultiplicity().getLower() != 0) {
                 if (obj.refGetValue(feature) == null) {
                     String featureClassName = getMetaObjectName(refClass);

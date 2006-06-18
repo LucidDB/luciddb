@@ -90,7 +90,7 @@ class MedMdrJoinRule extends RelOptRule
 
         // on right side, must join to reference field which refers to
         // left side type
-        List features =
+        List<StructuralFeature> features =
             JmiUtil.getFeatures(rightRel.mdrClassExtent.refClass,
                 StructuralFeature.class, false);
         Reference reference;
@@ -103,8 +103,7 @@ class MedMdrJoinRule extends RelOptRule
                 // Pseudocolumn such as mofClassName:  can't join.
                 return;
             }
-            StructuralFeature feature =
-                (StructuralFeature) features.get(rightOrdinal);
+            StructuralFeature feature = features.get(rightOrdinal);
             if (!(feature instanceof Reference)) {
                 return;
             }

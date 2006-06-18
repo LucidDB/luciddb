@@ -85,14 +85,10 @@ public abstract class FarragoRngUDR
             SqlParser sqlParser = new SqlParser(rngName);
             SqlIdentifier rngId = (SqlIdentifier) sqlParser.parseExpression();
             
-            RngmodelPackage rngPkg =
-                getRngModelPackage(session.getRepos());
-            RefClass refRngClass =
-                rngPkg.getRngschema().getRngRandomNumberGenerator();
-            RngRandomNumberGenerator rng = (RngRandomNumberGenerator)
+            RngRandomNumberGenerator rng =
                 stmtValidator.findSchemaObject(
                     rngId,
-                    refRngClass);
+                    RngRandomNumberGenerator.class);
             return rng_next_int_internal(n, rngName, getFilename(rng));
         } catch (Throwable ex) {
             throw FarragoJdbcUtil.newSqlException(ex, tracer);

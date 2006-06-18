@@ -244,11 +244,9 @@ CwmModelElement ExtensionModelDrop() :
 {
     <RNG> qualifiedName = CompoundIdentifier3()
     {
-        rng = (RngRandomNumberGenerator)
-        farragoParser.getStmtValidator().findSchemaObject(
+        rng = farragoParser.getStmtValidator().findSchemaObject(
             qualifiedName,
-            getRngModelPackage().getRngschema().
-            getRngRandomNumberGenerator());
+            RngRandomNumberGenerator.class);
     }
     CascadeOption()
     {
@@ -289,11 +287,9 @@ SqlNode ExtendedBuiltinFunctionCall() :
     id = CompoundIdentifier3()
     <RPAREN>
     {
-        rng = (RngRandomNumberGenerator)
-        farragoParser.getStmtValidator().findSchemaObject(
+        rng = farragoParser.getStmtValidator().findSchemaObject(
             id,
-            getRngModelPackage().getRngschema().
-            getRngRandomNumberGenerator());
+            RngRandomNumberGenerator.class);
         return
         FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
             new SqlNode [] {

@@ -58,7 +58,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
     OJClass ojBytePointer;
-    private Set streamDefSet;
+    private Set<FemExecutionStreamDef> streamDefSet;
     private String serverMofId;
     private long nextRelParamId;
     private int nextDynamicParamId;
@@ -90,7 +90,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         ojAssignableValue = OJClass.forClass(AssignableValue.class);
         ojBytePointer = OJClass.forClass(BytePointer.class);
 
-        streamDefSet = new HashSet();
+        streamDefSet = new HashSet<FemExecutionStreamDef>();
         scopeStack = new LinkedList<RelScope>();
         nextRelParamId = 1;
         // REVIEW jvs 22-Mar-2006:  does this match how user-level
@@ -203,7 +203,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         return super.visitChildInternal(child);
     }
 
-    public Set getStreamDefSet()
+    public Set<FemExecutionStreamDef> getStreamDefSet()
     {
         return streamDefSet;
     }

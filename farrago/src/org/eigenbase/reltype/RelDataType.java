@@ -71,7 +71,7 @@ public interface RelDataType
      *
      * @pre this.isStruct()
      */
-    public List getFieldList();
+    public List<RelDataTypeField> getFieldList();
 
     /**
      * Gets the fields in a struct type.  The field count is equal

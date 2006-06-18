@@ -66,9 +66,8 @@ public class DdlExtendCatalogStmt extends DdlStmt
         repos = ddlValidator.getRepos();
         sessionFactory =
             ddlValidator.getStmtValidator().getSession().getSessionFactory();
-        femJar = (FemJar) ddlValidator.getStmtValidator().findSchemaObject(
-            jarName,
-            repos.getSql2003Package().getFemJar());
+        femJar = ddlValidator.getStmtValidator().findSchemaObject(
+            jarName, FemJar.class);
         if (femJar.isModelExtension()) {
             throw FarragoResource.instance().CatalogModelAlreadyImported.ex(
                 repos.getLocalizedObjectName(femJar));

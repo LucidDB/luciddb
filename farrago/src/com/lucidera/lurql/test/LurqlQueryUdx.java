@@ -93,10 +93,9 @@ public abstract class LurqlQueryUdx
                     session.getRepos(),
                     db.getFennelDbHandle(),
                     null);
-            FemDataServer femServer = (FemDataServer)
+            FemDataServer femServer =
                 FarragoCatalogUtil.getModelElementByName(
-                    session.getRepos().getMedPackage().getFemDataServer().
-                    refAllOfType(),
+                    session.getRepos().allOfType(FemDataServer.class),
                     foreignServerName);
             if (femServer == null) {
                 throw new SQLException(
@@ -114,7 +113,7 @@ public abstract class LurqlQueryUdx
             RefPackage refPackage = mdrServer.getRootPackage();
             // NOTE jvs 12-June-2006:  pass strict=false in
             // case extent references other packages we can't see
-            JmiModelGraph modelGraph = new JmiModelGraph(refPackage, false);
+            JmiModelGraph modelGraph = new JmiModelGraph(refPackage, null, false);
             JmiModelView modelView = new JmiModelView(modelGraph);
             JmiQueryProcessor queryProcessor =
                 new LurqlQueryProcessor(

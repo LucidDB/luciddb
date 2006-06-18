@@ -637,6 +637,7 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         case SqlKind.OverORDINAL:
         case SqlKind.CollectionTableORDINAL:
         case SqlKind.OrderByORDINAL:
+        case SqlKind.TableSampleORDINAL:
             return getNamespace(((SqlCall) node).operands[0]);
         default:
             return namespaces.get(node);
@@ -1260,6 +1261,18 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
                 if (alias == null) {
                     alias = call.operands[1].toString();
                 }
+                final SqlNode expr = call.operands[0];
+                final SqlNode newExpr = registerFrom(
+                    parentScope, usingScope, expr, alias, forceNullable);
+                if (newExpr != expr) {
+                    call.setOperand(0, newExpr);
+                }
+                return node;
+            }
+
+        case SqlKind.TableSampleORDINAL:
+            {
+                final SqlCall call = (SqlCall) node;
                 final SqlNode expr = call.operands[0];
                 final SqlNode newExpr = registerFrom(
                     parentScope, usingScope, expr, alias, forceNullable);

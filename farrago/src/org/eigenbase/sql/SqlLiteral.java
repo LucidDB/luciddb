@@ -231,7 +231,8 @@ public class SqlLiteral extends SqlNode
             // own value!
             return value instanceof EnumeratedValues.Value
                 || value instanceof String
-                || value instanceof Enum;
+                || value instanceof Enum
+                || value instanceof SqlSampleSpec;
         case SqlTypeName.Multiset_ordinal:
             return true;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
@@ -297,6 +298,17 @@ public class SqlLiteral extends SqlNode
     public static Enum enumValue(SqlNode node)
     {
         return (Enum) ((SqlLiteral) node).value;
+    }
+
+    /**
+     * Extracts the {@link SqlSampleSpec} value from a symbol literal.
+     *
+     * @throws ClassCastException if the value is not a symbol literal
+     * @see #createSymbol(EnumeratedValues.Value, SqlParserPos)
+     */
+    public static SqlSampleSpec sampleValue(SqlNode node)
+    {
+        return (SqlSampleSpec) ((SqlLiteral) node).value;
     }
 
     /**
@@ -427,6 +439,16 @@ public class SqlLiteral extends SqlNode
         return new SqlLiteral(o, SqlTypeName.Symbol, pos);
     }
 
+    /**
+     * Creates a literal which represents a sample specification.
+     */
+    public static SqlLiteral createSample(
+        SqlSampleSpec sampleSpec,
+        SqlParserPos pos)
+    {
+        return new SqlLiteral(sampleSpec, SqlTypeName.Symbol, pos);
+    }
+
     public boolean equals(Object obj)
     {
         if (!(obj instanceof SqlLiteral)) {
@@ -551,9 +573,11 @@ public class SqlLiteral extends SqlNode
             if (value instanceof EnumeratedValues.Value) {
                 EnumeratedValues.Value enumVal = (EnumeratedValues.Value) value;
                 writer.keyword(enumVal.getName().toUpperCase());
-            } else {
+            } else if (value instanceof Enum) {
                 Enum enumVal = (Enum) value;
                 writer.keyword(enumVal.name());
+            } else {
+                writer.keyword(String.valueOf(value));
             }
             break;
         default:

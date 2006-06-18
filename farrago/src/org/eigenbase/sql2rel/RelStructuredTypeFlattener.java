@@ -126,12 +126,10 @@ public class RelStructuredTypeFlattener
     private RexNode [] restructureFields(
         RelDataType structuredType)
     {
-        List fields = structuredType.getFieldList();
-        RexNode [] structuringExps = new RexNode[fields.size()];
+        RexNode [] structuringExps =
+            new RexNode[structuredType.getFieldList().size()];
         int iOutput = 0;
-        Iterator iter = fields.iterator();
-        while (iter.hasNext()) {
-            RelDataTypeField field = (RelDataTypeField) iter.next();
+        for (RelDataTypeField field : structuredType.getFieldList()) {
             // TODO:  row
             if (field.getType().getSqlTypeName() == SqlTypeName.Structured) {
                 restructured = true;
@@ -281,9 +279,7 @@ public class RelStructuredTypeFlattener
     public void rewriteRel(AggregateRel rel)
     {
         RelDataType inputType = rel.getChild().getRowType();
-        Iterator fields = inputType.getFieldList().iterator();
-        while (fields.hasNext()) {
-            RelDataTypeField field = (RelDataTypeField) fields.next();
+        for (RelDataTypeField field : inputType.getFieldList()) {
             if (field.getType().isStruct()) {
                 // TODO jvs 10-Feb-2005
                 throw Util.needToImplement("aggregation on structured types");
@@ -541,11 +537,10 @@ public class RelStructuredTypeFlattener
                     rexBuilder.getTypeFactory(),
                     exp.getType(),
                     null);
-                List fieldList = flattenedType.getFieldList();
+                List<RelDataTypeField> fieldList = flattenedType.getFieldList();
                 int n = fieldList.size();
                 for (int j = 0; j < n; ++j) {
-                    RelDataTypeField field = (RelDataTypeField)
-                        fieldList.get(j);
+                    RelDataTypeField field = fieldList.get(j);
                     flattenedExps.add(
                         new RexInputRef(
                             newOffset + j,
@@ -585,11 +580,8 @@ public class RelStructuredTypeFlattener
                 // keep special functions which return row types
                 // working.
 
-                Iterator fieldIter = exp.getType().getFieldList().iterator();
                 int j = 0;
-                while (fieldIter.hasNext()) {
-                    RelDataTypeField field = (RelDataTypeField)
-                        fieldIter.next();
+                for (RelDataTypeField field : exp.getType().getFieldList()) {
                     RexNode cloneCall = RexUtil.clone(exp);
                     RexNode fieldAccess = rexBuilder.makeFieldAccess(
                         cloneCall, field.getIndex());
@@ -615,11 +607,7 @@ public class RelStructuredTypeFlattener
             rexBuilder.getTypeFactory(),
             type,
             null);
-        List fieldList = flattenedType.getFieldList();
-        int n = fieldList.size();
-        for (int j = 0; j < n; ++j) {
-            RelDataTypeField field = (RelDataTypeField)
-                fieldList.get(j);
+        for (RelDataTypeField field : flattenedType.getFieldList()) {
             flattenedExps.add(
                 rexBuilder.makeCast(
                     field.getType(),

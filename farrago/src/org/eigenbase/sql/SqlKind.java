@@ -112,12 +112,12 @@ public class SqlKind extends EnumeratedValues.BasicValue
     public static final SqlKind Intersect =
         new SqlKind("Intersect", IntersectORDINAL);
 
-    /** As */
+    /** AS operator */
     public static final int AsORDINAL = 15;
     public static final SqlKind As = new SqlKind("As", AsORDINAL);
 
     public static final int OverORDINAL = 16;
-    /** Over */
+    /** OVER operator */
     public static final SqlKind Over = new SqlKind("Over", OverORDINAL);
 
     public static final int WindowORDINAL = 17;
@@ -127,7 +127,11 @@ public class SqlKind extends EnumeratedValues.BasicValue
     /** MERGE statement */
     public static final int MergeORDINAL = 18;
     public static final SqlKind Merge = new SqlKind("Merge", MergeORDINAL);
-    
+
+    /** TABLESAMPLE operator */
+    public static final int TableSampleORDINAL = 19;
+    public static final SqlKind TableSample = new SqlKind("TableSample", TableSampleORDINAL);
+
     // binary operators
     // arithmetic 100 - 109
 

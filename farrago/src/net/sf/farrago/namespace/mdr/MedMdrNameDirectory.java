@@ -28,7 +28,6 @@ import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.FarragoMetadataFactory;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
@@ -170,13 +169,13 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         FarragoTypeFactory typeFactory,
         RefClass refClass)
     {
-        List features =
+        List<StructuralFeature> features =
             JmiUtil.getFeatures(refClass, StructuralFeature.class, false);
         int n = features.size();
         RelDataType [] types = new RelDataType[n + 2];
         String [] fieldNames = new String[n + 2];
         for (int i = 0; i < n; ++i) {
-            StructuralFeature feature = (StructuralFeature) features.get(i);
+            StructuralFeature feature = features.get(i);
             fieldNames[i] = feature.getName();
             types[i] = typeFactory.createMofType(feature);
             if (server.foreignRepository) {

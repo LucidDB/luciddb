@@ -23,7 +23,6 @@
 package net.sf.farrago.catalog;
 
 import java.util.*;
-import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
@@ -37,6 +36,7 @@ import net.sf.farrago.util.*;
 import org.eigenbase.util.SaffronProperties;
 import org.eigenbase.util.Util;
 import org.eigenbase.jmi.*;
+import org.netbeans.mdr.handlers.BaseObjectHandler;
 
 import java.util.logging.Logger;
 
@@ -100,7 +100,8 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
 
     protected void initGraphOnly()
     {
-        modelGraph = new JmiModelGraph(getRootPackage());
+        ClassLoader classLoader = BaseObjectHandler.getDefaultClassLoader();
+        modelGraph = new JmiModelGraph(getRootPackage(), classLoader, true);
         modelView = new JmiModelView(modelGraph);
     }
 
@@ -110,12 +111,12 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     {
         // TODO: multiple named configurations.  For now, build should have
         // imported exactly one configuration named Current.
-        Collection configs =
+        Collection<FemFarragoConfig> configs =
+            (Collection<FemFarragoConfig>) 
             getConfigPackage().getFemFarragoConfig().refAllOfClass();
 
         assert (configs.size() == 1);
-        FemFarragoConfig defaultConfig =
-            (FemFarragoConfig) configs.iterator().next();
+        FemFarragoConfig defaultConfig = configs.iterator().next();
         assert (defaultConfig.getName().equals("Current"));
         return defaultConfig;
     }
@@ -299,10 +300,8 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      */
     public CwmCatalog getCatalog(String catalogName)
     {
-        Collection catalogs =
-            getRelationalPackage().getCwmCatalog().refAllOfType();
-        return (CwmCatalog) FarragoCatalogUtil.getModelElementByName(
-            catalogs, catalogName);
+        return FarragoCatalogUtil.getModelElementByName(
+            allOfType(CwmCatalog.class), catalogName);
     }
 
     /**
@@ -422,6 +421,27 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     public String expandProperties(String value)
     {
         return FarragoProperties.instance().expandProperties(value);
+    }
+
+    private RefClass findRefClass(
+        Class<? extends RefObject> clazz)
+    {
+        JmiClassVertex vertex = modelGraph.getVertexForJavaInterface(clazz);
+        return vertex.getRefClass();
+    }
+
+    public <T extends RefObject>
+    Collection<T> allOfClass(Class<T> clazz)
+    {
+        RefClass refClass = findRefClass(clazz);
+        return (Collection<T>) refClass.refAllOfClass();
+    }
+
+    public <T extends RefObject>
+    Collection<T> allOfType(Class<T> clazz)
+    {
+        RefClass refClass = findRefClass(clazz);
+        return (Collection<T>) refClass.refAllOfType();
     }
 }
 

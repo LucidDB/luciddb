@@ -24,13 +24,11 @@ import com.lucidera.lurql.*;
 import com.lucidera.lurql.parser.*;
 
 import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
 
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
 import junit.framework.*;
-import junit.*;
 
 import java.util.*;
 import java.io.*;

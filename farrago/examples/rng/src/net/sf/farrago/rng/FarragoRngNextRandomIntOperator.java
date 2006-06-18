@@ -30,6 +30,7 @@ import org.eigenbase.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.rngmodel.rngschema.RngRandomNumberGenerator;
 
 /**
  * FarragoRngNextRandomIntOperator defines the SqlOperator for the
@@ -45,14 +46,14 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         super(
             "NEXT_RANDOM_INT",
             SqlKind.Other,
-            SqlTypeStrategies.rtiInteger, 
+            SqlTypeStrategies.rtiInteger,
             null,
             new FamilyOperandTypeChecker(
                 new SqlTypeFamily [] {
                     SqlTypeFamily.Integer,
                     SqlTypeFamily.Character,
                     SqlTypeFamily.Character
-                }), 
+                }),
             SqlFunctionCategory.System);
     }
 
@@ -80,17 +81,15 @@ public class FarragoRngNextRandomIntOperator extends SqlFunction
         } catch (Throwable ex) {
             throw Util.newInternal(ex);
         }
-        CwmModelElement rng = 
+        RngRandomNumberGenerator rng =
             preparingStmt.getStmtValidator().findSchemaObject(
                 id,
-                FarragoRngUDR.getRngModelPackage(
-                    preparingStmt.getRepos())
-                .getRngschema().getRngRandomNumberGenerator());
+                RngRandomNumberGenerator.class);
 
         // TODO jvs 27-Aug-2005:  make this USAGE instead
         preparingStmt.addDependency(rng, PrivilegedActionEnum.REFERENCES);
     }
-    
+
     // override SqlOperator
     public void unparse(
         SqlWriter writer,

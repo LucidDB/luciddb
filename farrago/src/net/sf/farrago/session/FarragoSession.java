@@ -111,7 +111,7 @@ public interface FarragoSession extends FarragoAllocation
      * @return list of installed {@link FarragoSessionModelExtension}
      * instances
      */
-    public List getModelExtensions();
+    public List<FarragoSessionModelExtension> getModelExtensions();
     
     /**
      * @return whether this session is an internal session cloned

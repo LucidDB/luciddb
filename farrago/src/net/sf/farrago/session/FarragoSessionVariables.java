@@ -73,11 +73,11 @@ public class FarragoSessionVariables implements Cloneable
     public String currentRoleName;
 
     /**
-     * Value of SQL expression CURRENT_PATH as a list of schemas.  Entries are
-     * SqlIdentifiers (catalog.schema).  This list is immutable to prevent
-     * accidental aliasing.
+     * Value of SQL expression CURRENT_PATH as a list of schemas.
+     * Each entry is a {@link SqlIdentifier} (catalog.schema).
+     * This list is immutable to prevent accidental aliasing.
      */
-    public List schemaSearchPath;
+    public List<SqlIdentifier> schemaSearchPath;
 
     /**
      * Full user name, e.g. "Joe Smith". Can be null.
@@ -130,12 +130,10 @@ public class FarragoSessionVariables implements Cloneable
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
         StringBuffer buf = new StringBuffer();
         int k = 0;
-        Iterator iter = schemaSearchPath.iterator();
-        while (iter.hasNext()) {
+        for (SqlIdentifier id : schemaSearchPath) {
             if (k++ > 0) {
                 buf.append(",");
             }
-            SqlIdentifier id = (SqlIdentifier) iter.next();
             id.unparse(writer, 0, 0);
             buf.append(writer.toString());
             writer.reset();
