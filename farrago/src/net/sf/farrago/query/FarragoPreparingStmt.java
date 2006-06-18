@@ -75,7 +75,7 @@ import java.util.List;
 public class FarragoPreparingStmt extends OJPreparingStmt
     implements FarragoSessionPreparingStmt,
         RelOptConnection,
-        RelOptSchemaWithSampling,
+        RelOptSchema,
         SqlValidatorCatalogReader
 {
     //~ Static fields/initializers --------------------------------------------
@@ -568,10 +568,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     RelMetadataQuery.getColumnOrigins(rootRel, i);
                 if (rcoSet == null) {
                     // If we don't know, assume none.
-                    columnOrigins.add(Collections.EMPTY_SET);
-                } else {
-                    columnOrigins.add(rcoSet);
+                    rcoSet = Collections.emptySet();
                 }
+                columnOrigins.add(rcoSet);
             }
             analyzedSql.columnOrigins =
                 Collections.unmodifiableList(columnOrigins);
@@ -1009,7 +1008,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     getFarragoTypeFactory());
         } else if (columnSet instanceof FemLocalView) {
             RelDataType rowType = createTableRowType(columnSet);
-            relOptTable = new FarragoView(columnSet, rowType, datasetName);
+            relOptTable = new FarragoView(columnSet, rowType);
         } else {
             throw Util.needToImplement(columnSet);
         }
