@@ -344,7 +344,7 @@ public abstract class RelOptUtil
     public static RelDataType createTypeFromProjection(
         final RelDataType type,
         final RelDataTypeFactory typeFactory,
-        final List columnNameList)
+        final List<String> columnNameList)
     {
         return typeFactory.createStructType(
             new RelDataTypeFactory.FieldInfo() {
@@ -355,7 +355,7 @@ public abstract class RelOptUtil
 
                 public String getFieldName(int index)
                 {
-                    return (String) columnNameList.get(index);
+                    return columnNameList.get(index);
                 }
 
                 public RelDataType getFieldType(int index)

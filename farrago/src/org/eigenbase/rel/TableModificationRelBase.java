@@ -46,7 +46,7 @@ public abstract class TableModificationRelBase extends SingleRel
     /** The table definition. */
     protected RelOptTable table;
     private Operation operation;
-    private List updateColumnList;
+    private List<String> updateColumnList;
     private RelDataType inputRowType;
     private boolean flattened;
 
@@ -59,7 +59,7 @@ public abstract class TableModificationRelBase extends SingleRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList,
+        List<String> updateColumnList,
         boolean flattened)
     {
         super(cluster, traits, child);
@@ -85,7 +85,7 @@ public abstract class TableModificationRelBase extends SingleRel
         return table;
     }
 
-    public List getUpdateColumnList()
+    public List<String> getUpdateColumnList()
     {
         return updateColumnList;
     }

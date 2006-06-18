@@ -33,7 +33,7 @@ import javax.jmi.model.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiInheritanceEdge extends DirectedEdge
+public class JmiInheritanceEdge extends DirectedEdge<JmiClassVertex>
 {
     JmiInheritanceEdge(
         JmiClassVertex superClass, JmiClassVertex subClass)

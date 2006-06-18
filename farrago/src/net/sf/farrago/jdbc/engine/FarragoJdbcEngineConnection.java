@@ -522,10 +522,9 @@ public class FarragoJdbcEngineConnection
         SqlIdentifier wrapperSqlIdent =
             new SqlIdentifier(wrapperName, SqlParserPos.ZERO);
         
-        FemDataWrapper wrapper = (FemDataWrapper)
+        FemDataWrapper wrapper =
             FarragoCatalogUtil.getModelElementByName(
-                session.getRepos().getMedPackage().getFemDataWrapper().
-                refAllOfType(),
+                session.getRepos().allOfType(FemDataWrapper.class),
                 wrapperSqlIdent.getSimple());
          
         if (wrapper != null) {

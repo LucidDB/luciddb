@@ -89,7 +89,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     private OJRexImplementorTable ojRexImplementorTable;
     protected FarragoSessionFactory sessionFactory;
     private FarragoPluginClassLoader pluginClassLoader;
-    private List modelExtensions;
+    private List<FarragoSessionModelExtension> modelExtensions;
     private FarragoDdlLockManager ddlLockManager;
     private FarragoSessionTxnMgr txnMgr;
     
@@ -284,7 +284,7 @@ public class FarragoDatabase extends FarragoDbSingleton
      * @return list of installed {@link FarragoSessionModelExtension}
      * instances
      */
-    public List getModelExtensions()
+    public List<FarragoSessionModelExtension> getModelExtensions()
     {
         return modelExtensions;
     }
@@ -352,11 +352,9 @@ public class FarragoDatabase extends FarragoDbSingleton
         List resourceBundles = new ArrayList();
         sessionFactory.defineResourceBundles(resourceBundles);
         
-        modelExtensions = new ArrayList();
-        Iterator jarIter = systemRepos.getSql2003Package().getFemJar()
-            .refAllOfClass().iterator();
-        while (jarIter.hasNext()) {
-            FemJar jar = (FemJar) jarIter.next();
+        modelExtensions = new ArrayList<FarragoSessionModelExtension>();
+        Collection<FemJar> allJars = systemRepos.allOfClass(FemJar.class);
+        for (FemJar jar : allJars) {
             if (jar.isModelExtension()) {
                 FarragoSessionModelExtension modelExtension =
                     sessionFactory.newModelExtension(
@@ -731,9 +729,8 @@ public class FarragoDatabase extends FarragoDbSingleton
         final SqlNode validatedSqlNode;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
             Map nameToTypeMap = new HashMap();
-            Iterator iter = analyzedSql.paramRowType.getFieldList().iterator();
-            while (iter.hasNext()) {
-                RelDataTypeField field = (RelDataTypeField) iter.next();
+            for (RelDataTypeField field :
+                analyzedSql.paramRowType.getFieldList()) {
                 nameToTypeMap.put(field.getName(), field.getType());
             }
             validatedSqlNode = sqlValidator.validateParameterizedExpression(

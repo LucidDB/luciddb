@@ -33,7 +33,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 /**
- * MedAbstractFennelTableModRel refines {@link TableModificationRelbase}.
+ * MedAbstractFennelTableModRel refines {@link TableModificationRelBase}.
  * It is also an abstract base class for implementations of the {@link FennelRel} interface.
  * 
  * @author Rushan Chen
@@ -52,7 +52,7 @@ public abstract class MedAbstractFennelTableModRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList,
+        List<String> updateColumnList,
         boolean flattened)
     {
         super(

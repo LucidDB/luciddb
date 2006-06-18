@@ -538,9 +538,9 @@ public abstract class JmiMemFactory
 
         protected Collection proxyRefAllPackages()
         {
-            Collection children = filterChildren(RefPackage.class);
+            Collection<RefPackage> children = filterChildren(RefPackage.class);
             if (this == rootPackageImpl) {
-                Collection list = new ArrayList();
+                Collection<RefPackage> list = new ArrayList<RefPackage>();
                 list.addAll(children);
                 list.addAll(pluginPackageMap.values());
                 return list;
@@ -698,13 +698,11 @@ public abstract class JmiMemFactory
             ResolvedReference rr,
             AssociationEnd referencedEnd)
         {
-            Collection refs = JmiObjUtil.getFeatures(
-                rr.referencingEnd.refClass(),
-                Reference.class,
-                rr.multiValued);
-            Reference ref = null;
-            for (Object refObj : refs) {
-                Reference featureRef = (Reference) refObj;
+            for (Reference featureRef :
+                JmiObjUtil.getFeatures(
+                    rr.referencingEnd.refClass(),
+                    Reference.class,
+                    rr.multiValued)) {
                 if (featureRef.getReferencedEnd() == referencedEnd) {
                     rr.ref = featureRef;
                     return true;
@@ -743,12 +741,12 @@ public abstract class JmiMemFactory
             return impl.wrap();
         }
 
-        protected Collection filterChildren(Class iface)
+        protected <T> Collection<T> filterChildren(Class<T> iface)
         {
-            List list = new ArrayList();
+            List<T> list = new ArrayList<T>();
             for (Object obj : values()) {
                 if (iface.isInstance(obj)) {
-                    list.add(obj);
+                    list.add(iface.cast(obj));
                 }
             }
             return list;

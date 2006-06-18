@@ -33,7 +33,7 @@ import javax.jmi.reflect.*;
 public class JmiClassVertex
 {
     private final MofClass mofClass;
-    
+    Class<? extends RefObject> javaInterface;
     RefClass refClass;
 
     JmiClassVertex(MofClass mofClass)
@@ -55,6 +55,14 @@ public class JmiClassVertex
     public RefClass getRefClass()
     {
         return refClass;
+    }
+
+    /**
+     * @return the Java interface represented by this vertex
+     */
+    public Class<? extends RefObject> getJavaInterface()
+    {
+        return javaInterface;
     }
 
     // implement Object

@@ -211,14 +211,14 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      *
      * @param qualifiedName name of object to look up
      *
-     * @param refClass expected class of object; if the object exists with a
+     * @param clazz expected class of object; if the object exists with a
      *        different class, it will be treated as if it did not exist
      *
      * @return schema object found
      */
-    public CwmModelElement findSchemaObject(
+    public <T extends CwmModelElement> T findSchemaObject(
         SqlIdentifier qualifiedName,
-        RefClass refClass);
+        Class<T> clazz);
 
     /**
      * Looks up a top-level object (e.g. a catalog) by name, throwing
@@ -226,13 +226,13 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      *
      * @param unqualifiedName SqlIdentifier which returns true for isSimple()
      *
-     * @param refClass class of object to find
+     * @param clazz class of object to find
      *
      * @return object found
      */
-    public CwmModelElement findUnqualifiedObject(
+    public <T extends CwmModelElement> T findUnqualifiedObject(
         SqlIdentifier unqualifiedName,
-        RefClass refClass);
+        Class<T> clazz);
 
     /**
      * Looks up all matching routine overloads by invocation name.
@@ -244,7 +244,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      *
      * @return list of matching FemRoutine objects (empty if no matches)
      */
-    public List findRoutineOverloads(
+    public List<FemRoutine> findRoutineOverloads(
         SqlIdentifier invocationName,
         ProcedureType routineType);
 
@@ -274,14 +274,15 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @param names array of 1 or more name components, from
      * most general to most specific
      *
-     * @param refClass type of object to resolve
+     * @param clazz type of object to resolve
      *
      * @return FarragoSessionResolvedObject, or null if object definitely
      * doesn't exist
      */
-    public FarragoSessionResolvedObject resolveSchemaObjectName(
+    public <T extends CwmModelElement>
+    FarragoSessionResolvedObject<T> resolveSchemaObjectName(
         String [] names,
-        RefClass refClass);
+        Class<T> clazz);
 
     /**
       * Gets schema object names as specified. They can be schema or table

@@ -24,8 +24,6 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.sql2003.*;
-
 
 /**
  * Information about a catalog object whose name has been fully resolved
@@ -34,13 +32,13 @@ import net.sf.farrago.fem.sql2003.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSessionResolvedObject
+public class FarragoSessionResolvedObject<T extends CwmModelElement>
 {
     //~ Instance fields -------------------------------------------------------
 
     public CwmCatalog catalog;
     public CwmSchema schema;
-    public CwmModelElement object;
+    public T object;
     public String catalogName;
     public String schemaName;
     public String objectName;

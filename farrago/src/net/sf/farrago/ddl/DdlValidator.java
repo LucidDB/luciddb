@@ -119,13 +119,13 @@ public class DdlValidator extends FarragoCompoundAllocation
      * of the symbols {@link #VALIDATE_CREATION}, {@link #VALIDATE_DELETION},
      * {@link #VALIDATE_MODIFICATION}, {@link #VALIDATE_TRUNCATION}).
      */
-    private Map<String,Object> schedulingMap;
+    private Map<String,Integer> schedulingMap;
 
     /**
      * Map of objects in transition between schedulingMap and validatedMap.
      * Content format is same as for schedulingMap.
      */
-    private Map<String,Object> transitMap;
+    private Map<String, Integer> transitMap;
 
     /**
      * Map of object validations which have already taken place.
@@ -180,7 +180,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
-        schedulingMap = new LinkedHashMap<String, Object>();
+        schedulingMap = new LinkedHashMap<String, Integer>();
         validatedMap = new LinkedHashMap<RefObject, Object>();
         deleteQueue = new LinkedHashSet<RefObject>();
 
@@ -198,11 +198,8 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // First, install action handlers for all installed model
         // extensions.
-        Iterator extIter =
-            stmtValidator.getSession().getModelExtensions().iterator();
-        while (extIter.hasNext()) {
-            FarragoSessionModelExtension ext =
-                (FarragoSessionModelExtension) extIter.next();
+        for (FarragoSessionModelExtension ext :
+            stmtValidator.getSession().getModelExtensions()) {
             ext.defineDdlHandlers(this, actionHandlers);
         }
 
@@ -473,15 +470,14 @@ public class DdlValidator extends FarragoCompoundAllocation
     public void deleteReplacementTarget(CwmModelElement newElement)
     {
         if (replacementTarget != null) {
-            Set deps = getDependencies(replacementTarget);
+            Set<CwmModelElement> deps = getDependencies(replacementTarget);
 
             // also revalidate dependencies of children (owned by rootElement)
             if (replacementTarget instanceof CwmNamespace) {
-                Collection children = ((CwmNamespace)replacementTarget).getOwnedElement();
+                Collection<CwmModelElement> children =
+                    ((CwmNamespace) replacementTarget).getOwnedElement();
                 if (children != null) {
-                    Iterator j = children.iterator();
-                    while (j.hasNext()) {
-                        CwmModelElement e = (CwmModelElement)j.next();
+                    for (CwmModelElement e : children) {
                         deps.addAll(getDependencies(e));
                     }
                 }
@@ -496,22 +492,21 @@ public class DdlValidator extends FarragoCompoundAllocation
             
             stopListening(); 
             // special cases - FemBaseColumnSet, FemDataServer
-            Iterator i = deps.iterator();
-            while (i.hasNext()) {
-                CwmModelElement e = (CwmModelElement)i.next();
+            for (CwmModelElement e : deps) {
                 if (e instanceof FemBaseColumnSet) {
                     // must reset server to newElement
-                    ((FemBaseColumnSet)e).setServer((FemDataServer)newElement);
+                    ((FemBaseColumnSet) e).setServer((FemDataServer) newElement);
                 } else if (e instanceof FemDataServer) {
-                    ((FemDataServer)e).setWrapper((FemDataWrapper)newElement);
+                    ((FemDataServer) e).setWrapper((FemDataWrapper) newElement);
                 }
             }
             
             // preserve owned elements
-            ArrayList ownedElements = null;
+            List<CwmModelElement> ownedElements = null;
             if (replacementTarget instanceof CwmNamespace) {
-                ownedElements = new ArrayList();
-                Collection c = ((CwmNamespace)replacementTarget).getOwnedElement();
+                ownedElements = new ArrayList<CwmModelElement>();
+                Collection<CwmModelElement> c =
+                    ((CwmNamespace)replacementTarget).getOwnedElement();
                 ownedElements.addAll(c);
                 // remove ownership to avoid cascade delete
                 c.clear();
@@ -547,7 +542,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // further validation
         stopListening();
 
-        List deletionList = new ArrayList();
+        List<RefObject> deletionList = new ArrayList<RefObject>();
         for (Object entry : validatedMap.entrySet()) {
             Map.Entry<RefObject,Object> mapEntry = (Map.Entry<RefObject,Object>) entry;
             RefObject obj = mapEntry.getKey();
@@ -618,9 +613,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         // now we can finally consummate any requested deletions, since we're
         // all done referencing the objects
         Collections.reverse(deletionList);
-        Iterator deletionIter = deletionList.iterator();
-        while (deletionIter.hasNext()) {
-            RefObject refObj = (RefObject) deletionIter.next();
+        for (RefObject refObj : deletionList) {
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine("really deleting " + refObj);
             }
@@ -798,19 +791,17 @@ public class DdlValidator extends FarragoCompoundAllocation
             // Swap in a new map so new scheduling calls aren't handled until
             // the next round.
             transitMap = schedulingMap;
-            schedulingMap = new LinkedHashMap<String, Object>();
+            schedulingMap = new LinkedHashMap<String, Integer>();
 
             boolean progress = false;
-            Iterator<Map.Entry<String,Object>> mapIter = transitMap.entrySet().iterator();
-            while (mapIter.hasNext()) {
-                Map.Entry<String,Object> mapEntry = mapIter.next();
+            for (Map.Entry<String, Integer> mapEntry : transitMap.entrySet()) {
                 RefObject obj =
                     (RefObject) getRepos().getMdrRepos().getByMofId(mapEntry
-                            .getKey());
+                        .getKey());
                 if (obj == null) {
                     continue;
                 }
-                Object action = mapEntry.getValue();
+                Integer action = mapEntry.getValue();
 
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
@@ -828,7 +819,7 @@ public class DdlValidator extends FarragoCompoundAllocation
                         element.setVisibility(VisibilityKindEnum.VK_PRIVATE);
                     }
                     if ((revalidateQueue != null)
-                            && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(obj)) {
                         setRevalidationResult(element, null);
                     }
                     progress = true;
@@ -840,9 +831,9 @@ public class DdlValidator extends FarragoCompoundAllocation
                         obj.refMofId(),
                         action);
                 } catch (EigenbaseException ex) {
-                    tracer.info("Revalidate exception on " + ((CwmModelElement)obj).getName() + ": " + FarragoUtil.exceptionToString(ex));
+                    tracer.info("Revalidate exception on " + ((CwmModelElement) obj).getName() + ": " + FarragoUtil.exceptionToString(ex));
                     if ((revalidateQueue != null)
-                            && revalidateQueue.contains(obj)) {
+                        && revalidateQueue.contains(obj)) {
                         setRevalidationResult(element, ex);
                     } else {
                         throw ex;
@@ -905,14 +896,13 @@ public class DdlValidator extends FarragoCompoundAllocation
     // implement FarragoSessionDdlValidator
     public void validateUniqueNames(
         CwmModelElement container,
-        Collection collection,
+        Collection<? extends CwmModelElement> collection,
         boolean includeType)
     {
-        Map<Object,CwmModelElement> nameMap = new LinkedHashMap<Object, CwmModelElement>();
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
-            Object nameKey = getNameKey(element, includeType);
+        Map<Object,CwmModelElement> nameMap =
+            new LinkedHashMap<Object, CwmModelElement>();
+        for (CwmModelElement element : collection) {
+            String nameKey = getNameKey(element, includeType);
             if (nameKey == null) {
                 continue;
             }
@@ -961,7 +951,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
-    private Object getNameKey(
+    private String getNameKey(
         CwmModelElement element,
         boolean includeType)
     {
@@ -972,7 +962,7 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (!includeType) {
             return name;
         }
-        Class typeClass;
+        Class<? extends Object> typeClass;
 
         // TODO jvs 25-Feb-2005:  provide a mechanism for generalizing these
         // special cases
@@ -993,10 +983,10 @@ public class DdlValidator extends FarragoCompoundAllocation
     {
         String depName = client.getName() + "$DEP";
         CwmDependency dependency =
-            (CwmDependency) FarragoCatalogUtil.getModelElementByNameAndType(
+            FarragoCatalogUtil.getModelElementByNameAndType(
                 client.getOwnedElement(),
                 depName,
-                getRepos().getCorePackage().getCwmDependency());
+                CwmDependency.class);
 
         if (dependency == null) {
             dependency = getRepos().newCwmDependency();
@@ -1009,9 +999,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             dependency.getClient().add(client);
         }
 
-        Iterator iter = suppliers.iterator();
-        while (iter.hasNext()) {
-            Object supplier = iter.next();
+        for (Object supplier : suppliers) {
             dependency.getSupplier().add(supplier);
         }
 
@@ -1035,14 +1023,13 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         // convert from List<FemSqlpathElement> to List<SqlIdentifier>
         List<SqlIdentifier> list = new ArrayList<SqlIdentifier>();
-        Iterator iter = schema.getPathElement().iterator();
-        while (iter.hasNext()) {
-            FemSqlpathElement element = (FemSqlpathElement) iter.next();
+        for (Object o : schema.getPathElement()) {
+            FemSqlpathElement element = (FemSqlpathElement) o;
             SqlIdentifier id =
-                new SqlIdentifier(new String [] {
-                        element.getSearchedSchemaCatalogName(),
-                        element.getSearchedSchemaName()
-                    },
+                new SqlIdentifier(new String []{
+                    element.getSearchedSchemaCatalogName(),
+                    element.getSearchedSchemaName()
+                },
                     SqlParserPos.ZERO);
             list.add(id);
         }
@@ -1139,7 +1126,7 @@ public class DdlValidator extends FarragoCompoundAllocation
             });
     }
 
-    private void mapParserPosition(Object obj)
+    private void mapParserPosition(RefObject obj)
     {
         SqlParserPos context = getParser().getCurrentPosition();
         if (context == null) {
@@ -1228,7 +1215,7 @@ public class DdlValidator extends FarragoCompoundAllocation
 
     private boolean validateAction(
         CwmModelElement modelElement,
-        Object action)
+        Integer action)
     {
         stmtValidator.setParserPosition(null);
         if (action == VALIDATE_CREATION) {
@@ -1287,15 +1274,12 @@ public class DdlValidator extends FarragoCompoundAllocation
             Collection deps = depSupplier.getSupplierDependency(element);
 
             if (deps != null) {
-                Iterator i = deps.iterator();
-                while (i.hasNext()) {
-                    Object o = i.next();
+                for (Object o : deps) {
                     if (o instanceof CwmDependency) {
                         CwmDependency dep = (CwmDependency) o;
                         Collection c = dep.getClient();
-                        Iterator i2 = c.iterator();
-                        while (i2.hasNext()) {
-                            CwmModelElement e = (CwmModelElement) i2.next();
+                        for (Object o2 : c) {
+                            CwmModelElement e = (CwmModelElement) o2;
                             visit.add(e);
                         }
                     }
@@ -1305,11 +1289,9 @@ public class DdlValidator extends FarragoCompoundAllocation
         return false;
     }
 
-    private void scheduleRevalidation(Set elements)
+    private void scheduleRevalidation(Set<CwmModelElement> elements)
     {
-        Iterator i = elements.iterator();
-        while (i.hasNext()) {
-            CwmModelElement e = (CwmModelElement)i.next();
+        for (CwmModelElement e : elements) {
             if (!revalidateQueue.contains(e)) {
                 revalidateQueue.add(e);
                 //REVIEW: unless we regenerate this dependency's SQL
@@ -1325,27 +1307,22 @@ public class DdlValidator extends FarragoCompoundAllocation
         }
     }
 
-    //FarragoSessionDdlValidator
-    public Set getDependencies(CwmModelElement rootElement)
+    // implement FarragoSessionDdlValidator
+    public Set<CwmModelElement> getDependencies(CwmModelElement rootElement)
     {
-        HashSet<CwmModelElement> result = new HashSet<CwmModelElement>();
+        Set<CwmModelElement> result = new HashSet<CwmModelElement>();
 
         DependencySupplier s =
             getRepos().getCorePackage().getDependencySupplier();
-        Collection deps = s.getSupplierDependency(rootElement);
-        Iterator i = deps.iterator();
-        while (i.hasNext()) {
-            Object o = i.next();
+        for (Object o : s.getSupplierDependency(rootElement)) {
             if (o instanceof CwmDependency) {
                 CwmDependency dep = (CwmDependency) o;
-                Collection c = dep.getClient();
-                Iterator i2 = c.iterator();
-                while (i2.hasNext()) {
-                    CwmModelElement e = (CwmModelElement)i2.next();
+                Collection<CwmModelElement> c = dep.getClient();
+                for (CwmModelElement e : c) {
                     result.add(e);
                 }
             }
-        }        
+        }
         return result;
     }
 
@@ -1367,20 +1344,16 @@ public class DdlValidator extends FarragoCompoundAllocation
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
-        Collection c = depSupplier.getSupplierDependency(oldElement);
-        Iterator i = c.iterator();
-        while (i.hasNext()) {
-            CwmDependency dep = (CwmDependency)i.next();
+        for (Object o : depSupplier.getSupplierDependency(oldElement)) {
+            CwmDependency dep = (CwmDependency) o;
             depSupplier.remove(oldElement, dep);
             depSupplier.add(newElement, dep);
         }
 
         DependencyClient depClient =
             getRepos().getCorePackage().getDependencyClient();
-        c = depClient.getClientDependency(oldElement);
-        i = c.iterator();
-        while (i.hasNext()) {
-            CwmDependency dep = (CwmDependency)i.next();
+        for (Object o : depClient.getClientDependency(oldElement)) {
+            CwmDependency dep = (CwmDependency) o;
             depClient.remove(oldElement, dep);
             depClient.add(newElement, dep);
         }
@@ -1401,9 +1374,8 @@ public class DdlValidator extends FarragoCompoundAllocation
         if (ns != null) {
             Collection c = ns.getOwnedElement();
             if (c != null) {
-                Iterator iter = c.iterator();
-                while (iter.hasNext()) {
-                    CwmModelElement element = (CwmModelElement) iter.next();
+                for (Object o : c) {
+                    CwmModelElement element = (CwmModelElement) o;
                     if (element.equals(target)) {
                         continue;
                     }
@@ -1411,8 +1383,8 @@ public class DdlValidator extends FarragoCompoundAllocation
                         continue;
                     }
                     if (element.refIsInstanceOf(
-                                type.refMetaObject(),
-                                true)) {
+                        type.refMetaObject(),
+                        true)) {
                         return element;
                     }
                 }

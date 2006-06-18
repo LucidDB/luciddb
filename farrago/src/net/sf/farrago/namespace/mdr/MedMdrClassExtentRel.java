@@ -28,13 +28,11 @@ import java.util.List;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 import openjava.ptree.*;
 
-import org.eigenbase.oj.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
@@ -42,7 +40,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 import org.eigenbase.runtime.*;
 
 
@@ -65,7 +62,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
      * Refinement for super.table.
      */
     final MedMdrClassExtent mdrClassExtent;
-    Class rowClass;
+    Class<? extends RefObject> rowClass;
     boolean useReflection;
 
     //~ Constructors ----------------------------------------------------------
@@ -97,7 +94,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
 
     private String [] getRuntimeName(RefBaseObject refObject)
     {
-        List nameList = new ArrayList();
+        List<String> nameList = new ArrayList<String>();
 
         boolean useModel = (refObject instanceof ModelElement);
 
@@ -128,7 +125,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                     refObject.refMetaObject().refMetaObject());
         }
         nameList.add(typeName);
-        return (String []) nameList.toArray(new String[0]);
+        return nameList.toArray(new String[0]);
     }
 
     RefBaseObject getRefObjectFromModelElement(ModelElement modelElement)
@@ -207,15 +204,16 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 inputRow);
 
         RelDataType outputRowType = getRowType();
-        List features =
-            JmiUtil.getFeatures(mdrClassExtent.refClass,
+        List<StructuralFeature> features =
+            JmiUtil.getFeatures(
+                mdrClassExtent.refClass,
                 StructuralFeature.class, false);
         int n = features.size();
         Expression [] accessorExps = new Expression[n + 2];
         RelDataTypeField [] outputFields = outputRowType.getFields();
 
         for (int i = 0; i < n; ++i) {
-            StructuralFeature feature = (StructuralFeature) features.get(i);
+            StructuralFeature feature = features.get(i);
             if (useReflection) {
                 accessorExps[i] =
                     new MethodCall(

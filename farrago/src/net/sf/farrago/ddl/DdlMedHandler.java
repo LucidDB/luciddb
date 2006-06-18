@@ -104,7 +104,7 @@ public class DdlMedHandler extends DdlHandler
         // need a special name uniquness check here
         validator.validateUniqueNames(
             repos.getCatalog(FarragoCatalogInit.SYSBOOT_CATALOG_NAME),
-            repos.getRelationalPackage().getCwmCatalog().refAllOfType(),
+            repos.allOfType(CwmCatalog.class),
             false);
 
         try {

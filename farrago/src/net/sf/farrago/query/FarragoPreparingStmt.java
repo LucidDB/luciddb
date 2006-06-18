@@ -129,7 +129,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // attributes of the openjava code generated to implement the statement:
     private ClassDeclaration implementingClassDecl;
     private Argument [] implementingArgs;
-    private Set loadedServerClassNameSet;
+    private Set<String> loadedServerClassNameSet;
     private FarragoSessionPlanner planner;
     private FarragoRelImplementor relImplementor;
 
@@ -149,7 +149,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         this.stmtValidator = stmtValidator;
         stmtValidator.addAllocation(this);
 
-        loadedServerClassNameSet = new HashSet();
+        loadedServerClassNameSet = new HashSet<String>();
 
         super.setResultCallingConvention(CallingConvention.ITERATOR);
 
@@ -465,11 +465,13 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             RelDataType dynamicParamRowType = getParamRowType();
 
             String xmiFennelPlan = null;
-            Set streamDefSet = relImplementor.getStreamDefSet();
+            Set<FemExecutionStreamDef> streamDefSet =
+                relImplementor.getStreamDefSet();
             if (!streamDefSet.isEmpty()) {
                 FemCmdPrepareExecutionStreamGraph cmdPrepareStream =
                     getRepos().newFemCmdPrepareExecutionStreamGraph();
-                Collection streamDefs = cmdPrepareStream.getStreamDefs();
+                Collection<FemExecutionStreamDef> streamDefs =
+                    cmdPrepareStream.getStreamDefs();
                 streamDefs.addAll(streamDefSet);
                 xmiFennelPlan =
                     JmiUtil.exportToXmiString(
@@ -532,7 +534,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             Collections.unmodifiableSet(directDependencies);
 
         // walk the expression looking for dynamic parameters
-        SqlVisitor dynamicParamFinder = new SqlBasicVisitor<Void>()
+        SqlVisitor<Void> dynamicParamFinder = new SqlBasicVisitor<Void>()
             {
                 public Void visit(SqlDynamicParam param)
                 {
@@ -559,16 +561,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // Derive information about origin of each column
             List<Set<RelColumnOrigin>> columnOrigins =
                 new ArrayList<Set<RelColumnOrigin>>();
-            List fieldList = analyzedSql.resultType.getFieldList();
+            List<RelDataTypeField> fieldList =
+                analyzedSql.resultType.getFieldList();
             for (int i = 0; i < fieldList.size(); ++i) {
                 Set<RelColumnOrigin> rcoSet = 
                     RelMetadataQuery.getColumnOrigins(rootRel, i);
                 if (rcoSet == null) {
                     // If we don't know, assume none.
-                    columnOrigins.add(Collections.EMPTY_SET);
-                } else {
-                    columnOrigins.add(rcoSet);
+                    rcoSet = Collections.emptySet();
                 }
+                columnOrigins.add(rcoSet);
             }
             analyzedSql.columnOrigins =
                 Collections.unmodifiableList(columnOrigins);
@@ -587,7 +589,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // function lookup because overloads need to be resolved first.  And we
         // can't do this during SqlToRelConverter because then we stop
         // collecting direct dependencies.
-        SqlVisitor udfInvocationFinder = new SqlBasicVisitor<Void>()
+        SqlVisitor<Void> udfInvocationFinder = new SqlBasicVisitor<Void>()
             {
                 public Void visit(SqlCall call)
                 {
@@ -606,12 +608,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         sqlNode.accept(udfInvocationFinder);
     }
 
-    protected Set getReferencedObjectIds()
+    protected Set<String> getReferencedObjectIds()
     {
-        Set set = new HashSet();
-        Iterator iter = allDependencies.iterator();
-        while (iter.hasNext()) {
-            RefObject refObj = (RefObject) iter.next();
+        Set<String> set = new HashSet<String>();
+        for (CwmModelElement refObj : allDependencies) {
             set.add(refObj.refMofId());
         }
         return set;
@@ -956,14 +956,19 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         return getTableForMember(name.names);
     }
-    
+
     // implement RelOptSchema
-    public RelOptTable getTableForMember(String [] names)
+    public RelOptTable getTableForMember(String[] names)
     {
-        FarragoSessionResolvedObject resolved =
+        return getTableForMember(names, null);
+    }
+
+    // implement RelOptSchemaWithSampling
+    public RelOptTable getTableForMember(String [] names, String datasetName)
+    {
+        FarragoSessionResolvedObject<CwmNamedColumnSet> resolved =
             stmtValidator.resolveSchemaObjectName(
-                names,
-                getRepos().getRelationalPackage().getCwmNamedColumnSet());
+                names, CwmNamedColumnSet.class);
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -972,6 +977,15 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         assert (resolved.object instanceof CwmNamedColumnSet);
 
         CwmNamedColumnSet columnSet = (CwmNamedColumnSet) resolved.object;
+
+        // Look up sample dataset, if asked for.
+        if (datasetName != null) {
+            CwmNamedColumnSet sampleColumnSet = null;
+//                stmtValidator.getSample(columnSet, datasetName);
+            if (sampleColumnSet != null) {
+                columnSet = sampleColumnSet;
+            }
+        }
 
         if (columnSet instanceof FemLocalTable) {
             FemLocalTable table = (FemLocalTable) columnSet;
@@ -1019,11 +1033,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     private FarragoMedColumnSet getForeignTableFromNamespace(
-        FarragoSessionResolvedObject resolved)
+        FarragoSessionResolvedObject<CwmNamedColumnSet> resolved)
     {
         FemDataServer femServer =
-            (FemDataServer) FarragoCatalogUtil.getModelElementByName(
-                getRepos().getMedPackage().getFemDataServer().refAllOfType(),
+            FarragoCatalogUtil.getModelElementByName(
+                getRepos().allOfType(FemDataServer.class),
                 resolved.catalogName);
         if (femServer == null) {
             return null;
@@ -1101,10 +1115,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     // implement SqlValidator.CatalogReader
     public SqlValidatorTable getTable(String [] names)
     {
-        FarragoSessionResolvedObject resolved =
+        FarragoSessionResolvedObject<CwmNamedColumnSet> resolved =
             stmtValidator.resolveSchemaObjectName(
-                names,
-                getRepos().getRelationalPackage().getCwmNamedColumnSet());
+                names, CwmNamedColumnSet.class);
 
         if (resolved == null) {
             return null;

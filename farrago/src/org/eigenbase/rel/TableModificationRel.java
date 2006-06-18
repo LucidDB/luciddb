@@ -48,7 +48,7 @@ public final class TableModificationRel extends TableModificationRelBase
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList,
+        List<String> updateColumnList,
         boolean flattened)
     {
         super(

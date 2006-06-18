@@ -227,16 +227,13 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * names, throwing an appropriate exception if not.
      *
      * @param container namespace object for use in error message
-     *
-     * @param collection Collection of CwmModelElements representing namespace
+     *@param collection Collection of CwmModelElements representing namespace
      *        contents
-     *
-     * @param includeType if true, include type in name; if false, ignore
-     *        types in deciding uniqueness
+     *@param includeType if true, include type in name; if false, ignore
      */
     public void validateUniqueNames(
         CwmModelElement container,
-        Collection collection,
+        Collection<? extends CwmModelElement> collection,
         boolean includeType);
 
     /**
@@ -320,7 +317,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * @param rootElement Starting element for dependency search
      * @return Set of CwmModelElement, immediate dependencies of rootElement
      */
-    public Set getDependencies(CwmModelElement rootElement);
+    public Set<CwmModelElement> getDependencies(CwmModelElement rootElement);
 
     /**
      * Modifies the analyzed SQL for a view definition, to take into account

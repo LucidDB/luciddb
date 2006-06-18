@@ -78,12 +78,12 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     /**
      * Saved copy of Farrago configuration parameters.
      */
-    private static SortedMap savedFarragoConfig;
+    private static SortedMap<String,Object> savedFarragoConfig;
 
     /**
      * Saved copy of Fennel configuration parameters.
      */
-    private static SortedMap savedFennelConfig;
+    private static SortedMap<String,Object> savedFennelConfig;
 
     private static Thread shutdownHook;
 
@@ -355,7 +355,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      * @return a JUnit test suite which will take care of initialization of
      *         per-testcase members
      */
-    public static Test wrappedSuite(Class clazz)
+    public static Test wrappedSuite(Class<? extends TestCase> clazz)
     {
         TestSuite suite = new TestSuite(clazz);
         return wrappedSuite(suite);
@@ -485,7 +485,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         if (driverName == null) {
             return new FarragoJdbcEngineDriver();
         }
-        Class clazz = Class.forName(driverName);
+        Class<?> clazz = Class.forName(driverName);
         return (FarragoJdbcEngineDriver) clazz.newInstance();
     }
 
@@ -702,7 +702,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         private void dropSchemas()
             throws Exception
         {
-            List list = new ArrayList();
+            List<String> list = new ArrayList<String>();
 
             // NOTE:  don't use DatabaseMetaData.getSchemas since it doesn't
             // work when Fennel is disabled
@@ -719,9 +719,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
                     list.add(schemaName);
                 }
             }
-            Iterator iter = list.iterator();
-            while (iter.hasNext()) {
-                String name = (String) iter.next();
+            for (String name : list) {
                 getStmt().execute("drop schema \"" + name + "\" cascade");
             }
         }
@@ -729,21 +727,19 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         private void dropDataWrappers()
             throws Exception
         {
-            List list = new ArrayList();
-            Iterator iter =
-                getRepos().getMedPackage().getFemDataWrapper().refAllOfClass().iterator();
-            while (iter.hasNext()) {
-                FemDataWrapper wrapper = (FemDataWrapper) iter.next();
+            List<String> list = new ArrayList<String>();
+            for (FemDataWrapper wrapper :
+                getRepos().allOfClass(FemDataWrapper.class)) {
                 if (wrapper.getName().startsWith("SYS_")) {
                     continue;
                 }
                 list.add(wrapper.isForeign() ? "foreign" : "local");
                 list.add(wrapper.getName());
             }
-            iter = list.iterator();
+            Iterator<String> iter = list.iterator();
             while (iter.hasNext()) {
-                String wrapperType = (String) iter.next();
-                String name = (String) iter.next();
+                String wrapperType = iter.next();
+                String name = iter.next();
                 getStmt().execute(
                     "drop " + wrapperType + " data wrapper \"" + name
                     + "\" cascade");
@@ -757,53 +753,41 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         private void dropDataServers()
             throws Exception
         {
-            List list = new ArrayList();
-            Iterator iter =
-                getRepos().getMedPackage().getFemDataServer().refAllOfClass().iterator();
-            while (iter.hasNext()) {
-                FemDataServer server = (FemDataServer) iter.next();
+            List<String> list = new ArrayList<String>();
+            for (FemDataServer server :
+                getRepos().allOfClass(FemDataServer.class)) {
                 if (isBlessedServer(server)) {
                     continue;
                 }
                 list.add(server.getName());
             }
-            iter = list.iterator();
-            while (iter.hasNext()) {
-                String name = (String) iter.next();
+            for (String name : list) {
                 getStmt().execute(
                     "drop server \"" + name
-                    + "\" cascade");
+                        + "\" cascade");
             }
         }
         
         private void dropAuthIds()
             throws Exception
         {
-            List list = new ArrayList();
-            Iterator iter =
-                getRepos().getSecurityPackage().getFemAuthId().refAllOfType()
-                .iterator();
-            while (iter.hasNext()) {
-                FemAuthId authId =
-                    (FemAuthId) iter.next();
+            List<String> list = new ArrayList<String>();
+            for (FemAuthId authId : getRepos().allOfType(FemAuthId.class)) {
                 if (authId.getName().equals(
-                        FarragoCatalogInit.SYSTEM_USER_NAME)
+                    FarragoCatalogInit.SYSTEM_USER_NAME)
                     || authId.getName().equals(
-                        FarragoCatalogInit.PUBLIC_ROLE_NAME)
+                    FarragoCatalogInit.PUBLIC_ROLE_NAME)
                     || authId.getName().equals(
-                        FarragoCatalogInit.SA_USER_NAME))
-                {
+                    FarragoCatalogInit.SA_USER_NAME)) {
                     continue;
                 }
                 list.add(
                     ((authId instanceof FemRole) ? "ROLE" : "USER")
-                    + " "
-                    + authId.getName());
+                        + " "
+                        + authId.getName());
             }
-            iter = list.iterator();
-            while (iter.hasNext()) {
-                String obj = iter.next().toString();
-                getStmt().execute("drop " + obj);
+            for (String name : list) {
+                getStmt().execute("drop " + name);
             }
         }
     }

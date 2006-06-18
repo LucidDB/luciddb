@@ -59,9 +59,9 @@ public class FarragoStatsUtil
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
             FemLocalSchema schema = 
-                lookupSchema(session, repos, catalog, schemaName);
+                lookupSchema(session, catalog, schemaName);
             FemAbstractColumnSet columnSet = 
-                lookupColumnSet(repos, schema, tableName);
+                lookupColumnSet(schema, tableName);
             FarragoCatalogUtil.updateRowCount(columnSet, rowCount);
 
             rollback = false;
@@ -87,8 +87,8 @@ public class FarragoStatsUtil
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
             FemLocalSchema schema = 
-                lookupSchema(session, repos, catalog, schemaName);
-            FemLocalIndex index = lookupIndex(repos, schema, indexName);
+                lookupSchema(session, catalog, schemaName);
+            FemLocalIndex index = lookupIndex(schema, indexName);
             FarragoCatalogUtil.updatePageCount(index, pageCount);
 
             rollback = false;
@@ -122,10 +122,10 @@ public class FarragoStatsUtil
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
             FemLocalSchema schema = 
-                lookupSchema(session, repos, catalog, schemaName);
+                lookupSchema(session, catalog, schemaName);
             FemAbstractColumnSet columnSet = 
-                lookupColumnSet(repos, schema, tableName);
-            FemAbstractColumn column = lookupColumn(repos, columnSet, columnName);
+                lookupColumnSet(schema, tableName);
+            FemAbstractColumn column = lookupColumn(columnSet, columnName);
             
             long rowCount = columnSet.getRowCount();
             long sampleRows = (rowCount * samplePercent) / 100;
@@ -267,7 +267,6 @@ public class FarragoStatsUtil
     
     private static FemLocalSchema lookupSchema(
         FarragoSession session,
-        FarragoRepos repos,
         CwmCatalog catalog,
         String schemaName)
     throws SqlValidatorException
@@ -275,7 +274,7 @@ public class FarragoStatsUtil
         if (schemaName == null || schemaName.length() == 0) {
             schemaName = session.getSessionVariables().schemaName;
         }
-        FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(repos, catalog, schemaName);
+        FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
         if (schema == null) {
             throw FarragoResource.instance().ValidatorUnknownObject.ex(schemaName);
         }
@@ -283,15 +282,17 @@ public class FarragoStatsUtil
     }
     
     private static FemAbstractColumnSet lookupColumnSet(
-        FarragoRepos repos,
         FemLocalSchema schema,
         String tableName)
     throws SqlValidatorException
     {
         FemAbstractColumnSet columnSet = null;
         if (tableName != null) {
-            columnSet = (FemAbstractColumnSet) FarragoCatalogUtil.getModelElementByNameAndType(
-                schema.getOwnedElement(), tableName, repos.getFemPackage().getSql2003().getFemAbstractColumnSet());
+            columnSet =
+                FarragoCatalogUtil.getModelElementByNameAndType(
+                    schema.getOwnedElement(),
+                    tableName,
+                    FemAbstractColumnSet.class);
         }
         if (columnSet == null) {
             throw FarragoResource.instance().ValidatorUnknownObject.ex(tableName);
@@ -300,15 +301,17 @@ public class FarragoStatsUtil
     }
 
     private static FemLocalIndex lookupIndex(
-        FarragoRepos repos,
         FemLocalSchema schema,
         String indexName)
     throws SqlValidatorException
     {
         FemLocalIndex index = null;
         if (indexName != null) {
-            index = (FemLocalIndex) FarragoCatalogUtil.getModelElementByNameAndType(
-                schema.getOwnedElement(), indexName, repos.getFemPackage().getMed().getFemLocalIndex());
+            index =
+                FarragoCatalogUtil.getModelElementByNameAndType(
+                schema.getOwnedElement(),
+                    indexName,
+                    FemLocalIndex.class);
         }
         if (index == null) {
             throw FarragoResource.instance().ValidatorUnknownObject.ex(indexName);
@@ -317,21 +320,23 @@ public class FarragoStatsUtil
     }
     
     private static FemAbstractColumn lookupColumn(
-        FarragoRepos repos,
         FemAbstractColumnSet columnSet,
         String columnName)
     throws SqlValidatorException
     {
         FemAbstractColumn column = null;
         if (columnName != null) {
-            column = (FemAbstractColumn) FarragoCatalogUtil.getModelElementByNameAndType(
-                columnSet.getFeature(), columnName, repos.getSql2003Package().getFemAbstractColumn());
+            column =
+                FarragoCatalogUtil.getModelElementByNameAndType(
+                    columnSet.getFeature(),
+                    columnName,
+                    FemAbstractColumn.class);
         }
         if (column == null) {
             throw FarragoResource.instance().ValidatorUnknownObject.ex(columnName);
-        }        
+        }
         return column;
     }
 }
 
-// End FarragoStatUtil.java
+// End FarragoStatsUtil.java

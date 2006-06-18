@@ -1115,4 +1115,16 @@ SortRel(sort0=[$1], dir0=[Ascending])
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testSample">
+        <Resource name="sql">
+            <![CDATA[select * from table(sample('DATASET1', cursor(select * from emp)))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+  ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+    TableAccessRel(table=[[SALES, EMP:DATASET1]])
+]]>
+        </Resource>
+    </TestCase>
 </Root>

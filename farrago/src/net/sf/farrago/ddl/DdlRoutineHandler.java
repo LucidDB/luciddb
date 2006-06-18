@@ -438,7 +438,7 @@ public class DdlRoutineHandler extends DdlHandler
             SqlNode expr = call.getOperands()[1];
             FemSqltypeAttribute attribute = (FemSqltypeAttribute)
                 FarragoCatalogUtil.getModelElementByName(
-                    objectType.getFeature(),
+                    (Collection<CwmFeature>) objectType.getFeature(),
                     lhs.getSimple());
             if (attribute == null) {
                 throw res.ValidatorConstructorAssignmentUnknown.ex(

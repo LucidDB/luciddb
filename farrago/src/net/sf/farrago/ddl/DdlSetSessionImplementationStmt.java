@@ -63,9 +63,8 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
         if (jarName == null) {
             return;
         }
-        femJar = (FemJar) ddlValidator.getStmtValidator().findSchemaObject(
-            jarName,
-            ddlValidator.getRepos().getSql2003Package().getFemJar());
+        femJar = ddlValidator.getStmtValidator().findSchemaObject(
+            jarName, FemJar.class);
     }
 
     public FarragoSessionPersonality newPersonality(

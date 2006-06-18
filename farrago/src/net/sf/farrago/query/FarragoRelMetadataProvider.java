@@ -96,14 +96,15 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
             return null;
         }
         FemLocalSchema schema = 
-            FarragoCatalogUtil.getSchemaByName(repos, catalog, schemaName);
+            FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
         if (schema == null) {
             return null;
         }
-        FemAbstractColumnSet columnSet = (FemAbstractColumnSet) 
+        FemAbstractColumnSet columnSet =
             FarragoCatalogUtil.getModelElementByNameAndType(
-                schema.getOwnedElement(), tableName, 
-                repos.getFemPackage().getSql2003().getFemAbstractColumnSet());
+                schema.getOwnedElement(),
+                tableName, 
+                FemAbstractColumnSet.class);
         if (columnSet == null) {
             return null;
         }

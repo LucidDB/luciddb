@@ -75,14 +75,13 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             // qualify the builtins with INFORMATION_SCHEMA, but we
             // currently don't.
             if (opName.names.length == 1) {
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
         }
         if (category == SqlFunctionCategory.UserDefinedSpecificFunction) {
             // Look up by specific name instead of invocation name.
-            FemRoutine femRoutine = (FemRoutine) stmtValidator.findSchemaObject(
-                opName,
-                stmtValidator.getRepos().getSql2003Package().getFemRoutine());
+            FemRoutine femRoutine =
+                stmtValidator.findSchemaObject(opName, FemRoutine.class);
             List<SqlOperator> overloads = new ArrayList<SqlOperator>();
             if (femRoutine.getType() == ProcedureTypeEnum.FUNCTION) {
                 overloads.add(convertRoutine(femRoutine));
@@ -91,15 +90,14 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         }
         
         if (syntax != SqlSyntax.Function) {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         
-        List list = stmtValidator.findRoutineOverloads(
+        List<FemRoutine> list = stmtValidator.findRoutineOverloads(
             opName,
             null);
         List<SqlOperator> overloads = new ArrayList<SqlOperator>();
-        for (Object aList : list) {
-            FemRoutine femRoutine = (FemRoutine) aList;
+        for (FemRoutine femRoutine : list) {
             if (category == SqlFunctionCategory.UserDefinedFunction) {
                 if (femRoutine.getType() != ProcedureTypeEnum.FUNCTION) {
                     continue;

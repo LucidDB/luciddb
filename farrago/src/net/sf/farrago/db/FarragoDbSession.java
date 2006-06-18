@@ -31,13 +31,10 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.*;
-import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -45,11 +42,8 @@ import net.sf.farrago.plugin.*;
 
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
-import org.eigenbase.oj.rex.*;
-import org.eigenbase.oj.stmt.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 import org.eigenbase.jmi.*;
@@ -190,7 +184,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             System.getProperty("user.name"));
         sessionVariables.systemUserFullName = info.getProperty(
             "clientUserFullName");
-        sessionVariables.schemaSearchPath = Collections.EMPTY_LIST;
+        sessionVariables.schemaSearchPath = Collections.emptyList();
         sessionVariables.sessionName = info.getProperty("sessionName");
         sessionVariables.programName = info.getProperty("clientProgramName");
         sessionVariables.processId = 0L;
@@ -308,7 +302,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public List getModelExtensions()
+    public List<FarragoSessionModelExtension> getModelExtensions()
     {
         return database.getModelExtensions();
     }

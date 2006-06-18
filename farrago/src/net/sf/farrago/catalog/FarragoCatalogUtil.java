@@ -189,13 +189,12 @@ public abstract class FarragoCatalogUtil
      */
     public static List<FemUniqueKeyConstraint> getUniqueKeyConstraints(CwmClassifier table)
     {
-        ArrayList listOfConstraints = new ArrayList();
-        Iterator iter = table.getOwnedElement().iterator();
+        List<FemUniqueKeyConstraint> listOfConstraints =
+            new ArrayList<FemUniqueKeyConstraint>();
 
-        while (iter.hasNext()) {
-            Object obj = iter.next();
+        for (Object obj : table.getOwnedElement()) {
             if (obj instanceof FemUniqueKeyConstraint) {
-                listOfConstraints.add(obj);
+                listOfConstraints.add((FemUniqueKeyConstraint) obj);
             }
         }
         return listOfConstraints;
@@ -211,9 +210,7 @@ public abstract class FarragoCatalogUtil
      */
     public static FemPrimaryKeyConstraint getPrimaryKey(CwmClassifier table)
     {
-        Iterator iter = table.getOwnedElement().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
+        for (Object obj : table.getOwnedElement()) {
             if (obj instanceof FemPrimaryKeyConstraint) {
                 return (FemPrimaryKeyConstraint) obj;
             }
@@ -233,9 +230,7 @@ public abstract class FarragoCatalogUtil
     public static FemLocalIndex getClusteredIndex(
         FarragoRepos repos, CwmClass table)
     {
-        Iterator iter = getTableIndexes(repos, table).iterator();
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (index.isClustered()) {
                 return index;
             }
@@ -254,16 +249,14 @@ public abstract class FarragoCatalogUtil
     public static List<FemLocalIndex> getClusteredIndexes(
         FarragoRepos repos, CwmClass table)
     {
-        ArrayList listOfIndexes = new ArrayList();
-        Iterator iter = getTableIndexes(repos, table).iterator();
+        ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (index.isClustered()) {
-                listOfIndexes.add(index);
+                indexList.add(index);
             }
         }
-        return listOfIndexes;
+        return indexList;
     }
         
     /**
@@ -277,16 +270,14 @@ public abstract class FarragoCatalogUtil
     public static List<FemLocalIndex> getUnclusteredIndexes(
         FarragoRepos repos, CwmClass table)
     {
-        ArrayList listOfIndexes = new ArrayList();
-        Iterator iter = getTableIndexes(repos, table).iterator();
+        ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (!index.isClustered() && !isDeletionIndex(index)) {
-                listOfIndexes.add(index);
+                indexList.add(index);
             }
         }
-        return listOfIndexes;
+        return indexList;
     }
     
     /**
@@ -300,11 +291,7 @@ public abstract class FarragoCatalogUtil
     public static FemLocalIndex getDeletionIndex(
         FarragoRepos repos, CwmClass table)
     {
-        Iterator iter =
-            FarragoCatalogUtil.getTableIndexes(repos, table).iterator();
-
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (isDeletionIndex(index)) {
                 return index;
             }
@@ -321,7 +308,7 @@ public abstract class FarragoCatalogUtil
      *
      * @return index collection
      */
-    public static Collection getTableIndexes(
+    public static Collection<FemLocalIndex> getTableIndexes(
         FarragoRepos repos, CwmClass table)
     {
         return
@@ -410,20 +397,19 @@ public abstract class FarragoCatalogUtil
     }
     
     /**
-     * Searches a collection for a CwmModelElement by name.
+     * Searches a collection of {@link CwmModelElement}s (or a subtype) by
+     * name.
      *
      * @param collection the collection to search
      * @param name name of element to find
      *
      * @return CwmModelElement found, or null if not found
      */
-    public static CwmModelElement getModelElementByName(
-        Collection collection,
+    public static <T extends CwmModelElement> T getModelElementByName(
+        Collection<T> collection,
         String name)
     {
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
+        for (T element : collection) {
             if (element.getName().equals(name)) {
                 return element;
             }
@@ -436,45 +422,45 @@ public abstract class FarragoCatalogUtil
      *
      * @param collection the collection to search
      * @param name name of element to find
-     * @param type class which sought object must instantiate
+     * @param clazz class which sought object must instantiate
      *
      * @return CwmModelElement found, or null if not found
      */
-    public static CwmModelElement getModelElementByNameAndType(
-        Collection collection,
+    public static <T extends CwmModelElement>
+    T getModelElementByNameAndType(
+        Collection<CwmModelElement> collection,
         String name,
-        RefClass type)
+        Class<T> clazz)
     {
-        Iterator iter = collection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
+        for (CwmModelElement element : collection) {
             if (!element.getName().equals(name)) {
                 continue;
             }
-            if (element.refIsInstanceOf(type.refMetaObject(), true)) {
-                return element;
+            if (clazz.isInstance(element)) {
+                return clazz.cast(element);
             }
         }
         return null;
     }
     
     /**
-     * Filters a collection for all CwmModelElements of a given type.
+     * Filters a collection for all {@link CwmModelElement}s of a given type.
      *
      * @param inCollection the collection to search
      * @param outCollection receives matching objects
      * @param type class which sought objects must instantiate
      */
-    public static void filterTypedModelElements(
-        Collection inCollection,
-        Collection outCollection,
-        Class type)
+    public static <
+        OutT extends CwmModelElement,
+        AskT extends OutT>
+    void filterTypedModelElements(
+        Collection<? extends CwmModelElement> inCollection,
+        Collection<OutT> outCollection,
+        Class<AskT> type)
     {
-        Iterator iter = inCollection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
+        for (CwmModelElement element : inCollection) {
             if (type.isInstance(element)) {
-                outCollection.add(element);
+                outCollection.add(type.cast(element));
             }
         }
     }
@@ -486,21 +472,17 @@ public abstract class FarragoCatalogUtil
      *
      * @param outMap receives indexed elements; key is name, value is element
      */
-    public static void indexModelElementsByName(
-        Collection inCollection,
-        Map outMap)
+    public static <T extends CwmModelElement> void indexModelElementsByName(
+        Collection<T> inCollection,
+        Map<String, T> outMap)
     {
-        Iterator iter = inCollection.iterator();
-        while (iter.hasNext()) {
-            CwmModelElement element = (CwmModelElement) iter.next();
+        for (T element : inCollection) {
             outMap.put(element.getName(), element);
         }
     }
     
     /**
      * Looks up a schema by name in a catalog.
-     *
-     * @param repos repos storing catalog
      *
      * @param catalog CwmCatalog to search
      *
@@ -509,14 +491,13 @@ public abstract class FarragoCatalogUtil
      * @return schema definition, or null if not found
      */
     public static FemLocalSchema getSchemaByName(
-        FarragoRepos repos,
         CwmCatalog catalog,
         String schemaName)
     {
-        return (FemLocalSchema) getModelElementByNameAndType(
+        return getModelElementByNameAndType(
             catalog.getOwnedElement(),
             schemaName,
-            repos.getSql2003Package().getFemLocalSchema());
+            FemLocalSchema.class);
     }
 
     /**
@@ -560,10 +541,9 @@ public abstract class FarragoCatalogUtil
         	if (!clusteredIndex.isSorted()) {
             	return true;
             }
-            Iterator iter = clusteredIndex.getIndexedFeature().iterator();
-            while (iter.hasNext()) {
-                CwmIndexedFeature indexedFeature =
-                    (CwmIndexedFeature) iter.next();
+            for (CwmIndexedFeature indexedFeature :
+                ((List<CwmIndexedFeature>) clusteredIndex.getIndexedFeature()))
+            {
                 if (indexedFeature.getFeature().equals(column)) {
                     return false;
                 }
@@ -576,7 +556,7 @@ public abstract class FarragoCatalogUtil
      * Gets the routine which implements a particular user-defined ordering,
      * or null if the ordering does not invoke a routine.
      *
-     * @param ordering user-defined ordering of interest
+     * @param udo user-defined ordering of interest
      *
      * @return invoked routine or null
      */
@@ -601,7 +581,7 @@ public abstract class FarragoCatalogUtil
      */
     public static SqlIdentifier getQualifiedName(CwmModelElement element)
     {
-        List names = new ArrayList(3);
+        List<String> names = new ArrayList<String>(3);
         names.add(element.getName());
         for (CwmNamespace ns = element.getNamespace(); ns != null;
              ns = ns.getNamespace())
@@ -609,7 +589,7 @@ public abstract class FarragoCatalogUtil
             names.add(ns.getName());
         }
         Collections.reverse(names);
-        String [] nameArray = (String []) names.toArray(Util.emptyStringArray);
+        String [] nameArray = names.toArray(Util.emptyStringArray);
         return new SqlIdentifier(nameArray, SqlParserPos.ZERO);
     }
 
@@ -663,14 +643,14 @@ public abstract class FarragoCatalogUtil
      *
      * @return list of structural features
      */
-    public static List getStructuralFeatures(CwmClassifier classifier)
+    public static List<CwmStructuralFeature> getStructuralFeatures(
+        CwmClassifier classifier)
     {
-        List structuralFeatures = new ArrayList();
-        Iterator iter = classifier.getFeature().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
+        List<CwmStructuralFeature> structuralFeatures =
+            new ArrayList<CwmStructuralFeature>();
+        for (Object obj : classifier.getFeature()) {
             if (obj instanceof CwmStructuralFeature) {
-                structuralFeatures.add(obj);
+                structuralFeatures.add((CwmStructuralFeature) obj);
             }
         }
         return structuralFeatures;
@@ -713,14 +693,9 @@ public abstract class FarragoCatalogUtil
     public static FemAuthId getAuthIdByName(
         FarragoRepos repos, String authName)
     {
-        Collection authIdCollection =
-            repos.getSecurityPackage().getFemAuthId().refAllOfType();
-
-        FemAuthId femAuthId = (FemAuthId)
-            FarragoCatalogUtil.getModelElementByName(
-                authIdCollection, authName);
-
-        return femAuthId;
+        return FarragoCatalogUtil.getModelElementByName(
+            repos.allOfType(FemAuthId.class),
+            authName);
     }
 
     /**
@@ -736,13 +711,8 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         String userName)
     {
-        Collection authIdCollection =
-            repos.getSecurityPackage().getFemUser().
-            refAllOfType();
-        FemUser user = (FemUser)
-            FarragoCatalogUtil.getModelElementByName(
-                authIdCollection, userName);
-        return user;
+        return FarragoCatalogUtil.getModelElementByName(
+            repos.allOfType(FemUser.class), userName);
     }
 
     /**
@@ -758,13 +728,8 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         String roleName)
     {
-        Collection authIdCollection =
-            repos.getSecurityPackage().getFemRole().
-            refAllOfType();
-        FemRole role = (FemRole)
-            FarragoCatalogUtil.getModelElementByName(
-                authIdCollection, roleName);
-        return role;
+        return FarragoCatalogUtil.getModelElementByName(
+            repos.allOfType(FemRole.class), roleName);
     }
 
     /**
@@ -863,8 +828,6 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos, FemAuthId grantorAuthId, FemAuthId granteeAuthId,
         CwmModelElement grantedObject)
     {
-        FemAuthId grantedRole;
-        
         // create a privilege object and set its properties
         FemGrant grant = repos.newFemGrant();        
         

@@ -38,7 +38,7 @@ import org.eigenbase.sql.parser.SqlParserPos;
  */
 public class DdlSetPathStmt extends DdlSetContextStmt
 {
-    private List<SqlNode> schemaList;
+    private List<SqlIdentifier> schemaList;
 
     /**
      * Constructs a new DdlSetPathStmt.
@@ -62,23 +62,25 @@ public class DdlSetPathStmt extends DdlSetContextStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
+        List<SqlNode> schemaExprList = null;
         if (parsedExpr instanceof SqlIdentifier) {
-            schemaList = Collections.singletonList(parsedExpr);
+            schemaExprList = Collections.singletonList(parsedExpr);
         } else if (parsedExpr instanceof SqlCall) {
             SqlCall call = (SqlCall) parsedExpr;
             if (call.getOperator().getName().equalsIgnoreCase("row")) {
-                schemaList = Arrays.asList(call.getOperands());
+                schemaExprList = Arrays.asList(call.getOperands());
             }
         }
-        if (schemaList != null) {
-            for (Object obj : schemaList) {
+        if (schemaExprList != null) {
+            this.schemaList = new ArrayList<SqlIdentifier>();
+            for (SqlNode obj : schemaExprList) {
                 if (!(obj instanceof SqlIdentifier)) {
-                    schemaList = null;
+                    schemaExprList = null;
                     break;
                 }
                 SqlIdentifier id = (SqlIdentifier) obj;
                 if ((id.names.length < 1) || (id.names.length > 2)) {
-                    schemaList = null;
+                    schemaExprList = null;
                     break;
                 }
                 if (id.isSimple()) {
@@ -95,15 +97,17 @@ public class DdlSetPathStmt extends DdlSetContextStmt
                     };
                     id.setNames(names, poses);
                 }
+                schemaList.add(id);
             }
         }
-        if (schemaList == null) {
+        if (schemaExprList == null) {
+            this.schemaList = null;
             throw FarragoResource.instance().ValidatorSetPathInvalidExpr.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(valueString));
         }
     }
 
-    public List<SqlNode> getSchemaList()
+    public List<SqlIdentifier> getSchemaList()
     {
         return schemaList;
     }
