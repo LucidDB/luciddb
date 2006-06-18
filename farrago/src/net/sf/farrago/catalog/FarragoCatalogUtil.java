@@ -36,6 +36,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
 import javax.jmi.reflect.*;
@@ -441,6 +442,20 @@ public abstract class FarragoCatalogUtil
             }
         }
         return null;
+    }
+
+    /**
+     * @deprecated use typesafe version instead
+     */
+    public static CwmModelElement getModelElementByNameAndType(
+        Collection collection,
+        String name,
+        RefClass type)
+    {
+        return getModelElementByNameAndType(
+            (Collection<CwmModelElement>) collection,
+            name,
+            (Class<CwmModelElement>) JmiObjUtil.getClassForRefClass(type));
     }
     
     /**

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/initsql/createJdbcViews.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#8 $
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -439,7 +439,7 @@
 . . . . . . . . >         null_identifier() as create_params,
 . . . . . . . . >         cast(1 as smallint) as nullable,
 . . . . . . . . >         true as case_sensitive,
-. . . . . . . . >         true as searchable,
+. . . . . . . . >         3 as searchable,
 . . . . . . . . >         false as unsigned_attribute,
 . . . . . . . . >         false as fixed_prec_scale,
 . . . . . . . . >         false as auto_increment,
@@ -591,7 +591,32 @@
 . . . . . . . . >         table_stats_internal t
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on index_info_view to public;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE jvs 17-June-2006:  Odd definition here is workaround
+0: jdbc:farrago:> -- for FNL-33 and constant reduction
+0: jdbc:farrago:> create view empty_view as
+. . . . . . . . > select * from (select 1 as one from (values(0))) where 0 > one;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view super_tables_view as
+. . . . . . . . >     select
+. . . . . . . . >         null_identifier() as table_cat,
+. . . . . . . . >         null_identifier() as table_schem,
+. . . . . . . . >         null_identifier() as table_name,
+. . . . . . . . >         null_identifier() as supertable_name
+. . . . . . . . >     from empty_view;
+0: jdbc:farrago:> grant select on super_tables_view to public;
 0: jdbc:farrago:>     
+0: jdbc:farrago:> create view super_types_view as
+. . . . . . . . >     select
+. . . . . . . . >         null_identifier() as type_cat,
+. . . . . . . . >         null_identifier() as type_schem,
+. . . . . . . . >         null_identifier() as type_name,
+. . . . . . . . >         null_identifier() as supertype_cat,
+. . . . . . . . >         null_identifier() as supertype_schem,
+. . . . . . . . >         null_identifier() as supertype_name
+. . . . . . . . >     from empty_view;
+0: jdbc:farrago:> grant select on super_types_view to public;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- TODO:  all the rest
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- just a placeholder for now

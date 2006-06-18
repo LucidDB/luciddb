@@ -94,7 +94,20 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
             if (runtimeContext != null) {
                 runtimeContext.checkCancel();
             }
-            return super.next();
+            boolean rc = super.next();
+            if (!rc) {
+                if (runtimeContext != null) {
+                    FarragoSession session = runtimeContext.getSession();
+                    if (session.isAutoCommit()) {
+                        // According to the Javadoc for
+                        // Connection.setAutoCommit, returning the last
+                        // row of a cursor in autocommit mode ends
+                        // the transaction.
+                        close();
+                    }
+                }
+            }
+            return rc;
         } catch (Throwable ex) {
             // trace exceptions as part of JDBC API
             throw FarragoJdbcUtil.newSqlException(ex, jdbcTracer);

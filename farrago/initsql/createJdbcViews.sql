@@ -439,7 +439,7 @@ create view type_info_view as
         null_identifier() as create_params,
         cast(1 as smallint) as nullable,
         true as case_sensitive,
-        true as searchable,
+        3 as searchable,
         false as unsigned_attribute,
         false as fixed_prec_scale,
         false as auto_increment,
@@ -591,7 +591,32 @@ union
         table_stats_internal t
 ;
 grant select on index_info_view to public;
+
+-- NOTE jvs 17-June-2006:  Odd definition here is workaround
+-- for FNL-33 and constant reduction
+create view empty_view as
+select * from (select 1 as one from (values(0))) where 0 > one;
+
+create view super_tables_view as
+    select
+        null_identifier() as table_cat,
+        null_identifier() as table_schem,
+        null_identifier() as table_name,
+        null_identifier() as supertable_name
+    from empty_view;
+grant select on super_tables_view to public;
     
+create view super_types_view as
+    select
+        null_identifier() as type_cat,
+        null_identifier() as type_schem,
+        null_identifier() as type_name,
+        null_identifier() as supertype_cat,
+        null_identifier() as supertype_schem,
+        null_identifier() as supertype_name
+    from empty_view;
+grant select on super_types_view to public;
+
 -- TODO:  all the rest
 
 -- just a placeholder for now
