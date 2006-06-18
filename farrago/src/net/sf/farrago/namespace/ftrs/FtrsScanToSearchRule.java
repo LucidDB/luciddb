@@ -238,7 +238,6 @@ class FtrsScanToSearchRule extends RelOptRule
             keyRowType,
             origScan.getCluster(),
             sargExpr);
-
         RelNode keyInput =
             mergeTraitsAndConvert(
                 callTraits, FennelRel.FENNEL_EXEC_CONVENTION,

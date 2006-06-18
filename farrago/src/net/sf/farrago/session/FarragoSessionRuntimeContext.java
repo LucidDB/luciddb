@@ -114,6 +114,12 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * @return corresponding row type
      */
     public RelDataType getRowTypeForResultSet(String resultSetName);
+
+    /**
+     * @return session on behalf of which this runtime context is
+     * executing
+     */
+    public FarragoSession getSession();
 }
 
 

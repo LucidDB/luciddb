@@ -1369,7 +1369,10 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String typeNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getSuperTypes");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.super_types_view");
     }
 
     // implement DatabaseMetaData
@@ -1379,7 +1382,10 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         String tableNamePattern)
         throws SQLException
     {
-        throw new UnsupportedOperationException("getSuperTables");
+        // For now, ignore all parameters because we always return
+        // empty set.
+        return executeDaemonQuery(
+            "select * from sys_boot.jdbc_metadata.super_tables_view");
     }
 
     // implement DatabaseMetaData

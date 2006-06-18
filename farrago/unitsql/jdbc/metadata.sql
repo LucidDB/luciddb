@@ -91,6 +91,11 @@ select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 -- changes with every model edit
 -- select * from sys_fem."Security"."Privilege";
 
+-- We don't actually support these features, but JDBC says we should
+-- still return empty results instead of throwing an exception
+!metadata getSuperTypes LOCALDB % %
+!metadata getSuperTables LOCALDB % %
+
 -- Implemented but not included since result depends on connection
 -- !metadata getConnection
 -- !metadata hashCode
@@ -103,7 +108,5 @@ select count(distinct "lineageId") from sys_fem."SQL2003"."LocalSchema";
 -- !metadata getBestRowIdentifier
 -- !metadata getVersionColumns
 -- !metadata getCrossReference
--- !metadata getSuperTypes
--- !metadata getSuperTables
 -- !importedkeys
 -- !exportedkeys

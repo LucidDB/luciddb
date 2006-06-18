@@ -4,23 +4,23 @@
 <project name="build-luciddb" default="build">
 	<property environment="env"/>
 
-	<!-- perforce properties -->
-	<property file="${open_propfile}"/>
-	<property name="p4.client" value="${env.USER}.${env.HOSTNAME}"/>
-
-
 	<!-- regular vs. integration build locations -->
 	<property name="default.build.home" location="."/>
 	<property name="integration.build.home" location="./build"/>
 
-
 	<!-- by default we build "with fennel" and "with tests" -->
 	<property name="luciddb.init.arg" value="--with-fennel"/>
-        <property name="luciddb.init.tests.arg" value="--with-tests"/>
+	<property name="luciddb.init.tests.arg" value="${with.tests}"/>
+
+    <!--
+    <condition property="luciddb.init.tests.arg"  value="${with.tests}">
+        <not><os family="windows"/></not>
+    </condition>
+    -->
 
 	<!-- perforce synchronization target -->
 	<target name="sync" description="Synchronize the Luciddb project" unless="no-sync">
-		<p4sync view="${open_root}/luciddb/..." failonerror="true"/>
+        <p4sync view="${open_root}/luciddb/..." failonerror="true"/>
 	</target>
 
 	<!-- basic build targets -->
@@ -121,8 +121,10 @@
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
 			<arg value="${luciddb.init.tests.arg}"/>
+            <env key="EIGEN_HOME" file="${eigen_home}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
 			<env key="PATH" path="${env.PATH}:${build.home}/thirdparty/ant/bin/ant"/>
+			<env key="LUCIDERA_PLATFORM_HOME" path="${lucidera_platform_home}"/>
 		</exec>		
 	</target>
 
