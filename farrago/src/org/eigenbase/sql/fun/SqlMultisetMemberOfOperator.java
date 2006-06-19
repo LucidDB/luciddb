@@ -41,7 +41,7 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
     public SqlMultisetMemberOfOperator()
     {
         //TODO check if precedence is correct
-        super("MEMBER OF", SqlKind.Other, 15, true,
+        super("MEMBER OF", SqlKind.Other, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             null, null);
     }

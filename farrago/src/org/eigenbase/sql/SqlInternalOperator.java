@@ -36,27 +36,27 @@ public abstract class SqlInternalOperator extends SqlSpecialOperator
         String name,
         SqlKind kind)
     {
-        super(name, kind, 1, true, null, null, null);
+        super(name, kind, 2, true, null, null, null);
     }
 
     public SqlInternalOperator(
         String name,
         SqlKind kind,
-        int pred)
+        int prec)
     {
-        super(name, kind, pred, true, null, null, null);
+        super(name, kind, prec, true, null, null, null);
     }
 
     public SqlInternalOperator(
         String name,
         SqlKind kind,
-        int pred,
+        int prec,
         boolean isLeftAssoc,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, pred, isLeftAssoc, returnTypeInference,
+        super(name, kind, prec, isLeftAssoc, returnTypeInference,
             operandTypeInference, operandTypeChecker);
     }
 

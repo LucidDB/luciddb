@@ -121,7 +121,7 @@ public class SqlCaseOperator extends SqlOperator
 
     public SqlCaseOperator()
     {
-        super("CASE", SqlKind.Case, 100, true, null,
+        super("CASE", SqlKind.Case, MaxPrec, true, null,
             SqlTypeStrategies.otiReturnType, null);
     }
 

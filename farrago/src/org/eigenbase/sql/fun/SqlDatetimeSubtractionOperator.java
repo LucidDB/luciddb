@@ -39,7 +39,7 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
     public SqlDatetimeSubtractionOperator()
     {
         super(
-            "-", SqlKind.Minus, 20, true,
+            "-", SqlKind.Minus, 40, true,
             SqlTypeStrategies.rtiThirdArgType,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusDateOperator);

@@ -25,7 +25,6 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.RelDataType;
 
@@ -40,13 +39,13 @@ public class SqlPrefixOperator extends SqlOperator
     public SqlPrefixOperator(
         String name,
         SqlKind kind,
-        int precedence,
+        int prec,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, 0, precedence * 2, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(name, kind, leftPrec(0, true), rightPrec(prec, true),
+            returnTypeInference, operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------

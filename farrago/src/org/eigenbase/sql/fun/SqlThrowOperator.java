@@ -44,7 +44,7 @@ public class SqlThrowOperator extends SqlInternalOperator
 {
     public SqlThrowOperator()
     {
-        super("$throw", SqlKind.Other, 1, true,
+        super("$throw", SqlKind.Other, 2, true,
             SqlTypeStrategies.rtiBoolean,
             null,
             SqlTypeStrategies.otcCharString);

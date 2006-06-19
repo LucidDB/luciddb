@@ -37,7 +37,7 @@ public class SqlUnnestOperator extends SqlFunctionalOperator
     {
         super(
             "UNNEST", SqlKind.Unnest,
-            100, true, null, null,
+            200, true, null, null,
             SqlTypeStrategies.otcMultisetOrRecordTypeMultiset);
     }
 

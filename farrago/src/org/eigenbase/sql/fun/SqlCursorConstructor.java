@@ -40,9 +40,7 @@ public class SqlCursorConstructor extends SqlSpecialOperator
 
     public SqlCursorConstructor()
     {
-        // REVIEW jvs 7-May-2006: Precedence copied from
-        // SqlMultisetQueryConstructor
-        super("CURSOR", SqlKind.CursorConstructor, 100, false,
+        super("CURSOR", SqlKind.CursorConstructor, MaxPrec, false,
             SqlTypeStrategies.rtiCursor,
             null,
             SqlTypeStrategies.otcAny);

@@ -43,8 +43,7 @@ public class SqlRowOperator extends SqlSpecialOperator
 
     public SqlRowOperator()
     {
-        // Precedence of 100 because nothing can pull parentheses apart.
-        super("ROW", SqlKind.Row, 100, false, null,
+        super("ROW", SqlKind.Row, MaxPrec, false, null,
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcVariadic);
     }

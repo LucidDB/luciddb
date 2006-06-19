@@ -42,7 +42,7 @@ public class SqlAsOperator extends SqlBinaryOperator
         super(
             "AS",
             SqlKind.As,
-            10,
+            20,
             true,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,

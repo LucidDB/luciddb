@@ -45,8 +45,7 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
 
     public SqlMultisetValueConstructor()
     {
-        // Precedence of 100 because nothing can pull parentheses apart.
-        super("MULTISET", SqlKind.MultisetValueConstructor, 100, false,
+        super("MULTISET", SqlKind.MultisetValueConstructor, MaxPrec, false,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcVariadic);

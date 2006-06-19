@@ -25,7 +25,6 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.RelDataType;
 
@@ -40,13 +39,13 @@ public class SqlPostfixOperator extends SqlOperator
     public SqlPostfixOperator(
         String name,
         SqlKind kind,
-        int precedence,
+        int prec,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, precedence * 2, 1, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(name, kind, leftPrec(prec, true), rightPrec(0, true),
+            returnTypeInference, operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------
