@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlUtil;
 
 
 /**
@@ -39,6 +40,9 @@ import org.eigenbase.util.*;
  */
 class FarragoView extends FarragoQueryNamedColumnSet
 {
+    private final String datasetName;
+    private final ModalityType modality;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -46,12 +50,18 @@ class FarragoView extends FarragoQueryNamedColumnSet
      *
      * @param cwmView catalog definition for view
      * @param rowType type for rows produced by view
+     * @param datasetName Name of sample dataset, or null to use vanilla
+     * @param modality
      */
     FarragoView(
-        CwmNamedColumnSet cwmView,
-        RelDataType rowType)
+        FemLocalView cwmView,
+        RelDataType rowType,
+        String datasetName,
+        ModalityType modality)
     {
         super(cwmView, rowType);
+        this.datasetName = datasetName;
+        this.modality = modality;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -66,9 +76,25 @@ class FarragoView extends FarragoQueryNamedColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        // REVIEW:  cache view definition?
-        final String queryString = getFemView().getQueryExpression().getBody();
+        String queryString = getFemView().getQueryExpression().getBody();
+        if (datasetName != null) {
+            queryString =
+                (modality == ModalityTypeEnum.MODALITYTYPE_STREAM ?
+                    "SELECT STREAM" :
+                    "SELECT") +
+                " * FROM (" +
+                queryString +
+                ") TABLESAMPLE SUBSTITUTE (" +
+                SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName) +
+                ") AS x";
+        }
+        return expandView(queryString);
+    }
+
+    private RelNode expandView(String queryString)
+    {
         try {
+            // REVIEW:  cache view definition?
             RelNode rel = getPreparingStmt().expandView(
                 getRowType(), queryString);
             rel = RelOptUtil.createRenameRel(rowType, rel);
@@ -80,6 +106,5 @@ class FarragoView extends FarragoQueryNamedColumnSet
         }
     }
 }
-
 
 // End FarragoView.java

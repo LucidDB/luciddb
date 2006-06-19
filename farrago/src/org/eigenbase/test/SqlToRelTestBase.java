@@ -68,7 +68,9 @@ public class SqlToRelTestBase extends TestCase
     /**
      * Mock implementation of {@link RelOptSchema}.
      */
-    protected static class MockRelOptSchema implements RelOptSchema {
+    protected static class MockRelOptSchema
+        implements RelOptSchemaWithSampling
+    {
         private final SqlValidatorCatalogReader catalogReader;
         private final RelDataTypeFactory typeFactory;
 
@@ -100,6 +102,27 @@ public class SqlToRelTestBase extends TestCase
                 }
             }
             return createColumnSet(names, rowType, collationList);
+        }
+
+        public RelOptTable getTableForMember(
+            String[] names, final String datasetName)
+        {
+            final RelOptTable table = getTableForMember(names);
+
+            // If they're asking for a sample, just for test purposes,
+            // assume there's a table called "<table>:<sample>".
+            RelOptTable datasetTable =
+                new DelegatingRelOptTable(table) {
+                    public String[] getQualifiedName()
+                    {
+                        final String[] qualifiedName =
+                            super.getQualifiedName().clone();
+                        qualifiedName[qualifiedName.length - 1] +=
+                            ":" + datasetName;
+                        return qualifiedName;
+                    }
+                };
+            return datasetTable;
         }
 
         protected MockColumnSet createColumnSet(
@@ -172,6 +195,46 @@ public class SqlToRelTestBase extends TestCase
             {
                 return collationList;
             }
+        }
+    }
+
+    private static class DelegatingRelOptTable implements RelOptTable
+    {
+        private final RelOptTable parent;
+
+        public DelegatingRelOptTable(RelOptTable parent)
+        {
+            this.parent = parent;
+        }
+
+        public String[] getQualifiedName()
+        {
+            return parent.getQualifiedName();
+        }
+
+        public double getRowCount()
+        {
+            return parent.getRowCount();
+        }
+
+        public RelDataType getRowType()
+        {
+            return parent.getRowType();
+        }
+
+        public RelOptSchema getRelOptSchema()
+        {
+            return parent.getRelOptSchema();
+        }
+
+        public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
+        {
+            return new TableAccessRel(cluster, this, connection);
+        }
+
+        public List<RelCollation> getCollationList()
+        {
+            return parent.getCollationList();
         }
     }
 

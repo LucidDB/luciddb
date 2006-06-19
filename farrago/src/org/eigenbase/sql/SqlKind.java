@@ -485,7 +485,8 @@ public class SqlKind extends EnumeratedValues.BasicValue
                 || (this == Join) || (this == Function) || (this == Cast)
                 || (this == Trim) || (this == LiteralChain) || (this == JdbcFn)
                 || (this == Preceding) || (this == Following)
-                || (this == OrderBy) || (this == CollectionTable));
+                || (this == OrderBy) || (this == CollectionTable)
+                || (this == TableSample));
         case FunctionORDINAL:
             return (this == Function) || (this == Row) || (this == Trim)
                 || (this == Cast) || (this == JdbcFn);

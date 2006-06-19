@@ -134,6 +134,20 @@ public abstract class SqlOperatorBinding
         }
         return ret;
     }
+
+    /**
+     * Returns the rowtype of the <code>ordinal</code>th operand, which is a
+     * cursor.
+     *
+     * <p>This is only implemented for {@link SqlCallBinding}.
+     *
+     * @param ordinal Ordinal of the operand
+     * @return Rowtype of the query underlying the cursor
+     */
+    public RelDataType getCursorOperand(int ordinal)
+    {
+        throw new UnsupportedOperationException();
+    }
 }
 
 // End SqlOperatorBinding.java

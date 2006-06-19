@@ -2672,6 +2672,32 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         }
     }
 
+    public void testSample()
+    {
+        // applied to table
+        check("SELECT * FROM emp TABLESAMPLE SUBSTITUTE('foo')");
+
+        // applied to query
+        check("SELECT * FROM (" +
+            "SELECT deptno FROM emp " +
+            "UNION ALL " +
+            "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x " +
+            "WHERE x.deptno < 100");
+
+
+        checkFails("SELECT x.^empno^ FROM (" +
+            "SELECT deptno FROM emp TABLESAMPLE SUBSTITUTE('bar') " +
+            "UNION ALL " +
+            "SELECT deptno FROM dept) TABLESAMPLE SUBSTITUTE('foo') AS x " +
+            "ORDER BY 1",
+            "Column 'EMPNO' not found in table 'X'");
+
+        check("select * from (\n" +
+            "    select * from emp\n" +
+            "    join dept on emp.deptno = dept.deptno\n" +
+            ") tablesample substitute('SMALL')");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)

@@ -25,8 +25,7 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.ReflectiveSqlOperatorTable;
 
 /**
@@ -986,6 +985,36 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
          {
              public boolean isDeterministic() { return false; }
          };
+
+    /**
+     * The <code>TABLESAMPLE</code> operator.
+     *
+     * <p>Examples:<ul>
+     * <li><code>&lt;query&gt; TABLESAMPLE SUBSTITUTE('sampleName')</code>
+     *     (non-standard)
+     * <li><code>&lt;query&gt; TABLESAMPLE BERNOULLI(&lt;percent&gt;)</code>
+     *     (standard, but not implemented yet)
+     * </ul>
+     *
+     * <p>Operand #0 is a query or table;
+     * Operand #1 is a {@link SqlSampleSpec} wrapped in a {@link SqlLiteral}.
+     */
+    public static final SqlSpecialOperator sampleFunction =
+        new SqlSpecialOperator(
+            "TABLESAMPLE", SqlKind.TableSample,
+            10, true,
+            new CursorReturnTypeInference(1), null,
+            SqlTypeStrategies.otcVariadic)
+        {
+            public void unparse(
+                SqlWriter writer, SqlNode [] operands,
+                int leftPrec, int rightPrec)
+            {
+                operands[0].unparse(writer, leftPrec, 0);
+                writer.keyword("TABLESAMPLE");
+                operands[1].unparse(writer, 0, rightPrec);
+            }
+        };
 }
 
 // End SqlStdOperatorTable.java

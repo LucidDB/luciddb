@@ -23,6 +23,7 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.relopt.RelOptSchema;
 import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelOptSchemaWithSampling;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
@@ -52,16 +53,30 @@ public class SqlValidatorUtil
      * {@link RelOptTable}. This is only possible if
      * the scope represents an identifier, such as "sales.emp". Otherwise,
      * returns null.
+     *
+     * @param namespace Namespace
+     * @param schema Schema
+     * @param datasetName Name of sample dataset to substitute, or null to use
+     *   the regular table
      */
     public static RelOptTable getRelOptTable(
         SqlValidatorNamespace namespace,
-        RelOptSchema schema)
+        RelOptSchema schema,
+        String datasetName)
     {
         if (namespace instanceof IdentifierNamespace) {
             IdentifierNamespace identifierNamespace =
                 (IdentifierNamespace) namespace;
             final String [] names = identifierNamespace.getId().names;
-            return schema.getTableForMember(names);
+            if (datasetName != null &&
+                schema instanceof RelOptSchemaWithSampling) {
+                return ((RelOptSchemaWithSampling) schema).
+                    getTableForMember(names, datasetName);
+            } else {
+                // Schema does not support substitution. Ignore the dataset,
+                // if any.
+                return schema.getTableForMember(names);
+            }
         } else {
             return null;
         }
