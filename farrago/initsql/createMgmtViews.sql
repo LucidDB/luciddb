@@ -588,3 +588,61 @@ create view dba_foreign_tables_internal2 as
   where
     g."action" = 'CREATION'
 ;
+
+-- Returns the set of all foreign data wrappers which have been marked
+-- as suitable for browse connect (mark is via the presence of the
+-- BROWSE_CONNECT_DESCRIPTION option).
+create view browse_connect_foreign_wrappers as
+  select
+    dw."name" as foreign_wrapper_name,
+    so."value" as browse_connect_description
+  from
+    sys_fem.med."DataWrapper" dw
+  inner join
+    sys_fem.med."StorageOption" so
+  on
+    dw."mofId" = so."StoredElement"
+  where 
+    dw."foreign" = true
+    and so."name" = 'BROWSE_CONNECT_DESCRIPTION'
+;
+
+-- Returns the set of options relevant to a given wrapper.  A partial
+-- set of options may be passed in via the proposed_server_options
+-- cursor parameter, which must have two columns (OPTION_NAME and
+-- OPTION_VALUE, in that order).  This allows for an incremental
+-- connection interaction, starting with specifying no options, then
+-- some, then more, stopping once user and wrapper are both satisfied.
+-- The result set is not fully normalized, because some options
+-- support a list of choices (e.g. for a dropdown selection UI
+-- widget).  optional_choice_ordinal -1 represents the "current"
+-- choice (either proposed by the user or chosen as default by the
+-- wrapper); other choice ordinals starting from 0 represent possible
+-- choices (if known).
+create function browse_connect_foreign_server(
+  foreign_wrapper_name varchar(128),
+  proposed_server_options cursor)
+returns table(
+  option_ordinal integer,
+  option_name varchar(128), 
+  option_description varchar(4096),
+  is_option_required boolean,
+  option_choice_ordinal int,
+  option_choice_value varchar(4096))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoMedUDR.browseConnectServer';
+
+-- Returns foreign schemas accessible via a given foreign server.
+create function browse_foreign_schemas(
+  foreign_server_name varchar(128))
+returns table(
+  schema_name varchar(128),
+  description varchar(4096))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemas';

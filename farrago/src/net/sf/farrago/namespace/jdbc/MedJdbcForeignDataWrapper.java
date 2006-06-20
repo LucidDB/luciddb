@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 
+import org.eigenbase.util.*;
 
 /**
  * MedJdbcForeignDataWrapper implements the FarragoMedDataWrapper
@@ -68,7 +69,76 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
         return "Foreign data wrapper for JDBC data";
     }
 
-    // TODO:  DriverPropertyInfo calls
+    // TODO:  more DriverPropertyInfo calls
+
+    // implement FarragoMedDataWrapper
+    public DriverPropertyInfo [] getServerPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps)
+    {
+        // TODO:  use locale
+        
+        DriverPropertyInfo [] driverArray = null;
+        boolean extOpts = getBooleanProperty(
+            serverProps, MedJdbcDataServer.PROP_EXT_OPTIONS, false);
+        String url = serverProps.getProperty(MedJdbcDataServer.PROP_URL);
+        if ((url != null) && extOpts) {
+            // User has proposed a URL, and they want extended properties.
+            // (Note that we ignore any template URL from the wrapper
+            // definition.)  Attempt to use that to augment our own properties
+            // with those specific to the driver.
+            Properties driverProps = new Properties();
+            driverProps.putAll(serverProps);
+            MedJdbcDataServer.removeNonDriverProps(driverProps);
+            try {
+                Driver driver = loadDriverClass(
+                    wrapperProps.getProperty(PROP_DRIVER_CLASS_NAME));
+                driverArray = driver.getPropertyInfo(url, driverProps);
+            } catch (Throwable ex) {
+                // Squelch it and move on.
+            }
+        }
+        
+        // serverProps takes precedence over wrapperProps
+        Properties chainedProps = new Properties(wrapperProps);
+        chainedProps.putAll(serverProps);
+        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
+            FarragoResource.instance(),
+            "MedJdbc",
+            chainedProps);
+        infoMap.addPropInfo(
+            MedJdbcDataServer.PROP_DRIVER_CLASS,
+            true);
+        infoMap.addPropInfo(
+            MedJdbcDataServer.PROP_URL,
+            true);
+        infoMap.addPropInfo(
+            MedJdbcDataServer.PROP_USER_NAME);
+        infoMap.addPropInfo(
+            MedJdbcDataServer.PROP_PASSWORD);
+        // TODO jvs 19-June-2006: Other properties like catalog name; how
+        // much should we expose?  Make it leveled via an "ADVANCED" property,
+        // use DatabaseMetaData to make it smart with choices, and let wrapper
+        // definition override DatabaseMetaData.
+        infoMap.addPropInfo(
+            MedJdbcDataServer.PROP_EXT_OPTIONS,
+            true,
+            BOOLEAN_CHOICES_DEFAULT_FALSE);
+
+        DriverPropertyInfo [] mapArray = infoMap.toArray();
+        if (driverArray == null) {
+            return mapArray;
+        } else {
+            DriverPropertyInfo [] result =
+                new DriverPropertyInfo[mapArray.length + driverArray.length];
+            System.arraycopy(mapArray, 0, result, 0, mapArray.length);
+            System.arraycopy(driverArray, 0, result, mapArray.length,
+                driverArray.length);
+            return result;
+        }
+    }
+
     // implement FarragoMedDataWrapper
     public void initialize(
         FarragoRepos repos,
@@ -77,24 +147,21 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
     {
         super.initialize(repos, props);
 
+        // ignore other props like BROWSE_CONNECT_DESCRIPTION
         String driverClassName = props.getProperty(PROP_DRIVER_CLASS_NAME);
-        if (driverClassName == null) {
-            // REVIEW:  should we support connecting at the wrapper level,
-            // and then allowing different servers to represent different
-            // subsets of the data from the same connection?
-            assert (props.isEmpty());
-        } else {
-            assert (props.size() == 1);
+        if (driverClassName != null) {
             loadDriverClass(driverClassName);
         }
     }
 
-    private void loadDriverClass(String driverClassName)
+    private Driver loadDriverClass(String driverClassName)
     {
         try {
-            Class.forName(driverClassName);
-        } catch (ClassNotFoundException ex) {
-            throw FarragoResource.instance().JdbcDriverLoadFailed.ex(driverClassName,
+            return (Driver)
+                Driver.class.forName(driverClassName).newInstance();
+        } catch (Exception ex) {
+            throw FarragoResource.instance().JdbcDriverLoadFailed.ex(
+                driverClassName,
                 ex);
         }
     }

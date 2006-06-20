@@ -64,6 +64,8 @@ class MedJdbcDataServer extends MedAbstractDataServer
     public static final String PROP_TABLE_TYPES = "TABLE_TYPES";
     public static final String PROP_EXT_OPTIONS = "EXTENDED_OPTIONS";
     public static final String PROP_TYPE_SUBSTITUTION = "TYPE_SUBSTITUTION";
+
+    // REVIEW jvs 19-June-2006:  What are these doing here?
     public static final String PROP_VERSION = "VERSION";
     public static final String PROP_NAME = "NAME";
     public static final String PROP_TYPE = "TYPE";
@@ -77,6 +79,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     String catalogName;
     String schemaName;
     String [] tableTypes;
+    boolean supportsMetaData;
     DatabaseMetaData databaseMetaData;
 
     //~ Constructors ----------------------------------------------------------
@@ -104,15 +107,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
 
         if (getBooleanProperty(props, PROP_EXT_OPTIONS, false)) {
             connectProps = (Properties) props.clone();
-            // or remove the properties of unknown?
-            connectProps.remove(PROP_URL);
-            connectProps.remove(PROP_DRIVER_CLASS);
-            connectProps.remove(PROP_SCHEMA_NAME);
-            connectProps.remove(PROP_VERSION);
-            connectProps.remove(PROP_NAME);
-            connectProps.remove(PROP_TYPE);
-            connectProps.remove(PROP_EXT_OPTIONS);
-            connectProps.remove(PROP_TYPE_SUBSTITUTION);
+            removeNonDriverProps(connectProps);
         }
 
         String tableTypeString = props.getProperty(PROP_TABLE_TYPES);
@@ -131,6 +126,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
         }
         try {
             databaseMetaData = connection.getMetaData();
+            supportsMetaData = true;
         } catch (Exception ex) {
             // driver can't even support getMetaData(); treat it
             // as brain-damaged
@@ -142,6 +138,19 @@ class MedJdbcDataServer extends MedAbstractDataServer
                         "UNKNOWN",
                         ""));
         }
+    }
+
+    static void removeNonDriverProps(Properties props)
+    {
+        // TODO jvs 19-June-2006:  Make this metadata-driven.
+        props.remove(PROP_URL);
+        props.remove(PROP_DRIVER_CLASS);
+        props.remove(PROP_SCHEMA_NAME);
+        props.remove(PROP_VERSION);
+        props.remove(PROP_NAME);
+        props.remove(PROP_TYPE);
+        props.remove(PROP_EXT_OPTIONS);
+        props.remove(PROP_TYPE_SUBSTITUTION);
     }
 
     // implement FarragoMedDataServer

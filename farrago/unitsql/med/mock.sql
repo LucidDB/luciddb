@@ -194,3 +194,43 @@ update mock_schema.dynamic_row_count set current_row_count=21;
 alter system set "codeCacheMaxBytes" = min;
 
 select count(*) from mock_foreign_dynamic_server.mock_schema.mock_table;
+
+
+-- test browse connect functionality
+create foreign data wrapper mock_browse
+library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+language java
+options(browse_connect_description 'Go Ask The Mock Turtle');
+
+-- note that none of the system wrappers should have 
+-- browse_connect_description set, so don't need ORDER BY here
+select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
+
+-- query for available options with no proposed settings (empty_view)
+select * from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'MOCK_BROWSE',
+    cursor(
+        select '' as option_name, '' as option_value
+        from sys_boot.jdbc_metadata.empty_view)))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for available options with some proposed settings and verify
+-- that the proposals override the defaults
+select * from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'MOCK_BROWSE',
+    cursor(
+        values ('FOREIGN_SCHEMA_NAME', 'Larry'),
+               ('EXECUTOR_IMPL', 'FENNEL'))))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for available schemas in a configured server
+select * from table(sys_boot.mgmt.browse_foreign_schemas(
+    'MOCK_FOREIGN_DYNAMIC_SERVER'))
+order by schema_name;
+
+-- query for available schemas in an unconfigured server (should be none)
+select * from table(sys_boot.mgmt.browse_foreign_schemas(
+    'SYS_MOCK_FOREIGN_DATA_SERVER'))
+order by schema_name;

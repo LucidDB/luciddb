@@ -38,3 +38,40 @@ from sys_boot.mgmt.dba_stored_tables_internal2
 where schema_name='MTEST';
 
 drop schema mtest cascade;
+
+select * from table(sys_boot.mgmt.browse_foreign_schemas('HSQLDB_DEMO'))
+order by schema_name;
+
+-- specialize the JDBC foreign wrapper for a particular DBMS;
+-- note that the url setting is intended to be interpreted as a template
+create foreign data wrapper hsqldb_wrapper
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc.jar'
+language java
+options(
+    browse_connect_description 'Hypersonic',
+    driver_class 'org.hsqldb.jdbcDriver',
+    url 'jdbc:hsqldb:path/to/data'
+);
+
+-- note that none of the system wrappers should have 
+-- browse_connect_description set, so don't need ORDER BY here
+select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
+
+-- query for available options with no proposed settings (empty_view)
+select * from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'HSQLDB_WRAPPER',
+    cursor(
+        select '' as option_name, '' as option_value
+        from sys_boot.jdbc_metadata.empty_view)))
+order by option_ordinal, option_choice_ordinal;
+
+-- query again with a real URL, asking for extended options:  
+-- should get back details direct from driver
+select option_name, option_choice_ordinal, option_choice_value from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'HSQLDB_WRAPPER',
+    cursor(
+        values ('URL', 'jdbc:hsqldb:testcases/hsqldb/scott'),
+               ('EXTENDED_OPTIONS', 'TRUE'))))
+order by option_ordinal, option_choice_ordinal;

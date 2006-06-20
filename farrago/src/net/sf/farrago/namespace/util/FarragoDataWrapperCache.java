@@ -297,7 +297,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
      * @param element FemElement we want the options from
      * @return Properties object populated with the storage options
      */
-    private Properties getStorageOptionsAsProperties(
+    public Properties getStorageOptionsAsProperties(
         FemElementWithStorageOptions element)
     {
         Properties props = new Properties();

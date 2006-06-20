@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/mock.sql#9 $
+0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#7 $
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_server
@@ -304,5 +304,77 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 +---------+
 | 21      |
 +---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test browse connect functionality
+0: jdbc:farrago:> create foreign data wrapper mock_browse
+. . . . . . . . > library 'class net.sf.farrago.namespace.mock.MedMockForeignDataWrapper'
+. . . . . . . . > language java
+. . . . . . . . > options(browse_connect_description 'Go Ask The Mock Turtle');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- note that none of the system wrappers should have 
+0: jdbc:farrago:> -- browse_connect_description set, so don't need ORDER BY here
+0: jdbc:farrago:> select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
++-----------------------+-----------------------------+
+| FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
++-----------------------+-----------------------------+
+| MOCK_BROWSE           | Go Ask The Mock Turtle      |
++-----------------------+-----------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available options with no proposed settings (empty_view)
+0: jdbc:farrago:> select * from table(
+. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . >     'MOCK_BROWSE',
+. . . . . . . . >     cursor(
+. . . . . . . . >         select '' as option_name, '' as option_value
+. . . . . . . . >         from sys_boot.jdbc_metadata.empty_view)))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |     OPTION_NAME      |             OPTION_DESCRIPTION              | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | FOREIGN_SCHEMA_NAME  | Name of foreign schema to simulate          | false               | -1                     |                      |
+| 1               | FOREIGN_TABLE_NAME   | UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION  | false               | -1                     |                      |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | -1                     | JAVA                 |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 0                      | JAVA                 |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 1                      | FENNEL               |
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available options with some proposed settings and verify
+0: jdbc:farrago:> -- that the proposals override the defaults
+0: jdbc:farrago:> select * from table(
+. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . >     'MOCK_BROWSE',
+. . . . . . . . >     cursor(
+. . . . . . . . >         values ('FOREIGN_SCHEMA_NAME', 'Larry'),
+. . . . . . . . >                ('EXECUTOR_IMPL', 'FENNEL'))))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |     OPTION_NAME      |             OPTION_DESCRIPTION              | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | FOREIGN_SCHEMA_NAME  | Name of foreign schema to simulate          | false               | -1                     | Larry                |
+| 1               | FOREIGN_TABLE_NAME   | UNLOCALIZED_FOREIGN_TABLE_NAME_DESCRIPTION  | false               | -1                     |                      |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | -1                     | FENNEL               |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 0                      | JAVA                 |
+| 2               | EXECUTOR_IMPL        | UNLOCALIZED_EXECUTOR_IMPL_DESCRIPTION       | true                | 1                      | FENNEL               |
++-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available schemas in a configured server
+0: jdbc:farrago:> select * from table(sys_boot.mgmt.browse_foreign_schemas(
+. . . . . . . . >     'MOCK_FOREIGN_DYNAMIC_SERVER'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| MOCK_SCHEMA  | Mock schema  |
++--------------+--------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available schemas in an unconfigured server (should be none)
+0: jdbc:farrago:> select * from table(sys_boot.mgmt.browse_foreign_schemas(
+. . . . . . . . >     'SYS_MOCK_FOREIGN_DATA_SERVER'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
++--------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
