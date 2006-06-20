@@ -60,8 +60,33 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
     // implement FarragoMedDataWrapper
     public String getDescription(Locale locale)
     {
-        // TODO: localize
+        // NOTE jvs 18-June-2006: Since this is just a mock we can ignore
+        // locale.
         return "Foreign data wrapper for mock tables";
+    }
+    
+    // implement FarragoMedDataWrapper
+    public DriverPropertyInfo [] getServerPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps)
+    {
+        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
+            FarragoResource.instance(),
+            "MedMock",
+            serverProps);
+        infoMap.addPropInfo(
+            MedMockDataServer.PROP_SCHEMA_NAME);
+        infoMap.addPropInfo(
+            MedMockDataServer.PROP_TABLE_NAME);
+        infoMap.addPropInfo(
+            MedMockDataServer.PROP_EXECUTOR_IMPL,
+            true,
+            new String [] {
+                MedMockDataServer.PROPVAL_JAVA,
+                MedMockDataServer.PROPVAL_FENNEL
+            });
+        return infoMap.toArray();
     }
 
     // TODO:  DriverPropertyInfo calls

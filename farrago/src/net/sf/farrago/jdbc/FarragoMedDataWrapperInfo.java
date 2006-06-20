@@ -47,8 +47,8 @@ public interface FarragoMedDataWrapperInfo
      * @return 0 or more property info descriptors
      */
     public DriverPropertyInfo [] getPluginPropertyInfo(
-            Locale locale,
-            Properties wrapperProps);
+        Locale locale,
+        Properties wrapperProps);
 
     /**
      * Obtains information about the properties applicable to server

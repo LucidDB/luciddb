@@ -47,6 +47,16 @@ public class FarragoAbstractPluginBase
     public static final DriverPropertyInfo [] EMPTY_DRIVER_PROPERTIES =
         new DriverPropertyInfo[0];
 
+    public static final String [] BOOLEAN_CHOICES_DEFAULT_FALSE = {
+        "FALSE",
+        "TRUE"
+    };
+
+    public static final String [] BOOLEAN_CHOICES_DEFAULT_TRUE = {
+        "TRUE",
+        "FALSE"
+    };
+
     //~ Methods ---------------------------------------------------------------
 
     /**

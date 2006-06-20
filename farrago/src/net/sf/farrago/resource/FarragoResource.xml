@@ -771,6 +771,33 @@ column type family is {1} but default value type family is {2}</text>
 <text>Values (''{0}'', ''{1}'') for property {2} do not match</text>
 </exception>
 
+<!-- NOTE:  Mock resources don't really need localization; this one is
+     just here as an example of how to do i18n for wrapper properties.  -->
+
+<message name="MedMock_FOREIGN_SCHEMA_NAME_Description">
+<text>Name of foreign schema to simulate</text>
+</message>
+
+<message name="MedJdbc_DRIVER_CLASS_Description">
+<text>Fully-qualified class name of JDBC driver to load</text>
+</message>
+
+<message name="MedJdbc_URL_Description">
+<text>JDBC URL for data source</text>
+</message>
+
+<message name="MedJdbc_USER_NAME_Description">
+<text>User name for authentication in source DBMS</text>
+</message>
+
+<message name="MedJdbc_PASSWORD_Description">
+<text>Password for authentication in source DBMS</text>
+</message>
+
+<message name="MedJdbc_EXTENDED_OPTIONS_Description">
+<text>Whether driver-specific options should be accepted</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- Flat File Data wrapper resources 469,000 - 470,000 -->
 <!-- ====================================================================== -->
