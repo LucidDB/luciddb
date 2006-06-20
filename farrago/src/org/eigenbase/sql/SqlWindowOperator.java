@@ -69,21 +69,24 @@ import java.util.Collections;
  * @since Oct 19, 2004
  * @version $Id$
  **/
-public class SqlWindowOperator extends SqlOperator {
+public class SqlWindowOperator extends SqlOperator
+{
     /**
      * The FOLLOWING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator followingOperator =
-            new SqlPostfixOperator("FOLLOWING", SqlKind.Following, 10, null, null, null);
+        new SqlPostfixOperator(
+            "FOLLOWING", SqlKind.Following, 20, null, null, null);
 
     /**
      * The PRECEDING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator precedingOperator =
-            new SqlPostfixOperator("PRECEDING", SqlKind.Following, 10, null, null, null);
+        new SqlPostfixOperator(
+            "PRECEDING", SqlKind.Following, 20, null, null, null);
 
     public SqlWindowOperator() {
-        super("WINDOW", SqlKind.Window, 1, true, null, null, null);
+        super("WINDOW", SqlKind.Window, 2, true, null, null, null);
     }
 
     public SqlSyntax getSyntax() {
@@ -260,7 +263,8 @@ public class SqlWindowOperator extends SqlOperator {
 
         // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
         if ( (null == orderList) && triggerFunction && !isTableSorted(scope)) {
-            throw validator.newValidationError(call,
+            throw validator.newValidationError(
+                call,
                 EigenbaseResource.instance().FuncNeedsOrderBy.ex());
         }
 
@@ -268,16 +272,20 @@ public class SqlWindowOperator extends SqlOperator {
         if (null != upperBound || null != lowerBound) {
             // 6.10 Rule 6a
             if (triggerFunction) {
-                throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
-                    EigenbaseResource.instance().RankWithFrame.ex());
+                throw validator.newValidationError(
+                    operands[SqlWindow.IsRows_OPERAND],
+                    EigenbaseResource.instance().
+                        RankWithFrame.ex());
             }
             SqlTypeFamily orderTypeFam = null;
             // SQL03 7.10 Rule 11a
             if (null != orderList) {
                 // if order by is a conpound list then range not allowed
                 if (orderList.size() > 1 && !isRows) {
-                    throw validator.newValidationError(operands[SqlWindow.IsRows_OPERAND],
-                        EigenbaseResource.instance().CompoundOrderByProhibitsRange.ex());
+                    throw validator.newValidationError(
+                        operands[SqlWindow.IsRows_OPERAND],
+                        EigenbaseResource.instance().
+                            CompoundOrderByProhibitsRange.ex());
                 }
                 // get the type family for the sort key for Frame Boundary Val.
                 RelDataType orderType = validator.deriveType(operandScope,orderList.get(0));
@@ -287,7 +295,8 @@ public class SqlWindowOperator extends SqlOperator {
                 // We relax this requirment if the table appears to be
                 // sorted already
                 if (!isRows  && !isTableSorted(scope)) {
-                    throw validator.newValidationError(call,
+                    throw validator.newValidationError(
+                        call,
                         EigenbaseResource.instance().OverMissingOrderBy.ex());
                 }
             }
@@ -327,26 +336,33 @@ public class SqlWindowOperator extends SqlOperator {
             final SqlNode boundVal = ((SqlCall)bound).getOperands()[0];
             // Boundries must be a constant
             if (!(boundVal instanceof SqlLiteral)) {
-                throw validator.newValidationError(boundVal,
-                    EigenbaseResource.instance().RangeOrRowMustBeConstant.ex());
+                throw validator.newValidationError(
+                    boundVal,
+                    EigenbaseResource.instance().
+                        RangeOrRowMustBeConstant.ex());
             }
             // SQL03 7.10 rule 11b
             // Physical ROWS must be a numeric constant.
             if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
-                throw validator.newValidationError(boundVal,
-                    EigenbaseResource.instance().RowMustBeNumeric.ex());
+                throw validator.newValidationError(
+                    boundVal,
+                    EigenbaseResource.instance().
+                        RowMustBeNumeric.ex());
             }
             // if this is a range spec check and make sure the boundery type
             // and order by type are compatible
             if (null != orderTypeFam && !isRows) {
                 RelDataType bndType = validator.deriveType(scope,boundVal);
                 SqlTypeFamily bndTypeFam =
-                    SqlTypeFamily.getFamilyForSqlType(bndType.getSqlTypeName());
+                    SqlTypeFamily.getFamilyForSqlType(
+                        bndType.getSqlTypeName());
                 switch (orderTypeFam.getOrdinal()) {
                 case SqlTypeFamily.Numeric_ordinal:
                     if (SqlTypeFamily.Numeric != bndTypeFam) {
-                        throw validator.newValidationError(boundVal,
-                            EigenbaseResource.instance().OrderByRangeMismatch.ex());
+                        throw validator.newValidationError(
+                            boundVal,
+                            EigenbaseResource.instance().
+                                OrderByRangeMismatch.ex());
                     }
                     break;
                 case SqlTypeFamily.Date_ordinal:
@@ -354,13 +370,17 @@ public class SqlWindowOperator extends SqlOperator {
                 case SqlTypeFamily.Timestamp_ordinal:
                     if (SqlTypeFamily.IntervalDayTime != bndTypeFam &&
                         SqlTypeFamily.IntervalYearMonth != bndTypeFam) {
-                        throw validator.newValidationError(boundVal,
-                            EigenbaseResource.instance().OrderByRangeMismatch.ex());
+                        throw validator.newValidationError(
+                            boundVal,
+                            EigenbaseResource.instance().
+                                OrderByRangeMismatch.ex());
                     }
                     break;
                 default:
-                    throw validator.newValidationError(boundVal,
-                        EigenbaseResource.instance().OrderByDataTypeProhibitsRange.ex());
+                    throw validator.newValidationError(
+                        boundVal,
+                        EigenbaseResource.instance().
+                            OrderByDataTypeProhibitsRange.ex());
                 }
             }
             break;
@@ -382,7 +402,8 @@ public class SqlWindowOperator extends SqlOperator {
             if (lowerBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
                 lowerLitType = ((SqlLiteral)lowerBound).getValue();
                 if (Bound.UnboundedFollowing == lowerLitType) {
-                    throw validator.newValidationError(lowerBound,
+                    throw validator.newValidationError(
+                        lowerBound,
                         EigenbaseResource.instance().BadLowerBoundary.ex());
                 }
             } else if (lowerBound instanceof SqlCall) {
@@ -393,7 +414,8 @@ public class SqlWindowOperator extends SqlOperator {
             if (upperBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
                 upperLitType = ((SqlLiteral) upperBound).getValue();
                 if (Bound.UnboundedPreceding == upperLitType) {
-                    throw validator.newValidationError(upperBound,
+                    throw validator.newValidationError(
+                        upperBound,
                         EigenbaseResource.instance().BadUpperBoundary.ex());
                 }
             } else if (upperBound instanceof SqlCall) {
@@ -404,21 +426,27 @@ public class SqlWindowOperator extends SqlOperator {
         if (Bound.CurrentRow == lowerLitType) {
             if (null != upperOp) {
                 if (upperOp.getName().equals("PRECEDING")) {
-                    throw validator.newValidationError(upperBound,
-                        EigenbaseResource.instance().CurrentRowPrecedingError.ex());
+                    throw validator.newValidationError(
+                        upperBound,
+                        EigenbaseResource.instance().
+                            CurrentRowPrecedingError.ex());
                 }
             }
         } else if (null != lowerOp) {
             if (lowerOp.getName().equals("FOLLOWING")) {
                 if (null != upperOp) {
                     if (upperOp.getName().equals("PRECEDING")) {
-                        throw validator.newValidationError(upperBound,
-                            EigenbaseResource.instance().FollowingBeforePrecedingError.ex());
+                        throw validator.newValidationError(
+                            upperBound,
+                            EigenbaseResource.instance().
+                                FollowingBeforePrecedingError.ex());
                     }
                 } else if (null != upperLitType) {
                     if (Bound.CurrentRow == upperLitType) {
-                        throw validator.newValidationError(upperBound,
-                            EigenbaseResource.instance().CurrentRowFollowingError.ex());
+                        throw validator.newValidationError(
+                            upperBound,
+                            EigenbaseResource.instance().
+                                CurrentRowFollowingError.ex());
                     }
                 }
             }
@@ -466,8 +494,10 @@ public class SqlWindowOperator extends SqlOperator {
      * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
      * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
      */
-    static class Bound extends EnumeratedValues.BasicValue {
-        private Bound(String name, int ordinal) {
+    static class Bound extends EnumeratedValues.BasicValue
+    {
+        private Bound(String name, int ordinal)
+        {
             super(name, ordinal, null);
         }
         public static final Bound CurrentRow =
@@ -478,27 +508,33 @@ public class SqlWindowOperator extends SqlOperator {
             new Bound("UNBOUNDED FOLLOWING", 2);
     }
 
-    public SqlNode createCurrentRow(SqlParserPos pos) {
+    public SqlNode createCurrentRow(SqlParserPos pos)
+    {
         return SqlLiteral.createSymbol(Bound.CurrentRow, pos);
     }
 
-    public SqlNode createUnboundedFollowing(SqlParserPos pos) {
+    public SqlNode createUnboundedFollowing(SqlParserPos pos)
+    {
         return SqlLiteral.createSymbol(Bound.UnboundedFollowing, pos);
     }
 
-    public SqlNode createUnboundedPreceding(SqlParserPos pos) {
+    public SqlNode createUnboundedPreceding(SqlParserPos pos)
+    {
         return SqlLiteral.createSymbol(Bound.UnboundedPreceding, pos);
     }
 
-    public SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos) {
+    public SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos)
+    {
         return followingOperator.createCall(literal, pos);
     }
 
-    public SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos) {
+    public SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos)
+    {
         return precedingOperator.createCall(literal, pos);
     }
 
-    public SqlNode createBound(SqlLiteral range) {
+    public SqlNode createBound(SqlLiteral range)
+    {
         return range;
     }
 }

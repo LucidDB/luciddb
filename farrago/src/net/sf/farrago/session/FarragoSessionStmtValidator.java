@@ -333,6 +333,18 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return the timing tracer associated with this statement
      */
     public EigenbaseTimingTracer getTimingTracer();
+
+    /**
+     * Looks up a sample dataset for a given schema object, or returns null
+     * if none is found.
+     *
+     * @param columnSet Schema object
+     * @param datasetName Name of dataset, not null
+     * @return Sample dataset, or null if not found
+     */
+    public CwmNamedColumnSet getSampleDataset(
+        CwmNamedColumnSet columnSet,
+        String datasetName);
 }
 
 

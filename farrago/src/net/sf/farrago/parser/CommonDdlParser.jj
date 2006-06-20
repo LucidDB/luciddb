@@ -487,6 +487,7 @@ FemLocalTable UnscopedTableDefinition() :
         table.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
     <LPAREN> TableElementList(table) <RPAREN>
+    OptionalSampleList(table, false)
     OptionalDescription(table)
     {
         List features = table.getFeature();
@@ -2112,7 +2113,7 @@ FemUserDefinedOrdering UserDefinedOrderingDefinition() :
     <ORDERING> <FOR> typeName = CompoundIdentifier3()
     {
         typeDef = farragoParser.getStmtValidator().findSchemaObject(
-            typeName,FemUserDefinedType.class);
+            typeName, FemUserDefinedType.class);
         orderingDef = getRepos().newFemUserDefinedOrdering();
         typeDef.getOrdering().add(orderingDef);
     }
@@ -2392,6 +2393,63 @@ void OptionalDescription(FemAnnotatedElement element) :
             element.setDescription(SqlLiteral.stringValue(description));
         }
     ]
+}
+
+void OptionalSampleList(FemBaseColumnSet element, boolean allowBaseline) :
+{}
+{
+    [
+        <SAMPLE> <LPAREN>
+        Sample(element, allowBaseline)
+        (
+            <COMMA> Sample(element, allowBaseline)
+        )*
+        <RPAREN>
+    ]
+}
+
+void Sample(FemBaseColumnSet element, boolean allowBaseline) :
+{
+    SqlIdentifier qualifiedTableName;
+    String sampleName;
+    SqlTimestampLiteral baseline = null;
+}
+{
+    qualifiedTableName = CompoundIdentifier()
+    (
+        LOOKAHEAD( {allowBaseline} )
+        baseline = Baseline()
+    |
+        { baseline = null; }
+    )
+    <AS> sampleName = Identifier()
+    {
+        CwmNamedColumnSet columnSet =
+            farragoParser.getStmtValidator().findSchemaObject(
+                qualifiedTableName,
+                CwmNamedColumnSet.class);
+        FemSampleDataset dataset = getRepos().newFemSampleDataset();
+        dataset.setName(sampleName);
+        dataset.setOwningColumnSet(element);
+        dataset.setUsedColumnSet(columnSet);
+        if (baseline != null) {
+            dataset.setBaselineTimestamp(baseline.toString());
+        }
+    }
+}
+
+SqlTimestampLiteral Baseline() :
+{
+}
+{
+    <BASELINE> <TIMESTAMP> <QUOTED_STRING>
+    {
+        return parseTimestampLiteral(token.image, getPos());
+    }
+    |
+    {
+        return null;
+    }
 }
 
 void OptionalStorageOptions(FemElementWithStorageOptions element) :
@@ -2714,6 +2772,7 @@ DdlStmt AnalyzeStmt() :
 TOKEN :
 {
     < ANALYZE: "ANALYZE">
+    | < BASELINE: "BASELINE" >
     | < CHECKPOINT: "CHECKPOINT" >
     | < CLUSTERED: "CLUSTERED" >
     | < COLUMNS: "COLUMNS" >
@@ -2749,7 +2808,8 @@ String DdlNonReservedKeyWord() :
 {
     (
         // NOTE: ANALYZE a reserved word to facilitate LL(1) parsing
-        <COLUMNS>
+        <BASELINE>
+        | <COLUMNS>
         | <COMPUTE>
         | <ESTIMATE>
         | <INDEX>

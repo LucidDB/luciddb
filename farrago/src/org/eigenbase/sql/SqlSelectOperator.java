@@ -69,7 +69,7 @@ public class SqlSelectOperator extends SqlOperator
 
     public SqlSelectOperator()
     {
-        super("SELECT", SqlKind.Select, 1, true,
+        super("SELECT", SqlKind.Select, 2, true,
             SqlTypeStrategies.rtiScope, null, null);
     }
 

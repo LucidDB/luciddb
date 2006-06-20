@@ -46,7 +46,7 @@ class SqlInOperator extends SqlBinaryOperator
     SqlInOperator()
     {
         super(
-            "IN", SqlKind.In, 15, true, SqlTypeStrategies.rtiNullableBoolean,
+            "IN", SqlKind.In, 30, true, SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown, null);
     }
 

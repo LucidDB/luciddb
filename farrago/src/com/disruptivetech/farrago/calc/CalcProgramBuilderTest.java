@@ -307,16 +307,6 @@ public class CalcProgramBuilderTest extends TestCase
                 "(?s).*Expected a register of Boolean type.*");
         }
 
-        //Testing if jumpBoolean condition with literal booleans asserts (use plain jump instead)
-        CalcProgramBuilder.Register const1 = builder.newBoolLiteral(true);
-        args = new Object [] { new Integer(2), const1 };
-        it = getMethods("addJump\\w+");
-        while (it.hasNext()) {
-            Method method = (Method) it.next();
-            assertExceptionIsThrown(method, args,
-                "(?s).*Expected a non literal register.*");
-        }
-
         //Testing jumps with negative line nbr
         CalcProgramBuilder.Register input0 =
             builder.newInput(CalcProgramBuilder.OpType.Bool, -1);

@@ -282,6 +282,22 @@ public class SqlToRelConverterTest extends SqlToRelTestBase
             "${plan}");
     }
 
+    public void testSample()
+    {
+        check("select * from emp tablesample substitute('DATASET1') where empno > 5",
+            "${plan}");
+    }
+
+    public void testSampleQuery()
+    {
+        check("select * from (\n" +
+            " select * from emp tablesample substitute('DATASET1') as e\n" +
+            " join dept on e.deptno = dept.deptno\n" +
+            ") tablesample substitute('DATASET2')\n" +
+            "where empno > 5",
+            "${plan}");
+    }
+
     public void testCollectionTableWithCursorParam()
     {
         check(

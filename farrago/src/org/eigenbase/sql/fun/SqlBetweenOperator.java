@@ -99,7 +99,7 @@ public class SqlBetweenOperator extends SqlInfixOperator
         Flag flag,
         boolean negated)
     {
-        super(negated ? notBetweenNames : betweenNames, SqlKind.Between, 15,
+        super(negated ? notBetweenNames : betweenNames, SqlKind.Between, 30,
             null, null, otcCustom);
         this.flag = flag;
         this.negated = negated;

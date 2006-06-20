@@ -1117,13 +1117,32 @@ SortRel(sort0=[$1], dir0=[Ascending])
     </TestCase>
     <TestCase name="testSample">
         <Resource name="sql">
-            <![CDATA[select * from table(sample('DATASET1', cursor(select * from emp)))]]>
+            <![CDATA[select * from emp tablesample substitute('DATASET1') where empno > 5]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-  ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+  FilterRel(condition=[>($0, 5)])
     TableAccessRel(table=[[SALES, EMP:DATASET1]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSampleQuery">
+        <Resource name="sql">
+            <![CDATA[select * from (
+ select * from emp tablesample substitute('DATASET1') as e
+ join dept on e.deptno = dept.deptno
+) tablesample substitute('DATASET2')
+where empno > 5]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
+  FilterRel(condition=[>($0, 5)])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
+      JoinRel(condition=[=($7, $8)], joinType=[inner])
+        TableAccessRel(table=[[SALES, EMP:DATASET1]])
+        TableAccessRel(table=[[SALES, DEPT:DATASET2]])
 ]]>
         </Resource>
     </TestCase>

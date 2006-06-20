@@ -1228,6 +1228,7 @@ SqlNode TableRef() :
     String alias;
     SqlParserPos pos;
     List args;
+    SqlNode sample;
 }
 {
     (
@@ -1240,7 +1241,7 @@ SqlNode TableRef() :
                     tableRef, over, pos);
             }
         }
-        |
+    |
         { boolean isLateral = false; }
         [<LATERAL> { isLateral = true;} ]
         tableRef = ParenthesizedExpression(EXPR_ACCEPT_QUERY)
@@ -1256,7 +1257,7 @@ SqlNode TableRef() :
                     tableRef, getPos());
             }
         }
-        |
+    |
         <UNNEST> { pos = getPos(); }
         args = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_SUBQUERY)
         {
@@ -1265,13 +1266,24 @@ SqlNode TableRef() :
                 SqlParserUtil.toNodeArray(args),
                 pos);
         }
-        |
+    |
         <TABLE> <LPAREN>
         tableRef = TableFunctionCall()
         <RPAREN>
         {
         }
     )
+    [
+        <TABLESAMPLE> { pos = getPos(); }
+        <SUBSTITUTE> <LPAREN> sample = StringLiteral(true) <RPAREN>
+        {
+            String sampleName = SqlLiteral.stringValue(sample);
+            SqlSampleSpec sampleSpec = SqlSampleSpec.createNamed(sampleName);
+            SqlLiteral sampleLiteral = SqlLiteral.createSample(sampleSpec, pos);
+            tableRef = SqlStdOperatorTable.sampleFunction.createCall(
+                tableRef, sampleLiteral, pos.plus(getPos()));
+         }
+    ]
     [
         [ <AS> ] alias = Identifier()
         {
@@ -1649,7 +1661,7 @@ SqlNodeList OrderBy(boolean accept) :
             // did they bother calling us?  To get the correct
             // parser position for error reporting.
             EigenbaseResource res = EigenbaseResource.instance();
-            String msg = res.IllegalOrderBy.str( getPositionString());
+            String msg = res.IllegalOrderBy.str(getPositionString());
             throw new ParseException(msg);
         }
     }
@@ -4028,6 +4040,7 @@ TOKEN :
     | < SUBCLASS_ORIGIN: "SUBCLASS_ORIGIN" >
     | < SUBMULTISET: "SUBMULTISET" >
     | < SUBSTRING: "SUBSTRING" >
+    | < SUBSTITUTE: "SUBSTITUTE" >
     | < SUM: "SUM" >
     | < SYMMETRIC: "SYMMETRIC" >
     | < SYSTEM: "SYSTEM" >
@@ -4320,6 +4333,7 @@ String CommonNonReservedKeyWord() :
         | <STRUCTURE>
         | <STYLE>
         | <SUBCLASS_ORIGIN>
+        | <SUBSTITUTE>
         | <TABLE_NAME>
         | <TEMPORARY>
         | <TIES>

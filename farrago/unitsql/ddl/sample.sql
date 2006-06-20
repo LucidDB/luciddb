@@ -1,0 +1,123 @@
+-- $Id$
+-- Test DDL on samples
+
+!set outputformat csv
+
+create schema sample;
+set schema 'sample';
+
+-- create two tables and one view to be samples
+
+create table s1 (i int not null primary key, j int, k int);
+
+insert into s1 (i, j, k)
+values (1, 1, 3),
+       (3, 1, 5);
+
+-- columns are in different order, different types, and a superset
+create table s2 (j double, k int, m varchar(10), i integer not null primary key);
+
+insert into s2 (i, j, k, m)
+values (3, 2.4, 3, 'unused'),
+       (6, 3.8, 6, null);
+
+create view v1 as
+select * from s1 where i > 1;
+
+-- create a table which has two samples
+create table t (i int not null primary key, j int, k int)
+sample (s1 as sample1, s2 as sample2)
+description 'table with a sample';
+
+-- expect datasets called 'SAMPLE1' and 'SAMPLE2'
+select "name" from sys_fem."SQL2003"."SampleDataset" order by 1;
+
+insert into t (i, j, k)
+values (1, 2, 3),
+       (2, 4, 5),
+       (3, 4, 5);
+
+-- todo: add samples to an existing table:
+--alter table t add sample ...;
+
+-- todo: remove samples from existing table:
+--alter table t drop sample ...;
+
+-- todo: create view with samples:
+--create view v sample (...) as ...;
+
+-- fully-qualified sample
+create table t2 (i int primary key, j int)
+sample (sample.s1 as sample1);
+
+-- fails: non-existent sample
+create table t3 (i int primary key, j int)
+sample (nonexistent.s1 as sample1);
+
+-- todo: fails: sample names must be unique
+--create table t4 (i int primary key, j int)
+--sample (s1 as sample1, s1 as sample1);
+
+-- can use the same sample more than once
+create table t5 (i int primary key, j int)
+sample (s1 as sample1, s1 as sample2)
+description 'table with a sample';
+
+-- samples must have the same columns with the same types
+
+-- todo: fails: missing column m
+--create table t6 (i int primary key, j int, m int)
+--sample (s1 as sample1);
+
+-- todo: fails: j is different type
+--create table t7 (i int primary key, j varchar(10), k int)
+--sample (s1 as sample1);
+
+-- succeeds: spurious columns are ok
+create table t8 (i int primary key, j int)
+sample (s1 as sample1);
+
+-- succeeds: reordered columns
+create table t9 (i int primary key, k int, j int)
+sample (s1 as sample1);
+
+-- todo: fails: sample has weaker constraints
+--create table t10 (i int not null primary key, j int, k int not null)
+--sample (s1 as sample1);
+
+-- Invocation ---------------------------------
+
+-- this plan should use s1
+explain plan for select i, j from t tablesample substitute('SAMPLE1');
+
+-- non-existent sample, plan should use t
+explain plan for select i, j from t tablesample substitute('SAMPLE9');
+
+-- this plan should use s2. some casting/reordering required
+explain plan for select i, j from t tablesample substitute('SAMPLE2');
+
+-- samples applied in union
+explain plan for
+select * from (
+  select i, j from t tablesample substitute('SAMPLE1')
+  union all
+  select i, k from t tablesample substitute('SAMPLE2'));
+
+-- sample applied to query, overridden by sample applied to table
+explain plan for
+select * from (
+  select i, j from t
+  union
+  select i, j from t tablesample substitute('SAMPLE1')
+) tablesample substitute('SAMPLE2');
+
+-- sample which is a view
+create table t11 (i int primary key, j int, k int)
+sample (v1 AS "SampleV", s1 as sample1);
+
+-- should generate a plan onto 's1 where i > 1 and j < 2'
+explain plan for
+select * from t11 tablesample substitute('SampleV')
+where j < 2;
+
+-- end sample.sql

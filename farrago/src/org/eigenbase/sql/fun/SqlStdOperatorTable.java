@@ -25,8 +25,7 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.ReflectiveSqlOperatorTable;
 
 /**
@@ -73,47 +72,47 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     // INTERSECT -> *
     // which explains the different precedence values
     public static final SqlSetOperator unionOperator =
-        new SqlSetOperator("UNION", SqlKind.Union, 7, false);
+        new SqlSetOperator("UNION", SqlKind.Union, 14, false);
 
     public static final SqlSetOperator unionAllOperator =
-        new SqlSetOperator("UNION ALL", SqlKind.Union, 7, true);
+        new SqlSetOperator("UNION ALL", SqlKind.Union, 14, true);
 
     public static final SqlSetOperator exceptOperator =
-        new SqlSetOperator("EXCEPT", SqlKind.Except, 7, false);
+        new SqlSetOperator("EXCEPT", SqlKind.Except, 14, false);
 
     public static final SqlSetOperator exceptAllOperator =
-        new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 7, true);
+        new SqlSetOperator("EXCEPT ALL", SqlKind.Except, 14, true);
 
     public static final SqlSetOperator intersectOperator =
-        new SqlSetOperator("INTERSECT", SqlKind.Intersect, 9, false);
+        new SqlSetOperator("INTERSECT", SqlKind.Intersect, 18, false);
 
     public static final SqlSetOperator intersectAllOperator =
-        new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 9, true);
+        new SqlSetOperator("INTERSECT ALL", SqlKind.Intersect, 18, true);
 
 
     /** The "MULTISET UNION" operator. */
     public static final SqlMultisetSetOperator multisetUnionOperator =
-        new SqlMultisetSetOperator("MULTISET UNION", 7, false);
+        new SqlMultisetSetOperator("MULTISET UNION", 14, false);
 
     /** The "MULTISET UNION ALL" operator. */
     public static final SqlMultisetSetOperator multisetUnionAllOperator =
-        new SqlMultisetSetOperator("MULTISET UNION ALL", 7, true);
+        new SqlMultisetSetOperator("MULTISET UNION ALL", 14, true);
 
     /** The "MULTISET EXCEPT" operator. */
     public static final SqlMultisetSetOperator multisetExceptOperator =
-        new SqlMultisetSetOperator("MULTISET EXCEPT", 7, false);
+        new SqlMultisetSetOperator("MULTISET EXCEPT", 14, false);
 
     /** The "MULTISET EXCEPT ALL" operator. */
     public static final SqlMultisetSetOperator multisetExceptAllOperator =
-        new SqlMultisetSetOperator("MULTISET EXCEPT ALL", 7, true);
+        new SqlMultisetSetOperator("MULTISET EXCEPT ALL", 14, true);
 
     /** The "MULTISET INTERSECT" operator. */
     public static final SqlMultisetSetOperator multisetIntersectOperator =
-        new SqlMultisetSetOperator("MULTISET INTERSECT", 9, false);
+        new SqlMultisetSetOperator("MULTISET INTERSECT", 18, false);
 
     /** The "MULTISET INTERSECT ALL" operator. */
     public static final SqlMultisetSetOperator multisetIntersectAllOperator =
-        new SqlMultisetSetOperator("MULTISET INTERSECT ALL", 9, true);
+        new SqlMultisetSetOperator("MULTISET INTERSECT ALL", 18, true);
 
     //-------------------------------------------------------------
     //                   BINARY OPERATORS
@@ -123,7 +122,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical <code>AND</code> operator.
      */
     public static final SqlBinaryOperator andOperator =
-        new SqlBinaryOperator("AND", SqlKind.And, 14, true,
+        new SqlBinaryOperator("AND", SqlKind.And, 28, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBoolX2);
@@ -139,7 +138,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * String concatenation operator, '<code>||</code>'.
      */
     public static final SqlBinaryOperator concatOperator =
-        new SqlBinaryOperator("||", SqlKind.Other, 30, true,
+        new SqlBinaryOperator("||", SqlKind.Other, 60, true,
             SqlTypeStrategies.rtiNullableDyadicStringSumPrecision,
             null,
             SqlTypeStrategies.otcStringSameX2);
@@ -148,7 +147,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Arithmetic division operator, '<code>/</code>'.
      */
     public static final SqlBinaryOperator divideOperator =
-        new SqlBinaryOperator("/", SqlKind.Divide, 30, true,
+        new SqlBinaryOperator("/", SqlKind.Divide, 60, true,
             SqlTypeStrategies.rtiNullableQuotient,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcDivisionOperator);
@@ -157,14 +156,14 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Dot operator, '<code>.</code>', used for referencing fields of records.
      */
     public static final SqlBinaryOperator dotOperator =
-        new SqlBinaryOperator(".", SqlKind.Dot, 40, true, null, null,
+        new SqlBinaryOperator(".", SqlKind.Dot, 80, true, null, null,
             SqlTypeStrategies.otcAnyX2);
 
     /**
      * Logical equals operator, '<code>=</code>'.
      */
     public static final SqlBinaryOperator equalsOperator =
-        new SqlBinaryOperator("=", SqlKind.Equals, 15, true,
+        new SqlBinaryOperator("=", SqlKind.Equals, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
@@ -173,7 +172,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical greater-than operator, '<code>&gt;</code>'.
      */
     public static final SqlBinaryOperator greaterThanOperator =
-        new SqlBinaryOperator(">", SqlKind.GreaterThan, 15, true,
+        new SqlBinaryOperator(">", SqlKind.GreaterThan, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableOrderedX2);
@@ -182,7 +181,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>IS DISTINCT FROM</code> operator.
      */
     public static final SqlBinaryOperator isDistinctFromOperator =
-        new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 15, true,
+        new SqlBinaryOperator("IS DISTINCT FROM", SqlKind.Other, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
@@ -192,7 +191,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * <code>NOT(x IS DISTINCT FROM y)</code>
      */
     public static final SqlBinaryOperator isNotDistinctFromOperator =
-        new SqlBinaryOperator("IS NOT DISTINCT FROM", SqlKind.Other, 15, true,
+        new SqlBinaryOperator("IS NOT DISTINCT FROM", SqlKind.Other, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
@@ -201,7 +200,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical greater-than-or-equal operator, '<code>&gt;=</code>'.
      */
     public static final SqlBinaryOperator greaterThanOrEqualOperator =
-        new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 15, true,
+        new SqlBinaryOperator(">=", SqlKind.GreaterThanOrEqual, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableOrderedX2);
@@ -216,7 +215,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical less-than operator, '<code>&lt;</code>'.
      */
     public static final SqlBinaryOperator lessThanOperator =
-        new SqlBinaryOperator("<", SqlKind.LessThan, 15, true,
+        new SqlBinaryOperator("<", SqlKind.LessThan, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableOrderedX2);
@@ -225,7 +224,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical less-than-or-equal operator, '<code>&lt;=</code>'.
      */
     public static final SqlBinaryOperator lessThanOrEqualOperator =
-        new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 15, true,
+        new SqlBinaryOperator("<=", SqlKind.LessThanOrEqual, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableOrderedX2);
@@ -237,7 +236,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * and {@link #prefixMinusOperator -} operators.
      */
     public static final SqlBinaryOperator minusOperator =
-        new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 20, true,
+        new SqlMonotonicBinaryOperator("-", SqlKind.Minus, 40, true,
             // Same type inference strategy as sum
             SqlTypeStrategies.rtiNullableSum,
             SqlTypeStrategies.otiFirstKnown,
@@ -247,7 +246,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Arithmetic multiplication operator, '<code>*</code>'.
      */
     public static final SqlBinaryOperator multiplyOperator =
-        new SqlMonotonicBinaryOperator("*", SqlKind.Times, 30, true,
+        new SqlMonotonicBinaryOperator("*", SqlKind.Times, 60, true,
             SqlTypeStrategies.rtiNullableProduct,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMultiplyOperator);
@@ -256,7 +255,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical not-equals operator, '<code>&lt;&gt;</code>'.
      */
     public static final SqlBinaryOperator notEqualsOperator =
-        new SqlBinaryOperator("<>", SqlKind.NotEquals, 15, true,
+        new SqlBinaryOperator("<>", SqlKind.NotEquals, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
@@ -265,7 +264,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Logical <code>OR</code> operator.
      */
     public static final SqlBinaryOperator orOperator =
-        new SqlBinaryOperator("OR", SqlKind.Or, 13, true,
+        new SqlBinaryOperator("OR", SqlKind.Or, 26, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBoolX2);
@@ -274,7 +273,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * Infix arithmetic plus operator, '<code>+</code>'.
      */
     public static final SqlBinaryOperator plusOperator =
-        new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 20, true,
+        new SqlMonotonicBinaryOperator("+", SqlKind.Plus, 40, true,
             SqlTypeStrategies.rtiNullableSum,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcPlusOperator);
@@ -304,7 +303,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlBinaryOperator submultisetOfOperator =
         //TODO check if precedence is correct
-        new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 15, true,
+        new SqlBinaryOperator("SUBMULTISET OF", SqlKind.Other, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             null,
             SqlTypeStrategies.otcMultisetX2);
@@ -313,57 +312,57 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     //                   POSTFIX OPERATORS
     //-------------------------------------------------------------
     public static final SqlPostfixOperator descendingOperator =
-        new SqlPostfixOperator("DESC", SqlKind.Descending, 10, null,
+        new SqlPostfixOperator("DESC", SqlKind.Descending, 20, null,
             SqlTypeStrategies.otiReturnType, SqlTypeStrategies.otcAny);
 
     public static final SqlPostfixOperator isNotNullOperator =
-        new SqlPostfixOperator("IS NOT NULL", SqlKind.Other, 15,
+        new SqlPostfixOperator("IS NOT NULL", SqlKind.Other, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean, SqlTypeStrategies.otcAny);
 
     public static final SqlPostfixOperator isNullOperator =
-        new SqlPostfixOperator("IS NULL", SqlKind.IsNull, 15,
+        new SqlPostfixOperator("IS NULL", SqlKind.IsNull, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean, SqlTypeStrategies.otcAny);
 
     public static final SqlPostfixOperator isNotTrueOperator =
-        new SqlPostfixOperator("IS NOT TRUE", SqlKind.Other, 15,
+        new SqlPostfixOperator("IS NOT TRUE", SqlKind.Other, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isTrueOperator =
-        new SqlPostfixOperator("IS TRUE", SqlKind.IsTrue, 15,
+        new SqlPostfixOperator("IS TRUE", SqlKind.IsTrue, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isNotFalseOperator =
-        new SqlPostfixOperator("IS NOT FALSE", SqlKind.Other, 15,
+        new SqlPostfixOperator("IS NOT FALSE", SqlKind.Other, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isFalseOperator =
-        new SqlPostfixOperator("IS FALSE", SqlKind.IsFalse, 15,
+        new SqlPostfixOperator("IS FALSE", SqlKind.IsFalse, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isNotUnknownOperator =
-        new SqlPostfixOperator("IS NOT UNKNOWN", SqlKind.Other, 15,
+        new SqlPostfixOperator("IS NOT UNKNOWN", SqlKind.Other, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isUnknownOperator =
-        new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 15,
+        new SqlPostfixOperator("IS UNKNOWN", SqlKind.IsNull, 30,
             SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
 
     public static final SqlPostfixOperator isASetOperator =
-        new SqlPostfixOperator("IS A SET", SqlKind.Other, 15,
+        new SqlPostfixOperator("IS A SET", SqlKind.Other, 30,
             SqlTypeStrategies.rtiBoolean,
             null,
             SqlTypeStrategies.otcMultiset);
@@ -372,12 +371,12 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
     //                   PREFIX OPERATORS
     //-------------------------------------------------------------
     public static final SqlPrefixOperator existsOperator =
-        new SqlPrefixOperator("EXISTS", SqlKind.Exists, 20,
+        new SqlPrefixOperator("EXISTS", SqlKind.Exists, 40,
             SqlTypeStrategies.rtiBoolean, null,
             SqlTypeStrategies.otcAny);
 
     public static final SqlPrefixOperator notOperator =
-        new SqlPrefixOperator("NOT", SqlKind.Not, 15,
+        new SqlPrefixOperator("NOT", SqlKind.Not, 30,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiBoolean,
             SqlTypeStrategies.otcBool);
@@ -389,7 +388,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * and '{@link #minusOperator -}' operators.
      */
     public static final SqlPrefixOperator prefixMinusOperator =
-        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 40,
+        new SqlPrefixOperator("-", SqlKind.MinusPrefix, 80,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcNumericOrInterval);
@@ -401,7 +400,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * and '{@link #minusOperator -}' operators.
      */
     public static final SqlPrefixOperator prefixPlusOperator =
-        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 40,
+        new SqlPrefixOperator("+", SqlKind.PlusPrefix, 80,
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcNumericOrInterval);
@@ -412,8 +411,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * t</code>. See also {@link #collectionTableOperator}.
      */
     public static final SqlPrefixOperator explicitTableOperator =
-        new SqlPrefixOperator("TABLE", SqlKind.ExplicitTable, 1, null, null,
-            null);
+        new SqlPrefixOperator(
+            "TABLE", SqlKind.ExplicitTable, 2, null, null, null);
 
     //-------------------------------------------------------------
     // AGGREGATE OPERATORS
@@ -544,7 +543,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlSpecialOperator lateralOperator =
         new SqlFunctionalOperator("LATERAL", SqlKind.Lateral,
-            100, true,
+            200, true,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny);
@@ -559,7 +558,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      */
     public static final SqlSpecialOperator collectionTableOperator =
         new SqlFunctionalOperator("TABLE", SqlKind.CollectionTable,
-            100, true,
+            200, true,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny);
@@ -613,7 +612,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * SIMILAR TO expression.
      */
     public static final SqlSpecialOperator escapeOperator =
-        new SqlSpecialOperator("Escape", SqlKind.Escape, 15);
+        new SqlSpecialOperator("Escape", SqlKind.Escape, 30);
 
     /**
      * The standard SELECT operator.
@@ -986,6 +985,35 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
          {
              public boolean isDeterministic() { return false; }
          };
+
+    /**
+     * The <code>TABLESAMPLE</code> operator.
+     *
+     * <p>Examples:<ul>
+     * <li><code>&lt;query&gt; TABLESAMPLE SUBSTITUTE('sampleName')</code>
+     *     (non-standard)
+     * <li><code>&lt;query&gt; TABLESAMPLE BERNOULLI(&lt;percent&gt;)</code>
+     *     (standard, but not implemented yet)
+     * </ul>
+     *
+     * <p>Operand #0 is a query or table;
+     * Operand #1 is a {@link SqlSampleSpec} wrapped in a {@link SqlLiteral}.
+     */
+    public static final SqlSpecialOperator sampleFunction =
+        new SqlSpecialOperator(
+            "TABLESAMPLE", SqlKind.TableSample, 20, true,
+            SqlTypeStrategies.rtiFirstArgType, null,
+            SqlTypeStrategies.otcVariadic)
+        {
+            public void unparse(
+                SqlWriter writer, SqlNode [] operands,
+                int leftPrec, int rightPrec)
+            {
+                operands[0].unparse(writer, leftPrec, 0);
+                writer.keyword("TABLESAMPLE");
+                operands[1].unparse(writer, 0, rightPrec);
+            }
+        };
 }
 
 // End SqlStdOperatorTable.java

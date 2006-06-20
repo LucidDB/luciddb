@@ -42,7 +42,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
     private static final SqlWriter.FrameType OverlapsFrameType = SqlWriter.FrameType.create("OVERLAPS");
 
     public SqlOverlapsOperator() {
-        super("OVERLAPS", SqlKind.Overlaps, 15, true,
+        super("OVERLAPS", SqlKind.Overlaps, 30, true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown, null);
     }

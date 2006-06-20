@@ -49,7 +49,7 @@ public class SqlOverOperator extends SqlBinaryOperator
 {
     public SqlOverOperator()
     {
-        super("OVER", SqlKind.Over, 10, true,
+        super("OVER", SqlKind.Over, 20, true,
             SqlTypeStrategies.rtiFirstArgType, null,
             SqlTypeStrategies.otcAnyX2);
     }

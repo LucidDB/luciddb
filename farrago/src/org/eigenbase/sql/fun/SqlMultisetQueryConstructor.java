@@ -45,8 +45,7 @@ public class SqlMultisetQueryConstructor extends SqlSpecialOperator
 
     public SqlMultisetQueryConstructor()
     {
-        // Precedence of 100 because nothing can pull parentheses apart.
-        super("MULTISET", SqlKind.MultisetQueryConstructor, 100, false,
+        super("MULTISET", SqlKind.MultisetQueryConstructor, MaxPrec, false,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcVariadic);

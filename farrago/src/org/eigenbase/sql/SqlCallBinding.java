@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.resource.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
@@ -109,6 +110,16 @@ public class SqlCallBinding extends SqlOperatorBinding
     public RelDataType getOperandType(int ordinal)
     {
         return validator.deriveType(scope, call.operands[ordinal]);
+    }
+
+    public RelDataType getCursorOperand(int ordinal)
+    {
+        final SqlNode operand = call.operands[ordinal];
+        assert SqlUtil.isCallTo(operand, SqlStdOperatorTable.cursorConstructor) :
+            operand;
+        final SqlCall cursorCall = (SqlCall) operand;
+        final SqlNode query = cursorCall.operands[0];
+        return validator.deriveType(scope, query);
     }
 
     /**

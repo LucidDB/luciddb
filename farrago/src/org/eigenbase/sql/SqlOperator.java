@@ -106,6 +106,9 @@ public abstract class SqlOperator
     /** used to validate operand types */
     private final SqlOperandTypeChecker operandTypeChecker;
 
+    /** Maximum precedence. */
+    protected static final int MaxPrec = 200;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -139,18 +142,36 @@ public abstract class SqlOperator
         String name,
         SqlKind kind,
         int prec,
-        boolean isLeftAssoc,
+        boolean leftAssoc,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        this(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
-            (2 * prec) + (isLeftAssoc ? 1 : 0), returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        this(
+            name, kind, leftPrec(prec, leftAssoc), rightPrec(prec, leftAssoc),
+            returnTypeInference, operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------
 
+    protected static int leftPrec(int prec, boolean leftAssoc)
+    {
+        assert prec % 2 == 0;
+        if (!leftAssoc) {
+            ++prec;
+        }
+        return prec;
+    }
+
+    protected static int rightPrec(int prec, boolean leftAssoc)
+    {
+        assert prec % 2 == 0;
+        if (leftAssoc) {
+            ++prec;
+        }
+        return prec;
+    }
+    
     public SqlOperandTypeChecker getOperandTypeChecker()
     {
         return operandTypeChecker;

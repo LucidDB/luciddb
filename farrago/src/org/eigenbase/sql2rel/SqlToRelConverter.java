@@ -75,6 +75,13 @@ public class SqlToRelConverter
     protected final RelDataTypeFactory typeFactory;
     private final SqlNodeToRexConverter exprConverter;
 
+    /**
+     * Stack of names of datasets requested by the
+     * <code>TABLE(SAMPLE(&lt;datasetName&gt;, &lt;query&gt;))</code>
+     * construct.
+     */
+    private final Stack<String> datasetStack = new Stack<String>();
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -740,8 +747,7 @@ public class SqlToRelConverter
         RelDataType rowType,
         int iField)
     {
-        RelDataTypeField field = (RelDataTypeField)
-            rowType.getFieldList().get(iField);
+        RelDataTypeField field = (RelDataTypeField) rowType.getFieldList().get(iField);
         RelDataType type = field.getType();
         if (!SqlTypeUtil.isExactNumeric(type)) {
             return literal;
@@ -931,20 +937,45 @@ public class SqlToRelConverter
         SqlNode from)
     {
         SqlCall call;
+        final SqlNode[] operands;
         switch (from.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
-            final SqlNode [] operands = ((SqlCall) from).getOperands();
+            operands = ((SqlCall) from).getOperands();
             convertFrom(bb, operands[0]);
+            return;
+
+        case SqlKind.TableSampleORDINAL:
+            operands = ((SqlCall) from).getOperands();
+            SqlSampleSpec sampleSpec = SqlLiteral.sampleValue(operands[1]);
+            if (sampleSpec instanceof SqlSampleSpec.SqlSubstitutionSampleSpec)
+            {
+                String sampleName =
+                    ((SqlSampleSpec.SqlSubstitutionSampleSpec) sampleSpec).
+                        getName();
+                datasetStack.push(sampleName);
+                convertFrom(bb, operands[0]);
+                datasetStack.pop();
+            } else {
+                throw Util.newInternal(
+                    "unknown TABLESAMPLE type: " + sampleSpec);
+            }
             return;
 
         case SqlKind.IdentifierORDINAL:
             final SqlValidatorNamespace fromNamespace =
                 validator.getNamespace(from);
+            final String datasetName =
+                datasetStack.isEmpty() ? null :
+                datasetStack.peek();
             RelOptTable table =
-                SqlValidatorUtil.getRelOptTable(fromNamespace, schema);
-            final RelNode tableRel = shouldConvertTableAccess ?
-                table.toRel(cluster, connection) :
-                new TableAccessRel(cluster, table, connection);
+                SqlValidatorUtil.getRelOptTable(
+                    fromNamespace, schema, datasetName);
+            final RelNode tableRel;
+            if (shouldConvertTableAccess) {
+                tableRel = table.toRel(cluster, connection);
+            } else {
+                tableRel = new TableAccessRel(cluster, table, connection);
+            }
             bb.setRoot(tableRel, true);
             return;
 
@@ -967,8 +998,7 @@ public class SqlToRelConverter
             }
             JoinRelType convertedJoinType = convertJoinType(joinType);
             final JoinRelBase joinRel;
-            joinRel = createJoin(
-                bb,
+            joinRel = createJoin(bb,
                 leftRel,
                 rightRel,
                 join.getCondition(),
@@ -995,8 +1025,7 @@ public class SqlToRelConverter
             RexNode[] exprs = {bb.convertExpression(call)};
             final String[] fieldNames = {validator.deriveAlias(call, 0)};
             final RelNode childRel =
-                CalcRel.createProject(
-                    null != bb.root  ? bb.root : new OneRowRel(cluster),
+                CalcRel.createProject(null != bb.root ? bb.root : new OneRowRel(cluster),
                     exprs,
                     fieldNames);
 
@@ -1009,20 +1038,36 @@ public class SqlToRelConverter
             // Dig out real call; TABLE() wrapper is just syntactic.
             assert(call.getOperands().length == 1);
             call = (SqlCall) call.getOperands()[0];
-            replaceSubqueries(bb, call);
-            RexNode rexCall = bb.convertExpression(call);
-            RelNode [] inputs = bb.retrieveCursors();
-            TableFunctionRel callRel = new TableFunctionRel(
-                cluster,
-                rexCall,
-                validator.getValidatedNodeType(call),
-                inputs);
-            bb.setRoot(callRel, true);
+            convertCollectionTable(bb, call);
             return;
-            
+
         default:
             throw Util.newInternal("not a join operator " + from);
         }
+    }
+
+    protected void convertCollectionTable(
+        Blackboard bb, SqlCall call)
+    {
+        if (call.getOperator() == SqlStdOperatorTable.sampleFunction) {
+            final String sampleName = SqlLiteral.stringValue(call.operands[0]);
+            datasetStack.push(sampleName);
+            SqlCall cursorCall = (SqlCall) call.operands[1];
+            SqlNode query = cursorCall.operands[0];
+            RelNode converted = convertQuery(query, false, false);
+            bb.setRoot(converted, false);
+            datasetStack.pop();
+            return;
+        }
+        replaceSubqueries(bb, call);
+        RexNode rexCall = bb.convertExpression(call);
+        RelNode [] inputs = bb.retrieveCursors();
+        TableFunctionRel callRel = new TableFunctionRel(
+            cluster,
+            rexCall,
+            validator.getValidatedNodeType(call),
+            inputs);
+        bb.setRoot(callRel, true);
     }
 
     private JoinRelBase createJoin(
@@ -1410,7 +1455,7 @@ public class SqlToRelConverter
     {
         SqlValidatorNamespace targetNs = validator.getNamespace(call);
         RelOptTable targetTable =
-            SqlValidatorUtil.getRelOptTable(targetNs, schema);
+            SqlValidatorUtil.getRelOptTable(targetNs, schema, null);
         return targetTable;
     }
 
@@ -1956,6 +2001,24 @@ public class SqlToRelConverter
         return query.createCluster(env, typeFactory, rexBuilder);
     }
 
+    public RexNode convertField(
+        RelDataType inputRowType,
+        RelDataTypeField field)
+    {
+        final RelDataTypeField inputField =
+            inputRowType.getField(field.getName());
+        if (inputField == null) {
+            throw Util.newInternal("field not found: " + field);
+        }
+        return RexUtil.maybeCast(
+            rexBuilder,
+            field.getType(),
+            rexBuilder.makeInputRef(
+                inputField.getType(),
+                inputField.getIndex()));
+    }
+
+
     //~ Inner Classes ---------------------------------------------------------
 
     /**
@@ -2264,8 +2327,7 @@ public class SqlToRelConverter
 
         RelNode [] retrieveCursors()
         {
-            RelNode [] cursorArray = (RelNode [])
-                cursors.toArray(RelNode.emptyArray);
+            RelNode [] cursorArray = cursors.toArray(RelNode.emptyArray);
             cursors.clear();
             return cursorArray;
         }

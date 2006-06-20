@@ -2,8 +2,9 @@
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2005-2005 The Eigenbase Project
-// Copyright (C) 2005-2005 Disruptive Tech
+// Copyright (C) 2002-2005 Disruptive Tech
 // Copyright (C) 2005-2005 LucidEra, Inc.
+// Portions Copyright (C) 2003-2005 John V. Sichi
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -19,38 +20,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.MultisetSqlType;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+package org.eigenbase.relopt;
 
 /**
- * The <code>UNNEST<code> operator.
+ * Extension to {@link RelOptSchema} with support for sample datasets.
  *
- * @author Wael Chatila
+ * @see RelOptConnection
+ * @see RelOptSchema
+ *
+ * @author jhyde
  * @version $Id$
  */
-public class SqlUnnestOperator extends SqlFunctionalOperator
+public interface RelOptSchemaWithSampling extends RelOptSchema
 {
-    public SqlUnnestOperator()
-    {
-        super(
-            "UNNEST", SqlKind.Unnest,
-            200, true, null, null,
-            SqlTypeStrategies.otcMultisetOrRecordTypeMultiset);
-    }
+    //~ Methods ---------------------------------------------------------------
 
-    public RelDataType inferReturnType(
-        SqlOperatorBinding opBinding)
-    {
-        RelDataType type = opBinding.getOperandType(0);
-        if (type.isStruct()) {
-            type = type.getFields()[0].getType();
-        }
-        MultisetSqlType t = (MultisetSqlType) type;
-        return t.getComponentType();
-    }
+    /**
+     * Retrieves a {@link RelOptTable} based upon a member access, using a
+     * sample dataset if it exists.
+     */
+    RelOptTable getTableForMember(String [] names, String datasetName);
+
 }
 
-// End SqlUnnestOperator.java
+
+// End RelOptSchemaWithSampling.java

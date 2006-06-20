@@ -47,7 +47,7 @@ public class SqlJoinOperator extends SqlOperator
 
     public SqlJoinOperator()
     {
-        super("JOIN", SqlKind.Join, 8, true, null, null, null);
+        super("JOIN", SqlKind.Join, 16, true, null, null, null);
     }
 
     //~ Methods ---------------------------------------------------------------

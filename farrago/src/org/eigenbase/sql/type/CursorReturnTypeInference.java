@@ -19,38 +19,37 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-package org.eigenbase.sql;
+package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.MultisetSqlType;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 /**
- * The <code>UNNEST<code> operator.
+ * Returns the rowtype of a cursor of the operand at a particular 0-based
+ * ordinal position.
  *
- * @author Wael Chatila
+ * @see OrdinalReturnTypeInference
+ *
+ * @author Julian Hyde
  * @version $Id$
  */
-public class SqlUnnestOperator extends SqlFunctionalOperator
+public class CursorReturnTypeInference
+    implements SqlReturnTypeInference
 {
-    public SqlUnnestOperator()
+    private final int ordinal;
+
+    public CursorReturnTypeInference(int ordinal)
     {
-        super(
-            "UNNEST", SqlKind.Unnest,
-            200, true, null, null,
-            SqlTypeStrategies.otcMultisetOrRecordTypeMultiset);
+        Util.deprecated("add to p4", false);
+        this.ordinal = ordinal;
     }
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
-        RelDataType type = opBinding.getOperandType(0);
-        if (type.isStruct()) {
-            type = type.getFields()[0].getType();
-        }
-        MultisetSqlType t = (MultisetSqlType) type;
-        return t.getComponentType();
+        return opBinding.getCursorOperand(ordinal);
     }
 }
 
-// End SqlUnnestOperator.java
+// End CursorReturnTypeInference.java

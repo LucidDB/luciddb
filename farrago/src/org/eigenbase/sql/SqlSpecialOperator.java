@@ -40,27 +40,27 @@ public class SqlSpecialOperator extends SqlOperator
         String name,
         SqlKind kind)
     {
-        super(name, kind, 1, true, null, null, null);
+        super(name, kind, 2, true, null, null, null);
     }
 
     public SqlSpecialOperator(
         String name,
         SqlKind kind,
-        int pred)
+        int prec)
     {
-        super(name, kind, pred, true, null, null, null);
+        super(name, kind, prec, true, null, null, null);
     }
 
     public SqlSpecialOperator(
         String name,
         SqlKind kind,
-        int pred,
-        boolean isLeftAssoc,
+        int prec,
+        boolean leftAssoc,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, pred, isLeftAssoc, returnTypeInference,
+        super(name, kind, prec, leftAssoc, returnTypeInference,
             operandTypeInference, operandTypeChecker);
     }
 

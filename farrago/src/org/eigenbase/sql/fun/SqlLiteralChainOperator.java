@@ -53,7 +53,7 @@ import java.util.Arrays;
 public class SqlLiteralChainOperator extends SqlInternalOperator {
 
     SqlLiteralChainOperator() {
-        super("$LiteralChain", SqlKind.LiteralChain, 40, true,
+        super("$LiteralChain", SqlKind.LiteralChain, 80, true,
             // precedence tighter than the * and || operators
             SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.otiFirstKnown,

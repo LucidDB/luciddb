@@ -977,16 +977,6 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Asserts that the register is not declared as {@link RegisterSetType#Literal}
-     * @param result
-     */
-    protected void assertRegisterNotLiteral(Register result)
-    {
-        compilationAssert((result.getRegisterType().getOrdinal() != RegisterSetType.LiteralORDINAL),
-            "Expected a non literal register.");
-    }
-
-    /**
      * Asserts that the register is declared as {@link OpType#Bool}
      * @param reg
      */
@@ -1147,7 +1137,6 @@ public class CalcProgramBuilder
         Register reg)
     {
         assertRegisterBool(reg);
-        assertRegisterNotLiteral(reg);
 
         //reg != null is checked for in addInstuction
         addInstruction(op, line, reg);
@@ -1223,7 +1212,6 @@ public class CalcProgramBuilder
         String label,
         Register reg)
     {
-        assertRegisterNotLiteral(reg);
         addInstruction(
             jumpNullInstruction,
             new Line(label),
@@ -1234,7 +1222,6 @@ public class CalcProgramBuilder
         String label,
         Register reg)
     {
-        assertRegisterNotLiteral(reg);
         addInstruction(
             jumpNotNullInstruction,
             new Line(label),

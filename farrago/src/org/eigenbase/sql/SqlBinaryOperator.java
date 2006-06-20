@@ -25,7 +25,6 @@ package org.eigenbase.sql;
 
 import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
 import org.eigenbase.sql.validate.SqlValidatorScope;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.RelDataType;
@@ -44,14 +43,14 @@ public class SqlBinaryOperator extends SqlOperator
         String name,
         SqlKind kind,
         int prec,
-        boolean isLeftAssoc,
+        boolean leftAssoc,
         SqlReturnTypeInference returnTypeInference,
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, (2 * prec) + (isLeftAssoc ? 0 : 1),
-            (2 * prec) + (isLeftAssoc ? 1 : 0), returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(
+            name, kind, leftPrec(prec, leftAssoc), rightPrec(prec, leftAssoc),
+            returnTypeInference, operandTypeInference, operandTypeChecker);
     }
 
     //~ Methods ---------------------------------------------------------------

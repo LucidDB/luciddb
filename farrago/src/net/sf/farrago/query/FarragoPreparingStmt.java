@@ -28,8 +28,6 @@ import java.net.*;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.jmi.reflect.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
@@ -75,7 +73,7 @@ import java.util.List;
 public class FarragoPreparingStmt extends OJPreparingStmt
     implements FarragoSessionPreparingStmt,
         RelOptConnection,
-        RelOptSchema,
+        RelOptSchemaWithSampling,
         SqlValidatorCatalogReader
 {
     //~ Static fields/initializers --------------------------------------------
@@ -174,8 +172,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         relMetadataProvider = new DefaultRelMetadataProvider();
 
-        // Chain Farrago metadata just above the default. This allows it to 
-        // provide metadata for rels that are not handled by other providers, 
+        // Chain Farrago metadata just above the default. This allows it to
+        // provide metadata for rels that are not handled by other providers,
         // but not to override the behavior of other providers.
         relMetadataProvider.addProvider(
             new FarragoRelMetadataProvider(getRepos()));
@@ -184,7 +182,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSessionPreparingStmt
-    public boolean mayCacheImplementation() 
+    public boolean mayCacheImplementation()
     {
         return true;
     }
@@ -238,7 +236,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         return sqlValidator != null;
     }
-    
+
     // implement FarragoSessionPreparingStmt
     public SqlValidator getSqlValidator()
     {
@@ -291,17 +289,17 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         return implementingClassDecl;
     }
-    
+
     protected Argument[] getImplementingArgs()
     {
         return implementingArgs;
     }
-    
+
     protected TableAccessMap getTableAccessMap()
     {
         return tableAccessMap;
     }
-    
+
     protected Map<String, RelDataType> getResultSetTypeMap()
     {
         return resultSetTypeMap;
@@ -311,7 +309,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
         analyzeRoutineDependencies(sqlNode);
-        
+
         // Now that we're done with validation, perform any deferred
         // privilege checks.
         stmtValidator.getPrivilegeChecker().checkAccess();
@@ -401,16 +399,16 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         packageDir.delete();
         packageDir.mkdir();
     }
-    
+
     // Override OJPreparingStmt
     protected BoundMethod compileAndBind(
         ClassDeclaration decl, ParseTree parseTree, Argument[] arguments)
     {
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
-        
+
         compileTransforms();
-        
+
         return boundMethod;
     }
 
@@ -427,7 +425,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 new CompilationUnit(packageName, new String[0],
                     new ClassDeclarationList(transformDecl));
 
-            Class clazz = 
+            Class clazz =
                 super.compileClass(
                     packageName,
                     transformDecl.getName(),
@@ -518,7 +516,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         final FarragoSessionAnalyzedSql analyzedSql)
     {
         RelNode rootRel = null;
-        
+
         getSqlToRelConverter();
         if (analyzedSql.paramRowType == null) {
             // query expression
@@ -551,20 +549,20 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
             if (analyzedSql.optimized) {
                 rootRel = optimize(rootRel.getRowType(), rootRel);
-            
+
                 // From here on, use the planner's notion of root, because the
                 // rootRel it returned to us may have lost some metadata.
                 // TODO: clean this up.
                 rootRel = planner.getRoot();
             }
-            
+
             // Derive information about origin of each column
             List<Set<RelColumnOrigin>> columnOrigins =
                 new ArrayList<Set<RelColumnOrigin>>();
             List<RelDataTypeField> fieldList =
                 analyzedSql.resultType.getFieldList();
             for (int i = 0; i < fieldList.size(); ++i) {
-                Set<RelColumnOrigin> rcoSet = 
+                Set<RelColumnOrigin> rcoSet =
                     RelMetadataQuery.getColumnOrigins(rootRel, i);
                 if (rcoSet == null) {
                     // If we don't know, assume none.
@@ -656,9 +654,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // views), we can finalize the relational expression metadata query
         // providers to use during optimization.
         finalizeRelMetadata(rootRel);
-        
+
         RelTraitSet desiredTraits = getDesiredRootTraitSet(rootRel);
-        
+
         rootRel = super.optimize(rowType, rootRel);
         if (dumpPlan) {
             planDumpTracer.fine(
@@ -689,7 +687,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             throw FarragoResource.instance().SessionOptimizerFailed.ex(
                 problemRel.toString());
         }
-        
+
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
         // tableAccessMaps, one before and one after optimization, and then
         // merge them.  Leaving out ones from before could lead us to avoid
@@ -698,7 +696,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // others.  Leaving out ones from after would screw up an optimizer
         // which supports materialized view rewrite.
         tableAccessMap = new TableAccessMap(rootRel);
-        
+
         return rootRel;
     }
 
@@ -737,7 +735,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             relMetadataProvider);
 
         // Add caching on top of all that.
-        CachingRelMetadataProvider cacheProvider = 
+        CachingRelMetadataProvider cacheProvider =
             new CachingRelMetadataProvider(relMetadataProvider, planner);
 
         // Put the planner at the head of its own chain before all the rest.
@@ -978,11 +976,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         CwmNamedColumnSet columnSet = (CwmNamedColumnSet) resolved.object;
 
-        // Look up sample dataset, if asked for.
+        // If they requested a sample, see if there's a sample with that name.
+        // Set oldColumnSet to remind us to cast & reorder columns.
+        CwmNamedColumnSet oldColumnSet = null;
         if (datasetName != null) {
-            CwmNamedColumnSet sampleColumnSet = null;
-//                stmtValidator.getSample(columnSet, datasetName);
+            CwmNamedColumnSet sampleColumnSet =
+                stmtValidator.getSampleDataset(columnSet, datasetName);
             if (sampleColumnSet != null) {
+                oldColumnSet = columnSet;
                 columnSet = sampleColumnSet;
             }
         }
@@ -1008,11 +1009,21 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                     getFarragoTypeFactory());
         } else if (columnSet instanceof FemLocalView) {
             RelDataType rowType = createTableRowType(columnSet);
-            relOptTable = new FarragoView(columnSet, rowType);
+            FemLocalView view = (FemLocalView) columnSet;
+            relOptTable = new FarragoView(
+                view, rowType, datasetName, view.getModality());
         } else {
             throw Util.needToImplement(columnSet);
         }
         initializeQueryColumnSet(relOptTable, columnSet);
+
+        if (oldColumnSet != null) {
+            RelDataType rowType = createTableRowType(oldColumnSet);
+            relOptTable = new PermutingRelOptTable(
+                this, oldColumnSet.getName(), rowType, relOptTable
+            );
+        }
+
         return relOptTable;
     }
 
@@ -1345,6 +1356,64 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
     }
 
+    /**
+     * Transform which permutes the columns of an input table, applying
+     * casts amd renaming columns if necessary, to make the output rowtype
+     * match the desired rowtype.
+     *
+     * <p>The input table must have a superset of the columns of the output
+     * rowtype, and their types must be coercible into the output types.
+     * Conversion is performed by the {@link SqlToRelConverter#convertField}
+     * method.
+     *
+     * <p>The transform generally generates an extra
+     * {@link CalcRel} during the conversion to a {@link RelNode}.
+     */
+    protected class PermutingRelOptTable extends RelOptAbstractTable
+    {
+        private final RelOptTable inputTable;
+
+        /**
+         * Creates a table which converts an input row type to a desired
+         * output row type, shuffling and casting columns in order to do so.
+         *
+         * @param schema Schema the table belongs to
+         * @param name Name of this table
+         * @param rowType Output row type of this table
+         * @param inputTable Input table
+         */
+        protected PermutingRelOptTable(
+            RelOptSchema schema,
+            String name,
+            RelDataType rowType,
+            RelOptTable inputTable)
+        {
+            super(schema, name, rowType);
+            assert inputTable != null : "inputTable";
+            this.inputTable = inputTable;
+        }
+
+        public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
+        {
+            final RelNode inputRel = inputTable.toRel(cluster, connection);
+            final RelDataType inputRowType = inputRel.getRowType();
+
+            // Add projections to make the columns the desired types.
+            List<String> fieldNames = new ArrayList<String>();
+            List<RexNode> fieldExprs = new ArrayList<RexNode>();
+            for (RelDataTypeField field : rowType.getFields()) {
+                RexNode expr =
+                    sqlToRelConverter.convertField(inputRowType, field);
+                fieldExprs.add(expr);
+                fieldNames.add(field.getName());
+            }
+
+            return CalcRel.createProject(
+                inputRel,
+                fieldExprs,
+                fieldNames);
+        }
+    }
 }
 
 

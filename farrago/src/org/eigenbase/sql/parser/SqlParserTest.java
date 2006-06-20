@@ -1056,6 +1056,31 @@ public class SqlParserTest extends TestCase
             "(?s).*Encountered \"[)]\" at line 1, column 31.*");
     }
 
+    public void testTableSample()
+    {
+        check("select * from (" +
+            "  select * " +
+            "  from emp " +
+            "  join dept on emp.deptno = dept.deptno" +
+            "  where gender = 'F'" +
+            "  order by sal) tablesample substitute('medium')",
+            TestUtil.fold(new String[] {
+                "SELECT *",
+                "FROM (SELECT *",
+                "FROM `EMP`",
+                "INNER JOIN `DEPT` ON (`EMP`.`DEPTNO` = `DEPT`.`DEPTNO`)",
+                "WHERE (`GENDER` = 'F')",
+                "ORDER BY `SAL`) TABLESAMPLE SUBSTITUTE('MEDIUM')"}));
+
+        check("select * " +
+            "from emp tablesample substitute('medium') as x " +
+            "join dept tablesample substitute('lar' /* split */ 'ge') on x.deptno = dept.deptno",
+            TestUtil.fold(new String[] {
+                "SELECT *",
+                "FROM `EMP` TABLESAMPLE SUBSTITUTE('MEDIUM') AS `X`",
+                "INNER JOIN `DEPT` TABLESAMPLE SUBSTITUTE('LARGE') ON (`X`.`DEPTNO` = `DEPT`.`DEPTNO`)"}));
+    }
+
     public void testLiteral()
     {
         checkExpSame("'foo'");

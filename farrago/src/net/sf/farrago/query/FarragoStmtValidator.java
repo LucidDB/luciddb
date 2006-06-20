@@ -550,7 +550,6 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     // implement FarragoSessionStmtValidator
     public CwmSqldataType findSqldataType(SqlIdentifier typeName)
     {
-
         if (!typeName.isSimple()) {
             FemUserDefinedType udt = findSchemaObject(
                 typeName,
@@ -689,6 +688,22 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
         }
 
         return resolved;
+    }
+
+    public CwmNamedColumnSet getSampleDataset(
+        CwmNamedColumnSet columnSet, String datasetName)
+    {
+        if (columnSet instanceof FemAbstractColumnSet) {
+            for (FemSampleDataset dataset :
+                (Collection<FemSampleDataset>)
+                ((FemAbstractColumnSet) columnSet).getSampleDataset()) {
+                if (dataset.getName().equals(datasetName)) {
+                    return (CwmNamedColumnSet) dataset.getUsedColumnSet();
+                }
+            }
+        }
+        // no sample found
+        return null;
     }
 
     // implement FarragoSessionStmtValidator
