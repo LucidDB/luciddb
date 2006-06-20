@@ -24,6 +24,7 @@
 #ifndef Fennel_TupleData_Included
 #define Fennel_TupleData_Included
 
+#include "StandardTypeDescriptor.h"
 #include <vector>
 
 
@@ -47,6 +48,7 @@ struct TupleDatum
     static const uint16_t TWO_BYTE_LENGTH_MASK2 = 0x00ff;
     static const uint8_t TWO_BYTE_LENGTH_BIT = 0x80;
 
+    uint dataType;
     TupleStorageByteLength cbData;
     PConstBuffer pData;
   
@@ -202,6 +204,7 @@ inline TupleDatum::TupleDatum()
 {
     cbData = 0;
     pData = NULL;
+    dataType = STANDARD_TYPE_END;
 }
 
 inline TupleDatum::TupleDatum(TupleDatum const &other)
@@ -224,6 +227,7 @@ inline void TupleDatum::copyFrom(TupleDatum const &other)
 {
     cbData = other.cbData;
     pData = other.pData;
+    dataType = other.dataType;
 }
 
 /***************************************************

@@ -168,15 +168,16 @@ CalcExtMinMaxTest::initWindowedAggDataBlock(
 
     
     outTuple->computeAndAllocate(calc.getOutputRegisterDescriptor());
+    (*outTuple)[0].dataType = dType;
     
     TupleDataWithBuffer inTuple(calc.getInputRegisterDescriptor());
 
     calc.bind(&inTuple, outTuple);
 
-    TupleDatum* pTD = &((*outTuple)[0]);
+//    TupleDatum* pTD = &((*outTuple)[0]);
 
-    *(reinterpret_cast<int32_t*>(const_cast<PBuffer>(pTD->pData))) =
-        dType;
+//    *(reinterpret_cast<int32_t*>(const_cast<PBuffer>(pTD->pData))) =
+//        dType;
     
     calc.exec();
     printOutput(*outTuple, calc);
@@ -200,7 +201,8 @@ WinAggAddTest(
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
-    pg << "CALL 'WinAggAdd(O0,I0,I1);" << endl;
+    pg << "CALL 'WinAggAdd(I0,I1);" << endl;
+    pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggSum(O1,I1);" << endl;
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
@@ -281,7 +283,8 @@ WinAggDropTest(
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
-    pg << "CALL 'WinAggDrop(O0,I0,I1);" << endl; // returns count()
+    pg << "CALL 'WinAggDrop(I0,I1);" << endl;
+    pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggSum(O1,I1);" << endl;
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
