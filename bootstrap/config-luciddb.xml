@@ -41,7 +41,7 @@
 
 		    <property name="open_root" value="&open_root;"/>
 		    <property name="eigen_home" value="&open_integration.build.home;"/>
-            <property name="lucidera_platform_home" value="&red_integration.build.home;/platform/main"/>
+            <property name="lucidera_platform_home" value="&red_default.build.home;/platform/main"/>
 		</ant>
 	</schedule>
 
