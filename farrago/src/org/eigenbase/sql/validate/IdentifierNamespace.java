@@ -72,9 +72,13 @@ public class IdentifierNamespace extends AbstractNamespace
                 // adds names to the front, e.g. FOO.BAR becomes BAZ.FOO.BAR.
                 SqlParserPos[] poses = new SqlParserPos[qualifiedNames.length];
                 Arrays.fill(poses, id.getParserPosition());
-                for (int i = 0; i < id.names.length; i++) {
-                    int offset = qualifiedNames.length - id.names.length;
-                    poses[i + offset] = id.getComponentParserPosition(i);
+                int offset = qualifiedNames.length - id.names.length;
+                // Test offset in case catalog supports fewer
+                // qualifiers than catalog reader.
+                if (offset >= 0) {
+                    for (int i = 0; i < id.names.length; i++) {
+                        poses[i + offset] = id.getComponentParserPosition(i);
+                    }
                 }
                 id.setNames(qualifiedNames, poses);
             }

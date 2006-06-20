@@ -1,0 +1,213 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- calc/inList.sql
+0: jdbc:luciddb:> -- $Id: //bb/bb713/server/Test/calc/inList.sql#1 $
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Test IN LIST and NOT IN LIST function/constructs
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- Author: Kirk
+0: jdbc:luciddb:> -- Date: 19 March, 1999
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Bug 3881 (0.0 vs -0.0 for inList)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Abstract: select stmt produces incorrect results
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE SCHEMA BUG3881;
+0: jdbc:luciddb:> create table BUG3881.qrysrcdec (d1 decimal ( 2, 0),
+. . . . . . . . >                                 d2 decimal ( 5, 2), 
+. . . . . . . . >                                 d3 decimal (12, 7),
+. . . . . . . . >                                 d4 decimal (15, 6));
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 1, 123.45, 123.456789, 123456789.123456 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 2, 22.5, 374.2597, 12.75 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 3, 132.75, 2099.999, -333.333 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 4, 73.734, -21367.45666, 888.98989898 );
+0: jdbc:luciddb:> --INSERT INTO BUG3881.qrysrcdec VALUES ( -12, 153.153, -1010.9999999, -115.000001);
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 5, 20.00 , 300.00, 5000000.000000 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 6, null, null, null);
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 7, 10.00 , 300.00, 50000.000000 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 6, -3.14, null, 2.718281);
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( 7, 10.00 , 300.00, 50000.000000 );
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( null, 0, 0, -1.1111);
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( null, null, null, null);
+0: jdbc:luciddb:> INSERT INTO BUG3881.qrysrcdec VALUES ( null, null, null, null);
+0: jdbc:luciddb:> SELECT * FROM BUG3881.qrysrcdec WHERE -ABS(LN(d1)) = (0.0000)  ;
++-----+---------+--------------+-------------------+
+| D1  |   D2    |      D3      |        D4         |
++-----+---------+--------------+-------------------+
+| 1   | 123.45  | 123.4567890  | 123456789.123456  |
++-----+---------+--------------+-------------------+
+0: jdbc:luciddb:> SELECT * FROM BUG3881.qrysrcdec WHERE ABS(LN(d1)) IN (0.0000)  ;
++-----+---------+--------------+-------------------+
+| D1  |   D2    |      D3      |        D4         |
++-----+---------+--------------+-------------------+
+| 1   | 123.45  | 123.4567890  | 123456789.123456  |
++-----+---------+--------------+-------------------+
+0: jdbc:luciddb:> SELECT * FROM BUG3881.qrysrcdec WHERE -ABS(LN(d1)) IN (0.0000)  ;
++-----+---------+--------------+-------------------+
+| D1  |   D2    |      D3      |        D4         |
++-----+---------+--------------+-------------------+
+| 1   | 123.45  | 123.4567890  | 123456789.123456  |
++-----+---------+--------------+-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table BUG3881.qrysrcdec;
+0: jdbc:luciddb:> drop schema BUG3881;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Bug 3893 (IN list with strings)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Abstract: inconsistent evalutation of IN with character data
+0: jdbc:luciddb:> -- Strings with trailing spaces should be treated specially in SQL
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE SCHEMA BUG3893;
+0: jdbc:luciddb:> CREATE TABLE BUG3893.T(c char(10));
+0: jdbc:luciddb:> INSERT INTO BUG3893.T VALUES ('abc');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- force usage of a filter
+0: jdbc:luciddb:> -- the following query should return 1 row
+0: jdbc:luciddb:> --SELECT * FROM (SELECT * FROM BUG3893.T ORDER BY 1) WHERE c IN ('abc');
+0: jdbc:luciddb:> SELECT * FROM (SELECT * FROM BUG3893.T) WHERE c IN ('abc');
++-------------+
+|      C      |
++-------------+
+| abc         |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- the following query should return zero rows
+0: jdbc:luciddb:> SELECT * FROM BUG3893.T WHERE NOT (c IN ('abc'));
++----+
+| C  |
++----+
++----+
+0: jdbc:luciddb:> -- this should also return no rows
+0: jdbc:luciddb:> -- SELECT * FROM BUG3893.T WHERE c NOT IN ('abc');
+0: jdbc:luciddb:> DROP TABLE BUG3893.T;
+0: jdbc:luciddb:> DROP SCHEMA BUG3893;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Bug 3935 (null with IN lists)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Abstract: select stmt with "IN" in where clause produces incorrect results
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> CREATE SCHEMA SBUG3935;
+0: jdbc:luciddb:> SET SCHEMA 'SBUG3935';
+0: jdbc:luciddb:> create table bug3935 (ti        tinyint, 
+. . . . . . . . >                       si        smallint,
+. . . . . . . . >                       ii        integer,
+. . . . . . . . >                       bi        bigint);
+0: jdbc:luciddb:> insert into bug3935 values ( 1, 10, 10000, 1000000000 );
+0: jdbc:luciddb:> insert into bug3935 values ( 2, 27, 80974, 23 );
+0: jdbc:luciddb:> insert into bug3935 values ( 3, 11, 2500000, 123456789 );
+0: jdbc:luciddb:> insert into bug3935 values ( 2, -27, -80974, -233 );
+0: jdbc:luciddb:> insert into bug3935 values ( 8, 6, 18, 54);
+0: jdbc:luciddb:> insert into bug3935 values ( null, null, null, null);
+0: jdbc:luciddb:> insert into bug3935 values ( 4, 999, 99999, 999999999);
+0: jdbc:luciddb:> insert into bug3935 values ( null, -238, -456778, null);
+0: jdbc:luciddb:> insert into bug3935 values ( 5, 67, 893256, 2000000000 );
+0: jdbc:luciddb:> insert into bug3935 values ( 4, 0, null, 0 );
+0: jdbc:luciddb:> insert into bug3935 values ( 6, 187, 76542, 1234567890 );
+0: jdbc:luciddb:> insert into bug3935 values ( 7, null, 22, 37);
+0: jdbc:luciddb:> insert into bug3935 values ( 8, 6, 18, 54);
+0: jdbc:luciddb:> insert into bug3935 values (null, null, null, null);
+0: jdbc:luciddb:> SELECT   *   FROM  bug3935  WHERE   ti*si IN (-54, 48, -1, 54, 333, 0);
++-----+------+---------+-------+
+| TI  |  SI  |   II    |  BI   |
++-----+------+---------+-------+
+| 2   | 27   | 80974   | 23    |
+| 2   | -27  | -80974  | -233  |
+| 8   | 6    | 18      | 54    |
+| 4   | 0    |         | 0     |
+| 8   | 6    | 18      | 54    |
++-----+------+---------+-------+
+0: jdbc:luciddb:> SELECT * FROM bug3935 WHERE NOT ((ii*100) IN (-1800, 7654200, 1801, -45677800, 45677800)) ;
++-----+------+----------+-------------+
+| TI  |  SI  |    II    |     BI      |
++-----+------+----------+-------------+
+| 1   | 10   | 10000    | 1000000000  |
+| 2   | 27   | 80974    | 23          |
+| 3   | 11   | 2500000  | 123456789   |
+| 2   | -27  | -80974   | -233        |
+| 8   | 6    | 18       | 54          |
+| 4   | 999  | 99999    | 999999999   |
+| 5   | 67   | 893256   | 2000000000  |
+| 7   |      | 22       | 37          |
+| 8   | 6    | 18       | 54          |
++-----+------+----------+-------------+
+0: jdbc:luciddb:> --SELECT * FROM bug3935 WHERE (ii*100) NOT IN (-1800, 7654200, 1801, -45677800, 45677800) ;
+0: jdbc:luciddb:> DROP TABLE BUG3935;
+0: jdbc:luciddb:> DROP SCHEMA SBUG3935;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Bug 7819 (to_Number and an inList together)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Based on bug 7819 and simplified from there
+0: jdbc:luciddb:> -- when using to_Number() and an inList in the
+0: jdbc:luciddb:> -- same expression, the server crashed.
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- to_number is not supported; use cast instead
+0: jdbc:luciddb:> -- NOT IN not worked
+0: jdbc:luciddb:> CREATE SCHEMA SB7819;
+0: jdbc:luciddb:> SET SCHEMA 'SB7819';
+0: jdbc:luciddb:>  
+0: jdbc:luciddb:> CREATE TABLE bug7819
+. . . . . . . . >    ( id INTEGER,
+. . . . . . . . >      non_id VARCHAR(256)
+. . . . . . . . >      );
+0: jdbc:luciddb:> INSERT INTO bug7819 VALUES (1, '12345');
+0: jdbc:luciddb:> INSERT INTO bug7819 VALUES (2, '23456');
+0: jdbc:luciddb:> SELECT * FROM bug7819
+. . . . . . . . > --WHERE to_number(non_id) IN (12345);
+. . . . . . . . > WHERE CAST(non_id AS INTEGER) IN (12345);
++-----+---------+
+| ID  | NON_ID  |
++-----+---------+
+| 1   | 12345   |
++-----+---------+
+0: jdbc:luciddb:> SELECT * FROM bug7819
+. . . . . . . . > --WHERE to_number(non_id) NOT IN (12345);
+. . . . . . . . > WHERE NOT (CAST(non_id AS INTEGER) IN (12345));
++-----+---------+
+| ID  | NON_ID  |
++-----+---------+
+| 2   | 23456   |
++-----+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --{{{ Bug 13201 (empty strings don't work with "IN" list)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- this should return false
+0: jdbc:luciddb:> values ('' in ('abc'));
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:luciddb:> -- these should return true
+0: jdbc:luciddb:> values ('' in ('','abc'));
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> values ('' in (''));
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> DROP TABLE bug7819;
+0: jdbc:luciddb:> DROP SCHEMA sb7819;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --}}}
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- End test calc;inList.sql
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

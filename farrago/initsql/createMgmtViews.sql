@@ -86,13 +86,11 @@ create procedure kill_statement_match(in s varchar(256))
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
             
----------------------------------------------------------------------------
--- Statistics generation                                                 --
----------------------------------------------------------------------------
+--
+-- Statistics
+--
 
---
 -- Set the row count of a table
---
 create procedure stat_set_row_count(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
@@ -102,9 +100,7 @@ language java
 contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_row_count';
 
---
 -- Set the page count of an index
---
 create procedure stat_set_page_count(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
@@ -114,12 +110,10 @@ language java
 contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_page_count';
 
---
 -- Generate a histogram for a column
 --
 -- distribution_type must be 0 for now
 -- value_digits are characters to use for fake column values
---
 create procedure stat_set_column_histogram(
     in catalog_name varchar(2000),
     in schema_name varchar(2000),
@@ -134,9 +128,7 @@ language java
 contains sql
 external name 'class net.sf.farrago.syslib.FarragoStatsUDR.set_column_histogram';
 
---
--- Histogram views
---
+-- Statistics views
 create view page_counts_view as
     select 
         i.table_cat,
@@ -219,9 +211,32 @@ create view histogram_bars_view as
 ;
 
 --
--- Database admin internal views
+-- Sequences
 --
 
+create view sequences_view as
+    select
+        c.table_cat,
+        c.table_schem,
+        c.table_name,
+        c.column_name,
+        s."baseValue",
+        s."increment",
+        s."minValue",
+        s."maxValue",
+        s."cycle",
+        s."expired"
+    from
+        sys_boot.jdbc_metadata.columns_view_internal c
+    inner join
+        sys_fem."SQL2003"."SequenceGenerator" s
+    on
+        c."mofId" = s."Column"
+;
+
+--
+-- Database admin internal views
+--
 
 create view dba_schemas_internal1 as
   select

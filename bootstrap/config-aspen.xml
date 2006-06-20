@@ -6,14 +6,9 @@
 
 		<!-- Bootstrappers are run with every build before mod checks -->
 		<bootstrappers>
-			<!-- <currentbuildstatusbootstrapper file="logs/aspen/currentbuildstatus.txt"/> -->
-			<p4bootstrapper port="&open_p4port;" client="&open_p4client;" user="&open_p4user;" view="&open_root;/bootstrap/..."/>
+			<currentbuildstatusbootstrapper file="logs/aspen/currentbuildstatus.txt"/>
+			<p4bootstrapper p4port="&open_p4port;" p4client="&open_p4client;" p4user="&open_p4user;" path="&open_root;/bootstrap/..."/>
 		</bootstrappers>
-
-                <listeners>
-                  <currentbuildstatuslistener file="logs/aspen/currentbuildstatus.txt"/>
-                  <currentbuildstatuslistener file="&open_default.build.home;/../web/logs/aspen&configSuffix;/currentbuildstatus.txt"/> 
-                </listeners>
 
 
 		<!-- Defines where cruise looks for changes, to decide whether to run the build -->
@@ -26,8 +21,8 @@
 
 
 		<!-- Configures the actual build loop, how often and which build file/target -->
-		<schedule interval="&build_interval_aspen;">
-			<ant buildfile="&open_default.build.home;/build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
+		<schedule interval="&build_interval;">
+			<ant buildfile="build-aspen.xml" uselogger="true" usedebug="false" antscript="&ant;" target="integration-build-and-test">
 			    <property name="open_propfile" value="&open_propfile;"/>
 			    <property name="open_root" value="&open_root;"/>
 			</ant>
@@ -35,25 +30,23 @@
 
 		<!-- directory to write build logs to -->
 		<log dir="logs/aspen">
-			<merge dir="&open_integration.build.home;/aspen/testlog"/>
+			<merge dir="build/aspen/testlog"/>
 		</log>
 
 		<!-- Publishers are run *after* a build completes -->
 		<publishers>
-			<!-- currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/ -->
+			<currentbuildstatuspublisher file="logs/aspen/currentbuildstatus.txt"/>
 
-			<artifactspublisher dir="&open_integration.build.home;/fennel/trace" dest="artifacts/aspen&configSuffix;" subdirectory="fennel_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/cpp/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="aspen_cpp_trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
-			<artifactspublisher dir="&open_integration.build.home;/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
+			<artifactspublisher dir="build/farrago/trace" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_trace"/>
+			<artifactspublisher dir="build/farrago/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_unitsql"/>
+			<artifactspublisher dir="build/farrago/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_initsql"/>
+			<artifactspublisher dir="build/farrago/regressionsql" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_regressionsql"/>
+			<artifactspublisher dir="build/farrago/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="farrago_testlog"/>
+			<artifactspublisher dir="build/aspen/testlog" dest="artifacts/aspen&configSuffix;" subdirectory="testlog"/>
+			<artifactspublisher dir="build/aspen/initsql" dest="artifacts/aspen&configSuffix;" subdirectory="initsql"/>
+			<artifactspublisher dir="build/aspen/unitsql" dest="artifacts/aspen&configSuffix;" subdirectory="unitsql"/>
+			<artifactspublisher dir="build/aspen/trace" dest="artifacts/aspen&configSuffix;" subdirectory="trace"/>
+			<artifactspublisher dir="build/aspen/testcases" dest="artifacts/aspen&configSuffix;" subdirectory="testcases"/>
 
 			<!-- sync up artifacts on jsp machine: CC's scp would copy everything -->
 			<execute command="&rsync_cmd; artifacts/aspen&configSuffix; &rsync_dest;"/>
@@ -81,7 +74,8 @@
 			       skipusers="&skipusers;"
 			       spamwhilebroken="&spamwhilebroken;"
 			       subjectprefix="&subjectprefix;">
-				<always address="&failureaddress;"/>
+				<failure address="&failureaddress;"
+				         reportWhenFixed="&reportwhenfixed;"/>
 			</email>
 		</publishers>
 	</project>

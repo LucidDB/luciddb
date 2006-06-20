@@ -826,6 +826,12 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         return repos.getSequenceAccessor(mofId);
     }
     
+    // implement FarragoSessionRuntimeContext
+    public FarragoSession getSession()
+    {
+        return session;
+    }
+    
     //~ Inner Classes ---------------------------------------------------------
 
     /**

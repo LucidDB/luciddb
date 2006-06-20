@@ -399,6 +399,8 @@ ${farrago.test.jvmargs}
     <attribute name="verbose" default="false"/>
     <attribute name="classpathref" default="blackhawk.run.classpath"/>
     <attribute name="inheritAll" default="true"/>
+    <attribute name="gtlf.dtd.use.remote" default="false"/>
+    <attribute name="gtlf.dtd.local" default="${thirdparty.dir}/blackhawk/gtlf-config-2-1.dtd"/>
     <sequential>
       <taskdef 
         name="bh" 
@@ -415,6 +417,8 @@ ${farrago.test.jvmargs}
         classpathref="@{classpathref}">
         <jvmarg line="&FarragoSqlLineProps;"/>
         <jvmarg line="${assertions.jvmarg}"/>
+        <sysproperty key="gtlf.dtd.use.remote" value="@{gtlf.dtd.use.remote}"/>
+        <sysproperty key="gtlf.dtd.local" value="@{gtlf.dtd.local}"/>
       </bh>
     </sequential>
   </macrodef>

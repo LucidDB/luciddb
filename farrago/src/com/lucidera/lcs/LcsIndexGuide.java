@@ -843,7 +843,7 @@ public class LcsIndexGuide
         return scanStream;
     }
     
-    protected FemLbmIndexScanStreamDef newIndexSearch(
+    protected FemLbmSearchStreamDef newIndexSearch(
         FennelRel rel,
         FemLocalIndex index,
         boolean isUniqueKey,
@@ -854,8 +854,8 @@ public class LcsIndexGuide
         FennelDynamicParamId startRidParamId,
         FennelDynamicParamId rowLimitParamId)
     {
-        FemLbmIndexScanStreamDef searchStream =
-            repos.newFemLbmIndexScanStreamDef();
+        FemLbmSearchStreamDef searchStream =
+            repos.newFemLbmSearchStreamDef();
         defineIndexScan(searchStream, rel, index);
         
         searchStream.setStartRidParamId(startRidParamId.intValue());

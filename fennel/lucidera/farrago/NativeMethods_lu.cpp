@@ -213,7 +213,7 @@ class ExecStreamSubFactory_lu
     }
 
     // implement FemVisitor
-    virtual void visit(ProxyLbmIndexScanStreamDef &streamDef)
+    virtual void visit(ProxyLbmSearchStreamDef &streamDef)
     {
         LbmIndexScanExecStreamParams params;
         pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);

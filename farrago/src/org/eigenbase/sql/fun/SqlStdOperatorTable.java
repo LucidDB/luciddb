@@ -771,7 +771,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         // SQL2003 Part2 Section 6.27, Syntax Rules 9
         new SqlFunction("MOD", SqlKind.Function,
             SqlTypeStrategies.rtiNullableSecondArgType, null,
-            SqlTypeStrategies.otcNumericX2,
+            SqlTypeStrategies.otcExactNumericX2,
             SqlFunctionCategory.Numeric);
 
     public static final SqlFunction lnFunc =

@@ -173,4 +173,11 @@ ORDER BY `A`, `B`]]>
             FROM `T`)))]]>
         </Resource>
     </TestCase>
+    <TestCase name="testInnerJoin">
+        <Resource name="formatted">
+            <![CDATA[SELECT *
+FROM `X`
+    INNER JOIN `Y` ON `X`.`K` = `Y`.`K`]]>
+        </Resource>
+    </TestCase>
 </Root>

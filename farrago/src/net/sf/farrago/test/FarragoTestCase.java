@@ -347,6 +347,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     // in quick succession, so only do it once for the entire test suite
     // instead of the Junit-recommended once per test case.
 
+    // TODO jvs 18-June-2006:  re-specialize to
+    // Class<? extends TestCase> once red-zone dependencies have propagated
     /**
      * Generic implementation of suite() to be called by subclasses.
      *

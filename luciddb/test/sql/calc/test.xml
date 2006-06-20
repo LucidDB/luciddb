@@ -22,16 +22,21 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcString.sql"/>
       </test>
 
-      <!-- missing ref file -->
       <test name="funcMath" requiresSuccess="cretables">
-        <test-metadata>
-          <notImplemented value="true"/>
-        </test-metadata>
+        <!-- functions not supported -->
+        <!-- trunc, to_number, to_char
+        -->
+        <!-- buggy mod() filed JIRA FRG-150 -->
+        <!-- some tests not included -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMath.sql"/>
       </test>
 
       <test name="funcDate" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- functions not supported -->
+        <!-- to_char, dow, year, month, day, quarter, hour, minute, second, day
+             ts, ADDINTERVAL, monthname, dayname, week
+        -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -39,7 +44,10 @@
       </test>
 
       <test name="funcConvert" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- functions not supported -->
+        <!-- to_number, to_char
+        -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -47,7 +55,10 @@
       </test>
 
       <test name="funcInterval" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- functions not supported -->
+        <!-- AddInterval, DiffInterval
+        -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -87,8 +98,11 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/range.sql"/>
       </test>
 
-      <test name="mathDate" requiresSuccess="cretables">
-        <!-- no sql file -->
+      <test name="mathDate" requiresSuccess="cretables, implicitConversion">
+        <!-- functions not supported -->
+        <!-- operators + -
+        -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -137,7 +151,9 @@
       </test>
 
       <test name="divisionScale" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- functions not supported -->
+        <!-- no system paremeter DIVISIONRESULTSCALE -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -145,10 +161,6 @@
       </test>
 
       <test name="inList" requiresSuccess="cretables">
-        <!-- no sql file -->
-        <test-metadata>
-          <notImplemented value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/inList.sql"/>
       </test>
 
@@ -157,10 +169,7 @@
       </test>
 
       <test name="bug1484" requiresSuccess="cretables">
-        <!-- no sql file -->
-        <test-metadata>
-          <notImplemented value="true"/>
-        </test-metadata>
+        <!-- unresolved issues: JIRA FRG-145 LDB-105 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug1484.sql"/>
       </test>
 
@@ -205,6 +214,7 @@
 
       <test name="bug11665" requiresSuccess="cretables">
         <!-- no sql file -->
+        <!-- designed to test memory allocation for calc; test skipped -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -216,7 +226,7 @@
       </test>
 
       <test name="bug12473" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- no sql file ; test skipped -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -224,19 +234,14 @@
       </test>
 
       <test name="bug8895" requiresSuccess="cretables">
-        <!-- no sql file -->
+        <!-- functions not supported -->
+        <!-- SYSTEM.TODAYNUMBEROVERAL, dow
+        -->
+        <!-- no tests to include -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8895.sql"/>
-      </test>
-
-      <test name="bug12903" requiresSuccess="cretables">
-        <!-- no sql file -->
-        <test-metadata>
-          <notImplemented value="true"/>
-        </test-metadata>
-        <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12903.sql"/>
       </test>
 
       <test name="bug12909" requiresSuccess="cretables">
@@ -261,6 +266,11 @@
           <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug55046.sql"/>
+      </test>
+     
+      <test name="varbinary" requiresSuccess="cretables">
+        <!-- unresolved issue: JIRA FRG-147 FRG-148 -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/calc/varbinary.sql"/>
       </test>
 
       <test-suite-call testfile="cast/test.xml"/>

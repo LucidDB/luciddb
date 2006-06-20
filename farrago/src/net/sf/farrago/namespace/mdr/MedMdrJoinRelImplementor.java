@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.namespace.mdr;
 
+import java.util.*;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
@@ -376,26 +377,54 @@ class MedMdrJoinRelImplementor
             useAssocReflection = true;
         }
 
+        // generates:
+        //     Object oj_varxx = ...
+        //     if (! (oj_varxx instanceof LeftKeyClass)) {
+        //         return Collections.EMPTY_LIST.iterator();
+        //     }
+        //     LeftKeyClass oj_varyy = (LeftKeyClass) oj_varxx;
+
+        Variable genericObj = implementor.newVariable();
         Variable varLeftObj = implementor.newVariable();
+        stmtList.add(
+            new VariableDeclaration(
+                OJUtil.typeNameForClass(Object.class),
+                genericObj.toString(),
+                new MethodCall(
+                    varRepository,
+                    "getByMofId",
+                    new ExpressionList(
+                        new MethodCall(
+                            new FieldAccess(
+                                varLeftRow,
+                                Util.toJavaId(
+                                    leftFields[joinRel.getLeftOrdinal()]
+                                        .getName(),
+                                    joinRel.getLeftOrdinal())),
+                            "toString",
+                            new ExpressionList())))));
+        stmtList.add(
+            new IfStatement(
+                new UnaryExpression(
+                    UnaryExpression.NOT,
+                    new InstanceofExpression(
+                        genericObj,
+                        OJUtil.typeNameForClass(leftKeyClass))),
+                new StatementList(
+                    new ReturnStatement(
+                        new MethodCall(
+                            new FieldAccess(
+                                OJClass.forClass(Collections.class),
+                                "EMPTY_LIST"),
+                            "iterator",
+                            new ExpressionList())))));
         stmtList.add(
             new VariableDeclaration(
                 OJUtil.typeNameForClass(leftKeyClass),
                 varLeftObj.toString(),
                 new CastExpression(
                     OJUtil.typeNameForClass(leftKeyClass),
-                    new MethodCall(
-                        varRepository,
-                        "getByMofId",
-                        new ExpressionList(
-                            new MethodCall(
-                                new FieldAccess(
-                                    varLeftRow,
-                                    Util.toJavaId(
-                                        leftFields[joinRel.getLeftOrdinal()]
-                                            .getName(),
-                                        joinRel.getLeftOrdinal())),
-                                "toString",
-                                new ExpressionList()))))));
+                    genericObj)));
 
         Expression collectionExpr = null;
         if (!useAssocReflection) {

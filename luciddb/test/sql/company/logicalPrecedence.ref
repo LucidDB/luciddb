@@ -1,0 +1,232 @@
+0: jdbc:luciddb:> set schema 's';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table booltest (bt boolean, bf boolean);
+0: jdbc:luciddb:> insert into booltest values(true, false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --------------------------------------------
+0: jdbc:luciddb:> -- minimum: NOT vs AND; NOT vs OR; AND vs OR
+0: jdbc:luciddb:> --------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT vs AND: not x and y = (not x) and y
+0: jdbc:luciddb:> -- not false and false = (not false) and false = false
+0: jdbc:luciddb:> -- right: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where not bf and bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where (not bf) and bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where not (bf and bf);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> -- right: result = false
+0: jdbc:luciddb:> select not bf and bf from booltest;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:luciddb:> select (not bf) and bf from booltest;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:luciddb:> -- wrong: result = true
+0: jdbc:luciddb:> select not (bf and bf) from booltest;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- NOT vs OR: not x or y = (not x) or y
+0: jdbc:luciddb:> -- not true or true = (not true) or true = true
+0: jdbc:luciddb:> -- right: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where not bt or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where (not bt) or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where not (bt or bt);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- AND vs OR: x or y and z = x or (y and z)
+0: jdbc:luciddb:> -- true or true and false = true or (true and false) = true
+0: jdbc:luciddb:> -- right: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where bt or bt and bf;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where bt or (bt and bf);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where (bt or bt) and bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> -- AND vs OR: x and y or z = (x and y) or z
+0: jdbc:luciddb:> -- false and true or true = (false and true) or true = true
+0: jdbc:luciddb:> -- right: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where bf and bt or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where (bf and bt) or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where bf and (bt or bt);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -----------
+0: jdbc:luciddb:> -- extra
+0: jdbc:luciddb:> -----------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- x and not y and z 
+0: jdbc:luciddb:> -- true and not false and false = true and (not false) and false = false
+0: jdbc:luciddb:> -- right: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where bt and not bf and bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where bt and (not bf) and bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where bt and (not (bf and bf));
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- not x and y and z
+0: jdbc:luciddb:> -- not false and false and true = (not false) and false and true = false
+0: jdbc:luciddb:> -- rigth: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where not bf and bf and bt;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where ((not bf) and bf) and bt;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> -- wrong: count = 1 
+0: jdbc:luciddb:> select count(*) from booltest where not (bf and bf) and bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where not (bf and bf and bt);
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- x or not y or z
+0: jdbc:luciddb:> -- false or not true or true = false or (not true) or true = true
+0: jdbc:luciddb:> -- right: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where bf or not bt or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where bf or (not bt) or bt;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> --wrong: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where bf or (not (bt or bt));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- not x or y or z
+0: jdbc:luciddb:> -- not true or true or false = (not true) or true or false = true
+0: jdbc:luciddb:> --right: count = 1
+0: jdbc:luciddb:> select count(*) from booltest where not bt or bt or bf;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where (not bt) or bt or bf;
++---------+
+| EXPR$0  |
++---------+
+| 1       |
++---------+
+0: jdbc:luciddb:> --wrong: count = 0
+0: jdbc:luciddb:> select count(*) from booltest where not (bt or bt) or bf;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> select count(*) from booltest where not (bt or bt or bf);
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

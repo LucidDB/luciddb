@@ -74,6 +74,7 @@
 | SYS_BOOT   | JDBC_METADATA  | CATALOGS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW                      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | COLUMNS_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | EMPTY_VIEW                        | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_INTERNAL               | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | INDEX_INFO_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | PRIMARY_KEYS_VIEW                 | VIEW        |          |           |             |            |                            |                 |
@@ -84,6 +85,8 @@
 | SYS_BOOT   | JDBC_METADATA  | PROCEDURE_COLUMNS_VIEW_INTERNAL   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW                      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | SCHEMAS_VIEW_INTERNAL             | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SUPER_TABLES_VIEW                 | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | JDBC_METADATA  | SUPER_TYPES_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW                       | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | TABLES_VIEW_INTERNAL              | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | TABLE_ROW_COUNTS_INTERNAL         | VIEW        |          |           |             |            |                            |                 |
@@ -115,6 +118,7 @@
 | SYS_BOOT   | MGMT           | OBJECTS_IN_USE_VIEW               | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | PAGE_COUNTS_VIEW                  | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | SEQUENCES_VIEW                    | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | SESSIONS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | STATEMENTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 +------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
@@ -414,21 +418,21 @@ usesLocalFiles                                    false
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
 | TYPE_NAME  | DATA_TYPE  | PRECISION  | LITERAL_PREFIX  | LITERAL_SUFFIX  | CREATE_PARAMS  | NULLABLE  | CASE_SENSITIVE  | SEARCHABLE  | UNSIGNED_ATTRIBUTE  | FIXED_PREC_SCALE  | AUTO_INCREMENT  | LOCAL_TYPE_NAME  | MINIMUM_SCALE  | MAXIMUM_SCALE  | SQL_DATA_TYPE  | SQL_DATETIME_SUB  | NUM_PREC_RADIX  |
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
-| TINYINT    | -6         | 8          |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| BIGINT     | -5         | 64         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| VARBINARY  | -3         | 65535      | X'              | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| BINARY     | -2         | 65535      | X'              | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| CHAR       | 1          | 65535      | '               | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| DECIMAL    | 3          | 19         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 10              |
-| INTEGER    | 4          | 32         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| SMALLINT   | 5          | 16         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| REAL       | 7          | 23         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| DOUBLE     | 8          | 52         |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   | 2               |
-| VARCHAR    | 12         | 65535      | '               | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| BOOLEAN    | 16         |            |                 |                 |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| DATE       | 91         | 0          | DATE '          | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| TIME       | 92         | 0          | TIME '          | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
-| TIMESTAMP  | 93         | 0          | TIMESTAMP '     | '               |                | 1         | true            | true        | false               | false             | false           |                  |                |                |                |                   |                 |
+| TINYINT    | -6         | 8          |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| BIGINT     | -5         | 64         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| VARBINARY  | -3         | 65535      | X'              | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| BINARY     | -2         | 65535      | X'              | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| CHAR       | 1          | 65535      | '               | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| DECIMAL    | 3          | 19         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 10              |
+| INTEGER    | 4          | 32         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| SMALLINT   | 5          | 16         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| REAL       | 7          | 23         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| DOUBLE     | 8          | 52         |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   | 2               |
+| VARCHAR    | 12         | 65535      | '               | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| BOOLEAN    | 16         |            |                 |                 |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| DATE       | 91         | 0          | DATE '          | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| TIME       | 92         | 0          | TIME '          | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
+| TIMESTAMP  | 93         | 0          | TIMESTAMP '     | '               |                | 1         | true            | 3           | false               | false             | false           |                  |                |                |                |                   |                 |
 +------------+------------+------------+-----------------+-----------------+----------------+-----------+-----------------+-------------+---------------------+-------------------+-----------------+------------------+----------------+----------------+----------------+-------------------+-----------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test calls not tested by !dbinfo
@@ -474,6 +478,19 @@ usesLocalFiles                                    false
 0: jdbc:farrago:> -- changes with every model edit
 0: jdbc:farrago:> -- select * from sys_fem."Security"."Privilege";
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- We don't actually support these features, but JDBC says we should
+0: jdbc:farrago:> -- still return empty results instead of throwing an exception
+0: jdbc:farrago:> !metadata getSuperTypes LOCALDB % %
++-----------+-------------+------------+----------------+------------------+-----------------+
+| TYPE_CAT  | TYPE_SCHEM  | TYPE_NAME  | SUPERTYPE_CAT  | SUPERTYPE_SCHEM  | SUPERTYPE_NAME  |
++-----------+-------------+------------+----------------+------------------+-----------------+
++-----------+-------------+------------+----------------+------------------+-----------------+
+0: jdbc:farrago:> !metadata getSuperTables LOCALDB % %
++------------+--------------+-------------+------------------+
+| TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  | SUPERTABLE_NAME  |
++------------+--------------+-------------+------------------+
++------------+--------------+-------------+------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Implemented but not included since result depends on connection
 0: jdbc:farrago:> -- !metadata getConnection
 0: jdbc:farrago:> -- !metadata hashCode
@@ -486,8 +503,6 @@ usesLocalFiles                                    false
 0: jdbc:farrago:> -- !metadata getBestRowIdentifier
 0: jdbc:farrago:> -- !metadata getVersionColumns
 0: jdbc:farrago:> -- !metadata getCrossReference
-0: jdbc:farrago:> -- !metadata getSuperTypes
-0: jdbc:farrago:> -- !metadata getSuperTables
 0: jdbc:farrago:> -- !importedkeys
 0: jdbc:farrago:> -- !exportedkeys
 0: jdbc:farrago:> 
