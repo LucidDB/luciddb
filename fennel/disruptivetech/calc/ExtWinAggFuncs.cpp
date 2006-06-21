@@ -48,8 +48,9 @@ void WinAggInit(RegisterRef<char*>* result)
 {
     TupleDatum *bind = result->getBinding(false);
 
-    StandardTypeDescriptorOrdinal dType = 
-        static_cast<StandardTypeDescriptorOrdinal>(bind->dataType);
+    StandardTypeDescriptorOrdinal dType = result->type();
+    
+//        static_cast<StandardTypeDescriptorOrdinal>(bind->dataType);
 
     PBuffer histogramObject = NULL;
     if (StandardTypeDescriptor::isExact(dType)) {

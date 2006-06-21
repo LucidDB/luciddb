@@ -152,7 +152,6 @@ void TupleData::compute(TupleDescriptor const &tupleDesc)
     for (uint i = 0; i < tupleDesc.size(); ++i) {
         TupleDatum datum;
         datum.cbData = tupleDesc[i].cbStorage;
-        datum.dataType = tupleDesc[i].pTypeDescriptor->getOrdinal();
         push_back(datum);
     }
 }
