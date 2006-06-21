@@ -332,6 +332,17 @@ ${farrago.test.jvmargs}
     <antcall target="gen-bh-report"/>
   </target>
 
+  <target name="emmaTest" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+    <property name="bh.filter.knownFailures" value="false"/>
+    <property file="run.properties"/>
+    <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
+    <blackhawk.fork
+      basedir="${luciddb.dir}"
+      testscript="test.xml"
+      classpathref="emma.test.classpath"/>
+    <antcall target="gen-bh-report"/>
+  </target>
+
   <target name="bhShortregSanity">
     <blackhawk.fork basedir="test/sql/shortreg" 
       testscript="test.xml"
@@ -744,7 +755,7 @@ ${farrago.test.jvmargs}
     </emma>
   </target>
  
-  <target name="emmaTest" depends="emmaInstr">
+  <target name="_emmaTest" depends="emmaInstr">
     <antcall target="emmaShortregSanity"/>
     <antcall target="emmaTxn"/>
     <antcall target="emmaBh" />
@@ -978,9 +989,6 @@ ${farrago.test.jvmargs}
     <copy todir="${luciddb.dir}/.settings" overwrite="true">
       <fileset dir="${luciddb.dir}/eclipse/.settings"/>
     </copy>
-  </target>
-
-  <target name="dummy">
   </target>
 
 </project>
