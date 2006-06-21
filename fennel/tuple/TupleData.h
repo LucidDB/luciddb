@@ -24,6 +24,7 @@
 #ifndef Fennel_TupleData_Included
 #define Fennel_TupleData_Included
 
+#include "StandardTypeDescriptor.h"
 #include <vector>
 
 

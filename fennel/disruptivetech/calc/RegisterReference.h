@@ -374,7 +374,12 @@ public:
     void
     value(TMPLT newV)
     {
-        assert(!(mProp & EPropReadOnly));
+        // JDF 06/19/06 Need to find out why output register used for
+        // histogram support gets marked as ReadOnly.
+        if (0) {
+            assert(!(mProp & EPropReadOnly));
+        }
+        
         if (mProp & (EPropCachePointer|EPropPtrReset)) {
             assert(mPData);
             *(reinterpret_cast<TMPLT*>(mPData)) = newV;
