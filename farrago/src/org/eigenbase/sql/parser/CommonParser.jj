@@ -1232,6 +1232,7 @@ SqlNode TableRef() :
 }
 {
     (
+        LOOKAHEAD(2)
         tableRef = CompoundIdentifier()
         over = TableOverOpt()
         {
@@ -1272,6 +1273,8 @@ SqlNode TableRef() :
         <RPAREN>
         {
         }
+    |
+        tableRef = ExtendedTableRef()
     )
     [
         <TABLESAMPLE> { pos = getPos(); }
@@ -1321,6 +1324,14 @@ SqlNode TableFunctionCall() :
         return call;
     }
 }
+
+/**
+ * Abstract production:
+ *    SqlNode ExtendedTableRef()
+ *
+ * Allows parser to be extended with new types of table references.  The
+ * default implementation of this production is empty.
+ */
 
 /*
  * Abstract production:

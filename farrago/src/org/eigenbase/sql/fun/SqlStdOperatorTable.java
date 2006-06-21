@@ -557,11 +557,8 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
      * {@link #explicitTableOperator} is a prefix operator.
      */
     public static final SqlSpecialOperator collectionTableOperator =
-        new SqlFunctionalOperator("TABLE", SqlKind.CollectionTable,
-            200, true,
-            SqlTypeStrategies.rtiFirstArgType,
-            null,
-            SqlTypeStrategies.otcAny);
+        new SqlCollectionTableOperator(
+            "TABLE", SqlCollectionTableOperator.MODALITY_RELATIONAL);
     
     public static final SqlOverlapsOperator overlapsOperator =
         new SqlOverlapsOperator();
