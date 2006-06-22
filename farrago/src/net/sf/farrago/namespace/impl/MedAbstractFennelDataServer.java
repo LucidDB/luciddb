@@ -104,7 +104,7 @@ public abstract class MedAbstractFennelDataServer
             initIndexCmd(cmd, index);
             cmd.setRootPageId(rootPageId);
             cmd.setEstimate(estimate);
-            cmd.setIncludeTuples(getIncludeTuples());
+            cmd.setIncludeTuples(getIncludeTuples(index));
             long pageCount = getFennelDbHandle().executeCmd(cmd);
             FarragoCatalogUtil.updatePageCount(index, pageCount);
         } finally {
@@ -138,7 +138,8 @@ public abstract class MedAbstractFennelDataServer
     /**
      * Whether or not to include tuples in page count statistics
      */
-    protected abstract boolean getIncludeTuples();
+    protected abstract boolean getIncludeTuples(
+        FemLocalIndex index);
 
     /**
      * Gets the SegmentId of the segment storing an index.

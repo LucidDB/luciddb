@@ -894,10 +894,12 @@
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 2.8 A few more rows than histogram bars
 0: jdbc:farrago:> --
-0: jdbc:farrago:> create table ten(i int primary key);
+0: jdbc:farrago:> create table ten(i int primary key)
+. . . . . . . . > server sys_column_store_data_server;
 0: jdbc:farrago:> insert into ten values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9);
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create table hundred (i int primary key);
+0: jdbc:farrago:> create table hundred (i int primary key)
+. . . . . . . . > server sys_column_store_data_server;
 0: jdbc:farrago:> insert into hundred (select a.i*10 + b.i from ten a, ten b);
 0: jdbc:farrago:> insert into hundred values (100), (101);
 0: jdbc:farrago:> 
@@ -907,7 +909,9 @@
 +------------+--------------+-------------+-----------------------------------------------+--------+
 | TABLE_CAT  | TABLE_SCHEM  | TABLE_NAME  |                  INDEX_NAME                   | PAGES  |
 +------------+--------------+-------------+-----------------------------------------------+--------+
+| LOCALDB    | STAT         | HUNDRED     | SYS$CLUSTERED_INDEX$STAT$HUNDRED$I            | 2      |
 | LOCALDB    | STAT         | HUNDRED     | SYS$CONSTRAINT_INDEX$HUNDRED$SYS$PRIMARY_KEY  | 1      |
+| LOCALDB    | STAT         | HUNDRED     | SYS$DELETION_INDEX$STAT$HUNDRED               | 1      |
 +------------+--------------+-------------+-----------------------------------------------+--------+
 0: jdbc:farrago:> select * from sys_boot.mgmt.row_counts_view order by 1, 2, 3;
 +------------+--------------+-------------+------------+
