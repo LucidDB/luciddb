@@ -433,3 +433,44 @@ drop table flatfiledir_schema."example";
 
 -- test: uses generated bcp
 select * from flatfiledir_server.bcp."example2" order by 3;
+
+
+-- test: browse connect functionality
+create foreign data wrapper local_file_wrapper
+library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+language java
+options (
+  browse_connect_description 'My Flat Files Wrapper'
+);
+
+select * from sys_boot.mgmt.browse_connect_foreign_wrappers order by 1;
+
+-- query for available connection options
+select * from table(
+sys_boot.mgmt.browse_connect_foreign_server(
+'LOCAL_FILE_WRAPPER',
+cursor(
+select '' as option_name, '' as option_value
+from sys_boot.jdbc_metadata.empty_view)))
+order by option_ordinal, option_choice_ordinal;
+
+-- query for available connection options, with specified set values
+select option_name, option_choice_ordinal, option_choice_value from table(
+sys_boot.mgmt.browse_connect_foreign_server(
+'LOCAL_FILE_WRAPPER',
+cursor(
+values ('CONTROL_FILE_EXTENSION', 'txt2'),
+       ('NUM_ROWS_SCAN', '100'))))
+order by option_ordinal, option_choice_ordinal;
+
+create server ff_server
+foreign data wrapper local_file_wrapper
+options (
+    directory 'unitsql/med/flatfiles/',
+    file_extension 'csv',
+    with_header 'yes', 
+    log_directory 'testlog/');
+
+-- query for available schemas
+select * from table(sys_boot.mgmt.browse_foreign_schemas('FF_SERVER'))
+order by schema_name;

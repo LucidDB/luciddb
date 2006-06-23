@@ -842,6 +842,50 @@ column type family is {1} but default value type family is {2}</text>
 <text>Invalid row {1} in control file {0}</text>
 </exception>
 
+<message name="MedFlatFile_DIRECTORY_Description">
+<text>OS directory path containing flat files</text>
+</message>
+
+<message name="MedFlatFile_FILE_EXTENSION_Description">
+<text>File name extension</text>
+</message>
+
+<message name="MedFlatFile_CONTROL_FILE_EXTENSION_Description">
+<text>Control file extension</text>
+</message>
+
+<message name="MedFlatFile_FIELD_DELIMITER_Description">
+<text>Field delimiter character</text>
+</message>
+
+<message name="MedFlatFile_LINE_DELIMITER_Description">
+<text>Line delimiter character</text>
+</message>
+
+<message name="MedFlatFile_QUOTE_CHAR_Description">
+<text>Character used to quote</text>
+</message>
+
+<message name="MedFlatFile_ESCAPE_CHAR_Description">
+<text>Character used to escape the special characters</text>
+</message>
+
+<message name="MedFlatFile_WITH_HEADER_Description">
+<text>Whether the files include a header</text>
+</message>
+
+<message name="MedFlatFile_NUM_ROWS_SCAN_Description">
+<text>The number of rows to scan to deduce the data type of columns</text>
+</message>
+
+<message name="MedFlatFile_WITH_LOGGING_Description">
+<text>Whether to log row errors</text>
+</message>
+
+<message name="MedFlatFile_LOG_DIRECTORY_Description">
+<text>OS directory path for writing log files</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->

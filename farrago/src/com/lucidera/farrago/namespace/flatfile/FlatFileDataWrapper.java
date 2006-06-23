@@ -63,6 +63,65 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
         return "Foreign data wrapper for flatfile tables";
     }
 
+    // implement FarragoMedDataWrapper
+    public DriverPropertyInfo [] getServerPropertyInfo(
+        Locale locale,
+        Properties wrapperProps,
+        Properties serverProps)
+    {
+        // TODO:  use locale
+
+        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
+            FarragoResource.instance(),
+            "MedFlatFile",
+            serverProps);
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_DIRECTORY,
+            true);
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_FILE_EXTENSION,
+            true,
+            new String[] {FlatFileParams.DEFAULT_FILE_EXTENSION});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_CONTROL_FILE_EXTENSION,
+            true,
+            new String[] {FlatFileParams.DEFAULT_CONTROL_FILE_EXTENSION});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_FIELD_DELIMITER,
+            true,
+            new String[] {FlatFileParams.DEFAULT_FIELD_DELIMITER});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_LINE_DELIMITER,
+            true,
+            new String[] {FlatFileParams.DEFAULT_LINE_DELIMITER});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_QUOTE_CHAR,
+            true,
+            new String[] {FlatFileParams.DEFAULT_QUOTE_CHAR});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_ESCAPE_CHAR,
+            true,
+            new String[] {FlatFileParams.DEFAULT_ESCAPE_CHAR});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_WITH_HEADER,
+            true,
+            new String[] {Boolean.toString
+                          (FlatFileParams.DEFAULT_WITH_HEADER)});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_NUM_ROWS_SCAN,
+            true,
+            new String[] {Integer.toString
+                          (FlatFileParams.DEFAULT_NUM_ROWS_SCAN)});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_WITH_LOGGING,
+            true,
+            new String[] {Boolean.toString
+                          (FlatFileParams.DEFAULT_WITH_LOGGING)});
+        infoMap.addPropInfo(
+            FlatFileParams.PROP_LOG_DIRECTORY);
+        return infoMap.toArray();
+    }
+
     // TODO:  DriverPropertyInfo calls
     // implement FarragoMedDataWrapper
     public void initialize(

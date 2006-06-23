@@ -122,15 +122,15 @@ class FlatFileParams extends MedAbstractBase
     public static final String FILE_EXTENSION_PREFIX = ".";
     public static final String LOG_FILE_EXTENSION = "err";
 
-    private static final String DEFAULT_FILE_EXTENSION = "txt";
-    private static final String DEFAULT_CONTROL_FILE_EXTENSION = "bcp";
-    private static final String DEFAULT_FIELD_DELIMITER = ",";
-    private static final String DEFAULT_LINE_DELIMITER = "\\n";
-    private static final String DEFAULT_QUOTE_CHAR = "\"";
-    private static final String DEFAULT_ESCAPE_CHAR = "\"";
-    private static final boolean DEFAULT_WITH_HEADER = true;
-    private static final int DEFAULT_NUM_ROWS_SCAN = 5;
-    private static final boolean DEFAULT_WITH_LOGGING = true;
+    protected static final String DEFAULT_FILE_EXTENSION = "txt";
+    protected static final String DEFAULT_CONTROL_FILE_EXTENSION = "bcp";
+    protected static final String DEFAULT_FIELD_DELIMITER = ",";
+    protected static final String DEFAULT_LINE_DELIMITER = "\\n";
+    protected static final String DEFAULT_QUOTE_CHAR = "\"";
+    protected static final String DEFAULT_ESCAPE_CHAR = "\"";
+    protected static final boolean DEFAULT_WITH_HEADER = true;
+    protected static final int DEFAULT_NUM_ROWS_SCAN = 5;
+    protected static final boolean DEFAULT_WITH_LOGGING = true;
     
     
     //~ Instance fields -------------------------------------------------------
