@@ -150,9 +150,14 @@ CalcExtMinMaxTest::initWindowedAggDataBlock(
     // agg functions.  Just pass in the Type
     // to be initialized.  It is supplied with
     // all subsequent calls
-    pg << "O vc,4;" << endl;
+    if (dType == STANDARD_TYPE_INT_64) {
+        pg << "I s8;" << endl;
+    } else {
+        pg << "I d;" << endl;
+    }        
+    pg << "O vb,4;" << endl;
     pg << "T;" << endl;
-    pg << "CALL 'WINAGGINIT(O0);" << endl;
+    pg << "CALL 'WinAggInit(O0,I0);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -366,24 +371,20 @@ void checkDropDbl(
 void
 CalcExtMinMaxTest::testCalcExtMinMax()
 {
-    // JDF disable until init time data type issue solved.
-    if (0) {
-        
-        // Test windowing integer type
-        TupleDataWithBuffer intAggTuple;
-        initWindowedAggDataBlock(&intAggTuple, STANDARD_TYPE_INT_64);
-        WinAggAddTest(&intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkAddInt);
-        WinAggDropTest(&intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkDropInt);
+    // Test windowing integer type
+    TupleDataWithBuffer intAggTuple;
+    initWindowedAggDataBlock(&intAggTuple, STANDARD_TYPE_INT_64);
+    WinAggAddTest(&intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkAddInt);
+    WinAggDropTest(&intAggTuple, intTestData, STANDARD_TYPE_INT_64, checkDropInt);
     
-        // Clear the vector that holds the TupleData for the simulated window.
-        testTuples.clear();
+    // Clear the vector that holds the TupleData for the simulated window.
+    testTuples.clear();
     
-        // windowing real type
-        TupleDataWithBuffer dblAggTuple;
-        initWindowedAggDataBlock(&dblAggTuple, STANDARD_TYPE_DOUBLE);
-        WinAggAddTest(&dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkAddDbl);
-        WinAggDropTest(&dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkDropDbl);
-    }
+    // windowing real type
+    TupleDataWithBuffer dblAggTuple;
+    initWindowedAggDataBlock(&dblAggTuple, STANDARD_TYPE_DOUBLE);
+    WinAggAddTest(&dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkAddDbl);
+    WinAggDropTest(&dblAggTuple, dblTestData, STANDARD_TYPE_DOUBLE, checkDropDbl);
 }
 
 

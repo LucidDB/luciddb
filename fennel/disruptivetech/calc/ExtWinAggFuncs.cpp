@@ -38,19 +38,18 @@ FENNEL_BEGIN_CPPFILE("$Id$");
  * @version $Id$
  */
 
-//! WinAggInit - Allocates and initializes the Accumulator object that is
+//! histogramAlloc  - Allocates and initializes the histogram object that is
 //! a parameter to all subsequent Windowed Agg operations.
 //!
 //! INPUT:
 //! result - ptr to RegisterRef to be used in later winagg calls
+//! targetDataType - RegisterReference who's sole purpose is to provide the base
+//!                  data type for histogram allocation
 //
-void WinAggInit(RegisterRef<char*>* result)
+void histogramAlloc(RegisterRef<char*>* result, RegisterReference* targetDataType)
 {
-    TupleDatum *bind = result->getBinding(false);
 
-    StandardTypeDescriptorOrdinal dType = result->type();
-    
-//        static_cast<StandardTypeDescriptorOrdinal>(bind->dataType);
+    StandardTypeDescriptorOrdinal dType = targetDataType->type();
 
     PBuffer histogramObject = NULL;
     if (StandardTypeDescriptor::isExact(dType)) {
@@ -62,6 +61,7 @@ void WinAggInit(RegisterRef<char*>* result)
         throw 22001;
     }
 
+    TupleDatum *bind = result->getBinding(false);
     *(reinterpret_cast<PBuffer*>(const_cast<PBuffer>(bind->pData))) =
         histogramObject;
 }
@@ -203,6 +203,13 @@ void count(RegisterRef<STDTYPE>* result,
     pAcc->getCount(result);
 }
 
+// WinAggInit overloaded for each of the integer data types
+template <typename TDT >
+void WinAggInit(RegisterRef<char*>* result, RegisterRef<TDT>* targetDataType)
+{
+    histogramAlloc(result, targetDataType);
+}
+
 // WinAggAdd, WinAggDrop, WinAggMin, WinAggMax, WinAggMin, WinAggSum
 // WinAggCount, WinAggAvg
 //
@@ -210,6 +217,7 @@ void count(RegisterRef<STDTYPE>* result,
 // registered with the calculator to support the INT64_t and DOUBLE data
 // types. All parameters match and are passed through to the associated
 // template functions defined above.
+
 void WinAggAdd(RegisterRef<int64_t>* node, RegisterRef<char*>* aggDataBlock)
 {
     add(node, aggDataBlock);
@@ -288,12 +296,42 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
 {
     assert(eit != NULL);
 
-    // First the generic initialization method
-    vector<StandardTypeDescriptorOrdinal> params_mm_init;
-    params_mm_init.push_back(STANDARD_TYPE_VARCHAR);
+    // WinAggInit.  Overloaded for each supported data
+    // type.  Note that we have to have a separate init
+    // for each data type but the other support functions
+    // only have to support int64_t and double.  When the 
+    // calc programs are built the small types are cast up
+    // to the supported types.
+    vector<StandardTypeDescriptorOrdinal> params_mm64_init;
+    params_mm64_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mm64_init.push_back(STANDARD_TYPE_INT_64);
 
-    eit->add("WINAGGINIT", params_mm_init,
-        (ExtendedInstruction1<char*>*) NULL,
+    eit->add("WinAggInit", params_mm64_init,
+        (ExtendedInstruction2<char*,int64_t>*) NULL,
+        &WinAggInit);
+
+    vector<StandardTypeDescriptorOrdinal> params_mm32_init;
+    params_mm32_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mm32_init.push_back(STANDARD_TYPE_INT_32);
+
+    eit->add("WinAggInit", params_mm32_init,
+        (ExtendedInstruction2<char*,int32_t>*) NULL,
+        &WinAggInit);
+
+    vector<StandardTypeDescriptorOrdinal> params_mm16_init;
+    params_mm16_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mm16_init.push_back(STANDARD_TYPE_INT_16);
+
+    eit->add("WinAggInit", params_mm16_init,
+        (ExtendedInstruction2<char*,int16_t>*) NULL,
+        &WinAggInit);
+
+    vector<StandardTypeDescriptorOrdinal> params_mm8_init;
+    params_mm8_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mm8_init.push_back(STANDARD_TYPE_INT_8);
+
+    eit->add("WinAggInit", params_mm8_init,
+        (ExtendedInstruction2<char*,int8_t>*) NULL,
         &WinAggInit);
 
     // Now the Add/Drop and functions for integers
@@ -333,7 +371,23 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<int64_t, char*>*) NULL,
              &WinAggMax);
 
-    // Add in the Add/Drop and funcstions for real numbers.
+    // Add in  real number support
+    vector<StandardTypeDescriptorOrdinal> params_mmd_init;
+    params_mmd_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mmd_init.push_back(STANDARD_TYPE_DOUBLE);
+    
+    eit->add("WinAggInit", params_mmd_init,
+        (ExtendedInstruction2<char*,double>*) NULL,
+        &WinAggInit);
+    
+    vector<StandardTypeDescriptorOrdinal> params_mmr_init;
+    params_mmr_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mmr_init.push_back(STANDARD_TYPE_REAL);
+    
+    eit->add("WinAggInit", params_mmr_init,
+        (ExtendedInstruction2<char*,float>*) NULL,
+        &WinAggInit);
+    
     vector<StandardTypeDescriptorOrdinal> params_ad_DOUBLE;
     params_ad_DOUBLE.push_back(STANDARD_TYPE_DOUBLE);
     params_ad_DOUBLE.push_back(STANDARD_TYPE_VARBINARY);
