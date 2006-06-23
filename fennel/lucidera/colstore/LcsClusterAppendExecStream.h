@@ -34,8 +34,8 @@
 
 FENNEL_BEGIN_NAMESPACE
 
-struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
-                                          public ConduitExecStreamParams
+struct LcsClusterAppendExecStreamParams :
+    public BTreeExecStreamParams, public ConduitExecStreamParams
 {
     /**
      * True if cluster append is in overwrite mode
@@ -57,13 +57,13 @@ struct LcsClusterAppendExecStreamParams : public BTreeExecStreamParams,
  * Given a stream of tuples corresponding to the column values in a cluster,
  * loads the cluster pages 
  */
-class LcsClusterAppendExecStream : public BTreeExecStream,
-                                   public ConduitExecStream
+class LcsClusterAppendExecStream :
+    public BTreeExecStream, public ConduitExecStream
 {
     /**
      * Space available on page blocks for writing cluster data
      */
-    uint m_blockSize;
+    uint blockSize;
 
     /**
      * Tuple descriptor for the tuple representing all cluster columns across
@@ -99,7 +99,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * True if overwriting all existing data
      */
-    bool m_bOverwrite;
+    bool overwrite;
 
     /**
      * Whether row count has been produced.
@@ -125,22 +125,22 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * True if execute has been called at least once
      */
-    bool m_bCompressCalled;
+    bool compressCalled;
 
     /**
      * Array of hashes, one per cluster column
      */
-    boost::scoped_array<LcsHash> m_hash;
+    boost::scoped_array<LcsHash> hash;
 
     /**
      * Number of columns in the cluster
      */
-    uint m_numColumns;
+    uint numColumns;
 
     /**
      * Array of temporary blocks for row array
      */
-    boost::scoped_array<PBuffer> m_rowBlock;
+    boost::scoped_array<PBuffer> rowBlock;
     
     /**
      * Maximum number of values that can be stored in m_rowBlock
@@ -150,66 +150,66 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Array of temporary blocks for hash table
      */
-    boost::scoped_array<PBuffer> m_hashBlock;
+    boost::scoped_array<PBuffer> hashBlock;
     
     /**
      * Array of temporary blocks used by ClusterNodeWriter
      */
-    boost::scoped_array<PBuffer> m_builderBlock;
+    boost::scoped_array<PBuffer> builderBlock;
 
     /**
      * Number of rows loaded into the current set of batches
      */
-    uint m_rowCnt;
+    uint rowCnt;
 
     /**
      * True if index blocks need to be written to disk
      */
-    bool m_indexBlockDirty;
+    bool indexBlockDirty;
 
     /**
      * Starting rowid in a cluster page
      */
-    LcsRid m_firstRow;
+    LcsRid firstRow;
 
     /**
      * Last rowid in the last batch
      */
-    LcsRid m_lastRow;
+    LcsRid lastRow;
 
     /* First rowid in current load
      */
-    LcsRid m_startRow;
+    LcsRid startRow;
 
     /**
      * Page builder object
      */
-    SharedLcsClusterNodeWriter m_riBlockBuilder;
+    SharedLcsClusterNodeWriter lcsBlockBuilder;
 
     /**
      * Row value ordinal returned from hash, one per cluster column
      */
-    boost::scoped_array<LcsHashValOrd> m_vOrd;
+    boost::scoped_array<LcsHashValOrd> hashValOrd;
 
     /**
      * Temporary buffers used by WriteBatch
      */
-    boost::scoped_array<boost::scoped_array<FixedBuffer> > m_buf;
+    boost::scoped_array<boost::scoped_array<FixedBuffer> > tempBuf;
 
     /**
      * Max size for each column cluster used by WriteBatch
      */
-    boost::scoped_array<uint> m_maxValueSize;
+    boost::scoped_array<uint> maxValueSize;
 
     /**
      * Indicates where or not we have already allocated arrays
      */
-    bool m_arraysAlloced;
+    bool arraysAlloced;
 
     /**
      * Buffer pointing to cluster page that will actually be written
      */
-    PLcsClusterNode m_indexBlock;
+    PLcsClusterNode pIndexBlock;
 
     /**
      * Total number of rows loaded by this object
@@ -219,17 +219,17 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * Allocate memory for arrays
      */
-    void AllocArrays();
+    void allocArrays();
     
     /**
      * Populates row and hash arrays from existing index block
      */
-    void LoadExistingBlock();
+    void loadExistingBlock();
     
     /**
      * Prepare to write a fresh block
      */
-    void StartNewBlock();
+    void startNewBlock();
 
     /**
      * Given a TupleData representing all columns in a cluster,
@@ -245,7 +245,7 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
     /**
      * True if row array is full
      */
-    bool IsRowArrayFull();
+    bool isRowArrayFull();
 
     /**
      * Writes a batch(run) to index block.
@@ -253,13 +253,13 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      *
      * @param lastBatch true if last batch
      */
-    void WriteBatch(bool lastBatch);
+    void writeBatch(bool lastBatch);
 
     /**
      * Writes block to index when the block is full or this is the last block
      * in the load
      */
-    void WriteBlock();
+    void writeBlock();
 
     /**
      * Gets last block written to disk so we can append to it, reading in the
@@ -269,14 +269,13 @@ class LcsClusterAppendExecStream : public BTreeExecStream,
      *
      * @return true if cluster is non-empty
      */
-    bool GetLastBlock(PLcsClusterNode &pBlock);
+    bool getLastBlock(PLcsClusterNode &pBlock);
 
-public:
     /**
      * Initializes and sets up object with content specific to the load that
      * will be carried out
      */
-    void Init();
+    void init();
 
     /**
      * Processes rows for loading.  Calls WriteBatch once values cannot fit
@@ -286,43 +285,13 @@ public:
      *
      * @return ExecStreamResult value
      */
-    ExecStreamResult Compress(ExecStreamQuantum const &quantum);
+    ExecStreamResult compress(ExecStreamQuantum const &quantum);
 
     /**
      * Writes out the last pending batches and btree pages.  Deallocates
      * temporary memory and buffer pages
      */
-    void Close();
-
-#ifdef NOT_NEEDED_YET
-    void SetNewBlockCount(uint cnt) {
-        m_newBlockCount = cnt;
-    }
-    
-    uint GetNewBlockCount() const {
-        return m_newBlockCount;
-    }
-
-    RecordNum GetNumRows() const {
-        return m_lastRow - m_startRow;
-    }
-
-    RID GetNextRow() const {
-        return m_lastRow;
-    }
-
-    void SetLastRow(LcsRid row) {
-        m_lastRow = row;
-    } 
-
-#endif
-
-    /**
-     * True iff we overwrite all the existing values in the cluster
-     */
-    bool IsInOverwriteMode() {
-        return m_bOverwrite;
-    }
+    void close();
 
 public:
     virtual void prepare(LcsClusterAppendExecStreamParams const &params);

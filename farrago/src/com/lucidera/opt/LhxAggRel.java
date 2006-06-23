@@ -21,10 +21,7 @@
 package com.lucidera.opt;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.*;
-import org.eigenbase.stat.RelStatColumnStatistics;
-import org.eigenbase.stat.RelStatSource;
 
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.catalog.*;

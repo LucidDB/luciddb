@@ -70,7 +70,7 @@ public class LucidDbOperatorTable extends SqlStdOperatorTable
 
     public static final SqlFunction lcsRidFunc =
         new SqlFunction("LCS_RID", SqlKind.Function,
-            SqlTypeStrategies.rtiBigint, null,
+            SqlTypeStrategies.rtiAlwaysNullableBigint, null,
             SqlTypeStrategies.otcAny,
             SqlFunctionCategory.Numeric);
     
@@ -102,6 +102,11 @@ public class LucidDbOperatorTable extends SqlStdOperatorTable
     public SqlTypeName getSpecialOpRetTypeName(int colId)
     {
         return specialOperators.getSpecialOpRetTypeName(colId);
+    }
+    
+    public boolean isNullable(int colId)
+    {
+        return specialOperators.isNullable(colId);
     }
     
     public Integer getSpecialOpColumnId(SqlOperator op)

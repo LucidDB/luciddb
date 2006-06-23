@@ -23,11 +23,11 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
-#include "fennel/lucidera/bitmap/LbmIndexScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSearchExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
-void LbmIndexScanExecStream::prepare(LbmIndexScanExecStreamParams const &params)
+void LbmSearchExecStream::prepare(LbmSearchExecStreamParams const &params)
 {
     BTreeSearchExecStream::prepare(params);
 
@@ -73,7 +73,7 @@ void LbmIndexScanExecStream::prepare(LbmIndexScanExecStreamParams const &params)
     }
 }
 
-bool LbmIndexScanExecStream::reachedTupleLimit(uint nTuples)
+bool LbmSearchExecStream::reachedTupleLimit(uint nTuples)
 {
     if (ignoreRowLimit) {
         return false;
@@ -90,7 +90,7 @@ bool LbmIndexScanExecStream::reachedTupleLimit(uint nTuples)
     return (nTuples >= rowLimit);
 }
 
-void LbmIndexScanExecStream::setAdditionalKeys()
+void LbmSearchExecStream::setAdditionalKeys()
 {
     if (ridInKey) {
         // If the rid key was not setup in farrago, need to copy the keys
@@ -117,4 +117,4 @@ void LbmIndexScanExecStream::setAdditionalKeys()
 
 FENNEL_END_CPPFILE("$Id$");
 
-// End LbmIndexScanExecStream.cpp
+// End LbmSearchExecStream.cpp

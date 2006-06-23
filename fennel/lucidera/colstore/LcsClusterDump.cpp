@@ -50,19 +50,18 @@ const uint oStr = oByte + nByte * lnByte + lnSep;
 // maximum read at one time
 const uint MaxReadBatch = 64;
 
-LcsClusterDump::LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
-                               TraceLevel traceLevelInit,
-                               SharedTraceTarget pTraceTargetInit,
-                               std::string nameInit) :
-    LcsClusterAccessBase(bTreeDescriptor),
-    TraceSource(pTraceTargetInit, nameInit)
+LcsClusterDump::LcsClusterDump(
+    const BTreeDescriptor &bTreeDescriptor, TraceLevel traceLevelInit,
+    SharedTraceTarget pTraceTargetInit, std::string nameInit) :
+        LcsClusterAccessBase(bTreeDescriptor),
+        TraceSource(pTraceTargetInit, nameInit)
 {
     traceLevel = traceLevelInit;
 }
 
 // Dump page contents
-void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
-                          uint szBlock)
+void LcsClusterDump::dump(
+    uint64_t pageId, PConstLcsClusterNode pHdr, uint szBlock)
 {
     PBuffer pBlock = (PBuffer) pHdr;
     uint i, j, k;
@@ -139,16 +138,16 @@ void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
 
         if (pBatch[i].mode == LCS_COMPRESSED) {
 
-            nBits = CalcWidth(pBatch[i].nVal);
+            nBits = calcWidth(pBatch[i].nVal);
 
             // calculate the bit vector widthes, sum(w[i]) is nBits 
-            iV = BitVecWidth(nBits, w);
+            iV = bitVecWidth(nBits, w);
 
             // this is where the bit vectors start
             pBit = pBlock + pBatch[i].oVal + pBatch[i].nVal * sizeof(uint16_t);
 
             // nBytes are taken by the bit vectors
-            BitVecPtr(pBatch[i].nRow, iV, w, p, pBit);
+            bitVecPtr(pBatch[i].nRow, iV, w, p, pBit);
 
             callTrace("Rows");
             callTrace("----");
@@ -161,7 +160,7 @@ void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
                 buf[0]= 0;
                 count = min(uint(pBatch[i].nRow - j), MaxReadBatch);
                 // read rows j to j+count -1
-                ReadBitVecs(v, iV, w, p, j, count);     
+                readBitVecs(v, iV, w, p, j, count);     
 
                 for (k = 0; k < count; k++, j++) {
                     if ((j % 8) == 0) {

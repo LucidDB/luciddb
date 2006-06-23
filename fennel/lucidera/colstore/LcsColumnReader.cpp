@@ -37,10 +37,10 @@ void LcsColumnReader::sync()
         // where the bit vectors start
         const PBuffer pBit = pValues + (sizeof(uint16_t) * pBatch->nVal);
         // # bits per value
-        uint nBits = CalcWidth(pBatch->nVal);
+        uint nBits = calcWidth(pBatch->nVal);
         // calculate bit vector widths
-        iV = BitVecWidth(nBits, width);
-        BitVecPtr(pBatch->nRow, iV, width, origin, (PBuffer) pBit);
+        iV = bitVecWidth(nBits, width);
+        bitVecPtr(pBatch->nRow, iV, width, origin, (PBuffer) pBit);
     
         uint totWidth;
         if (iV == 1)
@@ -62,58 +62,58 @@ void LcsColumnReader::sync()
         // single vector
 
         case 16:    // width 1 = 16
-            pFuncReadBitVec = ReadBitVec16;
+            pFuncReadBitVec = readBitVec16;
             break;
 
         case 8: // width 1 = 8
-            pFuncReadBitVec = ReadBitVec8;
+            pFuncReadBitVec = readBitVec8;
             break;
 
         case 4: // width 1 = 4
-            pFuncReadBitVec = ReadBitVec4;
+            pFuncReadBitVec = readBitVec4;
             break;
 
         case 2: // width 1 = 2
-            pFuncReadBitVec = ReadBitVec2;
+            pFuncReadBitVec = readBitVec2;
             break;
 
         case 1: // width 1 = 1
-            pFuncReadBitVec = ReadBitVec1;
+            pFuncReadBitVec = readBitVec1;
             break;
 
         // dual vector, first vector 8
 
         case 12:    // width 1 = 8, width 2 = 4
-            pFuncReadBitVec = ReadBitVec12;
+            pFuncReadBitVec = readBitVec12;
             break;
 
         case 10:    // width 1 = 8, width 2 = 2
-            pFuncReadBitVec = ReadBitVec10;
+            pFuncReadBitVec = readBitVec10;
             break;
 
         case 9: // width 1 = 8, width 2 = 1
-            pFuncReadBitVec = ReadBitVec9;
+            pFuncReadBitVec = readBitVec9;
             break;
 
         // dual vector, first vector 4
 
         case 6: // width 1 = 4, width 2 = 2
-            pFuncReadBitVec = ReadBitVec6;
+            pFuncReadBitVec = readBitVec6;
             break;
 
         case 5: // width 1 = 4, width 2 = 1
-            pFuncReadBitVec = ReadBitVec5;
+            pFuncReadBitVec = readBitVec5;
             break;
 
         // dual vector, first vector is 2
 
         case 3: // width 1 = 2, width 2 = 1
-            pFuncReadBitVec = ReadBitVec3;
+            pFuncReadBitVec = readBitVec3;
             break;
 
         // no bit vector stored
         case 0:
-            pFuncReadBitVec = ReadBitVec0;
+            pFuncReadBitVec = readBitVec0;
             break;
 
         default:
@@ -149,11 +149,11 @@ const PBuffer LcsColumnReader::getVariableValue()
         getBatchOffsets()[pScan->getRangePos()]);
 }
 
-void LcsColumnReader::readCompressedBatch(uint count, uint16_t *pValCodes,
-                                          uint *pActCount)
+void LcsColumnReader::readCompressedBatch(
+    uint count, uint16_t *pValCodes, uint *pActCount)
 {
     *pActCount = std::min(count, pScan->getRangeRowsLeft());
-    ReadBitVecs(pValCodes, iV, width, origin, pScan->getRangePos(),
+    readBitVecs(pValCodes, iV, width, origin, pScan->getRangePos(),
                 *pActCount);
 }
 

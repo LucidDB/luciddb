@@ -92,6 +92,19 @@ public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
         return RelMetadataQuery.getPopulationSize(rel.getLeft(), groupKey);
     }
     
+    public Double getPopulationSize(AggregateRelBase rel, BitSet groupKey)
+    {
+        BitSet childKey = new BitSet();
+        RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
+        return RelMetadataQuery.getPopulationSize(rel.getChild(), childKey);
+    }
+    
+    public Double getPopulationSize(ValuesRelBase rel, BitSet groupKey)
+    {
+        // assume half the rows are duplicates
+        return rel.getRows() / 2;
+    }
+    
     // Catch-all rule when none of the others apply.  Have not implemented
     // rules for aggregation and projection.
     public Double getPopulationSize(RelNode rel, BitSet groupKey)

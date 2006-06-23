@@ -187,7 +187,8 @@ class FtrsDataServer extends MedAbstractFennelDataServer
     }
 
     // implement MedAbstractFennelDataServer
-    protected boolean getIncludeTuples()
+    protected boolean getIncludeTuples(
+        FemLocalIndex index)
     {
         return false;
     }

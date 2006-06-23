@@ -141,7 +141,7 @@ void LcsHash::insert(
      * generate a real hash code.  Hash code generation is expensive, so
      * try to avoid it.
      */
-    bool noCompress = clusterBlockWriter->NoCompressMode(columnId);
+    bool noCompress = clusterBlockWriter->noCompressMode(columnId);
     key = noCompress ? 0 : computeKey(dataWithLen);
 
     *undoInsert     = false;
@@ -163,7 +163,7 @@ void LcsHash::insert(
          */
         *undoInsert =
             hash.isFull() ||
-            !clusterBlockWriter->AddValue(columnId, dataWithLen,
+            !clusterBlockWriter->addValue(columnId, dataWithLen,
                 &newValueOffset);
 
         if (*undoInsert)
@@ -206,14 +206,14 @@ void LcsHash::insert(
      * We found the value in the hash (from the Search() call above),
      * so it is already in the block,
      * but it still may not be part of the current batch.
-     * Whether it is or not, call AddValue(), so that we can adjust
+     * Whether it is or not, call addValue(), so that we can adjust
      * space left in the block.
      */
     else
     {
         bool bFirstTimeInBatch = !valOrd->isValueInBatch();
 
-        *undoInsert = !clusterBlockWriter->AddValue(columnId, bFirstTimeInBatch);
+        *undoInsert = !clusterBlockWriter->addValue(columnId, bFirstTimeInBatch);
         
         if(*undoInsert)
         {
@@ -266,7 +266,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
             /*
              * Value already existed in the batch.
              */
-            clusterBlockWriter->UndoValue(columnId, NULL, false); 
+            clusterBlockWriter->undoValue(columnId, NULL, false); 
             break;
         }
     case NEWENTRY:
@@ -284,7 +284,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
             valCnt--;
             hash.undoNewValueNode(undo.key);
             maxValueSize = undo.origMaxValueSize;
-            clusterBlockWriter->UndoValue(columnId, dataWithLen, true); 
+            clusterBlockWriter->undoValue(columnId, dataWithLen, true); 
             break;
         }
     case NEWBATCHVALUE:
@@ -293,7 +293,7 @@ void LcsHash::undoInsert(PBuffer dataWithLen)
              * Already in block but first time in batch.
              * Need to remove value from batch
              */
-            clusterBlockWriter->UndoValue(columnId, NULL, true); 
+            clusterBlockWriter->undoValue(columnId, NULL, true); 
             (&undo.vPtr->valueOrd)->clearValueInBatch();        
             break;
         }
@@ -326,7 +326,7 @@ bool LcsHash::search(
             continue;
 
         searchTuple[0].loadLcsDatum(clusterBlockWriter
-            ->GetOffsetPtr(columnId, valueNode->valueOffset));
+            ->getOffsetPtr(columnId, valueNode->valueOffset));
 
         compareRes = colTupleDesc.compareTuples(colTuple, searchTuple);
 
@@ -431,7 +431,7 @@ void LcsHash::clearFixedEntries()
     /*
      * Only clears entries if the next batch is not guaranteed to be fixed mode.
      */
-    if (!clusterBlockWriter->NoCompressMode(columnId)) {
+    if (!clusterBlockWriter->noCompressMode(columnId)) {
         for (uint i = 0; i < valCnt; i++) {
             if ((hash.valueNodes[i].valueOrd).isValueInBatch()) {
                 hash.valueNodes[i].valueOffset=0;
@@ -456,11 +456,11 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
      * generate a real hash code.  Hash code generation is expensive, so
      * try to avoid it.
      */
-    bool noCompress = clusterBlockWriter->NoCompressMode(columnId);
+    bool noCompress = clusterBlockWriter->noCompressMode(columnId);
   
     for( i = 0; i < numVals && !(hash.isFull()); i++ )
     {
-        dataWithLen = clusterBlockWriter->GetOffsetPtr(columnId,lastValOff);
+        dataWithLen = clusterBlockWriter->getOffsetPtr(columnId,lastValOff);
         key = noCompress ? 0 : computeKey(dataWithLen);
   
         /*
@@ -483,7 +483,7 @@ void LcsHash::restore(uint numVals, uint16_t lastValOff)
                 maxValueSize = storageLength;
         }
       
-        lastValOff = clusterBlockWriter->GetNextVal(columnId,
+        lastValOff = clusterBlockWriter->getNextVal(columnId,
             (uint16_t)lastValOff);
     }
 }
@@ -494,7 +494,7 @@ void LcsHash::startNewBatch(uint leftOvers)
      * If the hash is full we need to start over. Otherwise just clear the
      * entries used in building th eprevious batch.
      */
-    if(clusterBlockWriter->NoCompressMode(columnId) ||
+    if(clusterBlockWriter->noCompressMode(columnId) ||
         hash.isFull(leftOvers))
     {
         hash.resetHash();
@@ -596,11 +596,11 @@ bool LcsCompareColKeyUsingOffsetIndex::lessThan(
      * constructs TupleDatum of the column "columnId".
      */
     colTuple1[0].loadLcsDatum(clusterBlockWriter
-        ->GetOffsetPtr(columnId,
+        ->getOffsetPtr(columnId,
             hashTable->valueNodes[colKeyOffsetIndex1].valueOffset));
     
     colTuple2[0].loadLcsDatum(clusterBlockWriter
-        ->GetOffsetPtr(columnId,
+        ->getOffsetPtr(columnId,
             hashTable->valueNodes[colKeyOffsetIndex2].valueOffset));
     
     /*

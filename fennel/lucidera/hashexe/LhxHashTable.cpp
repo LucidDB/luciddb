@@ -321,6 +321,12 @@ void LhxHashTable::init(
     bufferLock.accessSegment(scratchAccessor);
     currentBlockCount = 0;
 
+    /*
+     * special hash table properties.
+     */
+    filterNull = hashInfo.filterNull;
+    removeDuplicate = hashInfo.removeDuplicate;
+
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     blockAccessor.init(usablePageSize);
     nodeBlockAccessor.init(usablePageSize);
@@ -660,7 +666,8 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
 PBuffer LhxHashTable::findKeyLocation(
     TupleData const &inputTuple,
     TupleProjection const &keyColsProj,
-    bool isProbing)
+    bool isProbing,
+    bool removeDuplicateProbe)
 {
     uint slotNum =
         (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
@@ -694,6 +701,10 @@ PBuffer LhxHashTable::findKeyLocation(
     /*
      * Found a matching key
      */
+    if (removeDuplicateProbe && hashKeyAccessor.isMatched()) {
+        return NULL;
+    }
+
     if (isProbing) {
         hashKeyAccessor.setMatched(true);
     }
@@ -884,17 +895,34 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
 
 bool LhxHashTable::addTuple(TupleData const &inputTuple)
 {
+    if (filterNull && inputTuple.containsNull(keyColsProj)) {
+        /*
+         * When null values are filtered, and this tuple does
+         * contain null in its key columns, do not add to hash
+         * table.
+         */
+        return true;
+    }
+
     /*
      * We are building the hash table.
      */
     bool isProbing = false;
-    PBuffer destKeyLoc = findKeyLocation(inputTuple, keyColsProj, isProbing);
+    bool removeDuplicateProbe = false;
+    PBuffer destKeyLoc =
+        findKeyLocation(inputTuple, keyColsProj, isProbing,
+            removeDuplicateProbe);
 
     if (!destKeyLoc) {
         /*
          * Key is not present in the hash table. Add both the key and the data.
          */
         return addKeyData(inputTuple);
+    } else if (removeDuplicate) {
+        /*
+         * Do not add duplicate keys.
+         */
+        return true;
     } else {
         /*
          * Key is present in the hash table.
@@ -917,6 +945,38 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
             }
             return aggData(destKeyLoc, inputTuple);
         }
+    }
+}
+
+PBuffer LhxHashTable::findKey(
+    TupleData const &inputTuple,
+    TupleProjection const &keyColsProj,
+    bool filterNullProbe,
+    bool removeDuplicateProbe)
+{
+    if (filterNullProbe && inputTuple.containsNull(keyColsProj)) {
+        /*
+         * If filter null and incoming tuple contains NULL,
+         * there is no match in the hash table.
+         */
+        return false;
+    }
+
+    PBuffer destKey;
+    PBuffer destKeyLoc;
+    bool isProbing = true;
+    destKeyLoc =
+        findKeyLocation(inputTuple, keyColsProj, isProbing,
+            removeDuplicateProbe);
+    
+    if (destKeyLoc) {
+        /*
+         * Need to copy destKey out as destKeyLoc might not be aligned.
+         */    
+        memcpy((PBuffer)&destKey, destKeyLoc, sizeof(PBuffer));
+        return destKey;
+    } else {
+        return NULL;
     }
 }
 

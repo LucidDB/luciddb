@@ -59,6 +59,13 @@ protected:
     TupleData *pBitmapSegTuple;
 
     /**
+     * Index of the bitmap columns
+     */
+    uint iSrid;
+    uint iSegmentDesc;
+    uint iSegments;
+
+    /**
      * Number of trailing zero bytes in the current segment
      */
     uint zeroBytes;

@@ -19,8 +19,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef Fennel_LbmIndexScanExecStream_Included
-#define Fennel_LbmIndexScanExecStream_Included
+#ifndef Fennel_LbmSearchExecStream_Included
+#define Fennel_LbmSearchExecStream_Included
 
 #include "fennel/exec/DynamicParam.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -28,10 +28,10 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * LbmIndexScanExecStreamParams defines parameters for instantiating a
- * LbmIndexScanExecStream
+ * LbmSearchExecStreamParams defines parameters for instantiating a
+ * LbmSearchExecStream
  */
-struct LbmIndexScanExecStreamParams : public BTreeSearchExecStreamParams
+struct LbmSearchExecStreamParams : public BTreeSearchExecStreamParams
 {
     /**
      * Parameter id representing the dynamic parameter used to limit the
@@ -47,13 +47,13 @@ struct LbmIndexScanExecStreamParams : public BTreeSearchExecStreamParams
 };
 
 /**
- * LbmIndexScanExecStream is the execution stream used for scanning bitmap
+ * LbmSearchExecStream is the execution stream used for scanning bitmap
  * indexes
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-class LbmIndexScanExecStream : public BTreeSearchExecStream
+class LbmSearchExecStream : public BTreeSearchExecStream
 {
     /**
      * True if the rid key is included in the btree search key.  This will
@@ -126,11 +126,11 @@ class LbmIndexScanExecStream : public BTreeSearchExecStream
     virtual void setAdditionalKeys();
 
 public:
-    virtual void prepare(LbmIndexScanExecStreamParams const &params);
+    virtual void prepare(LbmSearchExecStreamParams const &params);
 };
 
 FENNEL_END_NAMESPACE
 
 #endif
 
-// End LbmIndexScanExecStream.h
+// End LbmSearchExecStream.h

@@ -82,17 +82,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         if (feature == EigenbaseResource.instance().SQLFeature_E151) {
             return false;
         }
-        
-        // LucidDB doesn't yet support EXCEPT.
-        if (feature == EigenbaseResource.instance().SQLFeature_E071_03) {
-            return false;
-        }
-        
-        // LucidDB doesn't yet support INTERSECT.
-        if (feature == EigenbaseResource.instance().SQLFeature_F302) {
-            return false;
-        }
-        
+                
         return super.supportsFeature(feature);
     }
 
@@ -298,8 +288,17 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // LcsTableAppendRule relies on CoerceInputsRule above.)
         builder.addRuleCollection(medPluginRules);
 
+        // Use hash semi join if possible.
+        builder.addRuleInstance(new LhxSemiJoinRule());
+        
         // Use hash join wherever possible.
         builder.addRuleInstance(new LhxJoinRule());
+        
+        // Use hash join to implement set op: Intersect.
+        builder.addRuleInstance(new LhxIntersectRule());        
+
+        // Use hash join to implement set op: Except(minus).
+        builder.addRuleInstance(new LhxMinusRule());        
         
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but

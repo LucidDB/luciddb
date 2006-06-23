@@ -26,6 +26,8 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/exec/MockProducerExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
+#include "fennel/exec/ExecStreamScheduler.h"
+#include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/cache/Cache.h"
 
 #include <boost/test/test_tools.hpp>
@@ -34,16 +36,17 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
-    void testSequentialImpl(uint numRows);
-    void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight);
+    void testSequentialImpl(uint numRows, bool fakeInterrupt);
+    void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight,
+        bool fakeInterrupt);
 
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
         TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
-        TupleProjection &outputProj, bool leftOuter,
+        TupleProjection &outputProj,
         SharedMockProducerExecStreamGenerator pLeftGenerator,
         SharedMockProducerExecStreamGenerator pRightGenerator,
-        CompositeExecStreamGenerator &verifier);
+        CompositeExecStreamGenerator &verifier, bool fakeInterrupt);
     
 public:
     explicit LhxJoinExecStreamTest()
@@ -51,12 +54,17 @@ public:
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialCleanup);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1Cleanup);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2Cleanup);
     }
     
     /*
      * Match two identical sets.
      */
     void testSequential();
+
+    void testSequentialCleanup();
 
     /*
      * Match these two sets:
@@ -67,6 +75,8 @@ public:
      */
     void testDup1();
 
+    void testDup1Cleanup();
+
     /*
      * Match these two sets:
      *  left:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
@@ -75,24 +85,43 @@ public:
      * result: 0, 0, 0, .. 1, 1, 1, .. 2, 2, 2, ..
      */
     void testDup2();
+
+    void testDup2Cleanup();
 };
 
 void LhxJoinExecStreamTest::testSequential()
 {
-    testSequentialImpl(100);
+    testSequentialImpl(100, false);
+}
+
+void LhxJoinExecStreamTest::testSequentialCleanup()
+{
+    testSequentialImpl(100, true);
 }
 
 void  LhxJoinExecStreamTest::testDup1()
 {
-    testDupImpl(960, 16, 60);
+    testDupImpl(960, 16, 60, false);
+}
+
+void  LhxJoinExecStreamTest::testDup1Cleanup()
+{
+    testDupImpl(960, 16, 60, true);
 }
 
 void  LhxJoinExecStreamTest::testDup2()
 {
-    testDupImpl(960, 60, 16);
+    testDupImpl(960, 60, 16, false);
 }
 
-void LhxJoinExecStreamTest::testSequentialImpl(uint numRows)
+void  LhxJoinExecStreamTest::testDup2Cleanup()
+{
+    testDupImpl(960, 60, 16, true);
+}
+
+void LhxJoinExecStreamTest::testSequentialImpl(
+    uint numRows,
+    bool fakeInterrupt)
 {
     uint numColsLeft;
     uint numColsRight;
@@ -154,14 +183,13 @@ void LhxJoinExecStreamTest::testSequentialImpl(uint numRows)
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    bool leftOuter = false;
-
     testImpl(numRows, keyCount, cndKeys, numRows,
-        inputDesc, outputDesc, outputProj, leftOuter,
-        pLeftGenerator, pRightGenerator, verifier);
+        inputDesc, outputDesc, outputProj,
+        pLeftGenerator, pRightGenerator, verifier, fakeInterrupt);
 }
 
-void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight)
+void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
+    uint cndKeyRight, bool fakeInterrupt)
 {
     uint numColsLeft;
     uint numColsRight;
@@ -218,23 +246,23 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft, uint cndK
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    bool leftOuter = false;
     uint numResRows = (cndKeyLeft > cndKeyRight) ? 
         (numRows * numRows/cndKeyLeft) :
         (numRows * numRows/cndKeyRight);
 
     testImpl(numRows, keyCount, cndKeys, numResRows,
-        inputDesc, outputDesc, outputProj, leftOuter,
-        pLeftGenerator, pRightGenerator, verifier);
+        inputDesc, outputDesc, outputProj,
+        pLeftGenerator, pRightGenerator, verifier, fakeInterrupt);
 }
 
 void LhxJoinExecStreamTest::testImpl(
     uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
     TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
-    TupleProjection &outputProj, bool leftOuter,
+    TupleProjection &outputProj,
     SharedMockProducerExecStreamGenerator pLeftGenerator,
     SharedMockProducerExecStreamGenerator pRightGenerator,
-    CompositeExecStreamGenerator &verifier)
+    CompositeExecStreamGenerator &verifier,
+    bool fakeInterrupt)
 {
     TupleProjection leftKeyProj;
     TupleProjection rightKeyProj;
@@ -266,11 +294,14 @@ void LhxJoinExecStreamTest::testImpl(
     /*
      * Fields in LhxJoinExecStreamParams
      */
-    joinParams.leftInner = true;
-    joinParams.leftOuter = leftOuter;
-    joinParams.rightInner = true;
-    joinParams.rightOuter = false;
-    joinParams.eliminateDuplicate = false;
+    joinParams.leftInner     = true;
+    joinParams.leftOuter     = false;
+    joinParams.rightInner    = true;
+    joinParams.rightOuter    = false;
+
+    joinParams.setopAll      = false;
+    joinParams.setopDistinct = false;
+
     joinParams.outputProj = outputProj;
     joinParams.cndKeys = cndKeys;
     joinParams.numRows = numInputRows;
@@ -288,8 +319,9 @@ void LhxJoinExecStreamTest::testImpl(
      * Fields in ExecStreamParams
      */
     joinParams.pCacheAccessor = pCache;
+    int cacheSize = 100;
     joinParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache, 100);
+        pSegmentFactory->newScratchSegment(pCache, cacheSize);
     joinParams.pTempSegment = pRandomSegment;
 
     ExecStreamEmbryo joinStreamEmbryo;
@@ -318,7 +350,15 @@ void LhxJoinExecStreamTest::testImpl(
     // a sort before verify the output
     
 
-    verifyOutput(*pOutputStream, numResultRows, verifier);
+    verifyOutput(*pOutputStream, numResultRows, verifier, fakeInterrupt);
+
+    if (fakeInterrupt) {
+        // simulate error cleanup
+        pScheduler->stop();
+        pGraph->close();
+    }
+
+    BOOST_CHECK_EQUAL(0, pRandomSegment->getAllocatedSizeInPages());
 }
 
 FENNEL_UNIT_TEST_SUITE(LhxJoinExecStreamTest);

@@ -157,12 +157,15 @@ public class LhxJoinRule extends RelOptRule
             cndBuildKey = numBuildRows;
         }
         
+        boolean isSetop = false;
+        
         RelNode rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
                 fennelLeft,
                 fennelRight,
-                joinRel.getJoinType(),
+                LhxJoinRelType.getLhxJoinType(joinRel.getJoinType()),
+                isSetop,
                 leftKeys,
                 rightKeys,
                 newJoinOutputNames,

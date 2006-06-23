@@ -240,6 +240,25 @@ struct LbmNumberStreamInput
     uint bitmapSize; 
 };
 
+class NumberStreamExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+protected:
+    SharedNumberStream pStream;
+public:
+    NumberStreamExecStreamGenerator(SharedNumberStream pNumberStream)
+    {
+        pStream = SharedNumberStream(pNumberStream->clone());
+    }
+
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        if (pStream->hasNext()) {
+            return pStream->getNext();
+        }
+        return 0;
+    }
+};
+
 static const std::string traceName = "net.sf.fennel.test.lbm";
 
 /**
@@ -266,6 +285,14 @@ protected:
     TupleDescriptor bitmapTupleDesc;
     TupleData bitmapTupleData;
     TupleAccessor bitmapTupleAccessor;
+
+    /**
+     * Tuple descriptor, data, and accessor for key-containting bitmaps
+     * (keys, srid, segment descriptor, bitmap segments)
+     */
+    TupleDescriptor keyBitmapTupleDesc;
+    TupleData keyBitmapTupleData;
+    TupleAccessor keyBitmapTupleAccessor;
 
     inline static const std::string &getTraceName() 
     {
@@ -313,9 +340,34 @@ protected:
         return (nRids / 8) + extraSpace;
     }
 
+    /**
+     * Generate bitmaps to used in verifying result of bitmap index scan
+     *
+     * @param nRows number of rows in index
+     *
+     * @param start initial rid value
+     *
+     * @param skipRows generate rids every "skipRows" rows; i.e., if skipRows
+     * == 1, there are no gaps in the rids
+     *
+     * @param pBuf buffer where bitmap segment tuples will be marshalled
+     *
+     * @param bufSize amount of space currently used within pBuf
+     *
+     * @param fullBufSize size of pBuf
+     *
+     * @param nBitmaps returns number of bitmaps generated
+     */
+    void generateBitmaps(
+        uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
+        uint fullBufSize, uint &nBitmaps, bool includeKeys = false);
+
+    virtual void produceEntry(
+        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+        uint &bufSize, uint &nBitmaps, bool includeKeys);
+    
 public:
     void testCaseSetUp();
-    void testCaseTearDown();
 };
 
 FENNEL_END_NAMESPACE

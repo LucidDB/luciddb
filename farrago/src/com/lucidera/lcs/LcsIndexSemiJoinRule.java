@@ -213,25 +213,14 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                 sortInput,
                 FennelRelUtil.newIotaProjection(nKeys),
                 discardDuplicates);
-                
-        // create an index search on the left input's join column, i.e.,
-        // the rowscan input; but first need to create an index scan
-        LcsIndexScanRel indexScan =
-            new LcsIndexScanRel(
-                origRowScan.getCluster(),
-                origRowScan.lcsTable,
-                index,
-                origRowScan.getConnection(),
-                null,
-                false);
-        
+                        
         // create a merge and index search on top of the index scan
         boolean needIntersect = (call.rels.length > 2);
         FennelRelImplementor relImplementor = 
             FennelRelUtil.getRelImplementor(origRowScan);
         RelNode[] inputRels = createMergeIdxSearches(
             relImplementor, call,
-            sort, indexScan, origRowScan, needIntersect);
+            sort, origRowScan, index, needIntersect);
         
         LcsRowScanRel newRowScan =
             new LcsRowScanRel(
@@ -302,8 +291,8 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         FennelRelImplementor relImplementor,
         RelOptRuleCall call,
         FennelSortRel sort,
-        LcsIndexScanRel indexScan,
         LcsRowScanRel rowScan,
+        FemLocalIndex index,
         boolean needIntersect)
     {
         // if there already is a child underneath the rowscan, then we'll
@@ -333,7 +322,8 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         // since those are set in the parent index merge rel
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
-                sort, indexScan, true, false, null, null, null, null, null);
+                rowScan.getCluster(), sort, rowScan.lcsTable, index, null, true,
+                false, null, null, null, null, null);
     
         // create a merge on top of the index search
         LcsIndexMergeRel merge = 
@@ -410,7 +400,9 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                     (LcsIndexSearchRel) call.rels[2];
                 mergeRels[0] =
                     new LcsIndexSearchRel(
-                        indexSearch.getChild(), indexSearch.getIndexScan(),
+                        indexSearch.getCluster(),
+                        indexSearch.getChild(),
+                        indexSearch.lcsTable, indexSearch.index, null,
                         indexSearch.isUniqueKey(), indexSearch.isOuter(),
                         indexSearch.getInputKeyProj(),
                         indexSearch.getInputJoinProj(),

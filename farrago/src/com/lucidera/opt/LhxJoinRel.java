@@ -29,9 +29,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
-import org.eigenbase.stat.*;
 
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -40,12 +38,13 @@ import java.util.List;
  * @author Rushan Chen
  * @version $Id$
  */
-class LhxJoinRel extends FennelDoubleRel
+public class LhxJoinRel extends FennelDoubleRel
 {
     /**
      * Join type. Currently only inner join is supported.
      */
-    private final JoinRelType joinType;
+    private final LhxJoinRelType joinType;
+        
     /**
      * Join key columns from the left.
      */
@@ -65,6 +64,15 @@ class LhxJoinRel extends FennelDoubleRel
      */
     int cndBuildKey;
     
+    /**
+     * This LhxJoinRel implements setop, one of the following:
+     * intersect (distinct), except (distinct)
+     * Setop differs from regular join in its treatment of NULLs and
+     * duplicates: NULLs are considered "matching" and duplicates are
+     * removed by default(the default setop is setop DISTINCT). 
+     */
+    boolean isSetop;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -80,7 +88,8 @@ class LhxJoinRel extends FennelDoubleRel
         RelOptCluster cluster,
         RelNode left,
         RelNode right,
-        JoinRelType joinType,
+        LhxJoinRelType joinType,
+        boolean isSetop,
         List<Integer> leftKeys,
         List<Integer> rightKeys,
         List<String> fieldNameList,
@@ -90,11 +99,21 @@ class LhxJoinRel extends FennelDoubleRel
         super(cluster, left, right);
         assert joinType != null;
         this.joinType = joinType;
+        this.isSetop = isSetop;
         this.leftKeys = leftKeys;
         this.rightKeys = rightKeys;
-        this.rowType = JoinRel.deriveJoinRowType(
-            left.getRowType(), right.getRowType(), joinType,
-            cluster.getTypeFactory(), fieldNameList);
+        if (joinType == LhxJoinRelType.LEFTSEMI) {
+            // intersect is implemented using left semi join
+            this.rowType = left.getRowType();
+        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+            // except is implemented using right anti join
+            this.rowType = right.getRowType();            
+        } else {
+            // regular join
+            this.rowType = JoinRel.deriveJoinRowType(
+                left.getRowType(), right.getRowType(), joinType.getLogicalJoinType(),
+                cluster.getTypeFactory(), fieldNameList);
+        }
         this.numBuildRows = numBuildRows;
         this.cndBuildKey = cndBuildKey;
     }
@@ -110,6 +129,7 @@ class LhxJoinRel extends FennelDoubleRel
                 RelOptUtil.clone(left),
                 RelOptUtil.clone(right),
                 joinType,
+                isSetop,
                 leftKeys,
                 rightKeys,
                 RelOptUtil.getFieldNameList(rowType),
@@ -132,17 +152,33 @@ class LhxJoinRel extends FennelDoubleRel
     // implement RelNode
     public double getRows()
     {
-        return RelMetadataQuery.getRowCount(left)
-            * RelMetadataQuery.getRowCount(right);
+        double resultRowCount = 0;
+        
+        if (joinType == LhxJoinRelType.LEFTSEMI) {
+            resultRowCount = RelMetadataQuery.getRowCount(left);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+            resultRowCount = RelMetadataQuery.getRowCount(right);
+        } else {
+            resultRowCount = RelMetadataQuery.getRowCount(left) *
+                RelMetadataQuery.getRowCount(right);
+        }
+        return resultRowCount;
     }
 
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        pw.explain(
-            this,
-            new String [] { "left", "right", "leftKeys", "rightKeys", "joinType"},
-            new Object [] {leftKeys, rightKeys, joinType});
+    	if (!isSetop) {
+    		pw.explain(
+    				this,
+    				new String [] { "left", "right", "leftKeys", "rightKeys", "joinType"},
+    				new Object [] {leftKeys, rightKeys, joinType});
+    	} else {
+    		pw.explain(
+    				this,
+    				new String [] { "left", "right", "leftKeys", "rightKeys", "joinType", "setop"},
+    				new Object [] {leftKeys, rightKeys, joinType, isSetop});    		
+    	}
     }
 
     // implement RelNode
@@ -176,14 +212,47 @@ class LhxJoinRel extends FennelDoubleRel
         streamDef.setNumBuildRows(numBuildRows);
         streamDef.setCndBuildKeys(cndBuildKey);
         
-        if (joinType == JoinRelType.LEFT || joinType == JoinRelType.FULL) {
+        // From join types, derive whether to return matching or non-matching
+        // tuples from either side:
+        // LeftInner: matching tuples from the left
+        // LeftOuter: non-matching tuples from the left
+        // RightInner: matching tuples from the right
+        // RightOuter: non-matching tuples from the right
+        if (joinType == LhxJoinRelType.RIGHTANTI) {
+            streamDef.setLeftInner(false);
+        } else {
+            streamDef.setLeftInner(true);            
+        }
+        if (joinType == LhxJoinRelType.LEFT || joinType == LhxJoinRelType.FULL) {
             streamDef.setLeftOuter(true);
+        } else {
+            streamDef.setLeftOuter(false);            
         }
 
-        if (joinType == JoinRelType.RIGHT || joinType == JoinRelType.FULL) {
+        if (joinType == LhxJoinRelType.LEFTSEMI ||
+            joinType == LhxJoinRelType.RIGHTANTI){
+            streamDef.setRightInner(false);
+        } else {
+            streamDef.setRightInner(true);            
+        }
+        
+        if (joinType == LhxJoinRelType.RIGHT || joinType == LhxJoinRelType.FULL ||
+            joinType == LhxJoinRelType.RIGHTANTI) {
             streamDef.setRightOuter(true);
+        } else {
+            streamDef.setRightOuter(false);
         }
 
+        if (isSetop) {
+            // set operation
+            streamDef.setSetopAll(false);
+            streamDef.setSetopDistinct(true);
+        } else {
+            // regular join
+            streamDef.setSetopAll(false);
+            streamDef.setSetopDistinct(false);
+        }
+        
         streamDef.setLeftKeyProj(
             FennelRelUtil.createTupleProjection(
                 repos, leftKeys));

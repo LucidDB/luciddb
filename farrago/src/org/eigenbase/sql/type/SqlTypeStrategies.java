@@ -667,12 +667,21 @@ public static final SqlSingleOperandTypeChecker
         new ExplicitReturnTypeInference(SqlTypeName.Integer);
 
     /**
-     * Type-inference strategy whereby the result type of a call is an Bigint
+     * Type-inference strategy whereby the result type of a call is a Bigint
      */
     public static final SqlReturnTypeInference
         rtiBigint =
         new ExplicitReturnTypeInference(SqlTypeName.Bigint);
 
+    /**
+     * Type-inference strategy whereby the result type of a call is a nullable
+     * Bigint
+     */
+    public static final SqlReturnTypeInference
+        rtiAlwaysNullableBigint =
+        new SqlTypeTransformCascade(
+            rtiBigint, SqlTypeTransforms.forceNullable);
+    
     /**
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.

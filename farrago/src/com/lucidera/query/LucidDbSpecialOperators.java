@@ -69,7 +69,7 @@ public class LucidDbSpecialOperators
         
         final SpecialOperatorInfo lcsRidFuncInfo =
             new SpecialOperatorInfo(
-                LucidDbOperatorTable.lcsRidFunc, SqlTypeName.Bigint,
+                LucidDbOperatorTable.lcsRidFunc, SqlTypeName.Bigint, true,
                 LcsRidColumnId);
         
         sqlOpMap = new HashMap<SqlOperator, SpecialOperatorInfo>();
@@ -127,7 +127,17 @@ public class LucidDbSpecialOperators
         } else {
             return opInfo.getColId();
         }
-    }   
+    }
+    
+    public Boolean isNullable(int colId)
+    {
+        SpecialOperatorInfo opInfo = colIdMap.get(colId);
+        if (opInfo == null) {
+            return null;
+        } else {
+            return opInfo.isNullable();
+        }
+    }
     
     public static boolean isLcsRidColumnId(int colId)
     {
@@ -164,19 +174,26 @@ public class LucidDbSpecialOperators
     { 
         private SqlOperator op;
         private SqlTypeName typeName;
+        private boolean nullable;
         private int colId;
         
         public SpecialOperatorInfo(
-            SqlOperator op, SqlTypeName typeName, int colId)
+            SqlOperator op, SqlTypeName typeName, boolean nullable, int colId)
         {
             this.op = op;
             this.typeName = typeName;
+            this.nullable = nullable;
             this.colId = colId;
         }
         
         public SqlTypeName getRetType()
         {
             return typeName;
+        }
+        
+        public boolean isNullable()
+        {
+            return nullable;
         }
         
         public String getFuncName()

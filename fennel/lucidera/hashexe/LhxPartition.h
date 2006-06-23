@@ -28,6 +28,7 @@
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
+#include "fennel/segment/SegStreamAllocation.h"
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
@@ -45,12 +46,9 @@ FENNEL_BEGIN_NAMESPACE
 struct LhxPartition
 {
     /*
-     * The first page allocated from the SegStream associated with this
-     * partition
-     * Subsequent pages from this parition can be retrieved.
-     * If firstPageId is NULL_PAGE_ID, then this partition is 
+     * The seg stream pair (input/output) associated with this partition.
      */
-    PageId firstPageId;
+    SharedSegStreamAllocation segStream;
 
     /*
      * which input does data in this partition come from
@@ -134,7 +132,7 @@ class LhxPartitionReader
     uint tupleStorageLength;
 
     LhxPartitionReaderState readerState;
-    bool srcIsStream;
+    bool srcIsInputStream;
     ExecStreamBufState bufState;
     TupleDescriptor outputTupleDesc;
 
@@ -147,8 +145,7 @@ class LhxPartitionReader
 
 public:
     void open(SharedLhxPartition srcPartition,
-        LhxHashInfo const &hashInfo,
-        bool setDeallocate);
+              LhxHashInfo const &hashInfo);
     bool isTupleConsumptionPending();
     bool demandData();
     void unmarshalTuple(TupleData &outputTuple);
@@ -335,7 +332,7 @@ public:
 
 inline ExecStreamBufState LhxPartitionReader::getState() const
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         return streamBufAccessor->getState();
    } else {
         return bufState;

@@ -602,4 +602,103 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 | 234  | Peter "peg leg", Jimmy & Samantha "Sam"  | G            |
 +------+------------------------------------------+--------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test: browse connect functionality
+0: jdbc:farrago:> create foreign data wrapper local_file_wrapper
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java
+. . . . . . . . > options (
+. . . . . . . . >   browse_connect_description 'My Flat Files Wrapper'
+. . . . . . . . > );
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from sys_boot.mgmt.browse_connect_foreign_wrappers order by 1;
++-----------------------+-----------------------------+
+| FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
++-----------------------+-----------------------------+
+| LOCAL_FILE_WRAPPER    | My Flat Files Wrapper       |
++-----------------------+-----------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available connection options
+0: jdbc:farrago:> select * from table(
+. . . . . . . . > sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . > 'LOCAL_FILE_WRAPPER',
+. . . . . . . . > cursor(
+. . . . . . . . > select '' as option_name, '' as option_value
+. . . . . . . . > from sys_boot.jdbc_metadata.empty_view)))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+-------------------------+----------------------------------------------------------------+---------------------+------------------------+----------------------+
+| OPTION_ORDINAL  |       OPTION_NAME       |                       OPTION_DESCRIPTION                       | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-----------------+-------------------------+----------------------------------------------------------------+---------------------+------------------------+----------------------+
+| 0               | DIRECTORY               | OS directory path containing flat files                        | true                | -1                     |                      |
+| 1               | FILE_EXTENSION          | File name extension                                            | true                | -1                     | txt                  |
+| 1               | FILE_EXTENSION          | File name extension                                            | true                | 0                      | txt                  |
+| 2               | CONTROL_FILE_EXTENSION  | Control file extension                                         | true                | -1                     | bcp                  |
+| 2               | CONTROL_FILE_EXTENSION  | Control file extension                                         | true                | 0                      | bcp                  |
+| 3               | FIELD_DELIMITER         | Field delimiter character                                      | true                | -1                     | ,                    |
+| 3               | FIELD_DELIMITER         | Field delimiter character                                      | true                | 0                      | ,                    |
+| 4               | LINE_DELIMITER          | Line delimiter character                                       | true                | -1                     | \n                   |
+| 4               | LINE_DELIMITER          | Line delimiter character                                       | true                | 0                      | \n                   |
+| 5               | QUOTE_CHAR              | Character used to quote                                        | true                | -1                     | "                    |
+| 5               | QUOTE_CHAR              | Character used to quote                                        | true                | 0                      | "                    |
+| 6               | ESCAPE_CHAR             | Character used to escape the special characters                | true                | -1                     | "                    |
+| 6               | ESCAPE_CHAR             | Character used to escape the special characters                | true                | 0                      | "                    |
+| 7               | WITH_HEADER             | Whether the files include a header                             | true                | -1                     | true                 |
+| 7               | WITH_HEADER             | Whether the files include a header                             | true                | 0                      | true                 |
+| 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns  | true                | -1                     | 5                    |
+| 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns  | true                | 0                      | 5                    |
+| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | -1                     | true                 |
+| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | 0                      | true                 |
+| 10              | LOG_DIRECTORY           | OS directory path for writing log files                        | false               | -1                     |                      |
++-----------------+-------------------------+----------------------------------------------------------------+---------------------+------------------------+----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available connection options, with specified set values
+0: jdbc:farrago:> select option_name, option_choice_ordinal, option_choice_value from table(
+. . . . . . . . > sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . > 'LOCAL_FILE_WRAPPER',
+. . . . . . . . > cursor(
+. . . . . . . . > values ('CONTROL_FILE_EXTENSION', 'txt2'),
+. . . . . . . . >        ('NUM_ROWS_SCAN', '100'))))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-------------------------+------------------------+----------------------+
+|       OPTION_NAME       | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |
++-------------------------+------------------------+----------------------+
+| DIRECTORY               | -1                     |                      |
+| FILE_EXTENSION          | -1                     | txt                  |
+| FILE_EXTENSION          | 0                      | txt                  |
+| CONTROL_FILE_EXTENSION  | -1                     | txt2                 |
+| CONTROL_FILE_EXTENSION  | 0                      | bcp                  |
+| FIELD_DELIMITER         | -1                     | ,                    |
+| FIELD_DELIMITER         | 0                      | ,                    |
+| LINE_DELIMITER          | -1                     | \n                   |
+| LINE_DELIMITER          | 0                      | \n                   |
+| QUOTE_CHAR              | -1                     | "                    |
+| QUOTE_CHAR              | 0                      | "                    |
+| ESCAPE_CHAR             | -1                     | "                    |
+| ESCAPE_CHAR             | 0                      | "                    |
+| WITH_HEADER             | -1                     | true                 |
+| WITH_HEADER             | 0                      | true                 |
+| NUM_ROWS_SCAN           | -1                     | 100                  |
+| NUM_ROWS_SCAN           | 0                      | 5                    |
+| WITH_LOGGING            | -1                     | true                 |
+| WITH_LOGGING            | 0                      | true                 |
+| LOG_DIRECTORY           | -1                     |                      |
++-------------------------+------------------------+----------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server ff_server
+. . . . . . . . > foreign data wrapper local_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/med/flatfiles/',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog/');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- query for available schemas
+0: jdbc:farrago:> select * from table(sys_boot.mgmt.browse_foreign_schemas('FF_SERVER'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| BCP          |              |
++--------------+--------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
