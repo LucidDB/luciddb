@@ -22,7 +22,10 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
+import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.med.FemLocalIndex;
+import net.sf.farrago.fem.sql2003.FemAbstractColumn;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -42,8 +45,18 @@ class LcsIndexSearchRel extends FennelSingleRel
 {
     //~ Instance fields -------------------------------------------------------
     
-    /** Aggregation used since multiple inheritance is unavailable. */
-    final LcsIndexScanRel indexScanRel;
+    /** Index to use for access. */
+    final FemLocalIndex index;
+
+    /** Refinement for super.table. */
+    final LcsTable lcsTable;
+
+    /**
+     * Array of 0-based flattened column ordinals to project; if null, project
+     * all columns.  Note that these ordinals are relative to the table, not
+     * the index.
+     */
+    final Integer [] projectedColumns;
     
     final boolean isUniqueKey;
     final boolean isOuter;
@@ -69,8 +82,11 @@ class LcsIndexSearchRel extends FennelSingleRel
      * @param inputDirectiveProj TODO:  doc
      */
     public LcsIndexSearchRel(
+        RelOptCluster cluster,    		
         RelNode child,
-        LcsIndexScanRel indexScanRel,
+        LcsTable lcsTable,
+        FemLocalIndex index,
+        Integer [] projectedColumns,
         boolean isUniqueKey,
         boolean isOuter,
         Integer [] inputKeyProj,
@@ -79,11 +95,12 @@ class LcsIndexSearchRel extends FennelSingleRel
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId)
     {
-        super(
-            indexScanRel.getCluster(),
-            child);
-        this.indexScanRel = indexScanRel;
-        
+        super(cluster, child);
+        assert (isOuter == false && inputJoinProj == null);
+            
+        this.lcsTable = lcsTable;
+        this.index = index;
+        this.projectedColumns = projectedColumns;
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
         this.inputKeyProj = inputKeyProj;
@@ -95,26 +112,24 @@ class LcsIndexSearchRel extends FennelSingleRel
     }
     
     //~ Methods ---------------------------------------------------------------
-    
-    // override Rel
-    public RexNode [] getChildExps()
-    {
-        return indexScanRel.getChildExps();
-    }
-    
+        
     // override Rel
     public double getRows()
     {
-        // TODO:  this is only true when isUniqueKey
-        return RelMetadataQuery.getRowCount(getChild());
+        // TODO:  this is not correct if num of rows returned by an index is
+    	// filtered by sargable predicte.
+        return RelMetadataQuery.getRowCount(this);
     }
     
     // implement Cloneable
     public Object clone()
     {
         LcsIndexSearchRel clone = new LcsIndexSearchRel(
+            getCluster(),
             RelOptUtil.clone(getChild()),
-            indexScanRel,
+            lcsTable,
+            index,
+            projectedColumns,
             isUniqueKey,
             isOuter,
             inputKeyProj,
@@ -130,19 +145,42 @@ class LcsIndexSearchRel extends FennelSingleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refined costing
-        return indexScanRel.computeCost(
+        return computeCost(
             planner,
             RelMetadataQuery.getRowCount(this));
     }
-    
+
+    // implement RelNode
+    RelOptCost computeCost(
+        RelOptPlanner planner,
+        double dRows)
+    {
+        // TODO:  compute page-based I/O cost
+        // CPU cost is proportional to number of columns projected
+        // I/O cost is proportional to pages of index scanned
+        double dCpu = dRows * getRowType().getFieldList().size();
+
+        // TODO: adjust when selecting index key values(index only scan)
+        // [RID, bitmapfield1, bitmapfield2]
+        int nIndexCols = 3;
+
+        double dIo = dRows * nIndexCols;
+
+        return planner.makeCost(dRows, dCpu, dIo);
+    }
+
     // implement RelNode
     protected RelDataType deriveRowType()
     {
+        // TODO: to handle the projection case where only the key fields are
+        // the output.
+    	RelDataType rowType =
+    		lcsTable.getIndexGuide().createUnclusteredBitmapRowType();
+    	
         if (inputJoinProj != null) {
             // TODO: this part is no implemented yet.
             // We're implementing a join, so make up an appropriate join type.
-            final RelDataTypeField [] childFields =
-                getChild().getRowType().getFields();
+            final RelDataTypeField [] childFields = rowType.getFields();
             RelDataType leftType =
                 getCluster().getTypeFactory().createStructType(
                     new RelDataTypeFactory.FieldInfo() {
@@ -164,7 +202,7 @@ class LcsIndexSearchRel extends FennelSingleRel
                         }
                     });
             
-            RelDataType rightType = indexScanRel.getRowType();
+            RelDataType rightType = rowType;
             
             // for outer join, have to make left side nullable
             if (isOuter) {
@@ -176,8 +214,7 @@ class LcsIndexSearchRel extends FennelSingleRel
             return getCluster().getTypeFactory().createJoinType(
                 new RelDataType [] { leftType, rightType });
         } else {
-            assert (!isOuter);
-            return indexScanRel.getRowType();
+            return rowType;
         }
     }
     
@@ -189,10 +226,10 @@ class LcsIndexSearchRel extends FennelSingleRel
         Object inputJoinProjObj;
         Object inputDirectiveProjObj;
         
-        if (indexScanRel.projectedColumns == null) {
+        if (projectedColumns == null) {
             projection = "*";
         } else {
-            projection = Arrays.asList(indexScanRel.projectedColumns);
+            projection = Arrays.asList(projectedColumns);
         }
         
         if (inputKeyProj == null) {
@@ -200,31 +237,22 @@ class LcsIndexSearchRel extends FennelSingleRel
         } else {
             inputKeyProjObj = Arrays.asList(inputKeyProj);
         }
-        
-        if (inputJoinProj == null) {
-            inputJoinProjObj = Collections.EMPTY_LIST;
-        } else {
-            inputJoinProjObj = Arrays.asList(inputJoinProj);
-        }
-        
+                
         if (inputDirectiveProj == null) {
             inputDirectiveProjObj = Collections.EMPTY_LIST;
         } else {
             inputDirectiveProjObj = Arrays.asList(inputDirectiveProj);
         }
+        
         pw.explain(
             this,
             new String [] {
-                "child", "table", "projection", "index", "uniqueKey",
-                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
+                "child", "table", "index", "projection", "inputKeyProj",
                 "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
             },
             new Object [] {
-                Arrays.asList(indexScanRel.lcsTable.getQualifiedName()), projection,
-                indexScanRel.index.getName(), Boolean.valueOf(isUniqueKey),
-                Boolean.valueOf(indexScanRel.isOrderPreserving),
-                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
-                inputDirectiveProjObj, 
+                Arrays.asList(lcsTable.getQualifiedName()), index.getName(),
+                projection, inputKeyProjObj, inputDirectiveProjObj, 
                 (startRidParamId == null) ? (Integer)0 : startRidParamId,
                 (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId
             });
@@ -233,38 +261,42 @@ class LcsIndexSearchRel extends FennelSingleRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmSearchStreamDef indexSearchStream = 
-            indexScanRel.lcsTable.getIndexGuide().newIndexSearch(
-                indexScanRel,
-                indexScanRel.index,
-                isUniqueKey,
-                isOuter,
-                inputKeyProj,
-                inputJoinProj,
-                inputDirectiveProj,
-                implementor.translateParamId(startRidParamId),
-                implementor.translateParamId(rowLimitParamId));
-        
+    	FemExecutionStreamDef newStream;
+    	
+    	if (projectedColumns == null) {
+            // index search use the default projection of:
+            // [StartRID, BitmapDescriptor, BitmapSegment]
+    	    newStream = 
+    	        lcsTable.getIndexGuide().newIndexSearch(
+    	            this,
+    	            index,
+    	            isUniqueKey,
+    	            isOuter,
+    	            inputKeyProj,
+    	            inputJoinProj,
+    	            inputDirectiveProj,
+    	            implementor.translateParamId(startRidParamId),
+    	            implementor.translateParamId(rowLimitParamId));
+    	} else {
+    	    // pure scan
+    	    newStream =
+    	        lcsTable.getIndexGuide().newIndexScan(this, index,
+                    projectedColumns);
+    	}
+    	
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()), 
-            indexSearchStream);
+            newStream);
         
-        return indexSearchStream;
+        return newStream;
     }
     
     // override Rel
     public RelOptTable getTable()
     {
-        return indexScanRel.getTable();
+        return lcsTable;
     }
-    
-    // TODO: implement getCollations()
-    
-    public LcsIndexScanRel getIndexScan()
-    {
-        return indexScanRel;
-    }
-    
+            
     public boolean isUniqueKey()
     {
         return isUniqueKey;

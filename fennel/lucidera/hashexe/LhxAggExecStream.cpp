@@ -34,6 +34,9 @@ void LhxAggExecStream::prepare(
 {
     ConduitExecStream::prepare(params);
 
+    hashInfo.filterNull = false;
+    hashInfo.removeDuplicate = false;
+
     hashInfo.streamBufAccessor.push_back(pInAccessor);
 
     TupleDescriptor inputDesc = pInAccessor->getTupleDesc();
@@ -198,10 +201,11 @@ void LhxAggExecStream::open(bool restart)
     uint numChild = 2;
     LhxPlan *parentPlan = NULL;
     vector<SharedLhxPartition> partitionList;
-    buildPart = SharedLhxPartition(new LhxPartition());
 
-    buildPart->firstPageId = NULL_PAGE_ID;
+    buildPart = SharedLhxPartition(new LhxPartition());
+    (buildPart->segStream).reset();
     buildPart->inputIndex = 0;
+
     partitionList.push_back(buildPart);
 
     rootPlan =  SharedLhxPlan(new LhxPlan());
@@ -217,7 +221,7 @@ void LhxAggExecStream::open(bool restart)
      * Now starts at the first (root) plan.
      */
     curPlan = rootPlan.get();
-    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo, true);
+    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo);
     aggState = Build;
 }
 
@@ -335,8 +339,9 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                 bool status = hashTable.allocateResources();
                 assert(status);
 
-                buildReader.open(curPlan->getPartition(buildInputIndex),
-                    hashInfo, true);
+                buildReader.open(
+                    curPlan->getPartition(buildInputIndex),
+                    hashInfo);
 
                 aggState = Build;
                 break;                
@@ -358,8 +363,9 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                     bool status = hashTable.allocateResources();
                     assert(status);
 
-                    buildReader.open(curPlan->getPartition(buildInputIndex),
-                        hashInfo, true);
+                    buildReader.open(
+                        curPlan->getPartition(buildInputIndex),
+                        hashInfo);
 
                     aggState = Build;
                 } else {

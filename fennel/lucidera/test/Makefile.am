@@ -15,13 +15,13 @@ LcsMultiClusterAppendTest \
 LcsRowScanExecStreamTest \
 LbmEntryTest \
 LbmLoadBitmapTest \
-LbmIndexScanTest \
+LbmSearchTest \
 LbmIntersectExecStreamTest \
 LbmUnionExecStreamTest \
 LhxHashTableTest \
 LhxJoinExecStreamTest \
 LbmMinusExecStreamTest \
-LhxAggExecStreamTest
+LhxAggExecStreamTest 
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -32,7 +32,7 @@ LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmEntryTest_SOURCES=LbmEntryTest.cpp
 LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
-LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
+LbmSearchTest_SOURCES=LbmExecStreamTestBase.cpp LbmSearchTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
 LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
 LhxHashTableTest_SOURCES=LhxHashTableTest.cpp

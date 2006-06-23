@@ -463,16 +463,11 @@ select empno, min(ename), max(ename) from lhxemps group by empno;
 
 select empno, min(ename), max(ename) from lhxemps group by empno;
 
----------
--- Bug --
----------
+-----------------------------
+-- aggregating NULL values --
+-----------------------------
 create table emps1(
     ename1 varchar(20))
-server sys_column_store_data_server;
-
-drop table emps2;
-create table emps2(
-    ename2 varchar(20))
 server sys_column_store_data_server;
 
 insert into emps1 values(NULL);
@@ -489,6 +484,51 @@ select distinct ename1 from emps1;
 select count(*) from emps1 group by ename1;
 select count(ename1) from emps1 group by ename1;
 select count(distinct ename1) from emps1;
+
+--------------------
+-- Hash Semi Join --
+--------------------
+create table emps2(
+    ename2 varchar(20))
+server sys_column_store_data_server;
+
+insert into emps1 values('abc');
+insert into emps1 values('abc');
+insert into emps1 values('def');
+insert into emps2 values(NULL);
+insert into emps2 values('abc');
+insert into emps2 values('abc');
+
+explain plan for
+select ename1 from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+select ename1 from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+explain plan for
+select upper(ename1) from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+select upper(ename1) from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+explain plan for
+select ename1 from emps1
+where ename1 in (select upper(ename2) from emps2)
+order by 1;
+
+-- FIXME:
+-- should make join key casting a logical rule so that all plysical hash
+-- join plans can benefit from it.
+explain plan for
+select ename1 from emps1
+where upper(ename1) in (select upper(ename2) from emps2)
+order by 1;
 
 --------------
 -- Clean up --

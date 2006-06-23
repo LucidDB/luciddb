@@ -63,104 +63,104 @@ private:
     /**
      * Cluster page header
      */
-    PLcsClusterNode m_pHdr;
+    PLcsClusterNode pHdr;
     
     /**
      * Size of the cluster page header
      */
-    uint m_pHdrSize;
+    uint hdrSize;
     
     /**
      * Cluster page to be written
      */
-    PBuffer m_indexBlock;
+    PBuffer pIndexBlock;
     
     /**
      * Array of pointers to temporary blocks, 1 block for each column cluster
      */
-    PBuffer *m_pBlock;
+    PBuffer *pBlock;
 
     /**
      * Size of the cluster page
      */
-    uint m_szBlock;
+    uint szBlock;
 
     /**
      * Minimum size left on the page
      */
-    int m_rIMinSzLeft;
+    int minSzLeft;
 
     /**
      * Batch directories for the batches currently being constructed,
      * one per cluster column
      */
-    boost::scoped_array<LcsBatchDir> m_batch;
+    boost::scoped_array<LcsBatchDir> batchDirs;
 
     /**
      * Temporary storage for values, used for fixed mode batches; one per
      * cluster column
      */
-    boost::scoped_array<PBuffer> m_pValBank;
+    boost::scoped_array<PBuffer> pValBank;
 
     /**
      * First offset in the bank for each column in the cluster
      * value bank
      */
-    boost::scoped_array<uint16_t> m_oValBank;
+    boost::scoped_array<uint16_t> oValBank;
 
     /**
      * Start of each cluster column in the value bank
      */
-    boost::scoped_array<uint16_t> m_pValBankStart;
+    boost::scoped_array<uint16_t> valBankStart;
 
     /**
      * Offsets to the batch directories on the temporary pages,
      * one per cluster column
      */
-    boost::scoped_array<uint16_t> m_batchOffset;
+    boost::scoped_array<uint16_t> batchOffset;
 
     /**
      * Count of the number of batches in the temporary pages, one per
      * cluster column
      */
-    boost::scoped_array<uint> m_batchCount;
+    boost::scoped_array<uint> batchCount;
 
     /**
      * Number of bytes left on the page
      */
-    int m_szLeft;
+    int szLeft;
 
     /**
      * Number of bits required to store the value codes for each column
      * in the cluster, for the batches currently being constructed
      */
-    boost::scoped_array<uint> m_nBits;
+    boost::scoped_array<uint> nBits;
 
     /**
      * Number of values that will cause the next nBit change for the column
      * in the cluster
      */
-    boost::scoped_array<uint> m_nextWidthChange;
+    boost::scoped_array<uint> nextWidthChange;
 
     /**
      * Indicates whether temporary arrays have already been allocated
      */
-    bool m_allocArrays;
+    bool arraysAllocated;
 
     /**
      * Set when the mode of a batch should be forced to a particular value
      */
-    boost::scoped_array<ForceMode> m_bForceMode;
+    boost::scoped_array<ForceMode> bForceMode;
 
     /**
      * Number of times force mode has been used for each cluster column
      */
-    boost::scoped_array<uint> m_forceModeCount;
+    boost::scoped_array<uint> forceModeCount;
 
     /**
      * Max value size encountered thus far for each cluster column
      */
-    boost::scoped_array<uint> m_maxValueSize;
+    boost::scoped_array<uint> maxValueSize;
 
     /**
      * Cluster dump
@@ -183,9 +183,9 @@ private:
      *
      * @return address corresponding to offset
      */
-    PBuffer ValueSource(uint16_t lastValOffset, PBuffer pValBank,
-                            uint16_t oValBank, PBuffer pBlock,
-                            uint16_t f)
+    PBuffer valueSource(
+        uint16_t lastValOffset, PBuffer pValBank, uint16_t oValBank,
+        PBuffer pBlock, uint16_t f)
     {
         // if value not in back use 
         if (f < lastValOffset)
@@ -199,18 +199,18 @@ private:
      *
      * @return number of rows currently on page
      */
-    RecordNum MoveFromIndexToTemp(); 
+    RecordNum moveFromIndexToTemp(); 
 
     /**
      * Moves all cluster data from temporary storage to the actual
      * cluster page
      */
-    void MoveFromTempToIndex(); 
+    void moveFromTempToIndex(); 
 
     /**
      * Allocates temporary arrays used during cluster writes
      */
-    void AllocArrays();
+    void allocArrays();
 
     /**
      * Rounds a 32-bit value to a boundary of 8
@@ -235,10 +235,10 @@ private:
     }
 
 public:
-     explicit LcsClusterNodeWriter(BTreeDescriptor &treeDescriptorInit,
-                                   SegmentAccessor &accessorInit,
-                                   SharedTraceTarget pTraceTargetInit,
-                                   std::string nameInit);
+    explicit LcsClusterNodeWriter(
+        BTreeDescriptor &treeDescriptorInit, SegmentAccessor &accessorInit,
+        SharedTraceTarget pTraceTargetInit, std::string nameInit);
+
     ~LcsClusterNodeWriter();
 
     /**
@@ -275,16 +275,16 @@ public:
      * @param szBlock size of cluster page, reflecting max amount of space
      * available to write cluster data
      */
-    void Init(uint nColumns, PBuffer indexBlock, PBuffer *pBlock, uint szBlock);
+    void init(uint nColumns, PBuffer indexBlock, PBuffer *pBlock, uint szBlock);
 
-    void Close();
+    void close();
 
     /**
      * Prepares a cluster page as a new one
      *
      * @param startRID first RID on the page
      */
-    void OpenNew(LcsRid startRID);
+    void openNew(LcsRid startRID);
 
     /**
      * Prepares an existing cluster page for appending new data
@@ -297,8 +297,8 @@ public:
      *
      * @param nrows returns number of rows currently on page
      */
-    void OpenAppend(uint *nValOffsets, uint16_t *lastValOffsets,
-                    RecordNum &nrows);
+    void openAppend(
+        uint *nValOffsets, uint16_t *lastValOffsets, RecordNum &nrows);
     
     /**
      * Returns parameters describing the last batch for a given column
@@ -311,7 +311,7 @@ public:
      * @param recSize output parameter returning the record size for the
      * batch
      */
-    void DescribeLastBatch(uint column, uint &dRow, uint &recSize);
+    void describeLastBatch(uint column, uint &dRow, uint &recSize);
     
     /**
      * Returns the offset of the next value in a batch
@@ -320,7 +320,7 @@ public:
      *
      * @param thisVal offset of the value currently positioned at
      */
-    uint16_t GetNextVal(uint column, uint16_t thisVal);
+    uint16_t getNextVal(uint column, uint16_t thisVal);
 
     /**
      * Rolls back the last 8 value (or less) from a batch
@@ -331,16 +331,17 @@ public:
      * the buffer is assumed to be fixedRec * (nRows % 8) in size, as
      * determined by the last call to describeLastBatch
      */
-    void RollBackLastBatch(uint column, PBuffer pVal);
+    void rollBackLastBatch(uint column, PBuffer pVal);
 
     /**
      * Returns true if the batch is not being forced to compress mode
      *
      * @param column column being described
      */
-    inline bool NoCompressMode(uint column) const { 
-        return m_bForceMode[column] == fixed ||
-                m_bForceMode[column] == variable;
+    inline bool noCompressMode(uint column) const
+    { 
+        return bForceMode[column] == fixed ||
+                bForceMode[column] == variable;
     };
 
     /**
@@ -352,8 +353,10 @@ public:
      *
      * @return pointer to value
      */
-    inline PBuffer GetOffsetPtr(uint column, uint16_t offset)
-        { return m_pBlock[column] + offset; };
+    inline PBuffer getOffsetPtr(uint column, uint16_t offset)
+    { 
+        return pBlock[column] + offset;
+    };
 
     /**
      * Adds a value to the page, in the case where the value already exists
@@ -366,7 +369,7 @@ public:
      *
      * @return true if there is enough room in the page for the value
      */
-    bool AddValue(uint column, bool bFirstTimeInBatch);
+    bool addValue(uint column, bool bFirstTimeInBatch);
 
     /**
      * Adds a new value to the page.  In the case of compressed or variable
@@ -381,7 +384,7 @@ public:
      *
      * @return true if there is enough room in the page for the value
      */
-    bool AddValue(uint column, PBuffer pVal, uint16_t *oVal);
+    bool addValue(uint column, PBuffer pVal, uint16_t *oVal);
 
     /**
      * Undoes the last value added to the current batch for a column
@@ -393,7 +396,7 @@ public:
      * @param bFirstInBatch true if the value being undone is the first
      * such value for the batch
      */
-    void UndoValue(uint column, PBuffer pVal, bool bFirstInBatch);
+    void undoValue(uint column, PBuffer pVal, bool bFirstInBatch);
 
     /**
      * Writes a compressed mode batch into the temporary cluster page for
@@ -416,7 +419,7 @@ public:
      * @param pBuf temporary buffer where excess row values will be copied;
      * assumed to be (nRow % 8)*fixedRec big
      */
-    void PutCompressedBatch(uint column, PBuffer pRows, PBuffer pBuf);
+    void putCompressedBatch(uint column, PBuffer pRows, PBuffer pBuf);
 
     /**
      * Writes a fixed or variable mode batch into a temporary cluster page for
@@ -439,7 +442,7 @@ public:
      * @param pBuf temporary buffer where excess row values will be copied;
      * assumed to be (nRow % 8)*fixedRec big
      */
-    void PutFixedVarBatch(uint column, uint16_t *pRows, PBuffer pBuf);
+    void putFixedVarBatch(uint column, uint16_t *pRows, PBuffer pBuf);
 
     /**
      * Determines which compression mode to use for a batch
@@ -455,28 +458,32 @@ public:
      *
      * @param compressionMode returns the chosen compression mode
      */
-    void PickCompressionMode(uint column, uint fixedSize, uint nRows,
+    void pickCompressionMode(uint column, uint fixedSize, uint nRows,
                                 uint16_t **pValOffset,
                                 LcsBatchMode &compressionMode);
 
     /**
      * Returns true if there is no space left in the cluster page
      */
-    bool IsEndOfBlock() { 
+    bool isEndOfBlock()
+    { 
         uint col;
         int valueSizeNeeded;
         
         for (valueSizeNeeded = 0, col = 0; col < nClusterCols; col++)
-            valueSizeNeeded += m_batch[col].recSize * LcsMaxLeftOver;
+            valueSizeNeeded += batchDirs[col].recSize * LcsMaxLeftOver;
 
-        return m_szLeft <= (m_rIMinSzLeft + valueSizeNeeded); 
+        return szLeft <= (minSzLeft + valueSizeNeeded); 
     }
 
     /**
      * Done with the current cluster page.  Moves all data from temporary
      * pages into the real cluster page
      */
-    void EndBlock() { MoveFromTempToIndex(); }
+    void endBlock()
+    {
+        moveFromTempToIndex();
+    }
 };
 
 FENNEL_END_NAMESPACE

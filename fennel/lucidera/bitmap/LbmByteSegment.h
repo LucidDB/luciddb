@@ -34,6 +34,8 @@ FENNEL_BEGIN_NAMESPACE
 class LbmByteSegment
 {
 public:
+    static const uint bitsInByte[];
+    
     LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
@@ -103,6 +105,26 @@ public:
             byteNum += diff;
             byteSeg -= diff;
             len -= diff;
+        }
+    }
+
+    uint countBits()
+    {
+        uint total = 0;
+        for (uint i = 0; i < len; i++) {
+            total += bitsInByte[byteSeg[-i]];
+        }
+        return total;
+    }
+
+    static void verifyBitsInByte()
+    {
+        for (uint i = 0; i < 256; i++) {
+            uint slowBits = 0;
+            for (uint j = 0; j < 8; j++) {
+                if (i & (1 << j)) slowBits++;
+            }
+            assert (slowBits == bitsInByte[i]);
         }
     }
 

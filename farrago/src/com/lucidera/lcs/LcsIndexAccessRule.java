@@ -162,8 +162,12 @@ class LcsIndexAccessRule extends RelOptRule
                 origRowScan,
                 sargBindingList,
                 index2PosMap);
-        
-        RexNode extraFilter = null;
+                
+        // TODO: check for possibility of an index only scan
+        if (indexSet.size() == 1 && residualSargBindingList.size() == 0) {
+            // All filters can be answered by one index
+            // check if this index also provides all the output for the query
+        }
         
         // TODO since LcsRowScan does not support residual ranges now
         // change the residual into RexNodes and evaluate them in FilterRel
@@ -173,6 +177,8 @@ class LcsIndexAccessRule extends RelOptRule
         
         RexNode postFilterRexNode =
             rexAnalyzer.getPostFilterRexNode();
+
+        RexNode extraFilter = null;
         
         if (residualRexNode != null && postFilterRexNode != null) {
             extraFilter = 
@@ -232,29 +238,18 @@ class LcsIndexAccessRule extends RelOptRule
             rowScanInputRels[0] = indexRels[0];
         }
         
-        // check if the index contains all the required columns.
-        // TODO: this is not implemented yet. IndexScan/Search always returns
-        // the [SRID, bitmap1, bitmap2] which is sent to drive a LcsRowScan
-        //
-        // if ((origRowScan.projectedColumns.size() == 1) &&
-        // !testIndexColumn(index, filterColumn)) {
-        // A direct search against an index is easier.
-        //    transformCall(call, indexSearch, extraFilter);
-        // } else 
-        {
-            // Build a RowScan rel based on index search with no extra filters.
-            LcsRowScanRel rowScan =
-                new LcsRowScanRel(
-                    origRowScan.getCluster(),
-                    rowScanInputRels,
-                    origRowScan.lcsTable,
-                    origRowScan.clusteredIndexes,
-                    origRowScan.getConnection(),
-                    origRowScan.projectedColumns,
-                    false, false);
+        // Build a RowScan rel based on index search with no extra filters.
+        LcsRowScanRel rowScan =
+            new LcsRowScanRel(
+                origRowScan.getCluster(),
+                rowScanInputRels,
+                origRowScan.lcsTable,
+                origRowScan.clusteredIndexes,
+                origRowScan.getConnection(),
+                origRowScan.projectedColumns,
+                false, false);
             
-            transformCall(call, rowScan, extraFilter);
-        }
+        transformCall(call, rowScan, extraFilter);
     }
 
     private void transformCall(
@@ -268,30 +263,7 @@ class LcsIndexAccessRule extends RelOptRule
         }
         call.transformTo(rel);
     }
-    
-    private Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
-        LcsRowScanRel origRowScan,
-        List<SargBinding> sargBindingList)
-    {
-        Map<CwmColumn, SargIntervalSequence> colMap =
-            new HashMap<CwmColumn, SargIntervalSequence>();
-        
-        for (int i = 0; i < sargBindingList.size(); i ++) {
-            SargBinding sargBinding = sargBindingList.get(i);
-            RexInputRef fieldAccess = sargBinding.getInputRef();
-            FemAbstractColumn filterColumn =
-                origRowScan.getColumnForFieldAccess(fieldAccess.getIndex());
-            if (filterColumn != null) {        
-                SargIntervalSequence sargSeq = 
-                    FennelRelUtil.evaluateSargExpr(sargBinding.getExpr());
-            
-                colMap.put(filterColumn, sargSeq);
-            }
-        }            
-        
-        return colMap;
-    }
-    
+
     private List<SargIntervalSequence> getIndexSargSeq (
         LcsIndexGuide indexGuide,
         FemLocalIndex index,
@@ -392,19 +364,7 @@ class LcsIndexAccessRule extends RelOptRule
         assert (sargSeqList.size() == matchedPos);
         int indexKeyLength = index.getIndexedFeature().size();
         boolean partialMatch = matchedPos < indexKeyLength;
-        
-        // NOTE jvs 24-Jan-2006: I turned this optimization off because
-        // BTreeSearchUnique can no longer be used with interval inputs.
-        // Turning it back on requires verifying that all intervals are points,
-        // and then suppressing generation of directives.
-        boolean isUnique;
-        if (false) {
-            isUnique =
-                index.isUnique() && (indexKeyLength == 1);
-        } else {
-            isUnique = false;
-        }
-        
+
         // Create a type descriptor for the rows representing search
         // keys along with their directives.  Note that we force
         // the key type to nullable because we use null for the representation
@@ -469,24 +429,12 @@ class LcsIndexAccessRule extends RelOptRule
         assert (keyInput != null);
         
         // Set up projections for the search directive and key.
-        // TODO: multi-key index key proj and directive proj
         Integer [] inputDirectiveProj = new Integer [] { 0, (matchedPos + 1) };
         Integer [] inputKeyProj = new Integer [matchedPos * 2];
         for (int i = 0; i < matchedPos; i ++) {
             inputKeyProj[i] = i + 1;
             inputKeyProj[i + matchedPos] = matchedPos + i + 2;            
         }
-        
-        // First construct an index scan, and then try to add index search.
-        // TODO: do we need the orderPreserving property?It is set to false now.
-        LcsIndexScanRel indexScan =
-            new LcsIndexScanRel(
-                origRowScan.getCluster(),
-                origRowScan.lcsTable,
-                index,
-                origRowScan.getConnection(),
-                null,
-                false);
         
         FennelRelParamId startRidParamIdForSearch =
             requireUnion ? null : startRidParamId;
@@ -495,8 +443,11 @@ class LcsIndexAccessRule extends RelOptRule
         
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
+                origRowScan.getCluster(),
                 keyInput,
-                indexScan,
+                origRowScan.lcsTable,
+                index,
+                null,
                 false,
                 false,
                 inputKeyProj,

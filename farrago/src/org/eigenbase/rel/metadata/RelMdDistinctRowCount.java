@@ -147,6 +147,34 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
             rel.getLeft(), groupKey, newPred);
     }
     
+    public Double getDistinctRowCount(
+        AggregateRelBase rel, BitSet groupKey, RexNode predicate)
+    {
+        // determine which predicates can be applied on the child of the
+        // aggregate
+        List<RexNode> notPushable = new ArrayList<RexNode>();
+        List<RexNode> pushable = new ArrayList<RexNode>();
+        RelOptUtil.pushAggFilters(predicate, notPushable, pushable, rel);
+        RexNode childPreds =
+            RexUtil.andRexNodeList(rel.getCluster().getRexBuilder(), pushable);
+        
+        // set the bits as they correspond to the child input
+        BitSet childKey = new BitSet();
+        RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
+        
+        return RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(), childKey, childPreds);
+    }
+    
+    public Double getDistinctRowCount(
+        ValuesRelBase rel, BitSet groupKey, RexNode predicate)
+    {
+        Double selectivity = RelMdUtil.guessSelectivity(predicate);
+        // assume half the rows are duplicates
+        Double nRows = rel.getRows() / 2;
+        return RelMdUtil.numDistinctVals(nRows, nRows * selectivity);
+    }
+    
     // Catch-all rule when none of the others apply.  Have not implemented
     // rules for aggregation and projection.
     public Double getDistinctRowCount(

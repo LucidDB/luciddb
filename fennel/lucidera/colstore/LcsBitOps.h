@@ -29,7 +29,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Sets nBits(1,2,4) starting at whatBits in *pB, from the LSB of v
  */
-inline void SetBits(uint8_t *pB, uint nBits, uint whatBits, uint16_t v)
+inline void setBits(uint8_t *pB, uint nBits, uint whatBits, uint16_t v)
 {
     *pB |= ((v & ((1 << nBits) -1)) << whatBits);
 }
@@ -38,8 +38,8 @@ inline void SetBits(uint8_t *pB, uint nBits, uint whatBits, uint16_t v)
  * Copies nBits(1,2,4), starting at fromBits from byte B to uint16_t V,
  * starting at toBits
  */
-inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint16_t *v,
-                        uint toBits)
+inline void readBits(
+    uint8_t b, uint nBits, uint fromBits, uint16_t *v, uint toBits)
 {
     *v |= (((b & (((1 << nBits) -1) << fromBits)) >> fromBits) << toBits);
 }
@@ -51,7 +51,7 @@ inline void ReadBits(uint8_t b, uint nBits, uint fromBits, uint16_t *v,
  *
  * @return number of bits required
  */
-inline uint CalcWidth(uint n)
+inline uint calcWidth(uint n)
 {
     uint w;
 
@@ -74,7 +74,8 @@ inline uint CalcWidth(uint n)
     case 14:
     case 15: w = 16; break;
     default: break;
-}
+    }
+
     return w;
 }
 
@@ -91,7 +92,7 @@ typedef void (*PByteBitVecFuncPtr)(uint8_t *v, const PtrVec p, uint pos);
 /*
  * Creates a vector of widths required to represent l bits
  */
-inline uint BitVecWidth(uint l, WidthVec w)
+inline uint bitVecWidth(uint l, WidthVec w)
 {
     uint8_t po2;
     uint iW;
@@ -119,8 +120,8 @@ inline uint BitVecWidth(uint l, WidthVec w)
  *
  * @param pVec vector storage
  */
-inline uint BitVecPtr(uint iCount, uint iW, WidthVec w, PtrVec p,
-                      uint8_t *pVec) 
+inline uint bitVecPtr(
+    uint iCount, uint iW, WidthVec w, PtrVec p, uint8_t *pVec) 
 {   
     uint i;
     uint8_t *t;
@@ -143,7 +144,7 @@ inline uint BitVecPtr(uint iCount, uint iW, WidthVec w, PtrVec p,
  *
  * @param w bitVec width vector
  */
-inline uint SizeofBitVec(uint nRow, uint iW, WidthVec w)
+inline uint sizeofBitVec(uint nRow, uint iW, WidthVec w)
 {
     uint t;
     uint i;
@@ -168,8 +169,9 @@ inline uint SizeofBitVec(uint nRow, uint iW, WidthVec w)
  *
  * @param count how many rows to read
  */
-inline void ReadBitVecs(uint16_t *v, uint iV, const WidthVec w,
-                        const PtrVec p, uint pos, uint count)
+inline void readBitVecs(
+    uint16_t *v, uint iV, const WidthVec w, const PtrVec p, uint pos,
+    uint count)
 {
     uint        i, j, k;
     uint        b;
@@ -194,17 +196,17 @@ inline void ReadBitVecs(uint16_t *v, uint iV, const WidthVec w,
     
         case 4:
             for (j = 0, k = pos*4;  j < count; j++, k += 4)
-                ReadBits(p[i][k/8], 4, k % 8, &v[j], b);
+                readBits(p[i][k/8], 4, k % 8, &v[j], b);
             break;
 
         case 2:
             for (j = 0, k = pos*2; j < count; j++, k += 2)
-                ReadBits(p[i][k/8], 2, k % 8, &v[j], b);
+                readBits(p[i][k/8], 2, k % 8, &v[j], b);
             break;
 
         case 1:
             for (j = 0, k = pos; j < count; j++, k++)
-                ReadBits(p[i][k/8], 1, k % 8, &v[j], b);
+                readBits(p[i][k/8], 1, k % 8, &v[j], b);
             break;
 
         default:
@@ -225,7 +227,7 @@ inline void ReadBitVecs(uint16_t *v, uint iV, const WidthVec w,
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec0(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec0(uint16_t *v, const PtrVec p, uint pos)
 {
     // ARG_USED(p);
     // ARG_USED(pos);
@@ -241,7 +243,7 @@ inline void ReadBitVec0(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec16(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec16(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos*2);
 }
@@ -255,7 +257,7 @@ inline void ReadBitVec16(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec8(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec8(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
 }
@@ -269,11 +271,11 @@ inline void ReadBitVec8(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec4(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec4(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
+    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
 }
 
 /**
@@ -285,11 +287,11 @@ inline void ReadBitVec4(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec2(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec2(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
+    readBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
 }
 
 /**
@@ -301,11 +303,11 @@ inline void ReadBitVec2(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec1(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec1(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/8], 1, pos % 8, v, 0);
+    readBits(p[0][pos/8], 1, pos % 8, v, 0);
 }
 
 /**
@@ -317,10 +319,10 @@ inline void ReadBitVec1(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec12(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec12(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    ReadBits(p[1][pos/2], 4, (pos*4) % 8, v, 8);
+    readBits(p[1][pos/2], 4, (pos*4) % 8, v, 8);
 }
 
 /**
@@ -332,10 +334,10 @@ inline void ReadBitVec12(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec10(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec10(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 8);
+    readBits(p[1][pos/4], 2, (pos*2) % 8, v, 8);
 }
 
 /**
@@ -347,10 +349,10 @@ inline void ReadBitVec10(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec9(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec9(uint16_t *v, const PtrVec p, uint pos)
 {
     *v = *(p[0] + pos);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 8);
+    readBits(p[1][pos/8], 1, pos % 8, v, 8);
 }
 
 /**
@@ -362,12 +364,12 @@ inline void ReadBitVec9(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec6(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec6(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    ReadBits(p[1][pos/4], 2, (pos*2) % 8, v, 4);
+    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
+    readBits(p[1][pos/4], 2, (pos*2) % 8, v, 4);
 }
 
 /**
@@ -379,12 +381,12 @@ inline void ReadBitVec6(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec5(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec5(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 4);
+    readBits(p[0][pos/2], 4, (pos*4) % 8, v, 0);
+    readBits(p[1][pos/8], 1, pos % 8, v, 4);
 }
 
 /**
@@ -396,12 +398,12 @@ inline void ReadBitVec5(uint16_t *v, const PtrVec p, uint pos)
  *
  * @param pos first row of interest
  */
-inline void ReadBitVec3(uint16_t *v, const PtrVec p, uint pos)
+inline void readBitVec3(uint16_t *v, const PtrVec p, uint pos)
 {
     // clear the destination
     *v = 0;
-    ReadBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
-    ReadBits(p[1][pos/8], 1, pos % 8, v, 2);
+    readBits(p[0][pos/4], 2, (pos*2) % 8, v, 0);
+    readBits(p[1][pos/8], 1, pos % 8, v, 2);
 }
 
 FENNEL_END_NAMESPACE

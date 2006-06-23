@@ -61,13 +61,9 @@ public class RelMdUtil
      */
     public static RexNode makeSemiJoinSelectivityRexNode(SemiJoinRel rel)
     {
-        BitSet rightKey = new BitSet();
-        for (int dimCol : rel.getRightKeys()) {
-            rightKey.set(dimCol);
-        }
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         double selectivity = computeSemiJoinSelectivity(
-            rel.getRight(), rightKey);
+            rel.getLeft(), rel.getRight(), rel);
         RexNode selec = rexBuilder.makeApproxLiteral(
             new BigDecimal(selectivity));
         return rexBuilder.makeCall(artificialSelectivityFunc, selec);
@@ -92,35 +88,59 @@ public class RelMdUtil
     /**
      * Computes the selectivity of a semijoin filter if it is applied on a
      * fact table.  The computation is based on the selectivity of the 
-     * dimension table/columns.
+     * dimension table/columns and the number of distinct values in the fact
+     * table columns.
      * 
-     * @param dimRel relational expression representing the dimension table
-     * @param dimCols bitmap representing the dimension columns
+     * @param factRel fact table participating in the semijoin
+     * @param dimRel dimension table participating in the semijoin
+     * @param rel RelNode corresponding to the semijoin; used to access the
+     * semijoin keys; the left and right children may be different from the
+     * fact and dimension table parameters passed into this method if 
+     * semijoins are being chained together
+     * 
      * @return calculated selectivity
      */
     public static double computeSemiJoinSelectivity(
-        RelNode dimRel, BitSet dimCols)
+        RelNode factRel, RelNode dimRel, SemiJoinRel rel)
     {
-        Double dimCard = RelMetadataQuery.getDistinctRowCount(
-            dimRel, dimCols, null);
-        Double dimPop = RelMetadataQuery.getPopulationSize(dimRel, dimCols);
+        BitSet factKeys = new BitSet();
+        for (int factCol : rel.getLeftKeys()) {
+            factKeys.set(factCol);
+        }       
+        BitSet dimKeys = new BitSet();
+        for (int dimCol : rel.getRightKeys()) {
+            dimKeys.set(dimCol);
+        }      
+
+        Double factPop = RelMetadataQuery.getPopulationSize(factRel, factKeys);
+        Double dimPop = RelMetadataQuery.getPopulationSize(dimRel, dimKeys);
         
         // if cardinality and population are available, use them; otherwise
         // use percentage original rows
         Double selectivity;
+        Double dimCard = RelMetadataQuery.getDistinctRowCount(
+            dimRel, dimKeys, null);
         if (dimCard != null && dimPop != null) {
             // to avoid division by zero
             if (dimPop < 1.0) {
                 dimPop = 1.0;
             }
-            selectivity = dimCard / dimPop;
+            // take into account the case where the fact and dimension tables
+            // have different population sizes
+            double numDistinctVals;           
+            if (factPop != null && factPop > dimPop) {
+                numDistinctVals = factPop;
+            } else {
+                numDistinctVals = dimPop;
+            }
+            selectivity = dimCard / numDistinctVals;        
         } else {
             selectivity = RelMetadataQuery.getPercentageOriginalRows(dimRel);
         }
         
         if (selectivity == null) {
             // set a default selectivity based on the number of semijoin keys
-            selectivity = Math.pow(0.1, dimCols.cardinality());
+            selectivity = Math.pow(0.1, dimKeys.cardinality());
         } else if (selectivity > 1.0) {
             selectivity = 1.0;
         }
@@ -189,6 +209,9 @@ public class RelMdUtil
     {
         if (domainSize == null || numSelected == null) {
             return null;
+        }
+        if (domainSize == numSelected) {
+            return domainSize;
         }
         
         // The formula for this is:
@@ -345,7 +368,38 @@ public class RelMdUtil
         }
         
         return RexUtil.andRexNodeList(rexBuilder, unionList);
-    } 
+    }
+    
+    /**
+     * Takes a bitmap representing a set of input references and extracts the
+     * ones that reference the group by columns in an aggregate
+     * 
+     * @param groupKey the original bitmap
+     * @param aggRel the aggregate
+     * @param childKey sets bits from groupKey corresponding to group by 
+     * columns
+     */
+    public static void setAggChildKeys(
+        BitSet groupKey, AggregateRelBase aggRel, BitSet childKey)
+    {
+        AggregateRelBase.Call[] aggCalls = aggRel.getAggCalls();
+        for (int bit = groupKey.nextSetBit(0); bit >= 0;
+            bit = groupKey.nextSetBit(bit + 1))
+        {
+            if (bit < aggRel.getGroupCount()) {
+                // group by column
+                childKey.set(bit);
+            } else {
+                // aggregate column -- set a bit for each argument being
+                // aggregated
+                AggregateRelBase.Call agg =
+                    aggCalls[bit - aggRel.getGroupCount()];
+                for (int i = 0; i < agg.getArgs().length; i++) {
+                    childKey.set(agg.getArgs()[i]);
+                }
+            }
+        }
+    }
 }
 
 // End RelMdUtil.java

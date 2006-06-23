@@ -129,10 +129,10 @@ public:
  * account the variable length elements that are dependent on the number of
  * columns in the cluster
  */
-inline uint GetClusterSubHeaderSize(uint nColumns)
+inline uint getClusterSubHeaderSize(uint nColumns)
 {
     return sizeof(LcsClusterNode) + (3 * sizeof(uint16_t *) * nColumns) +
-            sizeof(uint) * nColumns;
+        sizeof(uint) * nColumns;
 }
 
 typedef LcsClusterNode *PLcsClusterNode;

@@ -88,6 +88,20 @@ struct LhxHashInfo
      * ExecStream buf accessors.
      */
     std::vector<SharedExecStreamBufAccessor> streamBufAccessor;
+
+    /**
+     * Special hash table properties:
+     *
+     * filterNull: do not add null keys to hash table
+     * in join sementics: nulls do not match; however, in set matching
+     * sementics, nulls are considered equal.
+     *
+     * removeDuplicate: do not add duplicatekeys to hash table
+     * note: removeDuplicate is used only in set matching joins where
+     * all inputDesc and keyProj have the same size.
+     */
+    bool filterNull;
+    bool removeDuplicate; 
 };
 
 FENNEL_END_NAMESPACE

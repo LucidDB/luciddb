@@ -118,18 +118,6 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      */
     bool producePending;
 
-#ifdef NOT_DONE_YET
-    BBRC Start();
-    // implement RIScan::RidPrefetchSource
-    RID PrefetchNextRid(RID ridMin = RID_MIN);
-    // fetch a buffered RID (and release its slot if bCount)
-    RID FetchNextRid(RID ridMin, bool& bDeleted, BOOL bCount);
-    // fill m_prefetchBuf with RID's less than EndRid
-    BBRC FillPrefetchBuffer(RID EndRid);
-    // called when the next deleted row may have been skipped
-    BBRC SkipDeletedRows();
-#endif /* NOT_DONE_YET */
-
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);
     virtual void open(bool restart);

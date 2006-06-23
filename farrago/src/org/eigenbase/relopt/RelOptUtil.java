@@ -1503,6 +1503,48 @@ public abstract class RelOptUtil
         
         return filterPushed;
     }
+    
+    /**
+     * Splits a filter into a list of filters that can be pushed past an
+     * aggregate vs those that can't be.  A filter can be pushed if it only
+     * references the group by columns in an aggreate.
+     * 
+     * @param aggFilters filters that will be analyzed
+     * @param notPushable returns list of filters that can't be pushed
+     * @param pushable return list of filters that can be pushed
+     * @param aggRel the aggregate RelNode
+     */
+    public static void pushAggFilters(
+        RexNode aggFilters, List<RexNode> notPushable, List<RexNode> pushable,
+        AggregateRelBase aggRel)
+    {
+        // convert the filter to a list
+        List<RexNode> filterList = new ArrayList<RexNode>();
+        RelOptUtil.decompCF(aggFilters, filterList);
+        
+        // for each filter, determine which inputs it references
+        int nFields = aggRel.getRowType().getFieldCount();
+        for (RexNode filter : filterList) {
+            BitSet filterRefs = new BitSet(nFields);
+            filter.accept(new InputFinder(filterRefs));
+            boolean push = true;
+            for (int bit = filterRefs.nextSetBit(0); bit >= 0;
+                bit = filterRefs.nextSetBit(bit + 1))
+            {
+                if (bit >= aggRel.getGroupCount()) {
+                    push = false;
+                    break;
+                }
+            }
+            // if the filter only references group by columns, then it can
+            // be pushed
+            if (push) {
+                pushable.add(filter);
+            } else {
+                notPushable.add(filter);
+            }
+        }
+    }
 
     /**
      * Splits a join condition.

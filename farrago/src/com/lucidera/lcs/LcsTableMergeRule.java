@@ -101,11 +101,7 @@ public class LcsTableMergeRule extends RelOptRule
             origProj.getChild().getRowType().getFieldCount() - nTargetFields;
         RexNode ridExpr = LucidDbSpecialOperators.makeRidExpr(
             rexBuilder, origProj.getChild(), nSourceFields);
-        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType type = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(SqlTypeName.Bigint), true);
-        RexNode nullableRidExpr = rexBuilder.makeCast(type, ridExpr);
-        projExprs[0] = nullableRidExpr;
+        projExprs[0] = ridExpr;
         projExprs[1] = nullLiteral;
         projExprs[2] = nullLiteral;
         fieldNames[0] = "rid";
@@ -114,7 +110,7 @@ public class LcsTableMergeRule extends RelOptRule
         
         // create the when condition for the CASE expression
         RexNode whenExpr = rexBuilder.makeCall(
-            SqlStdOperatorTable.isNullOperator, nullableRidExpr);
+            SqlStdOperatorTable.isNullOperator, ridExpr);
  
         List<String> updateList = tableModification.getUpdateColumnList();
         for (int i = 0; i < nTargetFields; i++) {

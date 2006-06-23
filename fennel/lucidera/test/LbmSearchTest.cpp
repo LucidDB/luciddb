@@ -25,7 +25,8 @@
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
-#include "fennel/lucidera/bitmap/LbmIndexScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSearchExecStream.h"
+#include "fennel/lucidera/test/LbmExecStreamTestBase.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/ftrs/BTreeInsertExecStream.h"
 #include "fennel/ftrs/BTreeSearchExecStream.h"
@@ -49,27 +50,10 @@ using namespace fennel;
  * Testcase for scanning a single bitmap index using equality search on
  * all index keys
  */
-class LbmIndexScanTest : public ExecStreamUnitTestBase
+class LbmSearchTest : public LbmExecStreamTestBase
 {
 protected:
-    StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_char1;
-    TupleAttributeDescriptor attrDesc_int64;
-    TupleAttributeDescriptor attrDesc_bitmap;
-
-    /**
-     * Size of bitmap columns
-     */
-    uint bitmapColSize;
-    
-    /**
-     * Tuple descriptor for a bitmap segment: (rid, segment descriptor, bitmap
-     * segments)
-     */
-    TupleDescriptor bitmapTupleDesc;
-
-    TupleData bitmapTupleData;
-    TupleAccessor bitmapTupleAccessor;
 
     /**
      * BTrees corresponding to the clusters
@@ -213,42 +197,16 @@ protected:
         TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
         boost::shared_array<FixedBuffer> &inputBuffer);
 
-    /**
-     * Generate bitmaps to used in verifying result of bitmap index scan
-     *
-     * @param nRows number of rows in index
-     *
-     * @param start initial rid value
-     *
-     * @param skipRows generate rids every "skipRows" rows; i.e., if skipRows
-     * == 1, there are no gaps in the rids
-     *
-     * @param pBuf buffer where bitmap segment tuples will be marshalled
-     *
-     * @param bufSize amount of space currently used within pBuf
-     *
-     * @param fullBufSize size of pBuf
-     *
-     * @param nBitmaps returns number of bitmaps generated
-     */
-    void generateBitmaps(
-        uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
-        uint fullBufSize, uint &nBitmaps);
-
-    void produceEntry(
-        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
-        uint &bufSize, uint &nBitmaps);
-
     void setSearchKey(
         char lowerDirective, char upperDirective, uint64_t lowerVal,
         uint64_t upperVal, PBuffer inputBuf, uint &offset,
         TupleAccessor &inputTupleAccessor, TupleData &inputTupleData);
 
 public:
-    explicit LbmIndexScanTest()
+    explicit LbmSearchTest()
     {
-        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testScan1000);
-        FENNEL_UNIT_TEST_CASE(LbmIndexScanTest, testMultipleRanges);
+        FENNEL_UNIT_TEST_CASE(LbmSearchTest, testScan1000);
+        FENNEL_UNIT_TEST_CASE(LbmSearchTest, testMultipleRanges);
     }
 
     void testCaseSetUp();
@@ -258,7 +216,7 @@ public:
     void testMultipleRanges();
 };
 
-void LbmIndexScanTest::testScan1000()
+void LbmSearchTest::testScan1000()
 {
     // with a 3-key index, 1000 rows will generate a 2-level btree, which
     // should suffice for this testcase
@@ -279,7 +237,7 @@ void LbmIndexScanTest::testScan1000()
     testScanPartialKey(nRows, nClusters, repeatSeqValues);
 }
 
-void LbmIndexScanTest::testMultipleRanges()
+void LbmSearchTest::testMultipleRanges()
 {
     uint nRows = 1000;
     uint nClusters = 1; 
@@ -359,7 +317,7 @@ void LbmIndexScanTest::testMultipleRanges()
         bitmapBuf);
 }
 
-void LbmIndexScanTest::setSearchKey(
+void LbmSearchTest::setSearchKey(
     char lowerDirective, char upperDirective, uint64_t lowerVal,
     uint64_t upperVal, PBuffer inputBuf, uint &offset,
     TupleAccessor &inputTupleAccessor, TupleData &inputTupleData)
@@ -376,7 +334,7 @@ void LbmIndexScanTest::setSearchKey(
     offset += inputTupleAccessor.getCurrentByteCount();
 }
 
-void LbmIndexScanTest::testScanFullKey(
+void LbmSearchTest::testScanFullKey(
     uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues)
 {
     // search for key0 = <val0>, key1 = <val1>, ..., key(n-1) = <val(n-1)>
@@ -421,7 +379,7 @@ void LbmIndexScanTest::testScanFullKey(
     }
 }
 
-void LbmIndexScanTest::testScanPartialKey(
+void LbmSearchTest::testScanPartialKey(
     uint nRows, uint nKeys, std::vector<int> const &repeatSeqValues)
 {
     // search for key0 = 0, key1 = 0, ..., key(n-2) = 0
@@ -491,7 +449,7 @@ void LbmIndexScanTest::testScanPartialKey(
         inputBuffer, expectedNBitmaps, bitmapBuf);
 }
 
-void LbmIndexScanTest::initEqualSearch(
+void LbmSearchTest::initEqualSearch(
     uint nKeys, uint nInputTuples, boost::scoped_array<uint64_t> &vals, 
     char &lowerDirective, char &upperDirective,
     TupleAccessor &inputTupleAccessor, TupleData &inputTupleData,
@@ -523,48 +481,7 @@ void LbmIndexScanTest::initEqualSearch(
         new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
 }
 
-void LbmIndexScanTest::generateBitmaps(
-    uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
-    uint fullBufSize, uint &nBitmaps)
-{
-    LbmEntry lbmEntry;
-    boost::scoped_array<FixedBuffer> entryBuf;
-    LcsRid rid = LcsRid(start);
-
-    // setup an LbmEntry with the initial rid value
-    uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
-    entryBuf.reset(new FixedBuffer[scratchBufSize]);
-    lbmEntry.init(entryBuf.get(), NULL, scratchBufSize, bitmapTupleDesc);
-    bitmapTupleData[0].pData = (PConstBuffer) &rid;
-    lbmEntry.setEntryTuple(bitmapTupleData);
-
-    // add on the remaining rids
-    for (rid = LcsRid(start + skipRows); rid < LcsRid(nRows); rid += skipRows) {
-        if (!lbmEntry.setRID(LcsRid(rid))) {
-            // exhausted buffer space, so write the tuple to the output
-            // buffer and reset LbmEntry
-            produceEntry(
-                lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps);
-            lbmEntry.setEntryTuple(bitmapTupleData);
-        }
-    }
-    // write out the last LbmEntry
-    produceEntry(lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps);
-    
-    assert(bufSize <= fullBufSize);
-}
-
-void LbmIndexScanTest::produceEntry(
-    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
-    uint &bufSize, uint &nBitmaps)
-{
-    TupleData bitmapTuple = lbmEntry.produceEntryTuple();
-    bitmapTupleAccessor.marshal(bitmapTuple, pBuf + bufSize);
-    bufSize += bitmapTupleAccessor.getCurrentByteCount();
-    ++nBitmaps;
-}
-
-void LbmIndexScanTest::loadTableAndIndex(
+void LbmSearchTest::loadTableAndIndex(
     uint nRows, uint nClusters, std::vector<int> const &repeatSeqValues,
     bool newRoot)
 {
@@ -798,7 +715,7 @@ void LbmIndexScanTest::loadTableAndIndex(
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void LbmIndexScanTest::initBTreeExecStreamParam(
+void LbmSearchTest::initBTreeExecStreamParam(
     BTreeExecStreamParams &param, shared_ptr<BTreeDescriptor> pBTreeDesc)
 {
     param.scratchAccessor = pSegmentFactory->newScratchSegment(pCache, 10);
@@ -814,7 +731,7 @@ void LbmIndexScanTest::initBTreeExecStreamParam(
     param.segmentId = pBTreeDesc->segmentId;
 }
 
-void LbmIndexScanTest::initClusterScanDef(
+void LbmSearchTest::initClusterScanDef(
     LcsRowScanBaseExecStreamParams &rowScanParams,
     struct LcsClusterScanDef &clusterScanDef,
     uint bTreeIndex)
@@ -831,7 +748,7 @@ void LbmIndexScanTest::initClusterScanDef(
     rowScanParams.lcsClusterScanDefs.push_back(clusterScanDef);
 }
 
-void LbmIndexScanTest::initBTreeBitmapDesc(
+void LbmSearchTest::initBTreeBitmapDesc(
     TupleDescriptor &tupleDesc, TupleProjection &keyProj, uint nKeys)
 {
     initBTreeTupleDesc(tupleDesc, nKeys);
@@ -842,7 +759,7 @@ void LbmIndexScanTest::initBTreeBitmapDesc(
     }
 }
 
-void LbmIndexScanTest::initBTreeTupleDesc(
+void LbmSearchTest::initBTreeTupleDesc(
     TupleDescriptor &tupleDesc, uint nKeys)
 {
     for (uint i = 0; i < nKeys; i++) {
@@ -854,36 +771,15 @@ void LbmIndexScanTest::initBTreeTupleDesc(
     tupleDesc.push_back(bitmapTupleDesc[2]);
 }
 
-void LbmIndexScanTest::testCaseSetUp()
+void LbmSearchTest::testCaseSetUp()
 {    
-    ExecStreamUnitTestBase::testCaseSetUp();
+    LbmExecStreamTestBase::testCaseSetUp();
 
-    bitmapColSize = pRandomSegment->getUsablePageSize()/8;
-    attrDesc_bitmap = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
-        true, bitmapColSize);
     attrDesc_char1 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
-    attrDesc_int64 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
-    attrDesc_char1 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
-
-    bitmapTupleDesc.clear();
-    bitmapTupleDesc.push_back(attrDesc_int64);
-    bitmapTupleDesc.push_back(attrDesc_bitmap);
-    bitmapTupleDesc.push_back(attrDesc_bitmap);
-
-    bitmapTupleData.compute(bitmapTupleDesc);
-    bitmapTupleData[1].pData = NULL;
-    bitmapTupleData[1].cbData = 0;
-    bitmapTupleData[2].pData = NULL;
-    bitmapTupleData[2].cbData = 0;
-        
-    bitmapTupleAccessor.compute(bitmapTupleDesc);
 }
 
-void LbmIndexScanTest::testCaseTearDown()
+void LbmSearchTest::testCaseTearDown()
 {
     for (uint i = 0; i < bTreeClusters.size(); i++) {
         bTreeClusters[i]->segmentAccessor.reset();
@@ -896,10 +792,10 @@ void LbmIndexScanTest::testCaseTearDown()
     savedBTreeClusterRootIds.clear();
     savedBTreeBitmapRootIds.clear();
 
-    ExecStreamUnitTestBase::testCaseTearDown();
+    LbmExecStreamTestBase::testCaseTearDown();
 }
 
-void LbmIndexScanTest::testScanIdx(
+void LbmSearchTest::testScanIdx(
     uint totalKeys, uint nKeys, uint bufSize,
     boost::shared_array<FixedBuffer> inputBuffer,
     uint expectedNBitmaps, PBuffer expectedBitmaps)
@@ -925,7 +821,7 @@ void LbmIndexScanTest::testScanIdx(
 
     // setup index scan stream
 
-    LbmIndexScanExecStreamParams indexScanParams;
+    LbmSearchExecStreamParams indexScanParams;
 
     // initialize parameters specific to indexScan
     indexScanParams.rowLimitParamId = DynamicParamId(0);
@@ -959,7 +855,7 @@ void LbmIndexScanTest::testScanIdx(
     indexScanParams.outputTupleDesc = bitmapTupleDesc;
 
     ExecStreamEmbryo indexScanStreamEmbryo;
-    indexScanStreamEmbryo.init(new LbmIndexScanExecStream(), indexScanParams);
+    indexScanStreamEmbryo.init(new LbmSearchExecStream(), indexScanParams);
     indexScanStreamEmbryo.getStream()->setName("IndexScanStream");
 
     SharedExecStream pOutputStream = prepareTransformGraph(
@@ -970,6 +866,6 @@ void LbmIndexScanTest::testScanIdx(
         *pOutputStream, bitmapTupleDesc, expectedNBitmaps, expectedBitmaps);
 }
 
-FENNEL_UNIT_TEST_SUITE(LbmIndexScanTest);
+FENNEL_UNIT_TEST_SUITE(LbmSearchTest);
 
-// End LbmIndexScanTest.cpp
+// End LbmSearchTest.cpp

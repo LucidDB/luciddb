@@ -516,6 +516,12 @@ class LhxHashTable
     uint  currentBlockCount;
 
     /**
+     * special hash table properties.
+     */
+    bool filterNull;
+    bool removeDuplicate;
+
+    /**
      * The hash generators used by this hash table: one for the current level;
      * one for the sub partition level(==partitionLevl+1).
      */
@@ -749,28 +755,32 @@ public:
      *
      * @param[in] inputTuple
      * @param[in] keyColsProj key columns from the inputTuple.
-     & @param[in] isProbing whether the hash table is being probed.
+     * @param[in] isProbing whether the hash table is being probed.
+     * @param[in] removeDuplicate
      *
      * @return the buffer which stored the address of the key
      */
     PBuffer findKeyLocation(
         TupleData const &inputTuple,
         TupleProjection const &keyColsProj,
-        bool isProbing);
+        bool isProbing,
+        bool removeDuplicateProbe);
 
     /**
      * Find key node based on key cols.
      *
      * @param[in] inputTuple
      * @param[in] keyColsProj key columns from the inputTuple.
-     & @param[in] isProbing whether the hash table is being probed.
+     * @param[in] filterNull
+     * @param[in] removeDuplicate
      *
      * @return the buffer which stored the address of the key
      */
-    inline PBuffer findKey(
+    PBuffer findKey(
         TupleData const &inputTuple,
         TupleProjection const &keyColsProj,
-        bool isProbing);
+        bool filterNullProbe,
+        bool removeDuplicateProbe);
 
     /**
      * Insert a new tuple.
@@ -1084,26 +1094,6 @@ inline void LhxHashBlockAccessor::allocSlots(uint slotCount)
 inline uint LhxHashTable::slotsNeeded(double cndKeys)
 {
     return uint(ceil(cndKeys * 1.2));
-}
-
-inline PBuffer LhxHashTable::findKey(
-    TupleData const &inputTuple,
-    TupleProjection const &keyColsProj,
-    bool isProbing)
-{
-    PBuffer destKey;
-    PBuffer destKeyLoc;
-    destKeyLoc = findKeyLocation(inputTuple, keyColsProj, isProbing);
-    
-    if (destKeyLoc) {
-        /*
-         * Need to copy destKey out as destKeyLoc might not be aligned.
-         */    
-        memcpy((PBuffer)&destKey, destKeyLoc, sizeof(PBuffer));
-        return destKey;
-    } else {
-        return NULL;
-    }
 }
 
 inline uint LhxHashTable::getNumSlots() const { return numSlots; }

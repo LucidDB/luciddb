@@ -1420,16 +1420,26 @@ public class SqlToRelConverter
                     all);
             case SqlKind.IntersectORDINAL:
                 // TODO:  all
-                return new IntersectRel(
-                    cluster,
-                    new RelNode [] { left, right },
-                    false);
+                if (!all) {
+                    return new IntersectRel(
+                        cluster,
+                        new RelNode [] { left, right },
+                        all);
+                } else {
+                    throw Util.newInternal(
+                        "set operator INTERSECT ALL not suported");
+                }                    
             case SqlKind.ExceptORDINAL:
                 // TODO:  all
-                return new MinusRel(
-                    cluster,
-                    new RelNode [] { left, right },
-                    false);
+                if (!all) {
+                    return new MinusRel(
+                        cluster,
+                        new RelNode [] { left, right },
+                        all);
+                } else {
+                    throw Util.newInternal(
+                        "set operator EXCEPT ALL not suported");
+                }
             default:
                 throw Util.newInternal("not a set operator "
                     + SqlKind.enumeration.getName(kind));

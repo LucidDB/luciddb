@@ -136,17 +136,71 @@ void LbmExecStreamTestBase::initSorterExecStream(
     embryo.getStream()->setName("SorterExecStream");
 }
 
+void LbmExecStreamTestBase::generateBitmaps(
+    uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
+    uint fullBufSize, uint &nBitmaps, bool includeKeys)
+{
+    LbmEntry lbmEntry;
+    boost::scoped_array<FixedBuffer> entryBuf;
+    LcsRid rid = LcsRid(start);
+
+    // setup an LbmEntry with the initial rid value
+    uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
+    entryBuf.reset(new FixedBuffer[scratchBufSize]);
+    lbmEntry.init(entryBuf.get(), NULL, scratchBufSize, bitmapTupleDesc);
+    bitmapTupleData[0].pData = (PConstBuffer) &rid;
+    lbmEntry.setEntryTuple(bitmapTupleData);
+
+    // add on the remaining rids
+    for (rid = LcsRid(start + skipRows); rid < LcsRid(nRows); rid += skipRows) {
+        if (!lbmEntry.setRID(LcsRid(rid))) {
+            // exhausted buffer space, so write the tuple to the output
+            // buffer and reset LbmEntry
+            produceEntry(
+                lbmEntry, bitmapTupleAccessor,
+                pBuf, bufSize, nBitmaps, includeKeys);
+            lbmEntry.setEntryTuple(bitmapTupleData);
+        }
+    }
+    // write out the last LbmEntry
+    produceEntry(
+        lbmEntry, bitmapTupleAccessor, pBuf, bufSize, nBitmaps, includeKeys);
+    
+    assert(bufSize <= fullBufSize);
+}
+
+void LbmExecStreamTestBase::produceEntry(
+    LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+    uint &bufSize, uint &nBitmaps, bool includeKeys)
+{
+    TupleData bitmapTuple = lbmEntry.produceEntryTuple();
+    if (includeKeys) {
+        int nKeys = keyBitmapTupleData.size() - bitmapTuple.size();
+        assert(nKeys > 0);
+        for (uint i = 0; i < bitmapTupleData.size(); i++) {
+            keyBitmapTupleData[nKeys+i] = bitmapTuple[i];
+        }
+        keyBitmapTupleAccessor.marshal(keyBitmapTupleData, pBuf + bufSize);
+        bufSize += keyBitmapTupleAccessor.getCurrentByteCount();
+    } else {
+        bitmapTupleAccessor.marshal(bitmapTuple, pBuf + bufSize);
+        bufSize += bitmapTupleAccessor.getCurrentByteCount();
+    }
+    ++nBitmaps;
+}
+
 void LbmExecStreamTestBase::testCaseSetUp()
 {    
     ExecStreamUnitTestBase::testCaseSetUp();
 
-    attrDesc_int64 = TupleAttributeDescriptor(
-        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     bitmapColSize = pRandomSegment->getUsablePageSize()/8;
     attrDesc_bitmap = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_VARBINARY),
         true, bitmapColSize);
+    attrDesc_int64 = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
 
+    bitmapTupleDesc.clear();
     bitmapTupleDesc.push_back(attrDesc_int64);
     bitmapTupleDesc.push_back(attrDesc_bitmap);
     bitmapTupleDesc.push_back(attrDesc_bitmap);
@@ -158,12 +212,6 @@ void LbmExecStreamTestBase::testCaseSetUp()
     bitmapTupleData[2].cbData = 0;
         
     bitmapTupleAccessor.compute(bitmapTupleDesc);
-}
-
-void LbmExecStreamTestBase::testCaseTearDown()
-{
-    ExecStreamUnitTestBase::testCaseTearDown();
-    bitmapTupleDesc.clear();
 }
 
 FENNEL_END_CPPFILE("$Id$");

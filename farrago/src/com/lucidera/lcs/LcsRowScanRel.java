@@ -179,12 +179,18 @@ public class LcsRowScanRel extends FennelMultipleRel
                     public RelDataType getFieldType(int index)
                     {
                         final int i = projectedColumns[index].intValue();
-                        if (LucidDbOperatorTable.ldbInstance().
-                            isSpecialColumnId(i))
+                        LucidDbOperatorTable ldbInstance =
+                            LucidDbOperatorTable.ldbInstance();
+                        if (ldbInstance.isSpecialColumnId(i))
                         {
-                            return getCluster().getTypeFactory().createSqlType(
-                                LucidDbOperatorTable.ldbInstance().
-                                    getSpecialOpRetTypeName(i));
+                            RelDataTypeFactory typeFactory =
+                                getCluster().getTypeFactory();
+                            SqlTypeName typeName =
+                                ldbInstance.getSpecialOpRetTypeName(i);
+                            return
+                                typeFactory.createTypeWithNullability(
+                                    typeFactory.createSqlType(typeName),
+                                    ldbInstance.isNullable(i));
                         } else {
                             return fields[i].getType();
                         }
@@ -321,8 +327,6 @@ public class LcsRowScanRel extends FennelMultipleRel
     {
         FemLocalIndex delIndex = FarragoCatalogUtil.getDeletionIndex(
             repos, lcsTable.getCwmColumnSet());
-        LcsIndexScanRel indexScan = new LcsIndexScanRel(
-            getCluster(), lcsTable, delIndex, connection, null, true);       
         
         RelNode keyInput = createDelIndexScanInput(fullScan);
         
@@ -330,8 +334,9 @@ public class LcsRowScanRel extends FennelMultipleRel
         Integer [] inputKeyProj = { 1, 3 };
         
         LcsIndexSearchRel indexSearch = new LcsIndexSearchRel(
-            keyInput, indexScan, true, false, inputKeyProj, null,
-            inputDirectiveProj, startRidParamId, rowLimitParamId);
+            getCluster(), keyInput, lcsTable, delIndex, null, true, false, 
+            inputKeyProj, null, inputDirectiveProj, startRidParamId,
+        rowLimitParamId);
         
         return indexSearch;
     }

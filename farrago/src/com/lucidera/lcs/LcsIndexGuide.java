@@ -835,10 +835,11 @@ public class LcsIndexGuide
     
     protected FemIndexScanDef newIndexScan(
         FennelRel rel,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        Integer [] projectedColumns)
     {
         FemIndexScanDef scanStream = repos.newFemIndexScanDef();
-        defineIndexScan(scanStream, rel, index);
+        defineIndexScan(scanStream, rel, index, projectedColumns);
         
         return scanStream;
     }
@@ -856,7 +857,7 @@ public class LcsIndexGuide
     {
         FemLbmSearchStreamDef searchStream =
             repos.newFemLbmSearchStreamDef();
-        defineIndexScan(searchStream, rel, index);
+        defineIndexScan(searchStream, rel, index, null);
         
         searchStream.setStartRidParamId(startRidParamId.intValue());
         searchStream.setRowLimitParamId(rowLimitParamId.intValue());
@@ -885,18 +886,22 @@ public class LcsIndexGuide
     private void defineIndexScan(
         FemIndexScanDef scanStream,
         FennelRel rel,
-        FemLocalIndex index)
+        FemLocalIndex index,
+        Integer [] outputProj)
     {
         
         defineIndexStream(scanStream, rel, index, false);
         
         // set FemIndexScanDef
-        //
-        // TODO: handle the case where the index scan satisfy the 
-        // projection out of the LcsRowScanRel. For now, output projection 
-        // maps to [RID, bitmapfield1, bitmapfield2].
-        scanStream.setOutputProj(
-            createUnclusteredBTreeBitmapProj(index));
+        if (outputProj == null) {
+            // If projected fields are not specified, output projection 
+            // maps to [RID, bitmapfield1, bitmapfield2].
+            scanStream.setOutputProj(
+                createUnclusteredBTreeBitmapProj(index));
+        } else {
+            scanStream.setOutputProj(FennelRelUtil.createTupleProjection(
+                repos, outputProj));
+        }
     }
     
     private void defineIndexStream(

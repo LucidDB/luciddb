@@ -307,6 +307,12 @@ explain plan for
             s.salesperson > 0 and s.customer > 0
         order by sid;
 
+-- semijoin used for IN clause; customer column has 100 distinct values so
+-- the semijoin should be worthwhile
+explain plan for
+    select * from sales where customer in
+        (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+
 -- semijoin that needs to be removed
 
 explain plan for
@@ -386,4 +392,8 @@ select sid, p.name, p.color, p.size, s.quantity
     where
         s.product_id = p.id and p.size = 'S' and
         s.salesperson > 0 and s.customer > 0
+    order by sid;
+
+select * from sales where customer in
+    (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
     order by sid;

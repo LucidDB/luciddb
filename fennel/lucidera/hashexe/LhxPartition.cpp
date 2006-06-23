@@ -34,8 +34,13 @@ void LhxPartitionWriter::open(
 {
     destPartition = destPartitionInit;
     tupleAccessor.compute(hashInfo.inputDesc[destPartition->inputIndex]);
+
     pSegOutputStream = SegOutputStream::newSegOutputStream(
         hashInfo.externalSegmentAccessor);
+    destPartition->segStream =
+        SegStreamAllocation::newSegStreamAllocation();
+    destPartition->segStream->beginWrite(pSegOutputStream);
+
     isAggregate = false;
 }
 
@@ -47,8 +52,12 @@ void LhxPartitionWriter::open(
 {
     destPartition = destPartitionInit;
     tupleAccessor.compute(hashInfo.inputDesc[destPartition->inputIndex]);
+
     pSegOutputStream = SegOutputStream::newSegOutputStream(
         hashInfo.externalSegmentAccessor);
+    destPartition->segStream =
+        SegStreamAllocation::newSegStreamAllocation();
+    destPartition->segStream->beginWrite(pSegOutputStream);
 
     isAggregate = true;
     /*
@@ -87,8 +96,7 @@ void LhxPartitionWriter::close()
             pSegOutputStream->consumeWritePointer(tupleStorageLength);    
         }
     }
-    destPartition->firstPageId = pSegOutputStream->getFirstPageId();
-    pSegOutputStream.reset();
+    destPartition->segStream->endWrite();    
 }
 
 void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
@@ -130,38 +138,42 @@ void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
 
 void LhxPartitionReader::open(
     SharedLhxPartition srcPartitionInit,
-    LhxHashInfo const &hashInfo,
-    bool setDeallocate)
+    LhxHashInfo const &hashInfo)
 {
     bufState = EXECBUF_NONEMPTY;
     srcPartition = srcPartitionInit;
     
-    if (srcPartition->firstPageId == NULL_PAGE_ID) {
-        srcIsStream = true;
+    if (!srcPartition->segStream) {
+        /*
+         * source has never been written to, which means the source
+         * is not from the disk but from input stream.
+         */
+        srcIsInputStream = true;
     } else {
-        srcIsStream = false;
+        srcIsInputStream = false;
     }
 
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         streamBufAccessor = hashInfo.streamBufAccessor[srcPartition->inputIndex];
         outputTupleDesc = streamBufAccessor->getTupleDesc();
     } else {
         outputTupleDesc = hashInfo.inputDesc[srcPartition->inputIndex];
         tupleAccessor.compute(outputTupleDesc);
-        pSegInputStream = SegInputStream::newSegInputStream(
-            hashInfo.externalSegmentAccessor, srcPartition->firstPageId);
-        pSegInputStream->startPrefetch();
-        /*
-         * Once read the disk page can be deallocated.
-         */
-        pSegInputStream->setDeallocate(setDeallocate);
         tupleAccessor.resetCurrentTupleBuf();
+
+        /*
+         * Since reader now gets input stream from the partition,
+         * this inputStream will delete content that is read.
+         * This also means each partition can only be read once. 
+         */
+        pSegInputStream = srcPartition->segStream->getInputStream();
+        pSegInputStream->startPrefetch();
     }
 }
 
 void LhxPartitionReader::close() 
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         /*
          * Do nothing if reading from stream.
          */
@@ -172,7 +184,7 @@ void LhxPartitionReader::close()
 
 void LhxPartitionReader::unmarshalTuple(TupleData &outputTuple)
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         /*
          * Read from stream.
          */
@@ -184,7 +196,7 @@ void LhxPartitionReader::unmarshalTuple(TupleData &outputTuple)
 
 void LhxPartitionReader::consumeTuple()
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         streamBufAccessor->consumeTuple();
     } else {
         tupleAccessor.resetCurrentTupleBuf();
@@ -194,7 +206,7 @@ void LhxPartitionReader::consumeTuple()
 
 bool LhxPartitionReader::isTupleConsumptionPending()
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         return streamBufAccessor->isTupleConsumptionPending();
     } else {
         if (tupleAccessor.getCurrentTupleBuf()) {
@@ -207,7 +219,7 @@ bool LhxPartitionReader::isTupleConsumptionPending()
 
 bool LhxPartitionReader::demandData()
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         return streamBufAccessor->demandData();
     } else {
         /*
@@ -262,7 +274,7 @@ void LhxPartitionInfo::open(
     curInputIndex = curInputIndexInit;
 
     reader = &tmpReader;
-    reader->open(partition, *hashInfo, true);
+    reader->open(partition, *hashInfo);
 
     for (uint i = 0; i < numChildPart; i ++) {
         uint index = i + curInputIndex * numChildPart;
@@ -401,20 +413,21 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
     LhxHashGenerator hashSubPart;
     hashSubPart.init(partitionLevel + 1);
 
-    vector<SharedLhxPartition> destPartitionList(numChildPart * 2);
+    uint numInputs = 2;
+
+    vector<SharedLhxPartition> destPartitionList(numChildPart * numInputs);
 
     LhxPartitionReader reader;
     LhxPartitionWriter writerList[numChildPart];
     uint childNum, i, j;
     TupleData outputTuple;
 
-    uint numInputs = 2;
 
     /*
      * Generate partitions for each input.
      */
     for (j = 0; j < numInputs; j ++) {
-        reader.open(partitions[j], hashInfo, true);
+        reader.open(partitions[j], hashInfo);
         outputTuple.compute(hashInfo.inputDesc[j]);
     
         for (i = 0; i < numChildPart; i ++) {
@@ -449,7 +462,6 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
         for (i = 0; i < numChildPart; i ++) {
             writerList[i].close();
         }
-        
         reader.close();
     }
 

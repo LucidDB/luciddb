@@ -239,11 +239,6 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
                 FennelRelUtil.convertTuplesToBase64String(
                     ridRowType, (List) compareTuple));
             
-            RelDataType varBinaryType = typeFactory.createTypeWithNullability(
-                typeFactory.createSqlType(
-                    SqlTypeName.Varbinary, LcsIndexGuide.LbmBitmapSegMaxSize),
-                    true);
-            
             // rid needs to not be nullable in the output since the delete
             // (i.e., splicer) expects non-null rid values
             outputRowType = createBitmapEntryRowType(false);
