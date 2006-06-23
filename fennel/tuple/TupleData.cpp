@@ -122,8 +122,8 @@ TupleStorageByteLength TupleDatum::getLcsLength(PConstBuffer pDataWithLen)
         if (*pDataWithLen & TWO_BYTE_LENGTH_BIT) {
             return
                 (((*pDataWithLen & ONE_BYTE_LENGTH_MASK) << 8)
-                    | *(pDataWithLen + 1)
-                    + 2);
+                    | *(pDataWithLen + 1))
+                    + 2;
         } else {
             return (*pDataWithLen + 1);
         }
