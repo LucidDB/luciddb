@@ -635,6 +635,12 @@
 . . . . . . . . > external name 
 . . . . . . . . > 'class net.sf.farrago.syslib.FarragoMedUDR.browseConnectServer';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- A view which can be used as the input cursor for proposed_server_options
+0: jdbc:farrago:> -- when no options are set (initial browse).
+0: jdbc:farrago:> create view browse_connect_empty_options as
+. . . . . . . . > select '' as option_name, '' as option_value
+. . . . . . . . > from sys_boot.jdbc_metadata.empty_view;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Returns foreign schemas accessible via a given foreign server.
 0: jdbc:farrago:> create function browse_foreign_schemas(
 . . . . . . . . >   foreign_server_name varchar(128))

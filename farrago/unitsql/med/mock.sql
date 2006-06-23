@@ -210,9 +210,7 @@ select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
 select * from table(
   sys_boot.mgmt.browse_connect_foreign_server(
     'MOCK_BROWSE',
-    cursor(
-        select '' as option_name, '' as option_value
-        from sys_boot.jdbc_metadata.empty_view)))
+    cursor(table sys_boot.mgmt.browse_connect_empty_options)))
 order by option_ordinal, option_choice_ordinal;
 
 -- query for available options with some proposed settings and verify

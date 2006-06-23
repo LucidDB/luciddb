@@ -592,10 +592,8 @@ union
 ;
 grant select on index_info_view to public;
 
--- NOTE jvs 17-June-2006:  Odd definition here is workaround
--- for FNL-33 and constant reduction
 create view empty_view as
-select * from (select 1 as one from (values(0))) where 0 > one;
+select * from (values(0)) where false;
 
 create view super_tables_view as
     select
