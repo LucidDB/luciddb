@@ -61,9 +61,7 @@ select * from sys_boot.mgmt.browse_connect_foreign_wrappers;
 select * from table(
   sys_boot.mgmt.browse_connect_foreign_server(
     'HSQLDB_WRAPPER',
-    cursor(
-        select '' as option_name, '' as option_value
-        from sys_boot.jdbc_metadata.empty_view)))
+    cursor(table sys_boot.mgmt.browse_connect_empty_options)))
 order by option_ordinal, option_choice_ordinal;
 
 -- query again with a real URL, asking for extended options:  

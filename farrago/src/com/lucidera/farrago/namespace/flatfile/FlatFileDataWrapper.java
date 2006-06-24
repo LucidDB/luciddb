@@ -102,21 +102,33 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
             FlatFileParams.PROP_ESCAPE_CHAR,
             true,
             new String[] {FlatFileParams.DEFAULT_ESCAPE_CHAR});
-        infoMap.addPropInfo(
-            FlatFileParams.PROP_WITH_HEADER,
-            true,
-            new String[] {Boolean.toString
-                          (FlatFileParams.DEFAULT_WITH_HEADER)});
+        if (FlatFileParams.DEFAULT_WITH_HEADER) {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_WITH_HEADER,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_TRUE);
+        } else {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_WITH_HEADER,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_FALSE);
+        }
         infoMap.addPropInfo(
             FlatFileParams.PROP_NUM_ROWS_SCAN,
             true,
             new String[] {Integer.toString
                           (FlatFileParams.DEFAULT_NUM_ROWS_SCAN)});
-        infoMap.addPropInfo(
-            FlatFileParams.PROP_WITH_LOGGING,
-            true,
-            new String[] {Boolean.toString
-                          (FlatFileParams.DEFAULT_WITH_LOGGING)});
+        if (FlatFileParams.DEFAULT_WITH_LOGGING) {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_WITH_LOGGING,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_TRUE);
+        } else {
+            infoMap.addPropInfo(
+                FlatFileParams.PROP_WITH_LOGGING,
+                true,
+                BOOLEAN_CHOICES_DEFAULT_FALSE);
+        }
         infoMap.addPropInfo(
             FlatFileParams.PROP_LOG_DIRECTORY);
         return infoMap.toArray();

@@ -642,12 +642,14 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 | 5               | QUOTE_CHAR              | Character used to quote                                        | true                | 0                      | "                    |
 | 6               | ESCAPE_CHAR             | Character used to escape the special characters                | true                | -1                     | "                    |
 | 6               | ESCAPE_CHAR             | Character used to escape the special characters                | true                | 0                      | "                    |
-| 7               | WITH_HEADER             | Whether the files include a header                             | true                | -1                     | true                 |
-| 7               | WITH_HEADER             | Whether the files include a header                             | true                | 0                      | true                 |
+| 7               | WITH_HEADER             | Whether the files include a header                             | true                | -1                     | TRUE                 |
+| 7               | WITH_HEADER             | Whether the files include a header                             | true                | 0                      | TRUE                 |
+| 7               | WITH_HEADER             | Whether the files include a header                             | true                | 1                      | FALSE                |
 | 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns  | true                | -1                     | 5                    |
 | 8               | NUM_ROWS_SCAN           | The number of rows to scan to deduce the data type of columns  | true                | 0                      | 5                    |
-| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | -1                     | true                 |
-| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | 0                      | true                 |
+| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | -1                     | TRUE                 |
+| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | 0                      | TRUE                 |
+| 9               | WITH_LOGGING            | Whether to log row errors                                      | true                | 1                      | FALSE                |
 | 10              | LOG_DIRECTORY           | OS directory path for writing log files                        | false               | -1                     |                      |
 +-----------------+-------------------------+----------------------------------------------------------------+---------------------+------------------------+----------------------+
 0: jdbc:farrago:> 
@@ -675,12 +677,14 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 | QUOTE_CHAR              | 0                      | "                    |
 | ESCAPE_CHAR             | -1                     | "                    |
 | ESCAPE_CHAR             | 0                      | "                    |
-| WITH_HEADER             | -1                     | true                 |
-| WITH_HEADER             | 0                      | true                 |
+| WITH_HEADER             | -1                     | TRUE                 |
+| WITH_HEADER             | 0                      | TRUE                 |
+| WITH_HEADER             | 1                      | FALSE                |
 | NUM_ROWS_SCAN           | -1                     | 100                  |
 | NUM_ROWS_SCAN           | 0                      | 5                    |
-| WITH_LOGGING            | -1                     | true                 |
-| WITH_LOGGING            | 0                      | true                 |
+| WITH_LOGGING            | -1                     | TRUE                 |
+| WITH_LOGGING            | 0                      | TRUE                 |
+| WITH_LOGGING            | 1                      | FALSE                |
 | LOG_DIRECTORY           | -1                     |                      |
 +-------------------------+------------------------+----------------------+
 0: jdbc:farrago:> 
