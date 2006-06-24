@@ -53,6 +53,26 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
     protected boolean ambitious;
 
     /**
+     * If true, and if {@link #ambitious} is true, the planner waits a finite
+     * number of iterations for the cost to improve.
+     *
+     * <p>The number of iterations K is equal to the number of
+     * iterations required to get the first finite plan. After the first finite
+     * plan, it continues to fire rules to try to improve it. The planner sets
+     * a target cost of the current best cost multiplied by
+     * {@link #CostImprovement}. If it does not meet that cost target within K
+     * steps, it quits, and uses the current best plan. If it meets the cost,
+     * it sets a new, lower target, and has another K iterations to meet it.
+     * And so forth.
+     *
+     * <p>If false, the planner continues to fire rules until the rule queue
+     * is empty.
+     */
+    protected boolean impatient = false;
+
+    protected static final double CostImprovement = .5;
+
+    /**
      * List of all operands of all rules. Any operand can be an 'entry point'
      * to a rule call, when a relexp is registered which matches the.
      */
@@ -320,7 +340,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         assert !rel.getTraits().equals(toTraits) :
             "pre: !rel.getTraits().equals(toTraits)";
 
-        RelNode rel2 = ensureRegistered(rel);
+        RelNode rel2 = ensureRegistered(rel, null);
         if (rel2.getTraits().equals(toTraits)) {
             return rel2;
         }
@@ -376,14 +396,32 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
     public RelNode findBestExp()
     {
         RelOptCost targetCost = makeHugeCost();
+        int tick = 0;
+        int firstFiniteTick = -1;
+        int splitCount = 0;
+        int giveUpTick = Integer.MAX_VALUE;
         while (true) {
+            ++tick;
             if (root.bestCost.isLe(targetCost)) {
+                if (firstFiniteTick < 0) {
+                    firstFiniteTick = tick;
+                }
                 if (ambitious) {
-                    // Choose a more ambitious target cost, and try again
+                    // Choose a more ambitious target cost, and try again.
+                    // If it took us 1000 iterations to find our first finite
+                    // plan, give ourselves another 1000 iterations to meet the
+                    // new target.
                     targetCost = root.bestCost.multiplyBy(0.5);
+                    ++splitCount;
+                    if (impatient) {
+                        giveUpTick = tick + firstFiniteTick;
+                    }
                 } else {
                     break;
                 }
+            } else if (tick > giveUpTick) {
+                // We haven't made progress recently. Take the current best.
+                break;
             }
             if (!ruleQueue.hasNextMatch()) {
                 break;
@@ -457,13 +495,19 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         return subset;
     }
 
-    public RelNode ensureRegistered(RelNode rel)
+    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
     {
         final RelSubset subset = mapRel2Subset.get(rel);
         if (subset != null) {
+            if (equivRel != null) {
+                final RelSubset equivSubset = getSubset(equivRel);
+                if (equivSubset != subset) {
+                    merge(subset.set, equivSubset.set);
+                }
+            }
             return subset;
         } else {
-            return register(rel, null);
+            return register(rel, equivRel);
         }
     }
 
@@ -962,9 +1006,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         RelSet set,
         RelSet set2)
     {
-        if (set == set2) {
-            return;
-        }
+        assert set != set2 : "pre: set != set2";
         if (set.id > set2.id) {
             // Swap the sets, so we're always merging the newer set into the
             // older.

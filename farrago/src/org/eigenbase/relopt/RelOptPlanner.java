@@ -164,7 +164,7 @@ public interface RelOptPlanner
      *
      * <p>The expression must not already have been registered. If you are
      * not sure whether it has been registered, call
-     * {@link #ensureRegistered(RelNode)}.
+     * {@link #ensureRegistered(RelNode,RelNode)}.
      *
      * @param rel Relational expression to register (must not already be
      *   registered)
@@ -182,10 +182,13 @@ public interface RelOptPlanner
     /**
      * Registers a relational expression if it is not already registered.
      *
-     * @param rel Relational expression
+     * @param rel Relational expression to register
+     *
+     * @param equivRel Relational expression it is equivalent to (may be null)
+     *
      * @return Registered relational expression
      */
-    RelNode ensureRegistered(RelNode rel);
+    RelNode ensureRegistered(RelNode rel, RelNode equivRel);
 
     /**
      * Determines whether a relational expression has been registered.

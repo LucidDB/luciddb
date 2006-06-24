@@ -332,7 +332,7 @@ public abstract class AbstractRelNode implements RelNode
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; i++) {
             final RelNode input = inputs[i];
-            RelNode e = planner.ensureRegistered(input);
+            RelNode e = planner.ensureRegistered(input, null);
             if (e != input) {
                 // TODO: change 'equal' to 'eq', which is stronger.
                 assert RelOptUtil.equal(
