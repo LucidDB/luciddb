@@ -18,12 +18,11 @@ fi
 # add session name
 SELF=`basename $0`
 FARRAGO_SESSION="${SELF}:${USER}@${HOSTNAME}"
-PROCESS_ID=$$
-CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}';clientProcessId=${PROCESS_ID}"
+CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}'"
 
 # note that sqlLine splits args at blanks, regardless of quoting,
 # so CLIENT_DRIVER_URL must not contain embedded blanks
-java ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
+java -Dprocess.id=$$ ${CLIENT_JAVA_ARGS} ${SQLLINE_JAVA_ARGS} \
     -u ${CLIENT_DRIVER_URL} \
     -d net.sf.farrago.jdbc.client.FarragoVjdbcClientDriver \
     -n sa $*
