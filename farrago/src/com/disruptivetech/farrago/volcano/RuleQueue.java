@@ -458,7 +458,11 @@ class RuleQueue
         {
             double imp1 = getImportance(rel1);
             double imp2 = getImportance(rel2);
-            return (imp1 < imp2) ? 1 : ((imp1 > imp2) ? (-1) : 0);
+            int c = Double.compare(imp1, imp2);
+            if (c == 0) {
+                c = rel1.getId() - rel2.getId();
+            }
+            return c;
         }
     }
 
@@ -475,8 +479,27 @@ class RuleQueue
         {
             double imp1 = match1.computeImportance();
             double imp2 = match2.computeImportance();
-            return (imp1 < imp2) ? 1 : ((imp1 > imp2) ? (-1) : 0);
+            int c = Double.compare(imp1, imp2);
+            if (c == 0) {
+                c = compareRels(match1.getRels(), match2.getRels());
+            }
+            return c;
         }
+    }
+
+    static int compareRels(RelNode[] rels0, RelNode[] rels1)
+    {
+        int c = rels0.length - rels1.length;
+        if (c != 0) {
+            return c;
+        }
+        for (int i = 0; i < rels0.length; i++) {
+            c = rels0[i].getId() - rels1[i].getId();
+            if (c != 0) {
+                return c;
+            }
+        }
+        return c;
     }
 }
 
