@@ -89,7 +89,7 @@ public class VolcanoRuleCall extends RelOptRuleCall
                 volcanoPlanner.listener.ruleProductionSucceeded(event);
             }
             
-            Util.discard(getPlanner().register(rel, rels[0]));
+            Util.discard(getPlanner().ensureRegistered(rel, rels[0]));
             
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleProductionEvent event =

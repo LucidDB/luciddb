@@ -21,13 +21,16 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.oj.rel;
+package net.sf.saffron.rel;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.oj.rel.IterOneRowRel;
+import org.eigenbase.oj.rel.IterCalcRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
 
 
 /**

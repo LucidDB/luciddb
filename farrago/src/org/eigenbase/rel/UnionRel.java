@@ -24,7 +24,6 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 
 /**
  * <code>UnionRel</code> returns the union of the rows of its inputs,
@@ -49,11 +48,21 @@ public final class UnionRel extends UnionRelBase
 
     //~ Methods ---------------------------------------------------------------
 
-    public Object clone()
+    public UnionRel clone()
     {
         UnionRel clone = new UnionRel(
             getCluster(),
             RelOptUtil.clone(inputs),
+            all);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    public UnionRel clone(RelNode[] inputs, boolean all)
+    {
+        UnionRel clone = new UnionRel(
+            getCluster(),
+            inputs,
             all);
         clone.inheritTraitsFrom(this);
         return clone;

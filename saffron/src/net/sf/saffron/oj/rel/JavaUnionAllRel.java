@@ -47,8 +47,16 @@ public class JavaUnionAllRel extends UnionRelBase implements JavaLoopRel
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaUnionAllRel clone()
     {
+        JavaUnionAllRel clone = new JavaUnionAllRel(getCluster(), inputs);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    public JavaUnionAllRel clone(RelNode[] inputs, boolean all)
+    {
+        assert all;
         JavaUnionAllRel clone = new JavaUnionAllRel(getCluster(), inputs);
         clone.inheritTraitsFrom(this);
         return clone;

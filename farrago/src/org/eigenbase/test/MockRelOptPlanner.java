@@ -23,9 +23,6 @@ package org.eigenbase.test;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.*;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.util.*;
 
 import java.util.*;
 
@@ -156,7 +153,7 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
     }
 
     // implement RelOptPlanner
-    public RelNode ensureRegistered(RelNode rel)
+    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
     {
         return rel;
     }
