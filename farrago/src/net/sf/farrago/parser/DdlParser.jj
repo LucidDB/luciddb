@@ -112,6 +112,20 @@ PARSER_END(FarragoParserImpl)
  *****************************************/
 
 /**
+ * Allows parser to be extended with new types of table references.  The
+ * default implementation of this production is empty.
+ */
+SqlNode ExtendedTableRef() :
+{
+}
+{
+    UnusedExtension()
+    {
+        return null;
+    }
+}
+
+/**
  * Allows an OVER clause following a table expression as an extension to
  * standard SQL syntax. The default implementation of this production is empty.
  */

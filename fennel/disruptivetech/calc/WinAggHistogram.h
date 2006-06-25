@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-// WinAggAccum - Windowed Aggregation Accumulator object.
+// WinAggHistogram - Windowed Aggregation Histogram object.
 */
 
 #ifndef Fennel_WinAggAccum_Included
@@ -47,17 +47,17 @@ FENNEL_BEGIN_NAMESPACE
  */
 
 template <typename STDTYPE>
-class WinAggAccum
+class WinAggHistogram
 {
 
 public:
-    WinAggAccum():
+    WinAggHistogram():
         currentSum(0),
         currentWindow(),
         nullRows()
     {}
 
-    ~WinAggAccum()
+    ~WinAggHistogram()
     {}
 
     // Comparator object supplied to the window object for comparing entires
@@ -123,7 +123,9 @@ public:
         if (!pDatum->isNull()) {
             assert(0 != currentWindow.size());
         
-            // remove the entry from the accumulator
+            // remove the entry from the accumulator.  The entries are in a
+            // multiset. The key is the the addresess of the data set. A comparator
+            // was supplied to sort by the tuple contents.
             STDTYPE* pData = node->refer();
 
             pair<typename winAggData::iterator, typename winAggData::iterator> entries =
@@ -151,8 +153,13 @@ public:
     {
         if (0 != currentWindow.size()) {
             // TupleDatum *pDatum = *(currentWindow.begin());
-            STDTYPE *pData = reinterpret_cast<STDTYPE*>
-                (const_cast<PBuffer>((*(currentWindow.begin()))->pData));
+            TupleDatum *td = *(currentWindow.begin());
+            PBuffer pBuffer = const_cast<PBuffer>(td->pData);
+            STDTYPE *pData = reinterpret_cast<STDTYPE*>(pBuffer);
+            
+            
+//            STDTYPE *pData = reinterpret_cast<STDTYPE*>
+//                (const_cast<PBuffer>((*(currentWindow.begin()))->pData));
             node->value(*pData);
         } else {
             node->toNull();
