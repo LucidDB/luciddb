@@ -34,7 +34,6 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -56,10 +55,19 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
 
     //~ Methods ---------------------------------------------------------------
 
-    public Object clone()
+    public IterConcatenateRel clone()
     {
         // REVIEW jvs 13-Nov-2005:  shouldn't we be cloning the inputs too?
         IterConcatenateRel clone = new IterConcatenateRel(getCluster(), inputs);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    public IterConcatenateRel clone(RelNode[] inputs, boolean all)
+    {
+        assert all;
+        IterConcatenateRel clone =
+            new IterConcatenateRel(getCluster(), inputs);
         clone.inheritTraitsFrom(this);
         return clone;
     }

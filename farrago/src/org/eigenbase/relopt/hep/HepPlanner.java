@@ -586,7 +586,7 @@ public class HepPlanner extends AbstractRelOptPlanner
     }
 
     // implement RelOptPlanner
-    public RelNode ensureRegistered(RelNode rel)
+    public RelNode ensureRegistered(RelNode rel, RelNode equivRel)
     {
         return rel;
     }

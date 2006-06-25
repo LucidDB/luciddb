@@ -65,12 +65,19 @@ public final class IntersectRel extends SetOpRel
         return dRows;
     }
 
-    public Object clone()
+    public IntersectRel clone()
     {
         IntersectRel clone = new IntersectRel(
             getCluster(),
             RelOptUtil.clone(inputs),
             all);
+        clone.inheritTraitsFrom(this);
+        return clone;
+    }
+
+    public IntersectRel clone(RelNode[] inputs, boolean all)
+    {
+        final IntersectRel clone = new IntersectRel(getCluster(), inputs, all);
         clone.inheritTraitsFrom(this);
         return clone;
     }

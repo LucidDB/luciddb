@@ -53,6 +53,8 @@ public abstract class SetOpRel extends AbstractRelNode
 
     //~ Methods ---------------------------------------------------------------
 
+    public abstract SetOpRel clone(RelNode[] inputs, boolean all);
+
     public boolean isDistinct()
     {
         return !all;
