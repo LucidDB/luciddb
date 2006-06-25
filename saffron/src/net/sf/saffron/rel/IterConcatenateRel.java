@@ -21,7 +21,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package org.eigenbase.oj.rel;
+package net.sf.saffron.rel;
 
 import openjava.mop.OJClass;
 import openjava.ptree.*;
@@ -33,7 +33,8 @@ import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.util.Util;
+import org.eigenbase.oj.rel.JavaRel;
+import org.eigenbase.oj.rel.JavaRelImplementor;
 
 
 /**
@@ -61,6 +62,12 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
         IterConcatenateRel clone = new IterConcatenateRel(getCluster(), inputs);
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    public SetOpRel clone(RelNode[] inputs, boolean all)
+    {
+        assert all;
+        return new IterConcatenateRel(getCluster(), inputs.clone());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
