@@ -18,7 +18,8 @@ fi
 # add session name
 SELF=`basename $0`
 FARRAGO_SESSION="${SELF}:${USER}@${HOSTNAME}"
-CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}'"
+PROCESS_ID=$$
+CLIENT_DRIVER_URL="${CLIENT_DRIVER_URL};sessionName='${FARRAGO_SESSION}';clientProcessId=${PROCESS_ID}"
 
 # note that sqlLine splits args at blanks, regardless of quoting,
 # so CLIENT_DRIVER_URL must not contain embedded blanks

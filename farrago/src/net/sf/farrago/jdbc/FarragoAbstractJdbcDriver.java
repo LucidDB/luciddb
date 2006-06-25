@@ -163,8 +163,21 @@ public abstract class FarragoAbstractJdbcDriver implements Driver
         if (userName != null) {
             props.setProperty("clientUserName", userName);
         }
-
         //REVIEW: add default for sessionName?
+
+        /**
+         * To set process ID, use a shell script to launch the JVM and use "exec"
+         * to replace the shell process with the JVM.  This allows you to pass the 
+         * shell's PID to the JVM:
+         *     #!/bin/bash
+         *     exec java -Dprocess.id=$$ the.class.name
+         * (Without exec, $$ is the bash process's PID.)
+         */
+        String processId = System.getProperty("process.id");
+        if (processId != null) {
+            props.setProperty("clientProcessId", processId);
+        }
+        
         return props;
     }
 
