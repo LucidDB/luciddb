@@ -23,7 +23,7 @@
 <project name="shortreg" basedir="." default="test">
   <dirname property="shortreg.dir" file="${ant.file.shortreg}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${shortreg.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

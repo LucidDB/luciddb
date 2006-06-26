@@ -23,7 +23,7 @@
 <project name="benchmark" basedir="." default="test">
   <dirname property="udf.dir" file="${ant.file.udf}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${udf.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

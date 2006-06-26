@@ -23,7 +23,7 @@
 <project name="dml_delete" basedir="." default="test">
   <dirname property="dml_delete.dir" file="${ant.file.dml_delete}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${dml_delete.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

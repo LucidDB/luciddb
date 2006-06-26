@@ -22,7 +22,7 @@
 
 <project name="sysviews" basedir="." default="test">
   <dirname property="sysviews.dir" file="${ant.file.sysviews}"/>
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${sysviews.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

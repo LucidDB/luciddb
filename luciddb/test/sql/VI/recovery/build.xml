@@ -23,7 +23,7 @@
 <project name="vi_recovery" basedir="." default="test">
   <dirname property="vi_recovery.dir" file="${ant.file.vi_recovery}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_recovery.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

@@ -23,7 +23,7 @@
 <project name="numerics" basedir="." default="test">
   <dirname property="numerics.dir" file="${ant.file.numerics}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${numerics.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

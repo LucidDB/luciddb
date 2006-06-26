@@ -97,7 +97,7 @@
     <farrago.synthesizeMetamodel
       extMofBasename="${plugin.model.basename}Mof"
       xmiDir="${plugin.xmi.dir}"/>
-    <farrago.antFork target="plugin.forked_importMetamodel"/>
+  <farrago.antFork dir="${plugin.dir}" target="plugin.forked_importMetamodel"/>
     <delete includeEmptyDirs="true" quiet="true">
       <fileset dir="${plugin.catalog.src.dir}" 
         excludes="${plugin.model.package}/**"/>

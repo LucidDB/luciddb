@@ -23,7 +23,7 @@
 <project name="mondrian" basedir="." default="test">
   <dirname property="mondrian.test.dir" file="${ant.file.mondrian}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${mondrian.test.dir}/../../../.."/>
   
 <fail unless="open.dir" />
 

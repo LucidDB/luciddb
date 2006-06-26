@@ -23,7 +23,7 @@
 <project name="conv_numeric" basedir="." default="test">
   <dirname property="conv_numeric.dir" file="${ant.file.conv_numeric}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${conv_numeric.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

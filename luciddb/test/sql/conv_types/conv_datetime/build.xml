@@ -23,7 +23,7 @@
 <project name="conv_datetime" basedir="." default="test">
   <dirname property="conv_datetime.dir" file="${ant.file.conv_datetime}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${conv_datetime.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
