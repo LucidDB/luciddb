@@ -1,0 +1,125 @@
+create schema udptest;
+set schema 'udptest';
+set path 'udptest';
+
+-- create foreign server
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '9'
+);
+
+-- create helper udx
+create function get_column_info(c cursor)
+returns table( 
+  NAME varchar(128),
+  TYPE varchar(128),
+  SIZE int,
+  "PRECISION" int,
+  SCALE int)
+language java
+parameter style system defined java
+reads sql data
+external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.getColumnInfo';
+
+
+-- import foreign schema
+import foreign schema BCP
+limit to ("bench100", "types", SALES, PRODUCTS)
+from server ff_server
+into udptest;
+
+-- create foreign tables
+create foreign table udptest.emp(
+  EMPNO numeric(5, 0),
+  FNAME varchar(20),
+  LNAME varchar(20),
+  SEX char(1),
+  DEPTNO integer,
+  MANAGER numeric(5, 0),
+  LOCID char(2),
+  SAL integer,
+  COMMISION integer,
+  HOBBY varchar(20)
+)
+server ff_server
+options (
+SCHEMA_NAME 'BCP',
+table_name 'EMP'
+);
+
+create foreign table udptest.dept(
+  DEPTNO integer,
+  DNAME varchar(20),
+  LOCID char(2)
+)
+server ff_server
+options (
+SCHEMA_NAME 'BCP',
+table_name 'DEPT'
+);
+
+-- create local tables
+create table udptest.location(
+  LOCID char(2),
+  STREET varchar(50),
+  CITY varchar(20),
+  STATE char(2),
+  ZIP numeric(5, 0)
+);
+
+create table udptest.CUSTOMERS(
+  CUSTID integer, 
+  FNAME varchar(30), 
+  LNAME varchar(30),
+  SEX char(1)
+);
+
+insert into LOCATION select * from ff_server."BCP".LOCATION;
+insert into CUSTOMERS select * from ff_server."BCP".CUSTOMERS;
+
+-- check tables
+select * from table( get_column_info(
+cursor(select * from udptest."bench100")));
+select * from table( get_column_info(
+cursor(select * from udptest."types")));
+select * from table( get_column_info(
+cursor(select * from udptest.customers)));
+select * from table( get_column_info(
+cursor(select * from udptest.dept)));
+select * from table( get_column_info(
+cursor(select * from udptest.emp)));
+select * from table( get_column_info(
+cursor(select * from udptest.location)));
+select * from table( get_column_info(
+cursor(select * from udptest.products)));
+select * from table( get_column_info(
+cursor(select * from udptest.sales)));
+
+select count(*) from udptest."bench100";
+select count(*) from udptest."types";
+select count(*) from udptest.customers;
+select count(*) from udptest.dept;
+select count(*) from udptest.emp;
+select count(*) from udptest.location;
+select count(*) from udptest.products;
+select count(*) from udptest.sales;
+
+-- create index
+create index CUSTOMERS_NAME on CUSTOMERS(LNAME, FNAME);
+
+-- analyze table columns
+analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;

@@ -1,0 +1,491 @@
+0: jdbc:luciddb:> set schema 'udptest';
+0: jdbc:luciddb:> set path 'udptest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- EXPORT_FOREIGN_SCHEMA_TO_CSV tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic export, no filters
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, null, null, '@EXPDIR@/foreign/basic', true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server fexp_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >   directory '@EXPDIR@/foreign/basic',
+. . . . . . . . >   file_extension '.txt',
+. . . . . . . . >   ctrl_file_extension '.bcp',
+. . . . . . . . >   field_delimiter '\t',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   escape_char '',
+. . . . . . . . >   with_header 'yes',
+. . . . . . . . >   num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check tables
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP."bench100")));
++--------+----------+-------+------------+--------+
+|  NAME  |   TYPE   | SIZE  | PRECISION  | SCALE  |
++--------+----------+-------+------------+--------+
+| kseq   | INTEGER  | 10    | 10         | 0      |
+| k2     | INTEGER  | 10    | 10         | 0      |
+| k4     | INTEGER  | 10    | 10         | 0      |
+| k5     | INTEGER  | 10    | 10         | 0      |
+| k10    | INTEGER  | 10    | 10         | 0      |
+| k25    | INTEGER  | 10    | 10         | 0      |
+| k100   | INTEGER  | 10    | 10         | 0      |
+| k1k    | INTEGER  | 10    | 10         | 0      |
+| k10k   | INTEGER  | 10    | 10         | 0      |
+| k40k   | INTEGER  | 10    | 10         | 0      |
+| k100k  | INTEGER  | 10    | 10         | 0      |
+| k250k  | INTEGER  | 10    | 10         | 0      |
+| k500k  | INTEGER  | 10    | 10         | 0      |
++--------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP."types")));
++--------------+------------+-------+------------+--------+
+|     NAME     |    TYPE    | SIZE  | PRECISION  | SCALE  |
++--------------+------------+-------+------------+--------+
+| c_char       | CHAR       | 10    | 10         | 0      |
+| c_varchar    | VARCHAR    | 10    | 10         | 0      |
+| c_decimal    | DECIMAL    | 10    | 10         | 3      |
+| c_tinyint    | TINYINT    | 3     | 3          | 0      |
+| c_smallint   | SMALLINT   | 5     | 5          | 0      |
+| c_integer    | INTEGER    | 10    | 10         | 0      |
+| c_bigint     | BIGINT     | 19    | 19         | 0      |
+| c_real       | REAL       | 13    | 7          | 0      |
+| c_double     | DOUBLE     | 22    | 15         | 0      |
+| c_boolean    | BOOLEAN    | 5     | 1          | 0      |
+| c_date       | DATE       | 10    | 0          | 0      |
+| c_time       | TIME       | 8     | 0          | 0      |
+| c_timestamp  | TIMESTAMP  | 19    | 0          | 0      |
++--------------+------------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.customers)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| FNAME   | VARCHAR  | 256   | 256        | 0      |
+| LNAME   | VARCHAR  | 256   | 256        | 0      |
+| SEX     | VARCHAR  | 256   | 256        | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.dept)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| DEPTNO  | INTEGER  | 10    | 10         | 0      |
+| DNAME   | VARCHAR  | 256   | 256        | 0      |
+| LOCID   | VARCHAR  | 256   | 256        | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.emp)));
++-------------+----------+-------+------------+--------+
+|    NAME     |   TYPE   | SIZE  | PRECISION  | SCALE  |
++-------------+----------+-------+------------+--------+
+| EMPNO       | INTEGER  | 10    | 10         | 0      |
+| FNAME       | VARCHAR  | 256   | 256        | 0      |
+| LNAME       | VARCHAR  | 256   | 256        | 0      |
+| SEX         | VARCHAR  | 256   | 256        | 0      |
+| DEPTNO      | INTEGER  | 10    | 10         | 0      |
+| MANAGER     | INTEGER  | 10    | 10         | 0      |
+| LOCID       | VARCHAR  | 256   | 256        | 0      |
+| SAL         | INTEGER  | 10    | 10         | 0      |
+| COMMISSION  | INTEGER  | 10    | 10         | 0      |
+| HOBBY       | VARCHAR  | 256   | 256        | 0      |
++-------------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.location)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| LOCID   | VARCHAR  | 256   | 256        | 0      |
+| STREET  | VARCHAR  | 256   | 256        | 0      |
+| CITY    | VARCHAR  | 256   | 256        | 0      |
+| STATE   | VARCHAR  | 256   | 256        | 0      |
+| ZIP     | INTEGER  | 10    | 10         | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.products)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| NAME    | VARCHAR  | 30    | 30         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.sales)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| EMPID   | INTEGER  | 10    | 10         | 0      |
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP."bench100";
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP."types";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.customers;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.dept;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.emp;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.location;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.products;
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> select count(*) from fexp_server.BCP.sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check tmp schema
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas where 
+. . . . . . . . > schema_name = '_TMP_LOCAL_SCHEMA';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- include with table_list
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, 'types, EMP, LOCATION ' , null, '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/include', true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create foreign server from exported schema
+0: jdbc:luciddb:> create server fexp_server2
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >   directory '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/include',
+. . . . . . . . >     file_extension '.txt',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter '\t',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import from exported schema
+0: jdbc:luciddb:> create schema tempudp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema BCP
+. . . . . . . . > from server fexp_server2
+. . . . . . . . > into tempudp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check metadata for imported tables/columns
+0: jdbc:luciddb:> select table_name from sys_root.dba_tables
+. . . . . . . . > where schema_name = 'TEMPUDP'
+. . . . . . . . > order by table_name;
++-------------+
+| TABLE_NAME  |
++-------------+
+| EMP         |
+| LOCATION    |
+| types       |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from tempudp."types" order by 1;
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+|   c_char    |  c_varchar  | c_decimal  | c_tinyint  | c_smallint  |  c_integer  |       c_bigint       | c_real  |   c_double    | c_boolean  |   c_date    |  c_time   |      c_timestamp       |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+| thisChar01  | varchar-01  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar02  | varchar-02  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | false      | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar03  | varchar-03  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | false      | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+0: jdbc:luciddb:> select * from tempudp.location order by locid;
++--------+---------------------------+----------------+--------+--------+
+| LOCID  |          STREET           |      CITY      | STATE  |  ZIP   |
++--------+---------------------------+----------------+--------+--------+
+| HQ     | 1730 South Amphlett Blvd  | San Mateo      | CA     | 94042  |
+| MP     | 770 Coleman               | Menlo Park     | CA     | 94025  |
+| SF     | 100 Market                | San Francisco  | CA     | 94987  |
+| SJ     | Main Street               | Los Angeles    | CA     | 92123  |
++--------+---------------------------+----------------+--------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema tempudp cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- include with table_pattern
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', false, null , '%e%', '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/include', true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import from exported schema
+0: jdbc:luciddb:> create schema tempudp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema BCP
+. . . . . . . . > from server fexp_server2
+. . . . . . . . > into tempudp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check metadata for imported tables/columns
+0: jdbc:luciddb:> select table_name from sys_root.dba_tables
+. . . . . . . . > where schema_name = 'TEMPUDP'
+. . . . . . . . > order by table_name;
++-------------+
+| TABLE_NAME  |
++-------------+
+| EMP         |
+| LOCATION    |
+| bench100    |
+| types       |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from tempudp."types";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from tempudp.emp;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> select count(*) from tempudp.location;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> select count(*) from tempudp."bench100";
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from tempudp."types" a, ff_server.BCP."types" b
+. . . . . . . . > where a."c_char" = b."c_char" and a."c_varchar" = b."c_varchar" and
+. . . . . . . . > a."c_decimal" = b."c_decimal" and a."c_tinyint" = b."c_tinyint" and
+. . . . . . . . > a."c_smallint" = b."c_smallint" and a."c_integer" = b."c_integer" and
+. . . . . . . . > a."c_bigint" = b."c_bigint" and a."c_real" = b."c_real" and 
+. . . . . . . . > a."c_double" = b."c_double" and a."c_date" = b."c_date" and 
+. . . . . . . . > a."c_time" = b."c_time" and a."c_timestamp" = b."c_timestamp";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop server fexp_server2 cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- exclude with table_list
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', true, 'bench100,CUSTOMERS, DEPT, EMP, PRODUCTS,types' , null, '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/exclude', true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create foreign server from exported schema
+0: jdbc:luciddb:> create server fexp_server2
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >   directory '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/exclude',
+. . . . . . . . >     file_extension '.txt',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter '\t',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import from exported schema
+0: jdbc:luciddb:> create schema tempudp2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema BCP
+. . . . . . . . > from server fexp_server2
+. . . . . . . . > into tempudp2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check metadata for imported tables/columns
+0: jdbc:luciddb:> -- select * from sys_root.dba_columns
+0: jdbc:luciddb:> -- where schema_name = 'TEMPUDP2'
+0: jdbc:luciddb:> -- order by table_name, column_name;
+0: jdbc:luciddb:> select table_name from sys_root.dba_tables
+. . . . . . . . > where schema_name = 'TEMPUDP2'
+. . . . . . . . > order by table_name;
++-------------+
+| TABLE_NAME  |
++-------------+
+| LOCATION    |
+| SALES       |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from tempudp2.location)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| LOCID   | VARCHAR  | 256   | 256        | 0      |
+| STREET  | VARCHAR  | 256   | 256        | 0      |
+| CITY    | VARCHAR  | 256   | 256        | 0      |
+| STATE   | VARCHAR  | 256   | 256        | 0      |
+| ZIP     | INTEGER  | 10    | 10         | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from tempudp2.sales)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| EMPID   | INTEGER  | 10    | 10         | 0      |
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from udptest.location a, tempudp2.location b
+. . . . . . . . > where a.locid = b.locid and a.street = b.street and a.city = b.city and
+. . . . . . . . > a.state = b.state and a.zip = b.zip;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from tempudp2.sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema tempudp2 cascade;
+0: jdbc:luciddb:> drop server fexp_server2 cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- exclude with table pattern
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', true, null, '%e%', '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/exclude', true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create foreign server from exported schema
+0: jdbc:luciddb:> create server fexp_server2
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >   directory '/home/elin/open/luciddb/test/sql/udr/udp/csv-exp/foreign/exclude',
+. . . . . . . . >     file_extension '.txt',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter '\t',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '2'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import from exported schema
+0: jdbc:luciddb:> create schema tempudp2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema BCP
+. . . . . . . . > from server fexp_server2
+. . . . . . . . > into tempudp2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check metadata for imported tables/columns
+0: jdbc:luciddb:> -- select * from sys_root.dba_columns
+0: jdbc:luciddb:> -- where schema_name = 'TEMPUDP2'
+0: jdbc:luciddb:> -- order by table_name, column_name;
+0: jdbc:luciddb:> select table_name from sys_root.dba_tables
+. . . . . . . . > where schema_name = 'TEMPUDP2'
+. . . . . . . . > order by table_name;
++-------------+
+| TABLE_NAME  |
++-------------+
+| CUSTOMERS   |
+| DEPT        |
+| EMP         |
+| LOCATION    |
+| PRODUCTS    |
+| SALES       |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from tempudp2.SALES)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| EMPID   | INTEGER  | 10    | 10         | 0      |
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from tempudp2.products)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| NAME    | VARCHAR  | 30    | 30         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from tempudp2.customers)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| FNAME   | VARCHAR  | 256   | 256        | 0      |
+| LNAME   | VARCHAR  | 256   | 256        | 0      |
+| SEX     | VARCHAR  | 256   | 256        | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from tempudp2.sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> select count(*) from tempudp2.products;
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> select count(*) from tempudp2.customers;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema tempudp2 cascade;
+0: jdbc:luciddb:> drop server fexp_server2 cascade;
+0: jdbc:luciddb:> drop schema tempudp cascade;
+0: jdbc:luciddb:> drop server fexp_server cascade;
+0: jdbc:luciddb:> !quit

@@ -44,6 +44,24 @@ public abstract class GetColumnTypesUdx
             resultInserter.executeUpdate();
         }
     }
+
+    public static void getColumnInfo(
+        ResultSet inputSet, PreparedStatement resultInserter)
+        throws SQLException
+    {
+        ResultSetMetaData rsMetadata = inputSet.getMetaData();
+        int n = rsMetadata.getColumnCount();
+
+        for (int i=1; i <= n; i++) {
+            resultInserter.setString(1, rsMetadata.getColumnName(i));
+            resultInserter.setString(2, rsMetadata.getColumnTypeName(i));
+            resultInserter.setInt(3, rsMetadata.getColumnDisplaySize(i));
+            resultInserter.setInt(4, rsMetadata.getPrecision(i));
+            resultInserter.setInt(5, rsMetadata.getScale(i));
+            resultInserter.executeUpdate();
+        }
+        inputSet.close();
+    }
 }
 
 // End GetColumnTypesUdx.java

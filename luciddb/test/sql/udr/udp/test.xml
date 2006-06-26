@@ -1,0 +1,38 @@
+<project name="bh" default="udp">
+  <target name="udp">
+    <test-suite name="udp">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udp" target="copy-csv"/>  
+        <ant dir="${open.dir}/luciddb/test/sql/udr/udp" target="clean-exp"/>
+      </init-hook>
+
+      <test name="crSource">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/cr_source.sql"/>
+      </test>
+
+      <test name="exportLocalSchema" requiresSuccess="crSource">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_schema.sql"/>
+      </test>
+
+      <test name="exportForeignSchema" requiresSuccess="crSource">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_foreign_schema.sql"/>
+      </test>
+
+      <test name="misc" requiresSuccess="crSource">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/misc.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml"/>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

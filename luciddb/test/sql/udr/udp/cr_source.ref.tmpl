@@ -1,0 +1,254 @@
+0: jdbc:luciddb:> create schema udptest;
+0: jdbc:luciddb:> set schema 'udptest';
+0: jdbc:luciddb:> set path 'udptest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create foreign server
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options(
+. . . . . . . . >   directory '@DIR@',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '9'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create helper udx
+0: jdbc:luciddb:> create function get_column_info(c cursor)
+. . . . . . . . > returns table( 
+. . . . . . . . >   NAME varchar(128),
+. . . . . . . . >   TYPE varchar(128),
+. . . . . . . . >   SIZE int,
+. . . . . . . . >   "PRECISION" int,
+. . . . . . . . >   SCALE int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > reads sql data
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.getColumnInfo';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- import foreign schema
+0: jdbc:luciddb:> import foreign schema BCP
+. . . . . . . . > limit to ("bench100", "types", SALES, PRODUCTS)
+. . . . . . . . > from server ff_server
+. . . . . . . . > into udptest;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create foreign tables
+0: jdbc:luciddb:> create foreign table udptest.emp(
+. . . . . . . . >   EMPNO numeric(5, 0),
+. . . . . . . . >   FNAME varchar(20),
+. . . . . . . . >   LNAME varchar(20),
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   MANAGER numeric(5, 0),
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   SAL integer,
+. . . . . . . . >   COMMISION integer,
+. . . . . . . . >   HOBBY varchar(20)
+. . . . . . . . > )
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > table_name 'EMP'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create foreign table udptest.dept(
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   DNAME varchar(20),
+. . . . . . . . >   LOCID char(2)
+. . . . . . . . > )
+. . . . . . . . > server ff_server
+. . . . . . . . > options (
+. . . . . . . . > SCHEMA_NAME 'BCP',
+. . . . . . . . > table_name 'DEPT'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create local tables
+0: jdbc:luciddb:> create table udptest.location(
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   STREET varchar(50),
+. . . . . . . . >   CITY varchar(20),
+. . . . . . . . >   STATE char(2),
+. . . . . . . . >   ZIP numeric(5, 0)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table udptest.CUSTOMERS(
+. . . . . . . . >   CUSTID integer, 
+. . . . . . . . >   FNAME varchar(30), 
+. . . . . . . . >   LNAME varchar(30),
+. . . . . . . . >   SEX char(1)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into LOCATION select * from ff_server."BCP".LOCATION;
+0: jdbc:luciddb:> insert into CUSTOMERS select * from ff_server."BCP".CUSTOMERS;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check tables
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest."bench100")));
++--------+----------+-------+------------+--------+
+|  NAME  |   TYPE   | SIZE  | PRECISION  | SCALE  |
++--------+----------+-------+------------+--------+
+| kseq   | INTEGER  | 10    | 10         | 0      |
+| k2     | INTEGER  | 10    | 10         | 0      |
+| k4     | INTEGER  | 10    | 10         | 0      |
+| k5     | INTEGER  | 10    | 10         | 0      |
+| k10    | INTEGER  | 10    | 10         | 0      |
+| k25    | INTEGER  | 10    | 10         | 0      |
+| k100   | INTEGER  | 10    | 10         | 0      |
+| k1k    | INTEGER  | 10    | 10         | 0      |
+| k10k   | INTEGER  | 10    | 10         | 0      |
+| k40k   | INTEGER  | 10    | 10         | 0      |
+| k100k  | INTEGER  | 10    | 10         | 0      |
+| k250k  | INTEGER  | 10    | 10         | 0      |
+| k500k  | INTEGER  | 10    | 10         | 0      |
++--------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest."types")));
++--------------+------------+-------+------------+--------+
+|     NAME     |    TYPE    | SIZE  | PRECISION  | SCALE  |
++--------------+------------+-------+------------+--------+
+| c_char       | CHAR       | 10    | 10         | 0      |
+| c_varchar    | VARCHAR    | 10    | 10         | 0      |
+| c_decimal    | DECIMAL    | 10    | 10         | 3      |
+| c_tinyint    | TINYINT    | 3     | 3          | 0      |
+| c_smallint   | SMALLINT   | 5     | 5          | 0      |
+| c_integer    | INTEGER    | 10    | 10         | 0      |
+| c_bigint     | BIGINT     | 19    | 19         | 0      |
+| c_real       | REAL       | 13    | 7          | 0      |
+| c_double     | DOUBLE     | 22    | 15         | 0      |
+| c_boolean    | BOOLEAN    | 5     | 1          | 0      |
+| c_date       | DATE       | 10    | 0          | 0      |
+| c_time       | TIME       | 8     | 0          | 0      |
+| c_timestamp  | TIMESTAMP  | 19    | 0          | 0      |
++--------------+------------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.customers)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| FNAME   | VARCHAR  | 30    | 30         | 0      |
+| LNAME   | VARCHAR  | 30    | 30         | 0      |
+| SEX     | CHAR     | 1     | 1          | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.dept)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| DEPTNO  | INTEGER  | 10    | 10         | 0      |
+| DNAME   | VARCHAR  | 20    | 20         | 0      |
+| LOCID   | CHAR     | 2     | 2          | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.emp)));
++------------+----------+-------+------------+--------+
+|    NAME    |   TYPE   | SIZE  | PRECISION  | SCALE  |
++------------+----------+-------+------------+--------+
+| EMPNO      | DECIMAL  | 5     | 5          | 0      |
+| FNAME      | VARCHAR  | 20    | 20         | 0      |
+| LNAME      | VARCHAR  | 20    | 20         | 0      |
+| SEX        | CHAR     | 1     | 1          | 0      |
+| DEPTNO     | INTEGER  | 10    | 10         | 0      |
+| MANAGER    | DECIMAL  | 5     | 5          | 0      |
+| LOCID      | CHAR     | 2     | 2          | 0      |
+| SAL        | INTEGER  | 10    | 10         | 0      |
+| COMMISION  | INTEGER  | 10    | 10         | 0      |
+| HOBBY      | VARCHAR  | 20    | 20         | 0      |
++------------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.location)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| LOCID   | CHAR     | 2     | 2          | 0      |
+| STREET  | VARCHAR  | 50    | 50         | 0      |
+| CITY    | VARCHAR  | 20    | 20         | 0      |
+| STATE   | CHAR     | 2     | 2          | 0      |
+| ZIP     | DECIMAL  | 5     | 5          | 0      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.products)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| NAME    | VARCHAR  | 30    | 30         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.sales)));
++---------+----------+-------+------------+--------+
+|  NAME   |   TYPE   | SIZE  | PRECISION  | SCALE  |
++---------+----------+-------+------------+--------+
+| CUSTID  | INTEGER  | 10    | 10         | 0      |
+| EMPID   | INTEGER  | 10    | 10         | 0      |
+| PRODID  | INTEGER  | 10    | 10         | 0      |
+| PRICE   | DECIMAL  | 4     | 4          | 2      |
++---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from udptest."bench100";
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest."types";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.customers;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.dept;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.emp;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.location;
++---------+
+| EXPR$0  |
++---------+
+| 4       |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.products;
++---------+
+| EXPR$0  |
++---------+
+| 16      |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.sales;
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create index
+0: jdbc:luciddb:> create index CUSTOMERS_NAME on CUSTOMERS(LNAME, FNAME);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- analyze table columns
+0: jdbc:luciddb:> analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

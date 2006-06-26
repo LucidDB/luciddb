@@ -1,0 +1,221 @@
+set schema 'udptest';
+set path 'udptest';
+
+-- EXPORT_FOREIGN_SCHEMA_TO_CSV tests
+
+-- basic export, no filters
+call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, null, null, '@EXPDIR@/foreign/basic', true);
+
+create server fexp_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/foreign/basic',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '2'
+);
+
+-- check tables
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP."bench100")));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP."types")));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.customers)));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.dept)));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.emp)));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.location)));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.products)));
+select * from table( get_column_info(
+cursor(select * from fexp_server.BCP.sales)));
+
+select count(*) from fexp_server.BCP."bench100";
+select count(*) from fexp_server.BCP."types";
+select count(*) from fexp_server.BCP.customers;
+select count(*) from fexp_server.BCP.dept;
+select count(*) from fexp_server.BCP.emp;
+select count(*) from fexp_server.BCP.location;
+select count(*) from fexp_server.BCP.products;
+select count(*) from fexp_server.BCP.sales;
+
+-- check tmp schema
+select schema_name from sys_root.dba_schemas where 
+schema_name = '_TMP_LOCAL_SCHEMA';
+
+--
+-- include with table_list
+--
+call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/foreign/include', true);
+
+-- create foreign server from exported schema
+create server fexp_server2
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/foreign/include',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp;
+
+import foreign schema BCP
+from server fexp_server2
+into tempudp;
+
+-- check metadata for imported tables/columns
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP'
+order by table_name;
+
+select * from tempudp."types" order by 1;
+select * from tempudp.location order by locid;
+
+drop schema tempudp cascade;
+
+--
+-- include with table_pattern
+--
+call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', false, null , '%e%', '@EXPDIR@/foreign/include', true);
+
+-- import from exported schema
+create schema tempudp;
+
+import foreign schema BCP
+from server fexp_server2
+into tempudp;
+
+-- check metadata for imported tables/columns
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP'
+order by table_name;
+
+select count(*) from tempudp."types";
+select count(*) from tempudp.emp;
+select count(*) from tempudp.location;
+select count(*) from tempudp."bench100";
+
+select count(*) from tempudp."types" a, ff_server.BCP."types" b
+where a."c_char" = b."c_char" and a."c_varchar" = b."c_varchar" and
+a."c_decimal" = b."c_decimal" and a."c_tinyint" = b."c_tinyint" and
+a."c_smallint" = b."c_smallint" and a."c_integer" = b."c_integer" and
+a."c_bigint" = b."c_bigint" and a."c_real" = b."c_real" and 
+a."c_double" = b."c_double" and a."c_date" = b."c_date" and 
+a."c_time" = b."c_time" and a."c_timestamp" = b."c_timestamp";
+
+drop server fexp_server2 cascade;
+
+--
+-- exclude with table_list
+--
+call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', true, 'bench100,CUSTOMERS, DEPT, EMP, PRODUCTS,types' , null, '@EXPDIR@/foreign/exclude', true);
+
+-- create foreign server from exported schema
+create server fexp_server2
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/foreign/exclude',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp2;
+
+import foreign schema BCP
+from server fexp_server2
+into tempudp2;
+
+-- check metadata for imported tables/columns
+-- select * from sys_root.dba_columns
+-- where schema_name = 'TEMPUDP2'
+-- order by table_name, column_name;
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP2'
+order by table_name;
+
+select * from table( get_column_info(
+cursor(select * from tempudp2.location)));
+select * from table( get_column_info(
+cursor(select * from tempudp2.sales)));
+
+select count(*) from udptest.location a, tempudp2.location b
+where a.locid = b.locid and a.street = b.street and a.city = b.city and
+a.state = b.state and a.zip = b.zip;
+
+select count(*) from tempudp2.sales;
+
+drop schema tempudp2 cascade;
+drop server fexp_server2 cascade;
+
+--
+-- exclude with table pattern
+--
+call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', true, null, '%e%', '@EXPDIR@/foreign/exclude', true);
+
+-- create foreign server from exported schema
+create server fexp_server2
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/foreign/exclude',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp2;
+
+import foreign schema BCP
+from server fexp_server2
+into tempudp2;
+
+-- check metadata for imported tables/columns
+-- select * from sys_root.dba_columns
+-- where schema_name = 'TEMPUDP2'
+-- order by table_name, column_name;
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP2'
+order by table_name;
+
+select * from table( get_column_info(
+cursor(select * from tempudp2.SALES)));
+select * from table( get_column_info(
+cursor(select * from tempudp2.products)));
+select * from table( get_column_info(
+cursor(select * from tempudp2.customers)));
+
+select count(*) from tempudp2.sales;
+select count(*) from tempudp2.products;
+select count(*) from tempudp2.customers;
+
+drop schema tempudp2 cascade;
+drop server fexp_server2 cascade;
+drop schema tempudp cascade;
+drop server fexp_server cascade;
