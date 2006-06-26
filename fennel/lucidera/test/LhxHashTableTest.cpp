@@ -381,7 +381,7 @@ void LhxHashTableTest::testInsert(
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
-        uint numLeafPlanRead;
+        uint numLeafPlanRead = 0;
 
         for (int i = 0; i < recursivePartitioning; i ++) {
             numLeafPlanCreated *= numChildPart;
