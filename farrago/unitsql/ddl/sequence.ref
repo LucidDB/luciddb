@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/sequence.sql#1 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/sequence.sql#2 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sequence_ddl_test;
 0: jdbc:farrago:> set schema 'sequence_ddl_test';
@@ -49,12 +49,12 @@ Error: org.eigenbase.sql.parser.SqlParseException: Multiple identity columns are
 . . . . . . . . >     b bigint generated always as identity
 . . . . . . . . >         (minvalue 12345678900987654321) primary key,
 . . . . . . . . >     j int);
-Error: From line 1, column 77 to line 1, column 96: Numeric literal '12345678900987654321' out of range (state=,code=0)
+Error: From line 3, column 19 to line 3, column 38: Numeric literal '12345678900987654321' out of range (state=,code=0)
 0: jdbc:farrago:> create table t(
 . . . . . . . . >     b bigint generated always as identity
 . . . . . . . . >         (maxvalue 1234567890.01) primary key,
 . . . . . . . . >     j int);
-Error: From line 1, column 77 to line 1, column 89: Numeric literal '1234567890.01' out of range (state=,code=0)
+Error: From line 3, column 19 to line 3, column 31: Numeric literal '1234567890.01' out of range (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- too many values
 0: jdbc:farrago:> create table t(

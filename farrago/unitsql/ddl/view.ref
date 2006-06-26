@@ -144,7 +144,9 @@ Error: From line 1, column 15 to line 1, column 17: Table 'V11' not found (state
 . . . . . . . . > from sys_fem."SQL2003"."LocalView"
 . . . . . . . . > where "name" = 'V12';
 'originalDefinition','description'
-' select empno, /* a comment */ name   from sales.emps','foobar'
+'
+select empno, /* a comment */ name
+  from sales.emps','foobar'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End view.sql
 0: jdbc:farrago:> 

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#7 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/misc.sql#5 $
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;
@@ -16,7 +16,7 @@ Error: Multiple PRIMARY KEY constraints not allowed on table "MISC"."DUP_PK" (st
 0: jdbc:farrago:> create table dup_constraints(
 . . . . . . . . >     i int not null constraint charlie primary key,
 . . . . . . . . >     j int not null constraint charlie unique);
-Error: DDL validation error near line 1, column 120: Duplicate definition for UNIQUE constraint "CHARLIE" within table "MISC"."DUP_CONSTRAINTS"; earlier definition was near line 1, column 77 (state=,code=0)
+Error: DDL validation error near line 3, column 39: Duplicate definition for UNIQUE constraint "CHARLIE" within table "MISC"."DUP_CONSTRAINTS"; earlier definition was near line 2, column 47 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FTRS-specific table validation rules
