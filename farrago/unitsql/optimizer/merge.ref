@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/merge.sql#2 $
+0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/merge.sql#2 $
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ----------------------------
 0: jdbc:farrago:> -- Tests for MERGE statement
@@ -395,7 +395,7 @@
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 52 to line 1, column 54: Table 'EMP' not found (state=,code=0)
+Error: From line 2, column 12 to line 2, column 14: Table 'EMP' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid table in using clause
 0: jdbc:farrago:> explain plan without implementation for
@@ -408,7 +408,7 @@ Error: From line 1, column 52 to line 1, column 54: Table 'EMP' not found (state
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 69 to line 1, column 75: Table 'TEMPEMP' not found (state=,code=0)
+Error: From line 3, column 11 to line 3, column 17: Table 'TEMPEMP' not found (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in on clause
 0: jdbc:farrago:> explain plan without implementation for
@@ -421,7 +421,7 @@ Error: From line 1, column 69 to line 1, column 75: Table 'TEMPEMP' not found (s
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 85 to line 1, column 89: Column 'EMPNO' not found in table 'T' (state=,code=0)
+Error: From line 3, column 27 to line 3, column 31: Column 'EMPNO' not found in table 'T' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in update set clause
 0: jdbc:farrago:> explain plan without implementation for
@@ -434,7 +434,7 @@ Error: From line 1, column 85 to line 1, column 89: Column 'EMPNO' not found in 
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 144 to line 1, column 151: Unknown target column 'T_DEPTNO' (state=,code=0)
+Error: From line 5, column 20 to line 5, column 27: Unknown target column 'T_DEPTNO' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in update set expr
 0: jdbc:farrago:> explain plan without implementation for
@@ -447,7 +447,7 @@ Error: From line 1, column 144 to line 1, column 151: Unknown target column 'T_D
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 180 to line 1, column 185: Column 'T_CITY' not found in table 'E' (state=,code=0)
+Error: From line 5, column 56 to line 5, column 61: Column 'T_CITY' not found in table 'E' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- ambiguous column
 0: jdbc:farrago:> explain plan without implementation for
@@ -462,7 +462,7 @@ Error: From line 1, column 180 to line 1, column 185: Column 'T_CITY' not found 
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.salary * .15,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 302 to line 1, column 307: Column 'SALARY' is ambiguous (state=,code=0)
+Error: From line 8, column 22 to line 8, column 27: Column 'SALARY' is ambiguous (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in insert target list
 0: jdbc:farrago:> explain plan without implementation for
@@ -475,7 +475,7 @@ Error: From line 1, column 302 to line 1, column 307: Column 'SALARY' is ambiguo
 . . . . . . . . >         insert (empno, name, age, t_gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(e.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 283 to line 1, column 290: Unknown target column 'T_GENDER' (state=,code=0)
+Error: From line 8, column 35 to line 8, column 42: Unknown target column 'T_GENDER' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- invalid column reference in insert values list
 0: jdbc:farrago:> explain plan without implementation for
@@ -488,7 +488,7 @@ Error: From line 1, column 283 to line 1, column 290: Unknown target column 'T_G
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(e.t_name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: At line 1, column 337: Table 'E' not found (state=,code=0)
+Error: At line 9, column 33: Table 'E' not found (state=,code=0)
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > merge into emps e
 . . . . . . . . >     using tempemps t on t.t_empno = e.empno
@@ -499,7 +499,7 @@ Error: At line 1, column 337: Table 'E' not found (state=,code=0)
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(name), t.t_age, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 337 to line 1, column 340: Column 'NAME' not found in any table (state=,code=0)
+Error: From line 9, column 33 to line 9, column 36: Column 'NAME' not found in any table (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- mismatch in number of column in values clause
 0: jdbc:farrago:> explain plan without implementation for
@@ -524,7 +524,7 @@ Error: Number of INSERT target columns (6) does not equal number of source items
 . . . . . . . . >         insert (empno, name, age, gender, salary, city)
 . . . . . . . . >         values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
 . . . . . . . . >             t.t_city);
-Error: From line 1, column 278 to line 1, column 280: Cannot assign to target field 'AGE' of type INTEGER from source field 'T_NAME' of type VARCHAR(25) (state=,code=0)
+Error: From line 8, column 30 to line 8, column 32: Cannot assign to target field 'AGE' of type INTEGER from source field 'T_NAME' of type VARCHAR(25) (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

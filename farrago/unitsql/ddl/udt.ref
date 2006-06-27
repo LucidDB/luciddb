@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/udt.sql#5 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/udt.sql#14 $
 0: jdbc:farrago:> -- Test DDL for user-defined types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema udttest;
@@ -157,7 +157,7 @@ Error: Result expression type VARCHAR(20) cannot be assigned to declared type DO
 . . . . . . . . > self as result
 . . . . . . . . > contains sql
 . . . . . . . . > ;
-Error: DDL validation error near line 1, column 93: Name of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_NOMBRE" must match name of structured object type "UDTTEST"."BAD_CONSTRUCTOR_NAME" (state=,code=0)
+Error: DDL validation error near line 5, column 20: Name of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_NOMBRE" must match name of structured object type "UDTTEST"."BAD_CONSTRUCTOR_NAME" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  constructor language must be SQL for now
 0: jdbc:farrago:> create type bad_constructor_language as (
@@ -182,7 +182,7 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: construc
 . . . . . . . . > self as result
 . . . . . . . . > contains sql
 . . . . . . . . > ;
-Error: DDL validation error near line 1, column 93: Return type of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_TYPE" must be type being constructed (state=,code=0)
+Error: DDL validation error near line 5, column 20: Return type of constructor routine "UDTTEST"."BAD_CONSTRUCTOR_TYPE" must be type being constructed (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  conflicting constructor methods
 0: jdbc:farrago:> create type duplicate_constructor as (
@@ -200,38 +200,38 @@ Error: DDL validation error near line 1, column 93: Return type of constructor r
 . . . . . . . . > contains sql
 . . . . . . . . > specific duplicate_constructor2
 . . . . . . . . > ;
-Error: DDL validation error near line 1, column 256: Invocation name and parameter type signature of routine "UDTTEST"."DUPLICATE_CONSTRUCTOR2" conflicts with another routine (state=,code=0)
+Error: DDL validation error near line 10, column 20: Invocation name and parameter type signature of routine "UDTTEST"."DUPLICATE_CONSTRUCTOR2" conflicts with another routine (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  must specify finality
 0: jdbc:farrago:> create type square as (
 . . . . . . . . >     side_length double
 . . . . . . . . > );
-Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+Error: DDL validation error near line 2, column 17: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can never specify FINAL+NOT INSTANTIABLE for anything
 0: jdbc:farrago:> create type square as (
 . . . . . . . . >     side_length double
 . . . . . . . . > ) final not instantiable;
-Error: DDL validation error near line 1, column 41: Cannot define structured object type "UDTTEST"."SQUARE" as both FINAL and NOT INSTANTIABLE (state=,code=0)
+Error: DDL validation error near line 2, column 17: Cannot define structured object type "UDTTEST"."SQUARE" as both FINAL and NOT INSTANTIABLE (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't specify INSTANTIABLE+NOT FINAL for structured type...yet!
 0: jdbc:farrago:> create type square as (
 . . . . . . . . >     side_length double
 . . . . . . . . > ) instantiable not final;
-Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+Error: DDL validation error near line 2, column 17: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL for structured type...yet!
 0: jdbc:farrago:> create type square as (
 . . . . . . . . >     side_length double
 . . . . . . . . > ) not final;
-Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+Error: DDL validation error near line 2, column 17: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  can't specify NOT FINAL+NOT INSTANTIABLE for 
 0: jdbc:farrago:> -- structured type...yet!
 0: jdbc:farrago:> create type square as (
 . . . . . . . . >     side_length double
 . . . . . . . . > ) not final not instantiable;
-Error: DDL validation error near line 1, column 41: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
+Error: DDL validation error near line 2, column 17: Must define structured object type "UDTTEST"."SQUARE" as FINAL (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  at least one attribute required
 0: jdbc:farrago:> create type no_attributes as () final;
@@ -244,13 +244,13 @@ Was expecting one of:
 0: jdbc:farrago:> create type bad_attrtype as (
 . . . . . . . . >     x foobar
 . . . . . . . . > ) final;
-Error: DDL validation error near line 1, column 35: Reference to unknown datatype "FOOBAR" (state=,code=0)
+Error: DDL validation error near line 2, column 5: Reference to unknown datatype "FOOBAR" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  constraints not allowed on attributes
 0: jdbc:farrago:> create type bad_constraint as (
 . . . . . . . . >     x int not null
 . . . . . . . . > ) final;
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "not" at line 1, column 43.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "not" at line 2, column 11.
 Was expecting one of:
     "CHARACTER" ...
     "COLLATE" ...
@@ -264,7 +264,7 @@ Was expecting one of:
 0: jdbc:farrago:> create type bad_default as (
 . . . . . . . . >     x double default 'zero'
 . . . . . . . . > ) final;
-Error: DDL validation error near line 1, column 34: Type mismatch in DEFAULT clause for structured type attribute "X";
+Error: DDL validation error near line 2, column 5: Type mismatch in DEFAULT clause for structured type attribute "X";
 column type family is NUMERIC but default value type family is CHARACTER (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should fail:  self-referencing nested type
@@ -330,7 +330,7 @@ Error: DDL validation error near line 1, column 21: Must define representation f
 0: jdbc:farrago:> create type bad_schema as (
 . . . . . . . . >     tb udttest.toothbrush
 . . . . . . . . > ) final;
-Error: DDL validation error near line 1, column 33: Reference to unknown user-defined type "TOOTHBRUSH" (state=,code=0)
+Error: DDL validation error near line 2, column 5: Reference to unknown user-defined type "TOOTHBRUSH" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test UDF's which operate on UDT's
@@ -401,7 +401,7 @@ Error: DDL validation error near line 1, column 33: Reference to unknown user-de
 . . . . . . . . >     endpoint1 rectilinear_coord,
 . . . . . . . . >     endpoint2 rectilinear_coord
 . . . . . . . . > ) final;
-Error: DDL validation error near line 1, column 35: Reference to unknown datatype "RECTILINEAR_COORD" (state=,code=0)
+Error: DDL validation error near line 2, column 5: Reference to unknown datatype "RECTILINEAR_COORD" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test tables which store typed columns

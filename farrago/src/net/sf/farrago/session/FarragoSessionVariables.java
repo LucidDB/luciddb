@@ -157,6 +157,7 @@ public class FarragoSessionVariables implements Cloneable
         this.systemUserName = baseVariables.systemUserName;
         this.sessionUserName = baseVariables.sessionUserName;
         this.currentUserName = baseVariables.currentUserName;
+        this.processId = baseVariables.processId;
         this.sessionName = baseVariables.sessionName;
 
         // Since schemaSearchPath is meant to be an unmodifiable list,

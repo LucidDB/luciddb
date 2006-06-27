@@ -56,7 +56,7 @@
 0: jdbc:farrago:> -- fails: non-existent sample
 0: jdbc:farrago:> create table t3 (i int primary key, j int)
 . . . . . . . . > sample (nonexistent.s1 as sample1);
-Error: DDL validation error near line 1, column 70: Reference to unknown table "S1" (state=,code=0)
+Error: DDL validation error near line 2, column 27: Reference to unknown table "S1" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- todo: fails: sample names must be unique
 0: jdbc:farrago:> --create table t4 (i int primary key, j int)
