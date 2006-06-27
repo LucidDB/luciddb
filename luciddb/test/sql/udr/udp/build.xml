@@ -23,7 +23,7 @@
 <project name="udp" basedir="." default="test">
   <dirname property="udp.dir" file="${ant.file.udp}" />
 
-  <property name="open.dir" location="${udx.dir}/../../../../.."/>
+  <property name="open.dir" location="${udp.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
@@ -42,9 +42,9 @@
   <property name="bh.log.basedir" value="${udp.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="csv.copy.dir" value="${udp.dir}/csv-copy" />
+  <property name="csv.copy.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
-  <property name="csv.exp.dir" value="${udp.dir}/csv-exp" />
+  <property name="csv.exp.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-exp" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
