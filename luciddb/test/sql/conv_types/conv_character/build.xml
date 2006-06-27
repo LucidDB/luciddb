@@ -23,7 +23,7 @@
 <project name="conv_char" basedir="." default="test">
   <dirname property="conv_char.dir" file="${ant.file.conv_char}" />
   
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${conv_char.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

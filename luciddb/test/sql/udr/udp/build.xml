@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
+<!-- 
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
-// Copyright (C) 2006-2006 LucidEra, Inc.
-// Copyright (C) 2006-2006 The Eigenbase Project
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -14,16 +14,16 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+//  
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="conv_numeric" basedir="." default="test">
-  <dirname property="conv_numeric.dir" file="${ant.file.conv_numeric}" />
+<project name="udp" basedir="." default="test">
+  <dirname property="udp.dir" file="${ant.file.udp}" />
 
-  <property name="open.dir" location="${conv_numeric.dir}/../../../../.."/>
+  <property name="open.dir" location="${udp.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
@@ -35,8 +35,16 @@
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+
   <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${conv_numeric.dir}/testlog" />
+  <property name="bh.log.basedir" value="${udp.dir}/testlog" />
+
+  <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+  <property name="csv.exp.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-exp" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -47,18 +55,49 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="test">
+  <target name="gen-all-sql">
+    <copy todir="${udp.dir}" overwrite="true">
+      <fileset dir="${udp.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+        <filter token="EXPDIR" value="${csv.exp.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork
-      basedir="${conv_numeric.dir}"
+      basedir="${udp.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
+  </target>
+
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="*.csv"/>
+        <include name="*.bcp"/>
+        <exclude name="blob.*"/>
+      </fileset>
+    </sync>
+  </target>
+
+  <target name="clean-exp">
+    <delete dir="${csv.exp.dir}"/>
   </target>
 
   <target name="clean">
     <delete dir="${bh.log.basedir}"/>
     <delete>
-      <fileset dir="${conv_numeric.dir}" includes="*.log"/>
+      <fileset dir="${udp.dir}">
+        <include name="*.err"/>
+      </fileset>
     </delete>
-  </target>
-
+    <delete dir="${csv.copy.dir}"/>
+    <delete dir="${csv.exp.dir}"/>
+  </target>  
 </project>

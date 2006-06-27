@@ -23,7 +23,7 @@
 <project name="vi_flip" basedir="." default="test">
   <dirname property="vi_flip.dir" file="${ant.file.vi_flip}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_flip.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

@@ -23,7 +23,7 @@
 <project name="vi_populate" basedir="." default="test">
   <dirname property="vi_populate.dir" file="${ant.file.vi_populate}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_populate.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

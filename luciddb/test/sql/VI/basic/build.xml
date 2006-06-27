@@ -23,7 +23,7 @@
 <project name="vi_basic" basedir="." default="test">
   <dirname property="vi_basic.dir" file="${ant.file.vi_basic}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_basic.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

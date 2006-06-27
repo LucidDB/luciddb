@@ -281,3 +281,31 @@ create view dba_foreign_table_options as
 ;
 
 grant select on dba_foreign_table_options to public;
+
+
+-- Export schema to csv files UDP
+create procedure export_schema_to_csv(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535),
+  in bcp boolean) 
+language java
+reads sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
+
+create procedure export_foreign_schema_to_csv(
+  in serv varchar(128),
+  in fschema varchar(128),
+  in exclude boolean,
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535),
+  in bcp boolean)
+language java
+modifies sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';

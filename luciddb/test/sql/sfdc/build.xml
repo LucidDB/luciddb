@@ -23,7 +23,7 @@
 <project name="sfdc" basedir="." default="test">
   <dirname property="sfdc.test.dir" file="${ant.file.sfdc}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${sfdc.test.dir}/../../../.."/>
   
 <fail unless="open.dir" />
 

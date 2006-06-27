@@ -24,6 +24,7 @@
 <!-- Farrago plugin RNG example ant build script -->
 
 <project name="farragoExampleRNG" basedir="." default="jar">
+  <dirname property="farragoExampleRNG.dir" file="${ant.file}" />
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
@@ -31,7 +32,7 @@
   <!-- Specialization definitions required by buildPlugin.xml -->
 
   <!-- Plugin build root -->
-  <property name="plugin.dir" location="."/>
+  <property name="plugin.dir" location="${farragoExampleRNG.dir}"/>
 
   <!-- Filename for generated jar (no path, no extension) -->
   <property name="plugin.jar.basename" 

@@ -23,7 +23,7 @@
 <project name="calc_cast" basedir="." default="test">
   <dirname property="calc_cast.dir" file="${ant.file.calc_cast}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${calc_cast.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

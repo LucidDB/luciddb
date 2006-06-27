@@ -23,7 +23,7 @@
 <project name="dml_merge" basedir="." default="test">
   <dirname property="dml_merge.dir" file="${ant.file.dml_merge}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${dml_merge.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

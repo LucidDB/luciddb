@@ -24,13 +24,14 @@
 <!-- Farrago plannerviz ant build script -->
 
 <project name="farragoPlannerviz" basedir="." default="jar">
+  <dirname property="farragoPlannerviz.dir" file="${ant.file}" />
 
   <!-- Definitions for Farrago build properties and macros -->
   <import file="../../buildMacros.xml"/>
 
   <!-- Specialization definitions required by buildPlugin.xml -->
 
-  <property name="plugin.dir" location="."/>
+  <property name="plugin.dir" location="${farragoPlannerviz.dir}"/>
   <property name="plugin.jar.basename" value="FarragoPlannerviz"/>
   <property name="plugin.factory.class" 
     value="net.sf.farrago.plannerviz.FarragoPlannervizPluginFactory"/>

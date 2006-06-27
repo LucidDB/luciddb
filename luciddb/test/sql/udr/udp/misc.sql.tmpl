@@ -1,0 +1,105 @@
+set schema 'udptest';
+set path 'udptest';
+
+--
+-- no bcp
+--
+call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, 'types,bench100,EMP', null, '@EXPDIR@/misc/nobcp', false);
+
+create server misc_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/misc/nobcp',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '2'
+);
+
+select * from table( get_column_info(
+cursor(select * from misc_server.BCP."types")));
+
+drop server misc_server cascade;
+
+-- call from within different catalog
+set schema 'sys_boot.jdbc_metadata';
+
+-- negative test
+call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+
+call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+
+
+create server misc_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/misc/diffcat',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '2'
+);
+
+select * from table( localdb.udptest.get_column_info(
+cursor(select * from misc_server.BCP."types")));
+
+set schema 'localdb.udptest';
+
+--
+-- negative tests
+--
+
+-- table_list and table_pattern both not null
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true);
+
+call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false);
+
+-- incorrect table within table_list
+call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS', null, '@EXPDIR@/misc/neg', true);
+ 
+call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types', null, '@EXPDIR@/misc/neg', false);
+
+-- incorrect catalog name
+call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true);
+
+-- incorrect schema name
+call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true);
+
+-- incorrect server name
+call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+
+-- incorrect foreign schema name
+call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+
+-- check export directory
+create server neg_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/misc/neg',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '2'
+);
+
+create schema neg;
+
+import foreign schema BCP
+from server neg_server
+into neg;
+
+select table_name from sys_root.dba_tables where
+schema_name = 'NEG'
+order by 1;

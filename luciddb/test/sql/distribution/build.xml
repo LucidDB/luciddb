@@ -23,7 +23,7 @@
 <project name="distribution" basedir="." default="test">
   <dirname property="distribution.dir" file="${ant.file.distribution}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${distribution.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

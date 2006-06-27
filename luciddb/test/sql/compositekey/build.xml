@@ -23,7 +23,7 @@
 <project name="compositekey" basedir="." default="test">
   <dirname property="compositekey.dir" file="${ant.file.compositekey}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${compositekey.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

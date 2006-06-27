@@ -23,7 +23,7 @@
 <project name="sqbm" basedir="." default="test">
   <dirname property="sqbm.dir" file="${ant.file.sqbm}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${sqbm.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
