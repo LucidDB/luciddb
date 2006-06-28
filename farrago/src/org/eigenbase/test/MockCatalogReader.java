@@ -59,8 +59,8 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
             typeFactory.createSqlType(SqlTypeName.Varchar, 10);
         final RelDataType varchar20Type =
             typeFactory.createSqlType(SqlTypeName.Varchar, 20);
-        final RelDataType dateType =
-            typeFactory.createSqlType(SqlTypeName.Date);
+        final RelDataType timestampType =
+            typeFactory.createSqlType(SqlTypeName.Timestamp);
         final RelDataType rectilinearCoordType =
             typeFactory.createStructType(
                 new RelDataType[] {intType, intType},
@@ -90,7 +90,7 @@ public class MockCatalogReader implements SqlValidatorCatalogReader
         empTable.addColumn("ENAME", varchar20Type);
         empTable.addColumn("JOB", varchar10Type);
         empTable.addColumn("MGR", intType);
-        empTable.addColumn("HIREDATE", dateType);
+        empTable.addColumn("HIREDATE", timestampType);
         empTable.addColumn("SAL", intType);
         empTable.addColumn("COMM", intType);
         empTable.addColumn("DEPTNO", intType);

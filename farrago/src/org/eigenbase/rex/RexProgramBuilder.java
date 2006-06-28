@@ -81,13 +81,13 @@ public class RexProgramBuilder
     private static boolean assertionsAreEnabled()
     {
         boolean assertionsEnabled = false;
-        assert (assertionsEnabled = true) == true;
+        assert assertionsEnabled = true;
         return assertionsEnabled;
     }
 
     private void validate(final RexNode expr, final int fieldOrdinal)
     {
-        final RexVisitor validator = new RexVisitorImpl(true) {
+        final RexVisitor<Void> validator = new RexVisitorImpl<Void>(true) {
             public Void visitInputRef(RexInputRef input)
             {
                 final int index = input.getIndex();
@@ -696,6 +696,7 @@ public class RexProgramBuilder
             RexLocalRef ref = projectRefList.get(i);
             progBuilder.addProject(ref, outputFields[i].getName());
         }
+        progBuilder.eliminateUnused();
         return progBuilder.getProgram();
     }
 

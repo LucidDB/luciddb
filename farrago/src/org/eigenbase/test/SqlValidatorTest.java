@@ -1007,7 +1007,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             " VARCHAR(20) NOT NULL ENAME," +
             " VARCHAR(10) NOT NULL JOB," +
             " INTEGER NOT NULL MGR," +
-            " DATE NOT NULL HIREDATE," +
+            " TIMESTAMP(0) NOT NULL HIREDATE," +
             " INTEGER NOT NULL SAL," +
             " INTEGER NOT NULL COMM," +
             " INTEGER NOT NULL DEPTNO) NOT NULL MULTISET NOT NULL");
@@ -2615,7 +2615,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             " VARCHAR(20) NOT NULL ENAME," +
             " VARCHAR(10) NOT NULL JOB," +
             " INTEGER NOT NULL MGR," +
-            " DATE NOT NULL HIREDATE," +
+            " TIMESTAMP(0) NOT NULL HIREDATE," +
             " INTEGER NOT NULL SAL," +
             " INTEGER NOT NULL COMM," +
             " INTEGER NOT NULL DEPTNO) NOT NULL";
