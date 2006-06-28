@@ -1734,6 +1734,11 @@ public class SqlParserTest extends TestCase
         checkExp("N'bye' \t\r\f\f\n' bye'", "_ISO-8859-1'bye' ' bye'");
         checkExp("_iso_8859-1'bye' \n\n--\n-- this is a comment\n' bye'",
             "_ISO_8859-1'bye' ' bye'");
+
+        // newline in string literal
+        checkExp("'foo\rbar'", "'foo\rbar'");
+        checkExp("'foo\nbar'", "'foo\nbar'");
+        checkExp("'foo\r\nbar'", "'foo\r\nbar'");
     }
 
     public void testStringLiteralFails()
@@ -1749,14 +1754,6 @@ public class SqlParserTest extends TestCase
         check("select N'1' '2' from t",
             "SELECT _ISO-8859-1'1' '2'" + NL +
             "FROM `T`");
-
-        // newline in string literal
-        checkExpFails("'foo\rbar'",
-            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
-        checkExpFails("'foo\nbar'",
-            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
-        checkExpFails("'foo\r\nbar'",
-            "(?s)Encountered \"\\\\'\" at line 1, column 1.*");
     }
 
     public void testStringLiteralChain()
