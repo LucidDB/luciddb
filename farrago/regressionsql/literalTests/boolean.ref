@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/literalTests/boolean.sql#9 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test boolean literal
 0: jdbc:farrago:> values true;

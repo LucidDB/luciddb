@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/joinorder.sql#7 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Tests for ConvertMultiJoinRule and OptimizeJoinRule
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jo;

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/literalTests/date.sql#2 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test date literal
 0: jdbc:farrago:> 

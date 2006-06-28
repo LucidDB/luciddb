@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/explain.sql#4 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test EXPLAIN command.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';

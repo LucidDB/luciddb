@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/misc.sql#3 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Negative tests for LucidDB transaction support
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail:  we don't support transactions

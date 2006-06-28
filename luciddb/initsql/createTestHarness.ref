@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#4 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- These procedures are for internal use by tests only, so
 0: jdbc:luciddb:> -- we put them in a hidden catalog.  They can be dropped for

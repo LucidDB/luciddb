@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/regressionsql/case.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Full vertical system testing of the case function
 0: jdbc:farrago:> -- 
 0: jdbc:farrago:> -- 

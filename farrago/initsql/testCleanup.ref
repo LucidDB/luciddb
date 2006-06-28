@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/testCleanup.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- This dummy script cleans up after unit tests
 0: jdbc:farrago:> -- (actual cleanup work is done by FarragoTestCase.CleanUp)
 0: jdbc:farrago:> !set verbose true

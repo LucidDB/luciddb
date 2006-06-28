@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/precedence.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Full vertical system testing of precedence tests 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- NOTE: This script is run twice. Once with the "calcVirtualMachine" set to use fennel

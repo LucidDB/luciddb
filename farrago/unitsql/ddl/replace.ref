@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/replace.sql#4 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test create or replace DDL 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema createorreplace;

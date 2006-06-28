@@ -1,4 +1,4 @@
-# $Id:$
+# $Id$
 
 # Test a static recursion that doesn't go very far
 PARSE RESULT:

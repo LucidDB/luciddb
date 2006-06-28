@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/sqlline/incremental.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test various sqlline display options
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- with full error stack

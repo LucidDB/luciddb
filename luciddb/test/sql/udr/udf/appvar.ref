@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/appvar.sql#3 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Test script for application variables UDF/UDP
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';

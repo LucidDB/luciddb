@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/pushfilter.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test optimizer rules for pushing down filters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema pdf;

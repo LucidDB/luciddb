@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/namespace.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test queries which make use of foreign namespaces
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Java calculator

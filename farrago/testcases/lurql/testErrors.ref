@@ -1,4 +1,4 @@
-# $Id:$
+# $Id$
 
 # Should fail:  class lookup.
 PARSE RESULT:

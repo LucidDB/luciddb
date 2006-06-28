@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/fy_quarter.sql#3 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Tests for FYQuarter UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';
