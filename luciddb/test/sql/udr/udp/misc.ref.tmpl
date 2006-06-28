@@ -143,7 +143,7 @@ Error: Directory @EXPDIR@/misc/neg/ does not exist (state=,code=0)
 0: jdbc:luciddb:> import foreign schema BCP
 . . . . . . . . > from server neg_server
 . . . . . . . . > into neg;
-Error: DDL validation error near line 1, column 39: Reference to unknown data server "NEG_SERVER" (state=,code=0)
+Error: DDL validation error near line 2, column 13: Reference to unknown data server "NEG_SERVER" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select table_name from sys_root.dba_tables where
 . . . . . . . . > schema_name = 'NEG'
