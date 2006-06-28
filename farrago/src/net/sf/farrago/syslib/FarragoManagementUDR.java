@@ -56,9 +56,10 @@ public abstract class FarragoManagementUDR
     //~ Static fields/initializers --------------------------------------------
 
     static final String STORAGEFACTORY_PROP_NAME =
-        "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.driverClassName";
+        "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
     static final String [] STORAGE_PROP_NAMES =
         new String [] {
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.driverClassName",
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.url",
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.userName",
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.password",
