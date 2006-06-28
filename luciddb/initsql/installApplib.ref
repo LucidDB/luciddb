@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/initsql/installApplib.sql#5 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> create schema applib;
 0: jdbc:luciddb:> set schema 'applib';
 0: jdbc:luciddb:> set path 'applib';

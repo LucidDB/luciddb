@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test internal rid function
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema rid;

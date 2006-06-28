@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/sqlUdfTest.sql#1 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Tests for SQL routines
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create schema udftest3;

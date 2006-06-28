@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/decimal.sql#6 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema decimal_ddl_test;
 0: jdbc:farrago:> set schema 'decimal_ddl_test';

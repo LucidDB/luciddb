@@ -1,4 +1,4 @@
-0: jdbc:farragotest:> -- $Id: //open/lu/dev_lcs/farrago/testcases/autoCalcRule.sql#3 $
+0: jdbc:farragotest:> -- $Id$
 0: jdbc:farragotest:> 
 0: jdbc:farragotest:> explain plan for select jplus(1, 1) from (values(true));
 +----------------------------------------------------------------------------------------------------+

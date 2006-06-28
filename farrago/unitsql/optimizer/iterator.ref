@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/optimizer/iterator.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test queries which abuse the implementation of conversion between Fennel 
 0: jdbc:farrago:> -- and Iterator calling convention.
 0: jdbc:farrago:> 

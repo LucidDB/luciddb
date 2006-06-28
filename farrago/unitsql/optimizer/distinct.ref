@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/optimizer/distinct.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test queries with DISTINCT
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';

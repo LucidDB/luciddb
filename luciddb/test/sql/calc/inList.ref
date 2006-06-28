@@ -1,6 +1,6 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- calc/inList.sql
-0: jdbc:luciddb:> -- $Id: //bb/bb713/server/Test/calc/inList.sql#1 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- Test IN LIST and NOT IN LIST function/constructs
 0: jdbc:luciddb:> --

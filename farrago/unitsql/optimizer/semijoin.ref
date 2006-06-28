@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev_lcs/farrago/unitsql/optimizer/semijoin.sql#23 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;

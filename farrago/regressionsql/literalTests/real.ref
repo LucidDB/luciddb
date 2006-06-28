@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/regressionsql/literalTests/real.sql#6 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test real literal
 0: jdbc:farrago:> values 0.0;

@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/stale.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test for correct cache invalidation of plans on stale object definitions
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema overstock;

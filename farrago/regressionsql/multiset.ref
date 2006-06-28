@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/regressionsql/multiset.sql#5 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Multiset related regression tests
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --FIXME: reenable the following five queries once 

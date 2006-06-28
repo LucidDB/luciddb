@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfInvocation.sql#8 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Tests ported from 
 0: jdbc:luciddb:> -- //open/lu/dev/farrago/unitsql/expressions/udfInvocation.sql
 0: jdbc:luciddb:> 
