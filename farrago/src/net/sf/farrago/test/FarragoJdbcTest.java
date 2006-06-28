@@ -2914,15 +2914,33 @@ public class FarragoJdbcTest extends ResultSetTestCase
     public void testDynamicParameterExecuteImmediate()
         throws Exception
     {
+        final String msg =
+            "Expected failure due to immediate execution with dynamic param";
+        
         String sql = "select empid from sales.emps where name=?";
         try {
             resultSet = stmt.executeQuery(sql);
+            Assert.fail(msg);
         } catch (SQLException ex) {
             // expected
-            return;
         }
-        Assert.fail(
-            "Expected failure due to immediate execution with dynamic param");
+
+        try {
+            boolean hasResult = stmt.execute(sql);
+            Util.discard(hasResult);
+            Assert.fail(msg);
+        } catch (SQLException ex) {
+            // expected
+        }
+
+        sql = "update sales.emps set age = ?";
+        try {
+            int cnt = stmt.executeUpdate(sql);
+            Util.discard(cnt);
+            Assert.fail(msg);
+        } catch (SQLException ex) {
+            // expected
+        }
     }
 
     //~ Inner Classes ---------------------------------------------------------
