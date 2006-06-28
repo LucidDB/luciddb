@@ -30,6 +30,7 @@ import org.eigenbase.sql.SqlUtil;
 import org.eigenbase.sql.parser.impl.SqlParserImpl;
 import org.eigenbase.test.SqlValidatorTestCase;
 import org.eigenbase.util.TestUtil;
+import static org.eigenbase.util.TestUtil.*;
 import org.eigenbase.util.Util;
 import org.eigenbase.util.Bug;
 
@@ -172,11 +173,6 @@ public class SqlParserTest extends TestCase
         String expected)
     {
         getTester().check(sql, expected);
-    }
-
-    protected static String fold(String[] strings)
-    {
-        return TestUtil.fold(strings);
     }
 
     protected SqlNode parseStmt(String sql) throws SqlParseException {
@@ -1104,13 +1100,14 @@ public class SqlParserTest extends TestCase
 
     public void testContinuedLiteral()
     {
-        checkExp("'abba'\n'abba'", "'abba' 'abba'");
-        checkExp("'abba'\n'0001'", "'abba' '0001'");
-        checkExp("N'yabba'\n'dabba'\n'doo'", "_ISO-8859-1'yabba' 'dabba' 'doo'");
-        checkExp("_iso-8859-1'yabba'\n'dabba'\n'doo'",
-            "_ISO-8859-1'yabba' 'dabba' 'doo'");
+        checkExp("'abba'\n'abba'", fold("'abba'\n'abba'"));
+        checkExp("'abba'\n'0001'", fold("'abba'\n'0001'"));
+        checkExp("N'yabba'\n'dabba'\n'doo'",
+            fold("_ISO-8859-1'yabba'\n'dabba'\n'doo'"));
+        checkExp("_iso-8859-1'yabba'\n'dabba'\n'don''t'",
+            fold("_ISO-8859-1'yabba'\n'dabba'\n'don''t'"));
 
-        checkExp("x'01aa'\n'03ff'", "X'01AA' '03FF'");
+        checkExp("x'01aa'\n'03ff'", fold("X'01AA'\n'03FF'"));
 
         // a bad hexstring
         checkFails("x'01aa'\n^'vvvv'^",
@@ -1260,7 +1257,7 @@ public class SqlParserTest extends TestCase
 
         // even if comment abuts the tokens at either end, it becomes a space
         check("values ('abc'/* a comment*/'def')",
-            "(VALUES (ROW('abc' 'def')))");
+            fold("(VALUES (ROW('abc'\n'def')))"));
 
         // comment which starts as soon as it has begun
         check("values /**/ (1)",
@@ -1696,9 +1693,9 @@ public class SqlParserTest extends TestCase
         checkExp("x'fffff'=X''", "(X'FFFFF' = X'')");
         checkExp("x'1' \t\t\f\r " + NL
             + "'2'--hi this is a comment'FF'\r\r\t\f " + NL + "'34'",
-            "X'1' '2' '34'");
+            fold("X'1'\n'2'\n'34'"));
         checkExp("x'1' \t\t\f\r " + NL + "'000'--" + NL + "'01'",
-            "X'1' '000' '01'");
+            fold("X'1'\n'000'\n'01'"));
         checkExp("x'1234567890abcdef'=X'fFeEdDcCbBaA'",
             "(X'1234567890ABCDEF' = X'FFEEDDCCBBAA')");
         // Check the inital zeroes don't get trimmed somehow
@@ -1716,8 +1713,7 @@ public class SqlParserTest extends TestCase
 
          // valid syntax, but should fail in the validator
         check("select x'1' '2' from t",
-            "SELECT X'1' '2'" + NL +
-            "FROM `T`");
+            fold("SELECT X'1'\n'2'\nFROM `T`"));
     }
 
     public void testStringLiteral()
@@ -1728,12 +1724,14 @@ public class SqlParserTest extends TestCase
         checkExp("n'lowercase n'", "_ISO-8859-1'lowercase n'");
         checkExp("'boring string'", "'boring string'");
         checkExp("_iSo_8859-1'bye'", "_ISO_8859-1'bye'");
-        checkExp("'three' \n ' blind'\n' mice'", "'three' ' blind' ' mice'");
+        checkExp("'three' \n ' blind'\n' mice'",
+            fold("'three'\n' blind'\n' mice'"));
         checkExp("'three' -- comment \n ' blind'\n' mice'",
-            "'three' ' blind' ' mice'");
-        checkExp("N'bye' \t\r\f\f\n' bye'", "_ISO-8859-1'bye' ' bye'");
+            fold("'three'\n' blind'\n' mice'"));
+        checkExp("N'bye' \t\r\f\f\n' bye'",
+            fold("_ISO-8859-1'bye'\n' bye'"));
         checkExp("_iso_8859-1'bye' \n\n--\n-- this is a comment\n' bye'",
-            "_ISO_8859-1'bye' ' bye'");
+            fold("_ISO_8859-1'bye'\n' bye'"));
 
         // newline in string literal
         checkExp("'foo\rbar'", "'foo\rbar'");
@@ -1752,20 +1750,27 @@ public class SqlParserTest extends TestCase
 
         // valid syntax, but should give a validator error
         check("select N'1' '2' from t",
-            "SELECT _ISO-8859-1'1' '2'" + NL +
-            "FROM `T`");
+            fold("SELECT _ISO-8859-1'1'\n'2'\n" +
+            "FROM `T`"));
     }
 
     public void testStringLiteralChain()
     {
-        checkExp("   'foo'\r'bar'", "'foo' 'bar'");
-        checkExp("   'foo'\r\n'bar'", "'foo' 'bar'");
-        checkExp("   'foo'\r\n\r\n'bar'  \n   'baz'", "'foo' 'bar' 'baz'");
-        checkExp("   'foo' /* a comment */ 'bar'", "'foo' 'bar'");
-        checkExp("   'foo' -- a comment\r\n 'bar'", "'foo' 'bar'");
+        final String fooBar = TestUtil.fold(new String[]{
+            "'foo'",
+            "'bar'"});
+        final String fooBarBaz = TestUtil.fold(new String[]{
+            "'foo'",
+            "'bar'",
+            "'baz'"});
+        checkExp("   'foo'\r'bar'", fooBar);
+        checkExp("   'foo'\r\n'bar'", fooBar);
+        checkExp("   'foo'\r\n\r\n'bar'  \n   'baz'", fooBarBaz);
+        checkExp("   'foo' /* a comment */ 'bar'", fooBar);
+        checkExp("   'foo' -- a comment\r\n 'bar'", fooBar);
         // String literals not separated by comment or newline are OK in
         // parser, should fail in validator.
-        checkExp("   'foo' 'bar'", "'foo' 'bar'");
+        checkExp("   'foo' 'bar'", fooBar);
     }
 
     public void testCaseExpression()

@@ -152,6 +152,11 @@ public class SqlLiteralChainOperator extends SqlInternalOperator {
         SqlCollation collation = null;
         for (int i = 0; i < rands.length; i++) {
             SqlLiteral rand = (SqlLiteral) rands[i];
+            if (i > 0) {
+                // SQL:2003 says there must be a newline between string
+                // fragments.
+                writer.newlineAndIndent();
+            }
             if (rand instanceof SqlCharStringLiteral) {
                 NlsString nls =
                     ((SqlCharStringLiteral) rand).getNlsString();
