@@ -7,6 +7,17 @@ create schema sys_boot.mgmt;
 set schema 'sys_boot.mgmt';
 set path 'sys_boot.mgmt';
 
+create function repository_properties()
+returns table(property_name varchar(255), property_value varchar(255))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryProperties';
+
+create view repository_properties_view as
+  select * from table(repository_properties());
+
+
 create function statements()
 returns table(id int, session_id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
 language java
