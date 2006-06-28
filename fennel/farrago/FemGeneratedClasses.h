@@ -147,8 +147,14 @@ typedef JniProxyIter<ProxyLbmIntersectStreamDef> SharedProxyLbmIntersectStreamDe
 class ProxyLbmMinusStreamDef;
 typedef JniProxyIter<ProxyLbmMinusStreamDef> SharedProxyLbmMinusStreamDef;
 
+class ProxyLbmNormalizerStreamDef;
+typedef JniProxyIter<ProxyLbmNormalizerStreamDef> SharedProxyLbmNormalizerStreamDef;
+
 class ProxyLbmSearchStreamDef;
 typedef JniProxyIter<ProxyLbmSearchStreamDef> SharedProxyLbmSearchStreamDef;
+
+class ProxyLbmSortedAggStreamDef;
+typedef JniProxyIter<ProxyLbmSortedAggStreamDef> SharedProxyLbmSortedAggStreamDef;
 
 class ProxyLbmSplicerStreamDef;
 typedef JniProxyIter<ProxyLbmSplicerStreamDef> SharedProxyLbmSplicerStreamDef;
@@ -273,10 +279,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -755,6 +761,12 @@ class ProxyLbmMinusStreamDef
 public:
 };
 
+class ProxyLbmNormalizerStreamDef
+: virtual public JniProxy, virtual public ProxyTupleStreamDef
+{
+public:
+};
+
 class ProxyLbmSearchStreamDef
 : virtual public JniProxy, virtual public ProxyIndexSearchDef
 {
@@ -763,6 +775,18 @@ int32_t getRowLimitParamId();
 static jmethodID meth_getRowLimitParamId;
 int32_t getStartRidParamId();
 static jmethodID meth_getStartRidParamId;
+};
+
+class ProxySortedAggStreamDef
+: virtual public JniProxy, virtual public ProxyAggStreamDef
+{
+public:
+};
+
+class ProxyLbmSortedAggStreamDef
+: virtual public JniProxy, virtual public ProxySortedAggStreamDef
+{
+public:
 };
 
 class ProxyLbmSplicerStreamDef
@@ -869,12 +893,6 @@ SharedProxyTupleProjection getInputCompareProjection();
 static jmethodID meth_getInputCompareProjection;
 SharedProxyTupleProjection getOutputProjection();
 static jmethodID meth_getOutputProjection;
-};
-
-class ProxySortedAggStreamDef
-: virtual public JniProxy, virtual public ProxyAggStreamDef
-{
-public:
 };
 
 class ProxySortingStreamDef
@@ -1171,7 +1189,11 @@ virtual void visit(ProxyLbmIntersectStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmMinusStreamDef &)
 { unhandledVisit(); }
+virtual void visit(ProxyLbmNormalizerStreamDef &)
+{ unhandledVisit(); }
 virtual void visit(ProxyLbmSearchStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyLbmSortedAggStreamDef &)
 { unhandledVisit(); }
 virtual void visit(ProxyLbmSplicerStreamDef &)
 { unhandledVisit(); }
