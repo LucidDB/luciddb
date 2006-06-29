@@ -255,7 +255,7 @@ public class FarragoObjectCache implements FarragoAllocation
 
         // release map lock since actual discard could be time-consuming
         for (EntryImpl discard : discards) {
-            discardEntry(discard);
+            discardEntry(discard, true);
         }
 
         // REVIEW:  in some circumstances, we want to fail if overdraft is
@@ -300,8 +300,25 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
+     * Removes an unpinned entry from the cache, but does not close its value.
+     */
+    public void detach(Entry e)
+    {
+        EntryImpl entry = (EntryImpl) e;
+        synchronized (mapKeyToEntry) {
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Detaching key " + entry.key.toString());
+            }
+            assert (entry.pinCount == 0) : entry.pinCount;
+            mapKeyToEntry.removeMulti(entry.getKey(), entry);
+        }
+        discardEntry(entry, false);
+    }
+
+
+    /**
      * Discards any entries associated with a key.
-     *
+     * If the bound value of an entry is a ClosableObject, it will be closed.
      * @param key key of the Entry to discard
      */
     public void discard(Object key)
@@ -312,7 +329,7 @@ public class FarragoObjectCache implements FarragoAllocation
             mapKeyToEntry.remove(key);
         }
         for (EntryImpl entry : list) {
-            discardEntry(entry);
+            discardEntry(entry, true);
         }
     }
 
@@ -327,23 +344,23 @@ public class FarragoObjectCache implements FarragoAllocation
             while (iter.hasNext()) {
                 Map.Entry mapEntry = (Map.Entry) iter.next();
                 EntryImpl entry = (EntryImpl) mapEntry.getValue();
-                discardEntry(entry);
+                discardEntry(entry, true);
             }
             mapKeyToEntry.clear();
         }
     }
 
-    private void discardEntry(EntryImpl entry)
+    private void discardEntry(EntryImpl entry, boolean closeValue)
     {
         synchronized (entry) {
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Discarding key " + entry.key.toString());
+                tracer.fine("Discarding entry " + entry.key.toString());
             }
 
             assert (entry.pinCount == 0) : entry.pinCount;
             assert (entry.constructionThread == null);
 
-            if (entry.value instanceof FarragoAllocation) {
+            if (closeValue && entry.value instanceof FarragoAllocation) {
                 ((FarragoAllocation) (entry.value)).closeAllocation();
             }
         }
@@ -460,4 +477,4 @@ public class FarragoObjectCache implements FarragoAllocation
 }
 
 
-// End FarragoObjectCache.java
+// End FarragoObjectCache.jav
