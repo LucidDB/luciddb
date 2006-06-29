@@ -68,7 +68,7 @@ public class LhxJoinRule extends RelOptRule
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
         RexNode joinCondition = joinRel.getCondition();
-        RexNode nonEquiCondition;
+        RexNode nonEquiCondition = null;
         
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
@@ -82,6 +82,11 @@ public class LhxJoinRule extends RelOptRule
             leftRel, joinCondition, leftKeys, rightKeys, leftKeysToCast,
             rightKeysToCast, leftFunctionKeys, rightFunctionKeys);
         
+        if (nonEquiCondition != null
+            && joinRel.getJoinType() != JoinRelType.INNER) {
+            return;
+        }
+    
         if (leftKeys.size() == 0 && leftKeysToCast.size() == 0  &&
             leftFunctionKeys.size() == 0 ||
             leftKeys.size() != rightKeys.size() ||

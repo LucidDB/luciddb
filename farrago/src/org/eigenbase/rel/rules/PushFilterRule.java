@@ -26,7 +26,6 @@ package org.eigenbase.rel.rules;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
@@ -41,13 +40,27 @@ public class PushFilterRule extends RelOptRule
 {   
     //  ~ Constructors --------------------------------------------------------
 
-    public PushFilterRule()
+    public PushFilterRule() 
     {
         super(new RelOptRuleOperand(
-            FilterRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(JoinRel.class, null)
-            }));
+                  FilterRel.class,
+                  new RelOptRuleOperand [] {
+                      new RelOptRuleOperand(JoinRel.class, null)}));
+    }
+    
+    public PushFilterRule(RelOptRuleOperand rule, String id)
+    {
+        // This rule is fired for either of the following two patterns:
+        //
+        // RelOptRuleOperand(
+        //     FilterRel.class,
+        //     new RelOptRuleOperand [] {
+        //         new RelOptRuleOperand(JoinRel.class, null)})
+        //
+        // RelOptRuleOperand(JoinRel.class, null)
+        //
+        super(rule);
+        description = "PushFilterRule: " + id;
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -55,31 +68,67 @@ public class PushFilterRule extends RelOptRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
+        FilterRel filterRel;
+        JoinRel joinRel;
+        
+        if (call.rels.length == 1) {
+            filterRel = null;
+            joinRel = (JoinRel) call.rels[0];
+        } else {
+            filterRel = (FilterRel) call.rels[0];
+            joinRel = (JoinRel) call.rels[1];
+        }
+        
         // no need to push filters for joins that have been converted back
         // from MultiJoinRels since filters have already been pushed to
         // the appropriate relnodes
-        JoinRel joinRel = (JoinRel) call.rels[1];
         if (joinRel.isMultiJoinDone()) {
             return;
         }
         
-        List<RexNode> aboveFilters = new ArrayList<RexNode>();
-        FilterRel filterRel = (FilterRel) call.rels[0];
-        RelOptUtil.decompCF(filterRel.getCondition(), aboveFilters);
-        
         List<RexNode> joinFilters = new ArrayList<RexNode>();
         RelOptUtil.decompCF(joinRel.getCondition(), joinFilters);
+
+        if (filterRel == null) {
+            // There is only the joinRel
+            // make sure it does not match a cartesian product joinRel
+            // (with "true" condition) otherwise this rule will be applied
+            // again on the new cartesian product joinRel.
+            boolean onlyTrueFilter = true;
+            ListIterator filterIter = joinFilters.listIterator();
+            while (filterIter.hasNext()) {
+                RexNode filter = (RexNode) filterIter.next();
+                if (!filter.isAlwaysTrue()) {
+                    onlyTrueFilter = false;
+                    break;
+                }
+            }
+            
+            if (onlyTrueFilter) {
+                return;
+            }
+        }        	
+
+        List<RexNode> aboveFilters = new ArrayList<RexNode>();        
         
+        if (filterRel != null) {
+            RelOptUtil.decompCF(filterRel.getCondition(), aboveFilters);
+        }
+                
         List<RexNode> leftFilters = new ArrayList<RexNode>();
         List<RexNode> rightFilters = new ArrayList<RexNode>();
-        
+                
         // TODO - add logic to derive additional filters.  E.g., from
         // (t1.a = 1 AND t2.a = 2) OR (t1.b = 3 AND t2.b = 4), you can
         // derive table filters:
         // (t1.a = 1 OR t1.b = 3)
         // (t2.a = 2 OR t2.b = 4)
         
-        // determine where the filters should be moved, if anywhere
+        /*
+         * Try to push down above filters.
+         * These are typically where clause filters. They can be pushed down if
+         * they are not on the NULL generating side.
+         */
         boolean filterPushed = false;
         if (RelOptUtil.classifyFilters(
             joinRel, aboveFilters, (joinRel.getJoinType() == JoinRelType.INNER), 
@@ -89,6 +138,12 @@ public class PushFilterRule extends RelOptRule
         {
             filterPushed = true;
         }
+        
+        /*
+         * Try to push down filters in ON clause.
+         * A ON clause filter can only be pushed down if it does not affect the
+         * non-matching set, i.e. it is not on the side which is preserved.
+         */
         if (RelOptUtil.classifyFilters(
             joinRel, joinFilters, false,
             !joinRel.getJoinType().generatesNullsOnRight(),

@@ -191,7 +191,19 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
         // Push filters down.
-        builder.addRuleInstance(new PushFilterRule());
+        builder.addRuleInstance(new PushFilterRule(
+            new RelOptRuleOperand(
+                FilterRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(JoinRel.class, null)
+            }),
+            "with filter above join"));
+        
+        builder.addRuleInstance(
+            new PushFilterRule(
+                new RelOptRuleOperand(JoinRel.class, null),
+                "without filter above join"));        
+
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
