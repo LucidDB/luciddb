@@ -36,6 +36,20 @@ class LbmMinusExecStreamTest : public LbmExecStreamTestBase
     void testMinus(
         uint nInputs, uint nRows, std::vector<InputData> const &inputData);
 
+    /**
+     * Perform [minuend] - [subtrahend] where minuend is based on
+     * repeatSeqValues and subtrahend is 0, n, 2n, 3n, ...
+     */
+    void testRestartingMinus(
+        uint nRows,
+        std::vector<int> const &repeatSeqValues,
+        uint subtrahendInterval);
+
+    void newMinusStream(
+        LbmMinusExecStreamParams &params,
+        ExecStreamEmbryo &embryo,
+        TupleDescriptor const &outputDesc);
+
 public:
     explicit LbmMinusExecStreamTest()
     {
@@ -45,6 +59,11 @@ public:
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testAnchorLarger1);
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testAnchorLarger2);
         FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testChildrenLarger);
+
+        // tests for restarting minus
+        FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testEvens);
+        FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testNines);
+        FENNEL_UNIT_TEST_CASE(LbmMinusExecStreamTest, testClose);
     }
 
     void test2Inputs();
@@ -53,8 +72,97 @@ public:
     void testAnchorLarger1();
     void testAnchorLarger2();
     void testChildrenLarger();
+
+    void testEvens();
+    void testNines();
+    void testClose();
 };
 
+/**
+ * Generates repeating tuples resulting from minus such as
+ * <pre>
+ * 0, 0, 0 [distinct row 0, repeats 12 times]
+ * 0, 1, 1 [distinct row 1, repeats 11 times]
+ * 0, 2, 2 [distinct row 1, repeats 12 times]
+ * ...
+ * </pre>
+ */
+class RestartingMinusExecStreamGenerator
+    : public MockProducerExecStreamGenerator
+{
+protected:
+    uint nKeys;
+    std::vector<int> repeatSeqValues;
+    uint subtrahendInterval;
+    uint interval;
+    boost::shared_array<uint> changeIndexes;
+    uint current;
+    uint lastRow;
+
+public:
+    RestartingMinusExecStreamGenerator(
+        uint nRows, std::vector<int> repeatSeqValues, uint subtrahendInterval)
+    {
+        this->nKeys = repeatSeqValues.size();
+        this->repeatSeqValues = repeatSeqValues;
+        interval = LbmExecStreamTestBase::getTupleInterval(repeatSeqValues);
+
+        // find the number of times each key value repeats
+        boost::scoped_array<uint> valueCounts;
+        valueCounts.reset(new uint[interval]);
+        for (uint i = 0; i < interval; i++) {
+            valueCounts[i] = getValueCount(nRows, i);
+        }
+        // account for subtrahend
+        for (uint iRow = 0; iRow < nRows; iRow += subtrahendInterval) {
+            valueCounts[iRow % interval]--;
+        }
+
+        // find indexes where the values change
+        changeIndexes.reset(new uint[interval]);
+        changeIndexes[0] = valueCounts[0];
+        for (uint i = 1; i < interval; i++) {
+            changeIndexes[i] = changeIndexes[i-1] + valueCounts[i];
+        }
+        current = 0;
+        lastRow = 0;
+    }
+    
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        // must be generated in order
+        assert (lastRow <= iRow);
+        lastRow = iRow;
+
+        if (iRow >= changeIndexes[current]) {
+            current++;
+            assert (current < interval);
+        }
+        assert (iCol < nKeys);
+        return current % repeatSeqValues[iCol];
+    }
+
+    /**
+     * Returns the number of times a value repeats over nRows
+     */
+    uint getValueCount(uint nRows, uint iValue)
+    {
+        uint nCopies = nRows / interval;
+        if (iValue < nRows % interval) {
+            nCopies++;
+        }
+        return nCopies;
+    }
+
+    /**
+     * Returns the total number of rows the result set should have
+     */
+    uint getRowCount()
+    {
+        return changeIndexes[interval - 1];
+    }
+};
+    
 void LbmMinusExecStreamTest::test2Inputs()
 {
     uint nInputs = 2;
@@ -347,6 +455,41 @@ void LbmMinusExecStreamTest::testChildrenLarger()
     testMinus(nInputs, nRows, inputData);
 }
 
+void LbmMinusExecStreamTest::testEvens()
+{
+    uint nRows = 1000;
+    std::vector<int> repeatSeqValues;
+    repeatSeqValues.push_back(1);
+    repeatSeqValues.push_back(5);
+    repeatSeqValues.push_back(9);
+    uint subtrahendInterval = 2;
+
+    testRestartingMinus(nRows, repeatSeqValues, subtrahendInterval);
+}
+
+void LbmMinusExecStreamTest::testNines()
+{
+    uint nRows = 1000;
+    std::vector<int> repeatSeqValues;
+    repeatSeqValues.push_back(1);
+    repeatSeqValues.push_back(5);
+    repeatSeqValues.push_back(9);
+    uint subtrahendInterval = 9;
+
+    testRestartingMinus(nRows, repeatSeqValues, subtrahendInterval);
+}
+
+void LbmMinusExecStreamTest::testClose()
+{
+    uint nRows = 1000;
+    std::vector<int> repeatSeqValues;
+    repeatSeqValues.push_back(2);
+    repeatSeqValues.push_back(3);
+    uint subtrahendInterval = 4;
+
+    testRestartingMinus(nRows, repeatSeqValues, subtrahendInterval);
+}
+
 void LbmMinusExecStreamTest::testMinus(
     uint nInputs, uint nRows, std::vector<InputData> const &inputData)
 {
@@ -377,15 +520,8 @@ void LbmMinusExecStreamTest::testMinus(
     }
 
     LbmMinusExecStreamParams minusParams;
-    minusParams.rowLimitParamId = DynamicParamId(1);
-    minusParams.startRidParamId = DynamicParamId(2);
-    minusParams.outputTupleDesc = bitmapTupleDesc;
-    minusParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache, 10);
-
     ExecStreamEmbryo minusEmbryo;
-    minusEmbryo.init(new LbmMinusExecStream(), minusParams);
-    minusEmbryo.getStream()->setName("MinusExecStream");
+    newMinusStream(minusParams, minusEmbryo, bitmapTupleDesc);
 
     SharedExecStream pOutputStream = prepareConfluenceGraph(
         valuesStreamEmbryoList, minusEmbryo);
@@ -393,6 +529,73 @@ void LbmMinusExecStreamTest::testMinus(
     verifyBufferedOutput(
         *pOutputStream, bitmapTupleDesc, bmInputs[nInputs].nBitmaps,
         bmInputs[nInputs].bufArray.get());
+}
+
+void LbmMinusExecStreamTest::testRestartingMinus(
+    uint nRows,
+    std::vector<int> const &repeatSeqValues,
+    uint subtrahendInterval)
+{
+    uint nKeys = repeatSeqValues.size();
+
+    // initialize minuend [ (keys), (bitmaps) ]
+    initKeyBitmap(nRows, repeatSeqValues);
+    ValuesExecStreamParams valuesParams;
+    valuesParams.outputTupleDesc = keyBitmapTupleDesc;
+    valuesParams.pTupleBuffer = keyBitmapBuf;
+    valuesParams.bufSize = keyBitmapBufSize;
+
+    ExecStreamEmbryo minuendEmbryo;
+    minuendEmbryo.init(new ValuesExecStream(), valuesParams);
+    minuendEmbryo.getStream()->setName("MinuendValuesExecStream");
+
+    // initialize subtrahend [ (bitmaps) ]
+    InputData subtrahendData;
+    subtrahendData.startRid = LcsRid(0);
+    subtrahendData.skipRows = subtrahendInterval;
+    subtrahendData.bitmapSize = 8;
+
+    BitmapInput bmInput;
+    initBitmapInput(bmInput, nRows, subtrahendData);
+
+    ValuesExecStreamParams subtrahendParams;
+    ExecStreamEmbryo subtrahendEmbryo;
+    initValuesExecStream(0, subtrahendParams, subtrahendEmbryo, bmInput);
+
+    // initialize the minus stream
+    LbmMinusExecStreamParams minusParams;
+    ExecStreamEmbryo minusEmbryo;
+    newMinusStream(minusParams, minusEmbryo, keyBitmapTupleDesc);
+
+    // initialize normalizer
+    ExecStreamEmbryo normalizerEmbryo;
+    LbmNormalizerExecStreamParams normalizerParams;
+    initNormalizerExecStream(normalizerParams, normalizerEmbryo, nKeys);
+
+    // build inputs -> minus stream -> normalizer transforms
+    SharedExecStream pOutputStream = prepareConfluenceTransformGraph(
+        minuendEmbryo, subtrahendEmbryo, minusEmbryo, normalizerEmbryo);
+    RestartingMinusExecStreamGenerator
+        verifier(nRows, repeatSeqValues, subtrahendInterval);
+    verifyOutput(
+        *pOutputStream,
+        verifier.getRowCount(), 
+        verifier);
+}
+
+void LbmMinusExecStreamTest::newMinusStream(
+    LbmMinusExecStreamParams &params,
+    ExecStreamEmbryo &embryo,
+    TupleDescriptor const &outputDesc) 
+{
+    params.rowLimitParamId = DynamicParamId(1);
+    params.startRidParamId = DynamicParamId(2);
+    params.outputTupleDesc = outputDesc;
+    params.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+
+    embryo.init(new LbmMinusExecStream(), params);
+    embryo.getStream()->setName("MinusExecStream");
 }
 
 FENNEL_UNIT_TEST_SUITE(LbmMinusExecStreamTest);

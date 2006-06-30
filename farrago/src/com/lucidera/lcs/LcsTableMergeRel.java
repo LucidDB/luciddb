@@ -46,6 +46,8 @@ import org.eigenbase.sql.type.*;
 public class LcsTableMergeRel extends MedAbstractFennelTableModRel
 {
     //~ Instance fields -------------------------------------------------------
+    private boolean updateOnly;
+    private boolean insertOnly;
     
     /* Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
@@ -59,6 +61,7 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
      * @param child input to the merge
      * @param operation DML operation type
      * @param updateColumnList update column list in the update substatement
+     * @param updateOnly merge only consists of an insert
      */
     public LcsTableMergeRel(
         RelOptCluster cluster,
@@ -66,7 +69,8 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList)
+        List updateColumnList,
+        boolean updateOnly)
     {
         super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             lcsTable, connection, child, operation, updateColumnList, true);
@@ -76,7 +80,9 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
         
         this.lcsTable = lcsTable;
         assert lcsTable.getPreparingStmt() ==
-            FennelRelUtil.getPreparingStmt(this);   
+            FennelRelUtil.getPreparingStmt(this);
+        this.updateOnly = updateOnly;
+        insertOnly = updateColumnList.size() == 0;
     }
     
     //~ Methods ---------------------------------------------------------------
@@ -109,7 +115,8 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
             getConnection(),
             RelOptUtil.clone(getChild()),
             getOperation(),
-            getUpdateColumnList());
+            getUpdateColumnList(),
+            updateOnly);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -126,15 +133,22 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
     // override RelNode
     public RelDataType getExpectedInputRowType(int ordinalInParent)
     {
+        // When there is both an UPDATE and INSERT substatement, the
         // input consists of the bitmap entry (rid, descriptor, segment) 
-        // followed by the fields of the table
+        // followed by the fields of the table.  If there is only an INSERT,
+        // then only the fields of the table are in the input.  If there
+        // is only an UPDATE, then the rid is not nullable.
         assert(ordinalInParent == 0);
-        RelDataType rowType =
-            getCluster().getTypeFactory().createJoinType(
+        RelDataType rowType;
+        if (insertOnly) {
+            rowType = table.getRowType();
+        } else {
+            rowType = getCluster().getTypeFactory().createJoinType(
                 new RelDataType [] {
-                    createBitmapEntryRowType(true),
+                    createBitmapEntryRowType(!updateOnly),
                     table.getRowType()
                 });
+        }
         return rowType;
     }
     
@@ -158,37 +172,76 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
         // ChildInput -> Buffer -> Splitter                Barrier
         //                                 \                 /
         //                              Reshape -> Sort -> Delete
-        
+        //
+        // If there only an INSERT substatement, the splitter, the
+        // Reshape/Sort/Delete substream, and the Reshape before the INSERT
+        // are not necessary.
+
         FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
         implementor.addDataFlowFromProducerToConsumer(input,  buffer);
         
-        FemSplitterStreamDef splitter =
-            indexGuide.newSplitter((SingleRel) childFennelRel);
-        implementor.addDataFlowFromProducerToConsumer(buffer, splitter);
+        FemSplitterStreamDef splitter;
+        FemExecutionStreamDef insertProducer;
+        if (insertOnly) {
+            splitter = null;
+            insertProducer = buffer;
+        } else {
+            splitter =
+                indexGuide.newSplitter((SingleRel) childFennelRel);
+            implementor.addDataFlowFromProducerToConsumer(buffer, splitter);
+            insertProducer = splitter;
+        }
         
         // create the delete substream
-        FemReshapeStreamDef deleteReshape =
-            newMergeReshape(true, childFennelRel);
-        implementor.addDataFlowFromProducerToConsumer(splitter, deleteReshape);
-        FemSortingStreamDef sortingStream =
-            indexGuide.newSorter(deletionIndex);
-        implementor.addDataFlowFromProducerToConsumer(
-            deleteReshape, sortingStream);       
-        FemLbmSplicerStreamDef deleter = 
-            indexGuide.newSplicer(this, deletionIndex, 0);
-        implementor.addDataFlowFromProducerToConsumer(sortingStream, deleter);
+        FemLbmSplicerStreamDef deleter = null;
+        if (!insertOnly) {
+            // if we only have an UPDATE substatement, null rids have already
+            // been filtered out
+            boolean compRid;
+            CompOperatorEnum compOp;
+            if (updateOnly) {
+                compRid = false;
+                compOp = CompOperatorEnum.COMP_NOOP;
+            } else {
+                compRid = true;
+                compOp = CompOperatorEnum.COMP_NE;
+            }
+            FemReshapeStreamDef deleteReshape = newMergeReshape(
+                compRid, compOp, true, childFennelRel);
+            implementor.addDataFlowFromProducerToConsumer(
+                splitter, deleteReshape);
+            FemSortingStreamDef sortingStream =
+                indexGuide.newSorter(deletionIndex);
+            implementor.addDataFlowFromProducerToConsumer(
+                deleteReshape, sortingStream);       
+            deleter = indexGuide.newSplicer(this, deletionIndex, 0);
+            implementor.addDataFlowFromProducerToConsumer(
+                sortingStream, deleter);
+        }
         
         // create the insert substream
-        FemReshapeStreamDef insertReshape =
-            newMergeReshape(false, childFennelRel);
-        implementor.addDataFlowFromProducerToConsumer(splitter, insertReshape); 
+        FemExecutionStreamDef appendProducer;
+        if (insertOnly) {
+            appendProducer = insertProducer;
+        } else {
+            FemReshapeStreamDef insertReshape = newMergeReshape(
+                false, CompOperatorEnum.COMP_NOOP, false, childFennelRel);
+            implementor.addDataFlowFromProducerToConsumer(
+                insertProducer, insertReshape);
+            appendProducer = insertReshape;
+        }
         LcsAppendStreamDef appendStreamDef =
-            new LcsAppendStreamDef(repos, lcsTable, insertReshape, this);
+            new LcsAppendStreamDef(repos, lcsTable, appendProducer, this);
         FemExecutionStreamDef appendSubStream =
             appendStreamDef.toStreamDef(implementor);
         
-        FemBarrierStreamDef barrier = indexGuide.newBarrier(this, 1);
-        implementor.addDataFlowFromProducerToConsumer(deleter, barrier);
+        FemBarrierStreamDef barrier;
+        if (insertOnly) {
+            barrier = indexGuide.newBarrier(this, 0);
+        } else {
+            barrier = indexGuide.newBarrier(this, 1);
+            implementor.addDataFlowFromProducerToConsumer(deleter, barrier);
+        }
         implementor.addDataFlowFromProducerToConsumer(appendSubStream, barrier);
         
         return barrier;
@@ -199,26 +252,27 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
      * portion of the overall MERGE execution stream
      * 
      * @param compareRid true if the stream will be doing rid comparison
+     * @param compOp the operator to use in the rid comparison
+     * @param projRids if true, project rids from input; otherwise, project
+     * all columns except the rid
      * @param input input that will be reshaped
      * 
      * @return created Reshape execution stream
      */
-    FemReshapeStreamDef newMergeReshape(boolean compareRid, FennelRel input)
+    FemReshapeStreamDef newMergeReshape(
+        boolean compareRid, CompOperator compOp, boolean projRids,
+        FennelRel input)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemReshapeStreamDef reshape = repos.newFemReshapeStreamDef();
-        RelDataTypeField[] inputFields = input.getRowType().getFields();
-        Integer[] outputProj;
-        RelDataType outputRowType;
+        RelDataTypeField[] inputFields = input.getRowType().getFields();     
         RexBuilder rexBuilder = getCluster().getRexBuilder();
         RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
         
         if (compareRid) {
             // In the comparison case, create a filter on the rid column
-            // to filter out nulls, and project out the rid column and the
-            // segment and descriptor fields that follow it
-            reshape.setCompareOp(CompOperatorEnum.COMP_NE);
-            outputProj = FennelRelUtil.newIotaProjection(3);
+            // to filter out nulls
+            reshape.setCompareOp(compOp);
             Integer[] compareProj = { 0 };
             reshape.setInputCompareProjection(
                 FennelRelUtil.createTupleProjection(repos, compareProj));
@@ -237,16 +291,20 @@ public class LcsTableMergeRel extends MedAbstractFennelTableModRel
                     new String [] { "rid" });
             reshape.setTupleCompareBytesBase64(
                 FennelRelUtil.convertTuplesToBase64String(
-                    ridRowType, (List) compareTuple));
-            
+                    ridRowType, (List) compareTuple));                     
+        } else {
+            assert(compOp == CompOperatorEnum.COMP_NOOP);
+            reshape.setCompareOp(compOp);
+        }
+        
+        Integer[] outputProj;
+        RelDataType outputRowType;
+        if (projRids) {
+            outputProj = FennelRelUtil.newIotaProjection(3);
             // rid needs to not be nullable in the output since the delete
             // (i.e., splicer) expects non-null rid values
             outputRowType = createBitmapEntryRowType(false);
         } else {
-            // In the non-comparsion case, project all except the first 3
-            // columns, which correspond to the rid and the descriptor and
-            // segment
-            reshape.setCompareOp(CompOperatorEnum.COMP_NOOP);
             int nNonRidFields = inputFields.length - 3;
             outputProj = FennelRelUtil.newBiasedIotaProjection(
                 nNonRidFields, 3);  

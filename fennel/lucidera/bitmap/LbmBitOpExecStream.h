@@ -53,7 +53,8 @@ struct LbmBitOpExecStreamParams : public ConfluenceExecStreamParams
 
 /**
  * LbmBitOpExecStream is a base class for implementing bit operation
- * execution streams that read from N input streams
+ * execution streams that read from N input streams. The first input
+ * stream and/or the output stream may be prefixed by key fields.
  *
  * @author Zelaine Fong
  * @version $Id$
@@ -171,6 +172,11 @@ protected:
     uint addLen;
 
     /**
+     * Number of non-bitmap fields preceding the bitmap fields
+     */
+    int nFields;
+
+    /**
      * Produces output tuple that previously failed due to buffer overflow.
      * Writes out the remaining segments that could not fit in the previous
      * buffer.  Determines if input has reached EOS.
@@ -196,6 +202,16 @@ protected:
         uint iInput, LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
 
     /**
+     * Flushes the segment writer if it has any data. The data is
+     * transferred to a bitmap tuple and the segment writer is reset.
+     * Finally, the tuple is produced to the output stream. If the tuple
+     * cannot be written, then it becomes a pending tuple.
+     *
+     * @return false if buffer overflow occured while producing the tuple
+     */
+    bool flush();
+
+    /**
      * Adds the processed segments to the segment under construction.  If
      * the segment fills up, writes it to the output buffer and continues
      * constructing the rest of the segment.  Leading, trailing, and
@@ -204,6 +220,13 @@ protected:
      * @return false if buffer overflow occurred writing out a segment
      */
     bool addSegments();
+
+    /**
+     * Produces a tuple to the output stream, based on a bitmap.
+     *
+     * @return false if buffer overflow occured while producing the tuple
+     */
+    virtual bool produceTuple(TupleData bitmapTuple);
 
 public:
     explicit LbmBitOpExecStream();

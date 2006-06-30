@@ -38,7 +38,7 @@ void LhxJoinExecStream::prepare(
     
     ConfluenceExecStream::prepare(params);
 
-    for (i = 0; i < 2 ; i ++) {
+    for (i = 0; i < inAccessors.size() ; i ++) {
         hashInfo.streamBufAccessor.push_back(inAccessors[i]);
         hashInfo.inputDesc.push_back(inAccessors[i]->getTupleDesc());
     }
@@ -66,6 +66,11 @@ void LhxJoinExecStream::prepare(
     leftFilterNull  = regularJoin;
 
     rightFilterNull = regularJoin && !rightOuter && !fullOuter;
+    
+    /*
+     * Force partitioning level. Only set in tests.
+     */
+    forcePartitionLevel = params.forcePartitionLevel;
 
     /*
      * Set special hash table properties.
@@ -231,29 +236,35 @@ void LhxJoinExecStream::open(bool restart)
     (rightPart->segStream).reset();
     rightPart->inputIndex = RightInputIndex;
 
-    rootPlan =  SharedLhxPlan(new LhxPlan());
-
     uint numInput       = 2;
-    uint numChild       = 2;
+    uint numChild       = 3;
     LhxPlan *parentPlan = NULL;
 
     vector<SharedLhxPartition> partitionList;
     partitionList.push_back(leftPart);
     partitionList.push_back(rightPart);
 
-    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan);
+    vector<bool> useFilter;
+    useFilter.push_back(!leftOuter && !fullOuter);
+    useFilter.push_back(!rightOuter && !fullOuter && !rightAnti);
 
-    curPlan = rootPlan.get();
-    isTopPartition = true;
-
-    rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo);
+    /*
+     * No input join filter for root plan.
+     */
+    rootPlan =  SharedLhxPlan(new LhxPlan());
+    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan,
+        useFilter);
 
     /*
      * Initialize recursive partitioning context.
      */
+    isTopPartition = true;
     partInfo.init(numInput, numChild, &hashInfo);
 
-    joinState = Build;
+    curPlan = rootPlan.get();
+    rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo);
+
+    joinState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
 }
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
@@ -265,6 +276,67 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
     {
         switch (joinState)
         {
+        case ForcePartitionBuild:
+            {
+                /*
+                 * Build
+                 */
+                for (;;) {
+                    if (!rightReader.isTupleConsumptionPending()) {
+                        if (rightReader.getState() == EXECBUF_EOS) {
+                            /*
+                             * break out of this loop, and start probing.
+                             */
+                            rightReader.close();
+                            leftReader.open(
+                                curPlan->getPartition(LeftInputIndex),
+                                hashInfo);
+                            joinState = Probe;
+                            numTuplesProduced = 0;
+                            break;
+                        }
+
+                        if (!rightReader.demandData()) {
+                            if (isTopPartition) {
+                                /*
+                                 * Top level: request more data from producer.
+                                 */
+                                return EXECRC_BUF_UNDERFLOW;
+                            } else {
+                                /*
+                                 * Recursive level: no more data in partition.
+                                 * Come back to the top of the same state to
+                                 * detect EOS.
+                                 */
+                                break;
+                            }
+                        }
+                        rightReader.unmarshalTuple(rightTuple);
+                    }
+
+                    /*
+                     * Add tuple to hash table.
+                     *
+                     * NOTE: This is a testing state. Always partition up to
+                     * forcePartitionLevel.
+                     */
+                    if (curPlan->partitionLevel < forcePartitionLevel ||
+                        !hashTable.addTuple(rightTuple)) {
+                        /*
+                         * If hash table is full, partition input data.
+                         *
+                         * First, partition the right(build input).
+                         */
+                        partInfo.open(
+                            &hashTableReader, &rightReader, rightTuple,
+                            curPlan->getPartition(LeftInputIndex));
+                        joinState = Partition;
+                        break;
+                    }
+                    rightReader.consumeTuple();
+                }
+                break;
+            }
         case Build:
             {
                 /*
@@ -276,6 +348,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             /*
                              * break out of this loop, and start probing.
                              */
+                            rightReader.close();
                             leftReader.open(
                                 curPlan->getPartition(LeftInputIndex),
                                 hashInfo);
@@ -309,12 +382,13 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         /*
                          * If hash table is full, partition input data.
                          *
-                         * First, partition the left.
+                         * First, partition the right(build input).
                          */
-                        partInfo.open(LeftInputIndex,
+                        partInfo.open(
+                            &hashTableReader, &rightReader, rightTuple,
                             curPlan->getPartition(LeftInputIndex));
                         joinState = Partition;
-                            break;
+                        break;
                     }
                     rightReader.consumeTuple();
                 }
@@ -323,39 +397,26 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
         case Partition:
             {
                 for (;;) {
-                    if (curPlan->generatePartitions(hashInfo, partInfo, false)
+                    if (curPlan->generatePartitions(hashInfo, partInfo)
                         == PartitionUnderflow) {
                         /*
                          * Request more data from producer.
                          */
                         return EXECRC_BUF_UNDERFLOW;
                     } else {
-                        if (partInfo.curInputIndex == LeftInputIndex) {
-                            /*
-                             * Now partition the right input.
-                             * The in-memory hash table is also part of the
-                             * partition.
-                             */
-                            partInfo.close(LeftInputIndex);
-                            partInfo.open(RightInputIndex,
-                                &hashTableReader, &rightReader, rightTuple);
-                        } else {
-                            /*
-                             * Finished building the partitions for both
-                             * inputs.
-                             */
-                            break;
-                        }
+                        /*
+                         * Finished building the partitions for both
+                         * inputs.
+                         */
+                        break;
                     }
                 }
-                partInfo.close(RightInputIndex);
+                partInfo.close();
                 joinState = CreateChildPlan;
                 break;
             }
         case CreateChildPlan:
             {
-                FENNEL_TRACE(TRACE_FINE, (curPlan->dataTrace).str());
-
                 /*
                  * Link the newly created partitioned in the plan tree.
                  */
@@ -377,12 +438,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 rightReader.open(
                     curPlan->getPartition(RightInputIndex),
                     hashInfo);
-                /*
-                 * Reset the list of partitions to prepare for the next level
-                 * of recursive partitioning.
-                 */
-                partInfo.reset();
-                joinState = Build;
+
+                joinState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 break;                
             }
         case GetNextPlan:
@@ -399,7 +456,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     rightReader.open(
                         curPlan->getPartition(RightInputIndex),
                         hashInfo);
-                    joinState = Build;
+                    joinState =
+                        (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 } else {
                     joinState = Done;
                 }
@@ -413,6 +471,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 for (;;) {
                     if (!leftReader.isTupleConsumptionPending()) {
                         if (leftReader.getState() == EXECBUF_EOS) {
+                            leftReader.close();
                             if (rightOuter || fullOuter) {
                                 /*
                                  * Set the output tuple to have NULL values on
@@ -684,6 +743,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 void LhxJoinExecStream::closeImpl()
 {
     hashTable.releaseResources();
+    rootPlan->close();
     ConfluenceExecStream::closeImpl();
 }
 

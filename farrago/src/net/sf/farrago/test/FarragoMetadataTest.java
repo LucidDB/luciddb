@@ -26,7 +26,6 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rex.*;
 
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -59,6 +58,8 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
     
     private static final double DEFAULT_EQUAL_SELECTIVITY_SQUARED =
         DEFAULT_EQUAL_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY;
+    
+    private static final double DEFAULT_COMP_SELECTIVITY = 0.5;
     
     /**
      * Creates a new FarragoMetadataTest object.
@@ -158,17 +159,15 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
     }
 
     private void checkPopulation(
-        String sql, BitSet groupKey, Double expected, boolean callChild)
+        String sql, BitSet groupKey, Double expected)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         transformQuery(
             programBuilder.createProgram(), sql);
-     
-        RelNode rel;
-        rel = (callChild) ? ((ProjectRel) rootRel).getChild() : rootRel;
+ 
         Double result = RelMetadataQuery.getPopulationSize(
-            rel, groupKey);
+            rootRel, groupKey);
         if (expected != null) {
             assertEquals(expected, result.doubleValue());
         } else {
@@ -183,7 +182,7 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         // c0 has a primary key on it
         groupKey.set(0);
         groupKey.set(4);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT, false);
+        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
     }
     
     public void testPopulationTabUniqueNotNull()
@@ -194,7 +193,7 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         groupKey.set(1);
         groupKey.set(2);
         groupKey.set(3);
-        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT, false);
+        checkPopulation("select * from tab", groupKey, TAB_ROWCOUNT);
     }
     
     public void testPopulationTabUniqueNull()
@@ -205,7 +204,7 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         // result should be null
         groupKey.set(2);
         groupKey.set(3);
-        checkPopulation("select * from tab", groupKey, null, false);
+        checkPopulation("select * from tab", groupKey, null);
     }
     
     public void testPopulationFilter()
@@ -216,9 +215,10 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         groupKey.set(1);
         groupKey.set(2);
         groupKey.set(3);
-        // filters are ignored so the full rowcount should be returned
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT, TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
         checkPopulation(
-            "select * from tab where c4 = 1", groupKey, TAB_ROWCOUNT, true);
+            "select * from tab where c4 = 1", groupKey, expected);
     }
     
     public void testPopulationSort()
@@ -229,7 +229,7 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         groupKey.set(0);
         groupKey.set(4);
         checkPopulation(
-            "select * from tab order by c4", groupKey, TAB_ROWCOUNT, false);
+            "select * from tab order by c4", groupKey, TAB_ROWCOUNT);
     }
     
     public void testPopulationJoin()
@@ -249,8 +249,13 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         groupKey.set(5+1);
         groupKey.set(5+2);
         Double result = RelMetadataQuery.getPopulationSize(
-            ((ProjectRel) rootRel).getChild(), groupKey);
-        assertEquals(TAB_ROWCOUNT * TAB_ROWCOUNT, result.doubleValue());
+            rootRel, groupKey);
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * TAB_ROWCOUNT,
+            TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        expected = RelMdUtil.numDistinctVals(
+            expected, TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        assertEquals(expected, result.doubleValue());
     }
     
     public void testPopulationUnion()
@@ -258,9 +263,23 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
+        double expected = RelMdUtil.numDistinctVals(
+            2 * TAB_ROWCOUNT, 2 * TAB_ROWCOUNT);
         checkPopulation(
             "select * from (select * from tab union all select * from tab)",
-            groupKey, 2* TAB_ROWCOUNT, true);
+            groupKey, expected);
+    }
+    
+    public void testPopulationAgg()
+        throws Exception
+    {
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+        double expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, TAB_ROWCOUNT);
+        expected = RelMdUtil.numDistinctVals(TAB_ROWCOUNT, expected);
+        checkPopulation(
+            "select c0, count(*) from tab group by c0", groupKey, expected);
     }
     
     private void checkUniqueKeys(
@@ -293,6 +312,20 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         checkUniqueKeys(
             "select * from tab where c0 = 1 order by c1",
             expected);
+    }
+    
+    public void testUniqueKeysAgg()
+        throws Exception
+    {
+        Set<BitSet> expected = new HashSet<BitSet>();
+        
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+        expected.add(groupKey);
+        
+        checkUniqueKeys(
+            "select c2, c4, count(*) from tab group by c2, c4", expected);
     }
     
     private void checkUniqueKeysJoin(String sql, Set<BitSet> expected)
@@ -360,15 +393,15 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
     }
     
     private void checkDistinctRowCount(
-        RelNode rel, BitSet groupKey, RexNode predicate, Double expected)
+        RelNode rel, BitSet groupKey, Double expected)
     {
         Double result = RelMetadataQuery.getDistinctRowCount(
-            rel, groupKey, predicate);
+            rel, groupKey, null);
         if (expected == null) {
             assertTrue(result == null);
         } else {
             assertTrue(result != null);
-            assertEquals(expected, result.doubleValue());
+            assertEquals(expected, result.doubleValue(), EPSILON);
         }
     }
     
@@ -379,13 +412,12 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab where c1 = 1");
-        ProjectRel projectRel = (ProjectRel) rootRel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        checkDistinctRowCount(
-            filterRel, groupKey, filterRel.getCondition(),
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
             TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        checkDistinctRowCount(rootRel, groupKey, expected);
     }
     
     public void testDistinctRowCountSort()
@@ -395,16 +427,12 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             programBuilder.createProgram(),
             "select * from tab where c1 = 1 order by c2");
-        SortRel sortRel = (SortRel) rootRel;
-        ProjectRel projectRel = (ProjectRel) sortRel.getChild();
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        // REVIEW zfong 4/19/06 - the predicate is getting applied
-        // twice in the calculation; I'm not sure how to avoid this
-        checkDistinctRowCount(
-            sortRel, groupKey, filterRel.getCondition(), 
-            TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED);
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY,
+            TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        checkDistinctRowCount(rootRel, groupKey, expected);
     }
     
     public void testDistinctRowCountUnion()
@@ -415,14 +443,40 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
             programBuilder.createProgram(),
             "select * from (select * from tab union all select * from tab) " +
                 "where c1 = 10");
-        ProjectRel projectRel = (ProjectRel) rootRel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        // UnionRel is the child of the FilterRel
-        checkDistinctRowCount(
-            filterRel.getChild(), groupKey, filterRel.getCondition(),
-            2 * (TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY));
+        // compute the number of distinct values from applying the filter
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY, TAB_ROWCOUNT);
+        // then compute the number of distinct values for each union
+        expected = RelMdUtil.numDistinctVals(
+            expected * 2, TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY * 2);
+        checkDistinctRowCount(rootRel, groupKey, expected);
+    }
+    
+    public void testDistinctRowCountAgg()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        transformQuery(
+            programBuilder.createProgram(),
+            "select c0, count(*) from tab where c0 > 0 group by c0 " +
+            "having count(*) = 0");
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+        // number of distinct values from applying the filter
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY,
+            TAB_ROWCOUNT * DEFAULT_COMP_SELECTIVITY);
+        // number of distinct values from applying the having clause
+        //
+        // REVIEW zfong 6/22/06 - I'm not able to get this test to pass
+        // without applying the where clause filter twice
+        expected = RelMdUtil.numDistinctVals(
+            expected,
+            expected * DEFAULT_EQUAL_SELECTIVITY * DEFAULT_COMP_SELECTIVITY);
+        checkDistinctRowCount(rootRel, groupKey, expected);
     }
     
     public void testDistinctRowCountJoin()
@@ -437,15 +491,9 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(5+0);
-        ProjectRel projectRel = (ProjectRel) rootRel;
         Double result = RelMetadataQuery.getDistinctRowCount(
-            projectRel.getChild(), groupKey, null);
-        
-        Double domainSize =
-            TAB_ROWCOUNT * TAB_ROWCOUNT *
-                DEFAULT_EQUAL_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY;
-        Double numSelected = domainSize * DEFAULT_EQUAL_SELECTIVITY;
-        // The calculation below mimics RelMdUtil.numDistinctVals().  
+            rootRel, groupKey, null);
+       
         // We need to multiply the selectivity three times to account for:
         // - table level filter on t2
         // - semijoin filter on t1
@@ -453,8 +501,19 @@ public class FarragoMetadataTest extends FarragoSqlToRelTestBase
         // Because this test does not exercise LucidEra logic that accounts
         // for the double counting of semijoins, that is why the selectivity
         // is multiplied three times
-        Double expected =
-            (1.0 - Math.exp(-1 * numSelected / domainSize)) * domainSize;
+
+        // number of distinct rows from the join; first arg corresponds to
+        // the number of rows from applying the table filter and semijoin;
+        // second is the number of rows from applying all three filters
+        double expected = RelMdUtil.numDistinctVals(
+            TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED,
+            TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED *
+                DEFAULT_EQUAL_SELECTIVITY);
+        // number of distinct rows from the topmost project
+        expected = RelMdUtil.numDistinctVals(
+            expected,
+            TAB_ROWCOUNT * TAB_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY_SQUARED *
+            DEFAULT_EQUAL_SELECTIVITY);
         assertTrue(result != null);
         assertEquals(expected, result.doubleValue(), EPSILON);
     }

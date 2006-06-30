@@ -312,6 +312,9 @@ explain plan for
 explain plan for
     select * from sales where customer in
         (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+explain plan for
+    select * from sales where customer in
+        (select id from customer where id < 10);
 
 -- semijoin that needs to be removed
 
@@ -396,4 +399,8 @@ select sid, p.name, p.color, p.size, s.quantity
 
 select * from sales where customer in
     (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+    order by sid;
+
+select * from sales where customer in
+    (select id from customer where id < 10)
     order by sid;

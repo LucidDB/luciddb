@@ -39,20 +39,36 @@ public class FarragoColumnMetadata extends MedAbstractColumnMetadata
     protected int mapColumnToField(
         RelNode rel, FemAbstractColumn keyCol)
     {
+        if (keyCol.getOrdinal() >= numColumns(rel)) {
+            return -1;
+        }
         return keyCol.getOrdinal();
     }
     
     protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)
     {
-        return fieldNo;
+        if (fieldNo == -1 || fieldNo >= numColumns(rel)) {
+            return -1;
+        } else {
+            return fieldNo;
+        }
     }
 
     protected FemAbstractColumn mapFieldToColumn(RelNode rel, int fieldNo)
     {
         int colno = mapFieldToColumnOrdinal(rel, fieldNo);
-        return (FemAbstractColumn)
-            ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet().
-                getFeature().get(colno);
+        if (colno == -1 || colno >= numColumns(rel)) {
+            return null;
+        } else {
+            return (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable()).
+                getCwmColumnSet().getFeature().get(colno);
+        }
+    }
+    
+    private int numColumns(RelNode rel)
+    {
+        return ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet().
+            getFeature().size();
     }
 }
 

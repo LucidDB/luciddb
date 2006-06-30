@@ -1505,43 +1505,35 @@ public abstract class RelOptUtil
     }
     
     /**
-     * Splits a filter into a list of filters that can be pushed past an
-     * aggregate vs those that can't be.  A filter can be pushed if it only
-     * references the group by columns in an aggreate.
-     * 
-     * @param aggFilters filters that will be analyzed
-     * @param notPushable returns list of filters that can't be pushed
-     * @param pushable return list of filters that can be pushed
-     * @param aggRel the aggregate RelNode
+     * Splits a filter into two lists, depending on whether or not the filter
+     * only references its child input
+     *
+     * @param nChildFields number of fields in the child
+     * @param predicate filters that will be split
+     * @param pushable returns the list of filters that can be pushed to the
+     * child input
+     * @param notPushable returns the list of filters that cannot be pushed to
+     * the child input
      */
-    public static void pushAggFilters(
-        RexNode aggFilters, List<RexNode> notPushable, List<RexNode> pushable,
-        AggregateRelBase aggRel)
+    public static void splitFilters(
+        int nChildFields, RexNode predicate, List<RexNode> pushable,
+        List<RexNode> notPushable)
     {
-        // convert the filter to a list
+    	// convert the filter to a list
         List<RexNode> filterList = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(aggFilters, filterList);
+        RelOptUtil.decompCF(predicate, filterList);
         
-        // for each filter, determine which inputs it references
-        int nFields = aggRel.getRowType().getFieldCount();
+        // for each filter, if the filter only references the child inputs,
+        // then it can be pushed
+        BitSet childBitmap = new BitSet(nChildFields);
+        RelOptUtil.setRexInputBitmap(childBitmap, 0, nChildFields);
         for (RexNode filter : filterList) {
-            BitSet filterRefs = new BitSet(nFields);
-            filter.accept(new InputFinder(filterRefs));
-            boolean push = true;
-            for (int bit = filterRefs.nextSetBit(0); bit >= 0;
-                bit = filterRefs.nextSetBit(bit + 1))
-            {
-                if (bit >= aggRel.getGroupCount()) {
-                    push = false;
-                    break;
-                }
-            }
-            // if the filter only references group by columns, then it can
-            // be pushed
-            if (push) {
-                pushable.add(filter);
+            BitSet filterRefs = new BitSet();
+            filter.accept(new RelOptUtil.InputFinder(filterRefs));
+            if (RelOptUtil.contains(childBitmap, filterRefs)) {
+            	pushable.add(filter);
             } else {
-                notPushable.add(filter);
+            	notPushable.add(filter);
             }
         }
     }

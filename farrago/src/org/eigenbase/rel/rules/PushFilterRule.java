@@ -170,6 +170,11 @@ public class PushFilterRule extends RelOptRule
         RexNode joinFilter;
 
         if (joinFilters.size() == 0) {
+            // if nothing actually got pushed and there is nothing leftover,
+            // then this rule is a no-op
+            if (leftFilters.size() == 0 && rightFilters.size() == 0) {
+                return;
+            }
             joinFilter = rexBuilder.makeLiteral(true);
         } else {
             joinFilter = RexUtil.andRexNodeList(rexBuilder, joinFilters);

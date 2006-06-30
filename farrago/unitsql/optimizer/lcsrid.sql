@@ -64,6 +64,7 @@ select *, lcs_rid(t1.c0), lcs_rid(t2.c0)
 select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
     order by 3;
+select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
 
 --------------
 -- Error cases
@@ -107,3 +108,4 @@ explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
 explain plan for select t2.c8, t1.c5, lcs_rid(t1.c0), t1.c2, lcs_rid(t2.c4)
     from tencols t1, tencols t2 where lcs_rid(t1.c0) = lcs_rid(t2.c0)
     order by 3;
+explain plan for select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;

@@ -222,6 +222,36 @@ Error: From line 1, column 8 to line 1, column 18: No match found for function s
 | 38  | 35  | 3       | 32  | 3       |
 | 48  | 45  | 4       | 42  | 4       |
 +-----+-----+---------+-----+---------+
+0: jdbc:farrago:> select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
+| 0       |
+| 0       |
+| 0       |
+| 0       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 1       |
+| 2       |
+| 2       |
+| 2       |
+| 2       |
+| 2       |
+| 3       |
+| 3       |
+| 3       |
+| 3       |
+| 3       |
+| 4       |
+| 4       |
+| 4       |
+| 4       |
+| 4       |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Error cases
@@ -358,5 +388,13 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 '      LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[2, 5, LCS_RID]], clustered indexes=[[I_C1_C2, I_C3_C4_C5]])'
 '        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[8, LCS_RID, LCS_RID]], clustered indexes=[[I_C6_C7_C8_C9]])'
+0: jdbc:farrago:> explain plan for select lcs_rid(t1.c0) from tencols t1, tencols t2 order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..1=[{inputs}], EXPR$0=[$t0])'
+'      FennelCartesianProductRel(leftouterjoin=[false])'
+'        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[LCS_RID]], clustered indexes=[[I_C0]])'
+'        LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0]], clustered indexes=[[I_C0]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

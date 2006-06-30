@@ -22,6 +22,7 @@
 package org.eigenbase.rel.metadata;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
@@ -82,16 +83,20 @@ public class RelMdSelectivity extends ReflectiveRelMetadataProvider
     
     public Double getSelectivity(FilterRelBase rel, RexNode predicate)
     {
-        // REVIEW zfong 4/12/06 - Broadbase takes the difference between
-        // predicate and the rel's condition and only computes the
-        // selectivity on those predicates.  By taking the difference, I
-        // don't see where the selectivity of the filters associated with the
-        // FilterRel would get computed.  So, instead, I'm taking the union
-        // of the two, removing redundant filters.
-        RexNode unionPreds = RelMdUtil.unionPreds(
-            rel.getCluster().getRexBuilder(), predicate, rel.getCondition());
-        
-        return RelMetadataQuery.getSelectivity(rel.getChild(), unionPreds);
+        // Take the difference between the predicate passed in and the
+        // predicate in the filter's condition, so we don't apply the
+        // selectivity of the filter twice.  If no predicate is passed in,
+        // use the filter's condition.
+        if (predicate != null) {
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(),
+                RelMdUtil.minusPreds(
+                    rel.getCluster().getRexBuilder(), predicate,
+                    rel.getCondition()));
+        } else {
+            return RelMetadataQuery.getSelectivity(
+                rel.getChild(), rel.getCondition());
+        }
     }
     
     public Double getSelectivity(SemiJoinRel rel, RexNode predicate)
@@ -110,8 +115,46 @@ public class RelMdSelectivity extends ReflectiveRelMetadataProvider
             rel.getLeft(), newPred);
     }
     
-    // Catch-all rule when none of the others apply.  Have not implemented
-    // rules for aggregation and projection.
+    public Double getSelectivity(AggregateRelBase rel, RexNode predicate)
+    {
+        List<RexNode> notPushable = new ArrayList<RexNode>();
+        List<RexNode> pushable = new ArrayList<RexNode>();
+        RelOptUtil.splitFilters(
+            rel.getGroupCount(), predicate, pushable, notPushable);
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+        RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
+        
+        Double selectivity = RelMetadataQuery.getSelectivity(
+            rel.getChild(), childPred);
+        if (selectivity == null) {
+            return null;
+        } else {
+            RexNode pred = RexUtil.andRexNodeList(rexBuilder, notPushable);
+            return selectivity * RelMdUtil.guessSelectivity(pred);
+        }
+    }
+    
+    public Double getSelectivity(ProjectRelBase rel, RexNode predicate)
+    {
+        List<RexNode> notPushable = new ArrayList<RexNode>();
+        List<RexNode> pushable = new ArrayList<RexNode>();
+        RelOptUtil.splitFilters(
+            rel.getChild().getRowType().getFieldCount(),
+            predicate, pushable, notPushable);
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+        RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
+        
+        Double selectivity = RelMetadataQuery.getSelectivity(
+            rel.getChild(), childPred);
+        if (selectivity == null) {
+            return null;
+        } else {
+            RexNode pred = RexUtil.andRexNodeList(rexBuilder, notPushable);
+            return selectivity * RelMdUtil.guessSelectivity(pred);
+        }
+    }
+    
+    // Catch-all rule when none of the others apply.
     public Double getSelectivity(RelNode rel, RexNode predicate)
     {
         return RelMdUtil.guessSelectivity(predicate);

@@ -82,16 +82,15 @@
 0: jdbc:farrago:> -- need to join on key columns as outer joins not supported otherwise
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- can push to the left since it doesn't generate nulls
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME jvs 7-Apr-2006:  re-enable this once we switch to the
-0: jdbc:farrago:> -- heuristic planner; Volcano stopped applying the rule due to some
-0: jdbc:farrago:> -- other changes I made.  To maintain coverage, I added an
-0: jdbc:farrago:> -- equivalent rule unit test to RelOptRulesTest
-0: jdbc:farrago:> -- (pushFilterThroughOuterJoin).
-0: jdbc:farrago:> -- explain plan for
-0: jdbc:farrago:> --     select * from t1 left outer join t2
-0: jdbc:farrago:> --         on k1 = k2
-0: jdbc:farrago:> --         where t1a = 1;
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select * from t1 left outer join t2
+. . . . . . . . >         on k1 = k2
+. . . . . . . . >         where t1a = 1;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
+'    FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1], expr#6=[=($t1, $t5)], proj#0..4=[{exprs}], $condition=[$t6])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- can't push to the right from where clause since right generates nulls
 0: jdbc:farrago:> explain plan for
@@ -103,6 +102,18 @@
 '  FennelToIteratorConverter'
 '    FtrsIndexSearchRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1, 2, 3, 4]], inputDirectiveProj=[[]])'
 '      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FRG-158 -- filters that always evaluate to true aren't pushed
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select t1a from t1 left outer join (select *, true as x from t2) on true
+. . . . . . . . >         where x is true;
+'column0'
+'IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS TRUE($t1)], T1A=[$t0], $condition=[$t2])'
+'  FennelToIteratorConverter'
+'    FennelCartesianProductRel(leftouterjoin=[true])'
+'      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FennelCalcRel(expr#0..4=[{inputs}], expr#5=[true], X=[$t5])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------------
 0: jdbc:farrago:> -- pushdown join filters

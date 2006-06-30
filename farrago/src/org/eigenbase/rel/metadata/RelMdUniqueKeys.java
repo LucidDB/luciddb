@@ -73,7 +73,7 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         if (rightUnique != null && rightUnique) {
             Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
             if (leftSet == null) {
-            	return null;
+                return null;
             }
             retSet.addAll(leftSet);
         }
@@ -83,7 +83,7 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
             int nFieldsOnLeft = left.getRowType().getFieldCount();
             Set<BitSet> rightSet = RelMetadataQuery.getUniqueKeys(right);
             if (rightSet == null) {
-            	return null;
+                return null;
             }
             Iterator it = rightSet.iterator();
             while (it.hasNext()) {
@@ -112,8 +112,22 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         return RelMetadataQuery.getUniqueKeys(rel.getLeft());
     }
     
-    // Catch-all rule when none of the others apply.  Rules not yet
-    // implemented for cases like aggregation.
+    public Set<BitSet> getUniqueKeys(AggregateRelBase rel)
+    {
+        Set<BitSet> retSet = new HashSet<BitSet>();
+        
+        // group by keys form a unique key
+        if (rel.getGroupCount() > 0) {
+            BitSet groupKey = new BitSet();
+            for (int i = 0; i < rel.getGroupCount(); i++) {
+                groupKey.set(i);
+            }
+            retSet.add(groupKey);
+        }
+        return retSet;
+    }
+    
+    // Catch-all rule when none of the others apply.
     public Set<BitSet> getUniqueKeys(RelNode rel)
     {
         // no information available

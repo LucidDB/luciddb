@@ -28,6 +28,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util14.*;
 
 import java.math.*;
 import java.util.*;
@@ -371,6 +372,40 @@ public class RelMdUtil
     }
     
     /**
+     * Takes the difference between two predicates, removing from the first
+     * any predicates also in the second
+     * 
+     * @param rexBuilder rexBuilder used to construct AND'd RexNode
+     * @param pred1 first predicate
+     * @param pred2 second predicate
+     * @return MINUS'd predicate list
+     */
+    public static RexNode minusPreds(
+        RexBuilder rexBuilder, RexNode pred1, RexNode pred2)
+    {
+        List<RexNode> list1 = new ArrayList<RexNode>();
+        List<RexNode> list2 = new ArrayList<RexNode>();
+        List<RexNode> minusList = new ArrayList<RexNode>();
+        RelOptUtil.decompCF(pred1, list1);
+        RelOptUtil.decompCF(pred2, list2);
+        
+        for (RexNode rex1 : list1) {
+            boolean add = true;
+            for (RexNode rex2 : list2) {
+                if (rex2.toString().compareTo(rex1.toString()) == 0) {
+                    add = false;
+                    break;
+                }
+            }
+            if (add) {
+                minusList.add(rex1);
+            }
+        }
+        
+        return RexUtil.andRexNodeList(rexBuilder, minusList);
+    }
+    
+    /**
      * Takes a bitmap representing a set of input references and extracts the
      * ones that reference the group by columns in an aggregate
      * 
@@ -398,6 +433,112 @@ public class RelMdUtil
                     childKey.set(agg.getArgs()[i]);
                 }
             }
+        }
+    }
+    
+    /**
+     * Forms two bitmaps by splitting the columns in a bitmap according to
+     * whether or not the column references the child input or is an
+     * expression
+     * 
+     * @param nChildFields number of inputs in the child; used to determine 
+     * whether or not a column references the child
+     * @param groupKey bitmap whose columns will be split
+     * @param baseCols bitmap representing columns from the child input
+     * @param projCols bitmap representing non-child columns
+     */
+    public static void splitCols(
+        RexNode[] projExprs, BitSet groupKey, BitSet baseCols, BitSet projCols)
+    {
+        for (int bit = groupKey.nextSetBit(0); bit >= 0;
+            bit = groupKey.nextSetBit(bit + 1))
+        {
+            if (projExprs[bit] instanceof RexInputRef) {
+                baseCols.set(((RexInputRef) projExprs[bit]).getIndex());
+            } else {
+                projCols.set(bit);
+            }
+        }
+    }
+    
+    /**
+     * Computes the cardinality of a particular expression from the projection
+     * list
+     * 
+     * @param rel RelNode corresponding to the project
+     * @param expr projection expression
+     * 
+     * @return cardinality
+     */
+    public static Double cardOfProjExpr(ProjectRelBase rel, RexNode expr)
+    {
+        return expr.accept(new CardOfProjExpr(rel));
+    }
+    
+    private static class CardOfProjExpr extends RexVisitorImpl<Double>
+    {
+        private ProjectRelBase rel;
+        
+        public CardOfProjExpr(ProjectRelBase rel)
+        {
+            super(true);
+            this.rel = rel;
+        }
+        
+        public Double visitInputRef(RexInputRef var)
+        {
+            int index = var.getIndex();
+            BitSet col = new BitSet(index);
+            col.set(index);
+            Double distinctRowCount = RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(), col, null);
+            if (distinctRowCount == null) {
+                return null;
+            } else {
+                return RelMdUtil.numDistinctVals(
+                    distinctRowCount, RelMetadataQuery.getRowCount(rel));
+            }
+        }
+        
+        public Double visitLiteral(RexLiteral literal)
+        {
+            return RelMdUtil.numDistinctVals(
+                1.0, RelMetadataQuery.getRowCount(rel));
+        }
+        
+        public Double visitCall(RexCall call)
+        {
+            Double distinctRowCount;
+            Double rowCount = RelMetadataQuery.getRowCount(rel);
+            if (call.isA(RexKind.MinusPrefix)) {
+                distinctRowCount = cardOfProjExpr(rel, call.getOperands()[0]);
+            } else if (call.isA(RexKind.Plus) || call.isA(RexKind.Minus)) {
+                Double card0 = cardOfProjExpr(rel, call.getOperands()[0]);
+                if (card0 == null) {
+                    return null;
+                }
+                Double card1 = cardOfProjExpr(rel, call.getOperands()[1]);
+                if (card1 == null) {
+                    return null;
+                }
+                distinctRowCount = Math.max(card0, card1);
+            } else if (call.isA(RexKind.Times) || call.isA(RexKind.Divide)) {
+                distinctRowCount = NumberUtil.multiply(
+                    cardOfProjExpr(rel, call.getOperands()[0]),
+                    cardOfProjExpr(rel, call.getOperands()[1]));
+            // TODO zfong 6/21/06 - Broadbase has code to handle date 
+            // functions like year, month, day; E.g., cardinality of Month()
+            // is 12
+            } else {
+                if (call.getOperands().length == 1) {
+                    distinctRowCount = cardOfProjExpr(
+                        rel, call.getOperands()[0]);
+                } else {
+                    distinctRowCount = rowCount / 10;
+                }
+            }
+            
+            return numDistinctVals(distinctRowCount, rowCount);
         }
     }
 }

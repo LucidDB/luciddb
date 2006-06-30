@@ -24,6 +24,7 @@ package org.eigenbase.rel.metadata;
 import org.eigenbase.util14.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
+import org.eigenbase.rex.*;
 
 import java.util.*;
 
@@ -82,9 +83,12 @@ public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
             groupKey, leftMask, rightMask,
             rel.getLeft().getRowType().getFieldCount());   
         
-        return NumberUtil.multiply(
+       Double population = NumberUtil.multiply(
             RelMetadataQuery.getPopulationSize(rel.getLeft(), leftMask),
             RelMetadataQuery.getPopulationSize(rel.getRight(), rightMask));
+       
+       return RelMdUtil.numDistinctVals(
+           population, RelMetadataQuery.getRowCount(rel));
     }
     
     public Double getPopulationSize(SemiJoinRel rel, BitSet groupKey)
@@ -105,8 +109,37 @@ public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
         return rel.getRows() / 2;
     }
     
-    // Catch-all rule when none of the others apply.  Have not implemented
-    // rules for aggregation and projection.
+    public Double getPopulationSize(ProjectRelBase rel, BitSet groupKey)
+    {
+    	BitSet baseCols = new BitSet();
+    	BitSet projCols = new BitSet();
+    	RexNode[] projExprs = rel.getChildExps();
+    	RelMdUtil.splitCols(projExprs, groupKey, baseCols, projCols);
+    	
+    	Double population = RelMetadataQuery.getPopulationSize(
+    	    rel.getChild(), baseCols);
+    	if (population == null) {
+    	    return null;
+    	}
+    	
+    	for (int bit = projCols.nextSetBit(0); bit >= 0;
+    	    bit = projCols.nextSetBit(bit + 1))
+    	{
+    	    Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
+    	    if (subRowCount == null) {
+    	        return null;
+    	    }
+    	    population *= subRowCount;
+    	}
+
+    	// REVIEW zfong 6/22/06 - Broadbase did not have the call to 
+    	// numDistinctVals.  This is needed; otherwise, population can be
+    	// larger than the number of rows in the RelNode.
+        return RelMdUtil.numDistinctVals(
+            population, RelMetadataQuery.getRowCount(rel));
+    }
+    
+    // Catch-all rule when none of the others apply.
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // if the keys are unique, return the row count; otherwise, we have

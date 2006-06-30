@@ -358,9 +358,9 @@ public class FarragoQueryTest extends FarragoTestCase
 
         // By default, tables without stats are assumed to have
         // 100 rows, and default selectivity assumption is 25% for a
-        // LIKE predicate. The single GROUP BY column gives a further 50%
-        // selectivity. 100 * 25% * 50% = 12.5.
-        assertEquals(12.5, analyzedSql.rowCount);
+        // LIKE predicate. The single GROUP BY column gives a further 10%
+        // selectivity. 100 * 25% * 10% = 2.5.
+        assertEquals(2.5, analyzedSql.rowCount);
         
         stmt.executeUpdate(
             "alter session implementation set default");

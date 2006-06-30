@@ -134,7 +134,10 @@ public abstract class MedAbstractColumnMetadata
         double population = 1.0;
         
         // if columns are part of a unique key, then just return the rowcount
-        if (RelMdUtil.areColumnsUnique(rel, groupKey)) {
+        Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
+        if (uniq == null) {
+            return null;
+        } else if (uniq) {
             return RelMetadataQuery.getRowCount(rel);
         }
         

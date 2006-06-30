@@ -52,6 +52,11 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
      * numRows: number of input rows.
      */
     uint numRows;
+
+    /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
 };
 
 /**
@@ -66,7 +71,7 @@ class LhxAggExecStream : public ConduitExecStream
 {
     enum LhxAggState {
         Build, GetNextPlan, Partition, Produce, ProducePending,
-        CreateChildPlan, Done
+        CreateChildPlan, ForcePartitionBuild, Done
     };
     /**
      * Hash join info.
@@ -146,6 +151,11 @@ class LhxAggExecStream : public ConduitExecStream
      *
      */
     LhxPartitionInfo partInfo;
+
+    /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
 
     /**
      * implement ExecStream

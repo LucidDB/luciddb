@@ -20,4 +20,5 @@ LbmChopperExecStream.cpp \
 LbmBitOpExecStream.cpp \
 LbmMinusExecStream.cpp \
 LbmNormalizerExecStream.cpp \
-LbmByteSegment.cpp
+LbmByteSegment.cpp \
+LbmSortedAggExecStream.cpp

@@ -36,9 +36,9 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
-    void testSequentialImpl(uint numRows, bool fakeInterrupt);
+    void testSequentialImpl(uint numRows, uint forcePartitionLevel);
     void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight,
-        bool fakeInterrupt);
+        uint forcePartitionLevel, bool needSort, bool fakeInterrupt);
 
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
@@ -46,17 +46,21 @@ class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
         TupleProjection &outputProj,
         SharedMockProducerExecStreamGenerator pLeftGenerator,
         SharedMockProducerExecStreamGenerator pRightGenerator,
-        CompositeExecStreamGenerator &verifier, bool fakeInterrupt);
+        CompositeExecStreamGenerator &verifier,
+        uint forcePartitionLevel, bool needSort, bool fakeInterrupt);
     
 public:
     explicit LhxJoinExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialPartition);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1Partition);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialCleanup);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1Cleanup);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2Cleanup);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2Partition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstPartition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
     }
     
     /*
@@ -64,18 +68,7 @@ public:
      */
     void testSequential();
 
-    void testSequentialCleanup();
-
-    /*
-     * Match these two sets:
-     *  left:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
-     * right:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
-     *
-     * result: 0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
-     */
-    void testDup1();
-
-    void testDup1Cleanup();
+    void testSequentialPartition();
 
     /*
      * Match these two sets:
@@ -84,44 +77,84 @@ public:
      *
      * result: 0, 0, 0, .. 1, 1, 1, .. 2, 2, 2, ..
      */
+    void testDup1();
+
+    void testDup1Partition();
+
+    /*
+     * Match these two sets:
+     *  left:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     * right:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
+     *
+     * result: 0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     */
     void testDup2();
 
-    void testDup2Cleanup();
+    void testDup2Partition();
+
+    /*
+     * Match these two sets:
+     *  left:  0, 0  0, .. 0, 0, 0, .. 0, 0, 0, ..
+     * right:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     *
+     * result: 0, 0, 0, .. 0, 0, 0, .. 0, 0, 0, ..
+     */
+    void testConst();
+    void testConstPartition();
+    void testConstCleanup();
 };
 
 void LhxJoinExecStreamTest::testSequential()
 {
-    testSequentialImpl(100, false);
+    testSequentialImpl(1000, 0);
 }
 
-void LhxJoinExecStreamTest::testSequentialCleanup()
+void LhxJoinExecStreamTest::testSequentialPartition()
 {
-    testSequentialImpl(100, true);
+    testSequentialImpl(1000, 2);
 }
 
 void  LhxJoinExecStreamTest::testDup1()
 {
-    testDupImpl(960, 16, 60, false);
+    testDupImpl(960, 16, 60, 0, false, false);
 }
 
-void  LhxJoinExecStreamTest::testDup1Cleanup()
+void  LhxJoinExecStreamTest::testDup1Partition()
 {
-    testDupImpl(960, 16, 60, true);
+    testDupImpl(960, 16, 60, 2, true, false);
 }
 
 void  LhxJoinExecStreamTest::testDup2()
 {
-    testDupImpl(960, 60, 16, false);
+    testDupImpl(960, 60, 16, 0, false, false);
 }
 
-void  LhxJoinExecStreamTest::testDup2Cleanup()
+void  LhxJoinExecStreamTest::testDup2Partition()
 {
-    testDupImpl(960, 60, 16, true);
+    testDupImpl(960, 60, 16, 2, true, false);
+}
+
+void  LhxJoinExecStreamTest::testConst()
+{
+    testDupImpl(960,  1, 60, 0, false, false);
+}
+
+void  LhxJoinExecStreamTest::testConstPartition()
+{
+    testDupImpl(960,  1, 60, 2, false, false);
+}
+
+void  LhxJoinExecStreamTest::testConstCleanup()
+{
+    /*
+     * Fake interrupt to exercise temp seg clean up code.
+     */
+    testDupImpl(960,  1, 60, 2, false, true);
 }
 
 void LhxJoinExecStreamTest::testSequentialImpl(
     uint numRows,
-    bool fakeInterrupt)
+    uint forcePartitionLevel)
 {
     uint numColsLeft;
     uint numColsRight;
@@ -183,14 +216,20 @@ void LhxJoinExecStreamTest::testSequentialImpl(
 
     CompositeExecStreamGenerator verifier(outColumnGenerators);
 
-    testImpl(numRows, keyCount, cndKeys, numRows,
-        inputDesc, outputDesc, outputProj,
-        pLeftGenerator, pRightGenerator, verifier, fakeInterrupt);
+    bool needSort = (forcePartitionLevel > 0) ? true : false;
+    bool fakeInterrupt = false;
+
+    testImpl(numRows, keyCount, cndKeys, numRows, inputDesc, outputDesc,
+        outputProj, pLeftGenerator, pRightGenerator, verifier,
+        forcePartitionLevel, needSort, fakeInterrupt);
 }
 
 void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
-    uint cndKeyRight, bool fakeInterrupt)
+    uint cndKeyRight, uint forcePartitionLevel, bool needSort,
+    bool fakeInterrupt)
 {
+    assert (!fakeInterrupt || !needSort);
+
     uint numColsLeft;
     uint numColsRight;
     numColsRight = numColsLeft = 2;
@@ -213,13 +252,13 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
     
     uint i;
 
-    assert (cndKeyLeft * cndKeyRight == numRows);
-
     for (i = 0; i < numColsLeft; i++) {
         leftColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows/cndKeyLeft)));
+            SharedInt64ColumnGenerator(new
+                DupColumnGenerator(numRows/cndKeyLeft)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows)));
+            SharedInt64ColumnGenerator(new
+                DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
 
         inputDesc.push_back(attrDesc);
         outputDesc.push_back(attrDesc);        
@@ -228,9 +267,11 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
 
     for (; i < numColsLeft + numColsRight; i++) {
         rightColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows/cndKeyRight)));
+            SharedInt64ColumnGenerator(new
+                DupColumnGenerator(numRows/cndKeyRight)));
         outColumnGenerators.push_back(
-            SharedInt64ColumnGenerator(new DupColumnGenerator(numRows)));
+            SharedInt64ColumnGenerator(new
+                DupColumnGenerator(numRows*numRows/cndKeyLeft/cndKeyRight)));
 
         outputDesc.push_back(attrDesc);        
         outputProj.push_back(i);
@@ -250,9 +291,9 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
         (numRows * numRows/cndKeyLeft) :
         (numRows * numRows/cndKeyRight);
 
-    testImpl(numRows, keyCount, cndKeys, numResRows,
-        inputDesc, outputDesc, outputProj,
-        pLeftGenerator, pRightGenerator, verifier, fakeInterrupt);
+    testImpl(numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
+        outputProj, pLeftGenerator, pRightGenerator, verifier,
+        forcePartitionLevel, needSort, fakeInterrupt);
 }
 
 void LhxJoinExecStreamTest::testImpl(
@@ -262,7 +303,7 @@ void LhxJoinExecStreamTest::testImpl(
     SharedMockProducerExecStreamGenerator pLeftGenerator,
     SharedMockProducerExecStreamGenerator pRightGenerator,
     CompositeExecStreamGenerator &verifier,
-    bool fakeInterrupt)
+    uint forcePartitionLevel, bool needSort, bool fakeInterrupt)
 {
     TupleProjection leftKeyProj;
     TupleProjection rightKeyProj;
@@ -302,6 +343,8 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.setopAll      = false;
     joinParams.setopDistinct = false;
 
+    joinParams.forcePartitionLevel = forcePartitionLevel;
+
     joinParams.outputProj = outputProj;
     joinParams.cndKeys = cndKeys;
     joinParams.numRows = numInputRows;
@@ -328,29 +371,36 @@ void LhxJoinExecStreamTest::testImpl(
     joinStreamEmbryo.init(new LhxJoinExecStream(),joinParams);
     joinStreamEmbryo.getStream()->setName("LhxJoinExecStream");
     
+    SharedExecStream pOutputStream;
    
-    ExternalSortExecStreamParams sortParams;
-    sortParams.outputTupleDesc = outputDesc;
-    sortParams.distinctness = DUP_ALLOW;
-    sortParams.pTempSegment = pRandomSegment;
-    sortParams.pCacheAccessor = pCache;
-    sortParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache, 10);
-    sortParams.keyProj.push_back(0);
-    ExecStreamEmbryo sortStreamEmbryo;
-    sortStreamEmbryo.init(
-        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
-    sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
-
-    SharedExecStream pOutputStream = prepareConfluenceTransformGraph(
-        leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo,
-        sortStreamEmbryo);
+    if (needSort) {
+        ExternalSortExecStreamParams sortParams;
+        sortParams.outputTupleDesc = outputDesc;
+        sortParams.distinctness = DUP_ALLOW;
+        sortParams.pTempSegment = pRandomSegment;
+        sortParams.pCacheAccessor = pCache;
+        sortParams.scratchAccessor =
+            pSegmentFactory->newScratchSegment(pCache, 10);
+        sortParams.keyProj.push_back(0);
+        ExecStreamEmbryo sortStreamEmbryo;
+        sortStreamEmbryo.init(
+            ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+        sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
+        
+        pOutputStream = prepareConfluenceTransformGraph(
+            leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo,
+            sortStreamEmbryo);
+    } else {
+        pOutputStream = prepareConfluenceGraph(
+            leftInputStreamEmbryo, rightInputStreamEmbryo, joinStreamEmbryo);
+    }
 
     // after partitioning the order might not be the same as the input, so add
-    // a sort before verify the output
-    
+    // a sort before verifying the output
 
-    verifyOutput(*pOutputStream, numResultRows, verifier, fakeInterrupt);
+    verifyOutput(*pOutputStream,
+        fakeInterrupt ? 1 : numResultRows,
+        verifier, fakeInterrupt);
 
     if (fakeInterrupt) {
         // simulate error cleanup

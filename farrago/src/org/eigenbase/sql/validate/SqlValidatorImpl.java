@@ -787,28 +787,41 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             call.setOperand(SqlUpdate.SOURCE_SELECT_OPERAND, select);
         } else if (node.isA(SqlKind.Merge)) {
             SqlMerge call = (SqlMerge) node;
+            SqlNodeList selectList;
             SqlUpdate updateStmt = call.getUpdateCall();
-            // just clone the select list from the update statement's source
-            // since it's the same as what we want for the select list of
-            // the merge source -- '*' followed by the update set expressions
-            SqlNodeList selectList = (SqlNodeList)
-                updateStmt.getSourceSelect().getSelectList().clone();
+            if (updateStmt != null) {
+                // if we have an update statement, just clone the select list
+                // from the update statement's source since it's the same as
+                // what we want for the select list of the merge source -- '*'
+                // followed by the update set expressions
+                selectList = (SqlNodeList)
+                    updateStmt.getSourceSelect().getSelectList().clone();
+            } else {
+                // otherwise, just use select *
+                selectList = new SqlNodeList(SqlParserPos.ZERO);
+                selectList.add(new SqlIdentifier("*", SqlParserPos.ZERO));
+            }
             SqlNode targetTable = call.getTargetTable();
             if (call.getAlias() != null) {
                 targetTable = SqlValidatorUtil.addAlias(
                     targetTable, call.getAlias().getSimple());
             }
-            // Source select for the merge is a left outer join between the
-            // source in the USING clause and the target table; need to clone
-            // source table reference in order for validation to work
+            // Provided there is an insert substatement, the source select for
+            // the merge is a left outer join between the source in the USING
+            // clause and the target table; otherwise, the join is just an
+            // inner join.  Need to clone the source table reference in order
+            // for validation to work
             SqlNode sourceTableRef = call.getSourceTableRef();
-            call.setSourceTableRef(sourceTableRef);
+            call.setSourceTableRef(sourceTableRef);          
+            SqlInsert insertCall = call.getInsertCall();
+            SqlJoinOperator.JoinType joinType = (insertCall == null) ?
+                SqlJoinOperator.JoinType.Inner :
+                SqlJoinOperator.JoinType.Left;
             SqlNode leftJoinTerm = (SqlNode) sourceTableRef.clone();
             SqlNode outerJoin = SqlStdOperatorTable.joinOperator.createCall(
                 leftJoinTerm,
                 SqlLiteral.createBoolean(false, SqlParserPos.ZERO),
-                SqlLiteral.createSymbol(
-                    SqlJoinOperator.JoinType.Left, SqlParserPos.ZERO),
+                SqlLiteral.createSymbol(joinType, SqlParserPos.ZERO),
                 targetTable,
                 SqlLiteral.createSymbol(
                     SqlJoinOperator.ConditionType.On, SqlParserPos.ZERO),
@@ -825,18 +838,19 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // note that the values clause has already been converted to a
             // select on the values row constructor; so we need to extract
             // that via the from clause on the select
-            SqlInsert insertCall = call.getInsertCall();
-            SqlSelect valuesSelect = (SqlSelect) insertCall.getSource();
-            SqlCall valuesCall = (SqlCall) valuesSelect.getFrom();
-            SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
-            selectList = new SqlNodeList(
-                Arrays.asList(rowCall.getOperands()), SqlParserPos.ZERO);
-            SqlNode insertSource = (SqlNode) sourceTableRef.clone();
-            select =
-                SqlStdOperatorTable.selectOperator.createCall(null,
-                    selectList, insertSource, null, null, null, null, null,
-                    SqlParserPos.ZERO);
-            insertCall.setOperand(SqlInsert.SOURCE_OPERAND, select);
+            if (insertCall != null) {
+                SqlSelect valuesSelect = (SqlSelect) insertCall.getSource();
+                SqlCall valuesCall = (SqlCall) valuesSelect.getFrom();
+                SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
+                selectList = new SqlNodeList(
+                    Arrays.asList(rowCall.getOperands()), SqlParserPos.ZERO);
+                SqlNode insertSource = (SqlNode) sourceTableRef.clone();
+                select =
+                    SqlStdOperatorTable.selectOperator.createCall(null,
+                        selectList, insertSource, null, null, null, null, null,
+                        SqlParserPos.ZERO);
+                insertCall.setOperand(SqlInsert.SOURCE_OPERAND, select);
+            }
         }
         return node;
     }
@@ -1572,18 +1586,22 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             // update call can reference either the source table reference
             // or the target table, so set its parent scope to the merge's
             // source select
-            registerQuery(
-                (ListScope) whereScopes.get(mergeCall.getSourceSelect()),
-                null,
-                mergeCall.getUpdateCall(),
-                null,
-                false);
-            registerQuery(
-                parentScope,
-                null,
-                mergeCall.getInsertCall(),
-                null,
-                false);
+            if (mergeCall.getUpdateCall() != null) {
+                registerQuery(
+                    (ListScope) whereScopes.get(mergeCall.getSourceSelect()),
+                    null,
+                    mergeCall.getUpdateCall(),
+                    null,
+                    false);
+            }
+            if (mergeCall.getInsertCall() != null) {
+                registerQuery(
+                    parentScope,
+                    null,
+                    mergeCall.getInsertCall(),
+                    null,
+                    false);
+            }
             break;
 
         case SqlKind.UnnestORDINAL:
@@ -2413,8 +2431,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
             (IdentifierNamespace) getNamespace(call.getTargetTable());
         validateNamespace(targetNamespace);
 
-        validateUpdate(call.getUpdateCall());
-        validateInsert(call.getInsertCall());
+        if (call.getUpdateCall() != null) {
+            validateUpdate(call.getUpdateCall());
+        }
+        if (call.getInsertCall() != null) {
+            validateInsert(call.getInsertCall());
+        }
 
         SqlValidatorTable table = targetNamespace.getTable();
         validateAccess(table, SqlAccessEnum.UPDATE);
