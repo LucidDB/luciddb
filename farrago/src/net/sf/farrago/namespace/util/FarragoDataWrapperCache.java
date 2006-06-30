@@ -114,8 +114,13 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FarragoMedDataWrapper wrapper =
             (FarragoMedDataWrapper) searchPrivateCache(mofId);
         if (wrapper != null) {
-            // already privately cached
-            return wrapper;
+            // verify if the private cache entry is valid (with matching
+            // library name and options)
+            if (options.equals(wrapper.getProperties()) && 
+                libraryName.equals(wrapper.getLibraryName())) {
+                // already privately cached
+                return wrapper;
+            }
         }
 
         // otherwise, try shared cache (pin exclusive since wrappers
@@ -125,6 +130,16 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FarragoObjectCache.Entry entry =
             getSharedCache().pin(mofId, factory, true);
 
+        wrapper = (FarragoMedDataWrapper) entry.getValue();
+        // if the share cache is invalid (mismatching library name or options),
+        // discard that entry and re-pin it (which will initialize a new entry 
+        // in the shared cache with the wrapper factory
+        if (!options.equals(wrapper.getProperties()) ||
+            !libraryName.equals(wrapper.getLibraryName())) {
+            getSharedCache().discard(mofId);
+            entry = getSharedCache().pin(mofId, factory, true);
+        }
+            
         wrapper = (FarragoMedDataWrapper) addToPrivateCache(entry);
         return wrapper;
     }
