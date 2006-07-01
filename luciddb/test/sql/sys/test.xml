@@ -1,0 +1,44 @@
+<project name="bh" default="sys">
+  <target name="sys">
+    <test-suite name="sys">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="sys"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/sys" target="copy-csv"/>
+      </init-hook>
+
+      <test name="dbaViews">
+        <junit-sql file="${open.dir}/luciddb/test/sql/sys/dbaViews.sql"/>
+      </test>
+
+      <test name="oracleWrapper">
+        <junit-sql file="${open.dir}/luciddb/test/sql/sys/oracleWrapper.sql"/>
+      </test>
+
+      <test name="sqlserverWrapper">
+        <!-- FRG-162 -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sys/sqlserverWrapper.sql"/>
+      </test>
+
+      <test name="flatfileWrapper">
+        <junit-sql file="${open.dir}/luciddb/test/sql/sys/flatfileWrapper.sql"/>
+      </test>
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="sys"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

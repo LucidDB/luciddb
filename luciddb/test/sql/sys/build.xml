@@ -20,9 +20,9 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="sysviews" basedir="." default="test">
-  <dirname property="sysviews.dir" file="${ant.file.sysviews}"/>
-  <property name="open.dir" location="${sysviews.dir}/../../../.."/>
+<project name="sys" basedir="." default="test">
+  <dirname property="sys.dir" file="${ant.file.sys}"/>
+  <property name="open.dir" location="${sys.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
@@ -35,11 +35,11 @@
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
   <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${sysviews.dir}/testlog" />
+  <property name="bh.log.basedir" value="${sys.dir}/testlog" />
 
   <!-- directory of csv files -->
   <property name="data.dir" value="${open.dir}/luciddb/test/data"/>
-  <property name="csv.copy.dir" value="${sysviews.dir}/csv-copy"/>
+  <property name="csv.copy.dir" value="${sys.dir}/csv-copy"/>
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -51,28 +51,18 @@
   <property name="test.classpath" refid="test.classpath"/>
 
   <target name="gen-all-sql">
-    <uptodate property="gensql.uptodate">
-      <srcfiles dir="${sysviews.dir}" includes="*.tmpl"/>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-    </uptodate>
-    <if>
-      <isset property="gensql.uptodate"/>
-      <then/>
-      <else>
-        <copy todir="${sysviews.dir}" overwrite="true">
-          <fileset dir="${sysviews.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${sys.dir}" overwrite="true">
+      <fileset dir="${sys.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
   </target>
 
   <target name="test" depends="gen-all-sql">
     <blackhawk.fork
-      basedir="${sysviews.dir}"
+      basedir="${sys.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
@@ -92,7 +82,7 @@
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
     <delete>
-      <fileset dir="${sysviews.dir}" includes="*.log"/>
+      <fileset dir="${sys.dir}" includes="*.log"/>
     </delete>
   </target>
 

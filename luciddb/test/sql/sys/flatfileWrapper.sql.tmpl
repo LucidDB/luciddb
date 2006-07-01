@@ -1,0 +1,40 @@
+-- check built-in flat file wrapper with browse connect
+
+select * from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'FLAT FILE', 
+    cursor(
+      select '' as option_name, '' as option_value 
+      from sys_boot.jdbc_metadata.empty_view)))
+order by option_ordinal, option_choice_ordinal;
+
+-- see options available
+select * from table(
+  sys_boot.mgmt.browse_connect_foreign_server(
+    'FLAT FILE', 
+    cursor(
+      values('URL', 'jdbc:jtds:sqlserver://akela.lucidera.com:1443'),
+            ('EXTENDED_OPTIONS', 'TRUE'))))
+order by option_ordinal, option_choice_ordinal;
+
+-- create flatfile server
+create server my_flatfile
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@DIR@',
+  file_extension '.csv',
+  ctrl_file_extension '.bcp',
+  field_delimiter ',',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '1'
+);
+
+-- browse foreign schemas for flatfile
+select * from table( sys_boot.mgmt.browse_foreign_schemas('MY_FLATFILE'))
+order by schema_name;
+
+-- cleanup
+drop server my_flatfile cascade;

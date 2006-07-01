@@ -25,6 +25,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.jdbc.engine.*;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 
 import java.sql.*;
 
@@ -72,6 +73,18 @@ public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
             || name.startsWith("SYS_");
     }
 
+    // override Cleanup
+    protected boolean isBlessedWrapper(FemDataWrapper wrapper)
+    {
+        String name = wrapper.getName();
+        return name.equals("ORACLE")
+            || name.equals("SQL SERVER")
+            || name.equals("FLAT FILE")
+            || name.equals("SALESFORCE")
+            || name.equals("NETSUITE")
+            || super.isBlessedWrapper(wrapper);
+    }
+    
     public static void saveTestParameters()
         throws Exception
     {
