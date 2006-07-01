@@ -229,7 +229,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <!-- Nightly tests -->
-  <target name="test-nightly-all-init" depends="cleanJars,createCatalog,buildJdbcPlugin">
+  <target name="test-nightly-all-init" depends="cleanJars,createCatalog">
     <antcall target="clean-subdirs"/>
     <antcall target="gen-all-sql"/>
   </target>
@@ -321,7 +321,7 @@ ${farrago.test.jvmargs}
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-all" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test-all" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <property file="run.properties"/>
     <blackhawk.fork
@@ -334,7 +334,7 @@ ${farrago.test.jvmargs}
 
 <!-- End Experiment-->
 
-  <target name="test" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
@@ -346,7 +346,7 @@ ${farrago.test.jvmargs}
     <antcall target="gen-bh-report"/>
   </target>
 
-  <target name="emmaTest" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="emmaTest" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
@@ -386,6 +386,7 @@ ${farrago.test.jvmargs}
       <include name="**/*.java" />
     </farrago.javaCompile>
     <antcall target="buildApplibPlugin"/>    
+    <antcall target="buildJdbcPlugin" />
     <antcall target="buildClientJar"/>
   </target>
 
@@ -647,6 +648,12 @@ ${farrago.test.jvmargs}
   <target name="cleanJars">
     <antcall target="cleanClientJar"/>
     <antcall target="cleanApplib"/>
+    <antcall target="cleanJdbcPlugins"/>
+  </target>
+
+  <target name="cleanJdbcPlugins">
+    <delete file="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar" quiet="true"/>
+    <delete file="${luciddb.plugin.dir}/FarragoMedJdbc.jar" quiet="true"/>
   </target>
 
   <target name="cleanClientJar">
