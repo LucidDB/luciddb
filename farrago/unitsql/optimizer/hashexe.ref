@@ -201,7 +201,7 @@
 'John'
 'John'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this query still uses cartesian product
+0: jdbc:farrago:> -- this query uses hash join after pushing down the RHS expression
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lhxemps, lhxdepts
 . . . . . . . . > where lhxemps.deptno = lhxdepts.deptnoA + 1
@@ -210,11 +210,14 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..4=[{inputs}], expr#5=[1], expr#6=[+($t3, $t5)], expr#7=[=($t2, $t6)], proj#0..4=[{exprs}], $condition=[$t7])'
+'      IterCalcRel(expr#0..5=[{inputs}], proj#0..4=[{exprs}])'
 '        FennelToIteratorConverter'
-'          FennelCartesianProductRel(leftouterjoin=[false])'
+'          LhxJoinRel(leftKeys=[[2]], rightKeys=[[2]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$EMPNO, SYS$CLUSTERED_INDEX$LHX$LHXEMPS$ENAME]])'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[+($t0, $t2)], proj#0..1=[{exprs}], +($0, 1)=[$t3])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOA, SYS$CLUSTERED_INDEX$LHX$LHXDEPTS$DEPTNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- multiple conditions between the same pair of tables
 0: jdbc:farrago:> explain plan for 
@@ -871,7 +874,7 @@
 . . . . . . . . > order by 1, 2;
 'ENAMEB','ENAMEC'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- not null types are compatible with hash outer joins
+0: jdbc:farrago:> -- test ON clause filter conditions for outer joins
 0: jdbc:farrago:> create table lhxemps5(
 . . . . . . . . >     empnoA integer)
 . . . . . . . . > server sys_column_store_data_server;
@@ -881,8 +884,10 @@
 . . . . . . . . > server sys_column_store_data_server;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into lhxemps5 values(1);
+0: jdbc:farrago:> insert into lhxemps5 values(2);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into lhxemps6 values(2);
+0: jdbc:farrago:> insert into lhxemps6 values(3);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 full outer join lhxemps6
@@ -899,15 +904,16 @@
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB
 . . . . . . . . > order by 1, 2;
 'EMPNOA','EMPNOB'
-'','2'
+'','3'
 '1',''
+'2','2'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- outer join with filter predicates
 0: jdbc:farrago:> -- filter pushed down
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
-. . . . . . . . >    lhxemps5.empnoA > 0
+. . . . . . . . >    lhxemps5.empnoA <> 2
 . . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
@@ -918,57 +924,160 @@
 '          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
 '            IteratorToFennelConverter'
-'              IterCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
 '                FennelToIteratorConverter'
 '                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter not pushed down
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter
-0: jdbc:farrago:> -- this should report an error that no physical implementaion is available
-0: jdbc:farrago:> -- NOTE: since error msg is not deterministic, use "without implementation
-0: jdbc:farrago:> --       to show just the logical plan
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 left outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
-. . . . . . . . >    lhxemps5.empnoA > 0
+. . . . . . . . >    lhxemps5.empnoA <> 2
 . . . . . . . . > order by 1, 2;
 'column0'
-'SortRel(sort0=[$0], sort1=[$1], dir0=[Ascending], dir1=[Ascending])'
-'  ProjectRel(EMPNOA=[$0], EMPNOB=[$1])'
-'    JoinRel(condition=[AND(=($0, $1), >($0, 0))], joinType=[left])'
-'      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS5]])'
-'      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS6]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], EMPNOA=[$t0], EMPNOB=[$t2])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[LEFT])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], <>($0, 2)=[$t2])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps5 left outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA <> 2
+. . . . . . . . > order by 1, 2;
+'EMPNOA','EMPNOB'
+'1',''
+'2',''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps5 left outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA <> 3
+. . . . . . . . > order by 1, 2;
+'EMPNOA','EMPNOB'
+'1',''
+'2','2'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter pushed down
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 right outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
-. . . . . . . . >    lhxemps5.empnoA > 0
+. . . . . . . . >    lhxemps5.empnoA <> 2
 . . . . . . . . > order by 1, 2;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
+'        IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter not pushed down
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter
-0: jdbc:farrago:> -- this should report an error
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from lhxemps5 full outer join lhxemps6
 . . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
-. . . . . . . . >    lhxemps5.empnoA > 0
+. . . . . . . . >    lhxemps5.empnoA <> 2
 . . . . . . . . > order by 1, 2;
 'column0'
-'SortRel(sort0=[$0], sort1=[$1], dir0=[Ascending], dir1=[Ascending])'
-'  ProjectRel(EMPNOA=[$0], EMPNOB=[$1])'
-'    JoinRel(condition=[AND(=($0, $1), >($0, 0))], joinType=[full])'
-'      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS5]])'
-'      TableAccessRel(table=[[LOCALDB, LHX, LHXEMPS6]])'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], EMPNOA=[$t0], EMPNOB=[$t2])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], <>($0, 2)=[$t2])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA <> 2
+. . . . . . . . > order by 1, 2;
+'EMPNOA','EMPNOB'
+'','2'
+'','3'
+'1',''
+'2',''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this can use hash outer join also
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lhxemps5 full outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA > lhxemps5.empnoA
+. . . . . . . . > order by 1, 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], EMPNOA=[$t0], EMPNOB=[$t2])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[>($t0, $t0)], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA > lhxemps5.empnoA
+. . . . . . . . > order by 1, 2;
+'EMPNOA','EMPNOB'
+'','2'
+'','3'
+'1',''
+'2',''
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lhxemps5 full outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA * lhxemps5.empnoA > 10
+. . . . . . . . > order by 1, 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
+'    IteratorToFennelConverter'
+'      IterCalcRel(expr#0..3=[{inputs}], EMPNOA=[$t0], EMPNOB=[$t2])'
+'        FennelToIteratorConverter'
+'          LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 1]], joinType=[FULL])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[*($t0, $t0)], expr#2=[10], expr#3=[>($t1, $t2)], EMPNOA=[$t0], >(*($0, $0), 10)=[$t3])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
+'            IteratorToFennelConverter'
+'              IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])'
+'                FennelToIteratorConverter'
+'                  LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps5 full outer join lhxemps6
+. . . . . . . . > on lhxemps5.empnoA = lhxemps6.empnoB and
+. . . . . . . . >    lhxemps5.empnoA * lhxemps5.empnoA > 10
+. . . . . . . . > order by 1, 2;
+'EMPNOA','EMPNOB'
+'','2'
+'','3'
+'1',''
+'2',''
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- this will use a post-join filter
 0: jdbc:farrago:> explain plan for

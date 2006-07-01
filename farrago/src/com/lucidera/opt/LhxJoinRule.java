@@ -45,9 +45,7 @@ public class LhxJoinRule extends RelOptRule
 
     public LhxJoinRule()
     {
-        super(new RelOptRuleOperand(
-                  JoinRel.class,
-                  null));
+        super(new RelOptRuleOperand(JoinRel.class, null));
     }
 
     //~ Methods ---------------------------------------------------------------
@@ -63,66 +61,53 @@ public class LhxJoinRule extends RelOptRule
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
-        RelDataTypeFactory typeFactory = joinRel.getCluster().getTypeFactory();
         
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
-        RexNode joinCondition = joinRel.getCondition();
         RexNode nonEquiCondition = null;
         
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
-        List<Integer> leftKeysToCast = new ArrayList<Integer>();
-        List<Integer> rightKeysToCast = new ArrayList<Integer>();
-        List<RexNode> leftFunctionKeys = new ArrayList<RexNode>();
-        List<RexNode> rightFunctionKeys = new ArrayList<RexNode>();
+
+        List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+        List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+
         
         nonEquiCondition = RelOptUtil.splitJoinCondition(
-            leftRel, joinCondition, leftKeys, rightKeys, leftKeysToCast,
-            rightKeysToCast, leftFunctionKeys, rightFunctionKeys);
+            joinRel, leftJoinKeys, rightJoinKeys);
         
         if (nonEquiCondition != null
             && joinRel.getJoinType() != JoinRelType.INNER) {
+            // this one can not be imlemented by hash join
+            // nor can it be implemented by cartesian product
             return;
         }
     
-        if (leftKeys.size() == 0 && leftKeysToCast.size() == 0  &&
-            leftFunctionKeys.size() == 0 ||
-            leftKeys.size() != rightKeys.size() ||
-            leftKeysToCast.size() != rightKeysToCast.size() ||
-            leftFunctionKeys.size() != rightFunctionKeys.size()) {
+        if (!joinRel.getVariablesStopped().isEmpty()) {
             return;
         }
 
-        if (!joinRel.getVariablesStopped().isEmpty()) {
+        if (leftJoinKeys.size() == 0) {
+            // should use cartesian product instead of hash join
             return;
         }
         
         List<Integer> outputProj = new ArrayList<Integer>();
         List<String> newJoinOutputNames = new ArrayList<String>();
-                
-        boolean projectionRequired =
-            leftKeysToCast.size() > 0 || leftFunctionKeys.size() > 0;
+
+        RelNode[] inputRels = new RelNode[] {leftRel, rightRel};
         
-        if (projectionRequired) {
-            // cast the inputs so that join keys have matching types
-            // this is required as during runtime, tuple comparison needs the
-            // inputs to have identical types.
-            RelNode[] inputRels = new RelNode[] {leftRel, rightRel};
+        projectInputs(inputRels, leftJoinKeys, rightJoinKeys,
+            leftKeys, rightKeys, outputProj);
         
-            projectInputs(rexBuilder, typeFactory, inputRels,
-                leftKeys, rightKeys,
-                leftKeysToCast, rightKeysToCast,
-                leftFunctionKeys, rightFunctionKeys,
-                outputProj);
+        leftRel = inputRels[0];
+        rightRel = inputRels[1];
         
-            leftRel = inputRels[0];
-            rightRel = inputRels[1];
-        }
-        
-        newJoinOutputNames.addAll(RelOptUtil.getFieldNameList(leftRel.getRowType()));
-        newJoinOutputNames.addAll(RelOptUtil.getFieldNameList(rightRel.getRowType()));
+        newJoinOutputNames.addAll(
+            RelOptUtil.getFieldNameList(leftRel.getRowType()));
+        newJoinOutputNames.addAll(
+            RelOptUtil.getFieldNameList(rightRel.getRowType()));
         
         RelNode fennelLeft =
             mergeTraitsAndConvert(
@@ -151,6 +136,10 @@ public class LhxJoinRule extends RelOptRule
         Double cndBuildKey;
         BitSet joinKeyMap = new BitSet();
         
+        // since rightJoinKeys can be more than simply inputrefs
+        // assume the adinality of the key to be the cardinality of all
+        // referenced fields.
+        
         for (int i = 0; i < rightKeys.size(); i ++) {
             joinKeyMap.set(rightKeys.get(i));
         }
@@ -177,17 +166,19 @@ public class LhxJoinRule extends RelOptRule
                 numBuildRows.intValue(),
                 cndBuildKey.intValue());
         
-        // Need to project the new output(left+cast+right+cast) to the original
+        int newProjectOutputSize = outputProj.size();
+        RelDataTypeField[] joinOutputFields = rel.getRowType().getFields();
+        
+        // Need to project the new output(left+key+right+key) to the original
         // join output(left+right).
         // The projection needs to happen before additional filtering since
         // filtering condition references the original output ordinals.
-        if (projectionRequired) {
-            int newProjectOutputSize = outputProj.size();
-            RexNode[] newProjectOutputFields = new RexNode[newProjectOutputSize];
-            String[]  newProjectOutputNames = new String[newProjectOutputSize];
-            
-            RelDataTypeField[] joinOutputFields = rel.getRowType().getFields();
-            
+        if (newProjectOutputSize < joinOutputFields.length) {
+            RexNode[] newProjectOutputFields =
+                new RexNode[newProjectOutputSize];
+            String[]  newProjectOutputNames =
+                new String[newProjectOutputSize];
+                        
             for (int i = 0; i < newProjectOutputSize; i ++) {
                 int fieldIndex = outputProj.get(i);
             
@@ -224,162 +215,91 @@ public class LhxJoinRule extends RelOptRule
     }
     
     private void projectInputs(
-        RexBuilder rexBuilder,
-        RelDataTypeFactory typeFactory,
         RelNode[] inputRels,
+        List<RexNode> leftJoinKeys,
+        List<RexNode> rightJoinKeys,
         List<Integer> leftKeys,
-        List<Integer> rightKeys,
-        List<Integer> leftKeysToCast,
-        List<Integer> rightKeysToCast,
-        List<RexNode> leftFunctionKeys,
-        List<RexNode> rightFunctionKeys,
+        List<Integer> rightKeys,            
         List<Integer> outputProj)
     {
-        RelNode leftRel = inputRels[0];
-        RelNode rightRel = inputRels[1];
-        
-        int origLeftInputSize = leftRel.getRowType().getFieldCount();
-        int origRightInputSize = rightRel.getRowType().getFieldCount();
-        
-        List<RexNode> newLeftFields = new ArrayList<RexNode>();
-        List<String>  newLeftFieldNames = new ArrayList<String>();
-        RexNode newLeftInputRef;
+    	RelNode leftRel  = inputRels[0];
+    	RelNode rightRel = inputRels[1];
+    	RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
+    	
+    	int origLeftInputSize = leftRel.getRowType().getFieldCount();
+    	int origRightInputSize = rightRel.getRowType().getFieldCount();
+    	
+    	List<RexNode> newLeftFields = new ArrayList<RexNode>();
+    	List<String>  newLeftFieldNames = new ArrayList<String>();
 
-        List<RexNode> newRightFields = new ArrayList<RexNode>();
-        List<String>  newRightFieldNames = new ArrayList<String>();
-        RexNode newRightInputRef;
-        
-        for (int i = 0; i < origLeftInputSize; i ++) {
-            newLeftFields.add(
-                rexBuilder.makeInputRef(
-                    leftRel.getRowType().getFields()[i].getType(), i));
-            newLeftFieldNames.add(
-                leftRel.getRowType().getFields()[i].getName());
-            outputProj.add(i);
-        }
-        
-        for (int i = 0; i < origRightInputSize; i ++) {
-            newRightFields.add(
-                rexBuilder.makeInputRef(
-                    rightRel.getRowType().getFields()[i].getType(), i));
-            newRightFieldNames.add(
-                rightRel.getRowType().getFields()[i].getName());
-            // right input starts after the additional casted fields
-            // and is set up after the casted fields are added.
-        }
-        
-        int newLeftKeyIndex = 0;
-        int newRightKeyIndex = 0;
-
-        // first add all the implicit key type castings
-        int numLeftKeysToCast =  leftKeysToCast.size();
+    	List<RexNode> newRightFields = new ArrayList<RexNode>();
+    	List<String>  newRightFieldNames = new ArrayList<String>();
+    	int leftKeyCount = leftJoinKeys.size();
+    	int rightKeyCount = rightJoinKeys.size();
+    	int i;
+    	
+    	for (i = 0; i < origLeftInputSize; i ++) {
+    	    newLeftFields.add(rexBuilder.makeInputRef(
+    	        leftRel.getRowType().getFields()[i].getType(), i));
+    	    newLeftFieldNames.add(
+    	        leftRel.getRowType().getFields()[i].getName());
+    	    outputProj.add(i);
+    	}
             
-        for (int i = 0; i < numLeftKeysToCast; i ++) {
-
-            int leftFieldIndex = leftKeysToCast.get(i);
-            int rightFieldIndex = rightKeysToCast.get(i);
-                
-            RelDataTypeField leftField
-                = leftRel.getRowType().getFields()[leftFieldIndex];
-            RelDataTypeField rightField
-                = rightRel.getRowType().getFields()[rightFieldIndex];
-                
-            RelDataType leftFieldType = leftField.getType();
-            RelDataType rightFieldType = rightField.getType();
-                
-            String leftFieldName = leftField.getName();
-            String rightFieldName = rightField.getName();
-                
-            // now decide how to cast
-            RelDataType targetFieldType = 
-                typeFactory.leastRestrictive(
-                    new RelDataType[] {leftFieldType, rightFieldType});
-
-            if (targetFieldType == leftFieldType) {
-                // just add the original field input index
-                leftKeys.add(leftFieldIndex);
-            } else {
-                // needs to cast first and then add to the key projection
-                newLeftInputRef =
-                    rexBuilder.makeInputRef(leftFieldType, leftFieldIndex);                                
-                newLeftFields.add(
-                    rexBuilder.makeCast(targetFieldType,  newLeftInputRef));
-                newLeftFieldNames.add(leftFieldName);
-                // change the corresponding join key pairs
-                // by referencing the newly created casted key
-                leftKeys.add(origLeftInputSize + newLeftKeyIndex);
-                newLeftKeyIndex ++;
-            }
-                
-            if (targetFieldType == rightFieldType) {
-                // just add the original field input index
-                rightKeys.add(rightFieldIndex);
-            } else {
-                // needs to cast first and then add to the key projection
-                newRightInputRef =
-                    rexBuilder.makeInputRef(rightFieldType, rightFieldIndex);                                
-                newRightFields.add(
-                    rexBuilder.makeCast(targetFieldType,  newRightInputRef));
-                newRightFieldNames.add(rightFieldName);
-                // change the corresponding join key pairs
-                // by referencing the newly created casted key
-                rightKeys.add(origRightInputSize + newRightKeyIndex);
-                newRightKeyIndex ++;
-            }                
-        }
-        
-        // then add the join predicates on functions that references
-        // a single input field.
-        int numLeftFunctionKeys =  leftFunctionKeys.size();
-
-        for (int i = 0; i < numLeftFunctionKeys; i ++) {
-            RexNode leftFunctionKey = leftFunctionKeys.get(i);
-            RexNode rightFunctionKey = rightFunctionKeys.get(i);
+    	int newLeftKeyCount = 0;
+    	for (i = 0; i < leftKeyCount; i ++) {
+    	    RexNode leftKey = leftJoinKeys.get(i);
+            	
+    	    if (leftKey instanceof RexInputRef) {
+    	        // already added to the projected left fields
+    	        // only need to remember the index in the join key list
+    	        leftKeys.add(((RexInputRef)leftKey).getIndex());
+    	    } else {
+    	        newLeftFields.add(leftKey);
+    	        newLeftFieldNames.add(leftKey.toString());
+    	        leftKeys.add(origLeftInputSize + newLeftKeyCount);
+    	        newLeftKeyCount ++;
+    	    }
+    	}
             
-            if (leftFunctionKey instanceof RexInputRef) {
-                leftKeys.add(((RexInputRef)leftFunctionKey).getIndex());
-            } else {
-                newLeftFields.add(leftFunctionKey);
-                newLeftFieldNames.add(leftFunctionKey.toString());
-                // change the corresponding join key pairs
-                // by referencing the newly created casted key                
-                leftKeys.add(origLeftInputSize + newLeftKeyIndex);
-                newLeftKeyIndex ++;
-            }
-            
-            if (rightFunctionKey instanceof RexInputRef) {
-                rightKeys.add(((RexInputRef)rightFunctionKey).getIndex());
-            } else {
-                newRightFields.add(rightFunctionKey);
-                newRightFieldNames.add(rightFunctionKey.toString());
-                // change the corresponding join key pairs
-                // by referencing the newly created casted key                
-                rightKeys.add(origRightInputSize + newRightKeyIndex);
-                newRightKeyIndex ++;
-            }
-        }
-        
-        int newLeftInputSize = newLeftFields.size();
-            
-        for (int i = 0; i < origRightInputSize; i ++) {
-            outputProj.add(newLeftInputSize + i);
-        }
+    	int leftFieldCount = origLeftInputSize + newLeftKeyCount;
+    	for (i = 0; i < origRightInputSize; i ++) {
+    	    newRightFields.add(rexBuilder.makeInputRef(
+    	        rightRel.getRowType().getFields()[i].getType(), i));
+    	    newRightFieldNames.add(
+    	        rightRel.getRowType().getFields()[i].getName());
+    	    outputProj.add(i + leftFieldCount);
+    	}
+                
+    	int newRightKeyCount = 0;
+    	for (i = 0; i < rightKeyCount; i ++) {
+    	    RexNode rightKey = rightJoinKeys.get(i);
 
-        // Now let's create project rels on the inputs.
-        if (newLeftKeyIndex > 0) {
-            // added project on top of the left input
-            leftRel =
-                CalcRel.createProject(leftRel, newLeftFields, newLeftFieldNames);
-        }
+            if (rightKey instanceof RexInputRef) {
+    	        // already added to the projected left fields
+    	        // only need to remember the index in the join key list
+    	        rightKeys.add(((RexInputRef)rightKey).getIndex());
+    	    } else {
+    	        newRightFields.add(rightKey);
+    	        newRightFieldNames.add(rightKey.toString());
+    	        rightKeys.add(origRightInputSize + newRightKeyCount);
+    	        newRightKeyCount ++;
+    	    }
+    	}
+
+    	// added project if need to produce new keys than the origianl input fields
+    	if (newLeftKeyCount > 0) {
+    	    leftRel =
+    	        CalcRel.createProject(leftRel, newLeftFields, newLeftFieldNames);
+    	}
             
-        if (newRightKeyIndex > 0) {
-            // added project on top of the right input
-            rightRel =
-                CalcRel.createProject(rightRel, newRightFields, newRightFieldNames);
-        }
-        
-        inputRels[0] = leftRel;
-        inputRels[1] = rightRel;
+    	if (newRightKeyCount > 0) {
+    	    rightRel =
+    	        CalcRel.createProject(rightRel, newRightFields, newRightFieldNames);
+    	}
+            
+    	inputRels[0] = leftRel;
+    	inputRels[1] = rightRel;
     }
 }
 // End LhxJoinRule.java

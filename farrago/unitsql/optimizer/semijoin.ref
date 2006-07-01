@@ -74,7 +74,7 @@
 '                FennelSortRel(key=[[0]], discardDuplicates=[true])'
 '                  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'this is row 1'], expr#3=[=($t0, $t2)], expr#4=[CAST($t1):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t4], $condition=[$t3])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'this is row 1'], expr#5=[=($t0, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], S3=[$t6], $condition=[$t5])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[_ISO-8859-1'this is row 1'], expr#5=[=($t0, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t6], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select *
@@ -184,7 +184,7 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '                  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>($t1, $t3)], expr#5=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t5], S1=[$t0], $condition=[$t4])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], S3=[$t6], $condition=[$t5])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t6], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- same as above except join columns are reversed
@@ -195,7 +195,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..9=[{inputs}], proj#0..3=[{exprs}], S1=[$t5], S2=[$t6], S3=[$t7], S4=[$t8])'
-'      LhxJoinRel(leftKeys=[[3, 4]], rightKeys=[[0, 4]], joinType=[INNER])'
+'      LhxJoinRel(leftKeys=[[4, 3]], rightKeys=[[4, 0]], joinType=[INNER])'
 '        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..4=[{exprs}])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
 '            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
@@ -203,7 +203,7 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '                  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>($t1, $t3)], expr#5=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t5], S1=[$t0], $condition=[$t4])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], S3=[$t6], $condition=[$t5])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t6], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- join on 3 columns but index only on 2 columns
@@ -223,7 +223,7 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '                  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>($t1, $t3)], expr#5=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t5], S1=[$t0], $condition=[$t4])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], S3=[$t6], $condition=[$t5])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t6], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- same query but filters juggled around
@@ -235,7 +235,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelCalcRel(expr#0..10=[{inputs}], proj#0..3=[{exprs}], S1=[$t6], S2=[$t7], S3=[$t8], S4=[$t9])'
-'      LhxJoinRel(leftKeys=[[3, 4, 5]], rightKeys=[[0, 3, 4]], joinType=[INNER])'
+'      LhxJoinRel(leftKeys=[[4, 3, 5]], rightKeys=[[3, 0, 4]], joinType=[INNER])'
 '        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..5=[{exprs}])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, T]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$T$A, SYS$CLUSTERED_INDEX$SJ$T$B, SYS$CLUSTERED_INDEX$SJ$T$C, SYS$CLUSTERED_INDEX$SJ$T$D]])'
 '            LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
@@ -243,7 +243,7 @@
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
 '                  FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>($t1, $t3)], expr#5=[CAST($t2):CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], S3=[$t5], S1=[$t0], $condition=[$t4])'
 '                    LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3]])'
-'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], S3=[$t6], $condition=[$t5])'
+'        FennelCalcRel(expr#0..3=[{inputs}], expr#4=[0], expr#5=[>($t1, $t4)], expr#6=[CAST($t2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], proj#0..3=[{exprs}], CAST($2):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"=[$t6], $condition=[$t5])'
 '          LcsRowScanRel(table=[[LOCALDB, SJ, SMALLTABLE]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S1, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S2, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S3, SYS$CLUSTERED_INDEX$SJ$SMALLTABLE$S4]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------
