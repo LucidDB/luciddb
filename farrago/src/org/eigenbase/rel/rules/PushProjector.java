@@ -102,12 +102,15 @@ public class PushProjector
         }
         
         // if nothing is being selected from the underlying rel, just 
-        // project the default expression passed in as a parameter
+        // project the default expression passed in as a parameter or the
+        // first column if there is no default expression
         if (projRefs.cardinality() == 0 && preserveLeft.size() == 0) {
             if (defaultExpr != null) {
                 preserveLeft.add(defaultExpr);
-            } else {
+            } else if (nScanFields == 1) {
                 return null;
+            } else {
+                projRefs.set(0);
             }
         }
 

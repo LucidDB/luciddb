@@ -114,6 +114,8 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             }
 
             uint prevClusterEnd = 0;
+            // reset datum pointers, in case previous tuple had nulls
+            outputTupleData.resetBuffer();
 
             // Read the non-cluster columns first
             for (uint j = 0; j < nonClusterCols.size(); j++) {
@@ -173,8 +175,6 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         if (tupleFound && !pOutAccessor->produceTuple(outputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
-        // reset datum pointers, in case of nulls
-        outputTupleData.resetBuffer();
         producePending = false;
         
         if (isFullScan) {

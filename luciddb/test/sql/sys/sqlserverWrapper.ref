@@ -1,0 +1,174 @@
+0: jdbc:luciddb:> -- test built-in sql server jdbc wrapper
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check that it's been tagged for browse connect
+0: jdbc:luciddb:> select * from sys_boot.mgmt.browse_connect_foreign_wrappers 
+. . . . . . . . > where foreign_wrapper_name = 'SQL SERVER'
+. . . . . . . . > order by 2;
++-----------------------+---------------------------------+
+| FOREIGN_WRAPPER_NAME  |   BROWSE_CONNECT_DESCRIPTION    |
++-----------------------+---------------------------------+
+| SQL SERVER            | SQL Server Database Connection  |
++-----------------------+---------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . >     'SQL SERVER', 
+. . . . . . . . >     cursor(
+. . . . . . . . >       select '' as option_name, '' as option_value 
+. . . . . . . . >       from sys_boot.jdbc_metadata.empty_view)))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+------------------------------------+
+| OPTION_ORDINAL  |    OPTION_NAME    |                 OPTION_DESCRIPTION                  | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  |        OPTION_CHOICE_VALUE         |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+------------------------------------+
+| 0               | DRIVER_CLASS      | Fully-qualified class name of JDBC driver to load   | true                | -1                     | net.sourceforge.jtds.jdbc.Driver   |
+| 1               | URL               | JDBC URL for data source                            | true                | -1                     | jdbc:jtds:sqlserver://server:port  |
+| 2               | USER_NAME         | User name for authentication in source DBMS         | false               | -1                     |                                    |
+| 3               | PASSWORD          | Password for authentication in source DBMS          | false               | -1                     |                                    |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | -1                     | FALSE                              |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 0                      | FALSE                              |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 1                      | TRUE                               |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- see options available
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . >     'SQL SERVER', 
+. . . . . . . . >     cursor(
+. . . . . . . . >       values('URL', 'jdbc:jtds:sqlserver://akela.lucidera.com:1433'),
+. . . . . . . . >             ('EXTENDED_OPTIONS', 'TRUE'))))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+--------------------------------+-----------------------------------------------------------------------------------------------------------+---------------------+------------------------+------------------------------------------------+
+| OPTION_ORDINAL  |          OPTION_NAME           |                                            OPTION_DESCRIPTION                                             | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  |              OPTION_CHOICE_VALUE               |
++-----------------+--------------------------------+-----------------------------------------------------------------------------------------------------------+---------------------+------------------------+------------------------------------------------+
+| 0               | DRIVER_CLASS                   | Fully-qualified class name of JDBC driver to load                                                         | true                | -1                     | net.sourceforge.jtds.jdbc.Driver               |
+| 1               | URL                            | JDBC URL for data source                                                                                  | true                | -1                     | jdbc:jtds:sqlserver://akela.lucidera.com:1433  |
+| 2               | USER_NAME                      | User name for authentication in source DBMS                                                               | false               | -1                     |                                                |
+| 3               | PASSWORD                       | Password for authentication in source DBMS                                                                | false               | -1                     |                                                |
+| 4               | EXTENDED_OPTIONS               | Whether driver-specific options should be accepted                                                        | true                | -1                     | TRUE                                           |
+| 4               | EXTENDED_OPTIONS               | Whether driver-specific options should be accepted                                                        | true                | 0                      | FALSE                                          |
+| 4               | EXTENDED_OPTIONS               | Whether driver-specific options should be accepted                                                        | true                | 1                      | TRUE                                           |
+| 5               | CACHEMETADATA                  | Set to true to enable the caching of column meta data for prepared statements.                            | false               | -1                     | false                                          |
+| 5               | CACHEMETADATA                  | Set to true to enable the caching of column meta data for prepared statements.                            | false               | 0                      | true                                           |
+| 5               | CACHEMETADATA                  | Set to true to enable the caching of column meta data for prepared statements.                            | false               | 1                      | false                                          |
+| 6               | PACKETSIZE                     | The network packet size (a multiple of 512).                                                              | false               | -1                     | 0                                              |
+| 7               | XAEMULATION                    | Set to false to use the Microsoft Distributed Transaction Coordinator.                                    | false               | -1                     | true                                           |
+| 7               | XAEMULATION                    | Set to false to use the Microsoft Distributed Transaction Coordinator.                                    | false               | 0                      | true                                           |
+| 7               | XAEMULATION                    | Set to false to use the Microsoft Distributed Transaction Coordinator.                                    | false               | 1                      | false                                          |
+| 8               | LASTUPDATECOUNT                | Return only the last update count on executeUpdate.                                                       | false               | -1                     | true                                           |
+| 8               | LASTUPDATECOUNT                | Return only the last update count on executeUpdate.                                                       | false               | 0                      | true                                           |
+| 8               | LASTUPDATECOUNT                | Return only the last update count on executeUpdate.                                                       | false               | 1                      | false                                          |
+| 9               | MACADDRESS                     | Hex-encoded client MAC address.                                                                           | false               | -1                     | 000000000000                                   |
+| 10              | USECURSORS                     | Use SQL Server fast forward only result sets for forward only result sets.                                | false               | -1                     | false                                          |
+| 10              | USECURSORS                     | Use SQL Server fast forward only result sets for forward only result sets.                                | false               | 0                      | true                                           |
+| 10              | USECURSORS                     | Use SQL Server fast forward only result sets for forward only result sets.                                | false               | 1                      | false                                          |
+| 11              | TDS                            | The database server protocol.                                                                             | false               | -1                     | 8.0                                            |
+| 11              | TDS                            | The database server protocol.                                                                             | false               | 0                      | 4.2                                            |
+| 11              | TDS                            | The database server protocol.                                                                             | false               | 1                      | 5.0                                            |
+| 11              | TDS                            | The database server protocol.                                                                             | false               | 2                      | 7.0                                            |
+| 11              | TDS                            | The database server protocol.                                                                             | false               | 3                      | 8.0                                            |
+| 12              | SERVERTYPE                     | The type of database (1 is SQL Server, 2 is Sybase).                                                      | true                | -1                     | 1                                              |
+| 12              | SERVERTYPE                     | The type of database (1 is SQL Server, 2 is Sybase).                                                      | true                | 0                      | 1                                              |
+| 12              | SERVERTYPE                     | The type of database (1 is SQL Server, 2 is Sybase).                                                      | true                | 1                      | 2                                              |
+| 13              | MAXSTATEMENTS                  | The maximum number of statements to keep open. This is only a target for the cache.                       | false               | -1                     | 500                                            |
+| 14              | CHARSET                        | Server character set for non-Unicode character values.                                                    | false               | -1                     |                                                |
+| 15              | WSID                           | Workstation ID or client host name override. Will be stored in master.dbo.sysprocesses, column hostname.  | false               | -1                     |                                                |
+| 16              | PROGNAME                       | The program name advertised by the driver.                                                                | false               | -1                     | jTDS                                           |
+| 17              | BATCHSIZE                      | The number of statements to submit at once. Batches are broken up in pieces this large.                   | false               | -1                     | 0                                              |
+| 18              | LOGINTIMEOUT                   | The time to wait for a successful login before timing out.                                                | false               | -1                     | 0                                              |
+| 19              | LOBBUFFER                      | The amount of LOB data to buffer in memory before caching to disk.                                        | false               | -1                     | 32768                                          |
+| 20              | SENDSTRINGPARAMETERSASUNICODE  | If strings should be sent as unicode values.                                                              | false               | -1                     | true                                           |
+| 20              | SENDSTRINGPARAMETERSASUNICODE  | If strings should be sent as unicode values.                                                              | false               | 0                      | true                                           |
+| 20              | SENDSTRINGPARAMETERSASUNICODE  | If strings should be sent as unicode values.                                                              | false               | 1                      | false                                          |
+| 21              | PASSWORD                       | The database password.                                                                                    | false               | -1                     |                                                |
+| 22              | USER                           | The database user.                                                                                        | false               | -1                     |                                                |
+| 23              | USELOBS                        | Map large types (IMAGE and TEXT/NTEXT) to LOBs vs. String/byte[].                                         | false               | -1                     | true                                           |
+| 23              | USELOBS                        | Map large types (IMAGE and TEXT/NTEXT) to LOBs vs. String/byte[].                                         | false               | 0                      | true                                           |
+| 23              | USELOBS                        | Map large types (IMAGE and TEXT/NTEXT) to LOBs vs. String/byte[].                                         | false               | 1                      | false                                          |
+| 24              | SOCKETTIMEOUT                  | The TCP/IP socket timeout value in seconds or 0 for no timeout.                                           | false               | -1                     | 0                                              |
+| 25              | NAMEDPIPE                      | Use named pipes to connect instead of TCP/IP sockets.                                                     | false               | -1                     | false                                          |
+| 25              | NAMEDPIPE                      | Use named pipes to connect instead of TCP/IP sockets.                                                     | false               | 0                      | true                                           |
+| 25              | NAMEDPIPE                      | Use named pipes to connect instead of TCP/IP sockets.                                                     | false               | 1                      | false                                          |
+| 26              | LANGUAGE                       | The language for server messages.                                                                         | false               | -1                     |                                                |
+| 27              | LOGFILE                        | Set the name of a file for the capture of logging information.                                            | false               | -1                     |                                                |
+| 28              | DATABASENAME                   | The database name.                                                                                        | false               | -1                     |                                                |
+| 29              | APPNAME                        | The application name advertised by the driver.                                                            | false               | -1                     | jTDS                                           |
+| 30              | INSTANCE                       | The database server instance.                                                                             | false               | -1                     |                                                |
+| 31              | PREPARESQL                     | Use stored procedures for prepared statements.                                                            | false               | -1                     | 3                                              |
+| 31              | PREPARESQL                     | Use stored procedures for prepared statements.                                                            | false               | 0                      | 0                                              |
+| 31              | PREPARESQL                     | Use stored procedures for prepared statements.                                                            | false               | 1                      | 1                                              |
+| 31              | PREPARESQL                     | Use stored procedures for prepared statements.                                                            | false               | 2                      | 2                                              |
+| 31              | PREPARESQL                     | Use stored procedures for prepared statements.                                                            | false               | 3                      | 3                                              |
+| 32              | bufferMinPackets               | The minimum number of packets per statement to buffer to memory.                                          | false               | -1                     | 8                                              |
+| 33              | DOMAIN                         | The domain used for authentication.                                                                       | false               | -1                     |                                                |
+| 34              | SERVERNAME                     | The database server hostname.                                                                             | true                | -1                     | akela.lucidera.com                             |
+| 35              | SSL                            | Set the SSL level.                                                                                        | false               | -1                     | off                                            |
+| 35              | SSL                            | Set the SSL level.                                                                                        | false               | 0                      | off                                            |
+| 35              | SSL                            | Set the SSL level.                                                                                        | false               | 1                      | request                                        |
+| 35              | SSL                            | Set the SSL level.                                                                                        | false               | 2                      | require                                        |
+| 35              | SSL                            | Set the SSL level.                                                                                        | false               | 3                      | authenticate                                   |
+| 36              | PORTNUMBER                     | The database server port number.                                                                          | false               | -1                     | 1433                                           |
+| 37              | TCPNODELAY                     | Enable/disable TCP_NODELAY                                                                                | false               | -1                     | true                                           |
+| 37              | TCPNODELAY                     | Enable/disable TCP_NODELAY                                                                                | false               | 0                      | true                                           |
+| 37              | TCPNODELAY                     | Enable/disable TCP_NODELAY                                                                                | false               | 1                      | false                                          |
+| 38              | bufferMaxMemory                | The global buffer memory limit for all connections (in kilobytes).                                        | false               | -1                     | 1024                                           |
++-----------------+--------------------------------+-----------------------------------------------------------------------------------------------------------+---------------------+------------------------+------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create sqlserver server without qualifying catalog name
+0: jdbc:luciddb:> create server my_mssql
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >   url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >   user_name 'schoi',
+. . . . . . . . >   password 'schoi',
+. . . . . . . . >   table_types 'TABLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- browse foreign schemas will show default catalog schemas
+0: jdbc:luciddb:> select * from table( sys_boot.mgmt.browse_foreign_schemas('MY_MSSQL'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| BBAdmin      |              |
+| BBTEST       |              |
+| BB_TEST      |              |
+| brio         |              |
+| dbo          |              |
+| guest        |              |
+| schoi        |              |
++--------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop server my_mssql cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create sqlserver server with qualifying catalog
+0: jdbc:luciddb:> create server my_mssql
+. . . . . . . . > foreign data wrapper "SQL SERVER"
+. . . . . . . . > options(
+. . . . . . . . >   url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >   user_name 'ldbtest',
+. . . . . . . . >   password 'ldbtest',
+. . . . . . . . >   qualifying_catalog_name 'BENCHMARK',
+. . . . . . . . >   table_types 'TABLE'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-162 incorrectly returns no schemas, qualifying_catalog_name
+0: jdbc:luciddb:> -- doesn't match any schemas since catalog info isn't returned
+0: jdbc:luciddb:> -- browse foreign schemas should show schemas for BENCHMARK catalog/database
+0: jdbc:luciddb:> select * from table( sys_boot.mgmt.browse_foreign_schemas('MY_MSSQL'))
+. . . . . . . . > order by schema_name;
++--------------+--------------+
+| SCHEMA_NAME  | DESCRIPTION  |
++--------------+--------------+
+| BBAdmin      |              |
+| BBTEST       |              |
+| BB_TEST      |              |
+| brio         |              |
+| dbo          |              |
+| guest        |              |
+| ldbtest      |              |
+| TBB_BENCH    |              |
++--------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop server my_mssql cascade;
+0: jdbc:luciddb:> !quit

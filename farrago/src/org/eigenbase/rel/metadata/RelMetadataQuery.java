@@ -183,7 +183,7 @@ public abstract class RelMetadataQuery
     /**
      * For a given output column of an expression, determines all
      * columns of underlying tables which contribute to result values. An
-     * ouptut column may have more than one origin due to expressions such as
+     * output column may have more than one origin due to expressions such as
      * UnionRel and ProjectRel. The optimizer may use this information for
      * catalog access (e.g. index availability).
      *

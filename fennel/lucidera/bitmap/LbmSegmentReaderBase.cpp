@@ -40,6 +40,7 @@ void LbmSegmentReaderBase::init(
     pSegDescStart = NULL;
     pSegDescEnd = NULL;
     zeroBytes = 0;
+    tupleChange = false;
 }
 
 ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
@@ -87,6 +88,7 @@ ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
         singleton = (uint8_t)(1 << (opaqueToInt(startRID) % LbmOneByteSize));
     }
 
+    tupleChange = true;
     return EXECRC_YIELD;
 }
 
@@ -102,6 +104,16 @@ void LbmSegmentReaderBase::advanceSegment()
     // starts and its length; also advance the segment descriptor to the
     // next descriptor
     readSegDescAndAdvance(pSegDescStart, byteSegLen, zeroBytes);
+}
+
+bool LbmSegmentReaderBase::getTupleChange()
+{
+    return tupleChange;
+}
+
+void LbmSegmentReaderBase::resetChangeListener()
+{
+    tupleChange = false;
 }
 
 FENNEL_END_CPPFILE("$Id$");

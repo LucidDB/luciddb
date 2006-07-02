@@ -409,7 +409,7 @@ void LbmUnionExecStreamTest::testUnion(
 
     ExternalSortExecStreamParams sortParams;
     ExecStreamEmbryo sortEmbryo;
-    initSorterExecStream(sortParams, sortEmbryo);
+    initSorterExecStream(sortParams, sortEmbryo, bitmapTupleDesc);
     transformEmbryoList.push_back(sortEmbryo);
     
     LbmUnionExecStreamParams unionParams;

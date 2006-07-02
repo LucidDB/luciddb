@@ -21,7 +21,9 @@ LbmUnionExecStreamTest \
 LhxHashTableTest \
 LhxJoinExecStreamTest \
 LbmMinusExecStreamTest \
-LhxAggExecStreamTest 
+LhxAggExecStreamTest \
+LbmNormalizerExecStreamTest \
+LbmSortedAggExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -39,6 +41,8 @@ LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
 LhxJoinExecStreamTest_SOURCES=LhxJoinExecStreamTest.cpp
 LbmMinusExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmMinusExecStreamTest.cpp
 LhxAggExecStreamTest_SOURCES=LhxAggExecStreamTest.cpp
+LbmNormalizerExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmNormalizerExecStreamTest.cpp
+LbmSortedAggExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmSortedAggExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

@@ -165,7 +165,7 @@ void LcsClusterDump::dump(
                 for (k = 0; k < count; k++, j++) {
                     if ((j % 8) == 0) {
                         if (j > 0)
-                            callTrace(buf);
+                            callTrace("%s", buf);
                         sprintf(buf, "%5u: ", j);
                         bufidx = 7;
                     }
@@ -173,7 +173,7 @@ void LcsClusterDump::dump(
                     sprintf(buf + bufidx, "%5u ", (uint) v[k]);
                     bufidx += 6;
                 }
-                callTrace(buf);
+                callTrace("%s", buf);
             }
 
             callTrace("Batch Values");
@@ -250,7 +250,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
 
     for(j = 0 ; j < sz; j++) {
         if (j && ((j % nByte) == 0)) {  
-            callTrace(st);
+            callTrace("%s", st);
             memset(st, ' ', lnLen);
         }
         
@@ -260,7 +260,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
         st[oStr + (j % nByte)] =  isprint(p[j]) ? p[j] : '.';
     }
 
-    callTrace(st);
+    callTrace("%s", st);
 
     p += sz;
     return p;

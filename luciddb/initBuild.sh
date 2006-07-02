@@ -21,18 +21,19 @@ set -e
 
 usage() {
     echo "Usage:  initBuild.sh "
-    echo "            --with[out]-fennel "
-    echo "            [--with[out]-optimization] "
-    echo "            [--with[out]-debug] "
-    echo "            [--without-fennel[-thirdparty]-build] "
+    echo "            [--with[out]-fennel] (default with) "
+    echo "            [--with[out]-optimization] (default without) "
+    echo "            [--with[out]-debug] (default with) "
+    echo "            [--without-fennel[-thirdparty]-build] (default w/both) "
     echo ""
-    echo "            [--with[out]-tests] "
-    echo "            [--with-nightly-tests] "
+    echo "            [--with[out]-tests] (default without) "
+    echo "            [--with-nightly-tests] (default without) "
     echo ""
-    echo "            [--without-farrago-build] "
-    echo "            [--without-dist-build]"
+    echo "            [--without-farrago-build] (default with) "
+    echo "            [--without-dist-build] (default with) "
 }
 
+with_fennel=true
 without_farrago_build=false
 without_dist_build=false
 without_tests=true
@@ -60,8 +61,11 @@ while [ -n "$1" ]; do
             with_nightly_tests=true;
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
-        --with-fennel) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --without-fennel) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --with-fennel)
+            with_fenne=true;;
+        --without-fennel)
+            with_fenne=false;;
+            
         --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --with?(out)-debug) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
@@ -76,6 +80,12 @@ while [ -n "$1" ]; do
 done
 
 shopt -uq extglob
+
+if $with_fennel ; then
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --with-fennel"
+else
+    FARRAGO_FLAGS="${FARRAGO_FLAGS} --without-fennel"
+fi
 
 if $with_nightly_tests ; then
     # make the build/test processes go further

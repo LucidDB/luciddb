@@ -319,6 +319,11 @@ class ExecStreamSubFactory_lu
         params.setopDistinct = streamDef.isSetopDistinct();
         params.setopAll      = streamDef.isSetopAll();
 
+        /*
+         * Set forcePartitionLevel to 0 to turn off force partitioning.
+         */
+        params.forcePartitionLevel = 0;
+
         CmdInterpreter::readTupleProjection(
             params.leftKeyProj, streamDef.getLeftKeyProj());
 
@@ -355,6 +360,11 @@ class ExecStreamSubFactory_lu
          */
         params.cndGroupByKeys = streamDef.getCndGroupByKeys();
         params.numRows = streamDef.getNumRows();
+
+        /*
+         * Set forcePartitionLevel to 0 to turn off force partitioning.
+         */
+        params.forcePartitionLevel = 0;
 
         pEmbryo->init(new LhxAggExecStream(), params);
     }

@@ -25,6 +25,8 @@
 #include "fennel/tuple/TupleData.h"
 #include "fennel/tuple/TupleDescriptor.h"
 
+using namespace std;
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -98,7 +100,7 @@ public:
      */
     uint hash(TupleData const &inputTuple, 
         TupleProjection const &keyProjection,
-        std::vector<bool> const &isKeyColVarChar);
+        vector<bool> const &isKeyColVarChar);
 
     /**
      * Compute hash value for a TupleDatum, on both value and length

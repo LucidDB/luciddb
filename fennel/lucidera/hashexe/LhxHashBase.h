@@ -22,6 +22,8 @@
 #ifndef Fennel_LhxHashBase_Included
 #define Fennel_LhxHashBase_Included
 
+using namespace std;
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -63,13 +65,13 @@ struct LhxHashInfo
      * For aggregation,
      * index 0 refers to the input.
      */
-    std::vector<TupleDescriptor> inputDesc;
+    vector<TupleDescriptor> inputDesc;
 
-    std::vector<TupleProjection> keyProj;
+    vector<TupleProjection> keyProj;
     /*
      * If a key column is varchar type.
      */
-    std::vector< std::vector<bool> > isKeyColVarChar;
+    vector< vector<bool> > isKeyColVarChar;
 
     /**
      * Projections of aggs and data fields out of the RHS.
@@ -87,7 +89,7 @@ struct LhxHashInfo
     /**
      * ExecStream buf accessors.
      */
-    std::vector<SharedExecStreamBufAccessor> streamBufAccessor;
+    vector<SharedExecStreamBufAccessor> streamBufAccessor;
 
     /**
      * Special hash table properties:

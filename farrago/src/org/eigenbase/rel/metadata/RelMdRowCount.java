@@ -26,6 +26,8 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rex.*;
 
+import java.util.*;
+
 /**
  * RelMdRowCount supplies a default implementation of
  * {@link RelMetadataQuery#getRowCount} for the standard logical algebra.
@@ -80,8 +82,23 @@ public class RelMdRowCount extends ReflectiveRelMetadataProvider
             RelMetadataQuery.getRowCount(rel.getLeft()));
     }
     
-    // Catch-all rule when none of the others apply.  Have not implemented
-    // rule for aggregation.
+    public Double getRowCount(AggregateRelBase rel)
+    {
+        BitSet groupKey = new BitSet();
+        for (int i = 0; i < rel.getGroupCount(); i++) {
+            groupKey.set(i);
+        }
+        // rowcount is the cardinality of the group by columns
+        Double distinctRowCount = RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(), groupKey, null);
+        if (distinctRowCount == null) {
+            return RelMetadataQuery.getRowCount(rel.getChild()) / 10;
+        } else {
+            return distinctRowCount;
+        }
+    }
+    
+    // Catch-all rule when none of the others apply.
     public Double getRowCount(RelNode rel)
     {
         return rel.getRows();

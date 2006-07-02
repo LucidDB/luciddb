@@ -183,19 +183,7 @@ void LbmNormalizerExecStreamTest::testNormalizer(
 
     ExecStreamEmbryo normalizerEmbryo;
     LbmNormalizerExecStreamParams normalizerParams;
-
-    TupleProjection keyProj;
-    for (int i = 0; i < nKeys; i++) {
-        keyProj.push_back(i);
-    }
-    normalizerParams.keyProj = keyProj;
-
-    TupleDescriptor keyDesc;
-    keyDesc.projectFrom(keyBitmapTupleDesc, keyProj);
-    normalizerParams.outputTupleDesc = keyDesc;
-
-    normalizerEmbryo.init(new LbmNormalizerExecStream(), normalizerParams);
-    normalizerEmbryo.getStream()->setName("Normalizer");
+    initNormalizerExecStream(normalizerParams, normalizerEmbryo, nKeys);
 
     SharedExecStream pOutputStream = prepareTransformGraph(
         valuesStreamEmbryo, normalizerEmbryo);

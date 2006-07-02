@@ -154,7 +154,8 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
         // aggregate
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
-        RelOptUtil.pushAggFilters(predicate, notPushable, pushable, rel);
+        RelOptUtil.splitFilters(
+            rel.getGroupCount(), predicate, pushable, notPushable);
         RexNode childPreds =
             RexUtil.andRexNodeList(rel.getCluster().getRexBuilder(), pushable);
         
@@ -175,8 +176,46 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
         return RelMdUtil.numDistinctVals(nRows, nRows * selectivity);
     }
     
-    // Catch-all rule when none of the others apply.  Have not implemented
-    // rules for aggregation and projection.
+    public Double getDistinctRowCount(
+        ProjectRelBase rel, BitSet groupKey, RexNode predicate)
+    {
+        BitSet baseCols = new BitSet();
+        BitSet projCols = new BitSet();
+        RexNode[] projExprs = rel.getChildExps();
+        RelMdUtil.splitCols(projExprs, groupKey, baseCols, projCols);
+        
+        List<RexNode> notPushable = new ArrayList<RexNode>();
+        List<RexNode> pushable = new ArrayList<RexNode>();
+        RelOptUtil.splitFilters(
+            rel.getChild().getRowType().getFieldCount(), predicate, pushable,
+            notPushable);
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+        
+        // get the distinct row count of the child input, passing in the
+        // columns and filters that only reference the child
+        RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
+        Double distinctRowCount = RelMetadataQuery.getDistinctRowCount(
+            rel.getChild(), baseCols, childPred);
+        if (distinctRowCount == null) {
+            return null;
+        }
+        
+        // multiply by the cardinality of the non-child projection expressions
+        for (int bit = projCols.nextSetBit(0); bit >= 0;
+            bit = projCols.nextSetBit(bit + 1))
+        {
+            Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
+            if (subRowCount == null) {
+                return null;
+            }
+            distinctRowCount *= subRowCount;
+        }
+        
+        return RelMdUtil.numDistinctVals(
+            distinctRowCount, RelMetadataQuery.getRowCount(rel));
+    }
+    
+    // Catch-all rule when none of the others apply.
     public Double getDistinctRowCount(
         RelNode rel, BitSet groupKey, RexNode predicate)
     {

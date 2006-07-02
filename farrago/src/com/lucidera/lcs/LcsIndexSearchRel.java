@@ -22,17 +22,14 @@ package com.lucidera.lcs;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.FemLocalIndex;
-import net.sf.farrago.fem.sql2003.FemAbstractColumn;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexNode;
 
 /**
  * LcsIndexSearchRel refines LcsIndexScanRel.  Instead of scanning an
@@ -118,7 +115,7 @@ class LcsIndexSearchRel extends FennelSingleRel
     {
         // TODO:  this is not correct if num of rows returned by an index is
     	// filtered by sargable predicte.
-        return RelMetadataQuery.getRowCount(this);
+        return lcsTable.getRowCount();
     }
     
     // implement Cloneable
@@ -223,7 +220,6 @@ class LcsIndexSearchRel extends FennelSingleRel
     {
         Object projection;
         Object inputKeyProjObj;
-        Object inputJoinProjObj;
         Object inputDirectiveProjObj;
         
         if (projectedColumns == null) {

@@ -84,7 +84,7 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     TupleProjection outputProj;
 
     /**
-     * These two fields combined denote the join sementics
+     * These two fields combined denote the join semantics
      * setDistinct setAll   JoinSementics
      *  false      false    regular join
      *  false      true     setop ALL (not implemented)
@@ -96,8 +96,8 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
 
     /**
      * Initial stats provided by the optimizer for resource allocation.
-     * cndKeys: key cardinality of the initial built input(chosen by the
-     * optimizer).
+     * cndKeys: key cardinality of the initial built input chosen by the
+     * optimizer.
      */
     uint cndKeys;
 
@@ -105,6 +105,11 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * numRows: number of rows of the initial built input.
      */
     uint numRows;
+
+    /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
 };
 
 class LhxJoinExecStream : public ConfluenceExecStream
@@ -116,7 +121,7 @@ class LhxJoinExecStream : public ConfluenceExecStream
     enum LhxJoinState {
         Build, GetNextPlan, Partition, Probe, CreateChildPlan, ProduceInner,
         ProduceLeftOuter, ProduceRightOuter, ProduceRightAnti, ProduceLeftSemi,
-        ProducePending, Done
+        ProducePending, ForcePartitionBuild, Done
     };
   
     /**
@@ -253,6 +258,11 @@ class LhxJoinExecStream : public ConfluenceExecStream
      *
      */
     LhxPartitionInfo partInfo;
+
+    /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
 
     /**
      * implement ExecStream

@@ -141,6 +141,8 @@ public class SqlValidatorTestCase extends TestCase
     {
         SqlNode parseQuery(String sql) throws SqlParseException;
 
+        SqlNode parseAndValidate(SqlValidator validator, String sql);
+        
         SqlValidator getValidator();
 
         /**
@@ -200,6 +202,20 @@ public class SqlValidatorTestCase extends TestCase
         void checkColumnType(
             String sql,
             String expected);
+
+        /**
+         * Checks that a query gets rewritten to an expected form.
+         *
+         * @param validator validator to use; null for default
+         *
+         * @param query query to test
+         *
+         * @param expectedRewrite expected SQL text after rewrite and unparse
+         */
+        void checkRewrite(
+            SqlValidator validator,
+            String query,
+            String expectedRewrite);
 
         /**
          * Checks that a query returns one column of an expected type. For
@@ -624,8 +640,11 @@ public class SqlValidatorTestCase extends TestCase
             return rowType;
         }
 
-        protected SqlNode parseAndValidate(SqlValidator validator, String sql)
+        public SqlNode parseAndValidate(SqlValidator validator, String sql)
         {
+            if (validator == null) {
+                validator = getValidator();
+            }
             SqlNode sqlNode;
             try {
                 sqlNode = parseQuery(sql);
@@ -837,6 +856,17 @@ public class SqlValidatorTestCase extends TestCase
             typeChecker.checkType(actualType);
         }
 
+        public void checkRewrite(
+            SqlValidator validator,
+            String query,
+            String expectedRewrite)
+        {
+            SqlNode rewrittenNode = tester.parseAndValidate(validator, query);
+            String actualRewrite =
+                rewrittenNode.toSqlString(SqlUtil.dummyDialect, false);
+            assertEquals(expectedRewrite, actualRewrite);
+        }
+
         public void checkInvalid(String expression, String expectedError)
         {
             // After bug 315 is fixed, take this assert out: the other assert
@@ -854,7 +884,7 @@ public class SqlValidatorTestCase extends TestCase
         public void checkFails(String expression, String expectedError)
         {
             // We need to test that the expression fails at runtime.
-            // Ironically, that means that is must succeed at prepare time.
+            // Ironically, that means that it must succeed at prepare time.
             SqlValidator validator = getValidator();
             final String sql = buildQuery(expression);
             SqlNode n = parseAndValidate(validator, sql);

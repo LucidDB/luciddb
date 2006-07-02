@@ -26,6 +26,7 @@ import junit.framework.*;
 import net.sf.farrago.util.*;
 import net.sf.farrago.test.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
 
 
 /**
@@ -157,6 +158,18 @@ public class LucidDbSqlTest extends FarragoTestCase
             String name = schema.getName();
             return name.equals("APPLIB")
                 || super.isBlessedSchema(schema);
+        }
+
+        // override Cleanup
+        protected boolean isBlessedWrapper(FemDataWrapper wrapper)
+        {
+            String name = wrapper.getName();
+            return name.equals("ORACLE")
+                || name.equals("SQL SERVER")
+                || name.equals("FLAT FILE")
+                || name.equals("SALESFORCE")
+                || name.equals("NETSUITE")
+                || super.isBlessedWrapper(wrapper);
         }
     }
 

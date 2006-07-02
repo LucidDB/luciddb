@@ -96,7 +96,8 @@ void LhxPartitionWriter::close()
             pSegOutputStream->consumeWritePointer(tupleStorageLength);    
         }
     }
-    destPartition->segStream->endWrite();    
+    destPartition->segStream->endWrite();
+    pSegOutputStream->close();
 }
 
 void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
@@ -178,7 +179,7 @@ void LhxPartitionReader::close()
          * Do nothing if reading from stream.
          */
     } else {
-        pSegInputStream.reset();
+        pSegInputStream->close();
     }
 }
 
@@ -226,7 +227,8 @@ bool LhxPartitionReader::demandData()
          * Read from disk.
          */
         uint bytesReadable = 0;
-        PConstBuffer pSrcBuf = pSegInputStream->getReadPointer(1, &bytesReadable);
+        PConstBuffer pSrcBuf =
+            pSegInputStream->getReadPointer(1, &bytesReadable);
         
         /*
          * If readable data does not fill a tuple, it means the segment stream
@@ -260,41 +262,32 @@ void LhxPartitionInfo::init(
     numInput     = numInputInit;
 
     writerList.clear();
-    for (uint i = 0; i < numChildPart; i ++) {
-        writerList.push_back(SharedLhxPartitionWriter(new LhxPartitionWriter()));
+    /*
+     * writerList is shared across iterations of partitioning. At each
+     * iteration, writerList is initialized with new destination partitions.
+     */
+    for (uint i = 0; i < numInput * numChildPart; i ++) {
+        writerList.push_back(
+            SharedLhxPartitionWriter(new LhxPartitionWriter()));
     }
     
     hashInfo = hashInfoInit;
 }
 
 void LhxPartitionInfo::open(
-    uint curInputIndexInit,
-    SharedLhxPartition partition)
-{
-    curInputIndex = curInputIndexInit;
-
-    reader = &tmpReader;
-    reader->open(partition, *hashInfo);
-
-    for (uint i = 0; i < numChildPart; i ++) {
-        uint index = i + curInputIndex * numChildPart;
-        destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
-        destPartitionList[index]->inputIndex = curInputIndex;
-        writerList[i]->open(destPartitionList[index], *hashInfo);
-    }
-    /*
-     * Tuples will come from a partition(stream or disk).
-     */
-    partitionMemory = false;
-}
-
-void LhxPartitionInfo::open(
-    uint curInputIndexInit,
     LhxHashTableReader *hashTableReaderInit,
     LhxPartitionReader *buildReader,
-    TupleData &buildTupleInit)
+    TupleData &buildTupleInit,
+    SharedLhxPartition probePartition)
 {
-    curInputIndex = curInputIndexInit;
+    uint i;
+
+    probeReader.open(probePartition, *hashInfo);
+
+    /*
+     * Start partitioning from the build side.
+     */
+    curInputIndex = numInput - 1;
 
     hashTableReader = hashTableReaderInit;
     /*
@@ -313,26 +306,38 @@ void LhxPartitionInfo::open(
      */
     buildTuple = buildTupleInit;
 
-    for (uint i = 0; i < numChildPart; i ++) {
-        uint index = i + curInputIndex * numChildPart;
+    destPartitionList.clear();
+    joinFilterList.clear();
+
+    for (i = 0; i < numInput * numChildPart; i ++) {
         destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
-        destPartitionList[index]->inputIndex = curInputIndex;
-        writerList[i]->open(destPartitionList[index], *hashInfo);
+        destPartitionList[i]->inputIndex = (i / numChildPart);
+
+        /*
+         * One filter for each partition
+         * filter bitmap is only allocated when a partition is written to
+         */
+        joinFilterList.push_back(boost::shared_ptr<boost::dynamic_bitset<> >());
+
+        writerList[i]->open(destPartitionList[i], *hashInfo);
     }
+
     /*
      * Tuples will come from memory(hash table) first.
      */
     partitionMemory = true;
 }
 
+
 void LhxPartitionInfo::open(
-    uint curInputIndexInit,
     LhxHashTableReader *hashTableReaderInit,
     LhxPartitionReader *buildReader,
     TupleData &buildTupleInit,
     AggComputerList *aggList)
 {
-    curInputIndex = curInputIndexInit;
+    uint i;
+    assert (numInput == 1);
+    curInputIndex = 0;
 
     hashTableReader = hashTableReaderInit;
     /*
@@ -357,49 +362,51 @@ void LhxPartitionInfo::open(
      */
     uint numWriterCachePages = hashInfo->numCachePages / numChildPart;
 
-    for (uint i = 0; i < numChildPart; i ++) {
-        uint index = i + curInputIndex * numChildPart;
+    destPartitionList.clear();
+    joinFilterList.clear();
+
+    for (i = 0; i < numInput * numChildPart; i ++) {
         destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
-        destPartitionList[index]->inputIndex = curInputIndex;
-        writerList[i]->open(destPartitionList[index], *hashInfo, aggList, numWriterCachePages);
+        destPartitionList[i]->inputIndex = (i / numChildPart);
+        writerList[i]->open(destPartitionList[i], *hashInfo, aggList,
+                            numWriterCachePages);
+        joinFilterList.push_back(boost::shared_ptr<boost::dynamic_bitset<> >());
     }
+
     /*
      * Tuples will come from memory(hash table) first.
      */
     partitionMemory = true;
 }
 
-void LhxPartitionInfo::close(
-    uint curInputIndexInit)
+void LhxPartitionInfo::close()
 {
-    assert(curInputIndex == curInputIndexInit);
-
     reader->close();
+    
+    uint numWriters = writerList.size();
 
-    for (uint i = 0; i < writerList.size(); i ++) {
+    for (uint i = 0; i < numWriters; i ++) {
         writerList[i]->close();
     }
-}
-
-void LhxPartitionInfo::reset()
-{
-    destPartitionList.clear();
 }
 
 void LhxPlan::init(
     uint partitionLevelInit,
     uint numChildPartInit,   
     vector<SharedLhxPartition> &partitionsInit,
-    LhxPlan *parentPlanInit)
+    LhxPlan *parentPlanInit,
+    vector<bool> useFilterInit,
+    boost::shared_ptr<boost::dynamic_bitset<> > joinFilterInit)
 {
     partitionLevel = partitionLevelInit;
+    useFilter = useFilterInit;
+    joinFilter = joinFilterInit;
 
     /*
-     * After support is added for repartitioning using stats(gathered during previous round of
-     * partitioning), numSubPart can be > numChildPart. A bin-packing
-     * algorithm will be used to keep in memory some subpartitions and output
-     * the rest to child partitions of similar size.
-     * 
+     * After support is added for repartitioning using stats(gathered during
+     * previous round of partitioning), numSubPart can be > numChildPart. A
+     * bin-packing algorithm will be used to keep in memory some subpartitions
+     * and output the rest to child partitions of similar size.
      */
     numSubPart   = numChildPart = numChildPartInit;
     for (int i = 0; i < partitionsInit.size(); i ++) {
@@ -421,7 +428,6 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
     LhxPartitionWriter writerList[numChildPart];
     uint childNum, i, j;
     TupleData outputTuple;
-
 
     /*
      * Generate partitions for each input.
@@ -486,54 +492,91 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
     }
 }
 
-LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
-    LhxPartitionInfo &partInfo, bool traceOn)
+LhxPartitionState LhxPlan::generatePartitions(
+    LhxHashInfo const &hashInfo,
+    LhxPartitionInfo  &partInfo)
 {
     bool isAggregate = (partInfo.numInput == 1);
+
+    LhxHashGenerator hashPrevPart;
+    hashPrevPart.init(partitionLevel);
 
     LhxHashGenerator hashSubPart;
     hashSubPart.init(partitionLevel + 1);
 
-    LhxPartitionReader *reader = partInfo.reader;
+    LhxPartitionReader *&reader = partInfo.reader;
     vector<SharedLhxPartitionWriter> &writerList = partInfo.writerList;
+    vector<boost::shared_ptr<boost::dynamic_bitset<> > > &joinFilterList =
+        partInfo.joinFilterList;
+    uint &curInputIndex = partInfo.curInputIndex;
 
-    uint curInputIndex = partInfo.curInputIndex;
-
-    uint childNum;
-    TupleData hashTableTuple;
-    TupleDescriptor hashTableTupleDesc;
     TupleData inputTuple;
-    TupleDescriptor const &inputTupleDesc = reader->getTupleDesc();
-
-    hashTableTupleDesc = hashInfo.inputDesc[curInputIndex];
-    hashTableTuple.compute(hashTableTupleDesc);
-    inputTuple.compute(inputTupleDesc);
-
+    inputTuple.compute(reader->getTupleDesc());
+    
+    uint hashKey;
+    uint prevHashKey;
+    uint writerNum;
+    bool writeToPartition;
+    
     /*
-     * If there's hash table to read from.
+     * If partition source is from memory,
+     * i.e. there's hash table to read from.
      */
-    if (traceOn) {
-        if (curInputIndex == partInfo.numInput - 1) {
-            dataTrace << "Input [1] [Tuples from Hash Table]\n";
-        } else {
-            dataTrace << "Input [0]\n";
-        }
-    }
+    if (partInfo.partitionMemory) {
+        TupleData hashTableTuple;
+        TupleDescriptor hashTableTupleDesc = hashInfo.inputDesc[curInputIndex];
 
-    if ((curInputIndex == partInfo.numInput - 1) && partInfo.partitionMemory) {
+        hashTableTuple.compute(hashTableTupleDesc);
+
         while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
 
-            if (traceOn) {
-                tuplePrinter.print(dataTrace, hashTableTupleDesc, hashTableTuple);
-                dataTrace <<"\n";
-            }
-
-            childNum = hashSubPart.hash(hashTableTuple,
+            hashKey = hashSubPart.hash(hashTableTuple,
                 hashInfo.keyProj[curInputIndex],
-                hashInfo.isKeyColVarChar[curInputIndex]) % numChildPart;
+                hashInfo.isKeyColVarChar[curInputIndex]);
+
+            writerNum =  hashKey % numChildPart + curInputIndex * numChildPart;
+
+            writeToPartition = false;
+
+            if (useFilter[curInputIndex]) {
+                /*
+                 * Use input filter if there is one. Note top level build input
+                 * does not have input filter.
+                 */
+                if (partitionLevel == 0) {
+                    writeToPartition = true;
+                } else {
+                    prevHashKey =
+                        hashPrevPart.hash(hashTableTuple,
+                            hashInfo.keyProj[curInputIndex],
+                            hashInfo.isKeyColVarChar[curInputIndex]);
+                    if (joinFilter && joinFilter->test(prevHashKey % 4096)) {
+                        writeToPartition = true;
+                    }
+                }
+            } else {
+                /*
+                 * Not using filter.
+                 */
+                writeToPartition = true;
+            }
             
-            writerList[childNum]->marshalTuple(hashTableTuple);
-            
+            if (writeToPartition) {
+                writerList[writerNum]->marshalTuple(hashTableTuple);
+                if (useFilter[partInfo.numInput - curInputIndex - 1]) {
+                    /*
+                     * Set output filter for the other input.
+                     */
+                    if (!joinFilterList[writerNum]) {
+                        /*
+                         * Filter not allocated yet.
+                         */
+                        joinFilterList[writerNum].reset(
+                            new boost::dynamic_bitset<>(4096));
+                    }
+                    joinFilterList[writerNum]->set(hashKey % 4096);
+                }
+            }
         }
         
         if (isAggregate) {
@@ -560,22 +603,27 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
         inputTuple = partInfo.buildTuple;
     }
 
-    if (traceOn) {
-        dataTrace << "[Tuples from exec stream or disk partition]\n";
-    }
-
     for (;;) {
         /*
-         * Note that the buildTuple is an unconsumed tuple from the reader. So
-         * when first time in this loop, isTupleConsumptionPending returns
-         * true.
+         * Note that partInfo.buildTuple is an unconsumed tuple from the
+         * reader. So when first time in this loop, isTupleConsumptionPending
+         * returns true.
          */
         if (!reader->isTupleConsumptionPending()) {
             if (reader->getState() == EXECBUF_EOS) {
-                /*
-                 * The current plan is completely partitioned.
-                 */
-                return PartitionEndOfData;
+                if (curInputIndex == 0) {
+                    /*
+                     * Done with partitioning the 0th input.
+                     * The current plan is completely partitioned.
+                     */
+                    return PartitionEndOfData;
+                } else {
+                    curInputIndex = 0;
+                    reader->close();
+                    reader = &partInfo.probeReader;
+                    inputTuple.compute(reader->getTupleDesc());
+                    continue;
+                }
             }
             
             if (!reader->demandData()) {
@@ -585,26 +633,88 @@ LhxPartitionState LhxPlan::generatePartitions(LhxHashInfo const &hashInfo,
                      */
                     return PartitionUnderflow;
                 } else {
-                    return PartitionEndOfData;
+                    if (curInputIndex == 0) {
+                        /*
+                         * Done with partitioning the 0th input.
+                         * The current plan is completely partitioned.
+                         */
+                        return PartitionEndOfData;
+                    } else {
+                        curInputIndex = 0;
+                        reader->close();
+                        reader = &partInfo.probeReader;
+                        inputTuple.compute(reader->getTupleDesc());
+                        continue;
+                    }
                 }
             }
             
             reader->unmarshalTuple(inputTuple);
         }
         
-        if (traceOn) {    
-            tuplePrinter.print(dataTrace, inputTupleDesc, inputTuple);
-            dataTrace <<"\n";
-        }
-
-        childNum = hashSubPart.hash(inputTuple,
+        hashKey = hashSubPart.hash(inputTuple,
             hashInfo.keyProj[curInputIndex],
-            hashInfo.isKeyColVarChar[curInputIndex]) % numChildPart;
+            hashInfo.isKeyColVarChar[curInputIndex]);
+        writerNum =  hashKey % numChildPart + curInputIndex * numChildPart;
         
+        writeToPartition = false;
+
         if (!isAggregate) {
-            writerList[childNum]->marshalTuple(inputTuple);
+            if (useFilter[curInputIndex]) {
+                /*
+                 * Use input filter if there exists one
+                 */                
+                if (writerNum >= numChildPart) {
+                    /*
+                     * Build input.
+                     * Note top level build input does not have input filter.
+                     */
+                    if (partitionLevel == 0) {
+                        writeToPartition = true;
+                    } else {
+                        prevHashKey =
+                            hashPrevPart.hash(inputTuple,
+                                hashInfo.keyProj[curInputIndex],
+                                hashInfo.isKeyColVarChar[curInputIndex]);
+                        if (joinFilter && joinFilter->test(prevHashKey % 4096)) {
+                            writeToPartition = true;
+                        }
+                    }
+                } else {
+                    /*
+                     * Probe input
+                     */
+                    if (joinFilterList[writerNum + numChildPart] &&
+                        joinFilterList[writerNum + numChildPart]->
+                        test(hashKey % 4096)) {
+                        writeToPartition = true;
+                    }
+                }
+            } else {
+                /*
+                 * Not using filter.
+                 */
+                writeToPartition = true;
+            }
+
+            if (writeToPartition) {
+                writerList[writerNum]->marshalTuple(inputTuple);
+                if (useFilter[partInfo.numInput - curInputIndex - 1]) {
+                    /*
+                     * Set output filter for the other input.
+                     */
+                    if (!joinFilterList[writerNum]) {
+                        /*
+                         * Filter not allocated yet.
+                         */
+                        joinFilterList[writerNum].reset(
+                            new boost::dynamic_bitset<>(4096));
+                    }
+                    joinFilterList[writerNum]->set(hashKey % 4096);
+                }
+            }
         } else {
-            writerList[childNum]->aggAndMarshalTuple(inputTuple);
+            writerList[writerNum]->aggAndMarshalTuple(inputTuple);
         }
 
         reader->consumeTuple();
@@ -625,7 +735,9 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo)
             partitionLevel + 1,
             numChildPart,
             partitionList,
-            this);
+            this,
+            useFilter,
+            partInfo.joinFilterList[i]);
         if (!firstChildPlan) {
             firstChildPlan = newChildPlan;
         } else {
@@ -633,6 +745,7 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo)
         }
     }
     partInfo.destPartitionList.clear();
+    partInfo.joinFilterList.clear();
 }
 
 LhxPlan *LhxPlan::getFirstLeaf()
@@ -655,6 +768,23 @@ LhxPlan *LhxPlan::getNextLeaf()
             return parent->getNextLeaf();
         } else {
             return NULL;
+        }
+    }
+}
+
+void LhxPlan::close()
+{
+    if (firstChildPlan) {
+        firstChildPlan->close();
+    }
+
+    if (siblingPlan) {
+        siblingPlan->close();
+    }
+
+    for (uint i = 0; i < partitions.size(); i ++) {
+        if (partitions[i] && partitions[i]->segStream) {
+            partitions[i]->segStream->close();
         }
     }
 }

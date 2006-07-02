@@ -23,6 +23,8 @@
 #define Fennel_LbmMinusExecStream_Included
 
 #include "fennel/lucidera/bitmap/LbmBitOpExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSeqSegmentReader.h"
+#include "fennel/tuple/TupleDataWithBuffer.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -90,6 +92,66 @@ class LbmMinusExecStream : public LbmBitOpExecStream
      */
     int advanceChildInputNo;
 
+    enum MinusState {
+        FIRST_MINUS = 0,
+        EMPTY_INPUT,
+        NONEMPTY_INPUT
+    };
+
+    /**
+     * State used to detect the special case of empty inputs
+     */
+    MinusState state;
+
+    /**
+     * A sequential reader used when the minuend input has keys, which may
+     * lead to RIDs being out of order.
+     */
+    LbmSeqSegmentReader minuendReader;
+
+    /**
+     * Whether the previous set of prefix fields is valid
+     */
+    bool prevTupleValid;
+
+    /**
+     * Previous set of prefix fields
+     */
+    TupleDataWithBuffer prevTuple;
+
+    /**
+     * Whether the prefix should be copied before reading more tuples
+     */
+    bool copyPrefixPending;
+
+    /**
+     * Tuple data used to build prefixed output
+     */
+    TupleData prefixedBitmapTuple;
+
+    /**
+     * Read a byte segment from the minuend input stream. The subtrahends 
+     * may be restarted under the following conditions:
+     *
+     * <ul>
+     *   <li>The main stream contains prefix columns
+     *   <li>The prefix columns changed between the last segment and the
+     *     current segment
+     * </ul>
+     */
+    ExecStreamResult readInputAndRestart(
+        uint iInput, LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
+
+    /**
+     * Reads the minuend input as a sequential stream.
+     */
+    ExecStreamResult readMinuendInput(
+        LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
+
+    int comparePrefixes();
+    void restartSubtrahends();
+    void copyPrefix();
+
     /**
      * Advance a single child input to the specified rid
      *
@@ -134,6 +196,10 @@ class LbmMinusExecStream : public LbmBitOpExecStream
      * EXECRC_EOS if all children have reached EOS
      */
     ExecStreamResult findMinInput(int &minInput);
+
+protected:
+    // override LbmBitOpStream
+    bool produceTuple(TupleData bitmapTuple);
 
 public:
     explicit LbmMinusExecStream();

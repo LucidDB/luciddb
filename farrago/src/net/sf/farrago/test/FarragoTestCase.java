@@ -699,6 +699,12 @@ public abstract class FarragoTestCase extends ResultSetTestCase
                 || name.startsWith("SYS_");
         }
 
+        protected boolean isBlessedWrapper(FemDataWrapper wrapper)
+        {
+            String name = wrapper.getName();
+            return name.startsWith("SYS_");
+        }
+
         private void dropSchemas()
             throws Exception
         {
@@ -730,7 +736,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             List<String> list = new ArrayList<String>();
             for (FemDataWrapper wrapper :
                 getRepos().allOfClass(FemDataWrapper.class)) {
-                if (wrapper.getName().startsWith("SYS_")) {
+                if (isBlessedWrapper(wrapper)) {
                     continue;
                 }
                 list.add(wrapper.isForeign() ? "foreign" : "local");

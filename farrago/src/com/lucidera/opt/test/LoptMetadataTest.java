@@ -415,11 +415,10 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select * from (select upper(name) as n from lopt_metadata.emps)"
             + " where n='ZELDA' order by 1");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
-        // Cumulative cost is full table access since the
-        // predicate is not sargable, plus the filtered rowcount for
+        // Cumulative cost is full table access plus the filtered rowcount for
         // the sort.
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
-        double sortRowCount = tableRowCount * DEFAULT_EQUAL_SELECTIVITY;
+        double sortRowCount = tableRowCount * .005;
         checkCost(
             tableRowCount + sortRowCount,
             cost);
@@ -716,12 +715,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select * from " +
                 "(select * from emps e, depts d where e.deptno = d.deptno) " +
                 "where name = 'foo'");
-        ProjectRel projectRel = (ProjectRel) rootRel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
-        // JoinRel is the child of the child of the FilterRel
-        projectRel = (ProjectRel) filterRel.getChild();
-        Double result = RelMetadataQuery.getSelectivity(
-            projectRel.getChild(), filterRel.getCondition());
+        Double result = RelMetadataQuery.getSelectivity(rootRel, null);
         assert(result != null);
         assertEquals(DEFAULT_EQUAL_SELECTIVITY, result, EPSILON);
     }
@@ -733,9 +727,8 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         transformQuery(programBuilder.createProgram(), sql);
         
-        ProjectRel projectRel = (ProjectRel) rootRel;
         Double result = RelMetadataQuery.getDistinctRowCount(
-            projectRel.getChild(), groupKey, null);
+            rootRel, groupKey, null);
         if (expected != null) {
             assertTrue(result != null);
             assertEquals(expected, result.doubleValue(), EPSILON);
@@ -750,8 +743,10 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         // count the number of distinct values in "name"
         BitSet groupKey = new BitSet();
         groupKey.set(1);
+        double expected = RelMdUtil.numDistinctVals(
+                (double) 90000, (double) COLSTORE_EMPS_ROWCOUNT);
         checkDistinctRowCount(
-            "select * from emps", groupKey, new Double(90000));  
+            "select * from emps", groupKey, expected);  
     }
     
     public void testDistinctRowCountSargableFilter()
@@ -768,21 +763,29 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         BitSet groupKey = new BitSet();
         groupKey.set(1);
+        double expected = RelMdUtil.numDistinctVals(
+            90000 * DEFAULT_EQUAL_SELECTIVITY,
+            COLSTORE_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
         checkDistinctRowCount(
             "select * from emps where upper(name) = 'FOO'", groupKey,
-            90000 * DEFAULT_EQUAL_SELECTIVITY);   
+            expected);   
     }
     
     public void testDistinctRowCountSargAndNonSargFilters()
         throws Exception
     {
+        // note that 2 bits are set, so to compute # distinct values, end
+        // up multiplying cardinality of 2 columns
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
+        double expected = RelMdUtil.numDistinctVals(
+            (double) COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY,
+            (double) COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY);
         // selectivity of deptno < 150 is .145
         checkDistinctRowCount(
             "select * from emps where deptno < 150 and upper(name) = 'FOO'",
-            groupKey, COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY);
+            groupKey, expected);
     }
     
     public void testDistinctRowCountNoStatsFilter()
@@ -804,8 +807,10 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
+        double expected = RelMdUtil.numDistinctVals(
+            DEFAULT_ROWCOUNT, DEFAULT_ROWCOUNT);
         checkDistinctRowCount(
-            "select * from tabwithuniqueKey", groupKey, DEFAULT_ROWCOUNT);
+            "select * from tabwithuniqueKey", groupKey, expected);
     }
     
     public void testSelectivityLcsTableNoStats()
@@ -821,9 +826,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             programBuilder.createProgram(),
             "select * from noStats where a = 1");
         
-        ProjectRel projectRel = (ProjectRel) rootRel;
-        Double result = RelMetadataQuery.getSelectivity(
-            projectRel.getChild(), null);
+        Double result = RelMetadataQuery.getSelectivity(rootRel, null);
         assertTrue(result != null);
         assertEquals(DEFAULT_SARGABLE_SELECTIVITY, result.doubleValue());
     }
@@ -841,33 +844,87 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         groupKey.set(0);
         Double result = RelMetadataQuery.getDistinctRowCount(
             rootRel, groupKey, null);
-        Double expected = new Double(90000);
+        double expected = 90000;
         assertEquals(expected, result.doubleValue(), EPSILON);
     }
     
-    public void testPopulationProjectedLcsTable()
+    private void testPopulationProjectedLcsTable(
+        String sql, BitSet groupKey, double expected, double epsilon)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new LcsTableProjectionRule());
-        transformQuery(
-            programBuilder.createProgram(),
-            "select age, deptno, name from emps");
-     
+        transformQuery(programBuilder.createProgram(), sql);    
+        
+        Double result = RelMetadataQuery.getPopulationSize(rootRel, groupKey);
+            
+        assertTrue(result != null);
+        assertEquals(expected, result.doubleValue(), epsilon);
+    }
+    
+    public void testPopulationNoProjExprs()
+        throws Exception
+    {
         // get the population of (deptno, name); note that the bits are
         // the projected ordinals
         BitSet groupKey = new BitSet();
         groupKey.set(1);
         groupKey.set(2);
-        Double result = RelMetadataQuery.getPopulationSize(
-            rootRel, groupKey);
-      
-       Double expected =
-           RelMdUtil.numDistinctVals(90000*150.0, COLSTORE_EMPS_ROWCOUNT*1.0);
-       
-       assertTrue(result != null);
-       assertEquals(expected.doubleValue(), result.doubleValue(), EPSILON);
+        
+        double expected = RelMdUtil.numDistinctVals(
+            90000*150.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        
+        testPopulationProjectedLcsTable(
+            "select age, deptno, name from emps", groupKey, expected, EPSILON);
     }
+    
+    public void testPopulationProjFuncExpr()
+        throws Exception
+    {
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+        
+        // 150 distinct values in deptno
+        Double nonProjExpr = RelMdUtil.numDistinctVals(
+            150.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        // 90000 distinct values in name
+        Double projExpr = RelMdUtil.numDistinctVals(
+            90000.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        projExpr = RelMdUtil.numDistinctVals(
+            projExpr, (double) COLSTORE_EMPS_ROWCOUNT);
+        double expected =
+            RelMdUtil.numDistinctVals(
+               nonProjExpr * projExpr, (double) COLSTORE_EMPS_ROWCOUNT);
+        
+        testPopulationProjectedLcsTable(
+            "select deptno, upper(name) from emps", groupKey, expected,
+            EPSILON);
+    }
+    
+    public void testPopulationProjTimesExpr()
+        throws Exception
+    {
+        BitSet groupKey = new BitSet();
+        groupKey.set(0);
+        groupKey.set(1);
+             
+        // 90000 distinct values in name
+        double expected = RelMdUtil.numDistinctVals(
+            90000.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        expected = RelMdUtil.numDistinctVals(
+            expected, (double) COLSTORE_EMPS_ROWCOUNT);
+        // 150 distinct values in deptno
+        double nonProjExpr = RelMdUtil.numDistinctVals(
+            150.0 * 150.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        expected *= nonProjExpr;
+        expected =
+            RelMdUtil.numDistinctVals(
+               expected, (double) COLSTORE_EMPS_ROWCOUNT);
+        
+        testPopulationProjectedLcsTable(
+            "select deptno * deptno, name from emps", groupKey, expected, 1.0);
+    }  
     
     public void testUniqueKeysProjectedLcsTable()
         throws Exception

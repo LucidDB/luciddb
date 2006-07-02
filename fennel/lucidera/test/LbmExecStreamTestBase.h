@@ -27,6 +27,7 @@
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
+#include "fennel/lucidera/bitmap/LbmNormalizerExecStream.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -293,6 +294,8 @@ protected:
     TupleDescriptor keyBitmapTupleDesc;
     TupleData keyBitmapTupleData;
     TupleAccessor keyBitmapTupleAccessor;
+    boost::shared_array<FixedBuffer> keyBitmapBuf;
+    uint keyBitmapBufSize;
 
     inline static const std::string &getTraceName() 
     {
@@ -318,7 +321,14 @@ protected:
 
     void initSorterExecStream(
         ExternalSortExecStreamParams &params,
-        ExecStreamEmbryo &embryo);
+        ExecStreamEmbryo &embryo,
+        TupleDescriptor const &outputDesc, 
+        uint nKeys = 1);
+
+    void initNormalizerExecStream(
+        LbmNormalizerExecStreamParams &params,
+        ExecStreamEmbryo &embryo, 
+        uint nKeys);
 
     /**
      * Calculates size of result bitmap.
@@ -362,12 +372,24 @@ protected:
         uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
         uint fullBufSize, uint &nBitmaps, bool includeKeys = false);
 
-    virtual void produceEntry(
+    void produceEntry(
         LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
         uint &bufSize, uint &nBitmaps, bool includeKeys);
-    
+
+    /**
+     * Initialize bitmaps with keys
+     */
+    void initKeyBitmap(uint nRows, std::vector<int> const &repeatSeqValues);
+
 public:
     void testCaseSetUp();
+
+    /**
+     * Find the interval for which an entire tuple's sequence repeats
+     */
+    static uint getTupleInterval(
+        std::vector<int> const &repeatSeqValues,
+        uint nKeys = 0);
 };
 
 FENNEL_END_NAMESPACE

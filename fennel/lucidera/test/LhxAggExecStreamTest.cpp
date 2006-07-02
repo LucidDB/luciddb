@@ -34,6 +34,10 @@ using namespace fennel;
 
 class LhxAggExecStreamTest : public ExecStreamUnitTestBase
 {
+    void testCountImpl(uint forcePartitionLevel);
+    void testSumImpl(uint forcePartitionLevel);
+    void testGroupCountImpl(uint forcePartitionLevel);
+
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
         TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
@@ -48,14 +52,52 @@ public:
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testCount);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSum);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testGroupCount);
+        FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testCountPartition);
+        FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSumPartition);
+        FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testGroupCountPartition);
     }
     
     void testCount();
+    void testCountPartition();
+
     void testSum();
+    void testSumPartition();
+
     void testGroupCount();
+    void testGroupCountPartition();
 };
 
 void LhxAggExecStreamTest::testCount()
+{
+    testCountImpl(0);
+}
+
+void LhxAggExecStreamTest::testCountPartition()
+{
+    testCountImpl(2);
+}
+
+void LhxAggExecStreamTest::testSum()
+{
+    testSumImpl(0);
+}
+
+void LhxAggExecStreamTest::testSumPartition()
+{
+    testSumImpl(2);
+}
+
+void LhxAggExecStreamTest::testGroupCount()
+{
+    testGroupCountImpl(0);
+}
+
+void LhxAggExecStreamTest::testGroupCountPartition()
+{
+    testGroupCountImpl(2);
+}
+
+void LhxAggExecStreamTest::testCountImpl(uint forcePartitionLevel)
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -86,6 +128,7 @@ void LhxAggExecStreamTest::testCount()
     aggParams.pTempSegment = pRandomSegment;
     aggParams.cndGroupByKeys = numRows;
     aggParams.numRows = numRows;
+    aggParams.forcePartitionLevel = forcePartitionLevel;
 
     ExecStreamEmbryo aggStreamEmbryo;
     aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
@@ -101,7 +144,7 @@ void LhxAggExecStreamTest::testCount()
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void LhxAggExecStreamTest::testSum()
+void LhxAggExecStreamTest::testSumImpl(uint forcePartitionLevel)
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -133,6 +176,7 @@ void LhxAggExecStreamTest::testSum()
     aggParams.pTempSegment = pRandomSegment;
     aggParams.cndGroupByKeys = numRows;
     aggParams.numRows = numRows;
+    aggParams.forcePartitionLevel = forcePartitionLevel;
     
     ExecStreamEmbryo aggStreamEmbryo;
     aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
@@ -149,7 +193,7 @@ void LhxAggExecStreamTest::testSum()
     verifyOutput(*pOutputStream, 1, expectedResultGenerator);
 }
 
-void LhxAggExecStreamTest::testGroupCount()
+void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc(
@@ -185,6 +229,7 @@ void LhxAggExecStreamTest::testGroupCount()
     aggParams.pTempSegment = pRandomSegment;
     aggParams.cndGroupByKeys = numRows/2;
     aggParams.numRows = numRows;
+    aggParams.forcePartitionLevel = forcePartitionLevel;
 
     ExecStreamEmbryo aggStreamEmbryo;
     

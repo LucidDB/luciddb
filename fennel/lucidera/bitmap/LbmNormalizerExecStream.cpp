@@ -89,8 +89,11 @@ bool LbmNormalizerExecStream::produceTuple()
     assert(producePending);
 
     // manually project output keys from the current tuple
-    for (uint i = 0; i < keyProj.size(); i++) {
-        keyData[i] = keyBitmapData[keyProj[i]];
+    if (segmentReader.getTupleChange()) {
+        for (uint i = 0; i < keyProj.size(); i++) {
+            keyData[i] = keyBitmapData[keyProj[i]];
+        }
+        segmentReader.resetChangeListener();
     }
 
     if (pOutAccessor->produceTuple(keyData)) {

@@ -1598,17 +1598,21 @@ public class SqlToRelConverter
         
         // convert update column list from SqlIdentifier to String
         List<String> targetColumnNameList = new ArrayList<String>();
-        for (SqlNode targetColumn : call.getUpdateCall().getTargetColumnList()) {
-            SqlIdentifier id = (SqlIdentifier) targetColumn;
-            String name = id.getSimple();
-            targetColumnNameList.add(name);
+        SqlUpdate updateCall = call.getUpdateCall();
+        if (updateCall != null) {
+            for (SqlNode targetColumn : updateCall.getTargetColumnList()) {
+                SqlIdentifier id = (SqlIdentifier) targetColumn;
+                String name = id.getSimple();
+                targetColumnNameList.add(name);
+            }
         }
         
         // replace the projection of the source select with a
         // projection that contains the following:
-        // 1) the expressions corresponding to the new insert row
-        // 2) all columns from the target table
-        // 3) the set expressions in the update call
+        // 1) the expressions corresponding to the new insert row (if there is
+        //    an insert)
+        // 2) all columns from the target table (if there is an update)
+        // 3) the set expressions in the update call (if there is an update)
         
         // first, convert the merge's source select to construct the columns
         // from the target table and the set expressions in the update call
@@ -1617,25 +1621,33 @@ public class SqlToRelConverter
         // then, convert the insert statement so we can get the insert
         // values expressions
         SqlInsert insertCall = call.getInsertCall();
-        RelNode insertRel = convertInsert(insertCall);
+        int nLevel1Exprs = 0;
+        RexNode[] level1InsertExprs = null;
+        RexNode[] level2InsertExprs = null;
+        if (insertCall != null) {
+            RelNode insertRel = convertInsert(insertCall);
         
-        // there are 2 level of projections in the insert source; combine
-        // them into a single project; level1 refers to the topmost project;
-        // the level1 projection contains references to the level2 expressions,
-        // except in the case where no target expression was provided, in
-        // which case, the expression is the default value for the column
-        RexNode[] level1InsertExprs = 
-            ((ProjectRel) insertRel.getInput(0)).getProjectExps();
-        RexNode[] level2InsertExprs =
-            ((ProjectRel) insertRel.getInput(0).getInput(0)).
-                getProjectExps();
-        int nLevel1Exprs = level1InsertExprs.length;
+            // there are 2 level of projections in the insert source; combine
+            // them into a single project; level1 refers to the topmost project;
+            // the level1 projection contains references to the level2
+            // expressions, except in the case where no target expression was
+            // provided, in which case, the expression is the default value for
+            // the column
+            level1InsertExprs = 
+                ((ProjectRel) insertRel.getInput(0)).getProjectExps();
+            level2InsertExprs =
+                ((ProjectRel) insertRel.getInput(0).getInput(0)).
+                    getProjectExps();
+            nLevel1Exprs = level1InsertExprs.length;
+        }
         
         JoinRel joinRel = (JoinRel) mergeSourceRel.getInput(0);
         int nSourceFields = joinRel.getLeft().getRowType().getFieldCount();
-        int numProjExprs =
-            nLevel1Exprs +
-            mergeSourceRel.getRowType().getFieldCount() - nSourceFields;
+        int numProjExprs = nLevel1Exprs;
+        if (updateCall != null) {
+            numProjExprs +=
+                mergeSourceRel.getRowType().getFieldCount() - nSourceFields;
+        }
         RexNode[] projExprs = new RexNode[numProjExprs];
         for (int level1Idx= 0; level1Idx < nLevel1Exprs; level1Idx++) {
             if (level1InsertExprs[level1Idx] instanceof RexInputRef) {
@@ -1646,9 +1658,12 @@ public class SqlToRelConverter
                 projExprs[level1Idx] = level1InsertExprs[level1Idx];
             }
         }
-        RexNode[] updateExprs =  ((ProjectRel) mergeSourceRel).getProjectExps();
-        for (int i = 0; i < numProjExprs - nLevel1Exprs; i++) {
-            projExprs[i + nLevel1Exprs] = updateExprs[nSourceFields + i];
+        if (updateCall != null) {
+            RexNode[] updateExprs =
+                ((ProjectRel) mergeSourceRel).getProjectExps();
+            for (int i = 0; i < numProjExprs - nLevel1Exprs; i++) {
+                projExprs[i + nLevel1Exprs] = updateExprs[nSourceFields + i];
+            }
         }
 
         RelNode massagedRel = CalcRel.createProject(joinRel, projExprs, null);      
