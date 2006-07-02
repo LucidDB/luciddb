@@ -131,6 +131,12 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
     private final Map<SqlNode,SqlNode> originalExprs =
         new HashMap<SqlNode,SqlNode>();
 
+    // REVIEW jvs 30-June-2006: subclasses may override shouldExpandIdentifiers
+    // in a way that ignores this; we should probably get rid of the
+    // protected method and always use this variable (or better, move
+    // preferences like this to a separate "parameter" class)
+    protected boolean expandIdentifiers;
+
     //~ Constructors ----------------------------------------------------------
 
     /**
@@ -1192,9 +1198,15 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         return SqlValidatorUtil.getAlias(node, ordinal);
     }
 
+    // implement SqlValidator
+    public void setIdentifierExpansion(boolean expandIdentifiers)
+    {
+        this.expandIdentifiers = expandIdentifiers;
+    }
+    
     protected boolean shouldExpandIdentifiers()
     {
-        return false;
+        return expandIdentifiers;
     }
 
     protected boolean shouldAllowIntermediateOrderBy()

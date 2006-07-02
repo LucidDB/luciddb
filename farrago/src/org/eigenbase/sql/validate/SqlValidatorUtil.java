@@ -149,7 +149,7 @@ public class SqlValidatorUtil
     /**
      * Converts an expression "expr" into "expr AS alias".
      */
-    static SqlNode addAlias(
+    public static SqlNode addAlias(
         SqlNode expr,
         String alias)
     {
