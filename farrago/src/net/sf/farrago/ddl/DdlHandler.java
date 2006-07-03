@@ -200,7 +200,7 @@ public abstract class DdlHandler
             } catch (SqlValidatorException ex) {
                 throw validator.newPositionalError(abstractElement,
                     res.ValidatorDefinitionError.ex(ex.getMessage(),
-                        repos.getLocalizedObjectName(abstractElement), ex));
+                        repos.getLocalizedObjectName(abstractElement)));
             }
         } else {
             // assume that we're revalidating a previously saved element
