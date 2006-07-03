@@ -23,8 +23,6 @@
 package net.sf.farrago.ddl;
 
 import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
@@ -33,10 +31,8 @@ import org.eigenbase.sql.validate.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import net.sf.farrago.cwm.core.*;
@@ -45,9 +41,6 @@ import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
 
-import java.io.*;
-import java.nio.charset.*;
-import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
@@ -201,20 +194,22 @@ public abstract class DdlHandler
 
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
+
+            try {
+                validator.getStmtValidator().validateDataType(dataType);
+            } catch (SqlValidatorException ex) {
+                throw validator.newPositionalError(abstractElement,
+                    res.ValidatorDefinitionError.ex(ex.getMessage(),
+                        repos.getLocalizedObjectName(abstractElement), ex));
+            }
+        } else {
+            // assume that we're revalidating a previously saved element
+            // so we can skip type validation altogether
         }
+
 
         CwmSqldataType type = (CwmSqldataType) element.getType();
         SqlTypeName typeName = SqlTypeName.get(type.getName());
-
-        // Check that every type is supported. For example, we don't support
-        // columns of type LONG VARCHAR right now.
-        final FarragoSessionPersonality personality =
-            validator.getStmtValidator().getSession().getPersonality();
-        if (!personality.isSupportedType(typeName)) {
-            throw newContextException(type,
-                EigenbaseResource.instance().TypeNotSupported.ex(
-                    typeName.toString()));
-        }
 
         // REVIEW jvs 23-Mar-2005:  For now, we attach the dependency to
         // a containing namespace.  For example, if a column is declared
@@ -245,47 +240,6 @@ public abstract class DdlHandler
 
         // NOTE: parser only generates precision, but CWM discriminates
         // precision from length, so we take care of it below
-        Integer precision = element.getPrecision();
-        if (precision == null) {
-            precision = element.getLength();
-        }
-
-        // TODO:  break this method up
-        // first, validate presence of modifiers
-        if ((typeName != null) && typeName.allowsPrec()) {
-            if (precision == null) {
-                int p = typeName.getDefaultPrecision();
-                if (p != -1) {
-                    precision = new Integer(p);
-                }
-            }
-            if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
-                throw validator.newPositionalError(
-                    abstractElement,
-                    res.ValidatorPrecRequired.ex(
-                        repos.getLocalizedObjectName(type),
-                        repos.getLocalizedObjectName(abstractElement)));
-            }
-        } else {
-            if (precision != null) {
-                throw validator.newPositionalError(
-                    abstractElement,
-                    res.ValidatorPrecUnexpected.ex(
-                        repos.getLocalizedObjectName(type),
-                        repos.getLocalizedObjectName(abstractElement)));
-            }
-        }
-        if ((typeName != null) && typeName.allowsScale()) {
-            // assume scale is always optional
-        } else {
-            if (element.getScale() != null) {
-                throw validator.newPositionalError(
-                    abstractElement,
-                    res.ValidatorScaleUnexpected.ex(
-                        repos.getLocalizedObjectName(type),
-                        repos.getLocalizedObjectName(abstractElement)));
-            }
-        }
         SqlTypeFamily typeFamily = null;
         if (typeName != null) {
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
@@ -299,6 +253,7 @@ public abstract class DdlHandler
                 element.setPrecision(null);
             }
         }
+
         if (typeFamily == SqlTypeFamily.Character) {
             // TODO jvs 18-April-2004:  Should be inheriting these defaults
             // from schema/catalog.
@@ -307,81 +262,12 @@ public abstract class DdlHandler
                 // default ever changed, that would invalidate existing data
                 element.setCharacterSetName(
                     repos.getDefaultCharsetName());
-            } else {
-                if (!Charset.isSupported(element.getCharacterSetName())) {
-                    throw validator.newPositionalError(
-                        abstractElement,
-                        res.ValidatorCharsetUnsupported.ex(
-                            element.getCharacterSetName(),
-                            repos.getLocalizedObjectName(abstractElement)));
-                }
-            }
-            Charset charSet = Charset.forName(element.getCharacterSetName());
-            if (charSet.newEncoder().maxBytesPerChar() > 1) {
-                // TODO:  implement multi-byte character sets
-                throw Util.needToImplement(charSet);
-            }
-        } else {
-            if (!JmiUtil.isBlank(element.getCharacterSetName())) {
-                throw validator.newPositionalError(
-                    abstractElement,
-                    res.ValidatorCharsetUnexpected.ex(
-                        repos.getLocalizedObjectName(type),
-                        repos.getLocalizedObjectName(abstractElement)));
             }
         }
 
         // now, enforce type-defined limits
         if (type instanceof CwmSqlsimpleType) {
             CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
-
-            if (element.getLength() != null) {
-                Integer maximum = simpleType.getCharacterMaximumLength();
-                assert (maximum != null);
-                if (element.getLength().intValue() > maximum.intValue()) {
-                    throw validator.newPositionalError(
-                        abstractElement,
-                        res.ValidatorLengthExceeded.ex(
-                            element.getLength(),
-                            maximum,
-                            repos.getLocalizedObjectName(abstractElement)));
-                }
-            }
-            if (element.getPrecision() != null) {
-                Integer maximum = simpleType.getNumericPrecision();
-                if (maximum == null) {
-                    maximum = simpleType.getDateTimePrecision();
-                }
-                assert (maximum != null);
-                if (element.getPrecision().intValue() > maximum.intValue()) {
-                    throw validator.newPositionalError(
-                        abstractElement,
-                        res.ValidatorPrecisionExceeded.ex(
-                            element.getPrecision(),
-                            maximum,
-                            repos.getLocalizedObjectName(abstractElement)));
-                }
-                if (typeFamily == SqlTypeFamily.Numeric) {
-                    if (element.getPrecision().intValue() <= 0) {
-                        throw validator.newPositionalError(
-                            abstractElement,
-                            res.ValidatorPrecisionMustBePositive.ex(
-                                repos.getLocalizedObjectName(abstractElement)));
-                    }
-                }
-            }
-            if (element.getScale() != null) {
-                Integer maximum = simpleType.getNumericScale();
-                assert (maximum != null);
-                if (element.getScale().intValue() > maximum.intValue()) {
-                    throw validator.newPositionalError(
-                        abstractElement,
-                        res.ValidatorScaleExceeded.ex(
-                            element.getScale(),
-                            maximum,
-                            repos.getLocalizedObjectName(abstractElement)));
-                }
-            }
         } else if (type instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) type;

@@ -39,3 +39,18 @@ values cast(128 as tinyint);
 values cast(255 as tinyint);
 values cast(256 as tinyint);
 
+-- data type validation error cases
+values cast(12 as integer(0));
+values cast(12 as boolean(0,2));
+values cast(12 as decimal(20,0));
+values cast(12 as decimal(1,20));
+values cast(12 as decimal(0,2));
+values cast(12 as char(1,2));
+values cast(12 as varchar(1,2));
+values cast(12 as binary(1,2));
+values cast(12 as varbinary(1,2));
+values cast(12 as badtype);
+values cast(12 as udt.badtype);
+values cast('12' as time(100));
+values cast('12' as timestamp(100));
+values cast('12' as date(1));
