@@ -72,7 +72,8 @@ public class OJSyntheticClass extends OJClass
      */
     OJSyntheticClass(
         Environment env, OJClass declarer, OJClass[] classes,
-        String[] fieldNames, ClassDeclaration decl, String description)
+        String[] fieldNames, ClassDeclaration decl, String description,
+        boolean defineValueConstructor)
     {
         super(env, declarer, decl);
         this.classes = classes;
@@ -85,8 +86,8 @@ public class OJSyntheticClass extends OJClass
             decl.getName(), null, null, new StatementList());
         decl.getBody().add(constructor);
         // create value constructor (unless it is the same as the default
-        // constructor)
-        if (classes.length > 0) {
+        // constructor, or we've been asked not to)
+        if ((classes.length > 0) && defineValueConstructor) {
             ParameterList parameterList = new ParameterList();
             StatementList statementList = new StatementList();
             for (int i = 0; i < classes.length; i++) {
