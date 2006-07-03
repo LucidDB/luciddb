@@ -60,9 +60,9 @@ void LbmMinusExecStream::open(bool restart)
     // since the children need to read till EOS, don't set a rowLimit
     rowLimit = 0;
     state = FIRST_MINUS;
+    copyPrefixPending = false;
     if (nFields) {
         prevTupleValid = false;
-        copyPrefixPending = false;
         minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
     }
 }
@@ -109,8 +109,8 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
                 rc = advanceChild(advanceChildInputNo, advanceChildRid);
                 if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
                     return rc;
-                advancePending = false;
                 }
+                advancePending = false;
             } else {
                 rc = advanceChildren(baseRid);
                 if (rc != EXECRC_YIELD) {
