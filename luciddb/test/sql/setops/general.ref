@@ -1,0 +1,419 @@
+0: jdbc:luciddb:> set schema 'stkmkt';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- rows with null and unknown values
+0: jdbc:luciddb:> -- null is treated similar to other values
+0: jdbc:luciddb:> -- unknown is treated similar to other values
+0: jdbc:luciddb:> -- null is treated as unknown
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create table t1 (b1 boolean, n1 integer);
+0: jdbc:luciddb:> create table t2 (b2 boolean, n2 integer);
+0: jdbc:luciddb:> create table t3 (b3 boolean, n3 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values(null,1),(unknown,1),(null,2),(null,3);
+0: jdbc:luciddb:> insert into t2 values(null,1),(null,3),(null,4);
+0: jdbc:luciddb:> insert into t3 values(null,5),(unknown,6);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- basics, intersect/except all not supported as of 6/28
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from t1 union all select * from t2;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 1   |
+|     | 1   |
+|     | 2   |
+|     | 3   |
+|     | 1   |
+|     | 3   |
+|     | 4   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 union select * from t2;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 4   |
+|     | 3   |
+|     | 2   |
+|     | 1   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 union all select * from t3;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 1   |
+|     | 1   |
+|     | 2   |
+|     | 3   |
+|     | 5   |
+|     | 6   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 union select * from t3;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 5   |
+|     | 6   |
+|     | 3   |
+|     | 2   |
+|     | 1   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 intersect all select * from t2;
+Error: java.lang.AssertionError: Internal error: set operator INTERSECT ALL not suported (state=,code=0)
+0: jdbc:luciddb:> select * from t1 intersect select * from t2;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 1   |
+|     | 3   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 intersect all select * from t3;
+Error: java.lang.AssertionError: Internal error: set operator INTERSECT ALL not suported (state=,code=0)
+0: jdbc:luciddb:> select * from t1 intersect select * from t3;
++-----+-----+
+| B1  | N1  |
++-----+-----+
++-----+-----+
+0: jdbc:luciddb:> select * from t1 except all select * from t2;
+Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not suported (state=,code=0)
+0: jdbc:luciddb:> select * from t1 except select * from t2;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 2   |
++-----+-----+
+0: jdbc:luciddb:> select * from t1 except all select * from t3;
+Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not suported (state=,code=0)
+0: jdbc:luciddb:> select * from t1 except select * from t3;
++-----+-----+
+| B1  | N1  |
++-----+-----+
+|     | 3   |
+|     | 2   |
+|     | 1   |
++-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> drop table t3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1(n1 integer);
+0: jdbc:luciddb:> create table t2(n2 integer);
+0: jdbc:luciddb:> create table t3(n3 integer);
+0: jdbc:luciddb:> create table t4(n4 integer);
+0: jdbc:luciddb:> insert into t1 values (1),(2),(3);
+0: jdbc:luciddb:> insert into t2 values (2),(3),(4);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- set ops with empty set(s)
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from t3 union all select * from t4;
++-----+
+| N3  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t3 union select * from t4;
++-----+
+| N3  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t3 intersect select * from t4;
++-----+
+| N3  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t3 except select * from t4;
++-----+
+| N3  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t2 union all select * from t4;
++-----+
+| N2  |
++-----+
+| 2   |
+| 3   |
+| 4   |
++-----+
+0: jdbc:luciddb:> select * from t2 union select * from t4;
++-----+
+| N2  |
++-----+
+| 2   |
+| 3   |
+| 4   |
++-----+
+0: jdbc:luciddb:> select * from t2 intersect select * from t4;
++-----+
+| N2  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t2 except select * from t4;
++-----+
+| N2  |
++-----+
+| 2   |
+| 3   |
+| 4   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- set ops on self
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from t1 union all select * from t1;
++-----+
+| N1  |
++-----+
+| 1   |
+| 2   |
+| 3   |
+| 1   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> select * from t1 union select * from t1;
++-----+
+| N1  |
++-----+
+| 2   |
+| 3   |
+| 1   |
++-----+
+0: jdbc:luciddb:> select * from t1 intersect select * from t1;
++-----+
+| N1  |
++-----+
+| 1   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> select * from t1 except select * from t1;
++-----+
+| N1  |
++-----+
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- nested 
+0: jdbc:luciddb:> -- (redundant select)
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from
+. . . . . . . . >   (select * from t1 union select * from t2)
+. . . . . . . . > union all 
+. . . . . . . . > select * from t1;
++-----+
+| N1  |
++-----+
+| 2   |
+| 3   |
+| 4   |
+| 1   |
+| 1   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1
+. . . . . . . . > except
+. . . . . . . . > select * from
+. . . . . . . . >   (select * from t1 except select * from t2);
++-----+
+| N1  |
++-----+
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- precedence: intersect has higher precedence, union and except have same
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select * from t1 union select * from t1 except select * from t1; 
++-----+
+| N1  |
++-----+
++-----+
+0: jdbc:luciddb:> select * from t1 except select * from t1 union select * from t1;
++-----+
+| N1  |
++-----+
+| 2   |
+| 3   |
+| 1   |
++-----+
+0: jdbc:luciddb:> select * from t1 union all select * from t1 intersect select * from t2;
++-----+
+| N1  |
++-----+
+| 1   |
+| 2   |
+| 3   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> select * from t2 intersect select * from t1 union all select * from t1;
++-----+
+| N2  |
++-----+
+| 2   |
+| 3   |
+| 1   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> select * from t1 intersect select * from t2 union all select * from t1;
++-----+
+| N1  |
++-----+
+| 2   |
+| 3   |
+| 1   |
+| 2   |
+| 3   |
++-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- compatibility (implicit conversion)
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create table t1(n1 double, n2 integer);
+0: jdbc:luciddb:> create table t2(m1 integer, m2 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values (1,10),(2,20);
+0: jdbc:luciddb:> insert into t2 values (1,10),(2,21);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION select * from t2;
++------+-----+
+|  N1  | N2  |
++------+-----+
+| 1.0  | 10  |
+| 2.0  | 20  |
+| 2.0  | 21  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION ALL select * from t2;
++------+-----+
+|  N1  | N2  |
++------+-----+
+| 1.0  | 10  |
+| 2.0  | 20  |
+| 1.0  | 10  |
+| 2.0  | 21  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t2 UNION select * from t1;
++------+-----+
+|  M1  | M2  |
++------+-----+
+| 1.0  | 10  |
+| 2.0  | 20  |
+| 2.0  | 21  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t2 UNION ALL select * from t1;
++------+-----+
+|  M1  | M2  |
++------+-----+
+| 1.0  | 10  |
+| 2.0  | 21  |
+| 1.0  | 10  |
+| 2.0  | 20  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 INTERSECT select * from t2;
++------+-----+
+|  N1  | N2  |
++------+-----+
+| 1.0  | 10  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t2 INTERSECT select * from t1;
++------+-----+
+|  M1  | M2  |
++------+-----+
+| 1.0  | 10  |
++------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- incompatible columns or diff number of cols
+0: jdbc:luciddb:> -- should all error out
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create table t1(n1 boolean);
+0: jdbc:luciddb:> create table t2(m1 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values (true);
+0: jdbc:luciddb:> insert into t2 values (null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of UNION (state=,code=0)
+0: jdbc:luciddb:> select * from t1 UNION ALL select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of UNION ALL (state=,code=0)
+0: jdbc:luciddb:> select * from t1 INTERSECT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of INTERSECT (state=,code=0)
+0: jdbc:luciddb:> select * from t1 EXCEPT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of EXCEPT (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1(n1 char(1));
+0: jdbc:luciddb:> create table t2(m1 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values ('a');
+0: jdbc:luciddb:> insert into t2 values (null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of UNION (state=,code=0)
+0: jdbc:luciddb:> select * from t1 UNION ALL select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of UNION ALL (state=,code=0)
+0: jdbc:luciddb:> select * from t1 INTERSECT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of INTERSECT (state=,code=0)
+0: jdbc:luciddb:> select * from t1 EXCEPT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of EXCEPT (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> delete from t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of UNION (state=,code=0)
+0: jdbc:luciddb:> select * from t1 UNION ALLselect * from t2;
+Error: Non-query expression encountered in illegal context (state=,code=0)
+0: jdbc:luciddb:> select * from t1 INTERSECT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of INTERSECT (state=,code=0)
+0: jdbc:luciddb:> select * from t1 EXCEPT select * from t2;
+Error: At line 1, column 8: Type mismatch in column 1 of EXCEPT (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1(n1 integer, n2 integer);
+0: jdbc:luciddb:> create table t2(m1 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t1 values (null,null),(1,1);
+0: jdbc:luciddb:> insert into t2 values (null),(1);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1 UNION select * from t2;
+Error: At line 1, column 31: Column count mismatch in UNION (state=,code=0)
+0: jdbc:luciddb:> select * from t1 UNION ALL select * from t2;
+Error: At line 1, column 35: Column count mismatch in UNION ALL (state=,code=0)
+0: jdbc:luciddb:> select * from t1 INTERSECT select * from t2;
+Error: At line 1, column 35: Column count mismatch in INTERSECT (state=,code=0)
+0: jdbc:luciddb:> select * from t1 EXCEPT select * from t2;
+Error: At line 1, column 32: Column count mismatch in EXCEPT (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

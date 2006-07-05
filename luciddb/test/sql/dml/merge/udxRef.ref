@@ -1,0 +1,396 @@
+0: jdbc:luciddb:> --------
+0: jdbc:luciddb:> -- Setup
+0: jdbc:luciddb:> --------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema ct;
+0: jdbc:luciddb:> set schema 'ct';
+0: jdbc:luciddb:> set path 'ct';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> ---------------
+0: jdbc:luciddb:> -- Cursor tests
+0: jdbc:luciddb:> ---------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1(aa int, bb varchar(20));
+0: jdbc:luciddb:> insert into t1 values (1, 'one'), (3, 'three'), (10, 'ten');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t2(a int, b varchar(20));
+0: jdbc:luciddb:> insert into t2 values (2, 'dos'), (3, 'tres');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with multiple output columns
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function get_column_types(c cursor)
+. . . . . . . . > returns table( colname varchar(65535), coltype int, coltypename varchar(65535))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- gets UDX directly
+0: jdbc:luciddb:> select * 
+. . . . . . . . >      from table(
+. . . . . . . . >        get_column_types(
+. . . . . . . . >          cursor(select * from sys_fem."Config"."FarragoConfig")));
++---------------------------+----------+--------------+
+|          COLNAME          | COLTYPE  | COLTYPENAME  |
++---------------------------+----------+--------------+
+| name                      | 12       | VARCHAR      |
+| fennelDisabled            | 16       | BOOLEAN      |
+| userCatalogEnabled        | 16       | BOOLEAN      |
+| codeCacheMaxBytes         | -5       | BIGINT       |
+| checkpointInterval        | 4        | INTEGER      |
+| serverRmiRegistryPort     | 4        | INTEGER      |
+| serverSingleListenerPort  | 4        | INTEGER      |
+| calcVirtualMachine        | 12       | VARCHAR      |
+| javaCompilerClassName     | 12       | VARCHAR      |
+| FennelConfig              | 12       | VARCHAR      |
+| mofId                     | 12       | VARCHAR      |
+| mofClassName              | 12       | VARCHAR      |
++---------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merges UDX into table
+0: jdbc:luciddb:> create table params (colname varchar(65535), coltype int, coltypename varchar(65535));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into params(colname, coltype, coltypename) 
+. . . . . . . . >   (select * 
+. . . . . . . . >      from table(
+. . . . . . . . >        get_column_types(
+. . . . . . . . >          cursor(select * from sys_fem."Config"."FarragoConfig"))));
+0: jdbc:luciddb:>        
+0: jdbc:luciddb:> select * from params order by 1;
++---------------------------+----------+--------------+
+|          COLNAME          | COLTYPE  | COLTYPENAME  |
++---------------------------+----------+--------------+
+| FennelConfig              | 12       | VARCHAR      |
+| calcVirtualMachine        | 12       | VARCHAR      |
+| checkpointInterval        | 4        | INTEGER      |
+| codeCacheMaxBytes         | -5       | BIGINT       |
+| fennelDisabled            | 16       | BOOLEAN      |
+| javaCompilerClassName     | 12       | VARCHAR      |
+| mofClassName              | 12       | VARCHAR      |
+| mofId                     | 12       | VARCHAR      |
+| name                      | 12       | VARCHAR      |
+| serverRmiRegistryPort     | 4        | INTEGER      |
+| serverSingleListenerPort  | 4        | INTEGER      |
+| userCatalogEnabled        | 16       | BOOLEAN      |
++---------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into params p
+. . . . . . . . >   using
+. . . . . . . . >     table(get_column_types(
+. . . . . . . . >             cursor(select * from sys_fem."Config"."FarragoConfig"))) as temp
+. . . . . . . . >   on p.colname = temp.colname
+. . . . . . . . >   when matched then 
+. . . . . . . . >     update set colname = upper(p.colname)
+. . . . . . . . >   when not matched then 
+. . . . . . . . >     insert (colname, coltype, coltypename)
+. . . . . . . . >     values (temp.colname, temp.coltype, temp.coltypename);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from params order by 1;
++---------------------------+----------+--------------+
+|          COLNAME          | COLTYPE  | COLTYPENAME  |
++---------------------------+----------+--------------+
+| CALCVIRTUALMACHINE        | 12       | VARCHAR      |
+| CHECKPOINTINTERVAL        | 4        | INTEGER      |
+| CODECACHEMAXBYTES         | -5       | BIGINT       |
+| FENNELCONFIG              | 12       | VARCHAR      |
+| FENNELDISABLED            | 16       | BOOLEAN      |
+| JAVACOMPILERCLASSNAME     | 12       | VARCHAR      |
+| MOFCLASSNAME              | 12       | VARCHAR      |
+| MOFID                     | 12       | VARCHAR      |
+| NAME                      | 12       | VARCHAR      |
+| SERVERRMIREGISTRYPORT     | 4        | INTEGER      |
+| SERVERSINGLELISTENERPORT  | 4        | INTEGER      |
+| USERCATALOGENABLED        | 16       | BOOLEAN      |
++---------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- gets another UDX directly 
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   get_column_types(
+. . . . . . . . >     cursor(values(1,'dsfs', cast ('sdfsd' as varchar(10)), TIME'12:12:12', 1.2, cast(12.2 as float)))))
+. . . . . . . . > order by 1;
++----------+----------+--------------+
+| COLNAME  | COLTYPE  | COLTYPENAME  |
++----------+----------+--------------+
+| EXPR$0   | 4        | INTEGER      |
+| EXPR$1   | 1        | CHAR         |
+| EXPR$2   | 12       | VARCHAR      |
+| EXPR$3   | 92       | TIME         |
+| EXPR$4   | 3        | DECIMAL      |
+| EXPR$5   | 6        | FLOAT        |
++----------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merges it into table
+0: jdbc:luciddb:> merge into params p
+. . . . . . . . >   using
+. . . . . . . . >     table(get_column_types(
+. . . . . . . . >             cursor(values(1,'dsfs', cast ('sdfsd' as varchar(10)), TIME'12:12:12', 1.2, cast(12.2 as float))))) as temp
+. . . . . . . . >   on p.colname = temp.colname
+. . . . . . . . >   when matched then 
+. . . . . . . . >     update set colname = lower(p.colname)
+. . . . . . . . >   when not matched then 
+. . . . . . . . >     insert (colname, coltype, coltypename)
+. . . . . . . . >     values (temp.colname, temp.coltype, temp.coltypename);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from params order by 1;
++---------------------------+----------+--------------+
+|          COLNAME          | COLTYPE  | COLTYPENAME  |
++---------------------------+----------+--------------+
+| CALCVIRTUALMACHINE        | 12       | VARCHAR      |
+| CHECKPOINTINTERVAL        | 4        | INTEGER      |
+| CODECACHEMAXBYTES         | -5       | BIGINT       |
+| EXPR$0                    | 4        | INTEGER      |
+| EXPR$1                    | 1        | CHAR         |
+| EXPR$2                    | 12       | VARCHAR      |
+| EXPR$3                    | 92       | TIME         |
+| EXPR$4                    | 3        | DECIMAL      |
+| EXPR$5                    | 6        | FLOAT        |
+| FENNELCONFIG              | 12       | VARCHAR      |
+| FENNELDISABLED            | 16       | BOOLEAN      |
+| JAVACOMPILERCLASSNAME     | 12       | VARCHAR      |
+| MOFCLASSNAME              | 12       | VARCHAR      |
+| MOFID                     | 12       | VARCHAR      |
+| NAME                      | 12       | VARCHAR      |
+| SERVERRMIREGISTRYPORT     | 4        | INTEGER      |
+| SERVERSINGLELISTENERPORT  | 4        | INTEGER      |
+| USERCATALOGENABLED        | 16       | BOOLEAN      |
++---------------------------+----------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table params;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- UDX with two cursors
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create function two_cursor_test(c1 cursor, c2 cursor)
+. . . . . . . . > returns table(col1 int, col2 varchar(20))
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class com.lucidera.luciddb.test.udr.TestTwoCursorUdx.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- gets the UDX directly
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   two_cursor_test(
+. . . . . . . . >     cursor(select * from t1),
+. . . . . . . . >     cursor(select * from t2)))
+. . . . . . . . > order by 1;
++-------+--------+
+| COL1  |  COL2  |
++-------+--------+
+| 1     | one    |
+| 2     | dos    |
+| 3     | tres   |
+| 3     | three  |
+| 10    | ten    |
++-------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- inserts and merges it into table
+0: jdbc:luciddb:> create table t12(c1 integer, c2 varchar(20));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t12
+. . . . . . . . >   (select * from table(
+. . . . . . . . >      two_cursor_test(
+. . . . . . . . >        cursor(select * from t1),
+. . . . . . . . >        cursor(select * from t2)))
+. . . . . . . . >      where col2 in ('one','ten'));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t12 t
+. . . . . . . . >   using
+. . . . . . . . >     table(two_cursor_test(
+. . . . . . . . >             cursor(select * from t1),
+. . . . . . . . >             cursor(select * from t2))) as temp
+. . . . . . . . >   on t.c1 = temp.col1
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set c2 = upper(c2)
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert (c1, c2) values (temp.col1, temp.col2);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t12 order by 1;
++-----+--------+
+| C1  |   C2   |
++-----+--------+
+| 1   | ONE    |
+| 2   | dos    |
+| 3   | tres   |
+| 3   | three  |
+| 10  | TEN    |
++-----+--------+
+0: jdbc:luciddb:> drop table t12;
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -----------------------
+0: jdbc:luciddb:> -- Time dimension tests
+0: jdbc:luciddb:> -----------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select 
+. . . . . . . . >  time_key, 
+. . . . . . . . >  applib.calendar_quarter( time_key ), 
+. . . . . . . . >  applib.fiscal_quarter( time_key, 4 ), 
+. . . . . . . . >  applib.fiscal_month( time_key, 4 ), 
+. . . . . . . . >  applib.fiscal_year( time_key, 4 )
+. . . . . . . . > from table(applib.time_dimension( 1997, 2, 27, 1997, 3, 5))
+. . . . . . . . > order by time_key;
++-------------+---------+---------+---------+---------+
+|  TIME_KEY   | EXPR$1  | EXPR$2  | EXPR$3  | EXPR$4  |
++-------------+---------+---------+---------+---------+
+| 1997-02-27  | Q1CY97  | Q4FY97  | 11      | 1997    |
+| 1997-02-28  | Q1CY97  | Q4FY97  | 11      | 1997    |
+| 1997-03-01  | Q1CY97  | Q4FY97  | 12      | 1997    |
+| 1997-03-02  | Q1CY97  | Q4FY97  | 12      | 1997    |
+| 1997-03-03  | Q1CY97  | Q4FY97  | 12      | 1997    |
+| 1997-03-04  | Q1CY97  | Q4FY97  | 12      | 1997    |
+| 1997-03-05  | Q1CY97  | Q4FY97  | 12      | 1997    |
++-------------+---------+---------+---------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table dt (d date, dow varchar(10), weekend char(1), cqt varchar(10));
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into dt(d, cqt)
+. . . . . . . . >    (select 
+. . . . . . . . >       time_key, 
+. . . . . . . . >       applib.calendar_quarter( time_key )
+. . . . . . . . >       from table(applib.time_dimension( 1997, 2, 27, 1997, 3, 7))
+. . . . . . . . >    );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into dt 
+. . . . . . . . >   using
+. . . . . . . . >     table(applib.time_dimension( 1997, 2, 25, 1997, 3, 5)) as temp
+. . . . . . . . >   on d = temp.time_key
+. . . . . . . . >   when matched then
+. . . . . . . . >     update set dow = temp.day_of_week,
+. . . . . . . . >                weekend = temp.weekend
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert (d, dow)
+. . . . . . . . >     values (temp.time_key, temp.day_of_week);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from dt;
++-------------+------------+----------+---------+
+|      D      |    DOW     | WEEKEND  |   CQT   |
++-------------+------------+----------+---------+
+| 1997-03-06  |            |          | Q1CY97  |
+| 1997-03-07  |            |          | Q1CY97  |
+| 1997-02-25  | Tuesday    |          |         |
+| 1997-02-26  | Wednesday  |          |         |
+| 1997-02-27  | Thursday   | N        | Q1CY97  |
+| 1997-02-28  | Friday     | N        | Q1CY97  |
+| 1997-03-01  | Saturday   | Y        | Q1CY97  |
+| 1997-03-02  | Sunday     | Y        | Q1CY97  |
+| 1997-03-03  | Monday     | N        | Q1CY97  |
+| 1997-03-04  | Tuesday    | N        | Q1CY97  |
+| 1997-03-05  | Wednesday  | N        | Q1CY97  |
++-------------+------------+----------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table dt;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table period (
+. . . . . . . . > time_key_seq integer,
+. . . . . . . . > time_key date,
+. . . . . . . . > quarter integer,
+. . . . . . . . > yr integer,
+. . . . . . . . > calendar_quarter varchar(15) );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into period
+. . . . . . . . > select 
+. . . . . . . . > g_period.time_key_seq,
+. . . . . . . . > g_period.time_key,
+. . . . . . . . > g_period.quarter,
+. . . . . . . . > g_period.yr,
+. . . . . . . . > g_period.calendar_quarter
+. . . . . . . . > from
+. . . . . . . . > (select * from table(applib.time_dimension(1996, 5, 1, 1996, 5, 31)))g_period;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from period
+. . . . . . . . > order by 2;
++---------------+-------------+----------+-------+-------------------+
+| TIME_KEY_SEQ  |  TIME_KEY   | QUARTER  |  YR   | CALENDAR_QUARTER  |
++---------------+-------------+----------+-------+-------------------+
+| 1             | 1996-05-01  | 2        | 1996  | Q2CY96            |
+| 2             | 1996-05-02  | 2        | 1996  | Q2CY96            |
+| 3             | 1996-05-03  | 2        | 1996  | Q2CY96            |
+| 4             | 1996-05-04  | 2        | 1996  | Q2CY96            |
+| 5             | 1996-05-05  | 2        | 1996  | Q2CY96            |
+| 6             | 1996-05-06  | 2        | 1996  | Q2CY96            |
+| 7             | 1996-05-07  | 2        | 1996  | Q2CY96            |
+| 8             | 1996-05-08  | 2        | 1996  | Q2CY96            |
+| 9             | 1996-05-09  | 2        | 1996  | Q2CY96            |
+| 10            | 1996-05-10  | 2        | 1996  | Q2CY96            |
+| 11            | 1996-05-11  | 2        | 1996  | Q2CY96            |
+| 12            | 1996-05-12  | 2        | 1996  | Q2CY96            |
+| 13            | 1996-05-13  | 2        | 1996  | Q2CY96            |
+| 14            | 1996-05-14  | 2        | 1996  | Q2CY96            |
+| 15            | 1996-05-15  | 2        | 1996  | Q2CY96            |
+| 16            | 1996-05-16  | 2        | 1996  | Q2CY96            |
+| 17            | 1996-05-17  | 2        | 1996  | Q2CY96            |
+| 18            | 1996-05-18  | 2        | 1996  | Q2CY96            |
+| 19            | 1996-05-19  | 2        | 1996  | Q2CY96            |
+| 20            | 1996-05-20  | 2        | 1996  | Q2CY96            |
+| 21            | 1996-05-21  | 2        | 1996  | Q2CY96            |
+| 22            | 1996-05-22  | 2        | 1996  | Q2CY96            |
+| 23            | 1996-05-23  | 2        | 1996  | Q2CY96            |
+| 24            | 1996-05-24  | 2        | 1996  | Q2CY96            |
+| 25            | 1996-05-25  | 2        | 1996  | Q2CY96            |
+| 26            | 1996-05-26  | 2        | 1996  | Q2CY96            |
+| 27            | 1996-05-27  | 2        | 1996  | Q2CY96            |
+| 28            | 1996-05-28  | 2        | 1996  | Q2CY96            |
+| 29            | 1996-05-29  | 2        | 1996  | Q2CY96            |
+| 30            | 1996-05-30  | 2        | 1996  | Q2CY96            |
+| 31            | 1996-05-31  | 2        | 1996  | Q2CY96            |
++---------------+-------------+----------+-------+-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into period p
+. . . . . . . . > using table(applib.time_dimension(1996, 5, 12, 1996, 6, 2)) as temp
+. . . . . . . . > on p.time_key = temp.time_key
+. . . . . . . . > when matched then 
+. . . . . . . . >   update set calendar_quarter = lower(p.calendar_quarter)
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (time_key, quarter, yr, calendar_quarter)
+. . . . . . . . >   values (temp.time_key, temp.quarter, temp.yr, temp.calendar_quarter);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from period
+. . . . . . . . > order by 2;
++---------------+-------------+----------+-------+-------------------+
+| TIME_KEY_SEQ  |  TIME_KEY   | QUARTER  |  YR   | CALENDAR_QUARTER  |
++---------------+-------------+----------+-------+-------------------+
+| 1             | 1996-05-01  | 2        | 1996  | Q2CY96            |
+| 2             | 1996-05-02  | 2        | 1996  | Q2CY96            |
+| 3             | 1996-05-03  | 2        | 1996  | Q2CY96            |
+| 4             | 1996-05-04  | 2        | 1996  | Q2CY96            |
+| 5             | 1996-05-05  | 2        | 1996  | Q2CY96            |
+| 6             | 1996-05-06  | 2        | 1996  | Q2CY96            |
+| 7             | 1996-05-07  | 2        | 1996  | Q2CY96            |
+| 8             | 1996-05-08  | 2        | 1996  | Q2CY96            |
+| 9             | 1996-05-09  | 2        | 1996  | Q2CY96            |
+| 10            | 1996-05-10  | 2        | 1996  | Q2CY96            |
+| 11            | 1996-05-11  | 2        | 1996  | Q2CY96            |
+| 12            | 1996-05-12  | 2        | 1996  | q2cy96            |
+| 13            | 1996-05-13  | 2        | 1996  | q2cy96            |
+| 14            | 1996-05-14  | 2        | 1996  | q2cy96            |
+| 15            | 1996-05-15  | 2        | 1996  | q2cy96            |
+| 16            | 1996-05-16  | 2        | 1996  | q2cy96            |
+| 17            | 1996-05-17  | 2        | 1996  | q2cy96            |
+| 18            | 1996-05-18  | 2        | 1996  | q2cy96            |
+| 19            | 1996-05-19  | 2        | 1996  | q2cy96            |
+| 20            | 1996-05-20  | 2        | 1996  | q2cy96            |
+| 21            | 1996-05-21  | 2        | 1996  | q2cy96            |
+| 22            | 1996-05-22  | 2        | 1996  | q2cy96            |
+| 23            | 1996-05-23  | 2        | 1996  | q2cy96            |
+| 24            | 1996-05-24  | 2        | 1996  | q2cy96            |
+| 25            | 1996-05-25  | 2        | 1996  | q2cy96            |
+| 26            | 1996-05-26  | 2        | 1996  | q2cy96            |
+| 27            | 1996-05-27  | 2        | 1996  | q2cy96            |
+| 28            | 1996-05-28  | 2        | 1996  | q2cy96            |
+| 29            | 1996-05-29  | 2        | 1996  | q2cy96            |
+| 30            | 1996-05-30  | 2        | 1996  | q2cy96            |
+| 31            | 1996-05-31  | 2        | 1996  | q2cy96            |
+|               | 1996-06-01  | 2        | 1996  | Q2CY96            |
+|               | 1996-06-02  | 2        | 1996  | Q2CY96            |
++---------------+-------------+----------+-------+-------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table period;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema ct cascade;
+0: jdbc:luciddb:> !quit

@@ -1,0 +1,221 @@
+0: jdbc:luciddb:> set schema 'stkmkt';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- BB bug3306
+0: jdbc:luciddb:> select t1.security from jantran t1
+. . . . . . . . > except
+. . . . . . . . > select t1.security from febtran t1
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from febtran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from martran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from martran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from aprtran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from aprtran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from maytran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from maytran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from juntran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from juntran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from jultran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from jultran t1
+. . . . . . . . >  except 
+. . . . . . . . >  select t1.security from augtran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from augtran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from septran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from septran t1
+. . . . . . . . >  except 
+. . . . . . . . >  select t1.security from octtran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from octtran t1
+. . . . . . . . >  except 
+. . . . . . . . >  select t1.security from novtran t1)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.security from novtran t1
+. . . . . . . . >  except
+. . . . . . . . >  select t1.security from dectran t1)
+. . . . . . . . > order by 1
+. . . . . . . . > ;
++-----------+
+| SECURITY  |
++-----------+
+| COM1      |
+| COM10     |
+| COM10     |
+| COM10     |
+| COM10     |
+| COM3      |
+| COM3      |
+| COM3      |
+| COM3      |
+| COM4      |
+| COM5      |
+| COM5      |
+| COM6      |
+| COM6      |
+| COM7      |
+| COM7      |
+| COM7      |
+| COM8      |
+| COM8      |
+| COM9      |
+| COM9      |
+| COM9      |
++-----------+
+0: jdbc:luciddb:> --BBTEST: Find securities that traded in each month that
+0: jdbc:luciddb:> --        didn't trade in the following month in CY97.
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select t1.symbol, t1.company
+. . . . . . . . > from tickers t1, jantran t2
+. . . . . . . . > where t1.symbol = t2.security
+. . . . . . . . > except
+. . . . . . . . > select t1.symbol, t1.company
+. . . . . . . . > from tickers t1, febtran t2
+. . . . . . . . > where t1.symbol = t2.security
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, febtran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, martran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, martran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, aprtran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, aprtran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, maytran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, maytran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, juntran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, juntran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, jultran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, jultran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, augtran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, augtran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, septran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, septran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, octtran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, octtran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, novtran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > UNION ALL
+. . . . . . . . > (select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, novtran t2
+. . . . . . . . >  where t1.symbol = t2.security
+. . . . . . . . >  except
+. . . . . . . . >  select t1.symbol, t1.company
+. . . . . . . . >  from tickers t1, dectran t2
+. . . . . . . . >  where t1.symbol = t2.security)
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++---------+-----------------+
+| SYMBOL  |     COMPANY     |
++---------+-----------------+
+| COM1    | Company No. 1   |
+| COM10   | Company No. 10  |
+| COM10   | Company No. 10  |
+| COM10   | Company No. 10  |
+| COM10   | Company No. 10  |
+| COM3    | Company No. 3   |
+| COM3    | Company No. 3   |
+| COM3    | Company No. 3   |
+| COM3    | Company No. 3   |
+| COM4    | Company No. 4   |
+| COM5    | Company No. 5   |
+| COM5    | Company No. 5   |
+| COM6    | Company No. 6   |
+| COM6    | Company No. 6   |
+| COM7    | Company No. 7   |
+| COM7    | Company No. 7   |
+| COM7    | Company No. 7   |
+| COM8    | Company No. 8   |
+| COM8    | Company No. 8   |
+| COM9    | Company No. 9   |
+| COM9    | Company No. 9   |
+| COM9    | Company No. 9   |
++---------+-----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- BB bug3313
+0: jdbc:luciddb:> --BBTEST: Find clients who made > $100 in the 
+0: jdbc:luciddb:> --        1st and 2nd months of CY97.
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select t1.account account,
+. . . . . . . . >        t2.acct_name account_name,
+. . . . . . . . >        sum ( (sale_price * numshares) - (purchase_price * numshares) - commission) profit
+. . . . . . . . > from jantran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no 
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > having sum ( (sale_price * numshares) - (purchase_price * numshares) - commission) > 100
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account,
+. . . . . . . . >        t2.acct_name account_name,
+. . . . . . . . >        sum ( (sale_price * numshares) - (purchase_price * numshares) - commission) profit
+. . . . . . . . > from febtran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no 
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > having sum ( (sale_price * numshares) - (purchase_price * numshares) - commission) > 100
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+---------+
+| ACCOUNT  | ACCOUNT_NAME  | PROFIT  |
++----------+---------------+---------+
++----------+---------------+---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

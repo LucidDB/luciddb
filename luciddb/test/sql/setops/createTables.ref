@@ -1,0 +1,178 @@
+0: jdbc:luciddb:> create schema stkmkt
+. . . . . . . . > ;
+0: jdbc:luciddb:> set schema 'stkmkt'
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table accounts(acct_no integer primary key, 
+. . . . . . . . >                       acct_name varchar(50), 
+. . . . . . . . >                       acct_remarks varchar(100))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table exchange(symbol varchar(10) primary key,
+. . . . . . . . >                       name   varchar(50), 
+. . . . . . . . >                       location varchar(100))
+. . . . . . . . > ;
+0: jdbc:luciddb:> create table tickers(symbol char(5) primary key, 
+. . . . . . . . >                      company varchar(100),
+. . . . . . . . >                      exchange varchar(10))
+. . . . . . . . > --                     exchange varchar(10) references exchange(symbol))
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table jantran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table febtran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table martran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table aprtran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table maytran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table juntran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table jultran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table augtran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table septran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table octtran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table novtran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table dectran(tid char(10) UNIQUE, 
+. . . . . . . . >                      account integer, 
+. . . . . . . . >                      security char(5), 
+. . . . . . . . > --                     account integer references accounts(acct_no), 
+. . . . . . . . > --                     security char(5) references tickers(symbol), 
+. . . . . . . . >                      purchase_time timestamp, 
+. . . . . . . . >                      purchase_price double, 
+. . . . . . . . >                      sale_time timestamp,
+. . . . . . . . >                      sale_price double,
+. . . . . . . . >                      numshares integer, 
+. . . . . . . . >                      commission double)
+. . . . . . . . > ;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
