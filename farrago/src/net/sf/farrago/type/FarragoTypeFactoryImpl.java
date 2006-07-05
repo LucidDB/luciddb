@@ -75,7 +75,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
     public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
-        super(new OJClassMap(FarragoSyntheticObject.class));
+        super(new OJClassMap(FarragoSyntheticObject.class, false));
 
         this.repos = repos;
 
