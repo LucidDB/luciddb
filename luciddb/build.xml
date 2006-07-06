@@ -212,6 +212,7 @@ ${farrago.test.jvmargs}
           <exclude name="VI/build.xml"/>
           <exclude name="hashjoin/**"/>
           <exclude name="dml/delete/**"/>
+          <exclude name="setops/**"/>
           <exclude name="sequences/build.xml"/>
         </fileset>
       </path>
