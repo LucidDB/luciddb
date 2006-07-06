@@ -39,6 +39,7 @@ without_dist_build=false
 without_tests=true
 with_nightly_tests=false
 FARRAGO_FLAGS=""
+FARRAGO_DIST_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
 
 # extended globbing for case statement
@@ -67,7 +68,10 @@ while [ -n "$1" ]; do
             with_fenne=false;;
             
         --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
-        --with?(out)-debug) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+        --with?(out)-debug) 
+            FARRAGO_DIST_FLAGS="${FARRAGO_DIST_FLAGS} $1";
+            FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
+
         --skip-fennel-thirdparty-build|--without-fennel-thirdparty-build) 
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --skip-fennel-build|--without-fennel-build) 
@@ -127,7 +131,7 @@ else
     cd ${luciddb_dir}/../farrago
     cp -f ./dist/ExampleRelease.properties ./dist/FarragoRelease.properties
     cd ${luciddb_dir}
-    ./distBuild.sh --without-init-build
+    ./distBuild.sh --without-init-build ${FARRAGO_DIST_FLAGS}
 fi
 
 nightlylog_dir=${luciddb_dir}/nightlylog
