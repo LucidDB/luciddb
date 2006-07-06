@@ -51,31 +51,25 @@ static const double DBL_TEST_MAX = 874.5;
 #define SUM_INDEX 1
 #define MIN_INDEX 2
 #define MAX_INDEX 3
-#define FV_INDEX 4
-#define LV_INDEX 5
 
 #define SAMPLE_SIZE 10
 
 
 static int64_t intTestData[][SAMPLE_SIZE] =
 {
-    {12,33,52, 14, 10, 63,  5,INT_TEST_MIN, 49,INT_TEST_MAX},  // test data values
-    {12,45,97,111,121,184,189,         191,240,         345},  // running SUM of test values
-    {12,12,12, 12, 10, 10,  5,           2,  2,           2},  // running MIN values
-    {12,33,52, 52, 52, 63, 63,          63, 63,         105},  // running MAX values
-    {12,12,12, 12, 12, 12, 12,          12, 12,          12},  // running FIRST_VALUE values
-    {12,33,52, 14, 10, 63,  5,INT_TEST_MIN, 49,INT_TEST_MAX},  // running LAST_VALUE values
+    {12,33,52,14,10,63,5,INT_TEST_MIN,49,INT_TEST_MAX},  // test data values
+    {12,45,97,111,121,184,189,191,240,345},              // running sum of test values
+    {12,12,12,12,10,10,5,2,2,2},                         // running MIN values
+    {12,33,52,52,52,63,63,63,63,105}                     // running MAX values
 };
 
 
 static double dblTestData[][SAMPLE_SIZE] =
 {
-    {63.5, 63.1, 92.9,DBL_TEST_MIN,  6.3, 38.5, 23.1,DBL_TEST_MAX,  44.7, 498.0}, // values
-    {63.5,126.6,219.5,       221.0,227.3,265.8,288.9,      1163.4,1208.1,1706.1}, // SUM
-    {63.5, 63.1, 63.1,         1.5,  1.5,  1.5,  1.5,         1.5,   1.5,   1.5}, // MIN
-    {63.5, 63.5, 92.9,        92.9, 92.9, 92.9, 92.9,       874.5, 874.5, 874.5}, // MAX
-    {63.5, 63.5, 63.5,        63.5, 63.5, 63.5, 92.9,       874.5, 874.5, 874.5}, // FIRST_VALUE
-    {63.5, 63.5, 92.9,        92.9, 92.9, 92.9, 92.8,       874.5, 874.5, 874.5}, // LAST_VALUE
+    {63.5,63.1,92.9,DBL_TEST_MIN,6.3,38.5,23.1,DBL_TEST_MAX,44.7,498.0},
+    {63.5,126.6,219.5,221.0,227.3,265.8,288.9,1163.4,1208.1,1706.1},
+    {63.5,63.1,63.1,1.5,1.5,1.5,1.5,1.5,1.5,1.5},
+    {63.5,63.5,92.9,92.9,92.9,92.9,92.9,874.5,874.5,874.5}
 };
 
 static vector<TupleData*>  testTuples;
@@ -127,7 +121,7 @@ CalcExtMinMaxTest::checkWarnings(Calculator& calc, string expected)
 {
     try {
         calc.exec();
-    } catch (...) {
+    } catch(...) {
         BOOST_FAIL("An exception was thrown while running program");
     }
     
@@ -172,7 +166,8 @@ CalcExtMinMaxTest::initWindowedAggDataBlock(
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
-    } catch (FennelExcn& ex) {
+    }
+    catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
@@ -198,10 +193,10 @@ WinAggAddTest(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
+        pg << "O s8,s8,s8,s8,s8;" << endl;
         pg << "I s8,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d,d,d;" << endl;
+        pg << "O s8,d,d,d,d;" << endl;
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -211,8 +206,6 @@ WinAggAddTest(
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
-    pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
-    pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -221,18 +214,18 @@ WinAggAddTest(
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
-    } catch (FennelExcn& ex) {
+    }
+    catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
     
     TupleDataWithBuffer outTuple( calc.getOutputRegisterDescriptor());
 
     for (int i=0; i < 10; i++){
-        TupleDataWithBuffer *inTuple = 
-            new TupleDataWithBuffer(calc.getInputRegisterDescriptor());
-        testTuples.push_back(inTuple);
+        TupleDataWithBuffer *inTuple = new TupleDataWithBuffer( calc.getInputRegisterDescriptor());
+        testTuples.push_back( inTuple);
 
-        calc.bind(inTuple, &outTuple);
+        calc.bind( inTuple, &outTuple);
         
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
@@ -252,12 +245,10 @@ void checkAddInt(
     int64_t testData[][SAMPLE_SIZE],
     int index)
 {
-    BOOST_CHECK_EQUAL(index+1, *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
-    BOOST_CHECK_EQUAL(testData[SUM_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
-    BOOST_CHECK_EQUAL(testData[MIN_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
-    BOOST_CHECK_EQUAL(testData[MAX_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
-    BOOST_CHECK_EQUAL(testData[FV_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[5].pData)));
-    BOOST_CHECK_EQUAL(testData[LV_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[6].pData)));
+    BOOST_CHECK(index+1 == *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
+    BOOST_CHECK(testData[SUM_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
+    BOOST_CHECK(testData[MIN_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
+    BOOST_CHECK(testData[MAX_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
 }
 
 void checkDropInt(
@@ -266,12 +257,10 @@ void checkDropInt(
     int index)
 {
     if (index > 0) {
-        BOOST_CHECK_EQUAL(index, *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
-        BOOST_CHECK_EQUAL(testData[SUM_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
-        BOOST_CHECK_EQUAL(testData[MIN_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
-        BOOST_CHECK_EQUAL(testData[MAX_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
-        BOOST_CHECK_EQUAL(testData[FV_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[5].pData)));
-        BOOST_CHECK_EQUAL(testData[LV_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[6].pData)));
+        BOOST_CHECK(index == *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
+        BOOST_CHECK(testData[SUM_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
+        BOOST_CHECK(testData[MIN_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
+        BOOST_CHECK(testData[MAX_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
     }
 }
 
@@ -286,10 +275,10 @@ WinAggDropTest(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
+        pg << "O s8,s8,s8,s8,s8;" << endl;
         pg << "I s8,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d,d,d;" << endl;
+        pg << "O s8,d,d,d,d;" << endl;
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -299,8 +288,6 @@ WinAggDropTest(
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
-    pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
-    pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -309,7 +296,8 @@ WinAggDropTest(
     // Assemble the script
     try {
         calc.assemble(pg.str().c_str());
-    } catch (FennelExcn& ex) {
+    }
+    catch (FennelExcn& ex) {
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
 
@@ -333,7 +321,7 @@ WinAggDropTest(
 
         (*check)(&outTuple, testData, i);
     }
-    assert(0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
+    assert( 0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
 }
 
 void checkAddDbl(
@@ -350,19 +338,11 @@ void checkAddDbl(
     
     double tdMin = testData[MIN_INDEX][index];
     double calcMin = *(reinterpret_cast<const double*>((*outTuple)[3].pData));
-    BOOST_CHECK_EQUAL(tdMin, calcMin);
+    BOOST_CHECK(tdMin == calcMin);
     
     double tdMax = testData[MAX_INDEX][index];
     double calcMax = *(reinterpret_cast<const double*>((*outTuple)[4].pData));
-    BOOST_CHECK_EQUAL(tdMax, calcMax);
-    
-    double tdFv = testData[FV_INDEX][index];
-    double calcFv = *(reinterpret_cast<const double*>((*outTuple)[5].pData));
-    BOOST_CHECK_EQUAL(tdFv, calcFv);
-    
-    double tdLv = testData[LV_INDEX][index];
-    double calcLv = *(reinterpret_cast<const double*>((*outTuple)[6].pData));
-    BOOST_CHECK_EQUAL(tdLv, calcLv);
+    BOOST_CHECK(tdMax == calcMax);
 }
 
 void checkDropDbl(
