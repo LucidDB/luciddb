@@ -121,6 +121,7 @@ public class FarragoSqlRunnerTest extends FarragoTestCase
     
     public void testScriptWithRedirect() throws IOException, SQLException
     {
+        addDiffMask("\\$Id.*\\$");
         String scriptBase = testScript.substring(0, testScript.lastIndexOf('.'));
         File f = new File(scriptBase);
         PrintStream stream = new PrintStream(openTestLogOutputStream(f));
