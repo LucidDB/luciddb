@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/explain.sql#4 $
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/explain.sql#4 $
 0: jdbc:farrago:> -- Test EXPLAIN command.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -126,15 +126,15 @@
 0: jdbc:farrago:> -- first explain without tweak
 0: jdbc:farrago:> explain plan including all attributes for
 . . . . . . . . > select count(*) from (values(0));
-+----------------------------------------------------------------------------------------------------------------------+
-|                                                       column0                                                        |
-+----------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter: rowcount = 1.0, cumulative cost = 5.0                                                     |
-|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1.0, cumulative cost = 4.0                                      |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1.0, cumulative cost = 3.0                             |
-|       FennelCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[true], $f0=[$t2]): rowcount = 1.0, cumulative cost = 2.0  |
-|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                                     |
-+----------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------+
+|                                                 column0                                                  |
++----------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter: rowcount = 1.0, cumulative cost = 5.0                                         |
+|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1.0, cumulative cost = 4.0                          |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1.0, cumulative cost = 3.0                 |
+|       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0  |
+|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                         |
++----------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create jar test_personality_plugin 
 . . . . . . . . > library 'class net.sf.farrago.test.FarragoTestPersonalityFactory' 
@@ -145,15 +145,15 @@
 0: jdbc:farrago:> -- explain again with tweak
 0: jdbc:farrago:> explain plan including all attributes for
 . . . . . . . . > select count(*) from (values(0));
-+----------------------------------------------------------------------------------------------------------------------+
-|                                                       column0                                                        |
-+----------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 1000004.0                                         |
-|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1000000.0, cumulative cost = 4.0                                |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 3.0                       |
-|       FennelCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[true], $f0=[$t2]): rowcount = 1.0, cumulative cost = 2.0  |
-|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                                     |
-+----------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------+
+|                                                 column0                                                  |
++----------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter: rowcount = 1000000.0, cumulative cost = 1000004.0                             |
+|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1000000.0, cumulative cost = 4.0                    |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1000000.0, cumulative cost = 3.0           |
+|       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0  |
+|         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                         |
++----------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End explain.sql

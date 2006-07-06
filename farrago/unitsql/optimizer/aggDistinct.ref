@@ -414,7 +414,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 '            FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '              FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '                FennelSortRel(key=[[0, 1]], discardDuplicates=[true])'
-'                  FennelCalcRel(expr#0..11=[{inputs}], expr#12=[OR($t8, $t9)], $f0=[$t11], $f1=[$t0])'
+'                  FennelCalcRel(expr#0..11=[{inputs}], $f0=[$t11], $f1=[$t0])'
 '                    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]], inputDirectiveProj=[[]])'
 '                      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '        FennelAggRel(groupCount=[1], agg#0=[COUNT(1)])'
@@ -820,7 +820,7 @@ Error: From line 2, column 23 to line 2, column 25: Column 'SAL' not found in an
 '                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      LhxAggRel(groupCount=[1], agg#0=[COUNT(1)])'
 '        LhxAggRel(groupCount=[2])'
-'          FennelCalcRel(expr#0..5=[{inputs}], expr#6=[OR($t2, $t3)], $f0=[$t5], $f1=[$t0])'
+'          FennelCalcRel(expr#0..5=[{inputs}], $f0=[$t5], $f1=[$t0])'
 '            FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2, 3]], inputDirectiveProj=[[]])'
 '              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2, 8, 9]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
