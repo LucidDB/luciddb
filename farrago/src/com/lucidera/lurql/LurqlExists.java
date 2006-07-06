@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -23,24 +23,22 @@ package com.lucidera.lurql;
 import java.util.*;
 import java.io.*;
 
-import org.eigenbase.util.*;
-
 /**
- * LurqlQuery represents the parsed form of a LURQL query.
+ * LurqlExists represents an exists clause within a LURQL query.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlQuery extends LurqlQueryNode
+public class LurqlExists extends LurqlQueryNode
 {
     private final List selectList;
+    
+    private final LurqlPathSpec pathSpec;
 
-    private final LurqlQueryNode root;
-
-    public LurqlQuery(List selectList, LurqlQueryNode root)
+    public LurqlExists(List selectList, LurqlPathSpec pathSpec)
     {
-        this.selectList = Collections.unmodifiableList(selectList);
-        this.root = root;
+        this.selectList = selectList;
+        this.pathSpec = pathSpec;
     }
 
     public List getSelectList()
@@ -48,37 +46,19 @@ public class LurqlQuery extends LurqlQueryNode
         return selectList;
     }
 
-    public LurqlQueryNode getRoot()
+    public LurqlPathSpec getPathSpec()
     {
-        return root;
-    }
-
-    static void unparseSelectList(PrintWriter pw, List selectList)
-    {
-        Iterator iter = selectList.iterator();
-        while (iter.hasNext()) {
-            String id = iter.next().toString();
-            if (id.equals("*")) {
-                pw.print(id);
-            } else {
-                StackWriter.printSqlIdentifier(pw, id);
-            }
-            if (iter.hasNext()) {
-                pw.print(", ");
-            }
-        }
+        return pathSpec;
     }
 
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
-        pw.print("select ");
-        unparseSelectList(pw, selectList);
-        pw.println();
-        pw.println("from");
-        root.unparse(pw);
-        pw.println(";");
+        pw.print("exists ");
+        LurqlQuery.unparseSelectList(pw, selectList);
+        pw.print(" in ");
+        pathSpec.unparse(pw);
     }
 }
 
-// End LurqlQuery.java
+// End LurqlExists.java

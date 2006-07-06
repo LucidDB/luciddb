@@ -1,8 +1,8 @@
 /*
 // $Id$
 // Farrago is an extensible data management system.
-// Copyright (C) 2005-2005 LucidEra, Inc.
-// Copyright (C) 2005-2005 The Eigenbase Project
+// Copyright (C) 2006-2006 LucidEra, Inc.
+// Copyright (C) 2006-2006 The Eigenbase Project
 //
 // This program is free software; you can redistribute it and/or modify it
 // under the terms of the GNU General Public License as published by the Free
@@ -27,56 +27,56 @@ import javax.jmi.model.*;
 
 import org.eigenbase.jmi.*;
 
+import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.edge.*;
 
 /**
- * LurqlPlanEdge is a follow edge in a LURQL plan graph.  (TODO:  factor
- * out subclass.)
+ * LurqlPlanExistsEdge implements the exists predicate within a
+ * LURQL plan graph.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlPlanEdge extends DirectedEdge
+public class LurqlPlanExistsEdge extends LurqlPlanEdge
 {
-    /**
-     * String representation of this edge.
-     */
-    protected String stringRep;
+    public static final LurqlPlanExistsEdge [] EMPTY_ARRAY =
+        new LurqlPlanExistsEdge[0];
+    
+    private final DirectedGraph subgraph;
 
-    LurqlPlanEdge(
+    private final Set projectSet;
+
+    LurqlPlanExistsEdge(
         LurqlPlanVertex source,
-        LurqlPlanVertex target)
+        LurqlPlanVertex target,
+        DirectedGraph subgraph,
+        Set projectSet)
     {
         super(source, target);
-    }
+        
+        this.subgraph = subgraph;
+        this.projectSet = projectSet;
 
-    public LurqlPlanVertex getPlanSource()
-    {
-        return (LurqlPlanVertex) getSource();
-    }
-    
-    public LurqlPlanVertex getPlanTarget()
-    {
-        return (LurqlPlanVertex) getTarget();
-    }
-    
-    public String toString()
-    {
-        return stringRep;
-    }
-
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof LurqlPlanEdge)) {
-            return false;
+        StringBuffer sb = new StringBuffer();
+        sb.append(getPlanSource().getName());
+        sb.append("->exists");
+        if (projectSet != null) {
+            sb.append(projectSet.toString());
         }
-        return stringRep.equals(obj.toString());
+        sb.append("->");
+        sb.append(getPlanTarget().getName());
+        stringRep = sb.toString();
     }
 
-    public int hashCode()
+    DirectedGraph getSubgraph()
     {
-        return stringRep.hashCode();
+        return subgraph;
+    }
+
+    Set getProjectSet()
+    {
+        return projectSet;
     }
 }
 
-// End LurqlPlanEdge.java
+// End LurqlPlanExistsEdge.java

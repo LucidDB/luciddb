@@ -62,8 +62,7 @@ List SelectList() :
     (
         <STAR>
         {
-            list = new ArrayList();
-            list.add("*");
+            list = Collections.singletonList("*");
         }
         | list = IdentifierList()
     )
@@ -133,6 +132,8 @@ LurqlFilter Filter() :
     Set values;
     String sqlQuery;
     LurqlDynamicParam param;
+    LurqlPathSpec existsPathSpec;
+    List existsSelectList = null;
 }
 {
     attributeName = Identifier()
@@ -166,6 +167,17 @@ LurqlFilter Filter() :
             }
         )
     )
+    |
+    <EXISTS>
+    [ existsSelectList = SelectList() <IN> ]
+    existsPathSpec = PathSpec()
+    {
+        if (existsSelectList == null) {
+            existsSelectList = Collections.singletonList("*");
+        }
+        return new LurqlFilter(
+            new LurqlExists(existsSelectList, existsPathSpec));
+    }
 }
 
 LurqlRoot SimpleRoot() :
@@ -465,6 +477,7 @@ TOKEN :
     | < RSQUARE: "]" >
     | < QMARK: "?" >
     | < UNION: "union" >
+    | < EXISTS: "exists" >
     | < GATHER: "gather" >
     | < THEN: "then" >
     | < FOLLOW: "follow" >

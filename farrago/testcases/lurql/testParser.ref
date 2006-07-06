@@ -15,7 +15,7 @@ Was expecting one of:
 
 # Test a mish-mash of parsable constructs.
 PARSE RESULT:
-select "goober", "bloob" 
+select "goober", "bloob"
 from
 (
     class "x" as "m"
@@ -37,7 +37,19 @@ from
     union
     class "y" as "n"
     where
-        "beebee" = 'c'
+        "beebee" = 'c' and
+        exists * in (
+            follow as "p"
+        ) and
+        exists "blaz" in (
+            follow as "ee"
+        ) and
+        exists * in (
+            follow as "ff"
+        ) and
+        exists "brat", "wurst" in (
+            follow as "ff"
+        )
     then (
         recursively (
             follow as "t"
