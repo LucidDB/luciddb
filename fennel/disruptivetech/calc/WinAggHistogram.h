@@ -21,8 +21,8 @@
 // WinAggHistogram - Windowed Aggregation Histogram object.
 */
 
-#ifndef Fennel_WinAggAccum_Included
-#define Fennel_WinAggAccum_Included
+#ifndef Fennel_WinAggHistogram_Included
+#define Fennel_WinAggHistogram_Included
 
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/disruptivetech/calc/CalcCommon.h"
@@ -30,6 +30,7 @@
 
 #include <utility>
 #include <set>
+#include <deque>
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -54,7 +55,8 @@ public:
     WinAggHistogram():
         currentSum(0),
         currentWindow(),
-        nullRows()
+        nullRows(),
+        queue()
     {}
 
     ~WinAggHistogram()
@@ -75,7 +77,10 @@ public:
         }
     } TupleDataCompare;
         
+    // REVIEW: jhyde, 2006/6/14: Use initcaps for type names.
     typedef multiset<TupleDatum*, TupleDataCompare> winAggData;
+
+    typedef deque<TupleDatum*> WinAggQueue;
 
     // data types to do NULL row accounting
     typedef struct _TuplePtrCompare
@@ -87,7 +92,7 @@ public:
     } TuplePtrCompare;
     
     typedef set<TupleDatum*, TuplePtrCompare> winAggNullData;
-    
+
 
     //! addRow - Adds new value to tree and updates
     //! the running sum for current values.
@@ -96,13 +101,16 @@ public:
     //
     void addRow(RegisterRef<STDTYPE>* node)
     {
-        // Add the new node to the accumulator strucuture
+        // Add the new node to the histogram strucuture
         TupleDatum *pDatum = node->getBinding();
 
         if (!pDatum->isNull()) {
             (void) currentWindow.insert(pDatum);
 
-            // Update the running sum for the accumulator
+            // Add to the FIFO queue.
+            queue.push_back(pDatum);
+
+            // Update the running sum for the histogram
             STDTYPE val = node->value();
             currentSum += val;
         } else {
@@ -111,10 +119,10 @@ public:
     }
     
     
-    //! addRow - Adds new value to tree and updates
+    //! dropRow - Removes value from tree and updates
     //! the running sum for current values.
     //!
-    //! Input - New value to be added to the tree
+    //! Input - Value to be removed from the tree
     //
     void dropRow(RegisterRef<STDTYPE>* node)
     {
@@ -123,7 +131,7 @@ public:
         if (!pDatum->isNull()) {
             assert(0 != currentWindow.size());
         
-            // remove the entry from the accumulator.  The entries are in a
+            // remove the entry from the histogram.  The entries are in a
             // multiset. The key is the the addresess of the data set. A comparator
             // was supplied to sort by the tuple contents.
             STDTYPE* pData = node->refer();
@@ -139,9 +147,12 @@ public:
                     break;
                 }
             }
+
+            // Remove from the FIFO queue.
+            queue.pop_front();
         } else {
             assert(0 != nullRows.size());
-            int count = nullRows.erase( pDatum);
+            int count = nullRows.erase(pDatum);
             assert(1 == count);
         }
     }
@@ -156,10 +167,6 @@ public:
             TupleDatum *td = *(currentWindow.begin());
             PBuffer pBuffer = const_cast<PBuffer>(td->pData);
             STDTYPE *pData = reinterpret_cast<STDTYPE*>(pBuffer);
-            
-            
-//            STDTYPE *pData = reinterpret_cast<STDTYPE*>
-//                (const_cast<PBuffer>((*(currentWindow.begin()))->pData));
             node->value(*pData);
         } else {
             node->toNull();
@@ -196,8 +203,7 @@ public:
     //! Return is always int64_t
     void getCount(RegisterRef<int64_t>* node)
     {
-        node->value( currentWindow.size() + nullRows.size());
-        
+        node->value(currentWindow.size() + nullRows.size());
     }
 
     //! getAvg - calculates and returns the average over the values currently
@@ -209,14 +215,43 @@ public:
         node->value((0 != currentWindow.size()) ? (currentSum / static_cast<STDTYPE>(currentWindow.size())) : 0);
     }
     
+    //! getFirstValue - returns the first value which entered the tree
+    //!
+    //! Returns NULL if the window is empty.
+    void getFirstValue(RegisterRef<STDTYPE>* node)
+    {
+        TupleDatum *td = queue.front();
+	PBuffer pBuffer = const_cast<PBuffer>(td->pData);
+	STDTYPE *pData = reinterpret_cast<STDTYPE*>(pBuffer);
+	node->value(*pData);
+    }
+
+    //! getLastValue - returns the last value which entered the tree
+    //!
+    //! Returns NULL if the window is empty.
+    void getLastValue(RegisterRef<STDTYPE>* node)
+    {
+        TupleDatum *td = queue.back();
+	PBuffer pBuffer = const_cast<PBuffer>(td->pData);
+	STDTYPE *pData = reinterpret_cast<STDTYPE*>(pBuffer);
+	node->value(*pData);
+    }
 
     // Private Data
 private:
-    
+ 
+    // REVIEW (jhyde, 2006/6/14): We need to support char datatypes, so it's
+    // not appropriate that sum has the same type as the values in the
+    // window. Maybe break histogram into a base class only min/max support,
+    // and a derived class with sum. The sum type will be an extra template
+    // parameter.
+   
     STDTYPE currentSum;     // holds the running sum over the window.  Updated
                             // as entries are added/removed
     winAggData currentWindow; // Holds the values currently in the window.
     winAggNullData nullRows;  // Holds Ptrs to Tuples with NULL data entries
+    /// FIFO queue of values, to enable FIRST_VALUE/LAST_VALUE support.
+    WinAggQueue queue;
 };
 
 
@@ -225,4 +260,4 @@ FENNEL_END_NAMESPACE
 
 #endif
 
-// End WinAggAccum.h
+// End WinAggHistogram.h
