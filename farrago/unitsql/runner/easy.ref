@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/runner/easy.sql#1 $
 0: jdbc:farrago:> -- Test script for SqlRunner
 0: jdbc:farrago:> 
 0: jdbc:farrago:> SET SCHEMA 'SALES';
