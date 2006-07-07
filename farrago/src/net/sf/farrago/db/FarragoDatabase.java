@@ -795,13 +795,15 @@ public class FarragoDatabase extends FarragoDbSingleton
             cacheEntry = codeCache.pin(sql, stmtFactory, false);
             executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
-            // Some statements should not be cached. Test this after preparing,
-            // hence after they have been put into the cache.
+
+            // Sometimes the implementation of a statement cannot be shared, and must
+            // not be cached. Test this when the statement is prepared, and so
+            // already in the cache.
             if (! stmt.mayCacheImplementation()) {
-                codeCache.unpin(cacheEntry); 
                 codeCache.detach(cacheEntry); 
                 // does not close the FarragoSessionExecutableStmt
                 cacheEntry = null;
+
             } else if (isStale(stmt.getRepos(), executableStmt)) {
                 cacheEntry.closeAllocation();
                 codeCache.discard(sql); // closes the FarragoSessionExecutableStmt
@@ -810,6 +812,7 @@ public class FarragoDatabase extends FarragoDbSingleton
             }
         } while (executableStmt == null);
 
+        // REVIEW mb: what if stmt is not cached? 
         if (cacheEntry != null)
             owner.addAllocation(cacheEntry);
         return executableStmt;
