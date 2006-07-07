@@ -129,9 +129,9 @@
 +----------------------------------------------------------------------------------------------------------+
 |                                                 column0                                                  |
 +----------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter: rowcount = 1.0, cumulative cost = 5.0                                         |
-|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 1.0, cumulative cost = 4.0                          |
-|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 1.0, cumulative cost = 3.0                 |
+| FennelToIteratorConverter: rowcount = 0.1, cumulative cost = 4.1                                         |
+|   FennelRenameRel(fieldNames=[[EXPR$0]]): rowcount = 0.1, cumulative cost = 4.0                          |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT()]): rowcount = 0.1, cumulative cost = 3.0                 |
 |       FennelCalcRel(expr#0=[{inputs}], expr#1=[true], $f0=[$t1]): rowcount = 1.0, cumulative cost = 2.0  |
 |         FennelValuesRel(tuples=[[{ 0 }]]): rowcount = 1.0, cumulative cost = 1.0                         |
 +----------------------------------------------------------------------------------------------------------+
