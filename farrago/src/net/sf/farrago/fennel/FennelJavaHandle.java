@@ -23,6 +23,8 @@
 package net.sf.farrago.fennel;
 
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
+import java.util.logging.*;
 
 
 /**
@@ -34,6 +36,10 @@ import net.sf.farrago.util.*;
  */
 public class FennelJavaHandle implements FarragoAllocation
 {
+    private static final Logger tracer =
+        FarragoTrace.getFennelJavaHandleTracer();
+
+
     //~ Instance fields -------------------------------------------------------
 
     private long objectHandle;
@@ -53,6 +59,7 @@ public class FennelJavaHandle implements FarragoAllocation
         if (objectHandle == 0) {
             return;
         }
+        tracer.fine(this.toString());
         FennelStorage.deleteObjectHandle(objectHandle);
     }
 
