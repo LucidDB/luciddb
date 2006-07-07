@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/farrago/unitsql/med/csv.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Setup SQL/MED data access to CSV files generated in this directory
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- create a private wrapper for jdbc (don't use the standard jdbc wrapper)

@@ -15,13 +15,15 @@ LcsMultiClusterAppendTest \
 LcsRowScanExecStreamTest \
 LbmEntryTest \
 LbmLoadBitmapTest \
-LbmIndexScanTest \
+LbmSearchTest \
 LbmIntersectExecStreamTest \
 LbmUnionExecStreamTest \
 LhxHashTableTest \
 LhxJoinExecStreamTest \
 LbmMinusExecStreamTest \
-LhxAggExecStreamTest
+LhxAggExecStreamTest \
+LbmNormalizerExecStreamTest \
+LbmSortedAggExecStreamTest
 
 TESTS = $(noinst_PROGRAMS)
 
@@ -32,13 +34,15 @@ LcsMultiClusterAppendTest_SOURCES=LcsMultiClusterAppendTest.cpp
 LcsRowScanExecStreamTest_SOURCES=LcsRowScanExecStreamTest.cpp
 LbmEntryTest_SOURCES=LbmEntryTest.cpp
 LbmLoadBitmapTest_SOURCES=LbmLoadBitmapTest.cpp
-LbmIndexScanTest_SOURCES=LbmIndexScanTest.cpp
+LbmSearchTest_SOURCES=LbmExecStreamTestBase.cpp LbmSearchTest.cpp
 LbmIntersectExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmIntersectExecStreamTest.cpp 
 LbmUnionExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmUnionExecStreamTest.cpp
 LhxHashTableTest_SOURCES=LhxHashTableTest.cpp
 LhxJoinExecStreamTest_SOURCES=LhxJoinExecStreamTest.cpp
 LbmMinusExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmMinusExecStreamTest.cpp
 LhxAggExecStreamTest_SOURCES=LhxAggExecStreamTest.cpp
+LbmNormalizerExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmNormalizerExecStreamTest.cpp
+LbmSortedAggExecStreamTest_SOURCES=LbmExecStreamTestBase.cpp LbmSortedAggExecStreamTest.cpp
 
 # NOTE:  have to repeat $(EXTRA_LDFLAGS) on mingw due to stupid linker.
 

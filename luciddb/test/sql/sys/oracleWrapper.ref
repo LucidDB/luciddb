@@ -1,0 +1,95 @@
+0: jdbc:luciddb:> -- test built-in oracle jdbc wrapper
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check that it's been tagged for browse connect
+0: jdbc:luciddb:> select * from sys_boot.mgmt.browse_connect_foreign_wrappers 
+. . . . . . . . > where foreign_wrapper_name = 'ORACLE'
+. . . . . . . . > order by 2;
++-----------------------+-----------------------------+
+| FOREIGN_WRAPPER_NAME  | BROWSE_CONNECT_DESCRIPTION  |
++-----------------------+-----------------------------+
+| ORACLE                | Oracle Database Connection  |
++-----------------------+-----------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- browse server options
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . >     'ORACLE', 
+. . . . . . . . >     cursor(
+. . . . . . . . >       select '' as option_name, '' as option_value 
+. . . . . . . . >       from sys_boot.jdbc_metadata.empty_view)))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------+
+| OPTION_ORDINAL  |    OPTION_NAME    |                 OPTION_DESCRIPTION                  | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  |           OPTION_CHOICE_VALUE           |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------+
+| 0               | DRIVER_CLASS      | Fully-qualified class name of JDBC driver to load   | true                | -1                     | oracle.jdbc.driver.OracleDriver         |
+| 1               | URL               | JDBC URL for data source                            | true                | -1                     | jdbc:oracle:thin:@machineName:port:SID  |
+| 2               | USER_NAME         | User name for authentication in source DBMS         | false               | -1                     |                                         |
+| 3               | PASSWORD          | Password for authentication in source DBMS          | false               | -1                     |                                         |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | -1                     | FALSE                                   |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 0                      | FALSE                                   |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 1                      | TRUE                                    |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- see extended options available
+0: jdbc:luciddb:> select * from table(
+. . . . . . . . > sys_boot.mgmt.browse_connect_foreign_server(
+. . . . . . . . > 'ORACLE', 
+. . . . . . . . > cursor(
+. . . . . . . . >  values('URL', 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE'),
+. . . . . . . . >        ('EXTENDED_OPTIONS', 'TRUE'))))
+. . . . . . . . > order by option_ordinal, option_choice_ordinal;
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------------+
+| OPTION_ORDINAL  |    OPTION_NAME    |                 OPTION_DESCRIPTION                  | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  |              OPTION_CHOICE_VALUE              |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------------+
+| 0               | DRIVER_CLASS      | Fully-qualified class name of JDBC driver to load   | true                | -1                     | oracle.jdbc.driver.OracleDriver               |
+| 1               | URL               | JDBC URL for data source                            | true                | -1                     | jdbc:oracle:thin:@akela.lucidera.com:1521:XE  |
+| 2               | USER_NAME         | User name for authentication in source DBMS         | false               | -1                     |                                               |
+| 3               | PASSWORD          | Password for authentication in source DBMS          | false               | -1                     |                                               |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | -1                     | TRUE                                          |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 0                      | FALSE                                         |
+| 4               | EXTENDED_OPTIONS  | Whether driver-specific options should be accepted  | true                | 1                      | TRUE                                          |
++-----------------+-------------------+-----------------------------------------------------+---------------------+------------------------+-----------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create oracle server
+0: jdbc:luciddb:> create server my_orcl
+. . . . . . . . > foreign data wrapper ORACLE
+. . . . . . . . > options(
+. . . . . . . . >   url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
+. . . . . . . . >   user_name 'schoi',
+. . . . . . . . >   password 'schoi'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- browse foreign schemas
+0: jdbc:luciddb:> select * from table( sys_boot.mgmt.browse_foreign_schemas('MY_ORCL'))
+. . . . . . . . > order by schema_name;
++---------------+--------------+
+|  SCHEMA_NAME  | DESCRIPTION  |
++---------------+--------------+
+| ANONYMOUS     |              |
+| APPLSYS       |              |
+| APPS          |              |
+| AR            |              |
+| CTXSYS        |              |
+| DBSNMP        |              |
+| DIP           |              |
+| FLOWS_020100  |              |
+| FLOWS_FILES   |              |
+| HR            |              |
+| INV           |              |
+| JTF           |              |
+| LUCIDWH       |              |
+| ONT           |              |
+| ORABKP        |              |
+| OUTLN         |              |
+| SCHOI         |              |
+| SCOTT         |              |
+| SYS           |              |
+| SYSTEM        |              |
+| TSMSYS        |              |
+| WMSYS         |              |
+| XDB           |              |
++---------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop server my_orcl cascade;
+0: jdbc:luciddb:> !quit

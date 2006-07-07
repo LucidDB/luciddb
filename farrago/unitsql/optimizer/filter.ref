@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/filter.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test queries which execute row-by-row filters
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';

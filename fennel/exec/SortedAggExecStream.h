@@ -78,7 +78,12 @@ class SortedAggExecStream : public ConduitExecStream
     inline void setCurGroupByKey();
     inline int  compareGroupByKeys();
     inline ExecStreamResult produce();
-    
+
+protected:
+    virtual AggComputer *newAggComputer(
+        AggFunction aggFunction,
+        TupleAttributeDescriptor const *pAttrDesc);
+   
 public:
     // implement ExecStream
     virtual void prepare(SortedAggExecStreamParams const &params);

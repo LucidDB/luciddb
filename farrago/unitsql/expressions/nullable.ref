@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/nullable.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test expressions on nullable data
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- comparison

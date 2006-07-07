@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/auth.sql#2 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test DDL on Authorization: 
 0: jdbc:farrago:> -- User, Role, Role Inheritance structure
 0: jdbc:farrago:> 

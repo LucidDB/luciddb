@@ -33,7 +33,7 @@ public enum JoinRelType
     LEFT,
     RIGHT,
     FULL;
-
+    
     /**
      * Returns whether a join of this type may generate NULL values on the
      * right-hand side.

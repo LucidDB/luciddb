@@ -100,10 +100,10 @@ merge into emps
                 t_age * 1000);
 select * from emps order by empno;
 
--- more than 1 row in the target table matches the source; per SQL2003, this
+-- more than 1 row in the source table matches the target; per SQL2003, this
 -- should return an error; currently, we do not return an error
-insert into emps(empno, name) values(130, 'JohnClone');
-select * from emps order by empno;
+insert into tempemps values(130, 'JohnClone', 41, 'M', 'Vancouver', null);
+select * from tempemps order by t_empno, t_name;
 merge into emps
     using (select * from tempemps where t_empno = 130) on t_empno = empno
     when matched then
@@ -113,7 +113,33 @@ merge into emps
         insert (empno, name, age, gender, salary, city)
         values(t_empno, upper(t_name), t_age, t_gender, t_age * 1000, t_city);
 select * from emps order by empno, name;
+delete from tempemps where t_name = 'JohnClone';
                 
+-- no insert substatement
+insert into tempemps values(160, 'Pebbles', 60, 'F', 'Foster City', 2);
+select * from tempemps order by t_empno;
+merge into emps
+    using (select * from tempemps) on t_empno = empno
+    when matched then
+        update set name = t_name, city = t_city;
+select * from emps order by empno, name;
+
+-- no update substatement
+merge into emps
+    using (select * from tempemps) on t_empno = empno
+    when not matched then
+        insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
+select * from emps order by empno, name;
+
+-- simple update via a merge
+delete from emps where empno = 130;
+select * from emps order by empno;
+merge into emps e1
+    using (select * from emps) e2 on e1.empno = e2.empno
+    when matched then
+        update set age = e1.age + 1;
+select * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -201,6 +227,20 @@ merge into emps
         insert
             values(t_empno, cast(upper(t_name) as varchar(20)), null, t_gender,
                 cast(t_city as char(30)), t_age, t_age * 1000);
+
+-- no insert substatement
+explain plan for
+merge into emps
+    using (select * from tempemps) on t_empno = empno
+    when matched then
+        update set name = t_name, city = t_city;
+
+-- no update substatement
+explain plan for
+merge into emps
+    using (select * from tempemps) on t_empno = empno
+    when not matched then
+        insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
 
 --------------
 -- Error cases

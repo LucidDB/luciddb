@@ -2691,6 +2691,28 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             ") tablesample substitute('SMALL')");
     }
 
+    public void testRewriteWithoutIdentifierExpansion()
+    {
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(false);
+        tester.checkRewrite(
+            validator,
+            "select * from dept",
+            "SELECT *" + NL + "FROM `DEPT`");
+    }
+
+    public void testRewriteWithIdentifierExpansion()
+    {
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(true);
+        tester.checkRewrite(
+            validator,
+            "select * from dept",
+            "SELECT `DEPT`.`DEPTNO`, `DEPT`.`NAME`"
+            + NL
+            + "FROM `SALES`.`DEPT` AS `DEPT`");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)

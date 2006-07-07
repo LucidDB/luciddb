@@ -23,7 +23,7 @@
 <project name="concurrency" basedir="." default="test">
   <dirname property="concurrency.dir" file="${ant.file.concurrency}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${concurrency.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

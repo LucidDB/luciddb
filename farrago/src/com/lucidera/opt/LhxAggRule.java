@@ -20,14 +20,11 @@
 */
 package com.lucidera.opt;
 
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.List;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.*;
 
 import net.sf.farrago.query.*;
 

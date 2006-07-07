@@ -646,6 +646,12 @@ no sql
 external name 
 'class net.sf.farrago.syslib.FarragoMedUDR.browseConnectServer';
 
+-- A view which can be used as the input cursor for proposed_server_options
+-- when no options are set (initial browse).
+create view browse_connect_empty_options as
+select '' as option_name, '' as option_value
+from sys_boot.jdbc_metadata.empty_view;
+
 -- Returns foreign schemas accessible via a given foreign server.
 create function browse_foreign_schemas(
   foreign_server_name varchar(128))

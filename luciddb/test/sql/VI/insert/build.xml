@@ -23,7 +23,7 @@
 <project name="vi_insert" basedir="." default="test">
   <dirname property="vi_insert.dir" file="${ant.file.vi_insert}" />
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_insert.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

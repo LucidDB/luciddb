@@ -69,9 +69,24 @@ public class OJClassMap
      */
     private int id;
 
+    /**
+     * Do generated classes need value constructors?  This can blow the
+     * Java virtual machine's limit on number of parameters per method,
+     * and in Farrago we don't actually use anything but the
+     * default constructor.
+     */
+    private final boolean defineValueConstructors;
+
     public OJClassMap(Class syntheticSuperClass)
     {
+        this(syntheticSuperClass, true);
+    }
+
+    public OJClassMap(
+        Class syntheticSuperClass, boolean defineValueConstructors)
+    {
         this.syntheticSuperClass = syntheticSuperClass;
+        this.defineValueConstructors = defineValueConstructors;
     }
 
     /**
@@ -131,7 +146,8 @@ public class OJClassMap
             ClassDeclaration decl = makeDeclaration(
                 className, classes, fieldNames);
             clazz = new OJSyntheticClass(
-                env, declarer, classes, fieldNames, decl, description);
+                env, declarer, classes, fieldNames, decl, description,
+                defineValueConstructors);
             // register ourself
             try {
                 declarer.addClass(clazz);

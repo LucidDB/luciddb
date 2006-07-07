@@ -45,8 +45,9 @@ class LhxHashTableTest : virtual public SegStorageTestBase
     uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable, 
         SharedLhxPartition destPartition);
 
-    uint readPartition(LhxHashInfo &hashInfo,
-        SharedLhxPartition srcPartition, bool setDeallocate,
+    uint readPartition(
+        LhxHashInfo &hashInfo,
+        SharedLhxPartition srcPartition,
         ostringstream &dataTrace);
 
     void testInsert(
@@ -126,7 +127,7 @@ uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
 }
 
 uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
-    SharedLhxPartition srcPartition, bool setDeallocate, ostringstream &dataTrace)
+    SharedLhxPartition srcPartition, ostringstream &dataTrace)
 {
     LhxPartitionReader reader;
     uint tuplesRead = 0;
@@ -136,7 +137,7 @@ uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
         
     outputTuple.compute(hashInfo.inputDesc[srcPartition->inputIndex]);
 
-    reader.open(srcPartition, (LhxHashInfo const &)hashInfo, setDeallocate);
+    reader.open(srcPartition, (LhxHashInfo const &)hashInfo);
 
     for (;;) {
         if (!reader.isTupleConsumptionPending()) {
@@ -156,9 +157,7 @@ uint LhxHashTableTest::readPartition(LhxHashInfo &hashInfo,
         
         reader.consumeTuple();
     }
-        
     reader.close();
-    
     return tuplesRead;
 }
 
@@ -282,6 +281,14 @@ void LhxHashTableTest::testInsert(
     /*
      * Verify that the keys are inserted.
      */
+    dataTrace << "All Matched Tuples:\n";
+    numTuples = 0;
+    /*
+     * verify that the hash table reader can see all the unmatched tuples.
+     * The above search is done in probing mode, so matched keys are
+     * marked as such. The whole table should be returned when reading
+     * matched rows.
+     */
     for (i = 0; i < numRows; i ++) {
         
         for (j = 0; j < numCols; j++) {
@@ -290,25 +297,18 @@ void LhxHashTableTest::testInsert(
         }
         
         PBuffer matchingKey =
-            hashTable.findKey(inputTuple, keyColsProj, false);
-        
-        assert(matchingKey != NULL);
+            hashTable.findKey(inputTuple, keyColsProj, true, true);
+
+        if (matchingKey) {
+            hashTableReader.bindKey(matchingKey);
+            while (hashTableReader.getNext(outputTuple)) {
+                tuplePrinter.print(dataTrace, inputTupleDesc, outputTuple);
+                dataTrace << "\n";
+                numTuples ++;
+            }
+        }
     }
     
-    /*
-     * verify that the hash table reader can see all the unmatched tuples.
-     * Teh above search is done in non-probing mode, so matched keys are not
-     * marked as such. The whole table should be returned when reading
-     * unmatched rows.
-     */
-    dataTrace << "All Unmatched Tuples:\n";
-    numTuples = 0;
-    hashTableReader.bindUnMatched();
-    while (hashTableReader.getNext(outputTuple)) {
-        tuplePrinter.print(dataTrace, inputTupleDesc, outputTuple);
-        dataTrace << "\n";
-        numTuples ++;
-    }
     assert (numTuples == numRows);
     
     if (dumpHashTable) {
@@ -335,7 +335,7 @@ void LhxHashTableTest::testInsert(
         dataTrace << "[Tuples read from partitions-1]\n";
 
         uint tuplesRead =
-            readPartition(hashInfo, partition, true, dataTrace);
+            readPartition(hashInfo, partition, dataTrace);
 
         if (dumpHashTable) {
             LhxHashTableDump hashTableDump(
@@ -345,7 +345,7 @@ void LhxHashTableTest::testInsert(
             hashTableDump.dump(dataTrace.str());
         }
         // verify read/write row count match.
-        assert (tuplesRead == tuplesWritten);
+        assert (tuplesWritten == numRows && tuplesRead == tuplesWritten);
     }
 
     if (recursivePartitioning > 0) {
@@ -370,7 +370,8 @@ void LhxHashTableTest::testInsert(
                     hashTable, partitions[j]);
         }
 
-        assert (tuplesWritten[0] == tuplesWritten[1]);
+        assert (tuplesWritten[0] == numRows &&
+                tuplesWritten[0] == tuplesWritten[1]);
         
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
@@ -380,7 +381,7 @@ void LhxHashTableTest::testInsert(
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
-        uint numLeafPlanRead;
+        uint numLeafPlanRead = 0;
 
         for (int i = 0; i < recursivePartitioning; i ++) {
             numLeafPlanCreated *= numChildPart;
@@ -397,38 +398,42 @@ void LhxHashTableTest::testInsert(
                     leafPlan = leafPlan->getNextLeaf();
                 }
             }
-            
-            tuplesRead[0] = 0;
-            tuplesRead[1] = 0;
-            
-            // get the first leaf 
-            leafPlan = plan->getFirstLeaf();
-            
-            while (leafPlan) {
-                numLeafPlanRead ++;
-                for (int j = 0; j < 2; j ++) {
-                    ostringstream dataTrace;
-                    dataTrace << "[Tuples read from partitions-2]"
-                              << "partition level " << i << "inputindex " << j
-                              << "\n";
-                    tuplesRead[j] +=
-                        readPartition(hashInfo,
-                            leafPlan->getPartition(j), false, dataTrace);
-                    if (dumpHashTable) {
-                        LhxHashTableDump hashTableDump(
-                            TRACE_INFO,
-                            shared_from_this(), 
-                            "LhxHashTableTest");
-                        hashTableDump.dump(dataTrace.str());
-                    }
-                }
-                leafPlan = leafPlan->getNextLeaf();
-            }
-            
-            assert (numLeafPlanRead == numLeafPlanCreated);
-            assert ((tuplesRead[0] == tuplesRead[1]) &&
-                (tuplesRead[0] == tuplesWritten[0]));
         }
+
+        // each partition can be read exactly once(since SegStreamAllocation
+        // deletes the disk content)
+        // so only verify the leaf level partitions.
+
+        tuplesRead[0] = 0;
+        tuplesRead[1] = 0;
+            
+        // get the first leaf 
+        leafPlan = plan->getFirstLeaf();
+        
+        while (leafPlan) {
+            numLeafPlanRead ++;
+            for (int j = 0; j < 2; j ++) {
+                ostringstream dataTrace;
+                dataTrace << "[Tuples read from partitions-2]"
+                          << "recursion depth" << recursivePartitioning
+                          << "inputindex " << j << "\n";
+                tuplesRead[j] +=
+                    readPartition(hashInfo,
+                            leafPlan->getPartition(j), dataTrace);
+                if (dumpHashTable) {
+                    LhxHashTableDump hashTableDump(
+                        TRACE_INFO,
+                        shared_from_this(), 
+                        "LhxHashTableTest");
+                    hashTableDump.dump(dataTrace.str());
+                }
+            }
+            leafPlan = leafPlan->getNextLeaf();
+        }
+        
+        assert (numLeafPlanRead == numLeafPlanCreated);
+        assert ((tuplesRead[0] == tuplesRead[1]) &&
+            (tuplesRead[0] == numRows));
     }
 
     hashTable.releaseResources();

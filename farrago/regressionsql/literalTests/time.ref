@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/literalTests/time.sql#2 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test time literal
 0: jdbc:farrago:> values TIME '12:01:01';

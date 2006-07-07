@@ -392,6 +392,7 @@ ${farrago.test.jvmargs}
     onerror="ignore"/>
 
   <macrodef name="blackhawk.fork">
+    <attribute name="dir" default="."/>
     <attribute name="basedir" default="."/>
     <attribute name="testscript" default="test.xml"/>
     <attribute name="bhhome" default="${bh.home}"/>
@@ -408,6 +409,7 @@ ${farrago.test.jvmargs}
         classpathref="blackhawk.run.classpath"
         onerror="fail"/>
       <bh
+        dir="@{dir}"
         testfile="@{basedir}/@{testscript}"
         bhHome="@{bhhome}"
         failOnError="@{fail.on.error}"
@@ -429,6 +431,7 @@ ${farrago.test.jvmargs}
 
   <!-- Macro for forking ant -->
   <macrodef name="farrago.antFork">
+    <attribute name="dir" default="."/>
     <attribute name="target" default="unspecifiedTarget"/>
     <attribute name="classpathref" default="ant.classpath"/>
     <attribute name="jvm" default="${farrago.jre.dir}/bin/java"/>
@@ -436,6 +439,7 @@ ${farrago.test.jvmargs}
     <element name="jvmargs" optional="yes"/>
     <sequential>
       <java classname="org.apache.tools.ant.Main" fork="true" failonerror="@{failonerror}"
+        dir="@{dir}"
         classpathref="@{classpathref}" jvm="@{jvm}">
         <jvmargs/>
         <arg value="${farrago.forkVerbosity}"/>

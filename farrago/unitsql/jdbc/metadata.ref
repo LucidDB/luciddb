@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/jdbc/metadata.sql#10 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test getCatalogs
@@ -96,6 +96,7 @@
 | SYS_BOOT   | JDBC_METADATA  | TYPE_INFO_VIEW                    | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW                         | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | JDBC_METADATA  | UDTS_VIEW_INTERNAL                | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | BROWSE_CONNECT_EMPTY_OPTIONS      | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | BROWSE_CONNECT_FOREIGN_WRAPPERS   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_FOREIGN_SERVERS_INTERNAL1     | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | DBA_FOREIGN_SERVERS_INTERNAL2     | VIEW        |          |           |             |            |                            |                 |

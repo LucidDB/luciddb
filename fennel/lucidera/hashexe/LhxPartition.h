@@ -28,11 +28,15 @@
 #include "fennel/tuple/TuplePrinter.h"
 #include "fennel/segment/SegInputStream.h"
 #include "fennel/segment/SegOutputStream.h"
+#include "fennel/segment/SegStreamAllocation.h"
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/AggComputer.h"
+#include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
+
+using namespace std;
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -45,12 +49,9 @@ FENNEL_BEGIN_NAMESPACE
 struct LhxPartition
 {
     /*
-     * The first page allocated from the SegStream associated with this
-     * partition
-     * Subsequent pages from this parition can be retrieved.
-     * If firstPageId is NULL_PAGE_ID, then this partition is 
+     * The seg stream pair (input/output) associated with this partition.
      */
-    PageId firstPageId;
+    SharedSegStreamAllocation segStream;
 
     /*
      * which input does data in this partition come from
@@ -60,7 +61,6 @@ struct LhxPartition
     uint   inputIndex;
 
 #ifdef NOT_DONE
-	VarBitMap m_Filter;											// bimap filter
 	SubPartStat *m_pSubPartStats;					// sub-partition statistics
 	BOOL m_bOneKey;						// whether there is only 1 distinct key
 #endif
@@ -134,7 +134,7 @@ class LhxPartitionReader
     uint tupleStorageLength;
 
     LhxPartitionReaderState readerState;
-    bool srcIsStream;
+    bool srcIsInputStream;
     ExecStreamBufState bufState;
     TupleDescriptor outputTupleDesc;
 
@@ -147,8 +147,7 @@ class LhxPartitionReader
 
 public:
     void open(SharedLhxPartition srcPartition,
-        LhxHashInfo const &hashInfo,
-        bool setDeallocate);
+              LhxHashInfo const &hashInfo);
     bool isTupleConsumptionPending();
     bool demandData();
     void unmarshalTuple(TupleData &outputTuple);
@@ -178,7 +177,7 @@ struct LhxPartitionInfo
      * remaining data from the build partition, as well as the inflight tuple
      * which caused the hash table overflow, need to be repartitioned.
      */
-    LhxPartitionReader tmpReader;
+    LhxPartitionReader probeReader;
     LhxPartitionReader *reader;
 
     /**
@@ -192,8 +191,9 @@ struct LhxPartitionInfo
      * destPartitionList.size() == 2 * numChildPart because child partitions
      * for both inputs have to be complete before child plans can be created.
      */
-    std::vector<SharedLhxPartitionWriter> writerList;
-    std::vector<SharedLhxPartition> destPartitionList;
+    vector<SharedLhxPartitionWriter> writerList;
+    vector<SharedLhxPartition> destPartitionList;
+    vector<boost::shared_ptr<boost::dynamic_bitset<> > > joinFilterList;
 
     uint numInput;
     uint curInputIndex;
@@ -218,29 +218,25 @@ struct LhxPartitionInfo
         LhxHashInfo *hashInfoInit);
 
     /**
-     * Prepare to partition the probe input which reads from a partition(which
-     * could be either disk partition or execution buffer stream).
+     * Prepare to partition the inputs:
+     * Build inout reads from both hash table and an existing reader. There is
+     * also a inflight tuple that is part of this partition.
+     * Probe input reads from a partition, which could be either disk partition
+     * or execution buffer stream.
      */
-    void open(uint curInputIndex,
-        SharedLhxPartition partition);
-
-    /**
-     * Prepare to partition the build input which reads from both hash table
-     * and an existing reader. There is also a inflight tuple that is part of
-     * this partition.
-     */
-    void open(uint curInputIndex,
+    void open(
         LhxHashTableReader *hashTableReaderInit,
         LhxPartitionReader *buildReader,
-        TupleData &buildTuple);
+        TupleData &buildTuple,
+        SharedLhxPartition probePartition);
 
     /**
-     * Prepare to aggregate and partition the build input which reads from both
+     * Prepare to aggregate and partition the (build) input which reads from both
      * hash table and an existing reader. There is also a inflight tuple that
      * is part of this partition.
-     * aggList contains the agg computers which will aggregate the input.
+     * aggList contains the agg computers which aggregate the input.
      */
-    void open(uint curInputIndex,
+    void open(
         LhxHashTableReader *hashTableReaderInit,
         LhxPartitionReader *buildReader,
         TupleData &buildTuple,
@@ -249,21 +245,16 @@ struct LhxPartitionInfo
     /**
      * Close the reader stream and the writer streams.
      */
-    void close(uint curInputIndex);
-
-    /**
-     * Reset the list of partitions to prepare for the next level
-     * of recursive partitioning.
-     */
-    void reset();
-
+    void close();
 };
 
 class LhxPlan
 {
 public:
     uint partitionLevel;
-    std::vector<SharedLhxPartition> partitions;
+    vector<SharedLhxPartition> partitions;
+    vector<bool>               useFilter;
+    boost::shared_ptr<boost::dynamic_bitset<> > joinFilter;
 
     /*
      * Plan linkage.
@@ -281,20 +272,27 @@ public:
     uint numSubPart;
     boost::scoped_array<uint> keptSubPart; 
     
-    ostringstream dataTrace;
-    TuplePrinter tuplePrinter;
+    inline void init(
+        uint partitionLevelInit,
+        uint numChildPartInit,
+        vector<SharedLhxPartition> &partitionsInit,
+        LhxPlan *parentPlanInit);
 
     void init(
         uint partitionLevelInit,
         uint numChildPartInit,
-        std::vector<SharedLhxPartition> &partitionsInit,
-        LhxPlan *parentPlanInit);
+        vector<SharedLhxPartition> &partitionsInit,
+        LhxPlan *parentPlanInit,
+        vector<bool> useFilterInit,
+        boost::shared_ptr<boost::dynamic_bitset<> > filterInit =
+                boost::shared_ptr<boost::dynamic_bitset<> >());
 
     /**
      * Generate partitions for the child plans.
      */
-    LhxPartitionState generatePartitions(LhxHashInfo const &hashInfo,
-        LhxPartitionInfo &partInfo, bool traceOn);
+    LhxPartitionState generatePartitions(
+        LhxHashInfo const &hashInfo,
+        LhxPartitionInfo &partInfo);
 
     /**
      * Partition this plan and create child plan.
@@ -331,11 +329,17 @@ public:
      * Get the first child plan.
      */
     inline SharedLhxPlan getFirstChild();
+
+    /**
+     * Close the plan tree. Release any resource pointed to from this plan
+     * tree.
+     */
+    void close();
 };
 
 inline ExecStreamBufState LhxPartitionReader::getState() const
 {
-    if (srcIsStream) {
+    if (srcIsInputStream) {
         return streamBufAccessor->getState();
    } else {
         return bufState;
@@ -351,6 +355,27 @@ inline void LhxPartitionWriter::allocateResources()
 {
     bool status = hashTable.allocateResources();
     assert(status);
+}
+
+inline void LhxPlan::init(
+    uint partitionLevelInit,
+    uint numChildPartInit,   
+    vector<SharedLhxPartition> &partitionsInit,
+    LhxPlan *parentPlanInit)
+{
+    /*
+     * No filter for this plan.
+     */
+    boost::shared_ptr<boost::dynamic_bitset<> > joinFilterInit =
+        boost::shared_ptr<boost::dynamic_bitset<> >();
+    vector<bool> useFilter;
+
+    if (partitionsInit.size() == 1) {
+        useFilter.push_back(false);
+    }
+
+    init(partitionLevelInit, numChildPartInit, partitionsInit, parentPlanInit,
+        useFilter, joinFilterInit);
 }
 
 inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)

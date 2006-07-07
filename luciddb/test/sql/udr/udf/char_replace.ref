@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/char_replace.sql#4 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Test queries for charReplace UDF
 0: jdbc:luciddb:> set schema 'udftest';
 0: jdbc:luciddb:> set path 'udftest';

@@ -912,25 +912,14 @@ SqlNode SqlMerge() :
     SqlIdentifier alias = null;
     SqlNode sourceTableRef;
     SqlNode condition;
-    SqlNodeList updateColumnList;
-    SqlIdentifier id;
-    SqlNode exp;
-    SqlNodeList updateExprList;
-    SqlNode updateCall;
-    List keywords = new ArrayList();
-    List insertColumnList = null;
-    SqlNode rowConstructor;
-    SqlNode insertValues;
-    SqlNode insertCall;
-    SqlParserPos pos;
-    SqlParserPos mergePos, insertPos, columnListPos = null;
+    SqlNode updateCall = null;
+    SqlNode insertCall = null;
+    SqlParserPos mergePos;
 }
 {
     <MERGE> <INTO> table = CompoundIdentifier()
     {
         mergePos = getPos();
-        updateColumnList = new SqlNodeList(mergePos);
-        updateExprList = new SqlNodeList(mergePos);
     }
     [ [ <AS> ] alias = SimpleIdentifier() ]
 
@@ -938,10 +927,41 @@ SqlNode SqlMerge() :
 
     <ON> condition = Expression(EXPR_ACCEPT_SUBQUERY)
 
+    (
+    LOOKAHEAD(2)
+    updateCall = WhenMatchedClause(table, alias)
+    [ insertCall = WhenNotMatchedClause(table) ]
+    |
+    insertCall = WhenNotMatchedClause(table)
+    )
+    {
+        return new SqlMerge(
+            SqlStdOperatorTable.mergeOperator,
+            table,
+            condition,
+            sourceTableRef,
+            updateCall,
+            insertCall,
+            alias,
+            mergePos);
+    }
+}
+
+SqlNode WhenMatchedClause(SqlIdentifier table, SqlIdentifier alias) :
+{
+    SqlIdentifier id;
+    SqlParserPos pos;
+    SqlNodeList updateColumnList;
+    SqlNode exp;
+    SqlNodeList updateExprList;
+}
+{
     <WHEN> <MATCHED> <THEN>
     <UPDATE> <SET> id = SimpleIdentifier()
     {
         pos = getPos();
+        updateColumnList = new SqlNodeList(pos);
+        updateExprList = new SqlNodeList(pos);
         updateColumnList.add(id);
     }
     <EQ> exp = Expression(EXPR_ACCEPT_SUBQUERY)
@@ -960,7 +980,7 @@ SqlNode SqlMerge() :
         }
     ) *
     {
-        updateCall = new SqlUpdate(
+        return new SqlUpdate(
             SqlStdOperatorTable.updateOperator,
             table,
             updateColumnList,
@@ -969,7 +989,17 @@ SqlNode SqlMerge() :
             alias,
             pos);
     }
+}
 
+SqlNode WhenNotMatchedClause(SqlIdentifier table) :
+{
+    SqlParserPos pos, insertPos, columnListPos = null;
+    List keywords = new ArrayList();
+    List insertColumnList = null;
+    SqlNode rowConstructor;
+    SqlNode insertValues;
+}
+{
     <WHEN> <NOT> <MATCHED> <THEN>
     <INSERT>
     {
@@ -993,7 +1023,7 @@ SqlNode SqlMerge() :
         pos = getPos();
         insertValues = SqlStdOperatorTable.valuesOperator.createCall(
             new SqlNode [ ] { rowConstructor }, pos);
-        insertCall = new SqlInsert(
+        return new SqlInsert(
             SqlStdOperatorTable.insertOperator,
             new SqlNodeList(keywords, insertPos),
             table,
@@ -1001,16 +1031,6 @@ SqlNode SqlMerge() :
             (insertColumnList != null)
                 ? new SqlNodeList(insertColumnList, columnListPos) : null,
             insertPos);
-
-        return new SqlMerge(
-            SqlStdOperatorTable.mergeOperator,
-            table,
-            condition,
-            sourceTableRef,
-            updateCall,
-            insertCall,
-            alias,
-            mergePos);
     }
 }
 

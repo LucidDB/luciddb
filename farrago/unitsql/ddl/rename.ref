@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/rename.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test create or replace rename to DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --

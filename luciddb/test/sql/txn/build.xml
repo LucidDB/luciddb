@@ -23,7 +23,7 @@
 <project name="txn" basedir="." default="test">
   <dirname property="txn.dir" file="${ant.file.txn}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${txn.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

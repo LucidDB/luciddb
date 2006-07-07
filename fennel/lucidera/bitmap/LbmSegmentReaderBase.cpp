@@ -31,12 +31,16 @@ void LbmSegmentReaderBase::init(
 {
     pInAccessor = pInAccessorInit;
     pBitmapSegTuple = &bitmapSegTuple;
+    iSrid = bitmapSegTuple.size() - 3;
+    iSegmentDesc = iSrid + 1;
+    iSegments = iSrid + 2;
     byteSegLen = 0;
     byteSegOffset = LbmByteNumber(0);
     pSegStart = NULL;
     pSegDescStart = NULL;
     pSegDescEnd = NULL;
     zeroBytes = 0;
+    tupleChange = false;
 }
 
 ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
@@ -56,25 +60,27 @@ ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
     pInAccessor->unmarshalTuple(*pBitmapSegTuple);
 
     // extract starting rid and compute its equivalent byte segment number
-    startRID = *reinterpret_cast<LcsRid const *> ((*pBitmapSegTuple)[0].pData);
+    startRID = *reinterpret_cast<LcsRid const *>
+        ((*pBitmapSegTuple)[iSrid].pData);
     byteSegOffset = ridToByteNumber(startRID);
     zeroBytes = 0;
 
     // determine where the segment descriptor starts and ends, if there is
     // one
-    pSegDescStart = (PBuffer) (*pBitmapSegTuple)[1].pData;
+    pSegDescStart = (PBuffer) (*pBitmapSegTuple)[iSegmentDesc].pData;
     // descriptor can be NULL
     if (pSegDescStart != NULL) {
-        pSegDescEnd = pSegDescStart + (*pBitmapSegTuple)[1].cbData;
+        pSegDescEnd = pSegDescStart + (*pBitmapSegTuple)[iSegmentDesc].cbData;
     } else {
         pSegDescEnd = NULL;
     }
 
     // determine where the bitmap segment starts and its length
-    if ((*pBitmapSegTuple)[2].pData) {
+    if ((*pBitmapSegTuple)[iSegments].pData) {
         // note that bit segment is stored backwards
-        byteSegLen = (*pBitmapSegTuple)[2].cbData;
-        pSegStart = (PBuffer) ((*pBitmapSegTuple)[2].pData + byteSegLen - 1);
+        byteSegLen = (*pBitmapSegTuple)[iSegments].cbData;
+        pSegStart = (PBuffer)
+            ((*pBitmapSegTuple)[iSegments].pData + byteSegLen - 1);
     } else {
         // singletons do not have a corresponding bitmap, so create one
         byteSegLen = 1;
@@ -82,6 +88,7 @@ ExecStreamResult LbmSegmentReaderBase::readBitmapSegTuple()
         singleton = (uint8_t)(1 << (opaqueToInt(startRID) % LbmOneByteSize));
     }
 
+    tupleChange = true;
     return EXECRC_YIELD;
 }
 
@@ -97,6 +104,16 @@ void LbmSegmentReaderBase::advanceSegment()
     // starts and its length; also advance the segment descriptor to the
     // next descriptor
     readSegDescAndAdvance(pSegDescStart, byteSegLen, zeroBytes);
+}
+
+bool LbmSegmentReaderBase::getTupleChange()
+{
+    return tupleChange;
+}
+
+void LbmSegmentReaderBase::resetChangeListener()
+{
+    tupleChange = false;
 }
 
 FENNEL_END_CPPFILE("$Id$");

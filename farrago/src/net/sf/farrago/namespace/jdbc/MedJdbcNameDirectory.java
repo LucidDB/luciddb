@@ -261,12 +261,13 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         try {
             while (resultSet.next()) {
                 String schemaName = resultSet.getString(1);
-                String catalogName = resultSet.getString(2);
                 if (server.catalogName != null) {
+                    String catalogName = resultSet.getString(2);
                     if (!server.catalogName.equals(catalogName)) {
                         continue;
                     }
                 }
+
                 sink.writeObjectDescriptor(
                     schemaName,
                     FarragoMedMetadataQuery.OTN_SCHEMA,

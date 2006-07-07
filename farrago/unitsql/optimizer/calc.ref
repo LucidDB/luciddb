@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/optimizer/calc.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test queries which instantiate the calculator (filter and/or project)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';

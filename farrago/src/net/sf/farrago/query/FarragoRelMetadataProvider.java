@@ -67,6 +67,11 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         mapParameterTypes(
             "getPopulationSize",
             Collections.singletonList((Class) BitSet.class));
+        
+        List<Class> args = new ArrayList<Class>();
+        args.add((Class) BitSet.class);
+        args.add((Class) RexNode.class);
+        mapParameterTypes("getDistinctRowCount", args);
     }
     
     /**

@@ -68,12 +68,6 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     bool rightOuter;
 
     /**
-     * Used for both hash aggregate and hash distinct(which has only one group,
-     * and no aggregate calculators)
-     */
-    bool eliminateDuplicate;
-
-    /**
      * Join keys from the left input.
      */
     TupleProjection leftKeyProj;
@@ -90,9 +84,20 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     TupleProjection outputProj;
 
     /**
+     * These two fields combined denote the join semantics
+     * setDistinct setAll   JoinSementics
+     *  false      false    regular join
+     *  false      true     setop ALL (not implemented)
+     *  true       false    setop DISTINCT
+     *  true       true     invalid combination
+     */
+    bool setopDistinct;
+    bool setopAll;
+
+    /**
      * Initial stats provided by the optimizer for resource allocation.
-     * cndKeys: key cardinality of the initial built input(chosen by the
-     * optimizer).
+     * cndKeys: key cardinality of the initial built input chosen by the
+     * optimizer.
      */
     uint cndKeys;
 
@@ -100,6 +105,11 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * numRows: number of rows of the initial built input.
      */
     uint numRows;
+
+    /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
 };
 
 class LhxJoinExecStream : public ConfluenceExecStream
@@ -109,9 +119,9 @@ class LhxJoinExecStream : public ConfluenceExecStream
     };
 
     enum LhxJoinState {
-        Build, GetNextPlan, Partition, Probe, ProduceInner,
-        ProduceLeftOuter, ProduceRightOuter, ProducePending, CreateChildPlan,
-        Done
+        Build, GetNextPlan, Partition, Probe, CreateChildPlan, ProduceInner,
+        ProduceLeftOuter, ProduceRightOuter, ProduceRightAnti, ProduceLeftSemi,
+        ProducePending, ForcePartitionBuild, Done
     };
   
     /**
@@ -156,10 +166,9 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     LhxJoinState nextState;
 
-    /**
-     * Return matching rows from the left.
+    /*
+     * Join semantics
      */
-    bool leftInner;
 
     /**
      * Return non-matching rows from the left.
@@ -167,14 +176,40 @@ class LhxJoinExecStream : public ConfluenceExecStream
     bool leftOuter;
 
     /**
-     * Return matching rows from the right.
+     * Return non-matching rows from the right.
      */
-    bool rightInner;
+    bool rightOuter;
+
+    /**
+     * Inner join: only return matching rows.
+     */
+    bool innerJoin;
+
+    /**
+     * Return non-matching rows from both sides.
+     */
+    bool fullOuter;
+
+    /**
+     * Return matching rows from the left.
+     */
+    bool leftSemi;
 
     /**
      * Return non-matching rows from the right.
      */
-    bool rightOuter;
+    bool rightAnti;
+
+    /**
+     * regularJoin:   do not match NULLs,
+     *                and do not remove duplicates in inputs.
+     * setopDistinct: match NULLs, and remove duplicates in inputs.
+     * setopAll:      match NULLs, and do not remove duplicates in inputs
+     * Note: setopAll is not implemented yet.
+     */
+    bool regularJoin;
+    bool setopDistinct;
+    bool setopAll;
 
     /**
      * Whether this join filters null key values(when they are not already
@@ -182,6 +217,12 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     bool leftFilterNull;
     bool rightFilterNull;
+
+    /*
+     * Related to set match semantics
+     */
+    bool removeDuplicateProbe;
+    bool removeDuplicateBuild;
 
     /*
      * Some temporary variables.
@@ -219,10 +260,17 @@ class LhxJoinExecStream : public ConfluenceExecStream
     LhxPartitionInfo partInfo;
 
     /**
+     * Force partitioning level. Only set in tests.
+     */
+    uint forcePartitionLevel;
+
+    /**
      * implement ExecStream
      */
     virtual void closeImpl();
-        
+
+    void setJoinType(LhxJoinExecStreamParams const &params);
+
 public:
     /*
      * implement ExecStream

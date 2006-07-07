@@ -23,7 +23,7 @@
   <project name="vi_tbs" basedir="." default="test">
   <dirname property="vi_tbs.dir" file="${ant.file.vi_tbs}"/>
 
-  <property name="open.dir" location="../../../../.."/>
+  <property name="open.dir" location="${vi_tbs.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

@@ -24,6 +24,7 @@
 
 #include "fennel/common/ByteBuffer.h"
 #include "fennel/lucidera/bitmap/LbmSegment.h"
+#include "fennel/tuple/TupleData.h"
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -34,6 +35,8 @@ FENNEL_BEGIN_NAMESPACE
 class LbmByteSegment
 {
 public:
+    static const uint bitsInByte[];
+    
     LbmByteNumber byteNum;
     PBuffer byteSeg;
     uint len;
@@ -103,6 +106,49 @@ public:
             byteNum += diff;
             byteSeg -= diff;
             len -= diff;
+        }
+    }
+
+    /**
+     * Count the number of bits in the current byte segment
+     */
+    uint countBits()
+    {
+        return countBits(byteSeg-len+1, len);
+    }
+
+    /**
+     * Counts the number of rows represented by a bitmap datum.
+     * An empty datum represents a single row.
+     */
+    static uint countBits(TupleDatum const &datum)
+    {
+        if (! datum.pData) {
+            return 1;
+        }
+        return countBits(datum.pData, datum.cbData);
+    }
+
+    /**
+     * Counts the number of bits in an array
+     */
+    static uint countBits(PConstBuffer pBuf, uint len) 
+    {
+        uint total = 0;
+        for (uint i = 0; i < len; i++) {
+            total += bitsInByte[pBuf[i]];
+        }
+        return total;
+    }
+
+    static void verifyBitsInByte()
+    {
+        for (uint i = 0; i < 256; i++) {
+            uint slowBits = 0;
+            for (uint j = 0; j < 8; j++) {
+                if (i & (1 << j)) slowBits++;
+            }
+            assert (slowBits == bitsInByte[i]);
         }
     }
 

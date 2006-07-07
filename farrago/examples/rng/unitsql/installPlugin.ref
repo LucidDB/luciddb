@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/med/csv.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test installation of RNG plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sys_boot.sys_boot';

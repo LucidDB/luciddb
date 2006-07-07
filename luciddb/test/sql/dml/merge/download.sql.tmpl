@@ -1,0 +1,41 @@
+-- create foreign server
+create server ff_server
+foreign data wrapper sys_file_wrapper
+options(
+    directory '@DIR@',
+    file_extension '.csv',
+    ctrl_file_extension '.bcp',
+    field_delimiter ',',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '9',
+    log_directory '@DIR@'
+);
+
+set schema 'mergetest';
+
+-- Download
+INSERT INTO LOCATION SELECT * FROM ff_server."BCP".LOCATION;
+INSERT INTO DEPT SELECT * FROM ff_server."BCP".DEPT;
+INSERT INTO EMP SELECT * FROM ff_server."BCP".EMP;
+INSERT INTO CUSTOMERS SELECT * FROM ff_server."BCP".CUSTOMERS;
+INSERT INTO PRODUCTS SELECT * FROM ff_server."BCP".PRODUCTS;
+INSERT INTO SALES SELECT * FROM ff_server."BCP".SALES;
+
+-- Check the download
+select count(*) from location;
+select count(*) from dept;
+select count(*) from emp;
+select count(*) from customers;
+select count(*) from products;
+select count(*) from sales;
+
+-- analyze the columns to get the statistics
+analyze table EMP estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table PRODUCTS estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table SALES estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table CUSTOMERS estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table LOCATION estimate statistics for all columns SAMPLE 100 PERCENT;
+analyze table DEPT estimate statistics for all columns SAMPLE 100 PERCENT;

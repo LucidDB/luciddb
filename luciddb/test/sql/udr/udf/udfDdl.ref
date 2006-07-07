@@ -1,4 +1,4 @@
-0: jdbc:luciddb:> -- $Id: //open/lu/dev/luciddb/test/sql/udr/udf/udfDdl.sql#2 $
+0: jdbc:luciddb:> -- $Id$
 0: jdbc:luciddb:> -- Ported from //open/lu/dev/farrago/unitsql/ddl/udf.sql
 0: jdbc:luciddb:> -- Test DDL for user-defined functions
 0: jdbc:luciddb:> 
@@ -96,7 +96,7 @@ Error: DDL validation error near line 1, column 29: Parameter mode to routine "U
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return i + j + k;
-Error: At line 1, column 83: Unknown identifier 'K' (state=,code=0)
+Error: At line 4, column 16: Unknown identifier 'K' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- test various modifiers
 0: jdbc:luciddb:> 
@@ -202,7 +202,7 @@ Error: Dropping routine "UDFTEST"."TO_UPPER2" requires CASCADE because other obj
 . . . . . . . . > returns int
 . . . . . . . . > contains sql
 . . . . . . . . > return add_integers(i,i);
-Error: From line 1, column 93 to line 1, column 109: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
+Error: From line 5, column 8 to line 5, column 24: No match found for function signature ADD_INTEGERS(<NUMERIC>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should succeed
 0: jdbc:luciddb:> create schema goodpath
@@ -220,7 +220,7 @@ Error: From line 1, column 93 to line 1, column 109: No match found for function
 . . . . . . . . > contains sql
 . . . . . . . . > external name 'class java.lang.System.getProperty'
 . . . . . . . . > return 'undefined';
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "return" at line 1, column 139.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "return" at line 5, column 1.
 Was expecting one of:
     <EOF> 
     "EXTERNAL" ...

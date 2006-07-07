@@ -534,7 +534,7 @@ public class LoptSemiJoinOptimizer
             dimCols.set(dimCol);
         }
         double selectivity =
-            RelMdUtil.computeSemiJoinSelectivity(dimRel, dimCols);
+            RelMdUtil.computeSemiJoinSelectivity(factRel, dimRel, semiJoin);
         RelOptCost factCost = RelMetadataQuery.getCumulativeCost(factRel);
         // if not enough information, return a low score
         if (factCost == null) {

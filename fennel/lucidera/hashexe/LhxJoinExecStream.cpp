@@ -34,20 +34,11 @@ void LhxJoinExecStream::prepare(
 {
     int i, j;
 
-    leftInner  = params.leftInner;
-    leftOuter  = params.leftOuter;
-    rightInner = params.rightInner;
-    rightOuter = params.rightOuter;
-
-    /*
-     * Returning matching rwos from both inputs.
-     * Does not support semi or anti join currently.
-     */
-    assert (leftInner && rightInner);
-
+    setJoinType(params);
+    
     ConfluenceExecStream::prepare(params);
 
-    for (i = 0; i < 2 ; i ++) {
+    for (i = 0; i < inAccessors.size() ; i ++) {
         hashInfo.streamBufAccessor.push_back(inAccessors[i]);
         hashInfo.inputDesc.push_back(inAccessors[i]->getTupleDesc());
     }
@@ -63,11 +54,34 @@ void LhxJoinExecStream::prepare(
     rightTupleSize = rightTuple.size();
 
     /*
-     * Since null values do not match, filter null values if non-matching
-     * tuples are not needed.
+     * These two join types are used exclusively in set matching operations,
+     * which by default eliminate duplicates.
      */
-    leftFilterNull  = !leftOuter;
-    rightFilterNull = !rightOuter;
+    removeDuplicateProbe = removeDuplicateBuild = setopDistinct;
+
+    /*
+     * Nulls do not join, unless in set operation.
+     * Filter null values if non-matching tuples are not needed.
+     */
+    leftFilterNull  = regularJoin;
+
+    rightFilterNull = regularJoin && !rightOuter && !fullOuter;
+    
+    /*
+     * Force partitioning level. Only set in tests.
+     */
+    forcePartitionLevel = params.forcePartitionLevel;
+
+    /*
+     * Set special hash table properties.
+     */
+    hashInfo.filterNull = rightFilterNull;
+
+    hashInfo.removeDuplicate = removeDuplicateBuild;
+
+    if (hashInfo.removeDuplicate) {
+        assert(rightTupleSize == params.rightKeyProj.size());
+    }
 
     assert (params.leftKeyProj.size() == params.rightKeyProj.size());
 
@@ -216,49 +230,53 @@ void LhxJoinExecStream::open(bool restart)
     leftPart = SharedLhxPartition(new LhxPartition());
     rightPart = SharedLhxPartition(new LhxPartition());
 
-    leftPart->firstPageId = NULL_PAGE_ID;
+    (leftPart->segStream).reset();
     leftPart->inputIndex = LeftInputIndex;
 
-    rightPart->firstPageId = NULL_PAGE_ID;
+    (rightPart->segStream).reset();
     rightPart->inputIndex = RightInputIndex;
 
-    rootPlan =  SharedLhxPlan(new LhxPlan());
-
     uint numInput       = 2;
-    uint numChild       = 2;
+    uint numChild       = 3;
     LhxPlan *parentPlan = NULL;
 
     vector<SharedLhxPartition> partitionList;
     partitionList.push_back(leftPart);
     partitionList.push_back(rightPart);
 
-    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan);
+    vector<bool> useFilter;
+    useFilter.push_back(!leftOuter && !fullOuter);
+    useFilter.push_back(!rightOuter && !fullOuter && !rightAnti);
 
-    curPlan = rootPlan.get();
-    isTopPartition = true;
-
-    rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo, true);
+    /*
+     * No input join filter for root plan.
+     */
+    rootPlan =  SharedLhxPlan(new LhxPlan());
+    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan,
+        useFilter);
 
     /*
      * Initialize recursive partitioning context.
      */
+    isTopPartition = true;
     partInfo.init(numInput, numChild, &hashInfo);
 
-    joinState = Build;
+    curPlan = rootPlan.get();
+    rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo);
+
+    joinState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
 }
 
 ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 {
     TupleProjection &leftKeyProj  =
         (TupleProjection &)hashInfo.keyProj[LeftInputIndex];
-    TupleProjection &rightKeyProj =
-        (TupleProjection &)hashInfo.keyProj[RightInputIndex];
 
     while (true)
     {
         switch (joinState)
         {
-        case Build:
+        case ForcePartitionBuild:
             {
                 /*
                  * Build
@@ -269,9 +287,10 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             /*
                              * break out of this loop, and start probing.
                              */
+                            rightReader.close();
                             leftReader.open(
                                 curPlan->getPartition(LeftInputIndex),
-                                hashInfo, true);
+                                hashInfo);
                             joinState = Probe;
                             numTuplesProduced = 0;
                             break;
@@ -297,23 +316,79 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 
                     /*
                      * Add tuple to hash table.
-                     * When null values are filtered, and this tuple does
-                     * contain null in its key columns, do not add to hash
-                     * table.
+                     *
+                     * NOTE: This is a testing state. Always partition up to
+                     * forcePartitionLevel.
                      */
-                    if (!(rightFilterNull &&
-                          rightTuple.containsNull(rightKeyProj))) {
-                        if (!hashTable.addTuple(rightTuple)) {
+                    if (curPlan->partitionLevel < forcePartitionLevel ||
+                        !hashTable.addTuple(rightTuple)) {
+                        /*
+                         * If hash table is full, partition input data.
+                         *
+                         * First, partition the right(build input).
+                         */
+                        partInfo.open(
+                            &hashTableReader, &rightReader, rightTuple,
+                            curPlan->getPartition(LeftInputIndex));
+                        joinState = Partition;
+                        break;
+                    }
+                    rightReader.consumeTuple();
+                }
+                break;
+            }
+        case Build:
+            {
+                /*
+                 * Build
+                 */
+                for (;;) {
+                    if (!rightReader.isTupleConsumptionPending()) {
+                        if (rightReader.getState() == EXECBUF_EOS) {
                             /*
-                             * If hash table is full, partition input data.
-                             *
-                             * First, partition the left.
+                             * break out of this loop, and start probing.
                              */
-                            partInfo.open(LeftInputIndex,
-                                curPlan->getPartition(LeftInputIndex));
-                            joinState = Partition;
+                            rightReader.close();
+                            leftReader.open(
+                                curPlan->getPartition(LeftInputIndex),
+                                hashInfo);
+                            joinState = Probe;
+                            numTuplesProduced = 0;
                             break;
-                        };
+                        }
+
+                        if (!rightReader.demandData()) {
+                            if (isTopPartition) {
+                                /*
+                                 * Top level: request more data from producer.
+                                 */
+                                return EXECRC_BUF_UNDERFLOW;
+                            } else {
+                                /*
+                                 * Recursive level: no more data in partition.
+                                 * Come back to the top of the same state to
+                                 * detect EOS.
+                                 */
+                                break;
+                            }
+                        }
+                        rightReader.unmarshalTuple(rightTuple);
+                    }
+
+                    /*
+                     * Add tuple to hash table.
+                     */
+                    if (!hashTable.addTuple(rightTuple)) {
+                        /*
+                         * If hash table is full, partition input data.
+                         *
+                         * First, partition the right(build input).
+                         */
+                        partInfo.open(
+                            &hashTableReader, &rightReader, rightTuple,
+                            curPlan->getPartition(LeftInputIndex));
+                        joinState = Partition;
+                        break;
                     }
                     rightReader.consumeTuple();
                 }
@@ -322,39 +397,26 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
         case Partition:
             {
                 for (;;) {
-                    if (curPlan->generatePartitions(hashInfo, partInfo, false)
+                    if (curPlan->generatePartitions(hashInfo, partInfo)
                         == PartitionUnderflow) {
                         /*
                          * Request more data from producer.
                          */
                         return EXECRC_BUF_UNDERFLOW;
                     } else {
-                        if (partInfo.curInputIndex == LeftInputIndex) {
-                            /*
-                             * Now partition the right input.
-                             * The in-memory hash table is also part of the
-                             * partition.
-                             */
-                            partInfo.close(LeftInputIndex);
-                            partInfo.open(RightInputIndex,
-                                &hashTableReader, &rightReader, rightTuple);
-                        } else {
-                            /*
-                             * Finished building the partitions for both
-                             * inputs.
-                             */
-                            break;
-                        }
+                        /*
+                         * Finished building the partitions for both
+                         * inputs.
+                         */
+                        break;
                     }
                 }
-                partInfo.close(RightInputIndex);
+                partInfo.close();
                 joinState = CreateChildPlan;
                 break;
             }
         case CreateChildPlan:
             {
-                FENNEL_TRACE(TRACE_FINE, (curPlan->dataTrace).str());
-
                 /*
                  * Link the newly created partitioned in the plan tree.
                  */
@@ -373,14 +435,11 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 
                 bool status = hashTable.allocateResources();
                 assert(status);
-                rightReader.open(curPlan->getPartition(RightInputIndex),
-                    hashInfo, true);
-                /*
-                 * Reset the list of partitions to prepare for the next level
-                 * of recursive partitioning.
-                 */
-                partInfo.reset();
-                joinState = Build;
+                rightReader.open(
+                    curPlan->getPartition(RightInputIndex),
+                    hashInfo);
+
+                joinState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 break;                
             }
         case GetNextPlan:
@@ -394,9 +453,11 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 
                     bool status = hashTable.allocateResources();
                     assert(status);
-                    rightReader.open(curPlan->getPartition(RightInputIndex),
-                        hashInfo, true);
-                    joinState = Build;
+                    rightReader.open(
+                        curPlan->getPartition(RightInputIndex),
+                        hashInfo);
+                    joinState =
+                        (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 } else {
                     joinState = Done;
                 }
@@ -410,24 +471,33 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 for (;;) {
                     if (!leftReader.isTupleConsumptionPending()) {
                         if (leftReader.getState() == EXECBUF_EOS) {
-                            if (!rightOuter) {
-                                /*
-                                 * Probing for this plan is done.
-                                 */
-                                joinState = GetNextPlan;
-                            } else {
+                            leftReader.close();
+                            if (rightOuter || fullOuter) {
                                 /*
                                  * Set the output tuple to have NULL values on
-                                 * the left, and get return all the
+                                 * the left, and return all the
                                  * non-matching tuples in the hash table on the
                                  * right.
                                  */
+                                hashTableReader.bindUnMatched();
+
                                 for (int i = 0; i <leftTupleSize; i ++) {
                                     outputTuple[i].pData = NULL;
                                 }
 
-                                hashTableReader.bindUnMatched();
                                 joinState = ProduceRightOuter;
+                            } else if (rightAnti) {
+                                /*
+                                 * Return non-matched rows from this plan
+                                 * before moving to the next plan.
+                                 */
+                                hashTableReader.bindUnMatched();
+                                joinState = ProduceRightAnti;
+                            } else {
+                                /*
+                                 * Probing for this plan is done.
+                                 */
+                                joinState = GetNextPlan;
                             }
                             break;
                         }
@@ -450,17 +520,18 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                     }
 
                     PBuffer keyBuf = NULL;
-                    bool isProbing = true;
 
                     /*
                      * Try to locate matching key in the hash table.
                      * If this tuple does contain null in its key columns, it
                      * will not join so hash table lookup is not needed.
                      */
-                    if (!leftTuple.containsNull(leftKeyProj)) {
-                        keyBuf = hashTable.findKey(leftTuple, leftKeyProj,
-                            isProbing);
-                    }
+                    /*
+                     * FIXME: set matching semantics
+                     */
+                    keyBuf =
+                        hashTable.findKey(leftTuple, leftKeyProj,
+                            leftFilterNull, removeDuplicateProbe);
         
                     if (keyBuf) {
                         /*
@@ -470,18 +541,33 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         for (int i = 0; i <leftTupleSize; i ++) {
                             outputTuple[i].copyFrom(leftTuple[i]);
                         }
-                        /**
-                         * Output the joined tuple.
-                         */
-                        hashTableReader.bindKey(keyBuf);
-                        joinState = ProduceInner;
-                        break;
+                        
+                        if (innerJoin || leftOuter || rightOuter || fullOuter) {
+                            /**
+                             * Output the joined tuple.
+                             */
+                            hashTableReader.bindKey(keyBuf);
+                            joinState = ProduceInner;
+                            break;
+                        } else if (leftSemi) {
+                            joinState = ProduceLeftSemi;
+                            nextState = ProducePending;
+                            break;
+                        } else {
+                            /*
+                             * rightAnti join falls through here.
+                             * It goes back to match all probing rows and return
+                             * non-matched rows from the hash table after
+                             * exhausting all probing rows.
+                             */
+                            leftReader.consumeTuple();
+                        }
                     } else {
                         /*
                          * No match. Need to return the leftTuple if leftOuter
                          * join.
                          */
-                        if (!leftOuter) {
+                        if (!leftOuter && !fullOuter) {
                             leftReader.consumeTuple();
                         } else {
                             /*
@@ -491,7 +577,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             for (int i = 0; i <leftTupleSize; i ++) {
                                 outputTuple[i].copyFrom(leftTuple[i]);
                             }
-                            for (int i = leftTupleSize; i < outputTuple.size(); i ++) {
+                            for (int i = leftTupleSize; i < outputTuple.size();
+                                 i ++) {
                                 outputTuple[i].pData = NULL;
                             }
                             joinState = ProduceLeftOuter;
@@ -505,7 +592,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 /*
                  * Producing the results.
-                 * Handle output overflow and quantum expiration in ProducePending.
+                 * Handle output overflow and quantum expiration in
+                 * ProducePending.
                  */
                 if (hashTableReader.getNext(rightTuple)) {
                     for (int i = 0; i <rightTupleSize; i ++) {
@@ -517,6 +605,26 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * successfully.
                      */
                     nextState = ProduceInner;
+                } else {
+                    leftReader.consumeTuple();
+                    joinState = Probe;
+                }
+                break;
+            }
+        case ProduceLeftSemi:
+            {
+                /*
+                 * Producing the results.
+                 * Handle output overflow and quantum expiration in
+                 * ProducePending.
+                 */
+                if (nextState == ProducePending) {
+                    joinState = ProducePending;
+                    /*
+                     * Come back to this state after producing the output tuple
+                     * successfully.
+                     */
+                    nextState = ProduceLeftSemi;
                 } else {
                     leftReader.consumeTuple();
                     joinState = Probe;
@@ -551,7 +659,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
             {
                 /*
                  * Producing the results.
-                 * Handle output overflow and quantum expiration in ProducePending.
+                 * Handle output overflow and quantum expiration in
+                 * ProducePending.
                  */
                 if (hashTableReader.getNext(rightTuple)) {
                     for (int i = 0; i <rightTupleSize; i ++) {
@@ -563,6 +672,28 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * successfully.
                      */
                     nextState = ProduceRightOuter;
+                } else {
+                    /*
+                     * Probing for this plan is done.
+                     */
+                    joinState = GetNextPlan;
+                }
+                break;
+            }
+        case ProduceRightAnti:
+            {
+                /*
+                 * Producing the results.
+                 * Handle output overflow and quantum expiration in
+                 * ProducePending.
+                 */
+                if (hashTableReader.getNext(outputTuple)) {
+                    joinState = ProducePending;
+                    /*
+                     * Come back to this state after producing the output tuple
+                     * successfully.
+                     */
+                    nextState = ProduceRightAnti;
                 } else {
                     /*
                      * Probing for this plan is done.
@@ -612,7 +743,63 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 void LhxJoinExecStream::closeImpl()
 {
     hashTable.releaseResources();
+    rootPlan->close();
     ConfluenceExecStream::closeImpl();
+}
+
+void LhxJoinExecStream::setJoinType(
+    LhxJoinExecStreamParams const &params)
+{
+    /*
+     * just some shorthand
+     */
+    bool li = params.leftInner;
+    bool lo = params.leftOuter;
+    bool ri = params.rightInner;
+    bool ro = params.rightOuter;
+
+    /*
+     * Join types currently supported:
+     *
+     * Inner, Left Outer, Right Outer, Full Outer
+     * Right Anti(return non-matching rows from the build side)
+     * Left Semi(return matching rows from the probe side)
+     *
+     * These join types are marked by using the above four parameters. Each
+     * specify whether to return matching or nonmatching tuples from a join
+     * input.
+     *
+     * LeftInner LeftOuter RightInner RightOuter   JoinType
+     *     F         F          F          T       Right Anti
+     *     T         F          F          F       Left Semi
+     *     T         F          T          F       Inner Join
+     *     T         F          T          T       Right Outer
+     *     T         T          T          F       Left Outer
+     *     T         T          T          T       Full Outer       
+     */    
+
+    rightAnti  = (!li && !lo && !ri &&  ro);
+    leftSemi   = ( li && !lo && !ri && !ro);
+    innerJoin  = ( li && !lo &&  ri && !ro);
+    rightOuter = ( li && !lo &&  ri &&  ro);
+    leftOuter  = ( li &&  lo &&  ri && !ro);
+    fullOuter  = ( li &&  lo &&  ri &&  ro);
+    
+    /*
+     * By construction, at most one of the above six is true for a combination
+     * of values.
+     * Now make sure at least one of them is true.
+     * Otherwise, the optimizer has passed in a join type not supported by this
+     * join implementation.
+     */
+    assert (rightAnti || leftSemi || innerJoin || rightOuter || leftOuter ||
+            fullOuter);
+
+    regularJoin   = !params.setopDistinct && !params.setopAll;
+    setopDistinct =  params.setopDistinct && !params.setopAll;
+    setopAll      = !params.setopDistinct &&  params.setopAll;
+
+    assert (!setopAll && (regularJoin || setopDistinct));    
 }
 
 FENNEL_END_CPPFILE("$Id$");

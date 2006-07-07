@@ -347,8 +347,6 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     // in quick succession, so only do it once for the entire test suite
     // instead of the Junit-recommended once per test case.
 
-    // TODO jvs 18-June-2006:  re-specialize to
-    // Class<? extends TestCase> once red-zone dependencies have propagated
     /**
      * Generic implementation of suite() to be called by subclasses.
      *
@@ -701,6 +699,12 @@ public abstract class FarragoTestCase extends ResultSetTestCase
                 || name.startsWith("SYS_");
         }
 
+        protected boolean isBlessedWrapper(FemDataWrapper wrapper)
+        {
+            String name = wrapper.getName();
+            return name.startsWith("SYS_");
+        }
+
         private void dropSchemas()
             throws Exception
         {
@@ -732,7 +736,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             List<String> list = new ArrayList<String>();
             for (FemDataWrapper wrapper :
                 getRepos().allOfClass(FemDataWrapper.class)) {
-                if (wrapper.getName().startsWith("SYS_")) {
+                if (isBlessedWrapper(wrapper)) {
                     continue;
                 }
                 list.add(wrapper.isForeign() ? "foreign" : "local");

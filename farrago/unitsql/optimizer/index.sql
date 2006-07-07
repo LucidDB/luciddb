@@ -415,6 +415,9 @@ drop table ftrsemps cascade;
 -------------------------------------------------------
 -- Part 1. index created on empty column store table --
 -------------------------------------------------------
+-- Use LucidDB personality
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
 create table lbmemps(
     empno integer not null,
     ename varchar(40),

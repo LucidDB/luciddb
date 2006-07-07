@@ -86,14 +86,25 @@ public class LcsTableMergeRule extends RelOptRule
         // insert target row depends on whether the rid is null or non-null.
         // In the case of the former, it corresponds to the target of the
         // INSERT substatement while in the latter, it corresponds to the
-        // UPDATE.  These will be implemented using a CASE expression.
+        // UPDATE.  These will be implemented using a CASE expression.  If
+        // only an INSERT or only an UPDATE substatement is present, no CASE
+        // expression is required.
         RelDataTypeField[] targetFields =
             tableModification.getTable().getRowType().getFields();
         int nTargetFields = targetFields.length;
+        List<String> updateList = tableModification.getUpdateColumnList();
+        boolean updateOnly =
+            (updateList.size() > 0 &&
+                origProjExprs.length == nTargetFields + updateList.size());
+        boolean insertOnly = (origProjExprs.length == nTargetFields);
+        assert(!(updateOnly && insertOnly));
+        
+        int nInsertFields = (updateOnly) ? 0 : nTargetFields;
+        
         RexNode[] projExprs = new RexNode[nTargetFields + 3];
         String[] fieldNames = new String[nTargetFields + 3];
         
-        // create the rid expression on the target table and the null values
+        // create the rid expression on the target table and the null values  
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
         RexNode nullLiteral = rexBuilder.makeNullLiteral(
             SqlTypeName.Varbinary, LcsIndexGuide.LbmBitmapSegMaxSize);
@@ -101,11 +112,7 @@ public class LcsTableMergeRule extends RelOptRule
             origProj.getChild().getRowType().getFieldCount() - nTargetFields;
         RexNode ridExpr = LucidDbSpecialOperators.makeRidExpr(
             rexBuilder, origProj.getChild(), nSourceFields);
-        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType type = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(SqlTypeName.Bigint), true);
-        RexNode nullableRidExpr = rexBuilder.makeCast(type, ridExpr);
-        projExprs[0] = nullableRidExpr;
+        projExprs[0] = ridExpr;
         projExprs[1] = nullLiteral;
         projExprs[2] = nullLiteral;
         fieldNames[0] = "rid";
@@ -113,34 +120,73 @@ public class LcsTableMergeRule extends RelOptRule
         fieldNames[2] = "segment";
         
         // create the when condition for the CASE expression
-        RexNode whenExpr = rexBuilder.makeCall(
-            SqlStdOperatorTable.isNullOperator, nullableRidExpr);
- 
-        List<String> updateList = tableModification.getUpdateColumnList();
+        RexNode whenExpr = null;
+        if (!updateOnly && !insertOnly) {
+            whenExpr = rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator, ridExpr);
+        }
+        
         for (int i = 0; i < nTargetFields; i++) {
-            // determine whether a target expression was specified for the
-            // field in the UPDATE call
-            int matchedSetExpr = updateList.indexOf(targetFields[i].getName());
-            RexNode updateExpr;
-            if (matchedSetExpr != -1) {
-                updateExpr = origProjExprs[nTargetFields * 2 + matchedSetExpr];
-            } else {
-                updateExpr = origProjExprs[nTargetFields + i];
+            RexNode updateExpr = null;
+            if (!insertOnly) {
+                // determine whether a target expression was specified for the
+                // field in the UPDATE call
+                int matchedSetExpr = updateList.indexOf(
+                    targetFields[i].getName());
+            
+                if (matchedSetExpr != -1) {
+                    updateExpr =
+                        origProjExprs[nInsertFields + nTargetFields +
+                            matchedSetExpr];
+                } else {
+                    updateExpr = origProjExprs[nInsertFields + i];
+                }
             }
             
-            projExprs[i + 3] = rexBuilder.makeCall(
-                SqlStdOperatorTable.caseOperator,
-                new RexNode[] { whenExpr, origProjExprs[i], updateExpr }); 
+            if (insertOnly) {
+                projExprs[i + 3] = origProjExprs[i];
+            } else if (updateOnly) {
+                projExprs[i + 3] = updateExpr;
+            } else {
+                projExprs[i + 3] = rexBuilder.makeCall(
+                    SqlStdOperatorTable.caseOperator,
+                    new RexNode[] { whenExpr, origProjExprs[i], updateExpr }); 
+            }
             fieldNames[i + 3] = targetFields[i].getName();
         }
 
         ProjectRel projRel = (ProjectRel) CalcRel.createProject(
             origProj.getChild(), projExprs, fieldNames);
         
+        // in the insert-only case, we only need the rows where the rid is
+        // null; so add a filter to select only those rows and then project
+        // the non-rid columns
+        RelNode mergeSource;
+        if (insertOnly) {
+            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+            RelDataType ridType = typeFactory.createTypeWithNullability(
+                typeFactory.createSqlType(SqlTypeName.Bigint), true);
+            RexNode isNullExpr = rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator,
+                rexBuilder.makeInputRef(ridType, 0));
+            mergeSource = CalcRel.createFilter(projRel, isNullExpr);
+            RexNode[] nonRidProjExprs = new RexNode[nTargetFields];
+            for (int i = 0; i < nTargetFields; i++) {
+                nonRidProjExprs[i] = rexBuilder.makeInputRef(
+                    projExprs[i + 3].getType(), i + 3);
+            }
+            String[] nonRidFieldNames = new String[nTargetFields];
+            System.arraycopy(fieldNames, 3, nonRidFieldNames, 0, nTargetFields);
+            mergeSource = CalcRel.createProject(
+                mergeSource, nonRidProjExprs, nonRidFieldNames);
+        } else {
+            mergeSource = projRel;
+        }
+        
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
-                projRel);
+                mergeSource);
         if (fennelInput == null) {
             return;
         }
@@ -152,7 +198,8 @@ public class LcsTableMergeRule extends RelOptRule
                 tableModification.getConnection(),
                 fennelInput,
                 tableModification.getOperation(),
-                tableModification.getUpdateColumnList());
+                tableModification.getUpdateColumnList(),
+                updateOnly);
 
         call.transformTo(mergeRel);      
     }

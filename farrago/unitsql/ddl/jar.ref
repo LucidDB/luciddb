@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/ddl/jar.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test DDL on jars
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema jartest;

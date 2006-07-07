@@ -106,6 +106,8 @@ require version '${required.ant.version}'."/>
   <property name="catalog.mdrStorage"
     location="${farrago.catalog.dir}/FarragoCatalog"/>
 
+  <property name="coverage.dir" value="${farrago.dir}/coverage"/>
+
   <!-- NOTE:  this has to use true/false (not 1/0) for MDR import -->
   <property name="fennel.disabled" value="false"/>
   <condition property="fennel.disabled.istrue">
@@ -1169,7 +1171,7 @@ please disable it and try again.
     <delete quiet="true">
       <fileset dir="unitsql/ddl" includes="mdr.bt?"/>
     </delete>
-    <mdr storageFile="unitsql/ddl/mdr">
+    <mdr storageFile="${farrago.dir}/unitsql/ddl/mdr">
       <instantiate name="TestMof"/>
     </mdr>
   </target>
@@ -1389,10 +1391,10 @@ please disable it and try again.
   <target name="emmaClean">
     <delete dir="${emma.farrago.classes.dir}" quiet="true"/>
     <delete quiet="true">
-      <fileset dir="." includes="coverage.*"/>
-      <fileset dir="coverage"/>
+        <fileset dir="${farrago.dir}" includes="coverage.*"/>
+        <fileset dir="${coverage.dir}"/>
     </delete>
-    <mkdir dir="coverage"/>
+    <mkdir dir="${coverage.dir}"/>
     <mkdir dir="${emma.farrago.classes.dir}"/>
   </target>
 
@@ -1402,6 +1404,7 @@ please disable it and try again.
       <instr 
         mode="copy" 
         outdir="${emma.farrago.classes.dir}" 
+        metadatafile="${farrago.dir}/coverage.em" 
         instrpath="${farrago.classes.dir}">
         <filter excludes="*_Stub*"/>
       </instr>
@@ -1431,10 +1434,11 @@ please disable it and try again.
   <target name="emmaReport">
     <emma verbosity="verbose">
       <report sourcepath="${farrago.src.dir}">
-        <infileset dir="." includes="*.em, *.ec"/>
-        <html/>
-        <xml/>
-        <txt/>
+        <infileset dir="${farrago.dir}" includes="*.em, *.ec"/>
+
+        <html outfile="${coverage.dir}/coverage.html"/>
+        <xml outfile="${coverage.dir}/coverage.xml"/>
+        <txt outfile="${coverage.dir}/coverage.txt"/>
       </report>
     </emma>
   </target>

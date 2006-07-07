@@ -59,6 +59,13 @@ protected:
     TupleData *pBitmapSegTuple;
 
     /**
+     * Index of the bitmap columns
+     */
+    uint iSrid;
+    uint iSegmentDesc;
+    uint iSegments;
+
+    /**
      * Number of trailing zero bytes in the current segment
      */
     uint zeroBytes;
@@ -67,6 +74,11 @@ protected:
      * Used to construct singleton bitmap
      */
     uint8_t singleton;
+
+    /**
+     * Detects when a new tuple is read
+     */
+    bool tupleChange;
 
     /**
      * Initializes reader to start reading bit segments from a specified
@@ -93,6 +105,22 @@ protected:
      * the next segment in a bitmap segment
      */
     void advanceSegment();
+
+public:
+    /**
+     * Reports whether a new tuple was read. Initially, this attribute is
+     * false. It is updated to true whenever a new tuple is read. The
+     * atribute is manually restored to false by calling
+     * resetChangeListener(). Otherwise, it will be stuck at true.
+     */
+    bool getTupleChange();
+
+    /**
+     * Resets the tuple change attribute to false.
+     *
+     * @see getTupleChange().
+     */
+    void resetChangeListener();
 };
 
 FENNEL_END_NAMESPACE

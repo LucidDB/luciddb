@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/unitsql/med/mock.sql#7 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test mock namespace plugin
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create server mock_foreign_server
@@ -325,9 +325,7 @@ Error: From line 1, column 15 to line 1, column 44: Table 'MOCK_EXCLUDE_SCHEMA.M
 0: jdbc:farrago:> select * from table(
 . . . . . . . . >   sys_boot.mgmt.browse_connect_foreign_server(
 . . . . . . . . >     'MOCK_BROWSE',
-. . . . . . . . >     cursor(
-. . . . . . . . >         select '' as option_name, '' as option_value
-. . . . . . . . >         from sys_boot.jdbc_metadata.empty_view)))
+. . . . . . . . >     cursor(table sys_boot.mgmt.browse_connect_empty_options)))
 . . . . . . . . > order by option_ordinal, option_choice_ordinal;
 +-----------------+----------------------+---------------------------------------------+---------------------+------------------------+----------------------+
 | OPTION_ORDINAL  |     OPTION_NAME      |             OPTION_DESCRIPTION              | IS_OPTION_REQUIRED  | OPTION_CHOICE_ORDINAL  | OPTION_CHOICE_VALUE  |

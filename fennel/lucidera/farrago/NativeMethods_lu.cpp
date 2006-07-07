@@ -28,7 +28,7 @@
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/lucidera/bitmap/LbmGeneratorExecStream.h"
 #include "fennel/lucidera/bitmap/LbmSplicerExecStream.h"
-#include "fennel/lucidera/bitmap/LbmIndexScanExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSearchExecStream.h"
 #include "fennel/lucidera/bitmap/LbmChopperExecStream.h"
 #include "fennel/lucidera/bitmap/LbmUnionExecStream.h"
 #include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
@@ -215,7 +215,7 @@ class ExecStreamSubFactory_lu
     // implement FemVisitor
     virtual void visit(ProxyLbmSearchStreamDef &streamDef)
     {
-        LbmIndexScanExecStreamParams params;
+        LbmSearchExecStreamParams params;
         pExecStreamFactory->readBTreeSearchStreamParams(params, streamDef);
 
         params.rowLimitParamId =
@@ -224,7 +224,7 @@ class ExecStreamSubFactory_lu
         params.startRidParamId =
             readDynamicParamId(streamDef.getStartRidParamId());
 
-        pEmbryo->init(new LbmIndexScanExecStream(), params);
+        pEmbryo->init(new LbmSearchExecStream(), params);
     }
 
     // implement FemVisitor
@@ -312,11 +312,17 @@ class ExecStreamSubFactory_lu
          * These fields are currently not used by the optimizer. We know that
          * optimizer only supports inner equi hash join.
          */
-        params.leftInner = true;
-        params.leftOuter = streamDef.isLeftOuter();
-        params.rightInner = true;
-        params.rightOuter = streamDef.isRightOuter();        
-        params.eliminateDuplicate = false;
+        params.leftInner     = streamDef.isLeftInner();
+        params.leftOuter     = streamDef.isLeftOuter();
+        params.rightInner    = streamDef.isRightInner();
+        params.rightOuter    = streamDef.isRightOuter();        
+        params.setopDistinct = streamDef.isSetopDistinct();
+        params.setopAll      = streamDef.isSetopAll();
+
+        /*
+         * Set forcePartitionLevel to 0 to turn off force partitioning.
+         */
+        params.forcePartitionLevel = 0;
 
         CmdInterpreter::readTupleProjection(
             params.leftKeyProj, streamDef.getLeftKeyProj());
@@ -354,6 +360,11 @@ class ExecStreamSubFactory_lu
          */
         params.cndGroupByKeys = streamDef.getCndGroupByKeys();
         params.numRows = streamDef.getNumRows();
+
+        /*
+         * Set forcePartitionLevel to 0 to turn off force partitioning.
+         */
+        params.forcePartitionLevel = 0;
 
         pEmbryo->init(new LhxAggExecStream(), params);
     }

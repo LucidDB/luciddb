@@ -24,7 +24,6 @@ package org.eigenbase.test;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.*;
 
 import java.util.*;
 
@@ -112,9 +111,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             DEFAULT_EQUAL_SELECTIVITY_SQUARED);
     }
 
-    // TODO jvs 28-Mar-2006:  enable this one when Broadbase
-    // selectivity formula with redundancy detection gets ported
-    public void _testPercentageOriginalRowsRedundantFilter()
+    public void testPercentageOriginalRowsRedundantFilter()
     {
         checkPercentageOriginalRows(
             "select * from (select * from dept where deptno=20)"
@@ -445,11 +442,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         String sql, double expected)
     {
         RelNode rel = convertSql(sql);
-        ProjectRel projectRel = (ProjectRel) rel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
-        RexNode predicate = filterRel.getCondition();
-        Double result = RelMetadataQuery.getSelectivity(
-            filterRel.getChild(), predicate);
+        Double result = RelMetadataQuery.getSelectivity(rel, null);
         assertTrue(result != null);
         assertEquals(expected, result.doubleValue(), EPSILON);
     }
@@ -483,9 +476,9 @@ public class RelMetadataTest extends SqlToRelTestBase
     }
     
     private void checkRelSelectivity(
-        RelNode rel, RexNode predicate, double expected)
+        RelNode rel, double expected)
     {
-        Double result = RelMetadataQuery.getSelectivity(rel, predicate);
+        Double result = RelMetadataQuery.getSelectivity(rel, null);
         assertTrue(result != null);
         assertEquals(expected, result.doubleValue(), EPSILON);
     }
@@ -493,10 +486,7 @@ public class RelMetadataTest extends SqlToRelTestBase
     public void testSelectivityRedundantFilter()
     {
         RelNode rel = convertSql("select * from emp where deptno = 10");
-        ProjectRel projectRel = (ProjectRel) rel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
-        checkRelSelectivity(
-            filterRel, filterRel.getCondition(), DEFAULT_EQUAL_SELECTIVITY);
+        checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
     }
     
     public void testSelectivitySort()
@@ -504,11 +494,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         RelNode rel = convertSql(
             "select * from emp where deptno = 10" +
             "order by ename");
-        SortRel sortRel = (SortRel) rel;
-        ProjectRel projectRel = (ProjectRel) sortRel.getChild();
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
-        checkRelSelectivity(
-            sortRel, filterRel.getCondition(), DEFAULT_EQUAL_SELECTIVITY);
+        checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
     }
     
     public void testSelectivityUnion()
@@ -516,23 +502,25 @@ public class RelMetadataTest extends SqlToRelTestBase
         RelNode rel = convertSql(
             "select * from (select * from emp union all select * from emp) " +
             "where deptno = 10");
-        ProjectRel projectRel = (ProjectRel) rel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
-        // UnionRel is the child of the FilterRel
+        checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
+    }
+    
+    public void testSelectivityAgg()
+    {
+        RelNode rel = convertSql(
+            "select deptno, count(*) from emp where deptno > 10 " +
+            "group by deptno having count(*) = 0");
         checkRelSelectivity(
-            filterRel.getChild(), filterRel.getCondition(),
-            DEFAULT_EQUAL_SELECTIVITY);
+            rel, DEFAULT_COMP_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY);
     }
     
     public void testDistinctRowCountTable()
     {
         // no unique key information is available so return null
         RelNode rel = convertSql("select * from emp where deptno = 10");
-        ProjectRel projectRel = (ProjectRel) rel;
-        FilterRel filterRel = (FilterRel) projectRel.getChild();
         BitSet groupKey = new BitSet();
         Double result = RelMetadataQuery.getDistinctRowCount(
-            filterRel.getChild(), groupKey, filterRel.getCondition());
+            rel, groupKey, null);
         assertTrue(result == null);
     }
 }

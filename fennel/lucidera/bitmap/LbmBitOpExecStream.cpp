@@ -51,25 +51,29 @@ void LbmBitOpExecStream::prepare(LbmBitOpExecStreamParams const &params)
     segmentReaders.reset(new LbmSegmentReader[nInputs]);
     bitmapSegTuples.reset(new TupleData[nInputs]);
     for (uint i = 0; i < nInputs; i++) {
-        assert(
-            inAccessors[i]->getTupleDesc() == inAccessors[0]->getTupleDesc());
         bitmapSegTuples[i].compute(inAccessors[i]->getTupleDesc());
     }
 
-    assert(inAccessors[0]->getTupleDesc() == pOutAccessor->getTupleDesc());
+    nFields = inAccessors[0]->getTupleDesc().size() - 3;
 }
 
 void LbmBitOpExecStream::open(bool restart)
 {
     ConfluenceExecStream::open(restart);
     if (!restart) {
+        uint nKeys = pOutAccessor->getTupleDesc().size() - 3;
+
         // allocate output buffer; the output buffer size is based on the size
         // required for building a LbmEntry
-        uint bitmapColSize = pOutAccessor->getTupleDesc()[1].cbStorage;
+        uint bitmapColSize = pOutAccessor->getTupleDesc()[nKeys+1].cbStorage;
         uint outputBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
         outputBuf.reset(new FixedBuffer[outputBufSize]);
+
+        // initialize the writer to produce bitmap tuples; the second input
+        // should be a bitmap input
         segmentWriter.init(
-            outputBuf.get(), outputBufSize, pOutAccessor->getTupleDesc(), true);
+            outputBuf.get(), outputBufSize,
+            inAccessors[1]->getTupleDesc(), true);
         bitmapBufSize = LbmEntry::getMaxBitmapSize(bitmapColSize);
 
         // allocate a temporary buffer for the bit operation; the temporary
@@ -77,11 +81,12 @@ void LbmBitOpExecStream::open(bool restart)
         byteSegBuf.reset(new FixedBuffer[bitmapBufSize]); 
         pByteSegBuf = byteSegBuf.get();
 
-        // create dynamic parameters
+        // create dynamic parameters with the same type as the first bitmap
+        // field, a RID
         pDynamicParamManager->createParam(
-            rowLimitParamId, pOutAccessor->getTupleDesc()[0]);
+            rowLimitParamId, pOutAccessor->getTupleDesc()[nKeys]);
         pDynamicParamManager->createParam(
-            startRidParamId, pOutAccessor->getTupleDesc()[0]);
+            startRidParamId, pOutAccessor->getTupleDesc()[nKeys]);
         dynParamsCreated = true;
     } else {
         segmentWriter.reset();
@@ -98,7 +103,7 @@ void LbmBitOpExecStream::open(bool restart)
 
 ExecStreamResult LbmBitOpExecStream::producePendingOutput(uint iInput)
 {
-    if (!pOutAccessor->produceTuple(outputTuple)) {
+    if (!produceTuple(outputTuple)) {
         return EXECRC_BUF_OVERFLOW;
     }
     // in the middle of adding segments when buffer overflow occurred;
@@ -125,13 +130,8 @@ ExecStreamResult LbmBitOpExecStream::readInput(
 
     if (rc == EXECRC_EOS) {
         // write out the last pending segment
-        if (!segmentWriter.isEmpty()) {
-            outputTuple = segmentWriter.produceSegmentTuple();
-            segmentWriter.reset();
-            if (!pOutAccessor->produceTuple(outputTuple)) {
-                producePending = true;
-                return EXECRC_BUF_OVERFLOW;
-            }
+        if (! flush()) {
+            return EXECRC_BUF_OVERFLOW;
         }
         pOutAccessor->markEOS();
         return EXECRC_EOS;
@@ -148,6 +148,20 @@ ExecStreamResult LbmBitOpExecStream::readInput(
     return EXECRC_YIELD;
 }
 
+bool LbmBitOpExecStream::flush()
+{
+    assert (!producePending);
+
+    if (!segmentWriter.isEmpty()) {
+        outputTuple = segmentWriter.produceSegmentTuple();
+        segmentWriter.reset();
+        if (!produceTuple(outputTuple)) {
+            producePending = true;
+        }
+    }
+    return !producePending;
+ }
+
 bool LbmBitOpExecStream::addSegments()
 {
     while (addLen > 0) {
@@ -157,7 +171,7 @@ bool LbmBitOpExecStream::addSegments()
         }
 
         outputTuple = segmentWriter.produceSegmentTuple();
-        if (!pOutAccessor->produceTuple(outputTuple)) {
+        if (!produceTuple(outputTuple)) {
             producePending = true;
             return false;
         }
@@ -168,6 +182,12 @@ bool LbmBitOpExecStream::addSegments()
     }
 
     return true;
+}
+
+bool LbmBitOpExecStream::produceTuple(TupleData bitmapTuple)
+{
+    assert(pOutAccessor->getTupleDesc().size() == bitmapTuple.size());
+    return pOutAccessor->produceTuple(bitmapTuple);
 }
 
 void LbmBitOpExecStream::closeImpl()

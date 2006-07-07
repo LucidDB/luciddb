@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
+<!-- 
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2005-2005 LucidEra, Inc.
@@ -14,15 +14,16 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//
+//  
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -->
 
-<project name="sysviews" basedir="." default="test">
-  <dirname property="sysviews.dir" file="${ant.file.sysviews}"/>
-  <property name="open.dir" location="../../../.."/>
+<project name="udp" basedir="." default="test">
+  <dirname property="udp.dir" file="${ant.file.udp}" />
+
+  <property name="open.dir" location="${udp.dir}/../../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
@@ -34,12 +35,16 @@
   <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
   <import file="${open.dir}/farrago/buildMacros.xml" />
 
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+
   <!-- directory where blackhawk output should go -->
-  <property name="bh.log.basedir" value="${sysviews.dir}/testlog" />
+  <property name="bh.log.basedir" value="${udp.dir}/testlog" />
 
   <!-- directory of csv files -->
-  <property name="data.dir" value="${open.dir}/luciddb/test/data"/>
-  <property name="csv.copy.dir" value="${sysviews.dir}/csv-copy"/>
+  <property name="csv.copy.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+  <property name="csv.exp.dir" value="${open.dir}/luciddb/test/sql/udr/udp/csv-exp" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -51,28 +56,19 @@
   <property name="test.classpath" refid="test.classpath"/>
 
   <target name="gen-all-sql">
-    <uptodate property="gensql.uptodate">
-      <srcfiles dir="${sysviews.dir}" includes="*.tmpl"/>
-      <mapper type="glob" from="*.tmpl" to="*"/>
-    </uptodate>
-    <if>
-      <isset property="gensql.uptodate"/>
-      <then/>
-      <else>
-        <copy todir="${sysviews.dir}" overwrite="true">
-          <fileset dir="${sysviews.dir}" includes="*.tmpl"/>
-          <filterset>
-            <filter token="DIR" value="${csv.copy.dir}"/>
-          </filterset>
-          <globmapper from="*.tmpl" to="*"/>
-        </copy>
-      </else>
-    </if>
+    <copy todir="${udp.dir}" overwrite="true">
+      <fileset dir="${udp.dir}" includes="*.tmpl"/>
+      <filterset>
+        <filter token="DIR" value="${csv.copy.dir}"/>
+        <filter token="EXPDIR" value="${csv.exp.dir}"/>
+      </filterset>
+      <globmapper from="*.tmpl" to="*"/>
+    </copy>
   </target>
 
   <target name="test" depends="gen-all-sql">
     <blackhawk.fork
-      basedir="${sysviews.dir}"
+      basedir="${udp.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
@@ -83,17 +79,25 @@
       verbose="true"
       failonerror="true">
       <fileset dir="${data.dir}">
-        <include name="EMP.csv"/>
+        <include name="*.csv"/>
+        <include name="*.bcp"/>
+        <exclude name="blob.*"/>
       </fileset>
     </sync>
   </target>
 
-  <target name="clean">
-    <delete dir="${bh.log.basedir}"/>
-    <delete dir="${csv.copy.dir}"/>
-    <delete>
-      <fileset dir="${sysviews.dir}" includes="*.log"/>
-    </delete>
+  <target name="clean-exp">
+    <delete dir="${csv.exp.dir}"/>
   </target>
 
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
+    <delete>
+      <fileset dir="${udp.dir}">
+        <include name="*.err"/>
+      </fileset>
+    </delete>
+    <delete dir="${csv.copy.dir}"/>
+    <delete dir="${csv.exp.dir}"/>
+  </target>  
 </project>

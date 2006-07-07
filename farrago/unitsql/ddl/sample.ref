@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/sample.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test DDL on samples
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv

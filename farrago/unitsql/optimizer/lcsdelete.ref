@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id:$
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------------------
 0: jdbc:farrago:> -- Delete tests on lcs tables
@@ -194,19 +194,18 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableDeleteRel(table=[[LOCALDB, LCSDEL, DELTAB]])'
-'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[null], expr#4=[CAST($t3):VARBINARY(512)], rid=[$t1], descriptor=[$t4], segment=[$t4])'
-'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'    FennelCalcRel(expr#0..1=[{inputs}], expr#2=[CAST($t1):BIGINT NOT NULL], expr#3=[null], expr#4=[CAST($t3):VARBINARY(512)], rid=[$t2], descriptor=[$t4], segment=[$t4])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI])'
 '        LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
-'        LhxAggRel(groupCount=[1])'
-'          FennelMergeRel'
-'            FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
-'              FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
-'                FennelRenameRel(fieldNames=[[$f0]])'
-'                  LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
-'            FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
-'              FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
-'                FennelRenameRel(fieldNames=[[$f0]])'
-'                  LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+'        FennelMergeRel'
+'          FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'            FennelAggRel(groupCount=[0], agg#0=[MAX(0)])'
+'              FennelRenameRel(fieldNames=[[$f0]])'
+'                LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
+'          FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'            FennelAggRel(groupCount=[0], agg#0=[MIN(0)])'
+'              FennelRenameRel(fieldNames=[[$f0]])'
+'                LcsRowScanRel(table=[[LOCALDB, LCSDEL, DELTAB]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSDEL$DELTAB$C1]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> drop server test_data cascade;
 0: jdbc:farrago:> 

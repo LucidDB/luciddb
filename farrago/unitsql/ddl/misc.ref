@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/misc.sql#5 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Miscellaneous DDL
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema misc;

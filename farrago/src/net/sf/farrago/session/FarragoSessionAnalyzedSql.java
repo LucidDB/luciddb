@@ -31,9 +31,9 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.cwm.core.CwmModelElement;
 
 /**
- * FarragoSessionAnalyzedSql contains the results of the analyzeSql
- * call used while processing DDL statements such as CREATE VIEW
- * and CREATE FUNCTION which contain SQL expressions.
+ * FarragoSessionAnalyzedSql contains the results of the analyzeSql call used
+ * while processing SQL expressions contained by DDL statements such as CREATE
+ * VIEW and CREATE FUNCTION.
  *
  * @author John V. Sichi
  * @version $Id$

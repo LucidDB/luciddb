@@ -79,7 +79,7 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
             pInputAttr = &(inputDesc[pInvocation->iInputAttr]);
         }
         aggComputers.push_back(
-            AggComputer::newAggComputer(
+            newAggComputer(
                 pInvocation->aggFunction,
                 pInputAttr));
         aggComputers.back().setInputAttrIndex(pInvocation->iInputAttr);
@@ -93,6 +93,13 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
     prevTuple.computeAndAllocate(prevTupleDesc);
     outputTuple.compute(prevTupleDesc);
     pOutAccessor->setTupleShape(prevTupleDesc);
+}
+
+AggComputer *SortedAggExecStream::newAggComputer(
+    AggFunction aggFunction,
+    TupleAttributeDescriptor const *pAttrDesc)
+{
+    return AggComputer::newAggComputer(aggFunction, pAttrDesc);
 }
 
 inline void SortedAggExecStream::clearAccumulator()

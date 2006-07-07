@@ -21,6 +21,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStreamGraphImpl.h"
 #include "fennel/lucidera/bitmap/LbmMinusExecStream.h"
 
 FENNEL_BEGIN_CPPFILE("$Id:");
@@ -32,6 +33,21 @@ LbmMinusExecStream::LbmMinusExecStream() : LbmBitOpExecStream()
 void LbmMinusExecStream::prepare(LbmMinusExecStreamParams const &params)
 {
     LbmBitOpExecStream::prepare(params);
+
+    if (nFields) {
+        // compute an output tuple based on the minuend
+        prefixedBitmapTuple.compute(inAccessors[0]->getTupleDesc());
+
+        // prevTuple contains only the prefix fields, it has it's own
+        // storage to track the previous tuple when the current tuple
+        // pointers have moved forward
+        TupleDescriptor prevTupleDesc;
+        TupleDescriptor const &inputDesc = inAccessors[0]->getTupleDesc();
+        for (int i = 0; i < nFields; i ++) {
+            prevTupleDesc.push_back(inputDesc[i]);
+        }
+        prevTuple.computeAndAllocate(prevTupleDesc);
+    }
 }
 
 void LbmMinusExecStream::open(bool restart)
@@ -43,6 +59,12 @@ void LbmMinusExecStream::open(bool restart)
     advancePending = false;
     // since the children need to read till EOS, don't set a rowLimit
     rowLimit = 0;
+    state = FIRST_MINUS;
+    copyPrefixPending = false;
+    if (nFields) {
+        prevTupleValid = false;
+        minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
+    }
 }
 
 ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
@@ -56,12 +78,17 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         }
     }
 
+    if (copyPrefixPending) {
+        copyPrefix();
+        copyPrefixPending = false;
+    }
+
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
 
         // read a segment from the anchor if we've finished processing the
         // previous segment
         if (needToRead) {
-            rc = readInput(0, baseRid, baseByteSeg, baseLen);
+            rc = readInputAndRestart(0, baseRid, baseByteSeg, baseLen);
             if (rc != EXECRC_YIELD) {
                 return rc;
             }
@@ -76,14 +103,14 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         }
 
         // minus the children input, if they haven't all reached EOS
-        if (!childrenDone) {
+        if ((state != EMPTY_INPUT) && !childrenDone) {
            
             if (advancePending) {
                 rc = advanceChild(advanceChildInputNo, advanceChildRid);
                 if (rc != EXECRC_YIELD && rc != EXECRC_EOS) {
                     return rc;
-                advancePending = false;
                 }
+                advancePending = false;
             } else {
                 rc = advanceChildren(baseRid);
                 if (rc != EXECRC_YIELD) {
@@ -112,6 +139,108 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     }
 
     return EXECRC_QUANTUM_EXPIRED;
+}
+
+ExecStreamResult LbmMinusExecStream::readInputAndRestart(
+    uint iInput, LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
+{
+    ExecStreamResult rc = EXECRC_YIELD;
+    if (nFields && iInput == 0) {
+        rc = readMinuendInput(currRid, currByteSeg, currLen);
+    } else {
+        rc = readInput(iInput, currRid, currByteSeg, currLen);
+    }
+    if (rc != EXECRC_YIELD || nFields == 0) {
+        return rc;
+    }
+
+    // If there are prefixes, and they have changed, then the first input's
+    // (the minuend's) RIDs may start all over. Restart the inputs to be
+    // subtracted (the subtrahends) so all of their data can be minused
+    // from the next minuend input.
+    //
+    // Also flush the segment writer's current tuple. If it cannot be
+    // written, then we can't copy the next prefix yet, because the old
+    // values will be used to construct the pending output tuple.
+    if (prevTupleValid) {
+        if (minuendReader.getTupleChange()) {
+            int keyComp = comparePrefixes();
+            if (keyComp != 0) {
+                baseRid = currRid;
+                restartSubtrahends();
+                if (!flush()) {
+                    copyPrefixPending = true;
+                    return EXECRC_BUF_OVERFLOW;
+                }
+                copyPrefix();
+            }
+            minuendReader.resetChangeListener();
+        }
+    } else {
+        prevTupleValid = true;
+        copyPrefix();
+        minuendReader.resetChangeListener();
+    }
+    return rc;
+}
+
+ExecStreamResult LbmMinusExecStream::readMinuendInput(
+    LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
+{
+    LbmByteNumber byteNumber;
+    ExecStreamResult rc = minuendReader.readSegmentAndAdvance(
+        byteNumber, currByteSeg, currLen);
+    currRid = byteNumberToRid(byteNumber);
+    if (rc == EXECRC_EOS) {
+        // write out the last pending segment
+        if (! flush()) {
+            return EXECRC_BUF_OVERFLOW;
+        }
+        pOutAccessor->markEOS();
+        return EXECRC_EOS;
+    } else if (rc != EXECRC_YIELD) {
+        return rc;
+    }
+
+    // segment read should never be larger than space available
+    // for segments
+    assert(currLen <= bitmapBufSize);
+
+    return EXECRC_YIELD;    
+}
+
+int LbmMinusExecStream::comparePrefixes()
+{
+    int ret =
+        (inAccessors[0]->getTupleDesc()).compareTuplesKey(
+            prevTuple,
+            bitmapSegTuples[0],
+            nFields);    
+    return ret;
+}
+
+void LbmMinusExecStream::restartSubtrahends()
+{
+    childrenDone = false;
+    minChildRid = LcsRid(0);
+    advancePending = false;
+    for (uint i = 1; i < nInputs; i++) {
+        pGraph->getStreamInput(getStreamId(), i)->open(true);
+        segmentReaders[i].init(inAccessors[i], bitmapSegTuples[i]);
+    }
+}
+
+void LbmMinusExecStream::copyPrefix()
+{
+    /*
+      Need to make sure pointers are allocated before memcpy.
+      resetBuffer restores the pointers to the associated buffer.
+    */
+    prevTuple.resetBuffer();
+    
+    for (int i = 0; i < nFields; i ++) {
+        prevTuple[i].memCopyFrom(bitmapSegTuples[0][i]);
+    }
 }
 
 ExecStreamResult LbmMinusExecStream::advanceChild(int inputNo, LcsRid rid)
@@ -220,10 +349,33 @@ ExecStreamResult LbmMinusExecStream::findMinInput(int &minInput)
 
     if (minInput == -1) {
         childrenDone = true;
+        if (state == FIRST_MINUS) {
+            state = EMPTY_INPUT;
+        }
         return EXECRC_EOS;
     } else {
+        if (state == FIRST_MINUS) {
+            state = NONEMPTY_INPUT;
+        }
         return EXECRC_YIELD;
     }
+}
+
+bool LbmMinusExecStream::produceTuple(TupleData bitmapTuple)
+{
+    // If the minuend contained prefix fields, they are prepended to
+    // the output: ([optional prefix fields], bitmap)
+    if (nFields) {
+        for (uint i = 0; i < nFields; i++) {
+            prefixedBitmapTuple[i].copyFrom(prevTuple[i]);
+        }
+        assert (prefixedBitmapTuple.size() == nFields + bitmapTuple.size());
+        for (uint i = 0; i < 3; i++) {
+            prefixedBitmapTuple[nFields+i].copyFrom(bitmapTuple[i]);
+        }
+        return pOutAccessor->produceTuple(prefixedBitmapTuple);
+    }
+    return pOutAccessor->produceTuple(bitmapTuple);
 }
 
 void LbmMinusExecStream::closeImpl()

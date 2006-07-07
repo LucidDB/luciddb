@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dev/farrago/unitsql/ddl/collectionTypes.sql#6 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test DDL for collection types
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema collectionsTest;

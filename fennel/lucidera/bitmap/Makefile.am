@@ -8,7 +8,7 @@ LbmSegmentReader.cpp \
 LbmSeqSegmentReader.cpp \
 LbmRidReader.cpp \
 LbmSegmentWriter.cpp \
-LbmIndexScanExecStream.cpp \
+LbmSearchExecStream.cpp \
 LbmGeneratorExecStream.cpp \
 LbmSplicerExecStream.cpp\
 LbmEntry.cpp \
@@ -18,4 +18,7 @@ LbmUnionWorkspace.cpp \
 LbmUnionExecStream.cpp \
 LbmChopperExecStream.cpp \
 LbmBitOpExecStream.cpp \
-LbmMinusExecStream.cpp
+LbmMinusExecStream.cpp \
+LbmNormalizerExecStream.cpp \
+LbmByteSegment.cpp \
+LbmSortedAggExecStream.cpp

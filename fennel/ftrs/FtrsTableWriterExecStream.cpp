@@ -80,8 +80,14 @@ void FtrsTableWriterExecStream::open(bool restart)
 {
     ConduitExecStream::open(restart);
     assert(pTxn);
+    
     // REVIEW:  close/restart?
+    
+    // block checkpoints while joining txn
+    SXMutexSharedGuard actionMutexGuard(*pActionMutex);
     pTxn->addParticipant(pTableWriter);
+    actionMutexGuard.unlock();
+    
     nTuples = 0;
     pTableWriter->openIndexWriters();
     isDone = false;

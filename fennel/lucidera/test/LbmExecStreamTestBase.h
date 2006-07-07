@@ -27,6 +27,7 @@
 #include "fennel/exec/ValuesExecStream.h"
 #include "fennel/exec/ExecStreamEmbryo.h"
 #include "fennel/lucidera/bitmap/LbmEntry.h"
+#include "fennel/lucidera/bitmap/LbmNormalizerExecStream.h"
 #include "fennel/lucidera/sorter/ExternalSortExecStream.h"
 
 FENNEL_BEGIN_NAMESPACE
@@ -240,6 +241,25 @@ struct LbmNumberStreamInput
     uint bitmapSize; 
 };
 
+class NumberStreamExecStreamGenerator : public MockProducerExecStreamGenerator
+{
+protected:
+    SharedNumberStream pStream;
+public:
+    NumberStreamExecStreamGenerator(SharedNumberStream pNumberStream)
+    {
+        pStream = SharedNumberStream(pNumberStream->clone());
+    }
+
+    virtual int64_t generateValue(uint iRow, uint iCol)
+    {
+        if (pStream->hasNext()) {
+            return pStream->getNext();
+        }
+        return 0;
+    }
+};
+
 static const std::string traceName = "net.sf.fennel.test.lbm";
 
 /**
@@ -267,6 +287,16 @@ protected:
     TupleData bitmapTupleData;
     TupleAccessor bitmapTupleAccessor;
 
+    /**
+     * Tuple descriptor, data, and accessor for key-containting bitmaps
+     * (keys, srid, segment descriptor, bitmap segments)
+     */
+    TupleDescriptor keyBitmapTupleDesc;
+    TupleData keyBitmapTupleData;
+    TupleAccessor keyBitmapTupleAccessor;
+    boost::shared_array<FixedBuffer> keyBitmapBuf;
+    uint keyBitmapBufSize;
+
     inline static const std::string &getTraceName() 
     {
         return traceName;
@@ -291,7 +321,14 @@ protected:
 
     void initSorterExecStream(
         ExternalSortExecStreamParams &params,
-        ExecStreamEmbryo &embryo);
+        ExecStreamEmbryo &embryo,
+        TupleDescriptor const &outputDesc, 
+        uint nKeys = 1);
+
+    void initNormalizerExecStream(
+        LbmNormalizerExecStreamParams &params,
+        ExecStreamEmbryo &embryo, 
+        uint nKeys);
 
     /**
      * Calculates size of result bitmap.
@@ -313,9 +350,46 @@ protected:
         return (nRids / 8) + extraSpace;
     }
 
+    /**
+     * Generate bitmaps to used in verifying result of bitmap index scan
+     *
+     * @param nRows number of rows in index
+     *
+     * @param start initial rid value
+     *
+     * @param skipRows generate rids every "skipRows" rows; i.e., if skipRows
+     * == 1, there are no gaps in the rids
+     *
+     * @param pBuf buffer where bitmap segment tuples will be marshalled
+     *
+     * @param bufSize amount of space currently used within pBuf
+     *
+     * @param fullBufSize size of pBuf
+     *
+     * @param nBitmaps returns number of bitmaps generated
+     */
+    void generateBitmaps(
+        uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,
+        uint fullBufSize, uint &nBitmaps, bool includeKeys = false);
+
+    void produceEntry(
+        LbmEntry &lbmEntry, TupleAccessor &bitmapTupleAccessor, PBuffer pBuf,
+        uint &bufSize, uint &nBitmaps, bool includeKeys);
+
+    /**
+     * Initialize bitmaps with keys
+     */
+    void initKeyBitmap(uint nRows, std::vector<int> const &repeatSeqValues);
+
 public:
     void testCaseSetUp();
-    void testCaseTearDown();
+
+    /**
+     * Find the interval for which an entire tuple's sequence repeats
+     */
+    static uint getTupleInterval(
+        std::vector<int> const &repeatSeqValues,
+        uint nKeys = 0);
 };
 
 FENNEL_END_NAMESPACE

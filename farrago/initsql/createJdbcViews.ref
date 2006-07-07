@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/initsql/createJdbcViews.sql#8 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- This script creates a view schema used by JDBC metadata calls
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set verbose true
@@ -592,10 +592,8 @@
 . . . . . . . . > ;
 0: jdbc:farrago:> grant select on index_info_view to public;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- NOTE jvs 17-June-2006:  Odd definition here is workaround
-0: jdbc:farrago:> -- for FNL-33 and constant reduction
 0: jdbc:farrago:> create view empty_view as
-. . . . . . . . > select * from (select 1 as one from (values(0))) where 0 > one;
+. . . . . . . . > select * from (values(0)) where false;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create view super_tables_view as
 . . . . . . . . >     select

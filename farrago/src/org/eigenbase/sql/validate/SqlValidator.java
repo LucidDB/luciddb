@@ -427,7 +427,14 @@ public interface SqlValidator
     /**
      * Declares a SELECT expression as a cursor.
      */
-    public void declareCursor(SqlSelect select);
+    void declareCursor(SqlSelect select);
+
+    /**
+     * Enables or disables expansion of identifiers.
+     *
+     * @param expandIdentifiers new setting
+     */
+    void setIdentifierExpansion(boolean expandIdentifiers);
     
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,

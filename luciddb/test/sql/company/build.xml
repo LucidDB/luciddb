@@ -23,7 +23,7 @@
 <project name="company" basedir="." default="test">
   <dirname property="company.dir" file="${ant.file.company}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${company.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

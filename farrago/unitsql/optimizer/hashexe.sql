@@ -113,7 +113,7 @@ where empno in
 (110, 110, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1)
 order by ename;
 
--- this query still uses cartesian product
+-- this query uses hash join after pushing down the RHS expression
 explain plan for 
 select * from lhxemps, lhxdepts
 where lhxemps.deptno = lhxdepts.deptnoA + 1
@@ -352,26 +352,128 @@ select * from lhxemps3 inner join lhxemps4
 on upper(cast(lhxemps3.enameB as char(20))) = cast(lhxemps4.enameC as char(20))
 order by 1, 2;
 
--- not null types are compatible with hash outer joins
+-- test ON clause filter conditions for outer joins
 create table lhxemps5(
-    enameB char(20) not null)
+    empnoA integer)
 server sys_column_store_data_server;
 
 create table lhxemps6(
-    enameC char(20) not null)
+    empnoB integer)
 server sys_column_store_data_server;
 
-insert into lhxemps5 values('Leo');
+insert into lhxemps5 values(1);
+insert into lhxemps5 values(2);
 
-insert into lhxemps6 values('Adel');
+insert into lhxemps6 values(2);
+insert into lhxemps6 values(3);
 
 explain plan for
 select * from lhxemps5 full outer join lhxemps6
-on lhxemps5.enameB = lhxemps6.enameC
+on lhxemps5.empnoA = lhxemps6.empnoB
 order by 1, 2;
 
 select * from lhxemps5 full outer join lhxemps6
-on lhxemps5.enameB = lhxemps6.enameC
+on lhxemps5.empnoA = lhxemps6.empnoB
+order by 1, 2;
+
+-- outer join with filter predicates
+-- filter pushed down
+explain plan for
+select * from lhxemps5 join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+-- filter not pushed down
+-- outer join on filter can not be evaluated as post filter
+explain plan for
+select * from lhxemps5 left outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+select * from lhxemps5 left outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+select * from lhxemps5 left outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 3
+order by 1, 2;
+
+-- filter pushed down
+explain plan for
+select * from lhxemps5 right outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+-- filter not pushed down
+-- outer join on filter can not be evaluated as post filter
+explain plan for
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA <> 2
+order by 1, 2;
+
+-- this can use hash outer join also
+explain plan for
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps5.empnoA
+order by 1, 2;
+
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps5.empnoA
+order by 1, 2;
+
+explain plan for
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA * lhxemps5.empnoA > 10
+order by 1, 2;
+
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA * lhxemps5.empnoA > 10
+order by 1, 2;
+
+-- this will use a post-join filter
+explain plan for
+select * from lhxemps5 join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps6.empnoB
+order by 1, 2;
+
+-- outer join on filter can not be evaluated as post filter
+-- this should report an error
+explain plan without implementation for
+select * from lhxemps5 left outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps6.empnoB
+order by 1, 2;
+
+-- outer join on filter can not be evaluated as post filter
+-- this should report an error
+explain plan without implementation for
+select * from lhxemps5 right outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps6.empnoB
+order by 1, 2;
+
+-- outer join on filter can not be evaluated as post filter
+-- this should report an error
+explain plan without implementation for
+select * from lhxemps5 full outer join lhxemps6
+on lhxemps5.empnoA = lhxemps6.empnoB and
+   lhxemps5.empnoA > lhxemps6.empnoB
 order by 1, 2;
 
 --------------------
@@ -463,16 +565,11 @@ select empno, min(ename), max(ename) from lhxemps group by empno;
 
 select empno, min(ename), max(ename) from lhxemps group by empno;
 
----------
--- Bug --
----------
+-----------------------------
+-- aggregating NULL values --
+-----------------------------
 create table emps1(
     ename1 varchar(20))
-server sys_column_store_data_server;
-
-drop table emps2;
-create table emps2(
-    ename2 varchar(20))
 server sys_column_store_data_server;
 
 insert into emps1 values(NULL);
@@ -489,6 +586,51 @@ select distinct ename1 from emps1;
 select count(*) from emps1 group by ename1;
 select count(ename1) from emps1 group by ename1;
 select count(distinct ename1) from emps1;
+
+--------------------
+-- Hash Semi Join --
+--------------------
+create table emps2(
+    ename2 varchar(20))
+server sys_column_store_data_server;
+
+insert into emps1 values('abc');
+insert into emps1 values('abc');
+insert into emps1 values('def');
+insert into emps2 values(NULL);
+insert into emps2 values('abc');
+insert into emps2 values('abc');
+
+explain plan for
+select ename1 from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+select ename1 from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+explain plan for
+select upper(ename1) from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+select upper(ename1) from emps1
+where ename1 in (select ename2 from emps2)
+order by 1;
+
+explain plan for
+select ename1 from emps1
+where ename1 in (select upper(ename2) from emps2)
+order by 1;
+
+-- FIXME:
+-- should make join key casting a logical rule so that all physical hash
+-- join plans can benefit from it.
+explain plan for
+select ename1 from emps1
+where upper(ename1) in (select upper(ename2) from emps2)
+order by 1;
 
 --------------
 -- Clean up --

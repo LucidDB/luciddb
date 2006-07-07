@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/expressions/orderby.sql#1 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test ORDER BY
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- ORDER BY column name instead of ordinal

@@ -1,0 +1,237 @@
+set schema 'udptest';
+set path 'udptest';
+
+-- EXPORT_SCHEMA_TO_CSV tests
+
+--
+-- basic export, no filters
+--
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, null, '@EXPDIR@/local/basic', true);
+
+create server exp_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/local/basic',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes',
+  num_rows_scan '2'
+);
+
+-- check tables
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP."bench100")));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP."types")));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.customers)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.dept)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.emp)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.location)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.products)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.sales)));
+
+select count(*) from exp_server.BCP."bench100";
+select count(*) from exp_server.BCP."types";
+select count(*) from exp_server.BCP.customers;
+select count(*) from exp_server.BCP.dept;
+select count(*) from exp_server.BCP.emp;
+select count(*) from exp_server.BCP.location;
+select count(*) from exp_server.BCP.products;
+select count(*) from exp_server.BCP.sales;
+
+-- check against old schema
+select count(*) from 
+exp_server.BCP."bench100"ex, udptest."bench100" l
+where ex."kseq" = l."kseq" and ex."k2" = l."k2" and ex."k4" = l."k4" and
+ex."k5" = l."k5" and ex."k10" = l."k10" and ex."k25" = l."k25" and
+ex."k100" = l."k100" and ex."k1k" = l."k1k" and ex."k10k" = l."k10k" and
+ex."k40k" = l."k40k" and ex."k100k" = l."k100k" and ex."k250k" = l."k250k"
+and ex."k500k" = l."k500k"
+order by 1;
+
+drop server exp_server cascade;
+
+--
+--  include with table_list
+--
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/local/include', true);
+
+-- create foreign server from exported schema
+create server exp_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/local/include',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp;
+
+import foreign schema BCP
+from server exp_server
+into tempudp;
+
+-- check metadata for imported tables/columns
+select * from table( get_column_info(
+cursor(select * from tempudp."types")));
+select * from table( get_column_info(
+cursor(select * from tempudp.emp)));
+select * from table( get_column_info(
+cursor(select * from tempudp.location)));
+
+select * from tempudp."types" order by 1;
+select * from tempudp.location order by locid;
+
+drop schema tempudp cascade;
+drop server exp_server cascade;
+
+--
+-- include with table_pattern
+--
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null , '%e%', '@EXPDIR@/local/include', true);
+
+-- create foreign server from exported schema
+create server exp_server
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/local/include',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp;
+
+import foreign schema BCP
+from server exp_server
+into tempudp;
+
+-- check metadata for imported tables/columns
+--select * from sys_root.dba_columns
+--where schema_name = 'TEMPUDP'
+--order by table_name, column_name;
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP'
+order by table_name;
+
+select count(*) from tempudp."types";
+select count(*) from tempudp.emp;
+select count(*) from tempudp.location;
+select count(*) from tempudp."bench100";
+
+--
+-- exclude with table_list
+--
+call sys_root.export_schema_to_csv(null, 'TEMPUDP', true, 'bench100, EMP,types' , null, '@EXPDIR@/local/exclude', true);
+
+-- create foreign server from exported schema
+create server exp_server2
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/local/exclude',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp2;
+
+import foreign schema BCP
+from server exp_server2
+into tempudp2;
+
+-- check metadata for imported tables/columns
+-- select * from sys_root.dba_columns
+-- where schema_name = 'TEMPUDP2'
+-- order by table_name, column_name;
+
+select * from table( get_column_info(
+cursor(select * from tempudp2.location)));
+
+select count(*) from tempudp.location a,tempudp2.location b
+where a.locid = b.locid and a.street = b.street and a.city = b.city and 
+a.state = b.state and a.zip = b.zip;
+
+drop schema tempudp2 cascade;
+drop server exp_server2 cascade;
+
+--
+-- exclude with table pattern
+--
+call sys_root.export_schema_to_csv(null, 'UDPTEST', true, null , '%S', '@EXPDIR@/local/exclude', true);
+
+-- create foreign server from exported schema
+create server exp_server2
+foreign data wrapper sys_file_wrapper
+options(
+  directory '@EXPDIR@/local/exclude',
+    file_extension '.txt',
+    ctrl_file_extension '.bcp',
+    field_delimiter '\t',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'yes',
+    num_rows_scan '2'
+);
+
+-- import from exported schema
+create schema tempudp2;
+
+import foreign schema BCP
+from server exp_server2
+into tempudp2;
+
+-- check metadata for imported tables/columns
+-- select * from sys_root.dba_columns
+-- where schema_name = 'TEMPUDP2'
+-- order by table_name, column_name;
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP2'
+order by table_name;
+
+select * from table( get_column_info(
+cursor(select * from tempudp2."types")));
+select * from table( get_column_info(
+cursor(select * from tempudp2.location)));
+
+select * from tempudp2."types"
+order by 1;
+
+select count(*) from tempudp2.location;
+select count(*) from tempudp2.dept;
+select count(*) from tempudp2.emp;
+select count(*) from tempudp2."bench100";
+
+drop schema tempudp2 cascade;
+drop server exp_server2 cascade;
+drop schema tempudp cascade;

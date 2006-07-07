@@ -117,19 +117,31 @@ public class PushProjectPastJoinRule extends RelOptRule
         {
             nLeftProject++;     
         }
-        int nRightProject = projRefs.cardinality() - nLeftProject;
-        
-        // nothing is being projected on one of the join inputs
-        if (nLeftProject == 0 || nRightProject == 0) {
-            return;
-        }
+        int nRightProject = projRefs.cardinality() - nLeftProject;      
         
         // create left and right projections, projecting only those
         // fields referenced on each side
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
+        // if nothing is projected from join child, arbitrarily project
+        // the first column unless there is only one column in the child;
+        // this is necessary since Fennel doesn't handle 0-column projections
+        if (nLeftProject == 0 && preserveLeft.size() == 0) {
+            if (nFieldsLeft == 1) {
+                return;
+            }
+            projRefs.set(0);
+            nLeftProject = 1;
+        }
         RelNode leftProjRel = pushProject.createProjectRefsAndExprs(
             rexBuilder, projRefs, leftFields, null, 0, nLeftProject,
             preserveLeft, joinRel.getLeft());
+        if (nRightProject == 0 && preserveRight.size() == 0) {
+            if (nFieldsRight == 1) {
+                return;
+            }
+            projRefs.set(nFieldsLeft);
+            nRightProject = 1;
+        }
         RelNode rightProjRel = pushProject.createProjectRefsAndExprs(
             rexBuilder, projRefs, rightFields, joinFields, nFieldsLeft,
             nRightProject, preserveRight, joinRel.getRight());

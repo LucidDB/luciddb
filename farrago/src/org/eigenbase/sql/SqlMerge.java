@@ -165,41 +165,47 @@ public class SqlMerge extends SqlCall
         getCondition().unparse(
             writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
 
-        writer.newlineAndIndent();
-        writer.keyword("WHEN MATCHED THEN UPDATE");
-        final SqlWriter.Frame setFrame =
-            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
         SqlUpdate updateCall = (SqlUpdate) getUpdateCall();
-        Iterator targetColumnIter =
-            updateCall.getTargetColumnList().getList().iterator();
-        Iterator sourceExpressionIter =
-            updateCall.getSourceExpressionList().getList().iterator();
-        while (targetColumnIter.hasNext()) {
-            writer.sep(",");
-            SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
-            id.unparse(
-                writer, getOperator().getLeftPrec(),
-                getOperator().getRightPrec());
-            writer.keyword("=");
-            SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
-            sourceExp.unparse(
-                writer, getOperator().getLeftPrec(),
-                getOperator().getRightPrec());
+        if (updateCall != null) {
+            writer.newlineAndIndent();
+            writer.keyword("WHEN MATCHED THEN UPDATE");
+            final SqlWriter.Frame setFrame =
+            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
+        
+            Iterator targetColumnIter =
+                updateCall.getTargetColumnList().getList().iterator();
+            Iterator sourceExpressionIter =
+                updateCall.getSourceExpressionList().getList().iterator();
+            while (targetColumnIter.hasNext()) {
+                writer.sep(",");
+                SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
+                id.unparse(
+                    writer, getOperator().getLeftPrec(),
+                    getOperator().getRightPrec());
+                writer.keyword("=");
+                SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
+                sourceExp.unparse(
+                    writer, getOperator().getLeftPrec(),
+                    getOperator().getRightPrec());
+            }
+            writer.endList(setFrame);
         }
-        writer.endList(setFrame);
 
-        writer.newlineAndIndent();
-        writer.keyword("WHEN NOT MATCHED THEN INSERT");
         SqlInsert insertCall = (SqlInsert) getInsertCall();
-        if (insertCall.getTargetColumnList() != null) {
-            insertCall.getTargetColumnList().unparse(
+        if (insertCall != null) {
+            writer.newlineAndIndent();
+            writer.keyword("WHEN NOT MATCHED THEN INSERT");
+            if (insertCall.getTargetColumnList() != null) {
+                insertCall.getTargetColumnList().unparse(
+                    writer, getOperator().getLeftPrec(),
+                    getOperator().getRightPrec());
+            }
+            insertCall.getSource().unparse(
                 writer, getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
-        }
-        insertCall.getSource().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
 
-        writer.endList(frame);
+            writer.endList(frame);
+        }
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)

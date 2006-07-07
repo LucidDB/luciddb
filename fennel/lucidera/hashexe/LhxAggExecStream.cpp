@@ -34,6 +34,14 @@ void LhxAggExecStream::prepare(
 {
     ConduitExecStream::prepare(params);
 
+    /*
+     * Force partitioning level. Only set in tests.
+     */
+    forcePartitionLevel = params.forcePartitionLevel;
+
+    hashInfo.filterNull = false;
+    hashInfo.removeDuplicate = false;
+
     hashInfo.streamBufAccessor.push_back(pInAccessor);
 
     TupleDescriptor inputDesc = pInAccessor->getTupleDesc();
@@ -195,12 +203,12 @@ void LhxAggExecStream::open(bool restart)
      * The execute state machine operates at the plan level.
      */
     uint numInput = 1;
-    uint numChild = 2;
+    uint numChild = 3;
     LhxPlan *parentPlan = NULL;
     vector<SharedLhxPartition> partitionList;
-    buildPart = SharedLhxPartition(new LhxPartition());
 
-    buildPart->firstPageId = NULL_PAGE_ID;
+    buildPart = SharedLhxPartition(new LhxPartition());
+    (buildPart->segStream).reset();
     buildPart->inputIndex = 0;
     partitionList.push_back(buildPart);
 
@@ -217,8 +225,9 @@ void LhxAggExecStream::open(bool restart)
      * Now starts at the first (root) plan.
      */
     curPlan = rootPlan.get();
-    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo, true);
-    aggState = Build;
+    buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo);
+
+    aggState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
 }
 
 ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
@@ -227,7 +236,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
     {
         switch (aggState)
         {
-        case Build:
+        case ForcePartitionBuild:
             {
                 /*
                  * Build
@@ -264,14 +273,76 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 
                     /*
                      * Add tuple to hash table.
+                     *
+                     * NOTE: This is a testing state. Always partition up to
+                     * forcePartitionLevel.
+                     */
+                    if (curPlan->partitionLevel < forcePartitionLevel ||
+                        !hashTable.addTuple(inputTuple)) {
+                        if (isTopPartition) {
+                            partInfo.open(&hashTableReader,
+                                          &buildReader, inputTuple,
+                                          &aggComputers);
+                        } else {
+                            partInfo.open(&hashTableReader,
+                                          &buildReader, inputTuple,
+                                          &partialAggComputers);
+                        }
+                        aggState = Partition;
+                        break;
+                    }
+                    buildReader.consumeTuple();
+                }
+                break;
+            }
+        case Build:
+            {
+                /*
+                 * Build
+                 */
+                inputTuple.compute(buildReader.getTupleDesc());
+                for (;;) {
+                    if (!buildReader.isTupleConsumptionPending()) {
+                        if (buildReader.getState() == EXECBUF_EOS) {
+                            buildReader.close();
+                            numTuplesProduced = 0;
+                            /*
+                             * break out of this loop, and start returning.
+                             */
+                            aggState = Produce;
+                            break;
+                        }
+
+                        if (!buildReader.demandData()) {
+                            if (isTopPartition) {
+                                /*
+                                 * Top level: request more data from stream producer.
+                                 */
+                                return EXECRC_BUF_UNDERFLOW;
+                            } else {
+                                /*
+                                 * Recursive level: no more data in partition.
+                                 * Come back to the top of the same state to
+                                 * detect EOS.
+                                 */
+                                break;
+                            }
+                        }
+                        buildReader.unmarshalTuple(inputTuple);
+                    }
+
+                    /*
+                     * Add tuple to hash table.
                      */
                     if (!hashTable.addTuple(inputTuple)) {
                         if (isTopPartition) {
-                            partInfo.open(buildInputIndex,
-                                &hashTableReader, &buildReader, inputTuple, &aggComputers);
+                            partInfo.open(&hashTableReader,
+                                          &buildReader, inputTuple,
+                                          &aggComputers);
                         } else {
-                            partInfo.open(buildInputIndex,
-                                &hashTableReader, &buildReader, inputTuple, &partialAggComputers);
+                            partInfo.open(&hashTableReader,
+                                          &buildReader, inputTuple,
+                                          &partialAggComputers);
                         }
                         aggState = Partition;
                         break;
@@ -283,7 +354,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
         case Partition:
             {
                 for (;;) {
-                    if (curPlan->generatePartitions(hashInfo, partInfo, false)
+                    if (curPlan->generatePartitions(hashInfo, partInfo)
                         == PartitionUnderflow) {
                         /*
                          * Request more data from producer.
@@ -297,24 +368,17 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         break;
                     }
                 }
-                partInfo.close(buildInputIndex);
+                partInfo.close();
                 aggState = CreateChildPlan;
                 break;
             }
         case CreateChildPlan:
             {
-                FENNEL_TRACE(TRACE_FINE, (curPlan->dataTrace).str());
                 /*
                  * Link the newly created partitioned in the plan tree.
                  */
                 curPlan->createChildren(partInfo);
                 
-                /*
-                 * Reset the list of partitions to prepare for the next level
-                 * of recursive partitioning.
-                 */
-                partInfo.reset();
-
                 /*
                  * now recurse down the plan tree to get the first leaf plan.
                  */
@@ -329,16 +393,18 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  * Hash table needs to aggregate partial results using the
                  * correct agg computer interface.
                  */
-                hashTable.init(curPlan->partitionLevel, hashInfo, &partialAggComputers);
+                hashTable.init(curPlan->partitionLevel, hashInfo,
+                               &partialAggComputers);
                 hashTableReader.init(&hashTable, hashInfo);
 
                 bool status = hashTable.allocateResources();
                 assert(status);
 
-                buildReader.open(curPlan->getPartition(buildInputIndex),
-                    hashInfo, true);
+                buildReader.open(
+                    curPlan->getPartition(buildInputIndex),
+                    hashInfo);
 
-                aggState = Build;
+                aggState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 break;                
             }
         case GetNextPlan:
@@ -353,15 +419,18 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * Hash table needs to aggregate partial results using the
                      * correct agg computer interface.
                      */
-                    hashTable.init(curPlan->partitionLevel, hashInfo, &partialAggComputers);
+                    hashTable.init(curPlan->partitionLevel, hashInfo,
+                                   &partialAggComputers);
                     hashTableReader.init(&hashTable, hashInfo);
                     bool status = hashTable.allocateResources();
                     assert(status);
 
-                    buildReader.open(curPlan->getPartition(buildInputIndex),
-                        hashInfo, true);
+                    buildReader.open(
+                        curPlan->getPartition(buildInputIndex),
+                        hashInfo);
 
-                    aggState = Build;
+                    aggState = 
+                        (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
                 } else {
                     aggState = Done;
                 }
@@ -426,6 +495,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 void LhxAggExecStream::closeImpl()
 {
     hashTable.releaseResources();
+    rootPlan->close();
     ConduitExecStream::closeImpl();
 }
 

@@ -40,7 +40,7 @@ ${farrago.test.jvmargs}
 
 ]>
 
-<project name="luciddb" basedir="." default="test">
+<project name="luciddb" default="test">
   <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
   <dirname property="luciddb.dir" file="${ant.file.luciddb}" />
@@ -48,7 +48,7 @@ ${farrago.test.jvmargs}
   <osfamily property="osfamily"/>
 
 <!-- assume common parent of fennel, farrago and luciddb  -->
-  <property name="open.dir" location=".."/>
+  <property name="open.dir" location="${luciddb.dir}/.."/>
   <fail unless="open.dir" />
   <property name="farrago.dir" location="${open.dir}/farrago"/>
   <property name="farrago.dist.dir" location="${farrago.dir}/dist"/>
@@ -122,12 +122,14 @@ ${farrago.test.jvmargs}
   <property name="trace.fennel.handles" value=""/>
 
   <property name="dist.dir"
-    location="${basedir}/dist"/>
+    location="${luciddb.dir}/dist"/>
   
   <property name="emma.luciddb.classes.dir" location="${luciddb.dir}/classes-cov"/>
 
   <!-- directory for init SQL scripts -->
   <property name="initSql.dir" value="${luciddb.dir}/initsql"/>
+
+  <property name="coverage.dir" value="${luciddb.dir}/coverage"/>
 
   <if>
     <equals arg1="${osfamily}" arg2="unix"/>
@@ -197,14 +199,15 @@ ${farrago.test.jvmargs}
     <property name="target.name" value="gen-all-sql"/>
     <foreach param="target.file" target="call-subdir-target" inheritAll="true">
       <path>
-        <fileset dir="${basedir}/test/sql">
+        <fileset dir="${luciddb.dir}/test/sql">
           <include name="**/build.xml"/>
           <exclude name="calc/**"/>
           <exclude name="conv_types/**"/>
           <exclude name="numerics/build.xml"/>
           <exclude name="txn/build.xml"/>
           <exclude name="concurrency/build.xml"/>
-          <exclude name="udr/**"/>
+          <exclude name="udr/udx/**"/>
+          <exclude name="udr/udf/**"/>
           <exclude name="VI/recovery/build.xml"/>
           <exclude name="VI/build.xml"/>
           <exclude name="hashjoin/**"/>
@@ -219,11 +222,14 @@ ${farrago.test.jvmargs}
     <echo>
       This is the target.file: ${target.file}
     </echo>
-    <ant antfile="${target.file}" target="${target.name}" inheritAll="false"/>
+    <dirname property="target.dir" file="${target.file}" />
+    <ant dir="${target.dir}" antfile="${target.file}" target="${target.name}" inheritAll="false">
+        <property name="open.dir" location="${open.dir}"/>
+    </ant>
   </target>
 
   <!-- Nightly tests -->
-  <target name="test-nightly-all-init" depends="cleanJars,createCatalog,buildJdbcPlugin">
+  <target name="test-nightly-all-init" depends="cleanJars,createCatalog">
     <antcall target="clean-subdirs"/>
     <antcall target="gen-all-sql"/>
   </target>
@@ -235,6 +241,7 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-nightly-nondb.xml"
       classpathref="test.classpath"/>
@@ -247,6 +254,7 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-nightly-flatfile.xml"
       classpathref="test.classpath"/>
@@ -259,6 +267,7 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-nightly-oracle.xml"
       classpathref="test.classpath"/>
@@ -271,6 +280,7 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-nightly-sqlserver.xml"
       classpathref="test.classpath"/>
@@ -283,6 +293,7 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-nightly-csvjdbc.xml"
       classpathref="test.classpath"/>
@@ -291,7 +302,7 @@ ${farrago.test.jvmargs}
   <target name="clean-subdirs">
     <property name="target.name" value="clean"/>
     <foreach param="target.file" target="call-subdir-target" inheritAll="true">
-      <fileset dir="${basedir}/test/sql">
+      <fileset dir="${luciddb.dir}/test/sql">
         <include name="**/build.xml"/>
       </fileset>
     </foreach>
@@ -304,15 +315,17 @@ ${farrago.test.jvmargs}
     <property name="bh.log.basedir" value="${testlog.dir}/bh-long"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-long.xml"
       classpathref="test.classpath"/>
   </target>
 
-  <target name="test-all" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test-all" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <property file="run.properties"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test-all.xml"
       classpathref="test.classpath"/>
@@ -321,25 +334,42 @@ ${farrago.test.jvmargs}
 
 <!-- End Experiment-->
 
-  <target name="test" depends="cleanJars,createCatalog,buildJdbcPlugin,gen-all-sql">
+  <target name="test" depends="cleanJars,createCatalog,gen-all-sql">
     <property name="bh.filter.knownFailures" value="false"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
+      dir="${luciddb.dir}"
       basedir="${luciddb.dir}"
       testscript="test.xml"
       classpathref="test.classpath"/>
     <antcall target="gen-bh-report"/>
   </target>
 
+  <target name="emmaTest" depends="cleanJars,createCatalog,gen-all-sql">
+    <property name="bh.filter.knownFailures" value="false"/>
+    <property file="run.properties"/>
+    <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
+    <blackhawk.fork
+      dir="${luciddb.dir}"
+      basedir="${luciddb.dir}"
+      testscript="test.xml"
+      classpathref="emma.test.classpath"/>
+    <antcall target="gen-bh-report"/>
+  </target>
+
   <target name="bhShortregSanity">
-    <blackhawk.fork basedir="test/sql/shortreg" 
+    <blackhawk.fork 
+      dir="${luciddb.dir}"
+      basedir="${luciddb.dir}/test/sql/shortreg" 
       testscript="test.xml"
       classpathref="test.classpath"/>
   </target>
 
   <target name="emmaBh">
-    <blackhawk.fork basedir="test/sql/shortreg" 
+    <blackhawk.fork 
+      dir="${luciddb.dir}"
+      basedir="${luciddb.dir}/test/sql/shortreg" 
       testscript="test.xml"
       classpathref="emma.test.classpath"/>
   </target>
@@ -356,6 +386,7 @@ ${farrago.test.jvmargs}
       <include name="**/*.java" />
     </farrago.javaCompile>
     <antcall target="buildApplibPlugin"/>    
+    <antcall target="buildJdbcPlugin" />
     <antcall target="buildClientJar"/>
   </target>
 
@@ -605,7 +636,7 @@ ${farrago.test.jvmargs}
 
   <target name="runLuciddbInitSql">
     <filelist dir="${initSql.dir}" id="filelist.InitSql"
-      files="installApplib.sql, createTestHarness.sql, createDbaViews.sql"/>
+      files="installApplib.sql, createTestHarness.sql, createDbaViews.sql, createForeignWrappers.sql"/>
     <pathconvert property="filelist.InitSql" 
       refid="filelist.InitSql" pathsep="${line.separator}"
       dirsep="${file.separator}" />
@@ -617,6 +648,12 @@ ${farrago.test.jvmargs}
   <target name="cleanJars">
     <antcall target="cleanClientJar"/>
     <antcall target="cleanApplib"/>
+    <antcall target="cleanJdbcPlugins"/>
+  </target>
+
+  <target name="cleanJdbcPlugins">
+    <delete file="${luciddb.plugin.dir}/FarragoMedJdbc3p.jar" quiet="true"/>
+    <delete file="${luciddb.plugin.dir}/FarragoMedJdbc.jar" quiet="true"/>
   </target>
 
   <target name="cleanClientJar">
@@ -726,10 +763,10 @@ ${farrago.test.jvmargs}
   <target name="emmaClean">
     <delete dir="${emma.luciddb.classes.dir}" quiet="true"/>
     <delete quiet="true">
-      <fileset dir="." includes="coverage.*"/>
-      <fileset dir="coverage"/>
+        <fileset dir="${luciddb.dir}" includes="coverage.*"/>
+        <fileset dir="${coverage.dir}"/>
     </delete>
-    <mkdir dir="coverage"/>
+    <mkdir dir="${coverage.dir}"/>
     <mkdir dir="${emma.luciddb.classes.dir}"/>
   </target>
 
@@ -738,13 +775,14 @@ ${farrago.test.jvmargs}
       <instr 
         mode="copy" 
         outdir="${emma.luciddb.classes.dir}" 
+        metadatafile="${luciddb.dir}/coverage.em" 
         instrpath="${classes.dir}">
         <filter excludes="*_Stub*"/>
       </instr>
     </emma>
   </target>
  
-  <target name="emmaTest" depends="emmaInstr">
+  <target name="emmaTest.old" depends="emmaInstr">
     <antcall target="emmaShortregSanity"/>
     <antcall target="emmaTxn"/>
     <antcall target="emmaBh" />
@@ -753,11 +791,11 @@ ${farrago.test.jvmargs}
   <target name="emmaReport">
     <emma verbosity="verbose">
       <report sourcepath="${luciddb.test.dir}/src,${farrago.src.dir}">
-        <infileset dir="${farrago.dir}" includes="*.em"/>
-        <infileset dir="." includes="*.em, *.ec"/>
-        <html/>
-        <xml/>
-        <txt/>
+        <infileset dir="${luciddb.dir}" includes="*.em, *.ec"/>
+
+        <html outfile="${coverage.dir}/coverage.html"/>
+        <xml outfile="${coverage.dir}/coverage.xml"/>
+        <txt outfile="${coverage.dir}/coverage.txt"/>
       </report>
     </emma>
   </target>
@@ -978,9 +1016,6 @@ ${farrago.test.jvmargs}
     <copy todir="${luciddb.dir}/.settings" overwrite="true">
       <fileset dir="${luciddb.dir}/eclipse/.settings"/>
     </copy>
-  </target>
-
-  <target name="dummy">
   </target>
 
 </project>

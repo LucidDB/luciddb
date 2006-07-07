@@ -82,17 +82,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         if (feature == EigenbaseResource.instance().SQLFeature_E151) {
             return false;
         }
-        
-        // LucidDB doesn't yet support EXCEPT.
-        if (feature == EigenbaseResource.instance().SQLFeature_E071_03) {
-            return false;
-        }
-        
-        // LucidDB doesn't yet support INTERSECT.
-        if (feature == EigenbaseResource.instance().SQLFeature_F302) {
-            return false;
-        }
-        
+                
         return super.supportsFeature(feature);
     }
 
@@ -201,7 +191,19 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
         // Push filters down.
-        builder.addRuleInstance(new PushFilterRule());
+        builder.addRuleInstance(new PushFilterRule(
+            new RelOptRuleOperand(
+                FilterRel.class,
+                new RelOptRuleOperand [] {
+                    new RelOptRuleOperand(JoinRel.class, null)
+            }),
+            "with filter above join"));
+        
+        builder.addRuleInstance(
+            new PushFilterRule(
+                new RelOptRuleOperand(JoinRel.class, null),
+                "without filter above join"));        
+
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
@@ -251,6 +253,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         // Apply PushProjectPastJoinRule while there are no physical joinrels
         // since the rule only matches on JoinRel.
+        builder.addGroupBegin();
         builder.addRuleInstance(new RemoveTrivialProjectRule());
         builder.addRuleInstance(new PushProjectPastJoinRule(
             LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
@@ -260,7 +263,6 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // patterns because the second is needed to handle the case where
         // the projection has been trivially removed but we still need to
         // pull special columns referenced in filters into a new projection
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
         builder.addRuleInstance(new PushProjectPastFilterRule(
             new RelOptRuleOperand(
                 ProjectRel.class,
@@ -273,7 +275,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             new RelOptRuleOperand(FilterRel.class, null),
             LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
             "without project"));
-        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addGroupEnd();
 
         // Apply physical projection to row scans, eliminating access
         // to clustered indexes we don't need.
@@ -298,8 +300,17 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // LcsTableAppendRule relies on CoerceInputsRule above.)
         builder.addRuleCollection(medPluginRules);
 
+        // Use hash semi join if possible.
+        builder.addRuleInstance(new LhxSemiJoinRule());
+        
         // Use hash join wherever possible.
         builder.addRuleInstance(new LhxJoinRule());
+        
+        // Use hash join to implement set op: Intersect.
+        builder.addRuleInstance(new LhxIntersectRule());        
+
+        // Use hash join to implement set op: Except(minus).
+        builder.addRuleInstance(new LhxMinusRule());        
         
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but

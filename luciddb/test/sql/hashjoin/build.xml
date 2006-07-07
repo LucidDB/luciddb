@@ -23,7 +23,7 @@
 <project name="hashjoin" basedir="." default="test">
   <dirname property="hashjoin.dir" file="${ant.file.hashjoin}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${hashjoin.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />

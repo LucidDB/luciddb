@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/dt/dev/farrago/unitsql/ddl/explain.sql#4 $
+0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test EXPLAIN command.
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -47,24 +47,24 @@
 0: jdbc:farrago:> -- Explain physical plan normal
 0: jdbc:farrago:> explain plan including attributes for
 . . . . . . . . > select 1 from depts;
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                      column0                                                                      |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], EXPR$0=[$t2])                                                                                       |
-|   FennelToIteratorConverter                                                                                                                       |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                       column0                                                                       |
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1])                                                                                            |
+|   FennelToIteratorConverter                                                                                                                         |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Explain physical plan verbose
 0: jdbc:farrago:> explain plan including all attributes for
 . . . . . . . . > select 1 from depts;
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                            column0                                                                                            |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], EXPR$0=[$t2]): rowcount = 100.0, cumulative cost = 1200.0                                                                                       |
-|   FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0                                                                                                                       |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                             column0                                                                                             |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], expr#1=[1], EXPR$0=[$t1]): rowcount = 100.0, cumulative cost = 1200.0                                                                                            |
+|   FennelToIteratorConverter: rowcount = 100.0, cumulative cost = 1100.0                                                                                                                         |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false]): rowcount = 100.0, cumulative cost = 1000.0  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Explain physical plan in XML format.
 0: jdbc:farrago:> explain plan as xml for 
@@ -73,12 +73,12 @@
 |                              column0                              |
 +-------------------------------------------------------------------+
 | <RelNode type="IterCalcRel">                                      |
-| 	<Property name="expr#0..1">                                      |
+| 	<Property name="expr#0">                                         |
 | 		{inputs}	</Property>                                            |
-| 	<Property name="expr#2">                                         |
+| 	<Property name="expr#1">                                         |
 | 		1	</Property>                                                   |
 | 	<Property name="EXPR$0">                                         |
-| 		$t2	</Property>                                                 |
+| 		$t1	</Property>                                                 |
 | 	<Inputs>                                                         |
 | 		<RelNode type="FennelToIteratorConverter">                      |
 | 			<Inputs>                                                       |
@@ -86,7 +86,7 @@
 | 					<Property name="table">                                      |
 | 						[LOCALDB, SALES, DEPTS]					</Property>                     |
 | 					<Property name="projection">                                 |
-| 						*					</Property>                                           |
+| 						[0]					</Property>                                         |
 | 					<Property name="index">                                      |
 | 						SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY					</Property>  |
 | 					<Property name="preserveOrder">                              |

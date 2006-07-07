@@ -1,4 +1,4 @@
-0: jdbc:farrago:> -- $Id: //open/lu/dev/farrago/regressionsql/literalTests/timestamp.sql#2 $ 
+0: jdbc:farrago:> -- $Id$ 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test timestamp literal
 0: jdbc:farrago:> -- we don'tsupport time w/ timezone in this release.

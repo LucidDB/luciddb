@@ -50,19 +50,18 @@ const uint oStr = oByte + nByte * lnByte + lnSep;
 // maximum read at one time
 const uint MaxReadBatch = 64;
 
-LcsClusterDump::LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
-                               TraceLevel traceLevelInit,
-                               SharedTraceTarget pTraceTargetInit,
-                               std::string nameInit) :
-    LcsClusterAccessBase(bTreeDescriptor),
-    TraceSource(pTraceTargetInit, nameInit)
+LcsClusterDump::LcsClusterDump(
+    const BTreeDescriptor &bTreeDescriptor, TraceLevel traceLevelInit,
+    SharedTraceTarget pTraceTargetInit, std::string nameInit) :
+        LcsClusterAccessBase(bTreeDescriptor),
+        TraceSource(pTraceTargetInit, nameInit)
 {
     traceLevel = traceLevelInit;
 }
 
 // Dump page contents
-void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
-                          uint szBlock)
+void LcsClusterDump::dump(
+    uint64_t pageId, PConstLcsClusterNode pHdr, uint szBlock)
 {
     PBuffer pBlock = (PBuffer) pHdr;
     uint i, j, k;
@@ -139,16 +138,16 @@ void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
 
         if (pBatch[i].mode == LCS_COMPRESSED) {
 
-            nBits = CalcWidth(pBatch[i].nVal);
+            nBits = calcWidth(pBatch[i].nVal);
 
             // calculate the bit vector widthes, sum(w[i]) is nBits 
-            iV = BitVecWidth(nBits, w);
+            iV = bitVecWidth(nBits, w);
 
             // this is where the bit vectors start
             pBit = pBlock + pBatch[i].oVal + pBatch[i].nVal * sizeof(uint16_t);
 
             // nBytes are taken by the bit vectors
-            BitVecPtr(pBatch[i].nRow, iV, w, p, pBit);
+            bitVecPtr(pBatch[i].nRow, iV, w, p, pBit);
 
             callTrace("Rows");
             callTrace("----");
@@ -161,12 +160,12 @@ void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
                 buf[0]= 0;
                 count = min(uint(pBatch[i].nRow - j), MaxReadBatch);
                 // read rows j to j+count -1
-                ReadBitVecs(v, iV, w, p, j, count);     
+                readBitVecs(v, iV, w, p, j, count);     
 
                 for (k = 0; k < count; k++, j++) {
                     if ((j % 8) == 0) {
                         if (j > 0)
-                            callTrace(buf);
+                            callTrace("%s", buf);
                         sprintf(buf, "%5u: ", j);
                         bufidx = 7;
                     }
@@ -174,7 +173,7 @@ void LcsClusterDump::dump(uint64_t pageId, PConstLcsClusterNode pHdr,
                     sprintf(buf + bufidx, "%5u ", (uint) v[k]);
                     bufidx += 6;
                 }
-                callTrace(buf);
+                callTrace("%s", buf);
             }
 
             callTrace("Batch Values");
@@ -251,7 +250,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
 
     for(j = 0 ; j < sz; j++) {
         if (j && ((j % nByte) == 0)) {  
-            callTrace(st);
+            callTrace("%s", st);
             memset(st, ' ', lnLen);
         }
         
@@ -261,7 +260,7 @@ PBuffer LcsClusterDump::fprintVal(uint idx, PBuffer pV)
         st[oStr + (j % nByte)] =  isprint(p[j]) ? p[j] : '.';
     }
 
-    callTrace(st);
+    callTrace("%s", st);
 
     p += sz;
     return p;

@@ -23,7 +23,7 @@
 <project name="calc" basedir="." default="test">
   <dirname property="calc.dir" file="${ant.file.calc}" />
 
-  <property name="open.dir" location="../../../.."/>
+  <property name="open.dir" location="${calc.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
