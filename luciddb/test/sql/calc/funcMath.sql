@@ -51,9 +51,9 @@ select mod(2,0) from boris1
 ;
 select mod(-2,3), mod(2,-3) from boris1
 ;
--- buggy; JIRA FRG-150 filed
---select mod(2.256,5) from boris1
---;
+-- JIRA FRG-150
+select mod(2.256,5) from boris1
+;
 select mod(n2,n3) from boris1
 ;
 select mod(0,3) from boris1

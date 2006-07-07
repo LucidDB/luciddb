@@ -31,7 +31,8 @@ external name 'class com.lucidera.luciddb.test.udr.GetColumnTypesUdx.execute';
 select * 
      from table(
        get_column_types(
-         cursor(select * from sys_fem."Config"."FarragoConfig")));
+         cursor(select * from sys_fem."Config"."FarragoConfig")))
+order by 1;
 
 -- merges UDX into table
 create table params (colname varchar(65535), coltype int, coltypename varchar(65535));

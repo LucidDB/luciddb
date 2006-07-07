@@ -10,7 +10,7 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select coltiny from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 43: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLTINY' of type TINYINT (state=,code=0)
+Error: From line 2, column 9 to line 2, column 15: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLTINY' of type TINYINT (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -26,7 +26,7 @@ Error: From line 1, column 37 to line 1, column 43: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target 
 . . . . . . . . >  select colsmall from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 44: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLSMALL' of type SMALLINT (state=,code=0)
+Error: From line 2, column 9 to line 2, column 16: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLSMALL' of type SMALLINT (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -43,7 +43,7 @@ Error: From line 1, column 37 to line 1, column 44: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colint from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 42: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLINT' of type INTEGER (state=,code=0)
+Error: From line 2, column 9 to line 2, column 14: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLINT' of type INTEGER (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -60,7 +60,7 @@ Error: From line 1, column 37 to line 1, column 42: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colbig from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 42: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLBIG' of type BIGINT (state=,code=0)
+Error: From line 2, column 9 to line 2, column 14: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLBIG' of type BIGINT (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -77,7 +77,7 @@ Error: From line 1, column 37 to line 1, column 42: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select coldec from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 42: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
+Error: From line 2, column 9 to line 2, column 14: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLDEC' of type DECIMAL(10, 4) (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -94,7 +94,7 @@ Error: From line 1, column 37 to line 1, column 42: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colnum from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 42: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLNUM' of type DECIMAL(10, 4) (state=,code=0)
+Error: From line 2, column 9 to line 2, column 14: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLNUM' of type DECIMAL(10, 4) (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -110,7 +110,7 @@ Error: From line 1, column 37 to line 1, column 42: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select coldouble from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 45: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
+Error: From line 2, column 9 to line 2, column 17: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLDOUBLE' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -126,7 +126,7 @@ Error: From line 1, column 37 to line 1, column 45: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colfloat from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 44: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
+Error: From line 2, column 9 to line 2, column 16: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLFLOAT' of type DOUBLE (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+
@@ -143,7 +143,7 @@ Error: From line 1, column 37 to line 1, column 44: Cannot assign to target fiel
 0: jdbc:luciddb:> insert into datatype_target
 . . . . . . . . >  select colreal from datatype_source
 . . . . . . . . > ;
-Error: From line 1, column 37 to line 1, column 43: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLREAL' of type REAL (state=,code=0)
+Error: From line 2, column 9 to line 2, column 15: Cannot assign to target field 'COL' of type CHAR(15) from source field 'COLREAL' of type REAL (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target
 . . . . . . . . > ;
 +------+

@@ -102,15 +102,21 @@ Error: From line 1, column 32 to line 1, column 39: Cannot apply '<' to argument
 0: jdbc:luciddb:> select d1 + 1, d1 - 10, t1 + 1000, t1 - 1000, ts1 + 1000, ts1 - 1000 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 13: Cannot apply '+' to arguments of type '<DATE> + <INTEGER>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 0: jdbc:luciddb:> select n1 * f1, n1 / f1, n2 + f2, n2 - f2, n1 + '10', n2 + '10.555' from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 44 to line 1, column 52: Cannot apply '+' to arguments of type '<INTEGER> + <CHAR(2)>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 0: jdbc:luciddb:> select f1 + s1 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DOUBLE> + <CHAR(30)>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 0: jdbc:luciddb:> select d1 from calctypes where f1 > '4.2345'
 . . . . . . . . > ;
 Error: From line 1, column 32 to line 1, column 44: Cannot apply '>' to arguments of type '<DOUBLE> > <CHAR(6)>'. Supported form(s): '<COMPARABLE_TYPE> > <COMPARABLE_TYPE>' (state=,code=0)
@@ -147,7 +153,9 @@ Error: From line 1, column 8 to line 1, column 13: Cannot apply '/' to arguments
 0: jdbc:luciddb:> select d1 + t1 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DATE> + <TIME>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 0: jdbc:luciddb:> select d1 - t1 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '-' to arguments of type '<DATE> - <TIME>'. Supported form(s): '<NUMERIC> - <NUMERIC>'
@@ -156,7 +164,9 @@ Error: From line 1, column 8 to line 1, column 14: Cannot apply '-' to arguments
 0: jdbc:luciddb:> select f1 + d1 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '+' to arguments of type '<DOUBLE> + <DATE>'. Supported form(s): '<NUMERIC> + <NUMERIC>'
-'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>' (state=,code=0)
+'<DATETIME_INTERVAL> + <DATETIME_INTERVAL>'
+'<DATETIME> + <DATETIME_INTERVAL>'
+'<DATETIME_INTERVAL> + <DATETIME>' (state=,code=0)
 0: jdbc:luciddb:> select f1 - d1 from calctypes
 . . . . . . . . > ;
 Error: From line 1, column 8 to line 1, column 14: Cannot apply '-' to arguments of type '<DOUBLE> - <DATE>'. Supported form(s): '<NUMERIC> - <NUMERIC>'

@@ -42,7 +42,7 @@
       </test>
 
       <test name="joinMisc" requiresSuccess="download">
-        <!-- substring and INC() functions not supported, commented out -->
+        <!-- INC() functions not supported, commented out -->
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
@@ -64,8 +64,10 @@
       </test>
 
       <test name="agg" requiresSuccess="download">
-        <!-- FRG-52 and FRG-115, queries commented out -->
+        <!-- TODO: FRG-115, FRG-165 -->
+        <!-- FRG-52 -->
         <test-metadata>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg.sql"/>
@@ -86,8 +88,10 @@
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
-        <!-- IN and to_number not supported yet -->
+        <!-- TODO: FRG-165 -->
+        <!-- to_number not supported yet, commented out -->
         <test-metadata>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg_cust.sql"/>
@@ -110,31 +114,34 @@
 
       <test name="aggDistinct" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="true"/>
           <notImplemented value="true"/>
+          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggDistinct.sql"/>
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- DESC commented out, not supported yet -->
+        <!-- TODO: FRG-167 DESC not implemented yet -->
         <test-metadata>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/null.sql"/>
       </test>
 
       <test name="order" requiresSuccess="download">
-        <!-- ASC and DESC not supported yet -->
+        <!-- TODO: FRG-167 DESC, ASC not implemented yet -->
         <test-metadata>
+          <knownFailure value="true"/>
           <withIndex value="true"/>
-
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/order.sql"/>
       </test>
 
       <test name="scalarSubquery" requiresSuccess="download">
-        <!-- ONEROW and lower not supported yet, FRG-114 -->
+        <!-- TODO: FRG-144 -->
+        <!-- Subqueries not completely supported -->
+        <!-- ONEROW and lower not supported yet -->
         <test-metadata>
           <notImplemented value="true"/>
         </test-metadata>
@@ -164,7 +171,7 @@
       </test>
 
       <test name="subIn" requiresSuccess="download">
-        <!-- IN not supported yet -->
+        <!-- subqueries not completely supported yet -->
         <test-metadata>
           <withIndex value="true"/>
           <notImplemented value="true"/>
@@ -181,7 +188,7 @@
       </test>
 
       <test name="subMult" requiresSuccess="download">
-        <!-- IN not supported yet -->
+        <!-- subqueries not completely supported yet -->
         <test-metadata>
           <withIndex value="true"/>
           <notImplemented value="true"/>
@@ -208,7 +215,6 @@
       </test>
 
       <test name="joinFiltExp" requiresSuccess="download">
-        <!-- IN not supported yet, commented out queries -->
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>
@@ -216,7 +222,6 @@
       </test>
 
       <test name="joinFilt" requiresSuccess="download">
-        <!-- IN not supported yet, commented out queries -->
         <test-metadata>
           <withIndex value="true"/>
         </test-metadata>

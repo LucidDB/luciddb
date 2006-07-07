@@ -5,7 +5,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT n1, ABS(n1) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ -2147483648, -32768, -128, -7, 0 ]
+[ -2147483648 ]
 Messages:
 [0]:PC=2 Code=22003 (state=,code=0)
 0: jdbc:luciddb:> SELECT n2, ABS(n2) FROM TEST_INTEGER_TABLE ORDER BY 1;
@@ -709,7 +709,7 @@ Error: From line 1, column 12 to line 1, column 19: No match found for function 
 | 12345      | Infinity               |
 | 99999999   | Infinity               |
 +------------+------------------------+
-0: jdbc:luciddb:> SELECT n2, EXP(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> SELECT n2, EXP(n2) FROM TEST_NUMERIC_TABLE ORDER BY 1; 
 +----------------+------------------------+
 |       N2       |         EXPR$1         |
 +----------------+------------------------+
@@ -725,22 +725,48 @@ Error: From line 1, column 12 to line 1, column 19: No match found for function 
 | 23456          | Infinity               |
 | 999999999999   | Infinity               |
 +----------------+------------------------+
-0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_NUMERIC_TABLE ORDER BY 1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- workaround for diffing ref files since precision differs depending on VM 
+0: jdbc:luciddb:> -- for floating point
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_NUMERIC_TABLE 
+. . . . . . . . > WHERE n3 <> -3.00000 and n3 <> 3.00000 and n3 <> 124.44300 ORDER BY 1;
 +-----------------+-------------------------+
 |       N3        |         EXPR$1          |
 +-----------------+-------------------------+
-|                 |                         |
 | -9999999.99999  | 0.0                     |
 | -3300.33000     | 0.0                     |
 | -333.00000      | 2.398487868841356E-145  |
-| -3.00000        | 0.049787068367863944    |
 | 0.00000         | 1.0                     |
-| 3.00000         | 20.085536923187668      |
-| 124.44300       | 1.1089404149789781E54   |
 | 333.00000       | 4.169293549452358E144   |
 | 3300.33000      | Infinity                |
 | 9999999.99999   | Infinity                |
 +-----------------+-------------------------+
+0: jdbc:luciddb:> !set numberFormat #.############
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_NUMERIC_TABLE
+. . . . . . . . > WHERE n3 between -3 and 3 ORDER BY 1;
++-----+------------------+
+| N3  |      EXPR$1      |
++-----+------------------+
+| -3  | 0.049787068368   |
+| 0   | 1                |
+| 3   | 20.085536923188  |
++-----+------------------+
+0: jdbc:luciddb:> !set numberFormat #.############E0
+0: jdbc:luciddb:> SELECT n3, EXP(n3) FROM TEST_NUMERIC_TABLE
+. . . . . . . . > WHERE n3 = 124.443;
++------------+--------------------+
+|     N3     |       EXPR$1       |
++------------+--------------------+
+| 1.24443E2  | 1.108940414979E54  |
++------------+--------------------+
+0: jdbc:luciddb:> !set numberFormat default
+0: jdbc:luciddb:> values ( EXP( cast( null as decimal(12, 5))));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> SELECT n4, EXP(n4) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 +-------------+--------------------------+
 |     N4      |          EXPR$1          |
@@ -1077,52 +1103,52 @@ Error: From line 1, column 12 to line 1, column 19: No match found for function 
 +-----------------------+-----------------------+
 0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n2, LN(ABS(n2)) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n3, LN(ABS(n3)) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_INTEGER_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=4 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=2 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n2, LN(ABS(n2)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=2 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n3, LN(ABS(n3)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n4, LN(ABS(n4)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n5, LN(ABS(n5)) FROM TEST_NUMERIC_TABLE ORDER BY 1;
 Error: could not calculate results for the following row:
-[ 0, 0, 0, 0, 0 ]
+[ 0 ]
 Messages:
 [0]:PC=3 Code=22023 (state=,code=0)
 0: jdbc:luciddb:> SELECT n1, LN(ABS(n1)) FROM TEST_REAL_TABLE ORDER BY 1;

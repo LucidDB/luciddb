@@ -31,22 +31,23 @@
 0: jdbc:luciddb:> select * 
 . . . . . . . . >      from table(
 . . . . . . . . >        get_column_types(
-. . . . . . . . >          cursor(select * from sys_fem."Config"."FarragoConfig")));
+. . . . . . . . >          cursor(select * from sys_fem."Config"."FarragoConfig")))
+. . . . . . . . > order by 1;
 +---------------------------+----------+--------------+
 |          COLNAME          | COLTYPE  | COLTYPENAME  |
 +---------------------------+----------+--------------+
-| name                      | 12       | VARCHAR      |
-| fennelDisabled            | 16       | BOOLEAN      |
-| userCatalogEnabled        | 16       | BOOLEAN      |
-| codeCacheMaxBytes         | -5       | BIGINT       |
+| FennelConfig              | 12       | VARCHAR      |
+| calcVirtualMachine        | 12       | VARCHAR      |
 | checkpointInterval        | 4        | INTEGER      |
+| codeCacheMaxBytes         | -5       | BIGINT       |
+| fennelDisabled            | 16       | BOOLEAN      |
+| javaCompilerClassName     | 12       | VARCHAR      |
+| mofClassName              | 12       | VARCHAR      |
+| mofId                     | 12       | VARCHAR      |
+| name                      | 12       | VARCHAR      |
 | serverRmiRegistryPort     | 4        | INTEGER      |
 | serverSingleListenerPort  | 4        | INTEGER      |
-| calcVirtualMachine        | 12       | VARCHAR      |
-| javaCompilerClassName     | 12       | VARCHAR      |
-| FennelConfig              | 12       | VARCHAR      |
-| mofId                     | 12       | VARCHAR      |
-| mofClassName              | 12       | VARCHAR      |
+| userCatalogEnabled        | 16       | BOOLEAN      |
 +---------------------------+----------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- merges UDX into table
