@@ -521,6 +521,13 @@ public abstract class FarragoCatalogUtil
      * which is part of a primary key or clustered index may not contain
      * nulls even when its definition says it can.
      *
+     *<p>
+     *
+     * REVIEW jvs 7-July-2006: The statement above is no longer true; we now
+     * store the derived nullability in isNullable, and remember the original
+     * declared nullability in isDeclaredNullable.  Maybe we should deprecate
+     * this method now.
+     *
      * @param repos repos storing column definition
      *
      * @param column the column of interest
@@ -533,38 +540,9 @@ public abstract class FarragoCatalogUtil
     {
         if (column.getIsNullable().equals(NullableTypeEnum.COLUMN_NO_NULLS)) {
             return false;
-        }
-
-        CwmClassifier owner = column.getOwner();
-        if (!(owner instanceof CwmTable)) {
+        } else {
             return true;
         }
-
-        FemPrimaryKeyConstraint primaryKey =
-            FarragoCatalogUtil.getPrimaryKey(owner);
-        if (primaryKey != null) {
-            if (primaryKey.getFeature().contains(column)) {
-                return false;
-            }
-        }
-        FemLocalIndex clusteredIndex = FarragoCatalogUtil.getClusteredIndex(
-            repos, (CwmTable) owner);
-                
-        if (clusteredIndex != null) {
-            // TODO rchen 2005-12-05: set column info in the catalog correctly so
-            // that we don't have to look up the clustered indices.
-        	if (!clusteredIndex.isSorted()) {
-            	return true;
-            }
-            for (CwmIndexedFeature indexedFeature :
-                ((List<CwmIndexedFeature>) clusteredIndex.getIndexedFeature()))
-            {
-                if (indexedFeature.getFeature().equals(column)) {
-                    return false;
-                }
-            }
-        }
-        return true;
     }
 
     /**

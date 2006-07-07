@@ -402,17 +402,6 @@
 . . . . . . . . >     g."action" = 'CREATION'
 . . . . . . . . > ;
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO: temporarily using parameter style to check if routine is a udx
-0: jdbc:farrago:> 
-0: jdbc:farrago:> create function is_udx(param_style varchar(1024))
-. . . . . . . . > returns boolean
-. . . . . . . . > contains sql
-. . . . . . . . > deterministic
-. . . . . . . . > return case
-. . . . . . . . > when param_style='RPS_JAVA_FARRAGO' then true
-. . . . . . . . > else false
-. . . . . . . . > end;
-0: jdbc:farrago:> 
 0: jdbc:farrago:> create view dba_routines_internal1 as
 . . . . . . . . >   select
 . . . . . . . . >     s.object_catalog as catalog_name,
@@ -423,7 +412,7 @@
 . . . . . . . . >     r."type" as routine_type,
 . . . . . . . . >     cast(r."creationTimestamp" as timestamp) as creation_timestamp,
 . . . . . . . . >     cast(r."modificationTimestamp" as timestamp) as last_modified_timestamp,
-. . . . . . . . >     is_udx(r."parameterStyle") as is_table_function,
+. . . . . . . . >     r."isUdx" as is_table_function,
 . . . . . . . . >     r."parameterStyle" as parameter_style,
 . . . . . . . . >     r."deterministic" as is_deterministic,
 . . . . . . . . >     r."dataAccess" as data_access,
