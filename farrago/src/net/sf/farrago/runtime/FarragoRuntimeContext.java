@@ -74,7 +74,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
 
     private final FarragoSession session;
     private final FarragoRepos repos;
-    private final FarragoObjectCache codeCache;
+    protected final FarragoObjectCache codeCache;
     private final Map txnCodeCache;
     private final FennelTxnContext fennelTxnContext;
     
@@ -84,13 +84,17 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
      */
     private final Map streamIdToHandleMap = new HashMap();
     private final Object [] dynamicParamValues;
-    private final FarragoCompoundAllocation streamOwner;
+
+    protected  FennelStreamGraph streamGraph;
+
+    /** responsible for closing the FennelStreamGraph */
+    protected final FarragoCompoundAllocation streamOwner;
+
     private final FarragoSessionIndexMap indexMap;
     private final FarragoSessionVariables sessionVariables;
     private final FarragoDataWrapperCache dataWrapperCache;
     private final FarragoStreamFactoryProvider streamFactoryProvider;
     private final boolean isDml;
-    private FennelStreamGraph streamGraph;
     private long currentTime;
     private boolean isCanceled;
     private ClassLoader statementClassLoader;
@@ -568,7 +572,7 @@ public class FarragoRuntimeContext extends FarragoCompoundAllocation
         }
     }
 
-    private FennelStreamGraph prepareStreamGraph(String xmiFennelPlan)
+    protected FennelStreamGraph prepareStreamGraph(String xmiFennelPlan)
     {
         boolean success = false;
         FennelStreamGraph newStreamGraph = null;
