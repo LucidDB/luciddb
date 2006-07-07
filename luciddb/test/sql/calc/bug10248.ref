@@ -44,14 +44,19 @@
 . . . . . . . . > BUG10248.BUG10248_T
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO: no "IN" yet
-0: jdbc:luciddb:> -- SELECT
-0: jdbc:luciddb:> -- BUG_10248_V.YEAR_ENTERED
-0: jdbc:luciddb:> -- FROM
-0: jdbc:luciddb:> -- BUG10248.BUG_10248_V
-0: jdbc:luciddb:> -- WHERE
-0: jdbc:luciddb:> -- (BUG_10248_V.FLIGHT_NUM IN (1,2))
-0: jdbc:luciddb:> -- ORDER BY 1
-0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> SELECT
+. . . . . . . . > BUG_10248_V.YEAR_ENTERED
+. . . . . . . . > FROM
+. . . . . . . . > BUG10248.BUG_10248_V
+. . . . . . . . > WHERE
+. . . . . . . . > (BUG_10248_V.FLIGHT_NUM IN (1,2))
+. . . . . . . . > ORDER BY 1
+. . . . . . . . > ;
++---------------+
+| YEAR_ENTERED  |
++---------------+
+| 1998-05-07    |
+| 1998-05-07    |
++---------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

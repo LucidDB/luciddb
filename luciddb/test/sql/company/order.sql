@@ -8,17 +8,14 @@ set schema 's';
 select EMPNO from EMP order by EMPNO;
 
 -- multiple cols
--- select LNAME, EMPNO from EMP order by LNAME,SEX;
--- select LNAME, EMPNO from EMP order by SEX,LNAME;
--- select LNAME, SEX, EMPNO from EMP order by SEX,EMPNO,LNAME;
-select LNAME, EMPNO, SEX from EMP order by LNAME,SEX;
-select LNAME, EMPNO, SEX from EMP order by SEX,LNAME;
+select LNAME, EMPNO from EMP order by LNAME,SEX;
+select LNAME, EMPNO from EMP order by SEX,LNAME;
 select LNAME, SEX, EMPNO from EMP order by SEX,EMPNO,LNAME;
 
 -- ASC/DESC
---select LNAME, EMPNO from EMP order by LNAME ASC , LOCID;
---select LNAME, EMPNO from EMP order by MANAGER,LOCID DESC;
---select LNAME, SEX, EMPNO from EMP order by MANAGER DESC,LNAME DESC;
+select LNAME, EMPNO from EMP order by LNAME ASC , LOCID;
+select LNAME, EMPNO from EMP order by MANAGER,LOCID DESC;
+select LNAME, SEX, EMPNO from EMP order by MANAGER DESC,LNAME DESC;
 
 -- numeric descriptors of columns in select list
 select LNAME, SEX from EMP order by 1,2;
@@ -38,9 +35,9 @@ select 'hello', lname, commission from EMP order by 2,1;
 select 'hello', lname, commission from EMP order by 1,lname;
 select 'hello', lname, commission from EMP order by lname,1;
 
--- select empno, floor(empno/2),
---   case when empno<105 then empno
---     else empno/2 end
--- from emp
--- order by 3 DESC, 1 ASC
+select empno, floor(empno/2),
+  case when empno<105 then empno
+    else empno/2 end
+from emp
+order by 3 DESC, 1 ASC;
 

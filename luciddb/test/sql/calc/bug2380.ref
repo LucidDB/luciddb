@@ -28,6 +28,6 @@
 . . . . . . . . > -- HAVING (n4 - n3) < (SELECT AVG(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > HAVING (n4 - n3) < (SELECT SUM(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > ;
-Error: From line 1, column 77 to line 1, column 122: Cannot apply '<' to arguments of type '<DECIMAL(17, 7)> < <RECORDTYPE(DECIMAL(2, 0) EXPR$0)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
+Error: From line 4, column 9 to line 4, column 54: Cannot apply '<' to arguments of type '<DECIMAL(17, 7)> < <RECORDTYPE(DECIMAL(2, 0) EXPR$0)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

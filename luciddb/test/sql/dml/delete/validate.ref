@@ -14,7 +14,7 @@
 0: jdbc:luciddb:> -- -- DELETE on a table that does not exist (should fail)
 0: jdbc:luciddb:> DELETE FROM DT.TableThatDoesNotExist
 . . . . . . . . > ;
-Error: From line 1, column 13 to line 1, column 14: Table 'DT.TABLETHATDOESNOTEXIST' not found (state=,code=0)
+Error: From line 1, column 13 to line 1, column 36: Table 'DT.TABLETHATDOESNOTEXIST' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- -- DELETE on a system table (should fail)
 0: jdbc:luciddb:> -- DELETE FROM system.columns

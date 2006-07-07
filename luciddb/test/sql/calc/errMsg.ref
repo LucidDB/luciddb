@@ -43,7 +43,7 @@ Error: From line 1, column 9 to line 1, column 17: No match found for function s
 0: jdbc:luciddb:> VALUES (TAN(3.14159265 / 2.00000000));
 Error: From line 1, column 9 to line 1, column 36: No match found for function signature TAN(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (MOD(-5.0, 0));
-Error: java.lang.ArithmeticException: / by zero (state=,code=0)
+Error: Argument to function 'MOD' must have a scale of 0 (state=,code=0)
 0: jdbc:luciddb:> VALUES (SQRT(-1.0));
 Error: From line 1, column 9 to line 1, column 18: No match found for function signature SQRT(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> VALUES (VALUERANGE(22.34323, 5.443));

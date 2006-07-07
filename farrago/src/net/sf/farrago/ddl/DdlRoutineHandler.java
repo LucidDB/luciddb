@@ -109,6 +109,7 @@ public class DdlRoutineHandler extends DdlHandler
             }
         }
         if (FarragoCatalogUtil.isTableFunction(routine)) {
+            routine.setUdx(true);
             validateAttributeSet(routine);
         }
         if (routine.getDataAccess() == null) {

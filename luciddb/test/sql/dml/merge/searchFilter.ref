@@ -1,0 +1,337 @@
+-------------------------------------------------
+pending design for filter conditions of ON clause
+-------------------------------------------------
+0: jdbc:luciddb:> set schema 'mergetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Create and populate tables with auto increment columns
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table EMPTEMP (
+. . . . . . . . >   EMPNO integer not null,
+. . . . . . . . >   FNAME varchar(15),
+. . . . . . . . >   LNAME varchar(15),
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   DNAME varchar(15),
+. . . . . . . . >   MANAGER integer,
+. . . . . . . . >   MFNAME varchar(15),
+. . . . . . . . >   MLNAME varchar(15),
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   CITY varchar(8),
+. . . . . . . . >   SAL decimal(10, 2),
+. . . . . . . . >   COMMISION decimal(10, 2),
+. . . . . . . . >   HOBBY varchar(25)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- functions in search condition
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- f(t1.key) = g(t2.key)
+0: jdbc:luciddb:> -- restriction:f and g must accept only 1 argument
+0: jdbc:luciddb:> insert into emptemp (empno, locid, sal)
+. . . . . . . . >   (select empno, locid, sal from emp where empno<=105);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select empno, locid, city, sal from emptemp;
++--------+--------+-------+-----------+
+| EMPNO  | LOCID  | CITY  |    SAL    |
++--------+--------+-------+-----------+
+| 100    | HQ     |       | 50000.00  |
+| 101    | SJ     |       | 50000.00  |
+| 102    | MP     |       | 50000.00  |
+| 103    | MP     |       | 50000.00  |
+| 104    | HQ     |       | 50000.00  |
+| 105    | HQ     |       | 50000.00  |
++--------+--------+-------+-----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into emptemp es
+. . . . . . . . >   using
+. . . . . . . . >     (select * from emp e, location l
+. . . . . . . . >        where e.locid = l.locid) as temp
+. . . . . . . . >     on
+. . . . . . . . > -->>> functions accepting more than 1 argument not supported as of 6/27/06
+. . . . . . . . > --    es.empno*10 = temp.empno*10 and 
+. . . . . . . . > --    (substring(cast(es.empno as varchar(10)) from 1 for 3)
+. . . . . . . . > --     = 
+. . . . . . . . > --     substring(cast(temp.empno as varchar(11)) from 1 for 3))
+. . . . . . . . > --    substring(es.locid from 1 for 2) = substring(temp.locid from 1 for 2)
+. . . . . . . . > --    e.empno > temp.empno
+. . . . . . . . >       cast(es.empno as varchar(10)) = cast (temp.empno as varchar(10))
+. . . . . . . . >   when matched then 
+. . . . . . . . >     update set sal = es.sal + 1
+. . . . . . . . >   when not matched then
+. . . . . . . . >     insert (empno, locid, city, sal)
+. . . . . . . . >     values (temp.empno, temp.locid, temp.city, temp.sal + 2);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select empno, locid, city, sal from emptemp order by empno;
++--------+--------+-----------+-----------+
+| EMPNO  | LOCID  |   CITY    |    SAL    |
++--------+--------+-----------+-----------+
+| 100    | HQ     |           | 50001.00  |
+| 101    | SJ     |           | 50001.00  |
+| 102    | MP     |           | 50001.00  |
+| 103    | MP     |           | 50001.00  |
+| 104    | HQ     |           | 50001.00  |
+| 105    | HQ     |           | 50001.00  |
+| 106    | SF     | San Fran  | 50002.00  |
+| 107    | HQ     | San Mate  | 50002.00  |
+| 108    | SF     | San Fran  | 50002.00  |
+| 109    | SF     | San Fran  | 50002.00  |
+| 110    | MP     | Menlo Pa  | 50002.00  |
++--------+--------+-----------+-----------+
+0: jdbc:luciddb:> delete from emptemp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test date related function
+0: jdbc:luciddb:> create table t1 (n1 date, n2 integer);
+0: jdbc:luciddb:> insert into t1 values (date'1999-01-01',10),(date'1999-01-02',20),
+. . . . . . . . >                       (date'1999-01-03',30),(date'1999-01-04',40);
+0: jdbc:luciddb:> create table t2 (m1 date, m2 integer);
+0: jdbc:luciddb:> insert into t2 values (date'1999-01-02',200),(date'1999-01-05',500);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-------------+-----+
+|     N1      | N2  |
++-------------+-----+
+| 1999-01-01  | 10  |
+| 1999-01-02  | 20  |
+| 1999-01-03  | 30  |
+| 1999-01-04  | 40  |
++-------------+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1
+. . . . . . . . > using t2 on
+. . . . . . . . >             applib.day_in_year(n1) = applib.day_in_year(m1) and
+. . . . . . . . >             applib.day_number_overall(n1) = applib.day_number_overall(m1) and
+. . . . . . . . >             n1 = m1
+. . . . . . . . > when matched then 
+. . . . . . . . >   update set n2 = m2 + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (n1,n2) values (m1,m2+2);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-------------+------+
+|     N1      |  N2  |
++-------------+------+
+| 1999-01-01  | 10   |
+| 1999-01-03  | 30   |
+| 1999-01-04  | 40   |
+| 1999-01-02  | 201  |
+| 1999-01-05  | 502  |
++-------------+------+
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- multiple-column keys
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> create table t1 (n1 integer, n2 integer, n3 integer);
+0: jdbc:luciddb:> insert into t1 values (1,1,11), (1,2,12), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> create table t2 (m1 integer, m2 integer, m3 integer);
+0: jdbc:luciddb:> insert into t2 values (1,1,100), (2,2,200), (3,3,300), (4,4,400);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- as of 6/27/06 this search condition is still buggy
+0: jdbc:luciddb:> -- Ex. search "on n1=m1 and n2=m2" and "on n1=m1 and not(n2<>m2)"
+0: jdbc:luciddb:> -- return different results
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --merge into t1 using t2 on n1=m1 and not(n2<>m2)
+0: jdbc:luciddb:> --when matched then update set n3=0
+0: jdbc:luciddb:> --when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select * from t1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- join condition has 2 keys
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=m2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 2   | 12   |
+| 1   | 1   | 0    |
+| 2   | 2   | 0    |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- join condition has 1 key and a filter
+0: jdbc:luciddb:> -- note that the filter is applied on the left outer join of t2 and t1
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 2   | 2   | 20   |
+| 3   | 3   | 30   |
+| 1   | 1   | 0    |
+| 2   | 2   | 200  |
+| 3   | 3   | 300  |
+| 4   | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- other filters 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2<>2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 2   | 2   | 20   |
+| 1   | 1   | 0    |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2=1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#8644:JoinRel.NONE(left=HepRelVertex#8633,right=HepRelVertex#8651,condition=AND(=($3, $0), =($1, 1)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2<>2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#8783:JoinRel.NONE(left=HepRelVertex#8772,right=HepRelVertex#8790,condition=AND(=($3, $0), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2>1 and m2<>2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#8926:JoinRel.NONE(left=HepRelVertex#8911,right=HepRelVertex#8947,condition=AND(=($3, $0), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2>1 and m2<>2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#9075:JoinRel.NONE(left=HepRelVertex#9064,right=HepRelVertex#9082,condition=AND(AND(=($3, $0), >($1, 1)), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=m2 and m2>2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#9214:JoinRel.NONE(left=HepRelVertex#9203,right=HepRelVertex#9221,condition=AND(AND(=($3, $0), =($4, $1)), >($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2>2 and m2=n2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#9353:JoinRel.NONE(left=HepRelVertex#9342,right=HepRelVertex#9360,condition=AND(AND(=($3, $0), >($1, 2)), =($1, $4)),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+| 3   | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- more than 1 result in search condition
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ambiguity, should throw an exception (not yet handled as of 6/27/06)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --delete from t1;
+0: jdbc:luciddb:> --delete from t2;
+0: jdbc:luciddb:> --insert into t1 values (1,1,10),(2,2,20),(4,4,40);
+0: jdbc:luciddb:> --insert into t2 values (1,1,11),(1,2,12),(2,2,20),(3,3,30);
+0: jdbc:luciddb:> --merge into t1 using t2 on n1=m1
+0: jdbc:luciddb:> --when matched then update set n3=0
+0: jdbc:luciddb:> --when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --select * from t1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> delete from t2;
+0: jdbc:luciddb:> insert into t2 values (1,1,10),(2,2,20),(4,4,40);
+0: jdbc:luciddb:> insert into t1 values (1,1,11),(1,2,12),(2,2,20),(3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 3   | 3   | 30  |
+| 1   | 2   | 0   |
+| 1   | 1   | 0   |
+| 2   | 2   | 0   |
+| 4   | 4   | 40  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table emptemp;
+0: jdbc:luciddb:> !quit

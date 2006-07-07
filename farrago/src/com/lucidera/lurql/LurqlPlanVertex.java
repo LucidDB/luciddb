@@ -149,13 +149,24 @@ public class LurqlPlanVertex
         this.recursionRoot = recursionRoot;
         
         // identify subgraph involved in recursion
-        final DirectedGraph subgraph = new DirectedMultigraph();
-        recursionRoot.recursionSubgraph = subgraph;
+        recursionRoot.recursionSubgraph =
+            recursionRoot.createReachableSubgraph(true);
 
+        // should have traversed this vertex above
+        assert(recursive);
+        
+        // REVIEW jvs 16-May-2005:  rethink freeze
+        stringRep = computeStringRep();
+    }
+
+    DirectedGraph createReachableSubgraph(final boolean setRecursive)
+    {
+        final DirectedGraph subgraph = new DirectedMultigraph();
+        
         // TODO jvs 16-May-2005:  submit to JGraphT
         DepthFirstIterator iter = new DepthFirstIterator(
             plan.getGraph(),
-            recursionRoot);
+            this);
         iter.addTraversalListener(
             new TraversalListenerAdapter()
             {
@@ -169,18 +180,17 @@ public class LurqlPlanVertex
                 public void vertexTraversed(VertexTraversalEvent e)
                 {
                     subgraph.addVertex(e.getVertex());
-                    ((LurqlPlanVertex) e.getVertex()).recursive = true;
+                    if (setRecursive) {
+                        ((LurqlPlanVertex) e.getVertex()).recursive = true;
+                    }
                 }
             });
+        
         while (iter.hasNext()) {
             iter.next();
         }
-
-        // should have traversed this vertex above
-        assert(recursive);
         
-        // REVIEW jvs 16-May-2005:  rethink freeze
-        stringRep = computeStringRep();
+        return subgraph;
     }
 
     public String toString()

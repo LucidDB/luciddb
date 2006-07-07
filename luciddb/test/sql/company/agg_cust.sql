@@ -7,6 +7,7 @@ set schema 's';
 
 -- plain aggregates
 
+-- TODO:
 select floor(sum(PRICE)) from SALES;
 
 select count(PRICE) from SALES;
@@ -29,6 +30,7 @@ select floor(avg(PRICE)), PRODID, floor(avg(PRICE)) from SALES group by PRODID o
 
 -- having
 
+-- TODO: FRG-115
 select sum(PRICE)
 , PRODID
 from SALES group by PRODID having PRODID < 10010 order by PRODID;
@@ -36,21 +38,21 @@ from SALES group by PRODID having PRODID < 10010 order by PRODID;
 select count(PRICE)
 , PRODID
 from SALES group by PRODID having PRODID > 10010 and PRODID/2<5007 order by PRODID;
+-- END FRG-115
 
--- TODO: IN not supported yet
---select floor(avg(PRICE))
---, PRODID
---from SALES group by PRODID having PRODID in (10005, 10007, 10009) order by PRODID;
+-- TODO: FRG-165
+select floor(avg(PRICE))
+, PRODID
+from SALES group by PRODID having PRODID in (10005, 10007, 10009) order by PRODID;
 
 --select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES group by PRODID having PRODID between 10005 and 10010 order by PRODID;
 
 
 -- where clauses restricting the rows aggregated
 
--- TODO: IN not supported
--- select sum(PRICE)
--- , PRODID 
--- from SALES  where PRODID in (10005, 10010) group by PRODID order by PRODID;
+select sum(PRICE)
+, PRODID 
+from SALES  where PRODID in (10005, 10010) group by PRODID order by PRODID;
 
 select count(PRICE)
 , PRODID
@@ -64,6 +66,7 @@ from SALES where EMPNO < 100 or EMPNO > 107 group by PRODID order by PRODID;
 
 -- having and where clauses
 
+-- TODO: FRG-115
 select sum(PRICE)
 , PRODID
 from SALES
@@ -77,15 +80,16 @@ from SALES
 where custid>50
 group by PRODID having PRODID > 10010 and PRODID/2<5007
 order by PRODID;
+-- END FRG-115
 
--- TODO: IN not supported
--- select floor(avg(PRICE))
--- , PRODID
--- from SALES
--- where custid>50
--- group by PRODID
--- having PRODID in (10005, 10007, 10009)
--- order by PRODID;
+-- TODO: FRG-165
+select floor(avg(PRICE))
+, PRODID
+from SALES
+where custid>50
+group by PRODID
+having PRODID in (10005, 10007, 10009)
+order by PRODID;
 
 -- select to_number(min(PRICE)), to_number(max(PRICE)), PRODID from SALES
 -- where custid>50

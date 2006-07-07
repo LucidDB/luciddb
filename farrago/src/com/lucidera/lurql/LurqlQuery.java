@@ -53,10 +53,8 @@ public class LurqlQuery extends LurqlQueryNode
         return root;
     }
 
-    // implement LurqlQueryNode
-    public void unparse(PrintWriter pw)
+    static void unparseSelectList(PrintWriter pw, List selectList)
     {
-        pw.print("select ");
         Iterator iter = selectList.iterator();
         while (iter.hasNext()) {
             String id = iter.next().toString();
@@ -67,10 +65,15 @@ public class LurqlQuery extends LurqlQueryNode
             }
             if (iter.hasNext()) {
                 pw.print(", ");
-            } else {
-                pw.print(" ");
             }
         }
+    }
+
+    // implement LurqlQueryNode
+    public void unparse(PrintWriter pw)
+    {
+        pw.print("select ");
+        unparseSelectList(pw, selectList);
         pw.println();
         pw.println("from");
         root.unparse(pw);

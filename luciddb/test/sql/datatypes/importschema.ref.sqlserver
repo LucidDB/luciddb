@@ -38,7 +38,7 @@
 | thisChar05  | varchar-05  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  | true       | 2005-10-12 07:00:00.0  | 1899-12-30 20:00:00.0  | 2005-10-12 19:00:00.0  |
 +-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+------------------------+------------------------+------------------------+
 0: jdbc:luciddb:> select * from @name_prefix@_is_schema."blob"; 
-Error: From line 1, column 15 to line 1, column 29: Table '@name_prefix@_IS_SCHEMA.blob' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 36: Table '@name_prefix@_IS_SCHEMA.blob' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema @name_prefix@_is_schema cascade;
 0: jdbc:luciddb:> create schema @name_prefix@_is_schema;

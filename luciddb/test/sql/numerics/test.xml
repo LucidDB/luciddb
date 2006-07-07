@@ -12,9 +12,6 @@
 
       <test name="decimals">
         <!-- decimal precision differences on different VMs -->
-        <test-metadata>
-          <knownFailure value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/numerics/decimals.sql"/>
       </test>
 

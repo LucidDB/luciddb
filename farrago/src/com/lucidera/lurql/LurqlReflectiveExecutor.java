@@ -60,6 +60,8 @@ public class LurqlReflectiveExecutor
 
     private Map args;
 
+    private Set finalResult;
+    
     /**
      * Creates a new executor for a plan.
      *
@@ -95,10 +97,23 @@ public class LurqlReflectiveExecutor
         filterMap = new HashMap();
         vertexToResultMap = new HashMap();
         vertexToStashMap = new HashMap();
-        Set finalResult = new HashSet();
+        finalResult = new HashSet();
         
         // execute plan
         DirectedGraph graph = plan.getGraph();
+        executeGraph(graph);
+
+        vertexToResultMap = null;
+        vertexToStashMap = null;
+        filterMap = null;
+        Set result = finalResult;
+        finalResult = null;
+        return result;
+    }
+
+    private void executeGraph(DirectedGraph graph)
+        throws JmiQueryException
+    {
         Iterator vertexIter = new TopologicalOrderIterator(graph);
         while (vertexIter.hasNext()) {
             LurqlPlanVertex planVertex = (LurqlPlanVertex) vertexIter.next();
@@ -122,11 +137,6 @@ public class LurqlReflectiveExecutor
                 finalResult.addAll(result);
             }
         }
-
-        vertexToResultMap = null;
-        vertexToStashMap = null;
-        filterMap = null;
-        return finalResult;
     }
 
     private void executeRecursion(LurqlPlanVertex rootVertex)
@@ -205,6 +215,9 @@ public class LurqlReflectiveExecutor
         throws JmiQueryException
     {
         LurqlFilter [] filters = getFilters(planVertex);
+        LurqlPlanExistsEdge [] existsEdges = getExistsEdges(
+            plan.getGraph(),
+            planVertex);
         
         if (planVertex.getRootObjectIds().isEmpty()) {
             Iterator iter = planVertex.getClassVertexSet().iterator();
@@ -214,6 +227,7 @@ public class LurqlReflectiveExecutor
                     classVertex.getRefClass().refAllOfType(),
                     output,
                     filters,
+                    existsEdges,
                     null);
             }
         } else {
@@ -226,7 +240,12 @@ public class LurqlReflectiveExecutor
                     objList.add(refObj);
                 }
             }
-            executeFilters(objList, output, filters, null);
+            executeFilters(
+                objList,
+                output,
+                filters,
+                existsEdges,
+                null);
         }
     }
 
@@ -234,6 +253,21 @@ public class LurqlReflectiveExecutor
     {
         return (LurqlFilter [])
             planVertex.getFilters().toArray(LurqlFilter.EMPTY_ARRAY);
+    }
+
+    private LurqlPlanExistsEdge [] getExistsEdges(
+        DirectedGraph graph,
+        LurqlPlanVertex planVertex)
+    {
+        List list = new ArrayList();
+        for (Object obj : graph.outgoingEdgesOf(planVertex)) {
+            if (!(obj instanceof LurqlPlanExistsEdge)) {
+                continue;
+            }
+            list.add(obj);
+        }
+        return (LurqlPlanExistsEdge [])
+            list.toArray(LurqlPlanExistsEdge.EMPTY_ARRAY);
     }
 
     private void executeOutgoingEdges(
@@ -249,7 +283,12 @@ public class LurqlReflectiveExecutor
         Iterator edgeIter =
             graph.outgoingEdgesOf(planVertex).iterator();
         while (edgeIter.hasNext()) {
-            LurqlPlanEdge edge = (LurqlPlanEdge) edgeIter.next();
+            Object edgeObj = edgeIter.next();
+            if (!(edgeObj instanceof LurqlPlanFollowEdge)) {
+                // dummy edge for exists
+                continue;
+            }
+            LurqlPlanFollowEdge edge = (LurqlPlanFollowEdge) edgeObj;
             if (!executeRecursive && edge.getPlanTarget().isRecursive()) {
                 continue;
             }
@@ -257,6 +296,9 @@ public class LurqlReflectiveExecutor
             AssociationEnd originEnd = edge.getOriginEnd();
             Classifier originType = originEnd.getType();
             LurqlFilter [] filters = getFilters(edge.getPlanTarget());
+            LurqlPlanExistsEdge [] existsEdges = getExistsEdges(
+                graph,
+                edge.getPlanTarget());
             Set output = getResultSet(edge.getPlanTarget());
             for (int i = 0; i < objArray.length; ++i) {
                 RefObject refObj = objArray[i];
@@ -269,17 +311,23 @@ public class LurqlReflectiveExecutor
                     refAssoc.refQuery(originEnd, refObj),
                     output,
                     filters,
+                    existsEdges,
                     edge.getDestinationTypeFilter());
             }
         }
     }
 
     private void executeFilters(
-        Collection input, Set output, LurqlFilter [] filters,
+        Collection input,
+        Set output,
+        LurqlFilter [] filters,
+        LurqlPlanExistsEdge [] existsEdges,
         JmiClassVertex typeFilter)
         throws JmiQueryException
     {
-        if ((filters.length == 0) && (typeFilter == null)) {
+        if ((filters.length == 0) && (existsEdges.length == 0)
+            && (typeFilter == null))
+        {
             output.addAll(input);
             return;
         }
@@ -316,8 +364,55 @@ outer:
                     continue outer;
                 }
             }
+            for (int i = 0; i < existsEdges.length; ++i) {
+                if (!testExists(refObj, existsEdges[i])) {
+                    continue outer;
+                }
+            }
             output.add(refObj);
         }
+    }
+
+    private boolean testExists(
+        RefObject refObj,
+        LurqlPlanExistsEdge existsEdge)
+        throws JmiQueryException
+    {
+        // First, set object id in exists root.
+        LurqlPlanVertex root = existsEdge.getPlanTarget();
+        root.getRootObjectIds().clear();
+        root.getRootObjectIds().add(refObj.refMofId());
+
+        DirectedGraph graph = existsEdge.getSubgraph();
+
+        // Execute sub-plan.
+        executeGraph(graph);
+
+        // Walk subgraph, clearing and checking results.
+        Set projectSet = existsEdge.getProjectSet();
+        int nResultsTotal = 0;
+        for (Object obj : graph.vertexSet()) {
+            LurqlPlanVertex planVertex = (LurqlPlanVertex) obj;
+            Set result = findResultSet(vertexToResultMap, planVertex);
+            if (result != null) {
+                int nResults = result.size();
+                result.clear();
+                // Never count the root; it always has the seed as a result.
+                if (planVertex == root) {
+                    continue;
+                }
+                if (projectSet != null) {
+                    // Check whether this is one of the variables selected
+                    // by the exists.
+                    if (!projectSet.contains(planVertex.getAlias())) {
+                        continue;
+                    }
+                }
+                nResultsTotal += nResults;
+            }
+        }
+
+        return nResultsTotal > 0;
     }
 
     private Set getFilterValues(LurqlFilter filter)

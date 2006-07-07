@@ -17,9 +17,9 @@ where emp.deptno=dept.deptno and dept.dname<'Development'
 order by 1;
 
 -- multiple dimension filter conditions
---explain plan excluding attributes for select emp.lname, emp.fname, dname from emp,dept
---where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
---order by 1,2;
+explain plan excluding attributes for select emp.lname, emp.fname, dname from emp,dept
+where emp.deptno=dept.deptno and dept.dname='Accounting' and dept.locid in ('HQ','SF')
+order by 1,2;
 explain plan excluding attributes for select emp.lname, emp.fname, dname
 from emp, dept
 where emp.deptno=dept.deptno and dept.dname='Accounting'
@@ -75,8 +75,8 @@ and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
---and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
-and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
+and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+-- and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00
 order by 1,2,3;
 
@@ -91,14 +91,14 @@ and sales.prodid = products.prodid
 and customers.lname < 'C'
 and customers.fname > 'S'
 and sales.prodid < 10009
---and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
-and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
+and products.name IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda')
+-- and (products.name='Soap' or products.name='Juice' or products.name='Soup' or products.name='Microwave' or products.name='Soda')
 and products.price < 5.00;
 
---explain plan excluding attributes for select sum(sales.price)
---from sales
---where custid in (select custid from customers where lname<'F' and fname>'D')
---and prodid in (select prodid from products where name
---IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
+explain plan excluding attributes for select sum(sales.price)
+from sales
+where custid in (select custid from customers where lname<'F' and fname>'D')
+and prodid in (select prodid from products where name
+IN ('Soap', 'Juice', 'Soup', 'Microwave', 'Soda'));
 
 !set outputformat table

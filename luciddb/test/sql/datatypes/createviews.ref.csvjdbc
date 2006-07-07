@@ -37,10 +37,10 @@
 0: jdbc:luciddb:> -- view off of foreign table imported using import schema
 0: jdbc:luciddb:> create view @name_prefix@_vschema.types_view_fromis as
 . . . . . . . . > select * from @name_prefix@_is_schema."types";
-Error: From line 1, column 60 to line 1, column 72: Table '@name_prefix@_IS_SCHEMA.types' not found (state=,code=0)
+Error: From line 2, column 15 to line 2, column 35: Table '@name_prefix@_IS_SCHEMA.types' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from @name_prefix@_vschema.types_view_fromis;
-Error: From line 1, column 15 to line 1, column 25: Table '@name_prefix@_VSCHEMA.TYPES_VIEW_FROMIS' not found (state=,code=0)
+Error: From line 1, column 15 to line 1, column 43: Table '@name_prefix@_VSCHEMA.TYPES_VIEW_FROMIS' not found (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- get metadata for views

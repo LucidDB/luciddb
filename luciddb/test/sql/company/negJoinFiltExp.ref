@@ -117,11 +117,13 @@
 'column0'
 'IterCalcRel'
 '  FennelToIteratorConverter'
-'    FennelCartesianProductRel'
-'      LcsRowScanRel'
-'      LcsRowScanRel'
-'        LcsIndexSearchRel'
-'          FennelValuesRel'
+'    LhxJoinRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'      FennelCalcRel'
+'        LcsRowScanRel'
+'          LcsIndexSearchRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !set outputformat table
 0: jdbc:luciddb:> !quit

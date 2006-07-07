@@ -92,25 +92,34 @@
 
       <test name="sqbm4nob" requiresSuccess="benchins1m">
         <!-- LDB-48 -->
+        <!-- No order by tests are non-deteministic, set to -->
+        <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>medium</runDuration>
+          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
       </test>
 
       <test name="sqbm5nob" requiresSuccess="benchins1m">
+        <!-- No order by tests are non-deteministic, set to -->
+        <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>short medium</runDuration>
+          <notImplemented value="true"/>
           <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5nob.sql"/>
       </test>
 
       <test name="sqbm6bnob" requiresSuccess="benchins1m">
+        <!-- No order by tests are non-deteministic, set to -->
+        <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>short medium</runDuration>
           <withIndex value="true"/>
+          <notImplemented value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>
       </test>

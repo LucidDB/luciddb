@@ -15,10 +15,13 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into foo values (2, X'1bad2bad3bad')
 . . . . . . . . > ;
-0: jdbc:luciddb:> --bug JIRA-147 values not truncated before inserting to table
+0: jdbc:luciddb:> --bug FRG-147 values not truncated before inserting to table
 0: jdbc:luciddb:> --insert into foo values (3, X'1bad2bad3bad4bad')
 0: jdbc:luciddb:> --;
 0: jdbc:luciddb:> --end bug
+0: jdbc:luciddb:> -- FRG-148 (bad imput to varbinary passes parser)
+0: jdbc:luciddb:> insert into foo values(3, X'X');
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from foo
 . . . . . . . . > ;
 +----+---------------+

@@ -2,7 +2,7 @@
 
 # Find all Exceptions.
 PARSE RESULT:
-select * 
+select *
 from
 class "Exception";
 
@@ -17,7 +17,7 @@ Exception: NameNotResolved
 
 # Test IN filter with literals.
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where
@@ -34,7 +34,7 @@ Class: Exception
 
 # Test IN filter with SQL query.
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where
@@ -55,7 +55,7 @@ Class: Exception
 
 # Test IN filter with SQL query which returns object ID.
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where
@@ -70,7 +70,7 @@ Class: Exception
 
 # Test filter based on association.
 PARSE RESULT:
-select * 
+select *
 from
 class "Attribute"
 where
@@ -98,7 +98,7 @@ Exception
 
 # Test single-valued dynamic parameter
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where
@@ -115,7 +115,7 @@ Class: Exception
 
 # Test set-valued dynamic parameter
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where
@@ -133,7 +133,7 @@ Class: Exception
 
 # Test single-valued dynamic parameter as a set element
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where

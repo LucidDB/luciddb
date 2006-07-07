@@ -2,7 +2,7 @@
 
 # Should fail:  class lookup.
 PARSE RESULT:
-select * 
+select *
 from
 class "NonExistent";
 
@@ -12,7 +12,7 @@ PREPARATION ERROR:  unknown class NonExistent
 
 # Should fail:  unknown alias
 PARSE RESULT:
-select "a" 
+select "a"
 from
 class "Exception" as "e";
 
@@ -22,7 +22,7 @@ PREPARATION ERROR:  unknown alias reference in select:  [a]
 
 # Should fail:  duplicate alias.
 PARSE RESULT:
-select * 
+select *
 from
 (
     class "Class" as "c"
@@ -36,7 +36,7 @@ PREPARATION ERROR:  duplicate definition for alias c
 
 # Should fail:  bad SQL
 PARSE RESULT:
-select * 
+select *
 from
 class "ModelElement"
 where

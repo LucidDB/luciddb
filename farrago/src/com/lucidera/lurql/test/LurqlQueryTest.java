@@ -199,6 +199,7 @@ public class LurqlQueryTest extends FarragoSqlTest
             pw.println("PARSE INPUT:");
             pw.print(queryString);
             pw.println("PARSE ERROR:  " + ex.getMessage());
+            tracer.throwing("LurqlQueryTest", "executeAction", ex);
             return;
         }
         pw.println("PARSE RESULT:");
@@ -213,6 +214,7 @@ public class LurqlQueryTest extends FarragoSqlTest
             } catch (Throwable ex) {
                 pw.println("PREPARATION ERROR:  " + ex.getMessage());
                 pw.println();
+                tracer.throwing("LurqlQueryTest", "executeAction", ex);
                 return;
             }
 
@@ -241,6 +243,7 @@ public class LurqlQueryTest extends FarragoSqlTest
                 } catch (Throwable ex) {
                     pw.println("EXECUTION ERROR:  " + ex.getMessage());
                     pw.println();
+                    tracer.throwing("LurqlQueryTest", "executeAction", ex);
                     return;
                 }
                 pw.println("EXECUTION RESULT:");

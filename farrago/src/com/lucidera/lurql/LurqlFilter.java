@@ -41,7 +41,11 @@ import org.eigenbase.util.*;
  *
  *<li><code>ATTRIBUTE IN [SQL-QUERY]</code>
  *
+ *<li><code>EXISTS (path-spec)</code>
+ *
  *</ul>
+ *
+ * TODO jvs 6-July-2006: refactor into LurqlExistsFilter, LurqlComparisonFilter
  *
  * @author John V. Sichi
  * @version $Id$
@@ -58,6 +62,8 @@ public class LurqlFilter extends LurqlQueryNode
     
     private final LurqlDynamicParam setParam;
 
+    private final LurqlExists exists;
+
     private boolean hasDynamicParams;
 
     public LurqlFilter(String attributeName, Set values)
@@ -66,6 +72,7 @@ public class LurqlFilter extends LurqlQueryNode
         this.values = Collections.unmodifiableSet(values);
         this.sqlQuery = null;
         this.setParam = null;
+        this.exists = null;
         Iterator iter = values.iterator();
         while (iter.hasNext()) {
             Object obj = iter.next();
@@ -82,6 +89,7 @@ public class LurqlFilter extends LurqlQueryNode
         this.values = null;
         this.setParam = null;
         this.sqlQuery = sqlQuery;
+        this.exists = null;
     }
 
     public LurqlFilter(String attributeName, LurqlDynamicParam param)
@@ -91,6 +99,21 @@ public class LurqlFilter extends LurqlQueryNode
         this.sqlQuery = null;
         this.setParam = param;
         hasDynamicParams = true;
+        this.exists = null;
+    }
+
+    public LurqlFilter(LurqlExists exists)
+    {
+        this.attributeName = null;
+        this.values = null;
+        this.sqlQuery = null;
+        this.setParam = null;
+        this.exists = exists;
+    }
+
+    public LurqlExists getExists()
+    {
+        return exists;
     }
 
     public String getAttributeName()
@@ -126,6 +149,11 @@ public class LurqlFilter extends LurqlQueryNode
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
+        if (exists != null) {
+            exists.unparse(pw);
+            return;
+        }
+        
         StackWriter.printSqlIdentifier(pw, attributeName);
         if (sqlQuery == null) {
             if (values == null) {

@@ -136,12 +136,12 @@ Error: The length for substring can not be negative (state=,code=0)
 0: jdbc:luciddb:> SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c1 = B.c1
 . . . . . . . . >   AND A.c1 <> LEFTN(B.c1, 10);
-Error: From line 1, column 93 to line 1, column 107: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
+Error: From line 3, column 15 to line 3, column 29: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s1 = B.s1
 . . . . . . . . >   AND A.s1 <> LEFTN(B.s1, 10);
-Error: From line 1, column 99 to line 1, column 113: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
+Error: From line 3, column 15 to line 3, column 29: No match found for function signature LEFTN(<CHARACTER>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Note that LTRIM on a given character should not remove
 0: jdbc:luciddb:> -- any characters that don't match.
@@ -149,12 +149,12 @@ Error: From line 1, column 99 to line 1, column 113: No match found for function
 0: jdbc:luciddb:> SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c1 = B.c1
 . . . . . . . . >   AND A.c1 <> LTRIM(B.c1, '@');
-Error: From line 1, column 93 to line 1, column 108: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
+Error: From line 3, column 15 to line 3, column 30: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s1 = B.s1
 . . . . . . . . >   AND A.s1 <> LTRIM(B.s1, '@');
-Error: From line 1, column 99 to line 1, column 114: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
+Error: From line 3, column 15 to line 3, column 30: No match found for function signature LTRIM(<CHARACTER>, <CHARACTER>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Just check that our substringing and padding, etc. returns
 0: jdbc:luciddb:> -- the proper number of columns and that CHAR_LENGTH checks it properly.
@@ -162,19 +162,19 @@ Error: From line 1, column 99 to line 1, column 114: No match found for function
 0: jdbc:luciddb:> SELECT A.c3, B.c3 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c3 = B.c3
 . . . . . . . . >   AND CHAR_LENGTH(A.c3) <> CHAR_LENGTH(LPAD(RTRIM(RPAD(SUBSTRING(B.c3, 2, 2), 100, '#'), '#'), CHAR_LENGTH(B.c3)));
-Error: From line 1, column 129 to line 1, column 165: No match found for function signature RPAD(<CHARACTER>, <NUMERIC>, <CHARACTER>) (state=,code=0)
+Error: From line 3, column 51 to line 3, column 87: No match found for function signature RPAD(<CHARACTER>, <NUMERIC>, <CHARACTER>) (state=,code=0)
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.s3, B.s3 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s3 = B.s3
 . . . . . . . . >   AND CHAR_LENGTH(A.s3) <> CHAR_LENGTH(LPAD(RTRIM(RPAD(SUBSTRING(B.s3, 2, 2), 100, '#'), '#'), CHAR_LENGTH(B.s3)));
-Error: From line 1, column 135 to line 1, column 171: No match found for function signature RPAD(<CHARACTER>, <NUMERIC>, <CHARACTER>) (state=,code=0)
+Error: From line 3, column 51 to line 3, column 87: No match found for function signature RPAD(<CHARACTER>, <NUMERIC>, <CHARACTER>) (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Translate is semi random, but we should check it intelligently.
 0: jdbc:luciddb:> -- This statement should not return any rows
 0: jdbc:luciddb:> SELECT A.c1, B.c1 FROM TEST_CHAR_TABLE A, TEST_CHAR_TABLE B
 . . . . . . . . > WHERE A.c1 = B.c1
 . . . . . . . . >   AND A.c1 <> TRANSLATE(B.c1, 'abcdefgkirkKIRK12345678x', 'abcdefgkirkKIRK12345678x');
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "," at line 1, column 107.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "," at line 3, column 29.
 Was expecting one of:
     "AND" ...
     "BETWEEN" ...
@@ -205,7 +205,7 @@ Was expecting one of:
 0: jdbc:luciddb:> SELECT A.s1, B.s1 FROM TEST_VARCHAR_TABLE A, TEST_VARCHAR_TABLE B
 . . . . . . . . > WHERE A.s1 = B.s1
 . . . . . . . . >   AND A.s1 <> TRANSLATE(B.s1, 'abcdefgkirkKIRK12345678x', 'abcdefgkirkKIRK12345678x');
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "," at line 1, column 113.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "," at line 3, column 29.
 Was expecting one of:
     "AND" ...
     "BETWEEN" ...
@@ -298,7 +298,7 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . >     V2 VARCHAR(10),
 . . . . . . . . >     V3 COMPUTED (V1 || V2)
 . . . . . . . . >     );
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "C1" at line 1, column 75.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "C1" at line 5, column 18.
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
 0: jdbc:luciddb:> SELECT SCHEMA_NAME,
@@ -310,7 +310,7 @@ Was expecting:
 . . . . . . . . > FROM SYSTEM.COLUMNS
 . . . . . . . . > WHERE TABLE_NAME = 'BUG8574'
 . . . . . . . . > ORDER BY COLUMN_NAME;
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "SYSTEM" at line 1, column 91.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "SYSTEM" at line 7, column 6.
 Was expecting one of:
     "LATERAL" ...
     "TABLE" ...
@@ -343,12 +343,12 @@ Was expecting one of:
 . . . . . . . . >       to_char(i6),
 . . . . . . . . >       to_char(i7)
 . . . . . . . . >    FROM bug9210;
-Error: From line 1, column 91 to line 1, column 101: No match found for function signature TO_CHAR(<NUMERIC>) (state=,code=0)
+Error: From line 6, column 7 to line 6, column 17: No match found for function signature TO_CHAR(<NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> SELECT table_name, column_name, sql_type, sql_Q1, sql_Q2
 . . . . . . . . > FROM system.COLUMNS
 . . . . . . . . > WHERE table_name = 'BUG9210_VIEW'
 . . . . . . . . > ORDER BY *;
-Error: org.eigenbase.sql.parser.SqlParseException: Encountered "system" at line 1, column 63.
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "system" at line 2, column 6.
 Was expecting one of:
     "LATERAL" ...
     "TABLE" ...
