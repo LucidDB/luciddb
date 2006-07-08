@@ -43,6 +43,7 @@ public abstract class MedAbstractDataWrapper extends MedAbstractBase
 
     private FarragoRepos repos;
     private Properties props;
+    private String libraryName;
 
     //~ Constructors ----------------------------------------------------------
 
@@ -66,6 +67,22 @@ public abstract class MedAbstractDataWrapper extends MedAbstractBase
     public Properties getProperties()
     {
         return props;
+    }
+
+    /**
+     * @return the library name used to initialize this wrapper
+     */
+    public String getLibraryName()
+    {
+        return libraryName;
+    }
+    
+    /**
+     * @param libraryName library name used to initialize this wrapper
+     */
+    public void setLibraryName(String libraryName)
+    {
+        this.libraryName = libraryName;
     }
 
     // implement FarragoMedDataWrapper

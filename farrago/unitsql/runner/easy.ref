@@ -1,0 +1,21 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test script for SqlRunner
+0: jdbc:farrago:> 
+0: jdbc:farrago:> SET SCHEMA 'SALES';
+0: jdbc:farrago:> SELECT * FROM DEPTS;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> SELECT * FROM EMPS WHERE DEPTNO=20;
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| EMPNO  |  NAME  | DEPTNO  | GENDER  |      CITY      | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+| 110    | Eric   | 20      | M       | San Francisco  | 3      | 80   | 416263      |          | false    |
+| 120    | Wilma  | 20      | F       |                | 1      | 50   |             |          | true     |
++--------+--------+---------+---------+----------------+--------+------+-------------+----------+----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

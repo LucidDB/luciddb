@@ -122,7 +122,7 @@ public class FarragoObjectCache implements FarragoAllocation
                     // this one's already in use by someone else
                     entry = null;
                 } else {
-                    tracer.fine("found cache entry");
+                    tracer.finer("found cache entry");
 
                     // pin the entry so that it can't be discarded after map
                     // lock is released below
@@ -155,14 +155,14 @@ public class FarragoObjectCache implements FarragoAllocation
                         try {
                             factory.initializeEntry(key, entry);
                             success = true;
-                            tracer.fine("initialized new cache entry");
+                            tracer.finer("initialized new cache entry");
                         } finally {
                             // NOTE: an exception can leave a failed entry
                             // lying around.  It would be nice to get rid of it
                             // immediately, but it's tricky since someone else
                             // may already be waiting for it.
                             if (!success) {
-                                tracer.fine("entry initialization failed");
+                                tracer.finer("entry initialization failed");
 
                                 // if unsuccessful, we're unwinding, so don't
                                 // leave failed entry pinned; can't unpin
@@ -183,7 +183,7 @@ public class FarragoObjectCache implements FarragoAllocation
                     }
 
                     while (entry.constructionThread != null) {
-                        tracer.fine("waiting for entry initialization");
+                        tracer.finer("waiting for entry initialization");
 
                         // someone else is supposed to construct the object
                         try {
@@ -218,8 +218,15 @@ public class FarragoObjectCache implements FarragoAllocation
             }
         }
 
+        // REVIEW mberkowitz 1-Jul-2006: when (unpinEntry) this seems to
+        // return an unpinned entry and to account for its memory.
+        if (tracer.isLoggable(Level.FINE)) {
+            long cacheSize = bytesUsed + entry.memoryUsage;
+            tracer.fine("returning new entry, pin count "+entry.pinCount+
+                        ", size "+entry.memoryUsage+", cache size "+cacheSize+
+                        ", key "+entry.key);
+        }
         adjustMemoryUsage(entry.memoryUsage);
-
         return entry;
     }
 
@@ -256,6 +263,9 @@ public class FarragoObjectCache implements FarragoAllocation
         // release map lock since actual discard could be time-consuming
         for (EntryImpl discard : discards) {
             discardEntry(discard);
+        }
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.finer("cache size after discards = "+bytesUsed);
         }
 
         // REVIEW:  in some circumstances, we want to fail if overdraft is
@@ -300,8 +310,34 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
+     * Removes an entry from the cache, but does not close its value.
+     * The entry must be exclusive: pinned only by the caller.
+     * @return the former value of the entry.
+     */
+    public Object detach(Entry e)
+    {
+        EntryImpl entry = (EntryImpl) e;
+        Object val = entry.value;
+        synchronized (mapKeyToEntry) {
+            if (tracer.isLoggable(Level.FINE)) {
+                tracer.fine("Detaching entry " + entry.key.toString() +
+                            ", size " + entry.memoryUsage);
+            }
+            assert (entry.pinCount == 1) : entry.pinCount;
+            mapKeyToEntry.removeMulti(entry.getKey(), entry);
+            bytesUsed -= entry.memoryUsage;
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer("cache size now "+bytesUsed);
+            }
+            entry.value = null;
+        }
+        return val;
+    }
+
+
+    /**
      * Discards any entries associated with a key.
-     *
+     * If the bound value of an entry is a ClosableObject, it will be closed.
      * @param key key of the Entry to discard
      */
     public void discard(Object key)
@@ -337,7 +373,8 @@ public class FarragoObjectCache implements FarragoAllocation
     {
         synchronized (entry) {
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Discarding key " + entry.key.toString());
+                tracer.fine("Discarding entry " + entry.key.toString() +
+                            ", size " + entry.memoryUsage);
             }
 
             assert (entry.pinCount == 0) : entry.pinCount;

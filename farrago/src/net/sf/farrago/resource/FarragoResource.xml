@@ -129,6 +129,11 @@
 <text>DDL validation error</text>
 </exception>
 
+<exception id="420009" name="ValidatorDefinitionError"
+    className="org.eigenbase.sql.validate.SqlValidatorException">
+<text>{0} in definition of {1}</text>
+</exception>
+
 <exception id="420010" name="ValidatorNameInUse"
     className="org.eigenbase.sql.validate.SqlValidatorException">
 <text>Target {1} already contains {0} with same name</text>
@@ -136,47 +141,47 @@
 
 <exception id="420040" name="ValidatorCharsetUnexpected"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>CHARACTER SET specification not allowed on {0} in definition of {1}</text>
+<text>CHARACTER SET specification not allowed on {0}</text>
 </exception>
 
 <exception id="420050" name="ValidatorPrecRequired"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Precision specification required for {0} in definition of {1}</text>
+<text>Precision specification required for {0}</text>
 </exception>
 
 <exception id="420060" name="ValidatorPrecUnexpected"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Precision specification not allowed on {0} in definition of {1}</text>
+<text>Precision specification not allowed on {0}</text>
 </exception>
 
 <exception id="420070" name="ValidatorScaleUnexpected"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Scale specification not allowed on {0} in definition of {1}</text>
+<text>Scale specification not allowed on {0}</text>
 </exception>
 
 <exception id="420080" name="ValidatorCharsetUnsupported"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Character set {0} unsupported in definition of {1}</text>
+<text>Character set {0} unsupported</text>
 </exception>
 
 <exception id="420090" name="ValidatorLengthExceeded"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Character length {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
+<text>Character length {0,number,#} exceeds maximum of {1,number,#}</text>
 </exception>
 
 <exception id="420100" name="ValidatorPrecisionExceeded"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Precision {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
+<text>Precision {0,number,#} exceeds maximum of {1,number,#}</text>
 </exception>
 
 <exception id="420101" name="ValidatorPrecisionMustBePositive"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Precision must be positive in definition of {0}</text>
+<text>Precision must be positive</text>
 </exception>
 
 <exception id="420110" name="ValidatorScaleExceeded"
     className="org.eigenbase.sql.validate.SqlValidatorException">
-<text>Scale {0,number,#} exceeds maximum of {1,number,#} in definition of {2}</text>
+<text>Scale {0,number,#} exceeds maximum of {1,number,#}</text>
 </exception>
 
 <exception id="420111" name="ValidatorScaleMustBeZero">

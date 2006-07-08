@@ -118,7 +118,8 @@ public interface FarragoSessionPreparingStmt extends FarragoAllocation
         boolean logical);
 
     /**
-     * @return true if the implementation may be saved for reuse
+     * Test if the implementation may be saved for reuse.
+     * Called after the statement has been prepared.
      */
     public boolean mayCacheImplementation();
 

@@ -1,0 +1,6 @@
+-- $Id$
+-- Test script for SqlRunner
+
+SET SCHEMA 'SALES';
+SELECT * FROM DEPTS;
+SELECT * FROM EMPS WHERE DEPTNO=20;

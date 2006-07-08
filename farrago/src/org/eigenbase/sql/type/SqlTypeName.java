@@ -116,16 +116,16 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
             PrecNoScaleNo);
     public static final int Char_ordinal = 14;
     public static final SqlTypeName Char =
-        new SqlTypeName("CHAR", Char_ordinal, PrecYesScaleNo);
+        new SqlTypeName("CHAR", Char_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Varchar_ordinal = 15;
     public static final SqlTypeName Varchar =
-        new SqlTypeName("VARCHAR", Varchar_ordinal, PrecYesScaleNo);
+        new SqlTypeName("VARCHAR", Varchar_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Binary_ordinal = 16;
     public static final SqlTypeName Binary =
-        new SqlTypeName("BINARY", Binary_ordinal, PrecYesScaleNo);
+        new SqlTypeName("BINARY", Binary_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Varbinary_ordinal = 17;
     public static final SqlTypeName Varbinary =
-        new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecYesScaleNo);
+        new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Null_ordinal = 18;
     public static final SqlTypeName Null =
         new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
@@ -452,6 +452,8 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         switch (getOrdinal()) {
         case Char_ordinal:
         case Binary_ordinal:
+        case Varchar_ordinal:
+        case Varbinary_ordinal:
             return 1;
         case Time_ordinal:
             return 0;

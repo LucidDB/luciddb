@@ -102,18 +102,18 @@
 . . . . . . . . > select "View1"."Foo", "View2"."Foo" as "Foo0"
 . . . . . . . . > from (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View1",
 . . . . . . . . >      (select * from (select cast(null as VARCHAR(1024)) as "Foo" from (values(0))) as c) as "View2";
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                   column0                                                                                   |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                                   |
-|   FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                          |
-|     IteratorToFennelConverter                                                                                                                                               |
-|       IterCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[null], expr#3=[CAST($t2):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t3])  |
-|         IterOneRowRel                                                                                                                                                       |
-|     IteratorToFennelConverter                                                                                                                                               |
-|       IterCalcRel(expr#0=[{inputs}], expr#1=[0], expr#2=[null], expr#3=[CAST($t2):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t3])  |
-|         IterOneRowRel                                                                                                                                                       |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                             column0                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                       |
+|   FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
+|     IteratorToFennelConverter                                                                                                                                   |
+|       IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])  |
+|         IterOneRowRel                                                                                                                                           |
+|     IteratorToFennelConverter                                                                                                                                   |
+|       IterCalcRel(expr#0=[{inputs}], expr#1=[null], expr#2=[CAST($t1):VARCHAR(1024) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], Foo=[$t2])  |
+|         IterOneRowRel                                                                                                                                           |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Execute to verify output.
 0: jdbc:farrago:> select "View1"."Foo", "View2"."Foo" as "Foo0"

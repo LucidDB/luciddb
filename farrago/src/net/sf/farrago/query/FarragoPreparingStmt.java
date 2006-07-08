@@ -181,7 +181,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     //~ Methods ---------------------------------------------------------------
 
-    // implement FarragoSessionPreparingStmt
+    // implement FarragoSessionPreparingStmt: cache everything
     public boolean mayCacheImplementation()
     {
         return true;

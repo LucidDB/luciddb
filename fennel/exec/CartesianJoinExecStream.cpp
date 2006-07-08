@@ -26,6 +26,8 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamGraph.h"
 
+#include <ostream>
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 void CartesianJoinExecStream::prepare(
@@ -35,10 +37,19 @@ void CartesianJoinExecStream::prepare(
     
     pLeftBufAccessor = inAccessors[0];
     assert(pLeftBufAccessor);
-    
+
     pRightBufAccessor = inAccessors[1];
     assert(pRightBufAccessor);
-    
+
+    SharedExecStream pLeftInput = pGraph->getStreamInput(getStreamId(), 0);
+    assert(pLeftInput);
+    pRightInput = pGraph->getStreamInput(getStreamId(), 1);
+    assert(pRightInput);
+    FENNEL_TRACE(TRACE_FINE,
+                 "left input " << pLeftInput->getStreamId() << ' ' << pLeftInput->getName() <<
+                 ", right input " << pRightInput->getStreamId() << ' ' << pRightInput->getName());
+
+   
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
     TupleDescriptor const &rightDesc = pRightBufAccessor->getTupleDesc();
     
@@ -53,6 +64,15 @@ void CartesianJoinExecStream::prepare(
     rightInputEmpty = true;
     
     ConfluenceExecStream::prepare(params);
+}
+
+// trace buffer state
+inline std::ostream& operator<< (std::ostream& os, SharedExecStreamBufAccessor buf)
+{
+    os << ExecStreamBufState_names[buf->getState()];
+    if (buf->hasPendingEOS())
+        os << "(EOS pending)";
+    return os;
 }
 
 ExecStreamResult CartesianJoinExecStream::execute(
@@ -76,6 +96,10 @@ ExecStreamResult CartesianJoinExecStream::execute(
                 return EXECRC_EOS;
             }
             if (!pLeftBufAccessor->demandData()) {
+                FENNEL_TRACE_THREAD(
+                    TRACE_FINE,
+                    "left underflow; left input " << pLeftBufAccessor <<
+                    " right input " << pRightBufAccessor);
                 return EXECRC_BUF_UNDERFLOW;
             }
             pLeftBufAccessor->unmarshalTuple(outputData);
@@ -102,13 +126,18 @@ ExecStreamResult CartesianJoinExecStream::execute(
 
                     pLeftBufAccessor->consumeTuple();
                     // restart right input stream
-                    pGraph->getStreamInput(getStreamId(),1)->open(true);
+                    pRightInput->open(true);
+                    FENNEL_TRACE_THREAD(TRACE_FINE, "re-opened right input " << pRightBufAccessor);
                     rightInputEmpty = true;
                     // NOTE: break out of the inner for loop, which will take
                     // us back to the top of the outer for loop
                     break;
                 }
                 if (!pRightBufAccessor->demandData()) {
+                    FENNEL_TRACE_THREAD(
+                        TRACE_FINE,
+                        "right underflow; left input " << pLeftBufAccessor <<
+                        " right input " << pRightBufAccessor);
                     return EXECRC_BUF_UNDERFLOW;
                 }
                 rightInputEmpty = false;

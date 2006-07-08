@@ -27,16 +27,19 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
+import net.sf.farrago.catalog.FarragoModelLoader;
 import net.sf.farrago.db.FarragoDatabase;
 import net.sf.farrago.db.FarragoDbSession;
+import net.sf.farrago.runtime.FarragoUdrRuntime;
 import net.sf.farrago.session.FarragoSession;
 import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
 import net.sf.farrago.session.FarragoSessionInfo;
 import net.sf.farrago.session.FarragoSessionVariables;
-import net.sf.farrago.runtime.FarragoUdrRuntime;
 
 import org.eigenbase.util.*;
+
 
 /**
  * FarragoManagementUDR is a set of user-defined routines providing
@@ -50,6 +53,19 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoManagementUDR
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    static final String STORAGEFACTORY_PROP_NAME =
+        "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
+    static final String [] STORAGE_PROP_NAMES =
+        new String [] {
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.driverClassName",
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.url",
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.userName",
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.password",
+            "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.schemaName"
+        };
+
     //~ Methods ---------------------------------------------------------------
 
     /**
@@ -70,7 +86,9 @@ public abstract class FarragoManagementUDR
                 if (stmtInfo != null) {
                     int i = 0;
                     resultInserter.setLong(++i, id);
-                    resultInserter.setLong(++i, info.getId());
+                    resultInserter.setLong(
+                        ++i,
+                        info.getId());
                     resultInserter.setString(
                         ++i,
                         stmtInfo.getSql());
@@ -108,7 +126,9 @@ public abstract class FarragoManagementUDR
                     List<String> mofIds = stmtInfo.getObjectsInUse();
                     for (String mofId : mofIds) {
                         int i = 0;
-                        resultInserter.setLong(++i, info.getId());
+                        resultInserter.setLong(
+                            ++i,
+                            info.getId());
                         resultInserter.setLong(++i, id);
                         resultInserter.setString(++i, mofId);
                         resultInserter.executeUpdate();
@@ -185,5 +205,37 @@ public abstract class FarragoManagementUDR
             throw Util.newInternal(ex);
         }
         return 0;
+    }
+
+    /**
+     * Populates a table of properties of the current repository connection.
+     *
+     * @param resultInserter
+     * @throws SQLException
+     */
+    public static void repositoryProperties(PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        FarragoModelLoader loader = db.getSystemRepos().getModelLoader();
+        if (loader != null) {
+            Properties props = loader.getStorageProperties();
+            int i = 0;
+            resultInserter.setString(++i, STORAGEFACTORY_PROP_NAME);
+            resultInserter.setString(
+                ++i,
+                loader.getStorageFactoryClassName());
+            resultInserter.executeUpdate();
+
+            for (String propName : STORAGE_PROP_NAMES) {
+                i = 0;
+                resultInserter.setString(++i, propName);
+                resultInserter.setString(
+                    ++i,
+                    props.getProperty(propName));
+                resultInserter.executeUpdate();
+            }
+        }
     }
 }

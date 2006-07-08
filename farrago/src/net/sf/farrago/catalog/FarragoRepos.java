@@ -278,6 +278,12 @@ public interface FarragoRepos extends FarragoAllocation,
      */
     public <T extends RefObject>
     Collection<T> allOfType(Class<T> clazz);
+    
+    /**
+     * Returns the FarragoModelLoader for this repos.
+     * May return null if not supported by implementation.
+     */
+    public FarragoModelLoader getModelLoader();
 }
 
 

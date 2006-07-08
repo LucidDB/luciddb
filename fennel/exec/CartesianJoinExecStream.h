@@ -59,6 +59,7 @@ class CartesianJoinExecStream : public ConfluenceExecStream
     TupleData outputData;
     SharedExecStreamBufAccessor pLeftBufAccessor;
     SharedExecStreamBufAccessor pRightBufAccessor;
+    SharedExecStream pRightInput;
     uint nLeftAttributes;
 
 public:

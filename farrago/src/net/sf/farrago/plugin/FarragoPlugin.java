@@ -95,6 +95,27 @@ public interface FarragoPlugin extends FarragoAllocation
         FarragoRepos repos,
         Properties props)
         throws SQLException;
+
+    /**
+     * set the library name used to initialize this plugin
+     *
+     * @param libraryName library name
+     */
+    public void setLibraryName(String libraryName);
+
+    /**
+     * return the library name used to initialize this plugin
+     *
+     * @return library name
+     */
+    public String getLibraryName();
+    
+    /**
+     * return the options with which this plugin was initialized
+     *
+     * @return plugin properties
+     */
+    public Properties getProperties();
 }
 
 

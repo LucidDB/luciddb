@@ -23,7 +23,6 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
 
 /**
  * Returns the rowtype of a cursor of the operand at a particular 0-based
@@ -41,7 +40,6 @@ public class CursorReturnTypeInference
 
     public CursorReturnTypeInference(int ordinal)
     {
-        Util.deprecated("add to p4", false);
         this.ordinal = ordinal;
     }
 

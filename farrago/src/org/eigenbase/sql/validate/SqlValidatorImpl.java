@@ -2301,9 +2301,11 @@ public class SqlValidatorImpl implements SqlValidatorWithHints
         validateAccess(table, SqlAccessEnum.INSERT);
     }
 
-    private void checkFieldCount(RelDataType sourceRowType, RelDataType logicalTargetRowType)
+    private void checkFieldCount(
+        RelDataType logicalSourceRowType,
+        RelDataType logicalTargetRowType)
     {
-        final int sourceFieldCount = sourceRowType.getFieldCount();
+        final int sourceFieldCount = logicalSourceRowType.getFieldCount();
         final int targetFieldCount = logicalTargetRowType.getFieldCount();
         if (sourceFieldCount != targetFieldCount) {
             throw EigenbaseResource.instance().UnmatchInsertColumn.ex(
