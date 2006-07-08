@@ -23,6 +23,7 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.jmi.mem.*;
@@ -95,6 +96,22 @@ public class JmiMemTest extends FarragoTestCase
         assertTrue(tableObj instanceof FemLocalTable);
         table = (FemLocalTable) tableObj;
         assertEquals(TABLE_NAME, table.getName());
+    }
+
+    public void testBreakOneToOneAssoc()
+        throws Exception
+    {
+        FarragoMemFactory factory = new FarragoMemFactory(
+            repos.getModelGraph());
+        FemStoredColumn col = factory.newFemStoredColumn();
+        FemSequenceGenerator seq = factory.newFemSequenceGenerator();
+        col.setSequence(seq);
+
+        assertSame(col, seq.getColumn());
+        
+        col.setSequence(null);
+        
+        assertNull(seq.getColumn());
     }
 
     public void testExportImport()
