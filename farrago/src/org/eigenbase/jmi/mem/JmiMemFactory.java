@@ -475,19 +475,38 @@ public abstract class JmiMemFactory
             if (needRelationshipCheck) {
                 final Relationship relationship = lookupRelationship(
                     clazz, attrName);
+                
                 if (relationship != null) {
-                    // Add the object at the other end.
-                    final ElementImpl elementImpl =
-                        ((Element) value).impl();
-                    if (relationship.inverse.many) {
-                        OneWayList inverseCollection =
-                            (OneWayList)
-                            elementImpl.get(relationship.inverse.name);
-                        inverseCollection.add(proxy);
-                    } else {
-                        elementImpl.put(
-                            relationship.inverse.name,
-                            proxy);
+                    Object oldVal = get(attrName);
+                    if (oldVal != null) {
+                        // Break association with existing partner.
+                        ElementImpl oldPartner = ((Element) oldVal).impl();
+                        if (relationship.inverse.many) {
+                            OneWayList inverseCollection =
+                                (OneWayList)
+                                oldPartner.get(relationship.inverse.name);
+                            inverseCollection.remove(proxy);
+                        } else {
+                            oldPartner.put(
+                                relationship.inverse.name,
+                                null);
+                        }
+                    }
+                    
+                    if (value != null) {
+                        // Add the object at the other end.
+                        final ElementImpl elementImpl =
+                            ((Element) value).impl();
+                        if (relationship.inverse.many) {
+                            OneWayList inverseCollection =
+                                (OneWayList)
+                                elementImpl.get(relationship.inverse.name);
+                            inverseCollection.add(proxy);
+                        } else {
+                            elementImpl.put(
+                                relationship.inverse.name,
+                                proxy);
+                        }
                     }
                 }
             }
