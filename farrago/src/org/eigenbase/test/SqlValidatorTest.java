@@ -456,6 +456,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("nullif('a','b')", "CHAR(1)");
         checkExpType("nullif(345.21, 2)", "DECIMAL(5, 2)");
         checkExpType("nullif(345.21, 2e0)", "DECIMAL(5, 2)");
+        checkWholeExpFails("nullif(1,2,3)",
+            "Invalid number of arguments to function 'NULLIF'. Was expecting 2 arguments");
     }
 
     public void testCoalesce()

@@ -46,6 +46,7 @@ public class SqlNullifFunction extends SqlFunction
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();
 
+        checkOperandCount(validator, getOperandTypeChecker(), call);
         if (2 != operands.length) {
             throw Util.newInternal("Invalid arg count: " + call);
         }
