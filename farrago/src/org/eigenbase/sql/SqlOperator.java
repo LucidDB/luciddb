@@ -606,7 +606,7 @@ public abstract class SqlOperator
             throwOnFailure);
     }
 
-    private void checkOperandCount(
+    protected void checkOperandCount(
         SqlValidator validator,
         SqlOperandTypeChecker argType,
         SqlCall call)
@@ -617,8 +617,16 @@ public abstract class SqlOperator
             return;
         }
         if (!od.getAllowedList().contains(new Integer(call.operands.length))) {
-            throw validator.newValidationError(call,
-                EigenbaseResource.instance().WrongNumOfArguments.ex());
+            if (od.getAllowedList().size() == 1) {
+                throw validator.newValidationError(
+                    call,
+                    EigenbaseResource.instance().InvalidArgCount.ex(
+                        call.getOperator().getName(),
+                        od.getAllowedList().get(0)));
+            } else {
+                throw validator.newValidationError(call,
+                    EigenbaseResource.instance().WrongNumOfArguments.ex());
+            }
         }
     }
 
