@@ -443,6 +443,12 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         RefClass refClass = findRefClass(clazz);
         return (Collection<T>) refClass.refAllOfType();
     }
+
+    // implement FarragoRepos
+    public FarragoModelLoader getModelLoader()
+    {
+        return null;
+    }
 }
 
 
