@@ -67,17 +67,20 @@ public class LhxSemiJoinRule extends RelOptRule
         AggregateRel  aggRel  = (AggregateRel)call.rels[3];
         RelNode      rightRel = aggRel.getChild();
         
-        RexNode joinCondition = joinRel.getCondition();
-        RexNode residualCondition;
+        RexNode residualCondition = null;
         
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
+
+        List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
+        List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
+
         
         residualCondition = RelOptUtil.splitJoinCondition(
-            leftRel, aggRel, joinCondition, leftKeys, rightKeys);
-        
-        if (leftKeys.size() == 0 || residualCondition != null) {
+            joinRel, leftJoinKeys, rightJoinKeys);
+                
+        if (leftJoinKeys.size() == 0 || residualCondition != null) {
             // join key only references input fields directly
             return;
         }
@@ -119,6 +122,17 @@ public class LhxSemiJoinRule extends RelOptRule
         }
        
         // now we can replace the original join(A, distinct(B)) with semiJoin(A, B)
+        List<Integer> outputProj = new ArrayList<Integer>();
+
+        RelNode[] inputRels = new RelNode[] {leftRel, rightRel};
+        
+        RelOptUtil.projectJoinInputs(inputRels, leftJoinKeys, rightJoinKeys,
+            leftKeys, rightKeys, outputProj);
+        
+        // the new leftRel and new rightRel, afte projection is added.
+        leftRel = inputRels[0];
+        rightRel = inputRels[1];
+
         RelNode fennelLeft =
             mergeTraitsAndConvert(
                 joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
@@ -174,7 +188,10 @@ public class LhxSemiJoinRule extends RelOptRule
                 numBuildRows.intValue(),
                 cndBuildKey.intValue());
         
-        // keep the original project
+        // This is a left semi join, so only fields from the left
+        // side is projected. There is no need to project the new output
+        // (left+key+right+key) to the original join output(left+right) before
+        // applying the original project.
         rel =
             CalcRel.createProject(rel, projExprs,
             		              RelOptUtil.getFieldNames(projRel.getRowType()));

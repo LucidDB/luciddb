@@ -661,7 +661,7 @@
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], proj#0..4=[{exprs}])'
 '  FennelToIteratorConverter'
-'    LhxJoinRel(leftKeys=[[3]], rightKeys=[[0]], joinType=[LEFTSEMI])'
+'    LhxJoinRel(leftKeys=[[3]], rightKeys=[[1]], joinType=[LEFTSEMI])'
 '      LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '          LcsIndexSearchRel(table=[[LOCALDB, SJ, SALES]], index=[I_SALES_CUST], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -669,7 +669,8 @@
 '              FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):INTEGER], ROW_VALUE=[$t1])'
 '                LhxAggRel(groupCount=[1])'
 '                  FennelValuesRel(tuples=[[{ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }]])'
-'      FennelValuesRel(tuples=[[{ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }]])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[CAST($t0):INTEGER], proj#0..1=[{exprs}])'
+'        FennelValuesRel(tuples=[[{ 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }, { 1 }, { 2 }, { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 }]])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from sales where customer in
 . . . . . . . . >         (select id from customer where id < 10);
