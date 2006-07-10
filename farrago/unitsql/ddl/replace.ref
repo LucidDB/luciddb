@@ -102,6 +102,7 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 0: jdbc:farrago:> create schema foo;
 0: jdbc:farrago:> set schema 'foo';
 0: jdbc:farrago:> create view v1 as select * from sales.depts;
+0: jdbc:farrago:> create table bar (col integer primary key);
 0: jdbc:farrago:> select * from v1;
 +---------+------------+
 | DEPTNO  |    NAME    |
@@ -110,6 +111,11 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
+0: jdbc:farrago:> select * from bar;
++------+
+| COL  |
++------+
++------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create or replace schema foo description 'blah';
 0: jdbc:farrago:> 
@@ -129,6 +135,11 @@ Error: Cannot replace index "IDX" because it does not support replacement (state
 | 20      | Marketing  |
 | 30      | Accounts   |
 +---------+------------+
+0: jdbc:farrago:> select * from foo.bar;
++------+
+| COL  |
++------+
++------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'foo';
 0: jdbc:farrago:> create view v2 as select * from sales.depts;

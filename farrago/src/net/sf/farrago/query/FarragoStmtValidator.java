@@ -23,6 +23,7 @@
 package net.sf.farrago.query;
 
 import java.util.*;
+import java.nio.charset.Charset;
 
 import javax.jmi.reflect.*;
 
@@ -41,6 +42,8 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeFamily;
 import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.validate.SqlMoniker;
 import org.eigenbase.sql.validate.SqlMonikerImpl;
@@ -760,6 +763,151 @@ public class FarragoStmtValidator extends FarragoCompoundAllocation
     public EigenbaseTimingTracer getTimingTracer()
     {
         return timingTracer;
+    }
+
+    // implement FarragoSessionStmtValidator
+    public void validateDataType(SqlDataTypeSpec dataType)
+        throws SqlValidatorException
+    {
+        // Check that every type is supported. For example, we don't support
+        // columns of type LONG VARCHAR right now.
+
+        final FarragoSessionPersonality personality =
+            getSession().getPersonality();
+        final String typeNameName = dataType.getTypeName().toString();
+        final FarragoResource res = FarragoResource.instance();
+
+        SqlTypeName typeName = SqlTypeName.get(typeNameName);
+        if (typeName != null) {
+            if (!personality.isSupportedType(typeName)) {
+                throw EigenbaseResource.instance().TypeNotSupported.ex(
+                    typeName.toString());
+            }
+        }
+
+        CwmSqldataType type = findSqldataType(dataType.getTypeName());
+
+        // Negative precision or scale in SqlDataTypeSpec indicates the
+        // precision or scale was not specified
+        Integer precision = (dataType.getPrecision() >= 0)?
+            Integer.valueOf(dataType.getPrecision()): null;
+        Integer scale = (dataType.getScale() >= 0)?
+            Integer.valueOf(dataType.getScale()): null;
+
+        // first, validate presence of modifiers
+        if ((typeName != null) && typeName.allowsPrec()) {
+            if (precision == null) {
+                int p = typeName.getDefaultPrecision();
+                if (p != -1) {
+                    precision = new Integer(p);
+                }
+            }
+            if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
+                throw res.ValidatorPrecRequired.ex(
+                        repos.getLocalizedObjectName(type));
+            }
+        } else {
+            if (precision != null) {
+                throw res.ValidatorPrecUnexpected.ex(
+                        repos.getLocalizedObjectName(type));
+            }
+        }
+        if ((typeName != null) && typeName.allowsScale()) {
+            // assume scale is always optional
+        } else {
+            if (scale != null) {
+                throw res.ValidatorScaleUnexpected.ex(
+                        repos.getLocalizedObjectName(type));
+            }
+        }
+        SqlTypeFamily typeFamily = null;
+        if (typeName != null) {
+            typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
+        }
+        if (typeFamily == SqlTypeFamily.Character) {
+            String charsetName = dataType.getCharSetName();
+            if (JmiUtil.isBlank(charsetName)) {
+                charsetName = repos.getDefaultCharsetName();
+            } else {
+                if (!Charset.isSupported(charsetName)) {
+                    throw res.ValidatorCharsetUnsupported.ex(
+                            dataType.getCharSetName());
+                }
+            }
+            Charset charSet = Charset.forName(charsetName);
+            if (charSet.newEncoder().maxBytesPerChar() > 1) {
+                // TODO:  implement multi-byte character sets
+                throw Util.needToImplement(charSet);
+            }
+        } else {
+            if (!JmiUtil.isBlank(dataType.getCharSetName())) {
+                throw res.ValidatorCharsetUnexpected.ex(
+                        repos.getLocalizedObjectName(type));
+            }
+        }
+
+        // now, enforce type-defined limits
+        if (type instanceof CwmSqlsimpleType) {
+            CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
+
+            if (precision != null) {
+                if (typeFamily == SqlTypeFamily.Binary ||
+                    typeFamily == SqlTypeFamily.Character) {
+                    Integer maximum = simpleType.getCharacterMaximumLength();
+                    assert (maximum != null);
+                    if (precision.intValue() > maximum.intValue()) {
+                        throw res.ValidatorLengthExceeded.ex(
+                                precision,
+                                maximum);
+                    }
+                } else {
+                    Integer maximum = simpleType.getNumericPrecision();
+                    if (maximum == null) {
+                        maximum = simpleType.getDateTimePrecision();
+                    }
+                    assert (maximum != null);
+                    if (precision.intValue() > maximum.intValue()) {
+                        throw res.ValidatorPrecisionExceeded.ex(
+                            precision,
+                            maximum);
+                    }
+                    if (typeFamily == SqlTypeFamily.Numeric) {
+                        if (precision.intValue() <= 0) {
+                            throw res.ValidatorPrecisionMustBePositive.ex();
+                        }
+                    }
+                }
+            }
+            if (scale != null) {
+                Integer maximum = simpleType.getNumericScale();
+                assert (maximum != null);
+                if (scale.intValue() > maximum.intValue()) {
+                    throw res.ValidatorScaleExceeded.ex(
+                            scale,
+                            maximum);
+                }
+            }
+        } else if (type instanceof FemSqlcollectionType) {
+            FemSqlcollectionType collectionType =
+                (FemSqlcollectionType) type;
+            FemSqltypeAttribute componentType = (FemSqltypeAttribute)
+                collectionType.getFeature().get(0);
+            // TODO: Validate
+        } else if (type instanceof FemUserDefinedType) {
+            // nothing special to do for UDT's, which were
+            // already validated on creation
+        } else if (type instanceof FemSqlrowType) {
+            FemSqlrowType rowType = (FemSqlrowType) type;
+            for (Iterator columnIter = rowType.getFeature().iterator();
+                columnIter.hasNext();) {
+                FemAbstractAttribute column =
+                    (FemAbstractAttribute) columnIter.next();
+                // TODO: Validate
+            }
+        } else {
+            throw Util.needToImplement(type);
+        }
+
     }
 }
 

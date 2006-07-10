@@ -468,7 +468,9 @@ class RuleQueue
 
     /**
      * Compares {@link VolcanoRuleMatch} objects according to their
-     * importance.
+     * importance. Matches which are more important collate earlier.
+     * Ties are adjudicated by comparing the {@link RelNode#getId id}s
+     * of the relational expressions matched.
      */
     private class RuleMatchImportanceComparator
         implements Comparator<VolcanoRuleMatch>
@@ -483,7 +485,7 @@ class RuleQueue
             if (c == 0) {
                 c = compareRels(match1.getRels(), match2.getRels());
             }
-            return c;
+            return - c;
         }
     }
 

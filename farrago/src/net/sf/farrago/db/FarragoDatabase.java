@@ -600,8 +600,7 @@ public class FarragoDatabase extends FarragoDbSingleton
 
     /**
      * Kill an executing statement: cancel it and deallocate it.
-     * @param statement id
-     * @return success
+     * @param  id statement id
      */
     public void killExecutingStmt(long id) throws Throwable
     {
@@ -620,7 +619,7 @@ public class FarragoDatabase extends FarragoDbSingleton
      * Not an error if none match.
      * @param match pattern to match. Null string matches nothing, to be safe.
      * @param nomatch pattern not to match
-     * @returns count of killed statements.
+     * @return count of killed statements.
      */
     public int killExecutingStmtMatching(String match, String nomatch) throws Throwable
     {
@@ -770,48 +769,52 @@ public class FarragoDatabase extends FarragoDbSingleton
 
             return null;
         }
+         
+        FarragoObjectCache.Entry cacheEntry;
+        FarragoObjectCache.CachedObjectFactory stmtFactory =
+            new FarragoObjectCache.CachedObjectFactory() {
+                public void initializeEntry(
+                    Object key,
+                    FarragoObjectCache.UninitializedEntry entry)
+                {
+                    timingTracer.traceTime("code cache miss");
+
+                    assert (key.equals(sql));
+                    FarragoSessionExecutableStmt executableStmt =
+                        stmt.prepare(validatedSqlNode, sqlNode);
+                    long memUsage =
+                        FarragoUtil.getStringMemoryUsage(sql)
+                        + executableStmt.getMemoryUsage();
+                    entry.initialize(executableStmt, memUsage);
+                }
+            };
 
         FarragoSessionExecutableStmt executableStmt;
-        if (!stmt.mayCacheImplementation()) {
-            // no cache
-            executableStmt = stmt.prepare(validatedSqlNode, sqlNode);
-            owner.addAllocation(executableStmt);
-        } else { 
-            // use the cache
-            FarragoObjectCache.Entry cacheEntry;
-            FarragoObjectCache.CachedObjectFactory stmtFactory =
-                new FarragoObjectCache.CachedObjectFactory() {
-                    public void initializeEntry(
-                        Object key,
-                        FarragoObjectCache.UninitializedEntry entry)
-                    {
-                        timingTracer.traceTime("code cache miss");
+        do {
+            // prepare the statement, caching the results in codeCache
+            cacheEntry = codeCache.pin(sql, stmtFactory, false);
+            executableStmt =
+                (FarragoSessionExecutableStmt) cacheEntry.getValue();
 
-                        assert (key.equals(sql));
-                        FarragoSessionExecutableStmt executableStmt =
-                            stmt.prepare(validatedSqlNode, sqlNode);
-                        long memUsage =
-                            FarragoUtil.getStringMemoryUsage(sql)
-                            + executableStmt.getMemoryUsage();
-                        entry.initialize(executableStmt, memUsage);
-                    }
-                };
+            // Sometimes the implementation of a statement cannot be shared, and must
+            // not be cached. Test this when the statement is prepared, and so
+            // already in the cache.
+            if (! stmt.mayCacheImplementation()) {
+                codeCache.detach(cacheEntry); 
+                // does not close the FarragoSessionExecutableStmt
+                cacheEntry = null;
 
-            do {
-                cacheEntry = codeCache.pin(sql, stmtFactory, false);
-                executableStmt =
-                    (FarragoSessionExecutableStmt) cacheEntry.getValue();
+            } else if (isStale(stmt.getRepos(), executableStmt)) {
+                cacheEntry.closeAllocation();
+                codeCache.discard(sql); // closes the FarragoSessionExecutableStmt
+                cacheEntry = null;
+                executableStmt = null;
+            }
+        } while (executableStmt == null);
 
-                if (isStale(stmt.getRepos(), executableStmt)) {
-                    cacheEntry.closeAllocation();
-                    codeCache.discard(sql);
-                    cacheEntry = null;
-                    executableStmt = null;
-                }
-            } while (executableStmt == null);
+        // REVIEW mb: what if stmt is not cached? 
+        if (cacheEntry != null)
             owner.addAllocation(cacheEntry);
-        }
-
         return executableStmt;
     }
 

@@ -30,11 +30,10 @@ import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlValidatorImpl;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.resgen.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import net.sf.farrago.session.FarragoSessionPersonality;
-
 
 /**
  * FarragoSqlValidator refines SqlValidator with some Farrago-specifics.
@@ -134,17 +133,10 @@ public class FarragoSqlValidator extends SqlValidatorImpl
     {
         super.validateDataType(dataType);
         FarragoPreparingStmt preparingStmt = getPreparingStmt();
-        final FarragoSessionPersonality personality =
-            preparingStmt.getSession().getPersonality();
-        final String typeNameName = dataType.getTypeName().getSimple();
-        SqlTypeName typeName = SqlTypeName.get(typeNameName);
-        if (typeName != null) {
-            if (!personality.isSupportedType(typeName)) {
-                throw newValidationError(
-                    dataType,
-                    EigenbaseResource.instance().TypeNotSupported.ex(
-                        typeName.toString()));
-            }
+        try {
+            preparingStmt.getStmtValidator().validateDataType(dataType);
+        } catch (SqlValidatorException ex) {
+            throw newValidationError(dataType, ex);
         }
     }
 

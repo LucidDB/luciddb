@@ -242,6 +242,12 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         mdrRepository.endTrans(rollback);
     }
 
+    // implement FarragoRepos
+    public FarragoModelLoader getModelLoader()
+    {
+        return modelLoader;
+    }
+    
 }
 
 

@@ -27,9 +27,9 @@ import java.util.*;
 import java.util.logging.*;
 
 import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.resource.FarragoResource;
 import net.sf.farrago.util.FarragoProperties;
 import net.sf.farrago.util.MdrUtil;
-import net.sf.farrago.resource.FarragoResource;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
@@ -50,6 +50,13 @@ import org.netbeans.mdr.persistence.jdbcimpl.*;
  */
 public class FarragoModelLoader
 {
+    //~ Static fields/initializers --------------------------------------------
+
+    // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
+    // FarragoTrace.
+    private static final Logger tracer =
+        Logger.getLogger("net.sf.farrago.catalog.FarragoRepos");
+
     //~ Instance fields -------------------------------------------------------
 
     protected MDRepository mdrRepos;
@@ -57,21 +64,7 @@ public class FarragoModelLoader
     private final Properties storageProps;
     private final FarragoProperties farragoProperties;
 
-    // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
-    // FarragoTrace.
-    private static final Logger tracer = Logger.getLogger(
-        "net.sf.farrago.catalog.FarragoRepos");
-
-    //~ Methods ---------------------------------------------------------------
-
-    public void close()
-    {
-        if (mdrRepos != null) {
-            org.netbeans.jmiimpl.mof.model.NamespaceImpl.clearContains();
-            mdrRepos.shutdown();
-            mdrRepos = null;
-        }
-    }
+    //~ Constructors ----------------------------------------------------------
 
     public FarragoModelLoader()
     {
@@ -82,6 +75,17 @@ public class FarragoModelLoader
     {
         this.farragoProperties = farragoProperties;
         storageProps = new Properties();
+    }
+
+    //~ Methods ---------------------------------------------------------------
+
+    public void close()
+    {
+        if (mdrRepos != null) {
+            org.netbeans.jmiimpl.mof.model.NamespaceImpl.clearContains();
+            mdrRepos.shutdown();
+            mdrRepos = null;
+        }
     }
 
     public MDRepository getMdrRepos()
@@ -106,11 +110,11 @@ public class FarragoModelLoader
                 setSystemReposProperties();
             } catch (IOException ex) {
                 throw FarragoResource.instance().CatalogPropsAccessFailed.ex(
-                    getSystemReposFile().getAbsolutePath(), ex);
+                    getSystemReposFile().getAbsolutePath(),
+                    ex);
             }
         }
-        mdrRepos =
-            MdrUtil.loadRepository(storageFactoryClassName, storageProps);
+        mdrRepos = MdrUtil.loadRepository(storageFactoryClassName, storageProps);
     }
 
     public File getSystemReposFile()
@@ -119,7 +123,8 @@ public class FarragoModelLoader
         return new File(catalogDir, "ReposStorage.properties");
     }
 
-    private void setSystemReposProperties() throws IOException
+    private void setSystemReposProperties()
+        throws IOException
     {
         File reposFile = getSystemReposFile();
         InputStream propsStream = new FileInputStream(reposFile);
@@ -156,12 +161,19 @@ public class FarragoModelLoader
         String name,
         String value)
     {
-        tracer.fine(
-            "Setting repository storage property '" + name
-            + "' = [ " + value + " ]");
+        tracer.fine("Setting repository storage property '" + name + "' = [ "
+            + value + " ]");
         storageProps.put(name, value);
     }
+
+    public Properties getStorageProperties()
+    {
+        return storageProps;
+    }
+
+    public String getStorageFactoryClassName()
+    {
+        return JdbcStorageFactory.class.getName();
+    }
 }
-
-
 // End FarragoModelLoader.java

@@ -181,5 +181,34 @@ Error: could not calculate results for the following row:
 Messages:
 [0]:PC=0 Code=22003 (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- data type validation error cases
+0: jdbc:farrago:> values cast(12 as integer(0));
+Error: From line 1, column 19 to line 1, column 25: Precision specification not allowed on datatype "INTEGER" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as boolean(0,2));
+Error: From line 1, column 19 to line 1, column 25: Precision specification not allowed on datatype "BOOLEAN" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as decimal(20,0));
+Error: From line 1, column 19 to line 1, column 25: Precision 20 exceeds maximum of 19 (state=,code=0)
+0: jdbc:farrago:> values cast(12 as decimal(1,20));
+Error: From line 1, column 19 to line 1, column 25: Scale 20 exceeds maximum of 19 (state=,code=0)
+0: jdbc:farrago:> values cast(12 as decimal(0,2));
+Error: From line 1, column 19 to line 1, column 25: Precision must be positive (state=,code=0)
+0: jdbc:farrago:> values cast(12 as char(1,2));
+Error: From line 1, column 19 to line 1, column 22: Scale specification not allowed on datatype "CHAR" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as varchar(1,2));
+Error: From line 1, column 19 to line 1, column 25: Scale specification not allowed on datatype "VARCHAR" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as binary(1,2));
+Error: From line 1, column 19 to line 1, column 24: Scale specification not allowed on datatype "BINARY" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as varbinary(1,2));
+Error: From line 1, column 19 to line 1, column 27: Scale specification not allowed on datatype "VARBINARY" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as badtype);
+Error: DDL validation error: Reference to unknown datatype "BADTYPE" (state=,code=0)
+0: jdbc:farrago:> values cast(12 as udt.badtype);
+Error: DDL validation error: Reference to unknown user-defined type "BADTYPE" (state=,code=0)
+0: jdbc:farrago:> values cast('12' as time(100));
+Error: From line 1, column 21 to line 1, column 24: Precision 100 exceeds maximum of 0 (state=,code=0)
+0: jdbc:farrago:> values cast('12' as timestamp(100));
+Error: From line 1, column 21 to line 1, column 29: Precision 100 exceeds maximum of 0 (state=,code=0)
+0: jdbc:farrago:> values cast('12' as date(1));
+Error: From line 1, column 21 to line 1, column 24: Precision specification not allowed on datatype "DATE" (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

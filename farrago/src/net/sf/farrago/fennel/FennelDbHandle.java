@@ -51,6 +51,8 @@ public class FennelDbHandle implements FarragoAllocation
 
     private static final Logger tracer =
         FarragoTrace.getFennelDbHandleTracer();
+    private static final Logger jhTracer =
+        FarragoTrace.getFennelJavaHandleTracer();
 
     //~ Instance fields -------------------------------------------------------
 
@@ -255,7 +257,8 @@ public class FennelDbHandle implements FarragoAllocation
             resultHandle.setLongHandle(resultHandleLong);
             if (exportList != null) {
                 tracer.fine("Returning " + resultHandleClassName + " = '"
-                    + resultHandleLong + "'");
+                            + resultHandleLong +
+                            "(" + Long.toHexString(resultHandleLong) + ")'");
             }
         }
 
@@ -283,6 +286,9 @@ public class FennelDbHandle implements FarragoAllocation
         long hJavaObj = FennelStorage.newObjectHandle(obj);
         FennelJavaHandle h = new FennelJavaHandle(hJavaObj);
         owner.addAllocation(h);
+        if (jhTracer.isLoggable(Level.FINE)) {
+            jhTracer.fine("java handle " + h +", object " + obj +", owner " + owner);
+        }
         return h;
     }
 
@@ -296,6 +302,9 @@ public class FennelDbHandle implements FarragoAllocation
         long handle,
         Object obj)
     {
+        if (jhTracer.isLoggable(Level.FINE)) {
+            jhTracer.fine("java handle "+handle+", set object "+obj);
+        }
         FennelStorage.setObjectHandle(handle, obj);
     }
 

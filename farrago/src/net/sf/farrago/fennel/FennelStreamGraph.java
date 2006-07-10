@@ -106,7 +106,7 @@ public class FennelStreamGraph implements FarragoAllocation
     {
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(operation + " streamGraphHandle = "
-                + streamGraphHandle);
+                + Long.toHexString(streamGraphHandle));
         }
     }
 
@@ -114,9 +114,9 @@ public class FennelStreamGraph implements FarragoAllocation
         String operation,
         FennelStreamHandle streamHandle)
     {
-        if (tracer.isLoggable(Level.FINE)) {
+        if (tracer.isLoggable(Level.FINER)) {
             tracer.fine(operation + " streamHandle = "
-                + streamHandle.getLongHandle());
+                + Long.toHexString(streamHandle.getLongHandle()));
         }
     }
 
@@ -125,10 +125,10 @@ public class FennelStreamGraph implements FarragoAllocation
         FennelStreamHandle streamHandle,
         int execStreamInputOrdinal)
     {
-        if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine(operation + " streamHandle = "
-                + streamHandle.getLongHandle() + " input ordinal = " 
-                + execStreamInputOrdinal);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.fine(operation
+                + " streamHandle = " + Long.toHexString(streamHandle.getLongHandle())
+                + " input ordinal = " + execStreamInputOrdinal);
         }
     }
 

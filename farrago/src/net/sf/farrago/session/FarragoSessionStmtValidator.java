@@ -44,6 +44,7 @@ import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.SqlMoniker;
+import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.resource.EigenbaseResource;
 
 
@@ -345,6 +346,13 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public CwmNamedColumnSet getSampleDataset(
         CwmNamedColumnSet columnSet,
         String datasetName);
+
+    /**
+     * Validates a data type expression.
+     */
+    public void validateDataType(SqlDataTypeSpec dataType)
+        throws SqlValidatorException;
+
 }
 
 

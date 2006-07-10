@@ -189,11 +189,13 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         sessionVariables.programName = info.getProperty("clientProgramName");
         sessionVariables.processId = 0L;
         String processStr = info.getProperty("clientProcessId");
-        if (processStr != null) {
+        if (processStr != null && processStr.length() > 0) {
             try {
                 sessionVariables.processId = Long.parseLong(processStr);
             } catch (NumberFormatException e) {
-                tracer.warning("processId error: " +e.getMessage());
+                tracer.warning(
+                    "processId=\"" +processStr +"\" error: " +e.getMessage());
+                Util.swallow(e, tracer);
             }
         }
 

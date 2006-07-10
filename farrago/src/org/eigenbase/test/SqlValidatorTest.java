@@ -456,6 +456,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpType("nullif('a','b')", "CHAR(1)");
         checkExpType("nullif(345.21, 2)", "DECIMAL(5, 2)");
         checkExpType("nullif(345.21, 2e0)", "DECIMAL(5, 2)");
+        checkWholeExpFails("nullif(1,2,3)",
+            "Invalid number of arguments to function 'NULLIF'. Was expecting 2 arguments");
     }
 
     public void testCoalesce()
@@ -754,6 +756,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testCastTypeToType()
     {
+        checkExpType("cast(123 as char)", "CHAR(1) NOT NULL");
+        checkExpType("cast(123 as varchar)", "VARCHAR(1) NOT NULL");
+        checkExpType("cast(x'1234' as binary)", "BINARY(1) NOT NULL");
+        checkExpType("cast(x'1234' as varbinary)", "VARBINARY(1) NOT NULL");
         checkExpType("cast(123 as varchar(3))", "VARCHAR(3) NOT NULL");
         checkExpType("cast(123 as char(3))", "CHAR(3) NOT NULL");
         checkExpType("cast('123' as integer)", "INTEGER NOT NULL");
@@ -793,15 +799,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cast function cannot convert value of type INTEGER MULTISET to type INTEGER");
         checkExpFails("cast(x'ff' as decimal(5,2))",
             "(?s).*Cast function cannot convert value of type BINARY\\(1\\) to type DECIMAL\\(5, 2\\)");
-        // TODO: Enable tests when data types are validated in non-DDL context
-        if (todo) {
-        checkExpFails("cast(43 as decimal(1,20))",
-            "(?s).*Scale 20 exceeds maximum of 19.*");
-        checkExpFails("cast(43 as decimal(20,19))",
-            "(?s).*Precision 20 exceeds maximum of 19");
-        checkExpFails("cast(43 as decimal(0,2))",
-            "(?s).*Precision must be positive.*");
-        }
 
         checkExpFails("cast(1 as boolean)",
             "(?s).*Cast function cannot convert value of type INTEGER to type BOOLEAN.*");
@@ -813,8 +810,6 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             "(?s).*Cast function cannot convert value of type DATE to type TIME.*");
         checkExpFails("cast(TIME '12:34:01' as DATE)",
             "(?s).*Cast function cannot convert value of type TIME\\(0\\) to type DATE.*");
-
-
     }
 
     public void testDateTime()
@@ -1007,7 +1002,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             " VARCHAR(20) NOT NULL ENAME," +
             " VARCHAR(10) NOT NULL JOB," +
             " INTEGER NOT NULL MGR," +
-            " DATE NOT NULL HIREDATE," +
+            " TIMESTAMP(0) NOT NULL HIREDATE," +
             " INTEGER NOT NULL SAL," +
             " INTEGER NOT NULL COMM," +
             " INTEGER NOT NULL DEPTNO) NOT NULL MULTISET NOT NULL");
@@ -2615,7 +2610,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
             " VARCHAR(20) NOT NULL ENAME," +
             " VARCHAR(10) NOT NULL JOB," +
             " INTEGER NOT NULL MGR," +
-            " DATE NOT NULL HIREDATE," +
+            " TIMESTAMP(0) NOT NULL HIREDATE," +
             " INTEGER NOT NULL SAL," +
             " INTEGER NOT NULL COMM," +
             " INTEGER NOT NULL DEPTNO) NOT NULL";
@@ -2700,8 +2695,10 @@ public class SqlValidatorTest extends SqlValidatorTestCase
 
     public void testRewriteWithoutIdentifierExpansion()
     {
+        SqlValidator validator = tester.getValidator();
+        validator.setIdentifierExpansion(false);
         tester.checkRewrite(
-            null,
+            validator,
             "select * from dept",
             "SELECT *" + NL + "FROM `DEPT`");
     }

@@ -30,6 +30,7 @@ import net.sf.farrago.db.FarragoDbSession;
 import net.sf.farrago.db.FarragoDbStmtContext;
 import net.sf.farrago.ddl.DdlValidator;
 import net.sf.farrago.fennel.FennelDbHandle;
+import net.sf.farrago.fennel.FennelJavaHandle;
 import net.sf.farrago.fennel.FennelStreamGraph;
 import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 import net.sf.farrago.runtime.FarragoRuntimeContext;
@@ -110,6 +111,15 @@ public abstract class FarragoTrace
     public static Logger getFennelDbHandleTracer()
     {
         return getClassTracer(FennelDbHandle.class);
+    }
+
+    /**
+     * The tracer "net.sf.farrago.fennel.FennelJavaHandle"
+     * traces {@link FennelDbHandle}.
+     */
+    public static Logger getFennelJavaHandleTracer()
+    {
+        return getClassTracer(FennelJavaHandle.class);
     }
 
     /**

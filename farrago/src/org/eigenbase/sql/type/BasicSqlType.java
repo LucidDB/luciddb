@@ -22,7 +22,6 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -167,6 +166,11 @@ public class BasicSqlType extends AbstractSqlType
                 return 0;  
             case SqlTypeName.Date_ordinal:
                 return 0;
+            case SqlTypeName.Char_ordinal:
+            case SqlTypeName.Varchar_ordinal:
+            case SqlTypeName.Binary_ordinal:
+            case SqlTypeName.Varbinary_ordinal:
+                return 1;              // SQL2003 part 2 section 6.1 syntax rule 5
             default:
                 throw Util.newInternal("type "+typeName+" does not have a precision");
             }

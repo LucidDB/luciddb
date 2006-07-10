@@ -161,6 +161,19 @@ public abstract class TestUtil
     }
 
     /**
+     * Converts a string containing newlines (\n) into a string containing
+     * os-dependent line endings.
+     */
+
+    public static String fold(String string)
+    {
+        if (!"\n".equals(NL)) {
+            string = string.replaceAll("\n", NL);
+        }
+        return string;
+    }
+
+    /**
      * Quotes a pattern.
      */
     public static String quotePattern(String s)

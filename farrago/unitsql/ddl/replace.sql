@@ -67,7 +67,9 @@ create or replace index idx on foo(bar);
 create schema foo;
 set schema 'foo';
 create view v1 as select * from sales.depts;
+create table bar (col integer primary key);
 select * from v1;
+select * from bar;
 
 create or replace schema foo description 'blah';
 
@@ -75,6 +77,7 @@ select "description" from sys_fem."SQL2003"."LocalSchema"
  where "name" = 'FOO';
 
 select * from foo.v1;
+select * from foo.bar;
 
 set schema 'foo';
 create view v2 as select * from sales.depts;

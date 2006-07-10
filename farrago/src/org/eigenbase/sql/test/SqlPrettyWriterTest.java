@@ -272,7 +272,7 @@ public class SqlPrettyWriterTest extends TestCase
         assertExprPrintsTo(true,
             "'x' /* comment */ 'y'" + NL +
             "  'z' ",
-            "'x' 'y' 'z'");
+            "'x'" + NL + "'y'" + NL + "'z'");
     }
 
     public void testOverlaps()
