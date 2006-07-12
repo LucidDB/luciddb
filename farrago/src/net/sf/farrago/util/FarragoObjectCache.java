@@ -319,17 +319,19 @@ public class FarragoObjectCache implements FarragoAllocation
         EntryImpl entry = (EntryImpl) e;
         Object val = entry.value;
         synchronized (mapKeyToEntry) {
-            if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Detaching entry " + entry.key.toString() +
-                            ", size " + entry.memoryUsage);
+            synchronized(e) {
+                if (tracer.isLoggable(Level.FINE)) {
+                    tracer.fine("Detaching entry " + entry.key.toString() +
+                                ", size " + entry.memoryUsage);
+                }
+                assert (entry.pinCount == 1) : entry.pinCount;
+                mapKeyToEntry.removeMulti(entry.getKey(), entry);
+                bytesUsed -= entry.memoryUsage;
+                if (tracer.isLoggable(Level.FINER)) {
+                    tracer.finer("cache size now "+bytesUsed);
+                }
+                entry.value = null;
             }
-            assert (entry.pinCount == 1) : entry.pinCount;
-            mapKeyToEntry.removeMulti(entry.getKey(), entry);
-            bytesUsed -= entry.memoryUsage;
-            if (tracer.isLoggable(Level.FINER)) {
-                tracer.finer("cache size now "+bytesUsed);
-            }
-            entry.value = null;
         }
         return val;
     }
