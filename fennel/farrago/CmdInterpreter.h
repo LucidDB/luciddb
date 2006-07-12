@@ -76,6 +76,11 @@ public:
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
         bool readOnly;
 
+        explicit TxnHandle()
+            : readOnly(false)
+            {
+            }
+
         virtual ~TxnHandle();           // make class polymorphic
     };
 
@@ -87,6 +92,11 @@ public:
         SharedExecStreamScheduler pScheduler;
         TxnHandle *pTxnHandle;
         jobject javaRuntimeContext;     // a global ref to the FarragoRuntimeContext
+
+        explicit StreamGraphHandle()
+            : pTxnHandle(0), javaRuntimeContext(0)
+            {
+            }
 
         ~StreamGraphHandle();
 
