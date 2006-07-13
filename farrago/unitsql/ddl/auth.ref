@@ -218,7 +218,7 @@ sqlline> !connect jdbc:farrago: SECMAN tiger
 0: jdbc:farrago:> -- should fail:  unknown user
 0: jdbc:farrago:> !closeall
 sqlline> !connect jdbc:farrago: BOBO tiger
-Error: Unknown user "BOBO" (state=,code=0)
+Error: Login failed for "BOBO": invalid username/password combination (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -------------------------------------------------------------------------
 0: jdbc:farrago:> -- Test 4:
