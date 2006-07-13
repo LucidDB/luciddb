@@ -16,9 +16,13 @@
 +---------+
 | true    |
 +---------+
-0: jdbc:luciddb:> -- FIXME:  uncomment once FRG-155 is fixed
-0: jdbc:luciddb:> -- values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
-0: jdbc:luciddb:> -- +@fdjgklfdirue');
+0: jdbc:luciddb:> values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
+. . . . . . . . > +@fdjgklfdirue');
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create view with reference to applib.contains_number
 0: jdbc:luciddb:> create view has_number(fname, fcol, phcol) as

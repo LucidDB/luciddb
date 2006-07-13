@@ -624,9 +624,6 @@ select ename1 from emps1
 where ename1 in (select upper(ename2) from emps2)
 order by 1;
 
--- FIXME:
--- should make join key casting a logical rule so that all physical hash
--- join plans can benefit from it.
 explain plan for
 select ename1 from emps1
 where upper(ename1) in (select upper(ename2) from emps2)

@@ -1,0 +1,136 @@
+<html>
+
+<head>
+<title>LucidDB Features</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+</head>
+
+<body>
+
+Here are some of the main features which set LucidDB apart:
+
+<p>
+
+<table border=1>
+
+<tr>
+<td><b>Category</b></td>
+<td><b>Feature</b></td>
+<td><b>Benefits</b></td>
+</tr>
+
+<tr>
+<td rowspan=2><i>Storage</i></td> 
+<td>Column-store tables</td> 
+<td>Very high data compression rates for columns with many repeated values; 
+reduced I/O for queries which access only a subset of columns;
+greater cache effectiveness</td>
+</tr>
+
+<tr>
+<td>Intelligent indexing</td> <td>Automatically adapts to either
+bitmap or btree representation depending on data distribution (even
+using both in the same index for different portions of the table),
+yielding optimal data compression, reduced I/O, and direct evaluation
+of boolean expressions</td>
+</tr>
+
+<tr>
+<td rowspan=2><i>Optimization</i></td> 
+<td>Star join optimization</td> 
+<td>Avoids reading fact table rows which are not needed by query</td>
+</tr>
+
+<tr>
+<td>Cost-based join ordering</td> 
+<td>No hints required</td>
+</tr>
+
+<tr>
+<td rowspan=3><i>Execution</i></td><td>Hash join/aggregation</td>
+<td>Can scale to even the largest number-crunching datasets in limited
+RAM via skew-resistant disk-based partitioning</td>
+</tr>
+
+<tr>
+<td>Selective prefetch</td> <td>High performance and greater cache and
+disk effectiveness because LucidDB can almost always predict exactly
+which disk blocks are needed to satisfy a query</td>
+</tr>
+
+<tr>
+<td>INSERT/UPSERT as bulk load</td> 
+<td>Tables can be loaded directly from external sources via SQL; no
+separate bulk loader utility is required (for performance, loads are
+never logged at the row-level, yet are fully recoverable); the SQL:2003
+MERGE statement provides upsert capability</td>
+</tr>
+
+<tr>
+<td rowspan=4><i>Connectivity</i></td> <td>SQL/MED
+architecture</td> <td>Allows LucidDB to connect to heterogeneous
+external data sources via <em>foreign data wrappers</em> and access
+their content as <em>foreign tables</em></td>
+</tr>
+
+<tr>
+<td>JDBC foreign data wrapper</td> 
+<td>Allows foreign tables in any JDBC data source to be queried via LucidDB</td>
+</tr>
+
+<tr>
+<td>Flat file foreign data wrapper</td> 
+<td>Allows flat files (e.g. BCP or CSV format) to be queried as
+foreign tables via LucidDB</td>
+</tr>
+
+<tr>
+<td>Pluggability</td> <td>Allows new foreign data wrappers (e.g. for
+accessing data from a web service) to be developed in Java and
+hot-plugged into a running LucidDB instance</td>
+</tr>
+
+<tr>
+<td rowspan=3><i>Extensibility</i></td> <td>SQL/JRT
+architecture</td> <td>Allows new functions and transformations to be 
+developed in Java and hot-plugged into a running LucidDB instance;
+LucidDB also comes with a companion library of common ETL functions
+(<b>applib</b>)</td>
+</tr>
+
+<tr>
+<td>User-defined functions</td>
+<td>Allows the set of builtin functions to be extended with custom
+user logic</td>
+</tr>
+
+<tr>
+<td>User-defined transformations</td>
+<td>Allows new table functions (such as custom logic for
+name and address cleansing and de-duplication)
+to be added to the system</td>
+</tr>
+
+<tr>
+<td rowspan=3><i>Standards</i></td> <td>SQL:2003
+</td> <td>Smooths migration of applications to and from other DBMS 
+products</td>
+</tr>
+
+<tr>
+<td>JDBC
+</td> <td>Allows connectivity from popular front-ends such as
+the <a target="_top" href="http://mondrian.sf.net">Mondrian</a> OLAP engine</td>
+</tr>
+
+<td>J2EE</td><td>Java architecture enables deployment of LucidDB into
+a J2EE application server (just like <a target="_top"
+href="http://www.hsqldb.org">hsqldb</a> or <a target="_top"
+href="http://db.apache.org/derby">Derby</a>); usage of Java as
+the primary extensibility mechanism makes it easy to integrate
+with the many enterprise API's available
+</tr>
+
+</table>
+
+</body>

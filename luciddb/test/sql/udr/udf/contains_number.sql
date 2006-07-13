@@ -6,9 +6,8 @@ set path 'udftest';
 -- basic tests
 values applib.contains_number('a');
 values applib.contains_number('Ahsdkj6sadsal');
--- FIXME:  uncomment once FRG-155 is fixed
--- values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
--- +@fdjgklfdirue');
+values applib.contains_number('gsdfglksjf^%$^$%dslkfjskfjw~!@$EWFDZVcxvkjdsifio#@%^$_
++@fdjgklfdirue');
 
 -- create view with reference to applib.contains_number
 create view has_number(fname, fcol, phcol) as

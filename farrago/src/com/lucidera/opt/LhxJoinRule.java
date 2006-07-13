@@ -72,7 +72,6 @@ public class LhxJoinRule extends RelOptRule
 
         List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
         List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
-
         
         nonEquiCondition = RelOptUtil.splitJoinCondition(
             joinRel, leftJoinKeys, rightJoinKeys);
@@ -94,16 +93,17 @@ public class LhxJoinRule extends RelOptRule
         }
         
         List<Integer> outputProj = new ArrayList<Integer>();
-        List<String> newJoinOutputNames = new ArrayList<String>();
 
         RelNode[] inputRels = new RelNode[] {leftRel, rightRel};
         
-        projectInputs(inputRels, leftJoinKeys, rightJoinKeys,
+        RelOptUtil.projectJoinInputs(inputRels, leftJoinKeys, rightJoinKeys,
             leftKeys, rightKeys, outputProj);
         
+        // the new leftRel and new rightRel, afte projection is added.
         leftRel = inputRels[0];
         rightRel = inputRels[1];
         
+        List<String> newJoinOutputNames = new ArrayList<String>();
         newJoinOutputNames.addAll(
             RelOptUtil.getFieldNameList(leftRel.getRowType()));
         newJoinOutputNames.addAll(
@@ -212,94 +212,6 @@ public class LhxJoinRule extends RelOptRule
                 new FilterRel(rel.getCluster(), rel, extraFilter);
         }
         call.transformTo(rel);
-    }
-    
-    private void projectInputs(
-        RelNode[] inputRels,
-        List<RexNode> leftJoinKeys,
-        List<RexNode> rightJoinKeys,
-        List<Integer> leftKeys,
-        List<Integer> rightKeys,            
-        List<Integer> outputProj)
-    {
-    	RelNode leftRel  = inputRels[0];
-    	RelNode rightRel = inputRels[1];
-    	RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
-    	
-    	int origLeftInputSize = leftRel.getRowType().getFieldCount();
-    	int origRightInputSize = rightRel.getRowType().getFieldCount();
-    	
-    	List<RexNode> newLeftFields = new ArrayList<RexNode>();
-    	List<String>  newLeftFieldNames = new ArrayList<String>();
-
-    	List<RexNode> newRightFields = new ArrayList<RexNode>();
-    	List<String>  newRightFieldNames = new ArrayList<String>();
-    	int leftKeyCount = leftJoinKeys.size();
-    	int rightKeyCount = rightJoinKeys.size();
-    	int i;
-    	
-    	for (i = 0; i < origLeftInputSize; i ++) {
-    	    newLeftFields.add(rexBuilder.makeInputRef(
-    	        leftRel.getRowType().getFields()[i].getType(), i));
-    	    newLeftFieldNames.add(
-    	        leftRel.getRowType().getFields()[i].getName());
-    	    outputProj.add(i);
-    	}
-            
-    	int newLeftKeyCount = 0;
-    	for (i = 0; i < leftKeyCount; i ++) {
-    	    RexNode leftKey = leftJoinKeys.get(i);
-            	
-    	    if (leftKey instanceof RexInputRef) {
-    	        // already added to the projected left fields
-    	        // only need to remember the index in the join key list
-    	        leftKeys.add(((RexInputRef)leftKey).getIndex());
-    	    } else {
-    	        newLeftFields.add(leftKey);
-    	        newLeftFieldNames.add(leftKey.toString());
-    	        leftKeys.add(origLeftInputSize + newLeftKeyCount);
-    	        newLeftKeyCount ++;
-    	    }
-    	}
-            
-    	int leftFieldCount = origLeftInputSize + newLeftKeyCount;
-    	for (i = 0; i < origRightInputSize; i ++) {
-    	    newRightFields.add(rexBuilder.makeInputRef(
-    	        rightRel.getRowType().getFields()[i].getType(), i));
-    	    newRightFieldNames.add(
-    	        rightRel.getRowType().getFields()[i].getName());
-    	    outputProj.add(i + leftFieldCount);
-    	}
-                
-    	int newRightKeyCount = 0;
-    	for (i = 0; i < rightKeyCount; i ++) {
-    	    RexNode rightKey = rightJoinKeys.get(i);
-
-            if (rightKey instanceof RexInputRef) {
-    	        // already added to the projected left fields
-    	        // only need to remember the index in the join key list
-    	        rightKeys.add(((RexInputRef)rightKey).getIndex());
-    	    } else {
-    	        newRightFields.add(rightKey);
-    	        newRightFieldNames.add(rightKey.toString());
-    	        rightKeys.add(origRightInputSize + newRightKeyCount);
-    	        newRightKeyCount ++;
-    	    }
-    	}
-
-    	// added project if need to produce new keys than the origianl input fields
-    	if (newLeftKeyCount > 0) {
-    	    leftRel =
-    	        CalcRel.createProject(leftRel, newLeftFields, newLeftFieldNames);
-    	}
-            
-    	if (newRightKeyCount > 0) {
-    	    rightRel =
-    	        CalcRel.createProject(rightRel, newRightFields, newRightFieldNames);
-    	}
-            
-    	inputRels[0] = leftRel;
-    	inputRels[1] = rightRel;
-    }
+    }    
 }
 // End LhxJoinRule.java
