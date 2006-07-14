@@ -2262,15 +2262,18 @@ public class FarragoJdbcTest extends ResultSetTestCase
     public void testTimeout()
         throws Exception
     {
-        String sql = "select * from sales.emps";
+        String sql = "select * from sales.emps order by name";
         preparedStmt = connection.prepareStatement(sql);
         for (int i = 10; i >= -2; i--) {
             preparedStmt.setQueryTimeout(i);
             resultSet = preparedStmt.executeQuery();
-            assertEquals(
-                4,
-                getResultSetCount());
-            resultSet.close();
+
+            compareResultLists(
+                Arrays.asList("110",           "100",  "110",       "120"),
+                Arrays.asList("Eric",          "Fred", "John",      "Wilma"),
+                Arrays.asList("20",            "10",   "40",        "20"),
+                Arrays.asList("M",             null,   "M",         "F"),
+                Arrays.asList("San Francisco", null,   "Vancouver", null));
         }
 
         sql = "select empid from sales.emps where name=?";
