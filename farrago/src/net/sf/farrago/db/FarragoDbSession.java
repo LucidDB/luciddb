@@ -209,15 +209,17 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         } else {
             // This is a normal session.
+            // Security best practices for failed login attempts:
+            // * report only that username/password combination is invalid
+            // * use same error for "no such user" and "wrong password"
+            // * do not reveal that username exists but password wrong
             repos = database.getUserRepos();
-
-            femUser = 
-                FarragoCatalogUtil.getUserByName(repos, sessionUser);
+            femUser = FarragoCatalogUtil.getUserByName(repos, sessionUser);
             if (femUser == null) {
-                throw FarragoResource.instance().SessionUnknownUser.ex(
+                throw FarragoResource.instance().SessionLoginFailed.ex(
                     repos.getLocalizedObjectName(sessionUser));
             } else {
-                // TODO:  authenticate
+                // TODO:  authenticate; use same SessionLoginFailed if fails
             }
         }
 

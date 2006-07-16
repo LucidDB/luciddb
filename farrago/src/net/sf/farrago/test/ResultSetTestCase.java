@@ -163,6 +163,57 @@ public abstract class ResultSetTestCase extends DiffTestCase
         resultSet.close();
         assertEquals(refList, actualSet);
     }
+
+    /** 
+     * Compares the columns of a result set against several
+     * String-valued reference lists, taking order into account.
+     *
+     * @param refLists vararg of List<String>.  The first list is compared
+     *                 to the first column, the second list to the
+     *                 second column and so on
+     */
+    protected void compareResultLists(List<String>... refLists)
+        throws Exception
+    {
+        int numExpectedColumns = refLists.length;
+
+        assertTrue(numExpectedColumns > 0);
+
+        assertTrue(
+            resultSet.getMetaData().getColumnCount() >= numExpectedColumns);
+
+        int numExpectedRows = -1;
+
+        List<List<String>> actualLists = new ArrayList<List<String>>();
+        for(int i = 0; i < numExpectedColumns; i++) {
+            actualLists.add(new ArrayList<String>());
+
+            if (i == 0) {
+                numExpectedRows = refLists[i].size();
+            } else {
+                assertEquals(
+                    "num rows differ across ref lists", 
+                    numExpectedRows, 
+                    refLists[i].size());
+            }
+        }
+
+        while(resultSet.next()) {
+            for(int i = 0; i < numExpectedColumns; i++) {
+                String s = resultSet.getString(i + 1);
+
+                actualLists.get(i).add(s);
+            }
+        }
+        resultSet.close();
+
+        for(int i = 0; i < numExpectedColumns; i++) {
+            assertEquals(
+                "column mismatch in column " + (i + 1),
+                refLists[i],
+                actualLists.get(i));
+        }
+    }
 }
 
 

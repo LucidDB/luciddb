@@ -161,7 +161,7 @@ public class FarragoEngineDriverTest extends FarragoTestCase
             conn = driver.connect(uri, empty);
             fail("Farrago connect without user credentials");
         } catch (SQLException e) {
-            FarragoJdbcTest.assertExceptionMatches(e, ".*Unknown user.*");
+            FarragoJdbcTest.assertExceptionMatches(e, ".*Login failed.*");
         }
         String loginUri = uri +";user=" +FarragoCatalogInit.SA_USER_NAME;
         conn = driver.connect(loginUri, empty);
@@ -180,7 +180,7 @@ public class FarragoEngineDriverTest extends FarragoTestCase
             conn = driver.connect(uri, unauth);
             fail("Farrago connect with bad user credentials");
         } catch (SQLException e) {
-            FarragoJdbcTest.assertExceptionMatches(e, ".*Unknown user.*");
+            FarragoJdbcTest.assertExceptionMatches(e, ".*Login failed.*");
         }
         conn = driver.connect(loginUri, unauth);
         assertNotNull("null connection", conn);

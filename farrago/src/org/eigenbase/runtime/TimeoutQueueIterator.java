@@ -27,6 +27,15 @@ import java.util.Iterator;
 
 import org.eigenbase.util.Util;
 
+// REVIEW: SWZ: 7/13/2006: In principal this class also exhibits the same bug
+// that was fixed in //open/dt/dev/.../TimeoutQueueTupleIter#2.  It doesn't
+// occur because this class is no longer used with row objects.  It is still
+// used for "explain plan" but since the output there is immutable Strings,
+// and because the query timeout isn't propagated to the result set used,
+// the bug doesn't occur.  Leaving it unfixed here, since the pattern used to 
+// fix TimeoutQueueTupleIter is hard to apply to this class's Iterator
+// calling convention.  Prehaps we should migrate explain plan to TupleIter
+// convention and eliminate this class altogether.
 
 /**
  * Adapter which allows you to iterate over an {@link Iterator} with a timeout.

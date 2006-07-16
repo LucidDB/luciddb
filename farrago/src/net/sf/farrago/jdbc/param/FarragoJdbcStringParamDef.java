@@ -52,6 +52,10 @@ class FarragoJdbcStringParamDef extends FarragoJdbcParamDef
         if (x instanceof String) {
             return x;
         }
+        if (x instanceof byte[]) {
+            // Don't allow binary to placed in string
+            throw newInvalidType(x);
+        }
         // REVIEW jvs 7-Oct-2004: the default toString() implementation for
         // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
         final String s = x.toString();

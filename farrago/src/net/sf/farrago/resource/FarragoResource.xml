@@ -935,8 +935,8 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed executing internal query</text>
 </exception>
 
-<exception id="470100" name="SessionUnknownUser">
-<text>Unknown user {0}</text>
+<exception id="470100" name="SessionLoginFailed">
+<text>Login failed for {0}: invalid username/password combination</text>
 </exception>
 
 <exception id="470110" name="SessionOptimizerFailed">
