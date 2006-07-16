@@ -177,9 +177,9 @@ public class FarragoJdbcTest extends ResultSetTestCase
     private static boolean schemaExists = false;
     private static final String [] columnNames =
         new String[TestSqlType.all.length];
-    private static String columnTypeStr = "";
-    private static String columnStr = "";
-    private static String paramStr = "";
+    protected static String columnTypeStr = "";
+    protected static String columnStr = "";
+    protected static String paramStr = "";
 
     static {
         for (int i = 0; i < TestSqlType.all.length; i++) {
@@ -208,7 +208,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
 
     //~ Instance fields -------------------------------------------------------
 
-    private Object [] values;
+    protected Object [] values;
 
     /** Tester to use */
     private JdbcTester tester;
@@ -527,6 +527,12 @@ public class FarragoJdbcTest extends ResultSetTestCase
     {
         String query =
             "insert into datatypes_schema.dataTypes_table values " + paramStr;
+        checkPreparedStmtDataTypes(query);
+    }
+
+    public void checkPreparedStmtDataTypes(String query)
+        throws Exception
+    {
         preparedStmt = connection.prepareStatement(query);
         values = new Object[2 + TestSqlType.all.length];
         preparedStmt.setInt(1, 100);
@@ -650,6 +656,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
     {
         checkSet(TestJavaType.Time, TestSqlType.Char, time);
         checkSet(TestJavaType.Time, TestSqlType.Varchar, time);
+        checkSet(TestJavaType.Time, TestSqlType.Date, time);
         checkSet(TestJavaType.Time, TestSqlType.Time, time);
         checkSet(TestJavaType.Time, TestSqlType.Timestamp, time);
         checkResults(TestJavaType.Time);
@@ -661,6 +668,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
         checkSet(TestJavaType.Date, TestSqlType.Char, date);
         checkSet(TestJavaType.Date, TestSqlType.Varchar, date);
         checkSet(TestJavaType.Date, TestSqlType.Date, date);
+        checkSet(TestJavaType.Date, TestSqlType.Time, date);
         checkSet(TestJavaType.Date, TestSqlType.Timestamp, date);
         checkResults(TestJavaType.Date);
     }
@@ -840,20 +848,14 @@ public class FarragoJdbcTest extends ResultSetTestCase
         checkResults(TestJavaType.String);
     }
 
-    private void checkResults(TestJavaType javaType)
+    protected int checkResults(ResultSet resultSet, TestJavaType javaType)
         throws SQLException
     {
-        int res = preparedStmt.executeUpdate();
-        assertEquals(1, res);
-
-        // Select the results back, to make sure the values we expected got
-        // written.
-        final Statement stmt = connection.createStatement();
-        final ResultSet resultSet =
-            stmt.executeQuery("select * from datatypes_schema.dataTypes_table");
         final int columnCount = resultSet.getMetaData().getColumnCount();
         assert columnCount == (TestSqlType.all.length + 1);
+        int rows = 0;
         while (resultSet.next()) {
+            rows++;
             for (int k = 0; k < TestSqlType.all.length; k++) {
                 // TestSqlType#2 (Tinyint) is held in column #2 (1-based).
                 final TestSqlType sqlType = TestSqlType.all[k];
@@ -876,6 +878,22 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 assertEquals(message, expected, actual);
             }
         }
+        return rows;
+    }
+
+    protected void checkResults(TestJavaType javaType)
+        throws SQLException
+    {
+        int res = preparedStmt.executeUpdate();
+        assertEquals(1, res);
+
+        // Select the results back, to make sure the values we expected got
+        // written.
+        final Statement stmt = connection.createStatement();
+        final ResultSet resultSet =
+            stmt.executeQuery("select * from datatypes_schema.dataTypes_table");
+        int rows = checkResults(resultSet, javaType);
+        assertEquals(res, rows);
         stmt.close();
         connection.rollback();
 
@@ -3170,6 +3188,8 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 {
                     if (value == null) {
                         return VALID;
+                    } else if (value instanceof byte[]) {
+                        return INVALID;
                     } else {
                         String str = String.valueOf(value);
                         if (str.length() <= 100) {
@@ -3202,6 +3222,8 @@ public class FarragoJdbcTest extends ResultSetTestCase
                 {
                     if (value == null) {
                         return VALID;
+                    } else if (value instanceof byte[]) {
+                        return INVALID;
                     } else {
                         String str = String.valueOf(value);
                         if (str.length() <= 200) {
@@ -3671,7 +3693,7 @@ public class FarragoJdbcTest extends ResultSetTestCase
      * "Boolean" has {@link ResultSet#getBoolean(int)} and
      * {@link PreparedStatement#setBoolean(int,boolean)}.
      */
-    private static class TestJavaType
+    protected static class TestJavaType
     {
         private static final TestJavaType Boolean =
             new TestJavaType("Boolean", boolean.class, true);

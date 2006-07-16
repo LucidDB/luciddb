@@ -49,7 +49,9 @@ public class FarragoJdbcParamDefFactory
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
     {
-        return new FarragoJdbcFennelTupleParamDef(paramName, paramMetaData);
+        FarragoJdbcParamDef paramDef = newParamDef(paramName, paramMetaData);
+        return new FarragoJdbcFennelTupleParamDef(
+            paramName, paramMetaData, paramDef);
     }
 
     private static FarragoJdbcParamDef newParamDef(
