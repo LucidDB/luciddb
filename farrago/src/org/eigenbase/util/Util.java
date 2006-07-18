@@ -1247,6 +1247,82 @@ public class Util extends Toolbox
             return argHandler.result();
         }
     }
+
+    /**
+     * Runs an external application.
+     *
+     * @param cmdarray command and arguments, see {@link ProcessBuilder}
+     * @param logger if not null, command and exit status will be logged
+     * @param appInput if not null,
+     *      data will be copied to application's stdin
+     * @param appOutput if not null,
+     *      data will be captured from application's stdout and stderr
+     * @return application process exit value
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static int runApplication(
+        String[] cmdarray,
+        Logger logger,
+        Reader appInput,
+        Writer appOutput)
+        throws IOException, InterruptedException
+    {
+        StringBuffer buf = new StringBuffer();
+        for (int i=0; i < cmdarray.length; ++i) {
+            if (i > 0) {
+                buf.append(" ");
+            }
+            buf.append('"');
+            buf.append(cmdarray[i]);
+            buf.append('"');
+        }
+        String fullcmd = buf.toString();
+        buf.setLength(0);
+
+        ProcessBuilder pb = new ProcessBuilder(cmdarray);
+        pb.redirectErrorStream(true);
+        if (logger != null) {
+            logger.info("start process: " +fullcmd);
+        }
+        Process p = pb.start();
+
+        // Setup the input/output streams to the subprocess.
+        // The buffering here is arbitrary. Javadocs strongly encourage
+        // buffering, but the size needed is very dependent on the
+        // specific application being run, the size of the input
+        // provided by the caller, and the amount of output expected.
+        // Since this method is currently used only by unit tests, 
+        // large-ish fixed buffer sizes have been chosen. If this
+        // method becomes used for something in production, it might
+        // be better to have the caller provide them as arguments.
+        if (appInput != null) {
+            OutputStream out =
+                new BufferedOutputStream(p.getOutputStream(), 100*1024);
+            int c;
+            while ((c=appInput.read()) != -1) {
+                out.write(c);
+            }
+            out.flush();
+        }
+        if (appOutput != null) {
+            InputStream in =
+                new BufferedInputStream(p.getInputStream(), 100*1024);
+            int c;
+            while ((c = in.read()) != -1) {
+                appOutput.write(c);
+            }
+            appOutput.flush();
+            in.close();
+        }
+        p.waitFor();
+
+        int status = p.exitValue();
+        if (logger != null) {
+            logger.info("exit status=" +status +" from " +fullcmd);
+        }
+        return status;
+    }
 }
 
 

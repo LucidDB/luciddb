@@ -24,6 +24,10 @@ package net.sf.farrago.test;
 
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.io.StringReader;
+import java.io.StringWriter;
 
 import junit.framework.*;
 
@@ -32,7 +36,9 @@ import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.server.*;
 import net.sf.farrago.test.jdbc.FarragoEngineDriverTest;
+import net.sf.farrago.resource.FarragoResource;
 import org.eigenbase.util14.ConnectStringParser;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -174,6 +180,42 @@ public class FarragoServerTest extends TestCase
         conn = clientDriver.connect(loginUri, unauth);
         assertNotNull("null connection", conn);
         conn.close();
+
+        boolean stopped = server.stopSoft();
+        server = null;
+        assertTrue(stopped);
+    }
+
+    /** Tests error message when a 2nd server is started. */
+    public void testTwoServers() throws Exception
+    {
+        server = newServer();
+        FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
+        server.start(serverDriver);
+
+        // try to start another server with sqllineEngine script
+        String[] cmd = {"./sqllineEngine"};
+        StringReader appInput = new StringReader("!quit\n");
+        StringWriter appOutput = new StringWriter();
+        Logger logger = Logger.getAnonymousLogger();
+        int status = Util.runApplication(cmd, logger, appInput, appOutput);
+        StringBuffer buf = appOutput.getBuffer();
+        if (buf.length() > 0 && logger != null) {    // dump command output
+            // make output visible at default logging level if test failed
+            Level level = status == 0? Level.FINE : Level.INFO;
+            logger.log(level, "***** command output *****");
+            logger.log(level, buf.toString());
+            logger.log(level, "***** end of output *****");
+        }
+        assertEquals("sqllineEngine status", 0, status);
+
+        // look for expected error message in sqllineEngine's output
+        String str = buf.toString();
+        String err = FarragoResource.instance().CatalogFileLockFailed.str("");
+        assertTrue("2nd server error message missing", str.indexOf(err) >= 0);
+
+        appInput.close();
+        appOutput.close();
 
         boolean stopped = server.stopSoft();
         server = null;
