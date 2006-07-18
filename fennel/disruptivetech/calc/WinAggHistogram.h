@@ -21,8 +21,8 @@
 // WinAggHistogram - Windowed Aggregation Histogram object.
 */
 
-#ifndef Fennel_WinAggAccum_Included
-#define Fennel_WinAggAccum_Included
+#ifndef Fennel_WinAggHistogram_Included
+#define Fennel_WinAggHistogram_Included
 
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/disruptivetech/calc/CalcCommon.h"
@@ -52,42 +52,16 @@ class WinAggHistogram
 
 public:
     WinAggHistogram():
-        currentSum(0),
         currentWindow(),
-        nullRows()
+        nullRows(0),
+        currentSum(0)
     {}
 
     ~WinAggHistogram()
     {}
 
-    // Comparator object supplied to the window object for comparing entires
-    // during sort.
-    typedef struct _TupleDataCompare
-    {
-        bool operator () (const TupleDatum* d1, const TupleDatum* d2) const
-        {
-            if (d1 && d2) {
-                return *(reinterpret_cast<STDTYPE*>(const_cast<PBuffer>(d1->pData))) <
-                    *(reinterpret_cast<STDTYPE*>(const_cast<PBuffer>(d2->pData)));
-            } else {
-                return (NULL == d2);
-            }
-        }
-    } TupleDataCompare;
-        
-    typedef multiset<TupleDatum*, TupleDataCompare> winAggData;
+    typedef multiset<STDTYPE> winAggData;
 
-    // data types to do NULL row accounting
-    typedef struct _TuplePtrCompare
-    {
-        bool operator () (const TupleDatum* v1, const TupleDatum* v2) const
-        {
-            return( v1 < v2);
-        }
-    } TuplePtrCompare;
-    
-    typedef set<TupleDatum*, TuplePtrCompare> winAggNullData;
-    
 
     //! addRow - Adds new value to tree and updates
     //! the running sum for current values.
@@ -100,21 +74,18 @@ public:
         TupleDatum *pDatum = node->getBinding();
 
         if (!pDatum->isNull()) {
-            (void) currentWindow.insert(pDatum);
-
-            // Update the running sum for the accumulator
             STDTYPE val = node->value();
+            (void) currentWindow.insert(val);
             currentSum += val;
         } else {
-            (void)nullRows.insert(pDatum);
+            ++nullRows;
         }
     }
     
-    
-    //! addRow - Adds new value to tree and updates
-    //! the running sum for current values.
+    //! dropRow - Removes a value from the tree and updates
+    //! the running sum..
     //!
-    //! Input - New value to be added to the tree
+    //! Input - Value to be removed from the tree
     //
     void dropRow(RegisterRef<STDTYPE>* node)
     {
@@ -122,45 +93,29 @@ public:
 
         if (!pDatum->isNull()) {
             assert(0 != currentWindow.size());
-        
-            // remove the entry from the accumulator.  The entries are in a
-            // multiset. The key is the the addresess of the data set. A comparator
-            // was supplied to sort by the tuple contents.
             STDTYPE* pData = node->refer();
 
             pair<typename winAggData::iterator, typename winAggData::iterator> entries =
-                currentWindow.equal_range(pDatum);
-            for(; entries.first != entries.second; entries.first++) {
-                if (pDatum == *(entries.first)) {
-                    currentWindow.erase(entries.first);
-                    
-                    // reduce the running sum for the window
-                    currentSum -= *pData;
-                    break;
-                }
+                currentWindow.equal_range(*pData);
+
+            assert(entries.first != entries.second);
+            if (entries.first != entries.second) {
+                currentWindow.erase(entries.first);
+                currentSum -= *pData;
             }
         } else {
-            assert(0 != nullRows.size());
-            int count = nullRows.erase( pDatum);
-            assert(1 == count);
+            assert(0 != nullRows);
+            --nullRows;
         }
     }
 
     //! getMin - Returns the current MIN() value for the window.
     //!
-    //! Returns 0 if the window is empty.
+    //! Returns NULL if the window is empty.
     void getMin(RegisterRef<STDTYPE>* node)
     {
         if (0 != currentWindow.size()) {
-            // TupleDatum *pDatum = *(currentWindow.begin());
-            TupleDatum *td = *(currentWindow.begin());
-            PBuffer pBuffer = const_cast<PBuffer>(td->pData);
-            STDTYPE *pData = reinterpret_cast<STDTYPE*>(pBuffer);
-            
-            
-//            STDTYPE *pData = reinterpret_cast<STDTYPE*>
-//                (const_cast<PBuffer>((*(currentWindow.begin()))->pData));
-            node->value(*pData);
+            node->value(*(currentWindow.begin()));
         } else {
             node->toNull();
         }
@@ -172,8 +127,7 @@ public:
     void getMax(RegisterRef<STDTYPE>* node)
     {
         if (0 != currentWindow.size()) {
-            node->value(*reinterpret_cast<STDTYPE*>
-                (const_cast<PBuffer>((*(--(currentWindow.end())))->pData)));
+            node->value(*(--(currentWindow.end())));
         } else {
             node->toNull();
         }
@@ -196,7 +150,7 @@ public:
     //! Return is always int64_t
     void getCount(RegisterRef<int64_t>* node)
     {
-        node->value( currentWindow.size() + nullRows.size());
+        node->value( currentWindow.size() + nullRows);
         
     }
 
@@ -209,17 +163,12 @@ public:
         node->value((0 != currentWindow.size()) ? (currentSum / static_cast<STDTYPE>(currentWindow.size())) : 0);
     }
     
-
-    // Private Data
 private:
-    
-    STDTYPE currentSum;     // holds the running sum over the window.  Updated
-                            // as entries are added/removed
-    winAggData currentWindow; // Holds the values currently in the window.
-    winAggNullData nullRows;  // Holds Ptrs to Tuples with NULL data entries
+    winAggData currentWindow;   // Holds the values currently in the window.
+    int64_t nullRows;           // Couunt of null entries
+    STDTYPE currentSum;         // holds the running sum over the window.  Updated
+                                // as entries are added/removed
 };
-
-
 
 FENNEL_END_NAMESPACE
 

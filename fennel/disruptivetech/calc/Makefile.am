@@ -28,6 +28,7 @@ ExtRegExp.cpp \
 StringToHex.cpp \
 ExtMath.cpp \
 ExtDynamicVariable.cpp \
+WinAggHistogramStrA.cpp \
 ExtWinAggFuncs.cpp
 
 #noinst_PROGRAMS =    \

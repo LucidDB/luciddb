@@ -22,6 +22,7 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/disruptivetech/calc/ExtendedInstructionTable.h"
 #include "fennel/disruptivetech/calc/WinAggHistogram.h"
+#include "fennel/disruptivetech/calc/WinAggHistogramStrA.h"
 #include "fennel/disruptivetech/calc/RegisterReference.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
 
@@ -56,6 +57,8 @@ void histogramAlloc(RegisterRef<char*>* result, RegisterReference* targetDataTyp
         histogramObject = reinterpret_cast<PBuffer>(new WinAggHistogram<int64_t>);
     } else if (StandardTypeDescriptor::isApprox(dType)) {
         histogramObject = reinterpret_cast<PBuffer>(new WinAggHistogram<double>);
+    } else if (StandardTypeDescriptor::isArray(dType)){
+        histogramObject = reinterpret_cast<PBuffer>(new WinAggHistogramStrA);
     } else {
         // TODO: find out what exception to throw`
         throw 22001;
@@ -114,16 +117,9 @@ template <typename STDTYPE>
 void min(RegisterRef<STDTYPE>* result, RegisterRef<char*>* aggDataBlock)
 {
     // cast otherData buffer pointer to our working structure
-    TupleDatum *resBind = result->getBinding(false);
     TupleDatum *bind = aggDataBlock->getBinding(false);
     WinAggHistogram<STDTYPE> *pAcc =
         *(reinterpret_cast<WinAggHistogram<STDTYPE>**>(const_cast<PBuffer>(bind->pData)));
-
-    if (NULL == resBind)
-    {
-        ;
-    }
-    
     // return min value
     pAcc->getMin(result);
 }
@@ -203,15 +199,21 @@ void count(RegisterRef<STDTYPE>* result,
     pAcc->getCount(result);
 }
 
-// WinAggInit overloaded for each of the integer data types
+// WinAggInit and WinAggCount do not need to be overloaded for each type
+// of data.  Interfaces are fixed.
 template <typename TDT >
 void WinAggInit(RegisterRef<char*>* result, RegisterRef<TDT>* targetDataType)
 {
     histogramAlloc(result, targetDataType);
 }
 
-// WinAggAdd, WinAggDrop, WinAggMin, WinAggMax, WinAggMin, WinAggSum
-// WinAggCount, WinAggAvg
+void WinAggCount(RegisterRef<int64_t>* result, RegisterRef<char*>* aggDataBlock)
+{
+    count(result, aggDataBlock);
+}
+
+// WinAggAdd, WinAggDrop, WinAggMin, WinAggMax, WinAggMin, WinAggSum,
+// WinAggAvg
 //
 // The Following section contains all the function entry points that are
 // registered with the calculator to support the INT64_t and DOUBLE data
@@ -241,11 +243,6 @@ void WinAggMax(RegisterRef<int64_t>* result, RegisterRef<char*>* aggDataBlock)
 void WinAggSum(RegisterRef<int64_t>* result, RegisterRef<char*>* aggDataBlock)
 {
     sum(result, aggDataBlock);
-}
-
-void WinAggCount(RegisterRef<int64_t>* result, RegisterRef<char*>* aggDataBlock)
-{
-    count(result, aggDataBlock);
 }
 
 void WinAggAvg(RegisterRef<int64_t>* result, RegisterRef<char*>* aggDataBlock)
@@ -284,6 +281,48 @@ void WinAggMin(RegisterRef<double>* result, RegisterRef<char*>* aggDataBlock)
 void WinAggMax(RegisterRef<double>* result, RegisterRef<char*>* aggDataBlock)
 {
     max(result, aggDataBlock);
+}
+
+//
+// Ascii interface
+//
+void WinAggAdd(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+{
+    // cast otherData buffer pointer to our working structure
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    // Process the new node. 
+    pAcc->addRow(node);
+}
+
+void WinAggDrop(RegisterRef<char*>* node, RegisterRef<char*>* aggDataBlock)
+{
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+    
+    pAcc->dropRow(node);
+}
+
+
+void WinAggMin(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
+{
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    pAcc->getMin(result);
+}
+
+void WinAggMax(RegisterRef<char*>* result, RegisterRef<char*>* aggDataBlock)
+{
+    TupleDatum *bind = aggDataBlock->getBinding(false);
+    WinAggHistogramStrA *pAcc =
+        *(reinterpret_cast<WinAggHistogramStrA**>(const_cast<PBuffer>(bind->pData)));
+
+    pAcc->getMax(result);
 }
 
 
@@ -388,21 +427,25 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
         (ExtendedInstruction2<char*,float>*) NULL,
         &WinAggInit);
     
-    vector<StandardTypeDescriptorOrdinal> params_ad_DOUBLE;
-    params_ad_DOUBLE.push_back(STANDARD_TYPE_DOUBLE);
-    params_ad_DOUBLE.push_back(STANDARD_TYPE_VARBINARY);
-
-    eit->add("WinAggAdd", params_ad_DOUBLE,
-             (ExtendedInstruction2<double, char*>*) NULL,
-             &WinAggAdd);
-
-    eit->add("WinAggDrop", params_ad_DOUBLE,
-             (ExtendedInstruction2<double, char*>*) NULL,
-             &WinAggDrop);
-
     vector<StandardTypeDescriptorOrdinal> params_DBL_funcs;
     params_DBL_funcs.push_back(STANDARD_TYPE_DOUBLE);
     params_DBL_funcs.push_back(STANDARD_TYPE_VARBINARY);
+
+    eit->add("WinAggAdd", params_DBL_funcs,
+             (ExtendedInstruction2<double, char*>*) NULL,
+             &WinAggAdd);
+
+    eit->add("WinAggDrop", params_DBL_funcs,
+             (ExtendedInstruction2<double, char*>*) NULL,
+             &WinAggDrop);
+
+    eit->add("WinAggMin", params_DBL_funcs,
+             (ExtendedInstruction2<double, char*>*) NULL,
+             &WinAggMin);
+
+    eit->add("WinAggMax", params_DBL_funcs,
+             (ExtendedInstruction2<double, char*>*) NULL,
+             &WinAggMax);
 
     eit->add("WinAggSum", params_DBL_funcs,
              (ExtendedInstruction2<double, char*>*) NULL,
@@ -412,12 +455,62 @@ ExtWinAggFuncRegister(ExtendedInstructionTable* eit)
              (ExtendedInstruction2<double, char*>*) NULL,
              &WinAggAvg);
 
-    eit->add("WinAggMin", params_DBL_funcs,
-             (ExtendedInstruction2<double, char*>*) NULL,
+
+    // support for CHAR and VARCHAR
+    vector<StandardTypeDescriptorOrdinal> params_mmvc_init;
+    params_mmvc_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mmvc_init.push_back(STANDARD_TYPE_VARCHAR);
+    
+    eit->add("WinAggInit", params_mmvc_init,
+        (ExtendedInstruction2<char*,char*>*) NULL,
+        &WinAggInit);
+    
+    vector<StandardTypeDescriptorOrdinal> params_StrA_funcs;
+    params_StrA_funcs.push_back(STANDARD_TYPE_VARCHAR);
+    params_StrA_funcs.push_back(STANDARD_TYPE_VARBINARY);
+
+    eit->add("WinAggAdd", params_StrA_funcs,
+             (ExtendedInstruction2<char *, char*>*) NULL,
+             &WinAggAdd);
+
+    eit->add("WinAggDrop", params_StrA_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &WinAggDrop);
+
+    eit->add("WinAggMin", params_StrA_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
              &WinAggMin);
 
-    eit->add("WinAggMax", params_DBL_funcs,
-             (ExtendedInstruction2<double, char*>*) NULL,
+    eit->add("WinAggMax", params_StrA_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &WinAggMax);
+
+    vector<StandardTypeDescriptorOrdinal> params_mmc_init;
+    params_mmc_init.push_back(STANDARD_TYPE_VARBINARY);
+    params_mmc_init.push_back(STANDARD_TYPE_CHAR);
+    
+    eit->add("WinAggInit", params_mmc_init,
+        (ExtendedInstruction2<char*,char*>*) NULL,
+        &WinAggInit);
+    
+    vector<StandardTypeDescriptorOrdinal> params_StrA2_funcs;
+    params_StrA2_funcs.push_back(STANDARD_TYPE_CHAR);
+    params_StrA2_funcs.push_back(STANDARD_TYPE_VARBINARY);
+
+    eit->add("WinAggAdd", params_StrA2_funcs,
+             (ExtendedInstruction2<char *, char*>*) NULL,
+             &WinAggAdd);
+
+    eit->add("WinAggDrop", params_StrA2_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &WinAggDrop);
+
+    eit->add("WinAggMin", params_StrA2_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
+             &WinAggMin);
+
+    eit->add("WinAggMax", params_StrA2_funcs,
+             (ExtendedInstruction2<char*, char*>*) NULL,
              &WinAggMax);
 }
 
