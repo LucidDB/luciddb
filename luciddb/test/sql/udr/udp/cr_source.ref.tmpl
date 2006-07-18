@@ -86,6 +86,9 @@
 0: jdbc:luciddb:> insert into LOCATION select * from ff_server."BCP".LOCATION;
 0: jdbc:luciddb:> insert into CUSTOMERS select * from ff_server."BCP".CUSTOMERS;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create view
+0: jdbc:luciddb:> create view empview as select * from udptest.emp;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- check tables
 0: jdbc:luciddb:> select * from table( get_column_info(
 . . . . . . . . > cursor(select * from udptest."bench100")));
@@ -190,6 +193,22 @@
 | PRODID  | INTEGER  | 10    | 10         | 0      |
 | PRICE   | DECIMAL  | 4     | 4          | 2      |
 +---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from udptest.empview)));
++------------+----------+-------+------------+--------+
+|    NAME    |   TYPE   | SIZE  | PRECISION  | SCALE  |
++------------+----------+-------+------------+--------+
+| EMPNO      | DECIMAL  | 5     | 5          | 0      |
+| FNAME      | VARCHAR  | 20    | 20         | 0      |
+| LNAME      | VARCHAR  | 20    | 20         | 0      |
+| SEX        | CHAR     | 1     | 1          | 0      |
+| DEPTNO     | INTEGER  | 10    | 10         | 0      |
+| MANAGER    | DECIMAL  | 5     | 5          | 0      |
+| LOCID      | CHAR     | 2     | 2          | 0      |
+| SAL        | INTEGER  | 10    | 10         | 0      |
+| COMMISION  | INTEGER  | 10    | 10         | 0      |
+| HOBBY      | VARCHAR  | 20    | 20         | 0      |
++------------+----------+-------+------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from udptest."bench100";
 +---------+
@@ -238,6 +257,12 @@
 | EXPR$0  |
 +---------+
 | 1000    |
++---------+
+0: jdbc:luciddb:> select count(*) from udptest.empview;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create index

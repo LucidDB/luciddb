@@ -174,14 +174,6 @@
 | 1000    |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- check tmp schema
-0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas where 
-. . . . . . . . > schema_name = '_TMP_LOCAL_SCHEMA';
-+--------------+
-| SCHEMA_NAME  |
-+--------------+
-+--------------+
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- include with table_list
 0: jdbc:luciddb:> --
@@ -483,6 +475,14 @@
 +---------+
 | 100     |
 +---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check temp schemas were all dropped
+0: jdbc:luciddb:> select schema_name from sys_root.dba_schemas where 
+. . . . . . . . > schema_name like '_TMP_LOCAL_SCHEMA%';
++--------------+
+| SCHEMA_NAME  |
++--------------+
++--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop schema tempudp2 cascade;
 0: jdbc:luciddb:> drop server fexp_server2 cascade;

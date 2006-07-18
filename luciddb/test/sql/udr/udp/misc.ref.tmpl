@@ -47,7 +47,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- negative test
 0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
-Error: From line 1, column 15 to line 1, column 31: Table 'UDPTEST.types' not found (state=,code=0)
+Error: No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false table_list=null table_pattern=t____ (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
 0: jdbc:luciddb:> 
@@ -94,25 +94,25 @@ Error: From line 1, column 15 to line 1, column 31: Table 'UDPTEST.types' not fo
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- table_list and table_pattern both not null
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true);
-Error: At most one of table_list/table_pattern can be specified (state=,code=0)
+Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false);
-Error: At most one of table_list/table_pattern can be specified (state=,code=0)
+Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect table within table_list
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS', null, '@EXPDIR@/misc/neg', true);
-Error: Table emp in list not found (state=,code=0)
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true);
+Error: One or more tables in table_list not found: [emp, nonexistant] (state=,code=0)
 0: jdbc:luciddb:>  
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types', null, '@EXPDIR@/misc/neg', false);
-Error: One or more tables not found while importing foreign schema "BCP":  [EMP, DEPT] (state=,code=0)
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false);
+Error: One or more tables not found while importing foreign schema "BCP":  [nonexistant, EMP, DEPT] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect catalog name
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true);
-Error: Table DEPT in list not found (state=,code=0)
+Error: One or more tables in table_list not found: [DEPT] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect schema name
 0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true);
-Error: Table bench in list not found (state=,code=0)
+Error: One or more tables in table_list not found: [bench] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect server name
 0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);

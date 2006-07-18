@@ -126,6 +126,22 @@
 | PRODID  | INTEGER  | 10    | 10         | 0      |
 | PRICE   | DECIMAL  | 4     | 4          | 2      |
 +---------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from exp_server.BCP.empview)));
++------------+----------+-------+------------+--------+
+|    NAME    |   TYPE   | SIZE  | PRECISION  | SCALE  |
++------------+----------+-------+------------+--------+
+| EMPNO      | DECIMAL  | 5     | 5          | 0      |
+| FNAME      | VARCHAR  | 20    | 20         | 0      |
+| LNAME      | VARCHAR  | 20    | 20         | 0      |
+| SEX        | CHAR     | 1     | 1          | 0      |
+| DEPTNO     | INTEGER  | 10    | 10         | 0      |
+| MANAGER    | DECIMAL  | 5     | 5          | 0      |
+| LOCID      | CHAR     | 2     | 2          | 0      |
+| SAL        | INTEGER  | 10    | 10         | 0      |
+| COMMISION  | INTEGER  | 10    | 10         | 0      |
+| HOBBY      | VARCHAR  | 20    | 20         | 0      |
++------------+----------+-------+------------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from exp_server.BCP."bench100";
 +---------+
@@ -174,6 +190,12 @@
 | EXPR$0  |
 +---------+
 | 1000    |
++---------+
+0: jdbc:luciddb:> select count(*) from exp_server.BCP.empview;
++---------+
+| EXPR$0  |
++---------+
+| 11      |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- check against old schema
@@ -318,10 +340,7 @@
 . . . . . . . . > from server exp_server
 . . . . . . . . > into tempudp;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- check metadata for imported tables/columns
-0: jdbc:luciddb:> --select * from sys_root.dba_columns
-0: jdbc:luciddb:> --where schema_name = 'TEMPUDP'
-0: jdbc:luciddb:> --order by table_name, column_name;
+0: jdbc:luciddb:> -- check metadata for imported tables
 0: jdbc:luciddb:> select table_name from sys_root.dba_tables
 . . . . . . . . > where schema_name = 'TEMPUDP'
 . . . . . . . . > order by table_name;
@@ -386,10 +405,15 @@
 . . . . . . . . > from server exp_server2
 . . . . . . . . > into tempudp2;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- check metadata for imported tables/columns
-0: jdbc:luciddb:> -- select * from sys_root.dba_columns
-0: jdbc:luciddb:> -- where schema_name = 'TEMPUDP2'
-0: jdbc:luciddb:> -- order by table_name, column_name;
+0: jdbc:luciddb:> -- check metadata for imported tables
+0: jdbc:luciddb:> select table_name from sys_root.dba_tables
+. . . . . . . . > where schema_name = 'TEMPUDP2'
+. . . . . . . . > order by table_name;
++-------------+
+| TABLE_NAME  |
++-------------+
+| LOCATION    |
++-------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from table( get_column_info(
 . . . . . . . . > cursor(select * from tempudp2.location)));
@@ -442,10 +466,7 @@
 . . . . . . . . > from server exp_server2
 . . . . . . . . > into tempudp2;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- check metadata for imported tables/columns
-0: jdbc:luciddb:> -- select * from sys_root.dba_columns
-0: jdbc:luciddb:> -- where schema_name = 'TEMPUDP2'
-0: jdbc:luciddb:> -- order by table_name, column_name;
+0: jdbc:luciddb:> -- check metadata for imported tables
 0: jdbc:luciddb:> select table_name from sys_root.dba_tables
 . . . . . . . . > where schema_name = 'TEMPUDP2'
 . . . . . . . . > order by table_name;
@@ -454,6 +475,7 @@
 +-------------+
 | DEPT        |
 | EMP         |
+| EMPVIEW     |
 | LOCATION    |
 | bench100    |
 | types       |

@@ -63,9 +63,9 @@ call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EX
 call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false);
 
 -- incorrect table within table_list
-call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS', null, '@EXPDIR@/misc/neg', true);
+call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true);
  
-call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types', null, '@EXPDIR@/misc/neg', false);
+call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false);
 
 -- incorrect catalog name
 call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true);

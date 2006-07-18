@@ -1000,14 +1000,7 @@ public class FarragoJdbcEngineDatabaseMetaData implements DatabaseMetaData
         queryBuilder.addExact("table_cat", catalog);
         queryBuilder.addPattern("table_schem", schemaPattern);
         queryBuilder.addPattern("table_name", tableNamePattern);
-
-        // TODO:  re-enable once IN is working
-        /*
         queryBuilder.addInList("table_type",types);
-        */
-        if ((types != null) && (types.length == 1)) {
-            queryBuilder.addExact("table_type", types[0]);
-        }
         queryBuilder.addOrderBy("table_type,table_schem,table_name,table_cat");
         return queryBuilder.execute();
     }

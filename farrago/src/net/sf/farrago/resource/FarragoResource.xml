@@ -1266,6 +1266,50 @@ column type family is {1} but default value type family is {2}</text>
 <text>PRIMARY KEY constraint</text>
 </message>
 
+<!-- ====================================================================== -->
+<!-- User defined routine resources 520,000 - 530,000 -->
+<!-- ====================================================================== -->
+
+<exception id="520000" name="ExportSchemaSpecifyListOrPattern">
+<text>Parameter list invalid: Cannot specify both table_list and table_pattern parameters</text>
+</exception>
+
+<exception id="520001" name="ExportSchemaTableNotFound">
+<text>One or more tables in table_list not found: [{0}]</text>
+</exception>
+
+<exception id="520002" name="ExportSchemaCreateTempSchemaError">
+<text>Error during creation of temp schema {0}: {1}</text>
+</exception>
+
+<exception id="520003" name="ExportSchemaImportForeignSchemaError">
+<text>Error during import foreign schema into temp schema {0}: {1}</text>
+</exception>
+
+<exception id="520004" name="ExportSchemaDropTempSchemaError">
+<text>Error dropping temp schema {0}: {1}</text>
+</exception>
+
+<exception id="520005" name="ExportSchemaNoTables">
+<text>No tables to export for catalog={0} schema={1} exclude={2} table_list={3} table_pattern={4}</text>
+</exception>
+
+<exception id="520006" name="ExportSchemaNoTablesImported">
+<text>No tables to export for foreign_server={0} foreign_schema={1} exclude={2} table_list={3} table_pattern={4} temp schema={5}</text>
+</exception>  
+
+<exception id="520007" name="ExportSchemaCreateDirFailed">
+<text>Failed to create export directory {0}: {1}</text>
+</exception>
+
+<exception id="520008" name="ExportSchemaCreateFileWriterFailed">
+<text>Failed to create file writer for file {0}: {1}</text>
+</exception>
+
+<exception id="520009" name="ExportSchemaFileWriterError">
+<text>FileWriter error for file {0}: {1}</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>
