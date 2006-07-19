@@ -95,6 +95,11 @@ public class RexToCalcTranslator
     private RexNode[] inputExprs = null;
     private RexProgram program;
 
+    /**
+     * List of expressions which are currently being implemented.
+     */
+    final Set<RexNode> inProgressNodeSet = new HashSet<RexNode>();
+
     //~ Constructors ----------------------------------------------------------
 
     public RexToCalcTranslator(
@@ -713,11 +718,44 @@ public class RexToCalcTranslator
      */
     public CalcProgramBuilder.Register implementNode(RexNode node)
     {
-        CalcProgramBuilder.Register result = getResult(node, false);
-        if (result == null) {
-            node.accept(this);
-            result = getResult(node, true);
+        return implementNode(node, true);
+    }
+
+    /**
+     * Adds instructions to implement an expression to the program,
+     * and returns the register which returns the result.
+     *
+     * <p>The <code>useCache</code> parmaeter controls whether to return
+     * the existing register if the expression has already been implemented.
+     *
+     * @param node Expression
+     * @param useCache Whether to look up the expression in the cache
+     *   of already implemented expressions
+     * @return Register which holds the result of evaluating the expression,
+     *   never null, and always equivalent to calling {@link #getResult}.
+     * @post result != null
+     * @post result == getResult(node)
+     */
+    public CalcProgramBuilder.Register implementNode(
+        RexNode node, boolean useCache)
+    {
+        CalcProgramBuilder.Register result;
+        if (useCache) {
+            result = getResult(node, false);
+            if (result != null) {
+                return result;
+            }
+        } else {
+            boolean added = inProgressNodeSet.add(node);
+            assert added;
         }
+        node.accept(this);
+        if (!useCache) {
+            final boolean removed = inProgressNodeSet.remove(node);
+            assert removed;
+        }
+        result = getResult(node, true);
+        assert result != null : "post: result != null";
         return result;
     }
 
@@ -948,7 +986,7 @@ public class RexToCalcTranslator
                 // avoid creating local registers and moving them into output
                 // registers.
                 CalcProgramBuilder.Register register =
-                        builder.newOutput(getCalcRegisterDescriptor(call));;
+                        builder.newOutput(getCalcRegisterDescriptor(call));
                 switch (aggOp.getOrdinal()) {
                 case AggOp.None_ordinal:
                     throw Util.newInternal(

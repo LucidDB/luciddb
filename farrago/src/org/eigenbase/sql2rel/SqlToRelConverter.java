@@ -26,12 +26,11 @@ package org.eigenbase.sql2rel;
 import openjava.mop.Environment;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.SqlMinMaxAggFunction;
 import org.eigenbase.sql.parser.SqlParserPos;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.SqlVisitor;
@@ -905,17 +904,77 @@ public class SqlToRelConverter
             {
                 final SqlOperator op = call.getOperator();
                 if (op instanceof SqlAggFunction) {
-                    RelDataType type = call.getType();
+                    final RelDataType type = call.getType();
                     RexNode[] exprs = call.getOperands();
-                    return rexBuilder.makeOver(
-                        type, (SqlAggFunction) op, exprs, partitionKeys,
-                        orderKeys, window.getLowerBound(),
-                        window.getUpperBound(), window.isRows());
+                    // The fennel support for windowed Agg MIN/MAX only supports
+                    // BIGINT and DOUBLE numberic types. if the expression
+                    // result is numeric but not correct then pre and post CAST
+                    // the data.  Example with INTEGER
+                    // CAST(MIN(CAST(exp to BIGINT)) to INTEGER)
+                    if (op instanceof SqlMinMaxAggFunction) {
+                        final RelDataType minMaxType = ComputeMinMaxType(type);
+                        final SqlMinMaxAggFunction aggFunc = (SqlMinMaxAggFunction) op;
+                        // Replace orignal expression with CAST of not one of
+                        // the supported types
+                        if (minMaxType != null) {
+                            exprs[0] = rexBuilder.makeCast(minMaxType, exprs[0]);
+                        }
+
+                        RexCallBinding bind = new RexCallBinding(
+                            rexBuilder.getTypeFactory(),
+                            SqlStdOperatorTable.histogramAggFunction,
+                            exprs);
+
+                        RexNode over = rexBuilder.makeOver(
+                            SqlStdOperatorTable.histogramAggFunction.inferReturnType(bind),
+                            SqlStdOperatorTable.histogramAggFunction,
+                            exprs,
+                            partitionKeys,
+                            orderKeys,
+                            window.getLowerBound(),
+                            window.getUpperBound(),
+                            window.isRows());
+
+                        RexNode histogramCall = rexBuilder.makeCall(
+                            (minMaxType != null) ? minMaxType : type,
+                            aggFunc.isMin() ?
+                            SqlStdOperatorTable.histogramMinFunction :
+                            SqlStdOperatorTable.histogramMaxFunction,
+                            over);
+
+                        // If needed post Cast result of MIN/MAX back to
+                        // original type
+                        RexNode outerCast = (minMaxType == null) ?
+                            histogramCall :
+                             rexBuilder.makeCast(type, histogramCall);
+
+                        return outerCast;
+
+                    } else {
+                        return rexBuilder.makeOver(
+                            type, (SqlAggFunction) op, exprs, partitionKeys,
+                            orderKeys, window.getLowerBound(),
+                            window.getUpperBound(), window.isRows());
+                    }
                 }
                 return super.visitCall(call);
             }
         };
         return rexAgg.accept(visitor);
+    }
+
+    private RelDataType ComputeMinMaxType(RelDataType type)
+    {
+        RelDataType targetType = null;
+        if (SqlTypeUtil.isExactNumeric(type) &&
+            (type.getSqlTypeName() != SqlTypeName.Bigint)) {
+            targetType = new BasicSqlType(SqlTypeName.Bigint);
+        } else if (SqlTypeUtil.isApproximateNumeric(type) &&
+            (type.getSqlTypeName() != SqlTypeName.Double)) {
+            targetType = new BasicSqlType(SqlTypeName.Double);
+        }
+
+        return targetType;
     }
 
     /**

@@ -30,6 +30,7 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.fun.SqlTrimFunction;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.BasicSqlType;
 import org.eigenbase.util.DoubleKeyMap;
 import org.eigenbase.util.Util;
 import org.eigenbase.util14.*;
@@ -160,13 +161,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         aggImplementationMap.put(agg, impl);
     }
 
-    // NOTE jvs 16-June-2004:  There's a reason I use the convention
-    // implements CalcRexImplementorTable
-    // which is that it keeps jalopy from supplying the missing
-    // method comment, while not preventing javadoc from inheriting
-    // the comment from super
-
-    /** implement interface CalcRexImplementorTable */
+    // implement CalcRexImplementorTable
     public CalcRexImplementor get(SqlOperator op)
     {
         CalcRexImplementor implementor =
@@ -311,8 +306,8 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         } else if (rd.getType().isApprox()) {
             return implementFirstOperandWithDouble(
                     call, translator, typeNode, i, castBack);
-
         }
+
         return call;
     }
 
@@ -605,7 +600,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             new IdentityImplementor());
 
         register(
-            opTab.reinterpretOperator,
+            SqlStdOperatorTable.reinterpretOperator,
             new ReinterpretCastImplementor());
 
         registerInstr(
@@ -660,15 +655,18 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         registerAgg(
             SqlStdOperatorTable.lastValueOperator,
             new LastValueCalcRexImplementor());
-        if (false) {
-            // TODO:
-            registerAgg(
-                SqlStdOperatorTable.minOperator,
-                new SumCalcRexImplementor());
-            registerAgg(
-                SqlStdOperatorTable.maxOperator,
-                new SumCalcRexImplementor());
-        }
+
+        // Register histogram and related functions required to make min and
+        // max work over windows.
+        registerAgg(
+            SqlStdOperatorTable.histogramAggFunction,
+            new HistogramAggRexImplementor());
+        register(
+            SqlStdOperatorTable.histogramMinFunction,
+            new HistogramMinMaxRexImplementor(true));
+        register(
+            SqlStdOperatorTable.histogramMaxFunction,
+            new HistogramMinMaxRexImplementor(false));
 
         return this;
     }
@@ -2087,6 +2085,107 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             assert call.operands.length == 1;
         }
     }
+
+    /**
+     * Implementation of the <code>$HISTOGRAM</code> aggregate function,
+     * which helps implement MIN and MAX in a windowed aggregation scenario.
+     *
+     * @see SqlStdOperatorTable#minOperator
+     * @see SqlStdOperatorTable#maxOperator
+     * @see SqlStdOperatorTable#histogramAggFunction
+     */
+    private static class HistogramAggRexImplementor
+        extends AbstractCalcRexAggImplementor
+    {
+        public HistogramAggRexImplementor()
+        {
+        }
+
+
+        public void implementInitialize(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            final RexNode operand = call.operands[0];
+            CalcProgramBuilder.Register reg0 =
+                translator.implementNode(operand);
+            ExtInstructionDefTable.histogramInit.add(
+                translator.builder,
+                new CalcProgramBuilder.Register [] {accumulatorRegister, reg0});
+        }
+        
+        public void implementAdd(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert call.getOperands().length == 1;
+
+            final CalcProgramBuilder.Register reg1 =
+                translator.implementNode(call.operands[0]);
+            ExtInstructionDefTable.histogramAdd.add(
+                translator.builder, accumulatorRegister, reg1);
+        }
+
+        public void implementDrop(
+            RexCall call,
+            CalcProgramBuilder.Register accumulatorRegister,
+            RexToCalcTranslator translator)
+        {
+            assert call.getOperands().length == 1;
+
+            final CalcProgramBuilder.Register reg1 =
+                translator.implementNode(call.operands[0]);
+            ExtInstructionDefTable.histogramDrop.add(
+                translator.builder, accumulatorRegister,
+                reg1);
+        }
+    }
+
+    /**
+     * Implementation of the
+     * {@link SqlStdOperatorTable#histogramMinFunction $HISTOGRAM_MIN} and
+     * {@link SqlStdOperatorTable#histogramMaxFunction $HISTOGRAM_MAX}
+     * operators, which extract MIN and MAX values from a histogram.
+     *
+     * @see HistogramAggRexImplementor
+     */
+    private static class HistogramMinMaxRexImplementor
+        extends AbstractCalcRexImplementor
+    {
+        private final boolean isMin;
+
+        public HistogramMinMaxRexImplementor(boolean min)
+        {
+            isMin = min;
+        }
+
+
+        public CalcProgramBuilder.Register implement(
+            RexCall call,
+            RexToCalcTranslator translator)
+        {
+            // The single argument must be a histogram.
+            assert call.getOperands().length == 1;
+
+            CalcProgramBuilder.Register resultReg =
+                createResultRegister(translator, call);
+
+            final RexNode operand = call.operands[0];
+            CalcProgramBuilder.Register reg0 =
+                translator.implementNode(operand);
+
+            CalcProgramBuilder.ExtInstrDef instrDef = isMin ?
+                ExtInstructionDefTable.histogramGetMin :
+                ExtInstructionDefTable.histogramGetMax;
+
+            instrDef.add(translator.builder, resultReg, reg0);
+
+            return resultReg;
+        }
+    }
+
 
     /**
      * Implements the internal {@link SqlStdOperatorTable#sliceOp $SLICE}
