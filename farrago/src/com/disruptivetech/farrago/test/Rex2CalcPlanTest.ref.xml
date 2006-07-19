@@ -1,0 +1,79 @@
+<?xml version="1.0" ?>
+<Root>
+    <TestCase name="testAggCount">
+        <Resource name="expectedInit">
+            <![CDATA[
+O s8;
+I s4;
+C bo, bo, s8;
+V 1, 0, 0;
+T;
+MOVE O0, C2 /* 0: COUNT($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O s8;
+I s4;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+ADD O0, O0, C2 /* 0: COUNT($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O s8;
+I s4;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+SUB O0, O0, C2 /* 0: COUNT($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testAggSum">
+        <Resource name="expectedInit">
+            <![CDATA[
+O s4;
+I s4;
+C bo, bo, s4;
+V 1, 0, 0;
+T;
+MOVE O0, C2 /* 0: SUM($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O s4;
+I s4;
+C bo, bo;
+V 1, 0;
+T;
+ADD O0, O0, I0 /* 0: SUM($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O s4;
+I s4;
+C bo, bo;
+V 1, 0;
+T;
+SUB O0, O0, I0 /* 0: SUM($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testAggSumExp">
+        <Resource name="expectedInit">
+            <![CDATA[
+O s4;
+I s4;
+C bo, bo, s4;
+V 1, 0, 0;
+T;
+MOVE O0, C2 /* 0: SUM($t0) */;
+RETURN /* 1: */;]]>
+        </Resource>
+    </TestCase>
+</Root>
