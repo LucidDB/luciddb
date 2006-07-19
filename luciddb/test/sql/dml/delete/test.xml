@@ -16,7 +16,8 @@
 
       <test name="validate" requiresSuccess="setup">
         <!-- delete from system table, via synonym, and special permissions -->
-        <!-- case with foreign key commented out -->
+        <!-- case with foreign key commented out, delete view and catalog -->
+        <!-- element also commented out, error is non-deterministic -->
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/delete/validate.sql"/>
       </test>
 

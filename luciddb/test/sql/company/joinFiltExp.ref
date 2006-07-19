@@ -358,10 +358,11 @@
 '                  LcsIndexMergeRel'
 '                    LcsIndexSearchRel'
 '                      FennelValuesRel'
-'          LcsRowScanRel'
-'            LcsIndexMergeRel'
-'              LcsIndexSearchRel'
-'                FennelValuesRel'
+'          FennelCalcRel'
+'            LcsRowScanRel'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel'
+'                  FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !set outputformat table
 0: jdbc:luciddb:> !quit

@@ -21,8 +21,8 @@ Error: From line 1, column 13 to line 1, column 36: Table 'DT.TABLETHATDOESNOTEX
 0: jdbc:luciddb:> -- ;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- -- DELETE on something in the catalog (should fail)
-0: jdbc:luciddb:> delete from sys_fem.med."StoredColumn";
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#41:TableModificationRel.NONE(child=HepRelVertex#42,table=[SYS_FEM, MED, StoredColumn],operation=DELETE,updateColumnList=[],flattened=true); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> -- commented out: error message is not deterministic
+0: jdbc:luciddb:> -- delete from sys_fem.med."StoredColumn";
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- -- DELETE on a view (should fail)
 0: jdbc:luciddb:> --CREATE VIEW DT.onerowView AS SELECT * FROM system.onerow
@@ -30,11 +30,10 @@ Error: Optimizer failed to find a valid physical implementation for relational e
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- DELETE FROM DT.onerowView
 0: jdbc:luciddb:> -- ;
+0: jdbc:luciddb:> -- commented out: error message is not deterministic
+0: jdbc:luciddb:> --CREATE VIEW DT.onerowView as values(1, 'one', 1.00);
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> CREATE VIEW DT.onerowView as values(1, 'one', 1.00);
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> DELETE from DT.onerowView;
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#61:TableModificationRel.NONE(child=HepRelVertex#74,table=[LOCALDB, DT, ONEROWVIEW],operation=DELETE,updateColumnList=[],flattened=true); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> --DELETE from DT.onerowView;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- -- DELETE on a table which we don't have DELETE permission for (should fail)
 0: jdbc:luciddb:> CREATE TABLE DT.permissionCheck (x integer)

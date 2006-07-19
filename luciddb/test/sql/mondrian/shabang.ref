@@ -13466,8 +13466,21 @@
 +---------------------+
 | Periodicals         |
 +---------------------+
-0: jdbc:luciddb:> -- see FRG-108
-0: jdbc:luciddb:> --select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_department" in ('Dairy', 'Household', 'Checkout', 'Periodicals', 'Health and Hygiene', 'Beverages', 'Carousel', 'Alcoholic Beverages') group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family";
+0: jdbc:luciddb:> -- FRG-108
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_department" in ('Dairy', 'Household', 'Checkout', 'Periodicals', 'Health and Hygiene', 'Beverages', 'Carousel', 'Alcoholic Beverages') group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family" order by 1,2,3,4;
++-------+----------------------+-----------------+-------------+
+|  c0   |          c1          |       c2        |     m0      |
++-------+----------------------+-----------------+-------------+
+| 1997  | Alcoholic Beverages  | Drink           | 6838.0000   |
+| 1997  | Beverages            | Drink           | 13573.0000  |
+| 1997  | Carousel             | Non-Consumable  | 841.0000    |
+| 1997  | Checkout             | Non-Consumable  | 1779.0000   |
+| 1997  | Dairy                | Drink           | 4186.0000   |
+| 1997  | Dairy                | Food            | 12885.0000  |
+| 1997  | Health and Hygiene   | Non-Consumable  | 16284.0000  |
+| 1997  | Household            | Non-Consumable  | 27038.0000  |
+| 1997  | Periodicals          | Non-Consumable  | 4294.0000   |
++-------+----------------------+-----------------+-------------+
 0: jdbc:luciddb:> select "customer"."education" from "customer" as "customer" where UPPER("customer"."education") = '*SUBTOTAL_MEMBER_SEL~SUM' group by "customer"."education" order by "customer"."education" ASC;
 +------------+
 | education  |
@@ -13515,7 +13528,22 @@
 +----------+
 | Q4       |
 +----------+
-0: jdbc:luciddb:> --select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q1', 'Q4') and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education";
+0: jdbc:luciddb:> -- FRG-108
+0: jdbc:luciddb:> select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q1', 'Q4') and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education" order by 1,2,3,4;
++-----+-------+----------------------+-------------+
+| c0  |  c1   |          c2          |     m0      |
++-----+-------+----------------------+-------------+
+| Q1  | 1997  | Bachelors Degree     | 17066.0000  |
+| Q1  | 1997  | Graduate Degree      | 3637.0000   |
+| Q1  | 1997  | High School Degree   | 19755.0000  |
+| Q1  | 1997  | Partial College      | 6309.0000   |
+| Q1  | 1997  | Partial High School  | 19524.0000  |
+| Q4  | 1997  | Bachelors Degree     | 18629.0000  |
+| Q4  | 1997  | Graduate Degree      | 4254.0000   |
+| Q4  | 1997  | High School Degree   | 21820.0000  |
+| Q4  | 1997  | Partial College      | 6115.0000   |
+| Q4  | 1997  | Partial High School  | 21206.0000  |
++-----+-------+----------------------+-------------+
 0: jdbc:luciddb:> select "time_by_day"."quarter" from "time_by_day" as "time_by_day" where "time_by_day"."the_year" = 1997 and UPPER("time_by_day"."quarter") = 'Q3' group by "time_by_day"."quarter" order by "time_by_day"."quarter" ASC;
 +----------+
 | quarter  |
@@ -13556,7 +13584,22 @@
 +----------+
 | Q3       |
 +----------+
-0: jdbc:luciddb:> --select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q3', 'Q3', 'Q2') and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education";
+0: jdbc:luciddb:> -- FRG-108
+0: jdbc:luciddb:> select "time_by_day"."quarter" as "c0", "time_by_day"."the_year" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."quarter" in ('Q3', 'Q3', 'Q2') and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."quarter", "time_by_day"."the_year", "customer"."education" order by 1,2,3,4;
++-----+-------+----------------------+-------------+
+| c0  |  c1   |          c2          |     m0      |
++-----+-------+----------------------+-------------+
+| Q2  | 1997  | Bachelors Degree     | 16175.0000  |
+| Q2  | 1997  | Graduate Degree      | 3880.0000   |
+| Q2  | 1997  | High School Degree   | 17907.0000  |
+| Q2  | 1997  | Partial College      | 5852.0000   |
+| Q2  | 1997  | Partial High School  | 18796.0000  |
+| Q3  | 1997  | Bachelors Degree     | 16969.0000  |
+| Q3  | 1997  | Graduate Degree      | 3799.0000   |
+| Q3  | 1997  | High School Degree   | 19182.0000  |
+| Q3  | 1997  | Partial College      | 6269.0000   |
+| Q3  | 1997  | Partial High School  | 19629.0000  |
++-----+-------+----------------------+-------------+
 0: jdbc:luciddb:> select "time_by_day"."quarter" from "time_by_day" as "time_by_day" where "time_by_day"."the_year" = 1997 and UPPER("time_by_day"."quarter") = 'Q2' group by "time_by_day"."quarter" order by "time_by_day"."quarter" ASC;
 +----------+
 | quarter  |
@@ -13591,7 +13634,27 @@
 +-------------------+
 | Drinks            |
 +-------------------+
-0: jdbc:luciddb:> --select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Beer and Wine', 'Drinks', 'Carbonated Beverages') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> -- FRG-108
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Beer and Wine', 'Drinks', 'Carbonated Beverages') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education" order by 1,2,3,4,5,6;
++-------+-----------------------+----------------------+--------+----------------------+------------+
+|  c0   |          c1           |          c2          |   c3   |          c4          |     m0     |
++-------+-----------------------+----------------------+--------+----------------------+------------+
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Bachelors Degree     | 1763.0000  |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Graduate Degree      | 352.0000   |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | High School Degree   | 2079.0000  |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Partial College      | 574.0000   |
+| 1997  | Beer and Wine         | Alcoholic Beverages  | Drink  | Partial High School  | 2070.0000  |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Bachelors Degree     | 917.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Graduate Degree      | 188.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | High School Degree   | 976.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Partial College      | 271.0000   |
+| 1997  | Carbonated Beverages  | Beverages            | Drink  | Partial High School  | 1055.0000  |
+| 1997  | Drinks                | Beverages            | Drink  | Bachelors Degree     | 631.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Graduate Degree      | 141.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | High School Degree   | 737.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Partial College      | 186.0000   |
+| 1997  | Drinks                | Beverages            | Drink  | Partial High School  | 774.0000   |
++-------+-----------------------+----------------------+--------+----------------------+------------+
 0: jdbc:luciddb:> select "product_class"."product_category" from "product" as "product", "product_class" as "product_class" where "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_department" = 'Beverages' and "product_class"."product_family" = 'Drink' and UPPER("product_class"."product_category") = 'HOT BEVERAGES' group by "product_class"."product_category" order by "product_class"."product_category" ASC;
 +-------------------+
 | product_category  |
@@ -13610,8 +13673,28 @@
 +-------------------+
 | Dairy             |
 +-------------------+
-0: jdbc:luciddb:> --select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Hot Beverages', 'Pure Juice Beverages', 'Dairy') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education";
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> -- FRG-108
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_category" as "c1", "product_class"."product_department" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_category" in ('Hot Beverages', 'Pure Juice Beverages', 'Dairy') and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family", "customer"."education" order by 1,2,3,4,5,6;
++-------+-----------------------+------------+--------+----------------------+------------+
+|  c0   |          c1           |     c2     |   c3   |          c4          |     m0     |
++-------+-----------------------+------------+--------+----------------------+------------+
+| 1997  | Dairy                 | Dairy      | Drink  | Bachelors Degree     | 1069.0000  |
+| 1997  | Dairy                 | Dairy      | Drink  | Graduate Degree      | 243.0000   |
+| 1997  | Dairy                 | Dairy      | Drink  | High School Degree   | 1222.0000  |
+| 1997  | Dairy                 | Dairy      | Drink  | Partial College      | 378.0000   |
+| 1997  | Dairy                 | Dairy      | Drink  | Partial High School  | 1274.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Bachelors Degree     | 1090.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Graduate Degree      | 256.0000   |
+| 1997  | Hot Beverages         | Beverages  | Drink  | High School Degree   | 1202.0000  |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Partial College      | 452.0000   |
+| 1997  | Hot Beverages         | Beverages  | Drink  | Partial High School  | 1301.0000  |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Bachelors Degree     | 953.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Graduate Degree      | 145.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | High School Degree   | 1010.0000  |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Partial College      | 303.0000   |
+| 1997  | Pure Juice Beverages  | Beverages  | Drink  | Partial High School  | 985.0000   |
++-------+-----------------------+------------+--------+----------------------+------------+
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Drink' and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education" order by 1,2,3,4;
 +-------+--------+----------------------+------------+
 |  c0   |   c1   |          c2          |     m0     |
 +-------+--------+----------------------+------------+
@@ -13943,7 +14026,7 @@
 +-----------------+
 | Food            |
 +-----------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "promotion"."promotion_name" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "promotion" as "promotion" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."promotion_id" = "promotion"."promotion_id" group by "time_by_day"."the_year", "product_class"."product_family", "promotion"."promotion_name";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "promotion"."promotion_name" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "promotion" as "promotion" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."promotion_id" = "promotion"."promotion_id" group by "time_by_day"."the_year", "product_class"."product_family", "promotion"."promotion_name" order by 1,2,3,4;
 +-------+-----------------+--------------------------+--------------+
 |  c0   |       c1        |            c2            |      m0      |
 +-------+-----------------+--------------------------+--------------+
@@ -14169,7 +14252,7 @@
 +--------------+
 | WA           |
 +--------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "customer"."education" as "c3", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "customer"."education";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "customer"."education" as "c3", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "customer"."education" order by 1,2,3,4,5;
 +-----+------+-------+----------------------+-------------+-------------+
 | c0  |  c1  |  c2   |          c3          |     m0      |     m1      |
 +-----+------+-------+----------------------+-------------+-------------+
@@ -14229,7 +14312,7 @@
 | product_family  |
 +-----------------+
 +-----------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education" order by 1,2,3,4;
 +-------+-----------------+----------------------+-------------+
 |  c0   |       c1        |          c2          |     m0      |
 +-------+-----------------+----------------------+-------------+
@@ -14434,7 +14517,7 @@
 +---------------------+
 | Starchy Foods       |
 +---------------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", "customer"."education" as "c3", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", "customer"."education" as "c3", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family", "customer"."education" order by 1,2,3,4,5,6;
 +-------+----------------------+-----------------+----------------------+-------------+------------+
 |  c0   |          c1          |       c2        |          c3          |     m0      |     m1     |
 +-------+----------------------+-----------------+----------------------+-------------+------------+
@@ -14557,7 +14640,7 @@
 | 1997  | Starchy Foods        | Food            | Partial College      | 460.0000    | 413.0873   |
 | 1997  | Starchy Foods        | Food            | Partial High School  | 1631.0000   | 1451.5684  |
 +-------+----------------------+-----------------+----------------------+-------------+------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 group by "time_by_day"."the_year";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 group by "time_by_day"."the_year" order by 1,2,3;
 +-------+--------------+--------------+
 |  c0   |      m0      |      m1      |
 +-------+--------------+--------------+
@@ -14629,7 +14712,7 @@
 +--------------+
 | Zacatecas    |
 +--------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."gender" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."gender";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."gender" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."gender" order by 1,2,3,4,5,6;
 +-----+------+-------+-----------------+-----+-------------+
 | c0  |  c1  |  c2   |       c3        | c4  |     m0      |
 +-----+------+-------+-----------------+-----+-------------+
@@ -14652,7 +14735,7 @@
 | WA  | USA  | 1997  | Non-Consumable  | F   | 11363.0000  |
 | WA  | USA  | 1997  | Non-Consumable  | M   | 11867.0000  |
 +-----+------+-------+-----------------+-----+-------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family" order by 1,2,3,4,5;
 +-----+------+-------+-----------------+-------------+
 | c0  |  c1  |  c2   |       c3        |     m0      |
 +-----+------+-------+-----------------+-------------+
@@ -14691,19 +14774,19 @@
 | store_country  |
 +----------------+
 +----------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "customer"."gender" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "customer"."gender";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "customer"."gender" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "customer"."gender" order by 1,2,3;
 +-------+-----+--------------+
 |  c0   | c1  |      m0      |
 +-------+-----+--------------+
 | 1997  | F   | 131558.0000  |
 | 1997  | M   | 135215.0000  |
 +-------+-----+--------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "customer"."gender" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1998 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "customer"."gender";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "customer"."gender" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1998 and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "customer"."gender" order by 1,2,3;
 +-----+-----+-----+
 | c0  | c1  | m0  |
 +-----+-----+-----+
 +-----+-----+-----+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."store_cost") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."store_cost") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family" order by 1,2,3,4;
 +-----+------+-------+-----------------+-------------+
 | c0  |  c1  |  c2   |       c3        |     m0      |
 +-----+------+-------+-----------------+-------------+
@@ -14717,12 +14800,12 @@
 | WA  | USA  | 1997  | Food            | 76322.9232  |
 | WA  | USA  | 1997  | Non-Consumable  | 20022.7779  |
 +-----+------+-------+-----------------+-------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."store_cost") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1998 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", sum("sales_fact_1997"."store_cost") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1998 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family" order by 1,2,3,4;
 +-----+-----+-----+-----+-----+
 | c0  | c1  | c2  | c3  | m0  |
 +-----+-----+-----+-----+-----+
 +-----+-----+-----+-----+-----+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."gender" as "c4", sum("sales_fact_1997"."store_cost") as "m0", sum("sales_fact_1997"."unit_sales") as "m1" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."gender";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."gender" as "c4", sum("sales_fact_1997"."store_cost") as "m0", sum("sales_fact_1997"."unit_sales") as "m1" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."gender" order by 1,2,3,4,5,6;
 +-----+------+-------+-----------------+-----+-------------+-------------+
 | c0  |  c1  |  c2   |       c3        | c4  |     m0      |     m1      |
 +-----+------+-------+-----------------+-----+-------------+-------------+
@@ -14786,7 +14869,7 @@
 +--------------+
 | Supermarket  |
 +--------------+
-0: jdbc:luciddb:> select "store"."store_type" as "c0", "time_by_day"."the_year" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 group by "store"."store_type", "time_by_day"."the_year";
+0: jdbc:luciddb:> select "store"."store_type" as "c0", "time_by_day"."the_year" as "c1", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 group by "store"."store_type", "time_by_day"."the_year" order by 1,2,3;
 +----------------------+-------+--------------+
 |          c0          |  c1   |      m0      |
 +----------------------+-------+--------------+
@@ -16097,7 +16180,7 @@
 +----------------------+
 | Sports Magazines     |
 +----------------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_subcategory" as "c1", "product_class"."product_category" as "c2", "product_class"."product_department" as "c3", "product_class"."product_family" as "c4", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "time_by_day"."the_year", "product_class"."product_subcategory", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_subcategory" as "c1", "product_class"."product_category" as "c2", "product_class"."product_department" as "c3", "product_class"."product_family" as "c4", sum("sales_fact_1997"."unit_sales") as "m0", sum("sales_fact_1997"."store_cost") as "m1" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" group by "time_by_day"."the_year", "product_class"."product_subcategory", "product_class"."product_category", "product_class"."product_department", "product_class"."product_family" order by 1,2,3,4,5,6,7;
 +-------+---------------------+-----------------------+----------------------+-----------------+-------------+-------------+
 |  c0   |         c1          |          c2           |          c3          |       c4        |     m0      |     m1      |
 +-------+---------------------+-----------------------+----------------------+-----------------+-------------+-------------+
@@ -16207,7 +16290,7 @@
 | 1997  | Wine                | Beer and Wine         | Alcoholic Beverages  | Drink           | 5155.0000   | 4228.6403   |
 | 1997  | Yogurt              | Dairy                 | Dairy                | Food            | 1783.0000   | 1901.8055   |
 +-------+---------------------+-----------------------+----------------------+-----------------+-------------+-------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."store_cost") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_family" as "c1", "customer"."education" as "c2", sum("sales_fact_1997"."store_cost") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "time_by_day"."the_year", "product_class"."product_family", "customer"."education" order by 1,2,3,4;
 +-------+-----------------+----------------------+-------------+
 |  c0   |       c1        |          c2          |     m0      |
 +-------+-----------------+----------------------+-------------+
@@ -16286,7 +16369,7 @@
 | Non-Consumable  | Health and Hygiene  |
 | Non-Consumable  | Household           |
 +-----------------+---------------------+
-0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family";
+0: jdbc:luciddb:> select "time_by_day"."the_year" as "c0", "product_class"."product_department" as "c1", "product_class"."product_family" as "c2", sum("sales_fact_1997"."unit_sales") as "m0" from "time_by_day" as "time_by_day", "sales_fact_1997" as "sales_fact_1997", "product_class" as "product_class", "product" as "product" where "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "product_class"."product_family" = 'Food' group by "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family" order by 1,2,3,4;
 +-------+------------------+-------+-------------+
 |  c0   |        c1        |  c2   |     m0      |
 +-------+------------------+-------+-------------+
@@ -16360,7 +16443,7 @@
 | store_state  |
 +--------------+
 +--------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_department" as "c3", "product_class"."product_family" as "c4", "customer"."education" as "c5", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_department" as "c3", "product_class"."product_family" as "c4", "customer"."education" as "c5", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_department", "product_class"."product_family", "customer"."education" order by 1,2,3,4,5,6,7;
 +-----+------+-------+----------------------+-----------------+----------------------+------------+
 | c0  |  c1  |  c2   |          c3          |       c4        |          c5          |     m0     |
 +-----+------+-------+----------------------+-----------------+----------------------+------------+
@@ -16719,7 +16802,7 @@
 | WA  | USA  | 1997  | Starchy Foods        | Food            | Partial College      | 246.0000   |
 | WA  | USA  | 1997  | Starchy Foods        | Food            | Partial High School  | 726.0000   |
 +-----+------+-------+----------------------+-----------------+----------------------+------------+
-0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."education";
+0: jdbc:luciddb:> select "store"."store_state" as "c0", "store"."store_country" as "c1", "time_by_day"."the_year" as "c2", "product_class"."product_family" as "c3", "customer"."education" as "c4", sum("sales_fact_1997"."unit_sales") as "m0" from "store" as "store", "sales_fact_1997" as "sales_fact_1997", "time_by_day" as "time_by_day", "product_class" as "product_class", "product" as "product", "customer" as "customer" where "sales_fact_1997"."store_id" = "store"."store_id" and "sales_fact_1997"."time_id" = "time_by_day"."time_id" and "time_by_day"."the_year" = 1997 and "sales_fact_1997"."product_id" = "product"."product_id" and "product"."product_class_id" = "product_class"."product_class_id" and "sales_fact_1997"."customer_id" = "customer"."customer_id" group by "store"."store_state", "store"."store_country", "time_by_day"."the_year", "product_class"."product_family", "customer"."education" order by 1,2,3,4,5,6;
 +-----+------+-------+-----------------+----------------------+-------------+
 | c0  |  c1  |  c2   |       c3        |          c4          |     m0      |
 +-----+------+-------+-----------------+----------------------+-------------+
