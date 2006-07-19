@@ -107,9 +107,23 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     uint numRows;
 
     /**
+     * The following are testing parameters.
+     */
+
+    /**
      * Force partitioning level. Only set in tests.
      */
     uint forcePartitionLevel;
+
+    /**
+     * Whether to use join filters.
+     */
+    bool enableJoinFilter;
+
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
 };
 
 class LhxJoinExecStream : public ConfluenceExecStream
@@ -263,6 +277,16 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * Force partitioning level. Only set in tests.
      */
     uint forcePartitionLevel;
+
+    /**
+     * Whether to use join filters.
+     */
+    bool enableJoinFilter;
+
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
 
     /**
      * implement ExecStream

@@ -322,8 +322,8 @@ public class LcsIndexSemiJoinRule extends RelOptRule
         // since those are set in the parent index merge rel
         LcsIndexSearchRel indexSearch =
             new LcsIndexSearchRel(
-                rowScan.getCluster(), sort, rowScan.lcsTable, index, null, true,
-                false, null, null, null, null, null);
+                rowScan.getCluster(), sort, rowScan.lcsTable, index, 
+                false, null, true, false, null, null, null, null, null);
     
         // create a merge on top of the index search
         LcsIndexMergeRel merge = 
@@ -402,7 +402,7 @@ public class LcsIndexSemiJoinRule extends RelOptRule
                     new LcsIndexSearchRel(
                         indexSearch.getCluster(),
                         indexSearch.getChild(),
-                        indexSearch.lcsTable, indexSearch.index, null,
+                        indexSearch.lcsTable, indexSearch.index, false, null,
                         indexSearch.isUniqueKey(), indexSearch.isOuter(),
                         indexSearch.getInputKeyProj(),
                         indexSearch.getInputJoinProj(),

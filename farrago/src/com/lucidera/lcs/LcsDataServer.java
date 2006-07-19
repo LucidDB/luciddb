@@ -88,7 +88,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
         planner.addRule(new LcsTableProjectionRule());
         planner.addRule(new LcsIndexBuilderRule());
         planner.addRule(new LcsIndexAccessRule());
-        
+
         // multiple sub-rules need to be specified for this rule
         // because we need to distinguish the cases where there are
         // children below the rowscan; note that the rule is very
@@ -125,6 +125,11 @@ class LcsDataServer extends MedAbstractFennelDataServer
                             new RelOptRuleOperand [] {
                             new RelOptRuleOperand(LcsIndexSearchRel.class, null)
                 })})}), "with merge child"));
+
+        // after join ordering, consider index only access. as above, 
+        // multiple rules are required for various patterns
+        planner.addRule(LcsIndexOnlyAccessRule.instanceSearch);
+        planner.addRule(LcsIndexOnlyAccessRule.instanceMerge);
     }
 
     // implement FarragoMedLocalDataServer

@@ -61,10 +61,8 @@ void LbmMinusExecStream::open(bool restart)
     rowLimit = 0;
     state = FIRST_MINUS;
     copyPrefixPending = false;
-    if (nFields) {
-        prevTupleValid = false;
-        minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
-    }
+    prevTupleValid = false;
+    minuendReader.init(inAccessors[0], bitmapSegTuples[0]);
 }
 
 ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
@@ -154,7 +152,7 @@ ExecStreamResult LbmMinusExecStream::readInputAndRestart(
         return rc;
     }
 
-    // If there are prefixes, and they have changed, then the first input's
+    // If there are prefixes, and the tuple changes, then the first input's
     // (the minuend's) RIDs may start all over. Restart the inputs to be
     // subtracted (the subtrahends) so all of their data can be minused
     // from the next minuend input.
@@ -164,9 +162,11 @@ ExecStreamResult LbmMinusExecStream::readInputAndRestart(
     // values will be used to construct the pending output tuple.
     if (prevTupleValid) {
         if (minuendReader.getTupleChange()) {
+            minuendReader.resetChangeListener();
             int keyComp = comparePrefixes();
-            if (keyComp != 0) {
-                baseRid = currRid;
+            // NOTE: if prefix key is a partial subset of index key then
+            // rids may restart though the prefix key has not changed
+            if (keyComp != 0 || currRid < startRid) {
                 restartSubtrahends();
                 if (!flush()) {
                     copyPrefixPending = true;
@@ -174,7 +174,6 @@ ExecStreamResult LbmMinusExecStream::readInputAndRestart(
                 }
                 copyPrefix();
             }
-            minuendReader.resetChangeListener();
         }
     } else {
         prevTupleValid = true;

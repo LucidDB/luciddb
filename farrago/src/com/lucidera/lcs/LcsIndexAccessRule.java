@@ -125,7 +125,6 @@ class LcsIndexAccessRule extends RelOptRule
             FennelRelUtil.getRelImplementor(origRowScan);
         
         // By default, these parameters are not used:
-        // ParamId == 0 menas this param is in valid.
         FennelRelParamId startRidParamId = null;
         FennelRelParamId rowLimitParamId = null;
         
@@ -163,12 +162,6 @@ class LcsIndexAccessRule extends RelOptRule
                 sargBindingList,
                 index2PosMap);
                 
-        // TODO: check for possibility of an index only scan
-        if (indexSet.size() == 1 && residualSargBindingList.size() == 0) {
-            // All filters can be answered by one index
-            // check if this index also provides all the output for the query
-        }
-        
         // TODO since LcsRowScan does not support residual ranges now
         // change the residual into RexNodes and evaluate them in FilterRel
         // after all rows are retrieved.
@@ -248,7 +241,7 @@ class LcsIndexAccessRule extends RelOptRule
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 false, false);
-            
+        
         transformCall(call, rowScan, extraFilter);
     }
 
@@ -365,49 +358,8 @@ class LcsIndexAccessRule extends RelOptRule
         int indexKeyLength = index.getIndexedFeature().size();
         boolean partialMatch = matchedPos < indexKeyLength;
 
-        // Create a type descriptor for the rows representing search
-        // keys along with their directives.  Note that we force
-        // the key type to nullable because we use null for the representation
-        // of infinity (rather than domain-specific junk).
-        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(origRowScan);
-        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
-        RelDataType directiveType =
-            typeFactory.createSqlType(
-                SqlTypeName.Char,
-                1);
-        
-        int keyRowLength = matchedPos * 2 + 2;
-        int keyRowMidPoint = keyRowLength / 2;
-        int lowerBoundKeyBase = 1;
-        int upperBoundKeyBase = keyRowMidPoint + 1;
-        
-        RelDataType[] dataTypes = new RelDataType[keyRowLength];
-        String[]      typeDescriptions = new String[keyRowLength];
-        
-        dataTypes[0] = directiveType;
-        dataTypes[keyRowMidPoint] = directiveType;
-        
-        typeDescriptions[0] = "lowerBoundDirective";
-        typeDescriptions[keyRowMidPoint] = "upperBoundDirective";
-        
-        for (int pos = 0; pos < matchedPos; pos ++) {
-            CwmColumn filterColumn = 
-                indexGuide.getIndexColumn(index, pos);
-        
-            RelDataType keyType =
-                typeFactory.createTypeWithNullability(
-                    typeFactory.createCwmElementType((FemAbstractColumn)filterColumn),
-                    true);
-            dataTypes[lowerBoundKeyBase + pos] = keyType;
-            dataTypes[upperBoundKeyBase + pos] = keyType;
-            
-            typeDescriptions[lowerBoundKeyBase + pos] = "lowerBoundKey";
-            typeDescriptions[upperBoundKeyBase + pos] = "upperBoundKey";
-            
-        }
-            
-        RelDataType keyRowType =
-            typeFactory.createStructType(dataTypes, typeDescriptions);
+        RelDataType keyRowType = 
+            getIndexInputType(indexGuide, origRowScan, index, matchedPos);
 
         RelNode sargRel;
         
@@ -447,6 +399,7 @@ class LcsIndexAccessRule extends RelOptRule
                 keyInput,
                 origRowScan.lcsTable,
                 index,
+                false,
                 null,
                 false,
                 false,
@@ -471,6 +424,60 @@ class LcsIndexAccessRule extends RelOptRule
         }
         
         return inputRel;
+    }
+    
+    /**
+     * Create a type descriptor for the rows representing search
+     * keys along with their directives.  Note that we force
+     * the key type to nullable because we use null for the representation
+     * of infinity (rather than domain-specific values).
+     */
+    static public RelDataType getIndexInputType(
+        LcsIndexGuide indexGuide, 
+        FennelRel rel, 
+        FemLocalIndex index, 
+        int matchedPos)
+    {
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
+        RelDataType directiveType =
+            typeFactory.createSqlType(
+                SqlTypeName.Char,
+                1);
+        
+        int keyRowLength = matchedPos * 2 + 2;
+        int keyRowMidPoint = keyRowLength / 2;
+        int lowerBoundKeyBase = 1;
+        int upperBoundKeyBase = keyRowMidPoint + 1;
+        
+        RelDataType[] dataTypes = new RelDataType[keyRowLength];
+        String[]      typeDescriptions = new String[keyRowLength];
+        
+        dataTypes[0] = directiveType;
+        dataTypes[keyRowMidPoint] = directiveType;
+        
+        typeDescriptions[0] = "lowerBoundDirective";
+        typeDescriptions[keyRowMidPoint] = "upperBoundDirective";
+        
+        for (int pos = 0; pos < matchedPos; pos ++) {
+            CwmColumn filterColumn = 
+                indexGuide.getIndexColumn(index, pos);
+        
+            RelDataType keyType =
+                typeFactory.createTypeWithNullability(
+                    typeFactory.createCwmElementType((FemAbstractColumn)filterColumn),
+                    true);
+            dataTypes[lowerBoundKeyBase + pos] = keyType;
+            dataTypes[upperBoundKeyBase + pos] = keyType;
+            
+            typeDescriptions[lowerBoundKeyBase + pos] = "lowerBoundKey";
+            typeDescriptions[upperBoundKeyBase + pos] = "upperBoundKey";
+            
+        }
+            
+        RelDataType keyRowType =
+            typeFactory.createStructType(dataTypes, typeDescriptions);
+        return keyRowType;
     }
 }
 

@@ -38,6 +38,7 @@ void LhxAggExecStream::prepare(
      * Force partitioning level. Only set in tests.
      */
     forcePartitionLevel = params.forcePartitionLevel;
+    enableSubPartStat   = params.enableSubPartStat;
 
     hashInfo.filterNull = false;
     hashInfo.removeDuplicate = false;
@@ -203,7 +204,6 @@ void LhxAggExecStream::open(bool restart)
      * The execute state machine operates at the plan level.
      */
     uint numInput = 1;
-    uint numChild = 3;
     LhxPlan *parentPlan = NULL;
     vector<SharedLhxPartition> partitionList;
 
@@ -213,13 +213,14 @@ void LhxAggExecStream::open(bool restart)
     partitionList.push_back(buildPart);
 
     rootPlan =  SharedLhxPlan(new LhxPlan());
-    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan);
+    rootPlan->init(partitionLevel, partitionList, parentPlan,
+        enableSubPartStat);
 
     /*
-     * Initialize recursive partitioning context.
+     * initialize recursive partitioning context.
      */
     isTopPartition = true;
-    partInfo.init(numInput, numChild, &hashInfo);
+    partInfo.init(numInput, &hashInfo);
 
     /*
      * Now starts at the first (root) plan.
@@ -277,7 +278,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * NOTE: This is a testing state. Always partition up to
                      * forcePartitionLevel.
                      */
-                    if (curPlan->partitionLevel < forcePartitionLevel ||
+                    if (curPlan->getPartitionLevel() < forcePartitionLevel ||
                         !hashTable.addTuple(inputTuple)) {
                         if (isTopPartition) {
                             partInfo.open(&hashTableReader,
@@ -379,6 +380,8 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  */
                 curPlan->createChildren(partInfo);
                 
+                FENNEL_TRACE(TRACE_FINE, curPlan->toString());
+
                 /*
                  * now recurse down the plan tree to get the first leaf plan.
                  */
@@ -393,7 +396,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  * Hash table needs to aggregate partial results using the
                  * correct agg computer interface.
                  */
-                hashTable.init(curPlan->partitionLevel, hashInfo,
+                hashTable.init(curPlan->getPartitionLevel(), hashInfo,
                                &partialAggComputers);
                 hashTableReader.init(&hashTable, hashInfo);
 
@@ -419,7 +422,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * Hash table needs to aggregate partial results using the
                      * correct agg computer interface.
                      */
-                    hashTable.init(curPlan->partitionLevel, hashInfo,
+                    hashTable.init(curPlan->getPartitionLevel(), hashInfo,
                                    &partialAggComputers);
                     hashTableReader.init(&hashTable, hashInfo);
                     bool status = hashTable.allocateResources();
