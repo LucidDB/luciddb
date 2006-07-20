@@ -22,11 +22,12 @@ package com.disruptivetech.farrago.calc;
 
 
 /**
- * A class that holds {@link CalcProgramBuilder.ExtInstrDef} and its sub classes
+ * A class that holds {@link CalcProgramBuilder.ExtInstrDef} and its
+ * sub-classes.
+ *
  * @author Wael Chatila
  * @since Jun 18, 2004
- * @version $
- * $Id$
+ * @version $Id$
  */
 public class ExtInstructionDefTable
 {
@@ -92,4 +93,16 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("strToUpperA", 2);
     public static final CalcProgramBuilder.ExtInstrDef pow =
         new CalcProgramBuilder.ExtInstrDef("POW", 3);
+    public static final CalcProgramBuilder.ExtInstrDef histogramInit =
+        new CalcProgramBuilder.ExtInstrDef("WinAggInit", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramAdd =
+        new CalcProgramBuilder.ExtInstrDef("WinAggAdd", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramDrop =
+        new CalcProgramBuilder.ExtInstrDef("WinAggDrop", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramGetMax =
+        new CalcProgramBuilder.ExtInstrDef("WinAggMax", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramGetMin =
+        new CalcProgramBuilder.ExtInstrDef("WinAggMin", 2);
 }
+
+// End ExtInstructionDefTable.java

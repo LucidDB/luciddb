@@ -462,6 +462,36 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
         new SqlAvgAggFunction(null);
 
     //-------------------------------------------------------------
+    // WINDOW Aggregate Functions
+    //-------------------------------------------------------------
+    /**
+     * <code>HISTORAM</code> aggregate function support. Used
+     * by window aggregate versions of MIN/MAX
+     */
+    public static final SqlAggFunction histogramAggFunction =
+        new SqlHistogramAggFunction(null);
+
+    /**
+     * <code>HISTOGRAM_MIN</code> window aggregate function.
+     */
+    public static final SqlFunction histogramMinFunction =
+        new SqlFunction("$HISTOGRAM_MIN", SqlKind.Function,
+            SqlTypeStrategies.rtiNullableFirstArgType,
+            null,
+            SqlTypeStrategies.otcNumericOrString,
+            SqlFunctionCategory.Numeric);
+
+    /**
+     * <code>HISTOGRAM_MAX</code> window aggregate function.
+     */
+    public static final SqlFunction histogramMaxFunction =
+        new SqlFunction("$HISTOGRAM_MAX", SqlKind.Function,
+            SqlTypeStrategies.rtiNullableFirstArgType,
+            null,
+            SqlTypeStrategies.otcNumericOrString,
+            SqlFunctionCategory.Numeric);
+
+    //-------------------------------------------------------------
     // WINDOW Rank Functions
     //-------------------------------------------------------------
     /**
@@ -750,7 +780,7 @@ public class SqlStdOperatorTable extends ReflectiveSqlOperatorTable
             SqlTypeStrategies.rtiNullableFirstArgType, null,
             SqlTypeStrategies.otcCharString,
             SqlFunctionCategory.String);
-
+    
     /**
      * Uses SqlOperatorTable.useDouble for its return type since we don't know
      * what the result type will be by just looking at the operand types.

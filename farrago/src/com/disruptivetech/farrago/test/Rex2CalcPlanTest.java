@@ -36,8 +36,10 @@ import org.eigenbase.oj.util.JavaRexBuilder;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.SqlOperator;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.validate.SqlValidatorUtil;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
@@ -45,6 +47,9 @@ import org.eigenbase.sql.parser.SqlParseException;
 import org.eigenbase.sql.parser.SqlParser;
 import org.eigenbase.sql2rel.SqlToRelConverter;
 import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.Util;
+import org.eigenbase.util.TestUtil;
+import org.eigenbase.test.DiffRepository;
 
 import java.io.PrintWriter;
 import java.io.Writer;
@@ -104,6 +109,11 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         return wrappedSuite(Rex2CalcPlanTest.class);
     }
 
+    protected DiffRepository getDiffRepos()
+    {
+        return DiffRepository.lookup(Rex2CalcPlanTest.class);
+    }
+
     //--- Helper Functions ------------------------------------------------
 
     /**
@@ -124,29 +134,9 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         boolean shortCircuit)
     {
         boolean doComments = true;
-        TestContext testContext = getTestContext();
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = new SqlParser(sql).parseQuery();
-        } catch (SqlParseException e) {
-            throw new AssertionFailedError(e.toString());
-        }
-        RelDataTypeFactory typeFactory =
-            testContext.stmt.getRelOptSchema().getTypeFactory();
-        final SqlValidator validator =
-            SqlValidatorUtil.newValidator(
-                SqlStdOperatorTable.instance(),
-                testContext.stmt,
-                typeFactory);
-        final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
-        final SqlToRelConverter converter =
-            new SqlToRelConverter(validator,
-                testContext.stmt.getRelOptSchema(), testContext.env,
-                testContext.stmt.getPlanner(),
-                testContext.stmt, rexBuilder);
-        RelNode rootRel = converter.convertQuery(sqlQuery, true, true);
-        assertTrue(rootRel != null);
+        RelNode rootRel = parseAndConvert(sql);
 
+        RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
         ProjectRel project = (ProjectRel) rootRel;
         FilterRel filter = (FilterRel) project.getInput(0);
 
@@ -212,6 +202,105 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         }
     }
 
+    /**
+     * This method is modeled after the check() method above.  It performs the
+     * same function but targeted to the needs of checking Aggregation functions
+     *
+     * Compiles a SQL statement, and compares the generated calc program with
+     * the contents of a reference file with the same name as the current test.
+     *
+     * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
+     *   WHERE</code>".
+     * @param shortCircuit Generate short-circuit logic to optimize logical
+     *   operations such as <code>AND</code> and <code>OR</OR> conditions.
+     * @param expectedInit String holds the section name in the ref file to
+     *   compare output against for the init function.
+     * @param expectedAdd String holds the section name in the ref file to
+     *   compare output against for the add function.
+     * @param expectedDrop String holds the section name in the ref file to
+     *   compare output against for the drop function.
+     */
+    private void checkAgg(
+        String sql,
+        boolean shortCircuit,
+        String expectedInit,
+        String expectedAdd,
+        String expectedDrop)
+    {
+        boolean doComments = true;
+        RelNode rootRel = parseAndConvert(sql);
+
+        RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
+        ProjectRel project = (ProjectRel) rootRel;
+
+        AggregateRel aggregate = (AggregateRel) project.getInput(0);
+
+        // Create a program builder, and add the project expressions.
+        RelDataType inputRowType = aggregate.getInput(0).getRowType();
+        final RexProgramBuilder programBuilder =
+            new RexProgramBuilder(inputRowType, rexBuilder);
+        for (int i = 0; i < aggregate.getAggCalls().length; i++) {
+            AggregateRelBase.Call aggCall = aggregate.getAggCalls()[i];
+            RexNode[] exprs = new RexNode[aggCall.getArgs().length];
+            for (int j = 0; j < aggCall.getArgs().length; j++) {
+                int argOperand = aggCall.getArgs()[j];
+                exprs[j] = rexBuilder.makeInputRef(
+                    inputRowType.getFields()[argOperand].getType(),
+                    argOperand);
+            }
+            RexNode call = rexBuilder.makeCall(
+                (SqlOperator) aggCall.getAggregation(),
+                exprs);
+            programBuilder.addProject(
+                call, aggregate.getRowType().getFields()[i].getName());
+        }
+
+        final RexProgram program = programBuilder.getProgram();
+
+        RexToCalcTranslator translator =
+            new RexToCalcTranslator(rexBuilder, aggregate);
+        translator.setGenerateShortCircuit(shortCircuit);
+        translator.setGenerateComments(doComments);
+        String[] programs = new String[3];
+        translator.getAggProgram(program, programs);
+
+        DiffRepository diffRepos = getDiffRepos();
+        diffRepos.assertEquals("expectedInit", expectedInit,
+            TestUtil.NL + programs[0]);
+        diffRepos.assertEquals("expectedAdd", expectedAdd,  
+            TestUtil.NL + programs[1]);
+        diffRepos.assertEquals("expectedDrop", expectedDrop,
+            TestUtil.NL + programs[2]);
+    }
+
+    private RelNode parseAndConvert(String sql)
+    {
+        TestContext testContext = getTestContext();
+        final SqlNode sqlQuery;
+        try {
+            sqlQuery = new SqlParser(sql).parseQuery();
+        } catch (SqlParseException e) {
+            throw new AssertionFailedError(e.toString());
+        }
+        RelDataTypeFactory typeFactory =
+            testContext.stmt.getRelOptSchema().getTypeFactory();
+        final SqlValidator validator =
+            SqlValidatorUtil.newValidator(
+                SqlStdOperatorTable.instance(),
+                testContext.stmt,
+                typeFactory);
+        final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
+        final SqlToRelConverter converter =
+            new SqlToRelConverter(validator,
+                testContext.stmt.getRelOptSchema(), testContext.env,
+                testContext.stmt.getPlanner(),
+                testContext.stmt, rexBuilder);
+        RelNode rootRel = converter.convertQuery(sqlQuery, true, true);
+        assertTrue(rootRel != null);
+        return rootRel;
+    }
+
+
     public static TestContext getTestContext()
     {
         if (testContext == null) {
@@ -219,6 +308,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         }
         return testContext;
     }
+
 
     //~ Inner Classes ---------------------------------------------------------
 
@@ -284,6 +374,40 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     public void testSimplePassThroughFilter() {
         String sql="SELECT empno,empno FROM emps WHERE empno > 10";
         check(sql, false,false);
+    }
+
+    public void testAggCount()
+    {
+        String sql = "SELECT COUNT(empno) FROM emps";
+        checkAgg(sql, false, "${expectedInit}", "${expectedAdd}", "${expectedDrop}");
+    }
+
+    public void testAggSum()
+    {
+        checkAgg("SELECT SUM(empno+5) FROM emps",
+            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
+    }
+
+    public void _testAggSumExp()
+    {
+        checkAgg(
+            "SELECT empno, SUM(empno+deptno), COUNT(empno) "+
+            "FROM emps "+
+            "GROUP BY empno,deptno",
+            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
+    }
+
+    public void _testAggMin()
+    {
+        checkAgg("SELECT MIN(empno) FROM emps ",
+            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
+    }
+
+    public void _testWindowedMinMax()
+    {
+        checkAgg("SELECT MIN(empno) OVER last3, MAX(empno) OVER last3 " +
+            "FROM emps WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
     }
 
     public void testSimplyEqualsFilter()

@@ -452,6 +452,15 @@ public static final SqlSingleOperandTypeChecker
             });
 
     public static final SqlSingleOperandTypeChecker
+        otcNumericOrString =
+        new CompositeOperandTypeChecker(
+            CompositeOperandTypeChecker.OR,
+            new SqlOperandTypeChecker[] {
+                  otcNumeric,
+                  otcString
+            });
+
+    public static final SqlSingleOperandTypeChecker
         otcRecordMultiset =
         new SqlSingleOperandTypeChecker()
         {
@@ -697,6 +706,13 @@ public static final SqlSingleOperandTypeChecker
     public static final SqlReturnTypeInference
         rtiVarchar2000 =
         new ExplicitReturnTypeInference(SqlTypeName.Varchar, 2000);
+    
+    /***
+     * Type-inference strategy for Histogram agg support
+     */ 
+    public static final SqlReturnTypeInference
+        rtiHistogram =
+        new ExplicitReturnTypeInference(SqlTypeName.Varbinary, 4);
 
     /**
      * Type-inference strategy which always returns "CURSOR".
