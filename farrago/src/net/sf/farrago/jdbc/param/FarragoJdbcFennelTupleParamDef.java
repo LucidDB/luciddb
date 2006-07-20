@@ -27,6 +27,7 @@ import net.sf.farrago.fennel.tuple.FennelTupleDatum;
 import java.sql.*;
 import java.math.BigInteger;
 import java.math.BigDecimal;
+import java.util.Calendar;
 
 import org.eigenbase.util14.NumberUtil;
 import org.eigenbase.util14.ConversionUtil;
@@ -41,14 +42,19 @@ import org.eigenbase.util14.ConversionUtil;
  */
 public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
 
+    /* ParamDef (non fennel version) used to override scrubValue */
+    private FarragoJdbcParamDef defaultParamDef;
+
     protected Number min;
     protected Number max;
 
     public FarragoJdbcFennelTupleParamDef(
         String paramName,
-        FarragoParamFieldMetaData param)
+        FarragoParamFieldMetaData param,
+        FarragoJdbcParamDef paramDef)
     {
         super(paramName, param);
+        defaultParamDef = paramDef;
 
         switch (paramMetaData.type) {
             case Types.TINYINT:
@@ -90,6 +96,24 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
 
     }
 
+    public Object scrubValue(Object obj)
+    {
+        if (defaultParamDef != null) {
+            return defaultParamDef.scrubValue(obj);
+        } else {
+            return super.scrubValue(obj);
+        }
+    }
+
+    public Object scrubValue(Object obj, Calendar cal)
+    {
+        if (defaultParamDef != null) {
+            return defaultParamDef.scrubValue(obj, cal);
+        } else {
+            return super.scrubValue(obj, cal);
+        }
+    }
+
     public void setNull(FennelTupleDatum datum)
     {
         checkNullable();
@@ -123,7 +147,8 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 break;
             case Types.VARCHAR:
             case Types.CHAR:
-                setString(datum, b? "TRUE":"FALSE", Boolean.class);
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, b? "true":"false", Boolean.class);
                 break;
             default:
                 throw newInvalidType(Boolean.class);
@@ -180,7 +205,8 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 break;
             case Types.VARCHAR:
             case Types.CHAR:
-                setString(datum, Long.toString(val), clazz);
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, Long.toString(val), clazz);
                 break;
             default:
                 throw newInvalidType(clazz);
@@ -189,17 +215,23 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
 
     public void setFloat(FennelTupleDatum datum, float val)
     {
-        setDouble(datum, (double) val, Float.class);
+        setDouble(datum, (double) val, true);
     }
 
 
     public void setDouble(FennelTupleDatum datum, double val)
     {
-        setDouble(datum, (double) val, Double.class);
+        setDouble(datum, (double) val, false);
     }
 
-    private void setDouble(FennelTupleDatum datum, double val, Class clazz)
+    private void setDouble(FennelTupleDatum datum, double val, boolean isFloat)
     {
+        Class clazz;
+        if (isFloat) {
+            clazz = Float.class;
+        } else {
+            clazz = Double.class;
+        }
         switch (paramMetaData.type) {
             case Types.TINYINT:
             case Types.SMALLINT:
@@ -231,7 +263,13 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 break;
             case Types.VARCHAR:
             case Types.CHAR:
-                setString(datum, Double.toString(val), clazz);
+                if (isFloat) {
+                    setString(paramMetaData.type == Types.CHAR,
+                        datum, Float.toString((float) val), clazz);
+                } else {
+                    setString(paramMetaData.type == Types.CHAR,
+                        datum, Double.toString(val), clazz);
+                }
                 break;
             default:
                 throw newInvalidType(clazz);
@@ -288,16 +326,25 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 break;
             case Types.VARCHAR:
             case Types.CHAR:
-                setString(datum, val.toString(),  BigDecimal.class);
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, val.toString(),  BigDecimal.class);
                 break;
             default:
                 throw newInvalidType(BigDecimal.class);
         }
     }
 
-    private void setString(FennelTupleDatum datum, String val, Class clazz)
+    private void setString(boolean pad, FennelTupleDatum datum, String val, Class clazz)
     {
         if (datum.getCapacity() >= val.length()) {
+            if (pad && datum.getCapacity() > val.length()) {
+                StringBuffer buf = new StringBuffer(datum.getCapacity());
+                buf.append(val);
+                for (int i = val.length(); i < datum.getCapacity(); i++) {
+                    buf.append(' ');
+                }
+                val = buf.toString();
+            }
             datum.setString(val);
         } else {
             throw newValueTooLong(val);
@@ -338,14 +385,20 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
             case Types.BIT:
             case Types.BOOLEAN:
                 try {
-                    Boolean boolVal = ConversionUtil.toBoolean(val);
+                    Boolean boolVal = ConversionUtil.toBoolean(val.trim());
                     if (boolVal == null) {
                         setNull(datum);
                     } else {
                         datum.setBoolean(boolVal.booleanValue());
                     }
                 } catch (Throwable ex) {
-                    throw newInvalidFormat(val);
+                    // Convert string to number, return false if zero
+                    try {
+                        double d = Double.parseDouble(val.trim());
+                        datum.setBoolean(d != 0);
+                    } catch (NumberFormatException e) {
+                        throw newInvalidFormat(val);
+                    }
                 }
                 break;
             case Types.REAL:
@@ -369,7 +422,29 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
                 break;
             case Types.VARCHAR:
             case Types.CHAR:
-                setString(datum, val, val.getClass());
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, val, val.getClass());
+                break;
+            case Types.DATE:
+                try {
+                    datum.setLong(Date.valueOf(val.trim()).getTime());
+                } catch (IllegalArgumentException e) {
+                    throw newInvalidFormat(val);
+                }
+                break;
+            case Types.TIME:
+                try {
+                    datum.setLong(Time.valueOf(val.trim()).getTime());
+                } catch (IllegalArgumentException e) {
+                    throw newInvalidFormat(val);
+                }
+                break;
+            case Types.TIMESTAMP:
+                try {
+                    datum.setLong(Timestamp.valueOf(val.trim()).getTime());
+                } catch (IllegalArgumentException e) {
+                    throw newInvalidFormat(val);
+                }
                 break;
             default:
                 throw newInvalidType(val);
@@ -385,7 +460,8 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
         switch (paramMetaData.type) {
             case Types.CHAR:
             case Types.VARCHAR:
-                setString(datum, val.toString(), val.getClass());
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, val.toString(), val.getClass());
                 break;
             case Types.DATE:
             case Types.TIMESTAMP:
@@ -405,10 +481,10 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
         switch (paramMetaData.type) {
             case Types.CHAR:
             case Types.VARCHAR:
-                setString(datum, val.toString(), val.getClass());
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, val.toString(), val.getClass());
                 break;
             case Types.TIME:
-            case Types.TIMESTAMP:
                 datum.setLong(val.getTime());
                 break;
             default:
@@ -425,7 +501,8 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
         switch (paramMetaData.type) {
             case Types.CHAR:
             case Types.VARCHAR:
-                setString(datum, val.toString(), val.getClass());
+                setString(paramMetaData.type == Types.CHAR,
+                    datum, val.toString(), val.getClass());
                 break;
             case Types.TIME:
             case Types.DATE:
@@ -471,8 +548,10 @@ public class FarragoJdbcFennelTupleParamDef extends FarragoJdbcParamDef {
             setBigDecimal(datum, (BigDecimal) val);
         } else if (val instanceof Number) {
             Number n = (Number) val;
-            if (val instanceof Float || val instanceof Double) {
-                setDouble(datum, n.doubleValue(), val.getClass());
+            if (val instanceof Float) {
+                setDouble(datum, n.doubleValue(), false);
+            } else if (val instanceof Double) {
+                setDouble(datum, n.doubleValue(), true);
             } else if (val instanceof Byte || val instanceof Short ||
                 val instanceof Integer || val instanceof Long) {
                 setLong(datum, n.longValue(), val.getClass());

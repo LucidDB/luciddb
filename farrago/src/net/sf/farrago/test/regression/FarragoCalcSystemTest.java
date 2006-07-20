@@ -144,7 +144,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         exclude.add(SqlStdOperatorTable.reinterpretOperator);
         exclude.add(SqlStdOperatorTable.sliceOp);
         exclude.add(SqlStdOperatorTable.nextValueFunc);
-        
+        exclude.add(SqlStdOperatorTable.histogramMaxFunction);
+        exclude.add(SqlStdOperatorTable.histogramMinFunction);
+
         // Eventually need to include these when cast is working
         exclude.add(SqlStdOperatorTable.overlapsOperator);
         exclude.add(SqlStdOperatorTable.initcapFunc);

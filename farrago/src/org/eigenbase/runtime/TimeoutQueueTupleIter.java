@@ -25,26 +25,52 @@ package org.eigenbase.runtime;
 import org.eigenbase.util.Util;
 
 /**
- * Adapter which allows you to iterate over an {@link TupleIter} with a timeout.
+ * Adapter which allows you to iterate over an {@link TupleIter} with
+ * a timeout.
  *
- * <p>The interface is similar to an {@link TupleIter}: the {@link #fetchNext}
- * method retrieves rows and indicates when there are no more rows. It has a 
- * timeout parameter, and throws a {@link QueueIterator.TimeoutException} if 
- * the timeout is exceeded. There is also a {@link #closeAllocation} method, 
- * which you must call.
+ * <p>The interface is similar to an {@link TupleIter}: the
+ * {@link #fetchNext()} method retrieves rows and indicates when there
+ * are no more rows. It has a timeout parameter, and throws a 
+ * {@link QueueIterator.TimeoutException} if the timeout is
+ * exceeded. There is also a {@link #closeAllocation} method, which
+ * you must call.
  *
- * <p>The class is implemented using a thread which reads from the underlying
- * TupleIter and places the results into a {@link QueueIterator}. If a method
- * call times out, the underlying thread will wait for the result of the call
- * until it completes.
+ * <p>The class is implemented using a thread which reads from the
+ * underlying TupleIter and places the results into a {@link
+ * QueueIterator}. If a method call times out, the underlying thread
+ * will wait for the result of the call until it completes.
  *
- * <p>There is no facility to cancel the fetch from the underlying iterator.
+ * <p>There is no facility to cancel the fetch from the underlying
+ * iterator.
+ *
+ * <p><b>Reader/writer synchronization and the {@link #FENCEPOST}.</b>
+ * The thread within this class that reads row objects from the
+ * underlying TupleIter(s) must be careful not to read a subsequent
+ * row until the reading thread (e.g., the driver) is finished with
+ * the row.  This is because the same row object may be re-used for
+ * subsequent rows.  To achieve this, this class's thread always
+ * inserts {@link #FENCEPOST} after every row object and the
+ * {@link #fetchNext()} method detects and discards the fencepost.
+ * The nature of the underlying {@link QueueIterator}'s
+ * SynchronousQueue prevents the writing thread from completing the
+ * put operation of the fencepost until the reading thread is prepared
+ * to read the value.  In this way we guarantee that the row object is
+ * not modified until the reader has requested the next row object, at
+ * which point we assume it's safe to modify the row object.
  *
  * @author Stephan Zuecher (based on tleung's TimeoutQueueIterator)
  * @version $Id$
  */
 public class TimeoutQueueTupleIter
 {
+    //~ Static fields/initializers---------------------------------------------
+
+    /** 
+     * Prevents reader's row object from being clobbered by the next row. 
+     * See class description for how this works.
+     */
+    private static final Fencepost FENCEPOST = new Fencepost();
+
     //~ Instance fields -------------------------------------------------------
 
     private final QueueIterator queueIterator;
@@ -62,13 +88,27 @@ public class TimeoutQueueTupleIter
     //~ Methods ---------------------------------------------------------------
 
     /**
-     * 
+     * Retrieve the next row from the underlying TupleIter, with the
+     * given timeout, in milliseconds.
+     *
+     * <p>See class description re: {@link #FENCEPOST}.
+     *
+     * @param timeoutMillis number of milliseconds to wait for the next
+     *                      row; less than or equal to 0 means do not wait
      */
     public Object fetchNext(long timeoutMillis) 
         throws QueueIterator.TimeoutException
     {
+        // REVIEW: SWZ: 7/13/2006: A particularly timeout particularly
+        // close to the amount of time it takes to fetch a row may
+        // cause problems due to the fencepost objects.  Perhaps we
+        // should reset the timeout when we find a fencepost object?
+        // Then again, fetch time is in no way guaranteed constant, so
+        // the timeout is probably to close for comfort even if we
+        // reset.
+
         long endTime = System.currentTimeMillis() + timeoutMillis;
-        if (queueIterator.hasNext(timeoutMillis)) {
+        while (queueIterator.hasNext(timeoutMillis)) {
             long remainingTimeout =
                 endTime - System.currentTimeMillis();
             if (remainingTimeout <= 0) {
@@ -76,10 +116,14 @@ public class TimeoutQueueTupleIter
                 throw new QueueIterator.TimeoutException();
             }
             
-            return queueIterator.next(remainingTimeout);
-        } else {
-            return TupleIter.NoDataReason.END_OF_DATA;
-        }
+            Object result = queueIterator.next(remainingTimeout);
+
+            if (result != FENCEPOST) {
+                return result;
+            }
+        } 
+
+        return TupleIter.NoDataReason.END_OF_DATA;
     }
     
     /**
@@ -128,6 +172,8 @@ public class TimeoutQueueTupleIter
      * Reads objects from the producer and writes them into the QueueIterator.
      * This is the method called by the thread when you call {@link #start}.
      * Never throws an exception.
+     *
+     * <p>See class description re: {@link #FENCEPOST}.
      */
     private void doWork()
     {
@@ -142,7 +188,9 @@ public class TimeoutQueueTupleIter
                     throw new RuntimeException();
                 }
                 
+                // Insert the object and then a fencepost.
                 queueIterator.put(next);
+                queueIterator.put(FENCEPOST);
             }
             
             // Signal that the stream ended without error.
@@ -150,6 +198,16 @@ public class TimeoutQueueTupleIter
         } catch (Throwable e) {
             // Signal that the stream ended with an error.
             queueIterator.done(e);
+        }
+    }
+    
+    //~ Inner classes --------------------------------------------------------
+    
+    private static class Fencepost
+    {
+        public String toString()
+        {
+            return "FENCEPOST_DUMMY";
         }
     }
 }
