@@ -57,6 +57,10 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
      * Force partitioning level. Only set in tests.
      */
     uint forcePartitionLevel;
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
 };
 
 /**
@@ -156,6 +160,11 @@ class LhxAggExecStream : public ConduitExecStream
      * Force partitioning level. Only set in tests.
      */
     uint forcePartitionLevel;
+
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
 
     /**
      * implement ExecStream

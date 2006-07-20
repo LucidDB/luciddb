@@ -39,6 +39,8 @@ select * from table( get_column_info(
 cursor(select * from exp_server.BCP.products)));
 select * from table( get_column_info(
 cursor(select * from exp_server.BCP.sales)));
+select * from table( get_column_info(
+cursor(select * from exp_server.BCP.empview)));
 
 select count(*) from exp_server.BCP."bench100";
 select count(*) from exp_server.BCP."types";
@@ -48,6 +50,7 @@ select count(*) from exp_server.BCP.emp;
 select count(*) from exp_server.BCP.location;
 select count(*) from exp_server.BCP.products;
 select count(*) from exp_server.BCP.sales;
+select count(*) from exp_server.BCP.empview;
 
 -- check against old schema
 select count(*) from 
@@ -129,10 +132,7 @@ import foreign schema BCP
 from server exp_server
 into tempudp;
 
--- check metadata for imported tables/columns
---select * from sys_root.dba_columns
---where schema_name = 'TEMPUDP'
---order by table_name, column_name;
+-- check metadata for imported tables
 select table_name from sys_root.dba_tables
 where schema_name = 'TEMPUDP'
 order by table_name;
@@ -169,10 +169,10 @@ import foreign schema BCP
 from server exp_server2
 into tempudp2;
 
--- check metadata for imported tables/columns
--- select * from sys_root.dba_columns
--- where schema_name = 'TEMPUDP2'
--- order by table_name, column_name;
+-- check metadata for imported tables
+select table_name from sys_root.dba_tables
+where schema_name = 'TEMPUDP2'
+order by table_name;
 
 select * from table( get_column_info(
 cursor(select * from tempudp2.location)));
@@ -211,10 +211,7 @@ import foreign schema BCP
 from server exp_server2
 into tempudp2;
 
--- check metadata for imported tables/columns
--- select * from sys_root.dba_columns
--- where schema_name = 'TEMPUDP2'
--- order by table_name, column_name;
+-- check metadata for imported tables
 select table_name from sys_root.dba_tables
 where schema_name = 'TEMPUDP2'
 order by table_name;

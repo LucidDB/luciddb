@@ -86,6 +86,9 @@ create table udptest.CUSTOMERS(
 insert into LOCATION select * from ff_server."BCP".LOCATION;
 insert into CUSTOMERS select * from ff_server."BCP".CUSTOMERS;
 
+-- create view
+create view empview as select * from udptest.emp;
+
 -- check tables
 select * from table( get_column_info(
 cursor(select * from udptest."bench100")));
@@ -103,6 +106,8 @@ select * from table( get_column_info(
 cursor(select * from udptest.products)));
 select * from table( get_column_info(
 cursor(select * from udptest.sales)));
+select * from table( get_column_info(
+cursor(select * from udptest.empview)));
 
 select count(*) from udptest."bench100";
 select count(*) from udptest."types";
@@ -112,6 +117,7 @@ select count(*) from udptest.emp;
 select count(*) from udptest.location;
 select count(*) from udptest.products;
 select count(*) from udptest.sales;
+select count(*) from udptest.empview;
 
 -- create index
 create index CUSTOMERS_NAME on CUSTOMERS(LNAME, FNAME);

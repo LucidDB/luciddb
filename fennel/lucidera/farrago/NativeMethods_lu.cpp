@@ -34,6 +34,8 @@
 #include "fennel/lucidera/bitmap/LbmIntersectExecStream.h"
 #include "fennel/lucidera/bitmap/LbmMinusExecStream.h"
 #include "fennel/lucidera/bitmap/LbmBitOpExecStream.h"
+#include "fennel/lucidera/bitmap/LbmNormalizerExecStream.h"
+#include "fennel/lucidera/bitmap/LbmSortedAggExecStream.h"
 #include "fennel/lucidera/hashexe/LhxJoinExecStream.h"
 #include "fennel/lucidera/hashexe/LhxAggExecStream.h"
 #include "fennel/db/Database.h"
@@ -323,6 +325,8 @@ class ExecStreamSubFactory_lu
          * Set forcePartitionLevel to 0 to turn off force partitioning.
          */
         params.forcePartitionLevel = 0;
+        params.enableJoinFilter    = true;
+        params.enableSubPartStat   = true;
 
         CmdInterpreter::readTupleProjection(
             params.leftKeyProj, streamDef.getLeftKeyProj());
@@ -366,7 +370,36 @@ class ExecStreamSubFactory_lu
          */
         params.forcePartitionLevel = 0;
 
+        /*
+         * NOTE:
+         * Hash aggregation partitions partially aggregated results to disk.
+         * The stat currently keeps track of the tuple count before
+         * aggregation, so it is not very accurate. Disable sub partition stats
+         * for now.
+         */
+        params.enableSubPartStat   = false;
+
         pEmbryo->init(new LhxAggExecStream(), params);
+    }
+
+    virtual void visit(ProxyLbmNormalizerStreamDef &streamDef)
+    {
+        LbmNormalizerExecStreamParams params;
+        pExecStreamFactory->readTupleStreamParams(params, streamDef);
+        TupleProjection keyProj;
+        for (int i = 0; i <  params.outputTupleDesc.size(); i++) {
+            keyProj.push_back(i);
+        }
+        params.keyProj = keyProj;
+
+        pEmbryo->init(new LbmNormalizerExecStream(), params);
+    }
+
+    virtual void visit(ProxyLbmSortedAggStreamDef &streamDef)
+    {
+        LbmSortedAggExecStreamParams params;
+        pExecStreamFactory->readAggStreamParams(params, streamDef);
+        pEmbryo->init(new LbmSortedAggExecStream(), params);
     }
 
     // implement JniProxyVisitor

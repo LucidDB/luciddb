@@ -36,9 +36,11 @@ using namespace fennel;
 
 class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
 {
-    void testSequentialImpl(uint numRows, uint forcePartitionLevel);
+    void testSequentialImpl(uint numRows, uint forcePartitionLevel,
+        bool enableJoinFilter, bool enableSubPartStat);
     void testDupImpl(uint numRows, uint cndKeyLeft, uint cndKeyRight,
-        uint forcePartitionLevel, bool needSort, bool fakeInterrupt);
+        uint forcePartitionLevel, bool enableJoinFilter,bool enableSubPartStat,
+        bool needSort, bool fakeInterrupt);
 
     void testImpl(
         uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
@@ -47,19 +49,27 @@ class LhxJoinExecStreamTest : public ExecStreamUnitTestBase
         SharedMockProducerExecStreamGenerator pLeftGenerator,
         SharedMockProducerExecStreamGenerator pRightGenerator,
         CompositeExecStreamGenerator &verifier,
-        uint forcePartitionLevel, bool needSort, bool fakeInterrupt);
+        uint forcePartitionLevel, bool enableJoinFilter,bool enableSubPartStat,
+        bool needSort, bool fakeInterrupt);
     
 public:
     explicit LhxJoinExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequentialPartition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testSequentialPartitionFilterStat);
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1Partition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup1PartitionFilterStat);
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2Partition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup2PartitionFilterStat);
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstPartition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testConstPartitionFilterStat);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
     }
     
@@ -69,6 +79,9 @@ public:
     void testSequential();
 
     void testSequentialPartition();
+    void testSequentialPartitionFilter();
+    void testSequentialPartitionStat();
+    void testSequentialPartitionFilterStat();
 
     /*
      * Match these two sets:
@@ -80,6 +93,9 @@ public:
     void testDup1();
 
     void testDup1Partition();
+    void testDup1PartitionFilter();
+    void testDup1PartitionStat();
+    void testDup1PartitionFilterStat();
 
     /*
      * Match these two sets:
@@ -91,6 +107,9 @@ public:
     void testDup2();
 
     void testDup2Partition();
+    void testDup2PartitionFilter();
+    void testDup2PartitionStat();
+    void testDup2PartitionFilterStat();
 
     /*
      * Match these two sets:
@@ -101,47 +120,104 @@ public:
      */
     void testConst();
     void testConstPartition();
+    void testConstPartitionStat();
+    void testConstPartitionFilterStat();
     void testConstCleanup();
 };
 
 void LhxJoinExecStreamTest::testSequential()
 {
-    testSequentialImpl(1000, 0);
+    testSequentialImpl(1000, 0, true, true);
 }
 
 void LhxJoinExecStreamTest::testSequentialPartition()
 {
-    testSequentialImpl(1000, 2);
+    testSequentialImpl(1000, 2, false, false);
+}
+
+void LhxJoinExecStreamTest::testSequentialPartitionFilter()
+{
+    testSequentialImpl(1000, 2, true, false);
+}
+
+void LhxJoinExecStreamTest::testSequentialPartitionStat()
+{
+    testSequentialImpl(1000, 2, false, true);
+}
+
+void LhxJoinExecStreamTest::testSequentialPartitionFilterStat()
+{
+    testSequentialImpl(1000, 2, true, true);
 }
 
 void  LhxJoinExecStreamTest::testDup1()
 {
-    testDupImpl(960, 16, 60, 0, false, false);
+    testDupImpl(960, 16, 60, 0, false, false, false, false);
 }
 
 void  LhxJoinExecStreamTest::testDup1Partition()
 {
-    testDupImpl(960, 16, 60, 2, true, false);
+    testDupImpl(960, 16, 60, 2, false, false, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup1PartitionFilter()
+{
+    testDupImpl(960, 16, 60, 2, true, false, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup1PartitionStat()
+{
+    testDupImpl(960, 16, 60, 2, false, true, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup1PartitionFilterStat()
+{
+    testDupImpl(960, 16, 60, 2, true, true, true, false);
 }
 
 void  LhxJoinExecStreamTest::testDup2()
 {
-    testDupImpl(960, 60, 16, 0, false, false);
+    testDupImpl(960, 60, 16, 0, false, false, false, false);
 }
 
 void  LhxJoinExecStreamTest::testDup2Partition()
 {
-    testDupImpl(960, 60, 16, 2, true, false);
+    testDupImpl(960, 60, 16, 2, false, false, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup2PartitionFilter()
+{
+    testDupImpl(960, 60, 16, 2, true, false, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup2PartitionStat()
+{
+    testDupImpl(960, 60, 16, 2, false, true, true, false);
+}
+
+void  LhxJoinExecStreamTest::testDup2PartitionFilterStat()
+{
+    testDupImpl(960, 60, 16, 2, true, true, true, false);
 }
 
 void  LhxJoinExecStreamTest::testConst()
 {
-    testDupImpl(960,  1, 60, 0, false, false);
+    testDupImpl(960,  1, 60, 0, false, false, false, false);
 }
 
 void  LhxJoinExecStreamTest::testConstPartition()
 {
-    testDupImpl(960,  1, 60, 2, false, false);
+    testDupImpl(960,  1, 60, 2, false, false, false, false);
+}
+
+void  LhxJoinExecStreamTest::testConstPartitionStat()
+{
+    testDupImpl(960,  1, 60, 2, false, true, false, false);
+}
+
+void  LhxJoinExecStreamTest::testConstPartitionFilterStat()
+{
+    testDupImpl(960,  1, 60, 2, true, true, false, false);
 }
 
 void  LhxJoinExecStreamTest::testConstCleanup()
@@ -149,12 +225,14 @@ void  LhxJoinExecStreamTest::testConstCleanup()
     /*
      * Fake interrupt to exercise temp seg clean up code.
      */
-    testDupImpl(960,  1, 60, 2, false, true);
+    testDupImpl(960,  1, 60, 2, false, false, false, true);
 }
 
 void LhxJoinExecStreamTest::testSequentialImpl(
     uint numRows,
-    uint forcePartitionLevel)
+    uint forcePartitionLevel,
+    bool enableJoinFilter,
+    bool enableSubPartStat)
 {
     uint numColsLeft;
     uint numColsRight;
@@ -221,12 +299,13 @@ void LhxJoinExecStreamTest::testSequentialImpl(
 
     testImpl(numRows, keyCount, cndKeys, numRows, inputDesc, outputDesc,
         outputProj, pLeftGenerator, pRightGenerator, verifier,
-        forcePartitionLevel, needSort, fakeInterrupt);
+        forcePartitionLevel, enableJoinFilter, enableSubPartStat,
+        needSort, fakeInterrupt);
 }
 
 void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
-    uint cndKeyRight, uint forcePartitionLevel, bool needSort,
-    bool fakeInterrupt)
+    uint cndKeyRight, uint forcePartitionLevel, bool enableJoinFilter,
+    bool enableSubPartStat, bool needSort, bool fakeInterrupt)
 {
     assert (!fakeInterrupt || !needSort);
 
@@ -293,7 +372,8 @@ void LhxJoinExecStreamTest::testDupImpl(uint numRows, uint cndKeyLeft,
 
     testImpl(numRows, keyCount, cndKeys, numResRows, inputDesc, outputDesc,
         outputProj, pLeftGenerator, pRightGenerator, verifier,
-        forcePartitionLevel, needSort, fakeInterrupt);
+        forcePartitionLevel, enableJoinFilter, enableSubPartStat, needSort,
+        fakeInterrupt);
 }
 
 void LhxJoinExecStreamTest::testImpl(
@@ -303,7 +383,8 @@ void LhxJoinExecStreamTest::testImpl(
     SharedMockProducerExecStreamGenerator pLeftGenerator,
     SharedMockProducerExecStreamGenerator pRightGenerator,
     CompositeExecStreamGenerator &verifier,
-    uint forcePartitionLevel, bool needSort, bool fakeInterrupt)
+    uint forcePartitionLevel, bool enableJoinFilter, bool enableSubPartStat,
+    bool needSort, bool fakeInterrupt)
 {
     TupleProjection leftKeyProj;
     TupleProjection rightKeyProj;
@@ -344,6 +425,8 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.setopDistinct = false;
 
     joinParams.forcePartitionLevel = forcePartitionLevel;
+    joinParams.enableJoinFilter = enableJoinFilter;
+    joinParams.enableSubPartStat = enableSubPartStat;
 
     joinParams.outputProj = outputProj;
     joinParams.cndKeys = cndKeys;

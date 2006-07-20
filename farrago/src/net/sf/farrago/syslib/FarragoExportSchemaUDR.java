@@ -26,6 +26,10 @@ import java.util.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+
+import net.sf.farrago.resource.FarragoResource;
+import org.eigenbase.util.EigenbaseException;
 
 /**
  * FarragoExportSchemaUDR provides system procedures to export tables from
@@ -39,6 +43,11 @@ public abstract class FarragoExportSchemaUDR
     private static final String QUOTE = "\"";
     private static final String TAB = "\t";
     private static final String NEWLINE = "\r\n";
+    private static final String[] TABLE_TYPES = { "TABLE", 
+                                                  "FOREIGN TABLE",
+                                                  "VIEW" };
+
+    private static final String LOGFILE_PREFIX = "Export_";
 
     /**
      * Exports tables within a schema to CSV/BCP files
@@ -67,77 +76,116 @@ public abstract class FarragoExportSchemaUDR
         boolean with_bcp)
         throws SQLException
     {
-        ResultSet rs;
+        ResultSet rs = null;
         HashSet<String> tableNames = new HashSet<String>();
         HashSet<String> tableList = null;
 
         Connection conn = 
             DriverManager.getConnection("jdbc:default:connection");
 
-        // query db for the table names
-        if ((table_list != null) && (table_pattern != null)) {
-            throw new SQLException(
-                "At most one of table_list/table_pattern can be specified"); 
-        } else if ((table_list == null) && (table_pattern != null)) {
-            // use table_pattern to retrieve table names
-            rs = conn.getMetaData().getTables(
-                catalog, schema, table_pattern, null);
+        try {
+            // get default catalog if catalog isn't set
+            if (catalog == null) {
+                catalog = conn.getCatalog();
+            }
 
-            // filter out the excluded table names
-            if (exclude) {
-                HashSet<String> exTbls = new HashSet<String>();
-                while (rs.next()) {
-                    exTbls.add(rs.getString(3));
-                }
-                ResultSet tempRs = conn.getMetaData().getTables(
-                    catalog, schema, "%", null);
-
-                while (tempRs.next()) {
-                    String tname = tempRs.getString(3);
-                    if (!exTbls.contains(tname)) {
-                        tableNames.add(tname);
+            // query db for the table names
+            if ((table_list != null) && (table_pattern != null)) {
+                throw FarragoResource.instance(
+                    ).ExportSchemaSpecifyListOrPattern.ex();
+            } else if ((table_list == null) && (table_pattern != null)) {
+                // use table_pattern to retrieve table names
+                rs = conn.getMetaData().getTables(
+                    catalog, schema, table_pattern, TABLE_TYPES);
+                
+                // filter out the excluded table names
+                if (exclude) {
+                    HashSet<String> exTbls = new HashSet<String>();
+                    while (rs.next()) {
+                        exTbls.add(rs.getString(3));
+                    }
+                    ResultSet tempRs = conn.getMetaData().getTables(
+                        catalog, schema, "%", TABLE_TYPES);
+                    
+                    while (tempRs.next()) {
+                        String tname = tempRs.getString(3);
+                        if (!exTbls.contains(tname)) {
+                            tableNames.add(tname);
+                        }
+                    }
+                    tempRs.close();
+                } else {
+                    // get table names matching table_pattern
+                    while (rs.next()) {
+                        tableNames.add(rs.getString(3));
                     }
                 }
+                
             } else {
-                // get table names matching table_pattern
+                // either table_list is being used or there is no filtering
+                // retrive all the table names in the schema. 
+                rs = conn.getMetaData().getTables(
+                    catalog, schema, "%", TABLE_TYPES);
                 while (rs.next()) {
                     tableNames.add(rs.getString(3));
                 }
-            }
-
-        } else {
-            // either table_list is being used or there is no filtering
-            // retrive all the table names in the schema. 
-            rs = conn.getMetaData().getTables(catalog, schema, "%", null);
-            while (rs.next()) {
-                tableNames.add(rs.getString(3));
-            }
-
-            // using table_list, verify table names from table_list
-            if (table_list != null) {
-                tableList = new HashSet<String>();
-                StringTokenizer strTok = new StringTokenizer(table_list, ",");
-                while (strTok.hasMoreTokens()) {
-                    String tblInList = strTok.nextToken();
-                    tblInList = tblInList.trim();
-                    if (tableNames.contains(tblInList)) {
-                        if (exclude) {
-                            tableNames.remove(tblInList);
+                
+                // using table_list, verify table names from table_list
+                if (table_list != null) {
+                    StringTokenizer strTok = new StringTokenizer(
+                        table_list, ",");
+                    StringBuilder incorrectTables = null;
+                    while (strTok.hasMoreTokens()) {
+                        String tblInList = strTok.nextToken().trim();
+                        if (tableNames.contains(tblInList)) {
+                            if (exclude) {
+                                tableNames.remove(tblInList);
+                            } else {
+                                if (tableList == null) {
+                                    tableList = new HashSet<String>();
+                                }
+                                tableList.add(tblInList);
+                            }
                         } else {
-                            tableList.add(tblInList);
+                            // a table in the table_list is incorrect
+                            if (incorrectTables == null) {
+                                incorrectTables = new StringBuilder();
+                                incorrectTables.append(tblInList);
+                            } else {
+                                incorrectTables.append(", " + tblInList);
+                            }
                         }
-                    } else {
-                        // a table in the table_list is incorrect
-                        throw new SQLException("Table " + tblInList + 
-                            " in list not found");
+                    }
+                    
+                    if (incorrectTables != null) {
+                        // table in list was incorrect, throw exception
+                        throw FarragoResource.instance(
+                            ).ExportSchemaTableNotFound.ex(
+                                incorrectTables.toString());
+                    }
+                    
+                    if (!exclude) {
+                        tableNames = tableList;
                     }
                 }
-                if (!exclude) {
-                    tableNames = tableList;
-                }
+            }
+
+            // no tables to export
+            if (tableNames.isEmpty()) {
+                throw FarragoResource.instance().ExportSchemaNoTables.ex(
+                    catalog,
+                    schema,
+                    String.valueOf(exclude),
+                    table_list,
+                    table_pattern);
+            }
+        } finally {
+            if (rs != null) {
+                rs.close();
             }
         }
- 
+
+        // create Csv files
         toCsv(catalog, schema, directory, with_bcp, tableNames, conn);
     }
 
@@ -169,11 +217,14 @@ public abstract class FarragoExportSchemaUDR
         throws SQLException
     {
         StringBuilder importSql = new StringBuilder();
-        String tmpLocalSchema = "_TMP_LOCAL_SCHEMA";
+        String tmpLocalSchema = "_TMP_LOCAL_SCHEMA" + 
+            UUID.randomUUID().toString();
+
+        boolean tmpSchemaExists = false;
 
         if ((table_list != null) && (table_pattern != null)) {
-            throw new SQLException(
-                "At most one of table_list/table_pattern can be specified"); 
+            throw FarragoResource.instance(
+                ).ExportSchemaSpecifyListOrPattern.ex();
         }
 
         Connection conn = 
@@ -181,13 +232,20 @@ public abstract class FarragoExportSchemaUDR
         Statement stmt = conn.createStatement();
 
         try {
+
             // create temporary local schema
-            stmt.executeUpdate("create schema " + tmpLocalSchema);
-        } catch (SQLException e) {
-            stmt.close();
-            throw new SQLException(e.getMessage());
-        }
-        try {
+            try {
+                stmt.executeUpdate("create schema " + QUOTE + tmpLocalSchema +
+                    QUOTE);
+            } catch (SQLException e) {
+                throw FarragoResource.instance(
+                    ).ExportSchemaCreateTempSchemaError.ex(
+                        tmpLocalSchema, 
+                        e.getMessage(),
+                        e );
+            }
+            tmpSchemaExists = true;
+
             importSql.append("import foreign schema " + QUOTE + foreign_schema 
                 + QUOTE + " ");
             // if there is filtering
@@ -200,6 +258,7 @@ public abstract class FarragoExportSchemaUDR
                 
                 if (table_list != null) {
                     // remove all spaces in table list
+                    // this means we can't have table names with spaces
                     table_list = table_list.replaceAll("\\s*", "");
                     importSql.append("(" + QUOTE + 
                         table_list.replaceAll(",", QUOTE+","+QUOTE) + QUOTE +
@@ -211,19 +270,93 @@ public abstract class FarragoExportSchemaUDR
             }
             importSql.append(
                 "from server " + QUOTE + foreign_server + QUOTE + " into " 
-                + tmpLocalSchema);
+                + QUOTE + tmpLocalSchema + QUOTE);
             
             // import foreign schema into temp schema
-            stmt.executeUpdate(importSql.toString()); 
-            
-            // call local schema export
-            exportSchemaToCsv(
-                null, tmpLocalSchema, false, null, null, directory, with_bcp);
-        } finally {
-            stmt.executeUpdate("drop schema " + tmpLocalSchema + " cascade");
-            stmt.close();
-        }
+            try {
+                stmt.executeUpdate(importSql.toString());
+            } catch (SQLException e) {
+                throw FarragoResource.instance(
+                     ).ExportSchemaImportForeignSchemaError.ex(
+                         tmpLocalSchema, 
+                         e.getMessage(), 
+                         e );
+            }
+             
+            // get table names within temp schema
+            ResultSet rs = conn.getMetaData().getTables(
+                null, tmpLocalSchema, "%", TABLE_TYPES);
+            HashSet<String> tableNames = new HashSet<String>();
+            if (rs.next() == false) {
+                // no tables to export
+                throw FarragoResource.instance(
+                    ).ExportSchemaNoTablesImported.ex(
+                        foreign_server,
+                        foreign_schema,
+                        String.valueOf(exclude),
+                        table_list,
+                        table_pattern,
+                        tmpLocalSchema);
+            } else {
+                tableNames = new HashSet<String>();
+                tableNames.add(rs.getString(3));
+                while (rs.next()) {
+                    tableNames.add(rs.getString(3));
+                }
+            }
+            rs.close();
 
+            // create Csv files
+            toCsv(null, tmpLocalSchema, directory, with_bcp, tableNames, conn);
+                
+            // drop temp schema
+            try {
+                stmt.executeUpdate("drop schema " + QUOTE + tmpLocalSchema +
+                    QUOTE + " cascade"); 
+            } catch (SQLException se) {
+                throw FarragoResource.instance(
+                    ).ExportSchemaDropTempSchemaError.ex(
+                        tmpLocalSchema,
+                        se.getMessage());
+            }
+
+            tmpSchemaExists = false;
+
+        } catch (EigenbaseException ee) {
+            if (tmpSchemaExists) {
+                try {
+                    stmt.executeUpdate("drop schema " + QUOTE + tmpLocalSchema 
+                        + QUOTE + " cascade");
+                } catch (SQLException se) {
+                    throw FarragoResource.instance(
+                        ).ExportSchemaDropTempSchemaError.ex(
+                            tmpLocalSchema,
+                            se.getMessage(),
+                            ee );
+                }
+                tmpSchemaExists = false;
+            }
+            throw ee;
+
+        } finally {
+            if (tmpSchemaExists) {
+                try {
+                    stmt.executeUpdate("drop schema " + QUOTE + tmpLocalSchema 
+                        + QUOTE + " cascade");
+                } catch (SQLException ex1) {
+                    // TODO: warn that we tried our best and schema still 
+                    // wasn't dropped. If it gets here, any previous exception
+                    // will be lost.
+                    throw FarragoResource.instance(
+                        ).ExportSchemaDropTempSchemaError.ex(
+                            tmpLocalSchema,
+                            ex1.getMessage(),
+                            ex1 );
+                }
+            }
+            stmt.close();
+            conn.close();
+        }
     }
 
     /**
@@ -247,50 +380,130 @@ public abstract class FarragoExportSchemaUDR
     { 
         File csvFile = null;
         File bcpFile = null;
+        File logFile = null;
         FileWriter csvOut = null;
         FileWriter bcpOut = null;
+        FileWriter logOut = null;
         // get rid of spaces and colons in directory name
         directory = directory.replaceAll("\\s*", "");
         directory = directory.replaceAll(":","");
+        // create export csv directory
         File csvDir = new File(directory);
         try {
             csvDir.mkdirs();
-        } catch (Throwable t) {
-            throw new SQLException(
-                "Failed to create directory:" + directory + " " 
-                + t.getMessage());
+        } catch (SecurityException e) {
+            throw FarragoResource.instance().ExportSchemaCreateDirFailed.ex(
+                directory,
+                e.getMessage(),
+                e );
+        }
+
+        // create export log file
+        String logFileName = directory + File.separator + LOGFILE_PREFIX +
+            getTimestampString() + ".log";
+        logFile = new File(logFileName);
+        try {
+            logOut = new FileWriter(logFile, false);
+        } catch (IOException e) {
+            throw FarragoResource.instance(
+                ).ExportSchemaCreateFileWriterFailed.ex(
+                    logFileName,
+                    e.getMessage(),
+                    e );
         }
 
         Iterator<String> tableIter = tableNames.iterator();
         Statement stmt = conn.createStatement();
-        
+        ResultSet tblData;
+        ResultSetMetaData tblMeta;
+
+        try {
+            logOut.write(QUOTE + "TableName" + QUOTE + TAB + QUOTE + 
+                "StartTime" + QUOTE + TAB + QUOTE + "Status" + QUOTE + 
+                TAB + QUOTE + "EndTime" + QUOTE + TAB + QUOTE + "Reason" + 
+                QUOTE + NEWLINE);
+        } catch (IOException ie) {
+            try {
+                logOut.flush();
+                logOut.close();
+                logFile.delete();
+            } catch (IOException ie2) {
+                throw FarragoResource.instance(
+                    ).ExportSchemaFileWriterError.ex(
+                        logFileName,
+                        ie.getMessage() + ie2.getMessage(),
+                        ie );
+            }
+            throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
+                logFileName,
+                ie.getMessage(),
+                ie );
+        }
+
         // loop through the tables and output data to csv/bcp files
         while (tableIter.hasNext()) {
             String tblName = tableIter.next();
-            ResultSet tblData;
 
-            if ( catalog != null) {
-                tblData = stmt.executeQuery(
-                    "select * from " + QUOTE + catalog + QUOTE + "." + QUOTE +
-                    schema + QUOTE + "." + QUOTE + tblName + QUOTE);
-            } else {
-                tblData = stmt.executeQuery(
-                    "select * from " + QUOTE + schema + QUOTE + "." + QUOTE +
-                    tblName + QUOTE);
-            }
-            ResultSetMetaData tblMeta = tblData.getMetaData();
-
-            String csvName = tblName + ".txt";
-            String bcpName = tblName + ".bcp";
             try {
-                csvFile = new File(directory+File.separator+csvName);
+                logOut.write(tblName + TAB + getTimestampString() + TAB);
+
+                if ( catalog != null) {
+                    tblData = stmt.executeQuery(
+                        "select * from " + QUOTE + catalog + QUOTE + "." + 
+                        QUOTE + schema + QUOTE + "." + QUOTE + tblName + 
+                        QUOTE);
+                } else {
+                    tblData = stmt.executeQuery(
+                        "select * from " + QUOTE + schema + QUOTE + "." + 
+                        QUOTE + tblName + QUOTE);
+                }
+
+                tblMeta = tblData.getMetaData();
+
+            } catch (SQLException se) {
+                try {
+                    logOut.write("FAIL" + TAB + getTimestampString() + TAB +
+                        se.toString() + NEWLINE);
+                    logOut.flush();
+                } catch (IOException ie) {
+                    throw FarragoResource.instance(
+                        ).ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage(),
+                            ie );
+                }
+                continue;
+            } catch (IOException ie) {
+                try {
+                    logOut.flush();
+                    logOut.close();
+                } catch (IOException ie2) {
+                    throw FarragoResource.instance(
+                        ).ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage() + ie2.getMessage(),
+                            ie );
+                }
+                throw FarragoResource.instance(
+                    ).ExportSchemaFileWriterError.ex(
+                        logFileName,
+                        ie.getMessage(),
+                        ie );
+            }
+
+            String csvName = directory + File.separator + tblName + ".txt";
+            String bcpName = directory + File.separator + tblName + ".bcp";
+            boolean tableFailed = false;
+            try {
+                csvFile = new File(csvName);
                 csvOut = new FileWriter(csvFile, false);
                 int numCols = tblMeta.getColumnCount();
                 if (with_bcp) {
                     // write BCP header
-                    bcpFile = new File(directory+File.separator+bcpName);
+                    bcpFile = new File(bcpName);
                     bcpOut = new FileWriter(bcpFile, false);
-                    bcpOut.write("6.0" + NEWLINE); // version using BroadBase
+                    // version using BroadBase
+                    bcpOut.write("6.0" + NEWLINE); 
                     bcpOut.write(numCols + NEWLINE);
                 }
                 
@@ -309,10 +522,13 @@ public abstract class FarragoExportSchemaUDR
                     }
                 }
 
+                if (with_bcp) {
+                    bcpOut.flush();
+                }
+
                 // write the csv file
                 while (tblData.next()) {
                     for (int i = 1; i <= numCols; i++) {
-                        // quote the quotes
                         String field = tblData.getString(i);
                         if (field == null) {
                             if (i != numCols) {
@@ -333,34 +549,123 @@ public abstract class FarragoExportSchemaUDR
                         }
                     }
                 }
-            } catch (IOException e) {
+                
+                // log success
                 try {
-                    if (csvOut != null) {
-                        csvOut.close();
+                    logOut.write("PASS" + TAB + getTimestampString() + TAB +
+                        "None" + NEWLINE);
+                    logOut.flush();
+                } catch (IOException ie) {
+                    try {
+                        logOut.flush();
+                        logOut.close();
+                    } catch (IOException ie2) {
+                        throw FarragoResource.instance(
+                            ).ExportSchemaFileWriterError.ex(
+                                logFileName,
+                                ie.getMessage() + ie2.getMessage(),
+                                ie );
                     }
-                    csvFile.delete();
-                    if (with_bcp && (bcpOut != null)) {
-                        bcpOut.close();
-                    }
-                    bcpFile.delete();
-                    stmt.close();
-                } catch (Throwable t) {
-                    throw new SQLException(e.getMessage()+t.getMessage());
+                    throw FarragoResource.instance(
+                        ).ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage(),
+                            ie );
                 }
-                throw new SQLException(e.getMessage());
-            } finally {
+            } catch (SQLException se) {
+                tableFailed = true;
                 try {
-                    if (csvOut != null) {
+                    logOut.write("FAIL" + TAB + getTimestampString() + TAB +
+                        se.toString() + NEWLINE);
+                    logOut.flush();
+                } catch (IOException ie) {
+                    try {
+                        logOut.flush();
+                        logOut.close();
+                    }  catch (IOException ie2) {
+                        throw FarragoResource.instance(
+                            ).ExportSchemaFileWriterError.ex(
+                                logFileName,
+                                ie.getMessage() + ie2.getMessage(),
+                                ie );
+                    }
+                    throw FarragoResource.instance(
+                        ).ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage(),
+                            ie );
+                }
+                continue;
+            } catch (IOException ie) {
+                tableFailed = true;
+                try {
+                    logOut.write("FAIL" + TAB + getTimestampString() + TAB +
+                        ie.toString() + NEWLINE);
+                    logOut.flush();
+                } catch (IOException ie2) {
+                    try {
+                        logOut.flush();
+                        logOut.close();
+                    }  catch (IOException ie3) {
+                        throw FarragoResource.instance(
+                            ).ExportSchemaFileWriterError.ex(
+                                logFileName,
+                                ie2.getMessage() + ie3.getMessage(),
+                                ie2 );
+                    }
+                    throw FarragoResource.instance(
+                        ).ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie2.getMessage(),
+                            ie2 );
+                }
+                continue;
+            } finally {
+                tblData.close();
+                if (csvOut != null) {
+                    try {
+                        csvOut.flush();
                         csvOut.close();
+                    } catch (IOException ie) {
+                        throw FarragoResource.instance(
+                            ).ExportSchemaFileWriterError.ex(
+                                csvName,
+                                ie.getMessage(),
+                                ie );
                     }
-                    if ((with_bcp) && (bcpOut != null)) {
+                }
+                if (bcpOut != null) {
+                    try {
+                        bcpOut.flush();
                         bcpOut.close();
+                    } catch (IOException ie) {
+                        throw FarragoResource.instance(
+                            ).ExportSchemaFileWriterError.ex(
+                                bcpName,
+                                ie.getMessage(),
+                                ie );
                     }
-                } catch (IOException e) {
-                    stmt.close();
-                    throw new SQLException(e.getMessage());
+                }
+
+                // delete partial files if table export failed
+                if (tableFailed) {
+                    if (csvFile != null) {
+                        csvFile.delete();
+                    }
+                    if (bcpFile != null) {
+                        bcpFile.delete();
+                    }
                 }
             }
+        }
+        try {
+            logOut.flush();
+            logOut.close();
+        } catch (IOException ie) {
+            throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
+                logFileName,
+                ie.getMessage(),
+                ie );
         }
         stmt.close();
     }
@@ -468,6 +773,12 @@ public abstract class FarragoExportSchemaUDR
     private static String quote(String value) 
     {
         return value.replaceAll("\"", "\"\"");
+    }
+
+    private static String getTimestampString()
+    {
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        return formatter.format(new java.util.Date());
     }
 }
 

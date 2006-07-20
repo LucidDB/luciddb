@@ -376,15 +376,14 @@ void LhxHashTableTest::testInsert(
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
 
-        uint numChildPart = 3;
-        plan->init(0, numChildPart, partitions, NULL);
+        plan->init(0, partitions, NULL, false);
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
         uint numLeafPlanRead = 0;
 
         for (int i = 0; i < recursivePartitioning; i ++) {
-            numLeafPlanCreated *= numChildPart;
+            numLeafPlanCreated *= LhxPlan::LhxChildPartCount;
             numLeafPlanRead = 0;
             leafPlan = plan->getFirstLeaf();
 
@@ -394,7 +393,7 @@ void LhxHashTableTest::testInsert(
                 //skip the next numChildPart leaves as they are newly
                 //created children
                 leafPlan = leafPlan->getFirstLeaf();
-                for (int k = 0; k < numChildPart; k ++) {
+                for (int k = 0; k < LhxPlan::LhxChildPartCount; k ++) {
                     leafPlan = leafPlan->getNextLeaf();
                 }
             }

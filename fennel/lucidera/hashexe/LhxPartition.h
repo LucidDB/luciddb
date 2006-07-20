@@ -35,8 +35,10 @@
 #include "fennel/exec/AggComputer.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/shared_array.hpp>
 
 using namespace std;
+using namespace boost;
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -61,7 +63,6 @@ struct LhxPartition
     uint   inputIndex;
 
 #ifdef NOT_DONE
-	SubPartStat *m_pSubPartStats;					// sub-partition statistics
 	BOOL m_bOneKey;						// whether there is only 1 distinct key
 #endif
 };
@@ -95,9 +96,9 @@ class LhxPartitionWriter
     TupleData partialAggTuple;
 
 public:
-    void open(SharedLhxPartition destPartition,
+    void open(SharedLhxPartition destPartitionInit,
         LhxHashInfo const &hashInfo);
-    void open(SharedLhxPartition destPartition,
+    void open(SharedLhxPartition destPartitionInit,
         LhxHashInfo &hashInfo,
         AggComputerList *aggList,
         uint numWriterCachePages);
@@ -140,8 +141,8 @@ class LhxPartitionReader
 
     /**
      * If reader is on a partition which comes from the input exec stream,
-     * (this is when this accessor is initialized using a NULL_PAGE_ID),
-     * use an exec stream buf accessor to read tuples.
+     * (this is when this accessor is opened on a partition without valid
+     * segStream), use an exec stream buf accessor to read tuples.
      */
     SharedExecStreamBufAccessor streamBufAccessor;
 
@@ -186,18 +187,31 @@ struct LhxPartitionInfo
     TupleData buildTuple;
 
     /**
-     * writerList.size() == numChildPart
+     * Child partitions for both inputs have to be complete before child plans
+     * can be created.
+     *     writerList.size() == destPartitionList.size() ==
+     *           numInput * LhxPlan::LhxChildPartCount
      *
-     * destPartitionList.size() == 2 * numChildPart because child partitions
-     * for both inputs have to be complete before child plans can be created.
+     * Input filters are used to filter only one input(the build input) of each
+     * child partition.
+     *
+     * joinFilterList.size() == LhxPlan::LhxChildPartCount
      */
     vector<SharedLhxPartitionWriter> writerList;
     vector<SharedLhxPartition> destPartitionList;
-    vector<boost::shared_ptr<boost::dynamic_bitset<> > > joinFilterList;
+    vector<shared_ptr<dynamic_bitset<> > > joinFilterList;
+
+
+    /*
+     * Stats associated with the subpartitions. One set of subpartitions for
+     * each input partition.
+     * subPartStatList.size() == numInput * LhxPlan::LhxChildPartCount
+     * and each item in the list contains LhxPlan::LhxSubPartCount elements.
+     */
+    vector<shared_array<uint> > subPartStatList;
 
     uint numInput;
     uint curInputIndex;
-    uint numChildPart;
 
     LhxHashInfo *hashInfo;
 
@@ -214,7 +228,6 @@ struct LhxPartitionInfo
      */
     void init(
         uint numInputInit,
-        uint numChildPartInit,
         LhxHashInfo *hashInfoInit);
 
     /**
@@ -250,11 +263,19 @@ struct LhxPartitionInfo
 
 class LhxPlan
 {
-public:
     uint partitionLevel;
     vector<SharedLhxPartition> partitions;
-    vector<bool>               useFilter;
-    boost::shared_ptr<boost::dynamic_bitset<> > joinFilter;
+    vector<bool>               useJoinFilter;
+    shared_ptr<dynamic_bitset<> > joinFilter;
+    
+    /*
+     * Map sub partitions to child partitions, based on hash key.
+     * The mapping algorithm tries to put similar amount of data to each child
+     * partition.
+     */
+    bool useSubPartStat;
+    shared_array<uint> subPartToChildMap;
+    shared_array<uint> childPartSize;
 
     /*
      * Plan linkage.
@@ -265,28 +286,55 @@ public:
     SharedLhxPlan firstChildPlan;
     SharedLhxPlan siblingPlan;
     
-    /*
-     * numSubPart == keptSubPart.size() + childrenPlan.size()
+    /**
+     * Add sibling plan.
      */
-    uint numChildPart;
-    uint numSubPart;
-    boost::scoped_array<uint> keptSubPart; 
-    
-    inline void init(
-        uint partitionLevelInit,
-        uint numChildPartInit,
-        vector<SharedLhxPartition> &partitionsInit,
-        LhxPlan *parentPlanInit);
+    inline void addSibling(SharedLhxPlan siblingPlan);
 
+    /**
+     * Using sub partition stats gathered at the previous partition level, map
+     * sub partitions to child partitions. The objective is to come up with
+     * child partitions of similar size.
+     */
+    void mapSubPartToChild(shared_array<uint> subPartStats);
+
+public:
+    /*
+     * Maximum number of subpartitions a non-leaf partition has. Subpartitions
+     * are packed into child partitions so that child partitions are of
+     * similar size.
+     */
+    static const uint LhxSubPartCount = 16;
+    static const uint LhxChildPartCount = 3;
+
+    /**
+     * Initialize a plan, with its input partitions and parent plan.
+     */
     void init(
         uint partitionLevelInit,
-        uint numChildPartInit,
         vector<SharedLhxPartition> &partitionsInit,
         LhxPlan *parentPlanInit,
-        vector<bool> useFilterInit,
-        boost::shared_ptr<boost::dynamic_bitset<> > filterInit =
-                boost::shared_ptr<boost::dynamic_bitset<> >());
+        bool useSubPartStat);
 
+    /**
+     * Initialize a plan.
+     */
+    void init(
+        uint partitionLevelInit,
+        vector<SharedLhxPartition> &partitionsInit,
+        bool useSubPartStat,
+        vector<shared_array<uint> > &subPartStats,
+        LhxPlan *parentPlanInit,
+        vector<bool> useJoinFilterInit,
+        shared_ptr<dynamic_bitset<> > filterInit =
+                shared_ptr<dynamic_bitset<> >());
+
+    /**
+     * Calculate the atrget child partition index based on the hashkey of a
+     * tuple.
+     */
+    uint calculateChildIndex(uint hashKey, uint curInputIndex);
+    
     /**
      * Generate partitions for the child plans.
      */
@@ -304,21 +352,11 @@ public:
      * Create child plan from partitions provided via partInfo.
      */
     void createChildren(LhxPartitionInfo &partInfo);
-
-    /**
-     * Add sibling plan.
-     */
-    inline void addSibling(SharedLhxPlan siblingPlan);
     
     /**
-     * Get first leaf plan in dfs order.
+     * Get the partition level of this plan.
      */
-    LhxPlan *getFirstLeaf();
-
-    /**
-     * Get next leaf plan in dfs order.
-     */
-    LhxPlan *getNextLeaf();
+    inline uint getPartitionLevel();
 
     /**
      * Get the partition corresponding to inputIndex.
@@ -331,10 +369,27 @@ public:
     inline SharedLhxPlan getFirstChild();
 
     /**
+     * Get first leaf plan in dfs order.
+     */
+    LhxPlan *getFirstLeaf();
+
+    /**
+     * Get next leaf plan in dfs order.
+     */
+    LhxPlan *getNextLeaf();
+
+    /**
      * Close the plan tree. Release any resource pointed to from this plan
      * tree.
      */
     void close();
+
+    /**
+     * Print the content of the plan tree rooted at this plan.
+     *
+     * @return the string representation of this plan tree.
+     */
+    string toString();
 };
 
 inline ExecStreamBufState LhxPartitionReader::getState() const
@@ -357,31 +412,14 @@ inline void LhxPartitionWriter::allocateResources()
     assert(status);
 }
 
-inline void LhxPlan::init(
-    uint partitionLevelInit,
-    uint numChildPartInit,   
-    vector<SharedLhxPartition> &partitionsInit,
-    LhxPlan *parentPlanInit)
-{
-    /*
-     * No filter for this plan.
-     */
-    boost::shared_ptr<boost::dynamic_bitset<> > joinFilterInit =
-        boost::shared_ptr<boost::dynamic_bitset<> >();
-    vector<bool> useFilter;
-
-    if (partitionsInit.size() == 1) {
-        useFilter.push_back(false);
-    }
-
-    init(partitionLevelInit, numChildPartInit, partitionsInit, parentPlanInit,
-        useFilter, joinFilterInit);
-}
-
 inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)
 {
-    siblingPlanInit->siblingPlan = siblingPlan;
     siblingPlan = siblingPlanInit;
+}
+
+inline uint LhxPlan::getPartitionLevel()
+{
+    return partitionLevel;
 }
 
 inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
@@ -391,7 +429,7 @@ inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
 
 inline SharedLhxPlan LhxPlan::getFirstChild()
 {
-    return (firstChildPlan);
+    return firstChildPlan;
 }
 
 FENNEL_END_NAMESPACE

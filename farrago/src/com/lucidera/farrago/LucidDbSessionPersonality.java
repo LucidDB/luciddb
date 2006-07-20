@@ -322,9 +322,6 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
         
-        // Use hash aggregation wherever possible.
-        builder.addRuleInstance(new LhxAggRule());
-
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -332,6 +329,13 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(ProjectToCalcRule.instance);
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
+
+        // Bitmap aggregation is favored
+        builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
+        builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+
+        // Prefer hash aggregation over the standard Fennel aggregation.
+        builder.addRuleInstance(new LhxAggRule());
 
         // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule());

@@ -487,6 +487,20 @@ public abstract class FennelRelUtil
     }
 
     /**
+     * @return an object suitable for display in a plan explanation
+     */
+    public static Object explainProjection(Integer[] projection)
+    {
+        Object projectionObj;
+        if (projection == null) {
+            projectionObj = "*";
+        } else {
+            projectionObj = Arrays.asList(projection);
+        }
+        return projectionObj;
+    }
+
+    /**
      * @return the preparing stmt that a relational expression belongs to
      */
     public static FarragoPreparingStmt getPreparingStmt(FennelRel rel)

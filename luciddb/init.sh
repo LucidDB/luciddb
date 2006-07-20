@@ -34,6 +34,22 @@ osdist ()
             fi
 
 
+        elif ( cat /etc/issue | grep -q -i 'red hat' ) ; then
+            echo "os=RedHat"
+            echo "osver=`cat /etc/issue | grep -i 'red hat' | sed -e 's/^.*\(release [^     ][  ]*\)/\1/g' | awk '{print $2;}'`"
+
+            if ( cat /proc/cpuinfo | grep '^flags' | tail -n 1 | grep -q -w ht ); then
+                echo "ht=true"
+                cpus=`cat /proc/cpuinfo | grep '^processor' | wc -l`
+                cpus=`expr $cpus \/ 2`
+                echo "cpus=$cpus"
+            else
+                echo "ht=false"
+                cpus=`cat /proc/cpuinfo | grep '^processor' | wc -l`
+                echo "cpus=$cpus"
+            fi
+
+
         else
             echo "os=Unknown"
             echo "osver=Unknown"

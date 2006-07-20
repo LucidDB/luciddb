@@ -129,6 +129,7 @@ void LhxAggExecStreamTest::testCountImpl(uint forcePartitionLevel)
     aggParams.cndGroupByKeys = numRows;
     aggParams.numRows = numRows;
     aggParams.forcePartitionLevel = forcePartitionLevel;
+    aggParams.enableSubPartStat = true;
 
     ExecStreamEmbryo aggStreamEmbryo;
     aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
@@ -177,6 +178,7 @@ void LhxAggExecStreamTest::testSumImpl(uint forcePartitionLevel)
     aggParams.cndGroupByKeys = numRows;
     aggParams.numRows = numRows;
     aggParams.forcePartitionLevel = forcePartitionLevel;
+    aggParams.enableSubPartStat = true;
     
     ExecStreamEmbryo aggStreamEmbryo;
     aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
@@ -230,6 +232,7 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
     aggParams.cndGroupByKeys = numRows/2;
     aggParams.numRows = numRows;
     aggParams.forcePartitionLevel = forcePartitionLevel;
+    aggParams.enableSubPartStat = true;
 
     ExecStreamEmbryo aggStreamEmbryo;
     
