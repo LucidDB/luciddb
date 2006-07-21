@@ -25,3 +25,13 @@ language java
 options(
   browse_connect_description 'Flat File Connection'
 );
+
+-- create luciddb local wrapper with browse connect
+create foreign data wrapper "LUCIDDB LOCAL"
+library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+language java
+options(
+  browse_connect_description 'LucidDb Loopback Connection',
+  driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
+  url 'jdbc:luciddb:'
+);
