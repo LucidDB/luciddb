@@ -950,7 +950,7 @@ public abstract class SqlOperatorTests extends TestCase
     public void testConcatOperator()
     {
         getTester().setFor(SqlStdOperatorTable.concatOperator);
-        getTester().checkString(" 'a'||'b' ", "ab", "todo: CHAR(2) NOT NULL");
+        getTester().checkString(" 'a'||'b' ", "ab", "CHAR(2) NOT NULL");
 
         if (todo) {
             // not yet implemented
@@ -1512,9 +1512,17 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.overlayFunc);
         getTester().checkString("overlay('ABCdef' placing 'abc' from 1)",
-            "abcdef", "todo: CHAR(9) NOT NULL");
+            "abcdef", "VARCHAR(9) NOT NULL");
         getTester().checkString("overlay('ABCdef' placing 'abc' from 1 for 2)",
-            "abcCdef", "todo: CHAR(9) NOT NULL");
+            "abcCdef", "VARCHAR(9) NOT NULL");
+        getTester().checkString(
+            "overlay(cast('ABCdef' as varchar(10)) placing " +
+            "cast('abc' as char(5)) from 1 for 2)",
+            "abc  Cdef", "VARCHAR(15) NOT NULL");
+        getTester().checkString(
+            "overlay(cast('ABCdef' as char(10)) placing " +
+            "cast('abc' as char(5)) from 1 for 2)",
+            "abc  Cdef    ", "VARCHAR(15) NOT NULL");
         getTester().checkNull(
             "overlay('ABCdef' placing 'abc' from 1 for cast(null as integer))");
         getTester().checkNull(
@@ -1815,10 +1823,10 @@ public abstract class SqlOperatorTests extends TestCase
     {
         getTester().setFor(SqlStdOperatorTable.trimFunc);
         // SQL:2003 6.29.11 Trimming a CHAR yields a VARCHAR
-        getTester().checkString("trim('a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
-        getTester().checkString("trim(both 'a' from 'aAa')", "A", "todo: VARCHAR(3) NOT NULL");
-        getTester().checkString("trim(leading 'a' from 'aAa')", "Aa", "todo: VARCHAR(3) NOT NULL");
-        getTester().checkString("trim(trailing 'a' from 'aAa')", "aA", "todo: VARCHAR(3) NOT NULL");
+        getTester().checkString("trim('a' from 'aAa')", "A", "VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(both 'a' from 'aAa')", "A", "VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(leading 'a' from 'aAa')", "Aa", "VARCHAR(3) NOT NULL");
+        getTester().checkString("trim(trailing 'a' from 'aAa')", "aA", "VARCHAR(3) NOT NULL");
         getTester().checkNull("trim(cast(null as varchar(1)) from 'a')");
         getTester().checkNull("trim('a' from cast(null as varchar(1)))");
 
