@@ -24,9 +24,9 @@ package net.sf.farrago.catalog;
 
 import net.sf.farrago.FarragoPackage;
 import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.core.CwmTaggedValue;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.CwmCatalog;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.config.FemFarragoConfig;
 import net.sf.farrago.util.FarragoAllocation;
 import net.sf.farrago.util.FarragoTransientTxnContext;
@@ -180,10 +180,12 @@ public interface FarragoRepos extends FarragoAllocation,
     /**
      * Gets an element's tag.
      *
-     * @param element the tagged CwmModelElement
+     * @param element the tagged element
      * @param tagName name of tag to find
      *
      * @return tag, or null if not found
+     *
+     * @deprecated use getTagAnnotation instead
      */
     public CwmTaggedValue getTag(
         CwmModelElement element,
@@ -192,10 +194,12 @@ public interface FarragoRepos extends FarragoAllocation,
     /**
      * Tags an element.
      *
-     * @param element the CwmModelElement to tag
+     * @param element the element to tag
      * @param tagName name of tag to create; if a tag with this name already
      *        exists, it will be updated
      * @param tagValue value to set
+     *
+     * @deprecated use setTagAnnotationValue instead
      */
     public void setTagValue(
         CwmModelElement element,
@@ -205,13 +209,56 @@ public interface FarragoRepos extends FarragoAllocation,
     /**
      * Gets a value tagged to an element.
      *
-     * @param element the tagged CwmModelElement
+     * @param element the tagged element
      * @param tagName name of tag to find
      *
      * @return tag value, or null if not found
+     *
+     * @deprecated use getTagAnnotationValue instead
      */
     public String getTagValue(
         CwmModelElement element,
+        String tagName);
+
+    /**
+     * Gets an element's annotation tag.
+     *
+     * @param element the tagged element
+     * @param tagName name of tag to find
+     *
+     * @return tag, or null if not found
+     */
+    public FemTagAnnotation getTagAnnotation(
+        FemAnnotatedElement element,
+        String tagName);
+
+    /**
+     * Tags an annotated element.
+     *
+     * @param element the element to tag
+     * @param tagName name of tag to create; if a tag with this name already
+     *        exists, it will be updated
+     * @param tagValue value to set
+     *
+     * @deprecated use setTagAnnotationValue instead
+     */
+    public void setTagAnnotationValue(
+        FemAnnotatedElement element,
+        String tagName,
+        String tagValue);
+
+    /**
+     * Gets a value tagged to an annotated element.
+     *
+     * @param element the tagged element
+     * @param tagName name of tag to find
+     *
+     * @return tag value, or null if not found
+     *
+     * @deprecated use getTagAnnotationValue instead
+     */
+    public String getTagAnnotationValue(
+        FemAnnotatedElement element,
         String tagName);
 
     /**
