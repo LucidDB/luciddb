@@ -83,6 +83,10 @@ public class SqlAdvisor
     {
         String simpleSql = simplifySql(sql, cursor);
         int idx = simpleSql.indexOf(hintToken);
+        if (idx < 0) {
+            SqlMoniker[] emptyMonikers = new SqlMoniker[0];
+            return emptyMonikers;
+        }
         int idxAdj = adjustTokenPosition(simpleSql, idx);
         if (idxAdj >=0 ) {
             idx = idxAdj;

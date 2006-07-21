@@ -914,7 +914,7 @@ public class RexToCalcTranslator
 
             CalcProgramBuilder.Register [] convRegs = { reg1, reg2 };
             implementConversionIfNeeded(call.operands[0],
-                call.operands[1], convRegs);
+                call.operands[1], convRegs, false);
             reg1 = convRegs[0];
             reg2 = convRegs[1];
 
@@ -1052,19 +1052,23 @@ public class RexToCalcTranslator
      * @param regs at the time of calling this methods this array must contain
      *        the result registers of op1 and op2.
      *        The new updated registers are returned in the regs array.
-     *
+     * @param keepVartypes - indicates when choosing between VARCHAR and CHAR,
+     *        to convert to VARCHAR or CHAR.  If true, converts to VARCHAR.
      */
     void implementConversionIfNeeded(
         RexNode op1,
         RexNode op2,
-        CalcProgramBuilder.Register [] regs)
+        CalcProgramBuilder.Register [] regs,
+        boolean keepVartypes)
     {
         if (SqlTypeUtil.inCharFamily(op1.getType())
                 && (op1.getType().getSqlTypeName() != op2.getType()
                 .getSqlTypeName())) {
             // Need to perform a cast.
             CalcProgramBuilder.Register newReg;
-            if (op1.getType().getSqlTypeName() == SqlTypeName.Varchar) {
+            SqlTypeName replaceType = (keepVartypes)?
+                SqlTypeName.Char: SqlTypeName.Varchar;
+            if (op1.getType().getSqlTypeName() == replaceType) {
                 // cast op1 to op2's type but use op1's precision
                 CalcProgramBuilder.RegisterDescriptor reg1Desc =
                     getCalcRegisterDescriptor(op1.getType());

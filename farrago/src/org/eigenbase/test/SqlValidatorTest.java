@@ -24,19 +24,13 @@
 package org.eigenbase.test;
 
 import junit.framework.TestCase;
-import junit.framework.TestSuite;
-import junit.framework.Test;
 import org.eigenbase.sql.SqlCollation;
 import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.util.Bug;
-import org.eigenbase.util.Util;
 
 import java.nio.charset.Charset;
 import java.util.logging.Logger;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
 
 
 /**
@@ -506,10 +500,12 @@ public class SqlValidatorTest extends SqlValidatorTestCase
     {
         checkExp("'a'||'b'");
         checkExp("x'12'||x'34'");
-        checkExpType("'a'||'b'", "todo: VARCHAR(2)"); // should it be "VARCHAR(2) NOT NULL"?
-        checkExpType("cast('a' as char(1))||cast('b' as char(2))", "todo: VARCHAR(3)");
-        checkExpType("'a'||'b'||'c'", "todo: VARCHAR(3)");
-        checkExpType("'a'||'b'||'cde'||'f'", "todo: VARCHAR(6)");
+        checkExpType("'a'||'b'", "CHAR(2) NOT NULL");
+        checkExpType("cast('a' as char(1))||cast('b' as char(2))", "CHAR(3) NOT NULL");
+        checkExpType("cast(null as char(1))||cast('b' as char(2))", "CHAR(3)");
+        checkExpType("'a'||'b'||'c'", "CHAR(3) NOT NULL");
+        checkExpType("'a'||'b'||'cde'||'f'", "CHAR(6) NOT NULL");
+        checkExpType("'a'||'b'||cast('cde' as VARCHAR(3))|| 'f'", "VARCHAR(6) NOT NULL");
         checkExp("_iso-8859-6'a'||_iso-8859-6'b'||_iso-8859-6'c'");
     }
 
@@ -633,7 +629,8 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("trim(both 'mustache' FROM 'beard')");
         checkExp("trim(leading 'mustache' FROM 'beard')");
         checkExp("trim(trailing 'mustache' FROM 'beard')");
-        checkExpType("trim('mustache' FROM 'beard')", "todo: CHAR(5)");
+        checkExpType("trim('mustache' FROM 'beard')", "VARCHAR(5) NOT NULL");
+        checkExpType("trim('mustache' FROM cast(null as varchar(4)))", "VARCHAR(4)");
 
         if (todo) {
             final SqlCollation.Coercibility expectedCoercibility = null;
@@ -665,7 +662,11 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExpFails("overlay('ABCdef' placing 'abc' from '1' for 3)",
             "(?s).*OVERLAY\\(<STRING> PLACING <STRING> FROM <INTEGER>\\).*");
         checkExpType("overlay('ABCdef' placing 'abc' from 1 for 3)",
-            "todo: CHAR(9)");
+            "VARCHAR(9) NOT NULL");
+        checkExpType("overlay('ABCdef' placing 'abc' from 6 for 3)",
+            "VARCHAR(9) NOT NULL");
+        checkExpType("overlay('ABCdef' placing cast(null as char(5)) from 1)",
+            "VARCHAR(11)");
 
         if (todo) {
             checkCollation("overlay('ABCdef' placing 'abc' collate latin1$sv from 1 for 3)",
@@ -681,6 +682,7 @@ public class SqlValidatorTest extends SqlValidatorTestCase
         checkExp("substring(x'ff' FROM 1  FOR 2)"); //binary string
 
         checkExpType("substring('10' FROM 1  FOR 2)", "VARCHAR(2) NOT NULL");
+        checkExpType("substring('1000' FROM 2)", "VARCHAR(4) NOT NULL");
         checkExpType("substring('1000' FROM '1'  FOR 'w')", "VARCHAR(4) NOT NULL");
         checkExpType("substring(cast(' 100 ' as CHAR(99)) FROM '1'  FOR 'w')",
             "VARCHAR(99) NOT NULL");

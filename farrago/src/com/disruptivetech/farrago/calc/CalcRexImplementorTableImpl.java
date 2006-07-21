@@ -580,7 +580,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
         register(
             SqlStdOperatorTable.overlayFunc,
             new BinaryStringMakeSametypeImplementor(
-                ExtInstructionDefTable.overlay, 0, 1));
+                ExtInstructionDefTable.overlay));
 
         register(
             SqlStdOperatorTable.positionFunc,
@@ -1464,7 +1464,7 @@ public class CalcRexImplementorTableImpl implements CalcRexImplementorTable
             newRegs[1] = (CalcProgramBuilder.Register) regs.get(iSecond);
 
             translator.implementConversionIfNeeded(
-                call.operands[iFirst], call.operands[iSecond], newRegs);
+                call.operands[iFirst], call.operands[iSecond], newRegs, true);
             regs.set(iFirst, newRegs[0]);
             regs.set(iSecond, newRegs[1]);
 
