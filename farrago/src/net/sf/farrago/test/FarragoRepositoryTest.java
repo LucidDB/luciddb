@@ -29,21 +29,21 @@ import net.sf.farrago.fem.sql2003.*;
 import junit.framework.*;
 
 /**
- * FarragoReposTest contains unit tests for the repository.
+ * FarragoRepositoryTest contains unit tests for the repository.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoReposTest extends FarragoTestCase
+public class FarragoRepositoryTest extends FarragoTestCase
 {
     /**
-     * Creates a new FarragoReposTest object.
+     * Creates a new FarragoRepositoryTest object.
      *
      * @param testName JUnit test name
      *
      * @throws Exception .
      */
-    public FarragoReposTest(String testName)
+    public FarragoRepositoryTest(String testName)
         throws Exception
     {
         super(testName);
@@ -52,7 +52,7 @@ public class FarragoReposTest extends FarragoTestCase
     // implement TestCase
     public static Test suite()
     {
-        return wrappedSuite(FarragoReposTest.class);
+        return wrappedSuite(FarragoRepositoryTest.class);
     }
 
     public void testTags()
@@ -79,4 +79,4 @@ public class FarragoReposTest extends FarragoTestCase
     }
 }
 
-// End FarragoReposTest.java
+// End FarragoRepositoryTest.java
