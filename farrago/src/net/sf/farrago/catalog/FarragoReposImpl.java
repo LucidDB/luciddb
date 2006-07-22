@@ -30,6 +30,7 @@ import net.sf.farrago.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
@@ -304,14 +305,51 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
             allOfType(CwmCatalog.class), catalogName);
     }
 
-    /**
-     * Gets an element's tag.
-     *
-     * @param element the tagged CwmModelElement
-     * @param tagName name of tag to find
-     *
-     * @return tag, or null if not found
-     */
+    // implement FarragoRepos
+    public FemTagAnnotation getTagAnnotation(
+        FemAnnotatedElement element,
+        String tagName)
+    {
+        Collection tags = element.getTagAnnotation();
+        Iterator iter = tags.iterator();
+        while (iter.hasNext()) {
+            FemTagAnnotation tag = (FemTagAnnotation) iter.next();
+            if (tag.getName().equals(tagName)) {
+                return tag;
+            }
+        }
+        return null;
+    }
+
+    // implement FarragoRepos
+    public void setTagAnnotationValue(
+        FemAnnotatedElement element,
+        String tagName,
+        String tagValue)
+    {
+        FemTagAnnotation tag = getTagAnnotation(element, tagName);
+        if (tag == null) {
+            tag = newFemTagAnnotation();
+            tag.setName(tagName);
+            element.getTagAnnotation().add(tag);
+        }
+        tag.setValue(tagValue);
+    }
+
+    // implement FarragoRepos
+    public String getTagAnnotationValue(
+        FemAnnotatedElement element,
+        String tagName)
+    {
+        FemTagAnnotation tag = getTagAnnotation(element, tagName);
+        if (tag == null) {
+            return null;
+        } else {
+            return tag.getValue();
+        }
+    }
+
+    // implement FarragoRepos
     public CwmTaggedValue getTag(
         CwmModelElement element,
         String tagName)
@@ -328,14 +366,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         return null;
     }
 
-    /**
-     * Tags an element.
-     *
-     * @param element the CwmModelElement to tag
-     * @param tagName name of tag to create; if a tag with this name already
-     *        exists, it will be updated
-     * @param tagValue value to set
-     */
+    // implement FarragoRepos
     public void setTagValue(
         CwmModelElement element,
         String tagName,
@@ -350,14 +381,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         tag.setValue(tagValue);
     }
 
-    /**
-     * Gets a value tagged to an element.
-     *
-     * @param element the tagged CwmModelElement
-     * @param tagName name of tag to find
-     *
-     * @return tag value, or null if not found
-     */
+    // implement FarragoRepos
     public String getTagValue(
         CwmModelElement element,
         String tagName)

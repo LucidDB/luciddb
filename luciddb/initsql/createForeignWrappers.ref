@@ -26,4 +26,13 @@
 . . . . . . . . >   browse_connect_description 'Flat File Connection'
 . . . . . . . . > );
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create luciddb local wrapper with browse connect
+0: jdbc:luciddb:> create foreign data wrapper "LUCIDDB LOCAL"
+. . . . . . . . > library '${FARRAGO_HOME}/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java
+. . . . . . . . > options(
+. . . . . . . . >   browse_connect_description 'LucidDb Loopback Connection',
+. . . . . . . . >   driver_class 'com.lucidera.jdbc.LucidDbLocalDriver',
+. . . . . . . . >   url 'jdbc:luciddb:'
+. . . . . . . . > );
 0: jdbc:luciddb:> !quit
