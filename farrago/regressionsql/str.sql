@@ -30,16 +30,11 @@ select name, empid, substring(name, 2, empid) from sales.emps order by 1;
 select lower(city) from sales.emps order by 1;
 select upper(city) from sales.emps order by 1;
 
--- NOTE jvs 10-Oct-2005:  I added these trims to avoid dtbug 405 in the
--- Fennel calc codegen which causes varchar to get pre-cast to char
--- when overlay operand types are mixed.  Get rid of them once this bug
--- is fixed.
-
-select overlay(name placing trim('??') from 1) from sales.emps order by 1;
-select overlay(name placing trim('??') from 2 for 1) from sales.emps order by 1;
-select overlay(name placing trim('??') from 2 for 2) from sales.emps order by 1;
-select overlay(city placing trim('??') from 2 for 3) from sales.emps order by 1;
-select overlay(name placing trim('??') from 2 for 4) from sales.emps order by 1;
+select overlay(name placing '??' from 1) from sales.emps order by 1;
+select overlay(name placing '??' from 2 for 1) from sales.emps order by 1;
+select overlay(name placing '??' from 2 for 2) from sales.emps order by 1;
+select overlay(city placing '??' from 2 for 3) from sales.emps order by 1;
+select overlay(name placing '??' from 2 for 4) from sales.emps order by 1;
 values overlay('ABCdef' placing '12' from 2 for 1);
 values overlay('ABCdef' placing '12' from 2 for 2);
 values overlay('ABCdef' placing '12' from 2 for 3);
