@@ -20,41 +20,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Iterator;
+import java.util.*;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
- * A <code>SqlNodeList</code> is a list of {@link SqlNode}s. It is also a
- * {@link SqlNode}, so may appear in a parse tree.
+ * A <code>SqlNodeList</code> is a list of {@link SqlNode}s. It is also a {@link
+ * SqlNode}, so may appear in a parse tree.
  */
-public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
+public class SqlNodeList
+    extends SqlNode
+    implements Iterable<SqlNode>
 {
-    //~ Instance fields -------------------------------------------------------
 
-    private final List<SqlNode> list;
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * An immutable, empty SqlNodeList.
      */
     public static final SqlNodeList Empty =
         new SqlNodeList(SqlParserPos.ZERO) {
-            public void add(SqlNode node) {
+            public void add(SqlNode node)
+            {
                 throw new UnsupportedOperationException();
             }
         };
 
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final List<SqlNode> list;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an empty <code>SqlNodeList</code>.
@@ -66,8 +68,8 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
     }
 
     /**
-     * Creates a <code>SqlNodeList</code> containing the nodes in
-     * <code>list</code>. The list is copied, but the nodes in it are not.
+     * Creates a <code>SqlNodeList</code> containing the nodes in <code>
+     * list</code>. The list is copied, but the nodes in it are not.
      */
     public SqlNodeList(
         Collection collection,
@@ -77,7 +79,7 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
         list = new ArrayList<SqlNode>(collection);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Iterable<SqlNode>
     public Iterator<SqlNode> iterator()
@@ -98,8 +100,8 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlNodeList(
-            list,
-            pos);
+                list,
+                pos);
     }
 
     public SqlNode get(int n)
@@ -118,9 +120,8 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
         int rightPrec)
     {
         final SqlWriter.Frame frame =
-            (leftPrec > 0) || (rightPrec > 0) ?
-            writer.startList("(", ")") :
-            writer.startList("", "");
+            ((leftPrec > 0) || (rightPrec > 0)) ? writer.startList("(", ")")
+            : writer.startList("", "");
         commaList(writer);
         writer.endList(frame);
     }
@@ -172,11 +173,12 @@ public class SqlNodeList extends SqlNode implements Iterable<SqlNode>
         return list.toArray(new SqlNode[list.size()]);
     }
 
-    public static boolean isEmptyList(final SqlNode node) {
+    public static boolean isEmptyList(final SqlNode node)
+    {
         if (node instanceof SqlNodeList) {
-           if (0  == ((SqlNodeList)node).size()) {
-               return true;
-           }
+            if (0 == ((SqlNodeList) node).size()) {
+                return true;
+            }
         }
         return false;
     }

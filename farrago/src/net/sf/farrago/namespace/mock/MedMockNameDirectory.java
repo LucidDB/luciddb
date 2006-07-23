@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
@@ -34,28 +35,31 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
 
 
 /**
- * MedMockNameDirectory provides a mock implementation of the
- * {@link FarragoMedNameDirectory} interface.
+ * MedMockNameDirectory provides a mock implementation of the {@link
+ * FarragoMedNameDirectory} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockNameDirectory extends MedAbstractNameDirectory
+class MedMockNameDirectory
+    extends MedAbstractNameDirectory
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static final String COLUMN_NAME = "MOCK_COLUMN";
-    
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedMockDataServer server;
 
     String scope;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMockNameDirectory(MedMockDataServer server, String scope)
     {
@@ -63,7 +67,7 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
         this.scope = scope;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
@@ -79,12 +83,13 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
             return null;
         }
 
-        return server.newColumnSet(
-            localName,
-            server.getProperties(),
-            typeFactory,
-            server.createMockRowType(typeFactory),
-            Collections.EMPTY_MAP);
+        return
+            server.newColumnSet(
+                localName,
+                server.getProperties(),
+                typeFactory,
+                server.createMockRowType(typeFactory),
+                Collections.EMPTY_MAP);
     }
 
     // implement FarragoMedNameDirectory
@@ -93,14 +98,15 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
     {
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
             if (foreignName.equals(server.getForeignSchemaName())) {
-                return new MedMockNameDirectory(
-                    server,
-                    FarragoMedMetadataQuery.OTN_TABLE);
+                return
+                    new MedMockNameDirectory(
+                        server,
+                        FarragoMedMetadataQuery.OTN_TABLE);
             }
         }
         return null;
     }
-    
+
     // implement FarragoMedNameDirectory
     public boolean queryMetadata(
         FarragoMedMetadataQuery query,
@@ -109,7 +115,7 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
     {
         // NOTE:  We take advantage of the fact that we're permitted
         // to ignore query filters and return everything.
-        
+
         if (scope.equals(FarragoMedMetadataQuery.OTN_SCHEMA)) {
             sink.writeObjectDescriptor(
                 server.getForeignSchemaName(),
@@ -134,6 +140,5 @@ class MedMockNameDirectory extends MedAbstractNameDirectory
         return true;
     }
 }
-
 
 // End MedMockNameDirectory.java

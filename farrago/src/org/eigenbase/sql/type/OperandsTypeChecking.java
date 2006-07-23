@@ -23,23 +23,15 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.resource.EigenbaseResource;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
 
-import java.util.ArrayList;
-
-// TODO jvs 1-Jun-2005:  move the contents of this class to SqlTypeStrategies
 
 /**
  * Strategies to check for allowed operand types of an operator call.
  *
  * @author Wael Chatila
- * @since Sept 8, 2004
  * @version $Id$
+ * @since Sept 8, 2004
  */
 public abstract class OperandsTypeChecking
 {

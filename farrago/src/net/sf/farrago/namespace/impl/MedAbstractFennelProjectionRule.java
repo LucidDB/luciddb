@@ -29,49 +29,55 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
+
 
 /**
- * MedAbstractFennelProjectionRule is a base class for implementing
- * projection rules on different storage mechanisms
+ * MedAbstractFennelProjectionRule is a base class for implementing projection
+ * rules on different storage mechanisms
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public abstract class MedAbstractFennelProjectionRule extends RelOptRule
+public abstract class MedAbstractFennelProjectionRule
+    extends RelOptRule
 {
-    private String[] fieldNames;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
+    private String [] fieldNames;
+
     protected ProjectRel origProject;
 
     protected Integer [] projectedColumns;
-    
+
     protected int numProjectedCols;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MedAbstractFennelProjectionRule object.
-     * 
+     *
      * @param operand root operand to pass to RelOptRule constructor
      */
     public MedAbstractFennelProjectionRule(RelOptRuleOperand operand)
     {
         super(operand);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
-    
+
     public abstract void onMatch(RelOptRuleCall call);
-    
+
     /**
-     * Creates projection list for scan
-     *
-     * @note sets member variable numProjectedCols to > 0 if projection
-     * rule can be applied
+     * Creates projection list for scan, and sets member variable
+     * numProjectedCols to > 0 if projection rule can be applied.
      *
      * @return true if columns in projection list need to be renamed
      */
@@ -109,31 +115,36 @@ public abstract class MedAbstractFennelProjectionRule extends RelOptRule
 
     /**
      * Maps a projection expression to its underlying field reference
-     * 
+     *
      * @param exp expression to be mapped
      * @param origFieldName returns field name corresponding to the field
      * reference
      * @param rowType row from which the field reference originated
+     *
      * @return ordinal representing the projection element
      */
     protected Integer mapProjCol(
-        RexNode exp, List<String> origFieldName, RelDataType rowType)
+        RexNode exp,
+        List<String> origFieldName,
+        RelDataType rowType)
     {
         if (!(exp instanceof RexInputRef)) {
             return null;
         }
         return mapFieldRef(exp, origFieldName, rowType);
     }
-    
+
     protected Integer mapFieldRef(
-        RexNode exp, List<String> origFieldName, RelDataType rowType)
+        RexNode exp,
+        List<String> origFieldName,
+        RelDataType rowType)
     {
         RexInputRef fieldAccess = (RexInputRef) exp;
         origFieldName.add(
             rowType.getFields()[fieldAccess.getIndex()].getName());
         return new Integer(fieldAccess.getIndex());
     }
-    
+
     /**
      * Creates a new FennelRenameRel relnode on top of a scan, reflecting
      * renamed columns
@@ -143,8 +154,7 @@ public abstract class MedAbstractFennelProjectionRule extends RelOptRule
     public RelNode renameProjectedScan(RelNode projectedScan)
     {
         // Replace calling convention with FENNEL_EXEC_CONVENTION
-        RelTraitSet traits =
-            RelOptUtil.clone(origProject.getTraits());
+        RelTraitSet traits = RelOptUtil.clone(origProject.getTraits());
         traits.setTrait(
             CallingConventionTraitDef.instance,
             FennelRel.FENNEL_EXEC_CONVENTION);

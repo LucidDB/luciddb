@@ -22,27 +22,33 @@
 */
 package net.sf.farrago.jdbc;
 
-import org.eigenbase.util.EigenbaseException;
+import java.sql.*;
+
+import java.util.logging.*;
+
+import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
-import java.sql.SQLException;
-import java.util.logging.Logger;
 
 /**
- * Utility functions for the Farrago JDBC driver
- * (refactored from FarragoUtil)
+ * Utility functions for the Farrago JDBC driver (refactored from FarragoUtil)
  *
  * @author angel
  * @version $Id$
  * @since Mar 18, 2006
  */
-public class FarragoJdbcUtil {
+public class FarragoJdbcUtil
+{
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Converts any Throwable to a SQLException.
      *
      * @param ex Throwable to be converted
-     * @param tracer Logger on which to trace exceptions as they are
-     *              converted; must not be <code>null</code>
+     * @param tracer Logger on which to trace exceptions as they are converted;
+     * must not be <code>null</code>
+     *
      * @return ex as a SQLException
      */
     public static SQLException newSqlException(
@@ -78,8 +84,10 @@ public class FarragoJdbcUtil {
             // for anything else, include the class name
             // as part of what went wrong
             sqlExcn =
-                new FarragoSqlException(ex.getClass().getName() + ": "
-                    + message, ex);
+                new FarragoSqlException(
+                    ex.getClass().getName() + ": "
+                    + message,
+                    ex);
         }
 
         // preserve additional attributes of the original excn
@@ -89,9 +97,9 @@ public class FarragoJdbcUtil {
         // underlying cause -- that is, the exception at the end of the cause
         // chain -- comes out on top.
         //
-        // If this is a parse exception, the underlying cause will be a
-        // generated class specific to our particular parser implementation, so
-        // we stop at the SqlParseException which is just above it.
+        // If this is a parse exception, the underlying cause will be a generated
+        // class specific to our particular parser implementation, so we stop at
+        // the SqlParseException which is just above it.
         if (cause == null) {
             return sqlExcn;
         } else if (ex instanceof EigenbaseParserException) {
@@ -104,13 +112,14 @@ public class FarragoJdbcUtil {
             return sqlCause;
         }
     }
-    
+
     /**
      * Creates a new SQLException.
      *
      * @param message detail message, the reason for this exception
-     * @param tracer Logger on which to trace new exceptions;
-     *              must not be <code>null</code>
+     * @param tracer Logger on which to trace new exceptions; must not be <code>
+     * null</code>
+     *
      * @return new SQLException
      */
     public static SQLException newSqlException(
@@ -127,7 +136,7 @@ public class FarragoJdbcUtil {
         return ex;
     }
 
-     //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Exception thrown by Farrago JDBC driver.
@@ -137,26 +146,30 @@ public class FarragoJdbcUtil {
      * ensure that the error occurs at the right (line, col) thru (line, col)
      * position.
      *
-     * <p>The original exception is returned by the
-     * {@link #getOriginalThrowable()} method, but will not be returned from
-     * the standard {@link #getNextException()} or {@link #getCause()} methods;
-     * this exception therefore behaves exactly like a regular
-     * {@link java.sql.SQLException}.
+     * <p>The original exception is returned by the {@link
+     * #getOriginalThrowable()} method, but will not be returned from the
+     * standard {@link #getNextException()} or {@link #getCause()} methods; this
+     * exception therefore behaves exactly like a regular {@link
+     * java.sql.SQLException}.
      */
-    public static class FarragoSqlException extends SQLException
+    public static class FarragoSqlException
+        extends SQLException
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -2302810435386763566L;
 
         /**
-         * Original exception. Marked 'transient' so that it does not
-         * prevent this exception from being serializable.
+         * Original exception. Marked 'transient' so that it does not prevent
+         * this exception from being serializable.
          */
         private transient final Throwable original;
 
         /**
          * Creates an exception with a message and a record of the undiluted
          * original exception.
+         *
          * @param s
          * @param original
          */
@@ -172,9 +185,7 @@ public class FarragoJdbcUtil {
         {
             return original;
         }
-
     }
-
 }
 
 // End FarragoJdbcUtil.java

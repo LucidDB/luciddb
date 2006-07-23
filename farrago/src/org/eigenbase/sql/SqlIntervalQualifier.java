@@ -21,17 +21,19 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Represents an INTERVAL qualifier.
  *
  * <p>INTERVAL qualifier is defined as follows:
- * <blockquote><code><pre>
+ *
+ * <blockquote><code>
+ * <pre>
  *
  * &lt;interval qualifier&gt; ::=
  *               &lt;start field&gt; TO &lt;end field&gt;
@@ -54,9 +56,12 @@ import org.eigenbase.sql.validate.SqlValidator;
  * &lt;interval fractional seconds precision&gt; ::= &lt;unsigned integer&gt;
  * &lt;interval leading field precision&gt; ::= &lt;unsigned integer&gt;
  *
- * </pre></code></blockquote>
+ * </pre>
+ * </code></blockquote>
  *
- * <p>Examples include:<ul>
+ * <p>Examples include:
+ *
+ * <ul>
  * <li><code>INTERVAL '1:23:45.678' HOUR TO SECOND</code></li>
  * <li><code>INTERVAL '1 2:3:4' DAY TO SECOND</code></li>
  * <li><code>INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)</code></li>
@@ -65,15 +70,21 @@ import org.eigenbase.sql.validate.SqlValidator;
  * An instance of this class is immutable.
  *
  * @author Wael Chatila
- * @since Oct 31, 2004
  * @version $Id$
+ * @since Oct 31, 2004
  */
-public class SqlIntervalQualifier extends SqlNode
+public class SqlIntervalQualifier
+    extends SqlNode
 {
-    private final int         startPrecision;
-    private final TimeUnit    startUnit;
-    private final TimeUnit    endUnit;
-    private final int         fractionalSecondPrecision;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final int startPrecision;
+    private final TimeUnit startUnit;
+    private final TimeUnit endUnit;
+    private final int fractionalSecondPrecision;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlIntervalQualifier(
         TimeUnit startUnit,
@@ -89,6 +100,8 @@ public class SqlIntervalQualifier extends SqlNode
         this.endUnit = endUnit;
         this.fractionalSecondPrecision = fractionalSecondPrecision;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void validate(
         SqlValidator validator,
@@ -135,8 +148,13 @@ public class SqlIntervalQualifier extends SqlNode
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlIntervalQualifier(
-            startUnit, startPrecision, endUnit, fractionalSecondPrecision, pos);
+        return
+            new SqlIntervalQualifier(
+                startUnit,
+                startPrecision,
+                endUnit,
+                fractionalSecondPrecision,
+                pos);
     }
 
     public void unparse(
@@ -188,33 +206,28 @@ public class SqlIntervalQualifier extends SqlNode
 
     public boolean isYearMonth()
     {
-        return TimeUnit.Year.equals(startUnit) ||
-               TimeUnit.Month.equals(startUnit);
+        return
+            TimeUnit.Year.equals(startUnit)
+            || TimeUnit.Month.equals(startUnit);
     }
 
-    //~ INNER CLASS --------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Enumeration of time units used to construct an interval.
      */
-    public static class TimeUnit extends EnumeratedValues.BasicValue
+    public static class TimeUnit
+        extends EnumeratedValues.BasicValue
     {
-        private TimeUnit(String name, int ordinal) {
-            super(name, ordinal, null);
-        }
-
         public static final int Year_ordinal = 0;
-        public static final TimeUnit Year =
-            new TimeUnit("Year", Year_ordinal);
+        public static final TimeUnit Year = new TimeUnit("Year", Year_ordinal);
         public static final int Month_ordinal = 1;
         public static final TimeUnit Month =
             new TimeUnit("Month", Month_ordinal);
         public static final int Day_ordinal = 2;
-        public static final TimeUnit Day =
-            new TimeUnit("Day", Day_ordinal);
+        public static final TimeUnit Day = new TimeUnit("Day", Day_ordinal);
         public static final int Hour_ordinal = 3;
-        public static final TimeUnit Hour =
-            new TimeUnit("Hour", Hour_ordinal);
+        public static final TimeUnit Hour = new TimeUnit("Hour", Hour_ordinal);
         public static final int Minute_ordinal = 4;
         public static final TimeUnit Minute =
             new TimeUnit("Minute", Minute_ordinal);
@@ -222,11 +235,16 @@ public class SqlIntervalQualifier extends SqlNode
         public static final TimeUnit Second =
             new TimeUnit("Second", Second_ordinal);
         public static final EnumeratedValues enumeration =
-                new EnumeratedValues(new TimeUnit[]{
+            new EnumeratedValues(
+                new TimeUnit[] {
                     Year, Month, Day, Hour, Minute, Second,
                 });
+
+        private TimeUnit(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
     }
 }
 
 // End SqlIntervalQualifier.java
-

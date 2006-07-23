@@ -22,39 +22,48 @@
 */
 package net.sf.farrago.query;
 
-import org.eigenbase.relopt.*;
+import java.math.*;
+
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
-import java.math.*;
 
 /**
- * FennelOneRowRule provides an implementation for {@link OneRowRel}
- * in terms of {@link FennelValuesRel}.
+ * FennelOneRowRule provides an implementation for {@link OneRowRel} in terms of
+ * {@link FennelValuesRel}.
  *
  * @author Wael Chatila
- * @since Feb 4, 2005
  * @version $Id$
+ * @since Feb 4, 2005
  */
-public class FennelOneRowRule extends ConverterRule
+public class FennelOneRowRule
+    extends ConverterRule
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public FennelOneRowRule()
     {
         super(
-            OneRowRel.class, CallingConvention.NONE,
-            FennelRel.FENNEL_EXEC_CONVENTION, "FennelOneRowRule");
+            OneRowRel.class,
+            CallingConvention.NONE,
+            FennelRel.FENNEL_EXEC_CONVENTION,
+            "FennelOneRowRule");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode convert(RelNode rel)
     {
         OneRowRel oneRowRel = (OneRowRel) rel;
 
         RexBuilder rexBuilder = oneRowRel.getCluster().getRexBuilder();
-        RexLiteral literalZero = rexBuilder.makeExactLiteral(
-            new BigDecimal(0));
+        RexLiteral literalZero = rexBuilder.makeExactLiteral(new BigDecimal(0));
 
         List<List<RexLiteral>> tuples =
             Collections.singletonList(
@@ -65,7 +74,12 @@ public class FennelOneRowRule extends ConverterRule
             OneRowRel.deriveOneRowType(oneRowRel.getCluster().getTypeFactory());
 
         FennelValuesRel valuesRel =
-            new FennelValuesRel(oneRowRel.getCluster(), rowType, tuples);
+            new FennelValuesRel(
+                oneRowRel.getCluster(),
+                rowType,
+                tuples);
         return valuesRel;
     }
 }
+
+// End FennelOneRowRule.java

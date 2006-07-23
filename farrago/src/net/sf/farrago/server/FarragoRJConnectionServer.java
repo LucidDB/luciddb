@@ -22,38 +22,50 @@
 */
 package net.sf.farrago.server;
 
-import org.objectweb.rmijdbc.RJConnectionServer;
-import net.sf.farrago.jdbc.rmi.FarragoRJConnectionInterface;
-import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
-import net.sf.farrago.jdbc.FarragoConnection;
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
-import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.rmi.*;
+
+import org.objectweb.rmijdbc.*;
+
 
 /**
- * RMI server-side implementation of {@link java.sql.Connection},
- * also contains server-side implementations of the the extended methods of
- * a Farrago JDBC connection defined by the interface
- * {@link net.sf.farrago.jdbc.FarragoConnection}.
+ * RMI server-side implementation of {@link java.sql.Connection}, also contains
+ * server-side implementations of the the extended methods of a Farrago JDBC
+ * connection defined by the interface {@link
+ * net.sf.farrago.jdbc.FarragoConnection}.
  *
  * @author Tim Leung
  * @version $Id$
  */
-public class FarragoRJConnectionServer extends RJConnectionServer
-    implements FarragoRJConnectionInterface {
+public class FarragoRJConnectionServer
+    extends RJConnectionServer
+    implements FarragoRJConnectionInterface
+{
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Holds the underlying connection. The underlying connection is also held
      * in the base class, but that member is private and is of the wrong type.
      */
     private final FarragoConnection farragoConnection;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoRJConnectionServer(FarragoConnection c)
-        throws RemoteException {
+        throws RemoteException
+    {
         super(c);
         this.farragoConnection = c;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String findMofId(String wrapperName)
         throws RemoteException, SQLException
@@ -61,11 +73,11 @@ public class FarragoRJConnectionServer extends RJConnectionServer
         return farragoConnection.findMofId(wrapperName);
     }
 
-    public long getFarragoSessionId() throws RemoteException, SQLException
+    public long getFarragoSessionId()
+        throws RemoteException, SQLException
     {
         return farragoConnection.getFarragoSessionId();
     }
-
 
     public FarragoRJMedDataWrapperInterface getWrapper(
         final String mofId,
@@ -73,8 +85,12 @@ public class FarragoRJConnectionServer extends RJConnectionServer
         Properties options)
         throws RemoteException, SQLException
     {
-        return new FarragoRJMedDataWrapperServer(farragoConnection, mofId, 
-            libraryName, options);
+        return
+            new FarragoRJMedDataWrapperServer(farragoConnection,
+                mofId,
+                libraryName,
+                options);
     }
-
 }
+
+// End FarragoRJConnectionServer.java

@@ -28,7 +28,7 @@ import net.sf.farrago.util.*;
 
 
 /**
- * FennelTxnContext manages the state of at most one Fennel transaction.  A
+ * FennelTxnContext manages the state of at most one Fennel transaction. A
  * context may be inactive, meaning it has no current transaction.
  *
  * @author John V. Sichi
@@ -36,20 +36,20 @@ import net.sf.farrago.util.*;
  */
 public class FennelTxnContext
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
     private final FennelDbHandle fennelDbHandle;
     private long hTxn;
     private boolean readOnly;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelTxnContext object.
      *
      * @param metadataFactory FarragoMetadataFactory for creating Fem instances
-     *
      * @param fennelDbHandle handle to database affected by txns in this context
      */
     public FennelTxnContext(
@@ -60,7 +60,7 @@ public class FennelTxnContext
         this.fennelDbHandle = fennelDbHandle;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return handle to Fennel database accessed by this txn context
@@ -79,23 +79,23 @@ public class FennelTxnContext
      */
     public void initiateTxn()
     {
-        assert(!readOnly);
+        assert (!readOnly);
         getTxnHandleLong();
     }
 
     /**
-     * Starts a read-only transaction; no transaction is allowed to be
-     * in progress already.
+     * Starts a read-only transaction; no transaction is allowed to be in
+     * progress already.
      */
     public void initiateReadOnlyTxn()
     {
-        assert(hTxn == 0);
+        assert (hTxn == 0);
         readOnly = true;
         getTxnHandleLong();
     }
 
     /**
-     * Gets the handle to the current txn.  If no txn is in progress, starts one
+     * Gets the handle to the current txn. If no txn is in progress, starts one
      * and returns the new handle.
      *
      * @return txn handle as long
@@ -186,7 +186,7 @@ public class FennelTxnContext
     }
 
     /**
-     * Creates a new savepoint, starting a new transaction if necessary.  Note
+     * Creates a new savepoint, starting a new transaction if necessary. Note
      * that savepoint handles are "lightweight" and thus don't require
      * deallocation.
      *
@@ -237,8 +237,8 @@ public class FennelTxnContext
 
     /**
      * Wrapper for executeCmd in the case where cmd is a
-     * FemCmdCreateExecutionStreamGraph.  This ensures that some object owns
-     * the returned stream graph.
+     * FemCmdCreateExecutionStreamGraph. This ensures that some object owns the
+     * returned stream graph.
      *
      * @param owner the object which will be made responsible for the stream
      * graph's allocation as a result of this call
@@ -247,8 +247,8 @@ public class FennelTxnContext
      */
     public FennelStreamGraph newStreamGraph(FarragoAllocationOwner owner)
     {
-        assert(fennelDbHandle != null);
-        
+        assert (fennelDbHandle != null);
+
         fennelDbHandle.getTransientTxnContext().beginTransientTxn();
         try {
             FemCmdCreateExecutionStreamGraph cmdCreate =
@@ -256,7 +256,8 @@ public class FennelTxnContext
             cmdCreate.setTxnHandle(getTxnHandle());
             fennelDbHandle.executeCmd(cmdCreate);
             FennelStreamGraph streamGraph =
-                new FennelStreamGraph(fennelDbHandle,
+                new FennelStreamGraph(
+                    fennelDbHandle,
                     cmdCreate.getResultHandle());
             owner.addAllocation(streamGraph);
             return streamGraph;
@@ -265,6 +266,5 @@ public class FennelTxnContext
         }
     }
 }
-
 
 // End FennelTxnContext.java

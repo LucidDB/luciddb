@@ -23,13 +23,13 @@
 package net.sf.farrago.catalog;
 
 import java.io.*;
+
 import java.util.*;
 import java.util.logging.*;
 
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.util.FarragoProperties;
-import net.sf.farrago.util.MdrUtil;
+import net.sf.farrago.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
@@ -50,21 +50,22 @@ import org.netbeans.mdr.persistence.jdbcimpl.*;
  */
 public class FarragoModelLoader
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 15-Dec-2005:  Do it this way to avoid dependency on
     // FarragoTrace.
     private static final Logger tracer =
         Logger.getLogger("net.sf.farrago.catalog.FarragoRepos");
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     protected MDRepository mdrRepos;
     private String storageFactoryClassName;
     private final Properties storageProps;
     private final FarragoProperties farragoProperties;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoModelLoader()
     {
@@ -77,7 +78,7 @@ public class FarragoModelLoader
         storageProps = new Properties();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void close()
     {
@@ -114,7 +115,8 @@ public class FarragoModelLoader
                     ex);
             }
         }
-        mdrRepos = MdrUtil.loadRepository(storageFactoryClassName, storageProps);
+        mdrRepos =
+            MdrUtil.loadRepository(storageFactoryClassName, storageProps);
     }
 
     public File getSystemReposFile()
@@ -161,7 +163,8 @@ public class FarragoModelLoader
         String name,
         String value)
     {
-        tracer.fine("Setting repository storage property '" + name + "' = [ "
+        tracer.fine(
+            "Setting repository storage property '" + name + "' = [ "
             + value + " ]");
         storageProps.put(name, value);
     }

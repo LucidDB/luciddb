@@ -20,15 +20,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * A <code>SqlFunction</code> is a type of operator which has conventional
@@ -37,9 +36,11 @@ import org.eigenbase.resource.EigenbaseResource;
  * @author jhyde
  * @version $Id$
  */
-public class SqlFunction extends SqlOperator
+public class SqlFunction
+    extends SqlOperator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlFunctionCategory functionType;
 
@@ -47,21 +48,16 @@ public class SqlFunction extends SqlOperator
 
     private final RelDataType [] paramTypes;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new SqlFunction for a call to a builtin function.
      *
      * @param name of builtin function
-     *
      * @param kind kind of operator implemented by function
-     *
      * @param returnTypeInference strategy to use for return type inference
-     *
      * @param operandTypeInference strategy to use for parameter type inference
-     *
      * @param operandTypeChecker strategy to use for parameter type checking
-     *
      * @param funcType categorization for function
      */
     public SqlFunction(
@@ -72,11 +68,18 @@ public class SqlFunction extends SqlOperator
         SqlOperandTypeChecker operandTypeChecker,
         SqlFunctionCategory funcType)
     {
-        super(name, kind, 100, 100, returnTypeInference, operandTypeInference,
+        super(name,
+            kind,
+            100,
+            100,
+            returnTypeInference,
+            operandTypeInference,
             operandTypeChecker);
 
-        assert !(funcType == SqlFunctionCategory.UserDefinedConstructor &&
-            returnTypeInference == null);
+        assert !(
+                (funcType == SqlFunctionCategory.UserDefinedConstructor)
+                && (returnTypeInference == null)
+                );
 
         this.functionType = funcType;
 
@@ -88,19 +91,14 @@ public class SqlFunction extends SqlOperator
 
     /**
      * Creates a placeholder SqlFunction for an invocation of a function with a
-     * possibly qualified name.  This name must be resolved into either a
-     * builtin function or a user-defined function.
+     * possibly qualified name. This name must be resolved into either a builtin
+     * function or a user-defined function.
      *
      * @param sqlIdentifier possibly qualified identifier for function
-     *
      * @param returnTypeInference strategy to use for return type inference
-     *
      * @param operandTypeInference strategy to use for parameter type inference
-     *
      * @param operandTypeChecker strategy to use for parameter type checking
-     *
      * @param paramTypes array of parameter types
-     *
      * @param funcType function category
      */
     public SqlFunction(
@@ -120,15 +118,15 @@ public class SqlFunction extends SqlOperator
             operandTypeInference,
             operandTypeChecker);
 
- //       assert !(funcType == SqlFunctionCategory.UserDefinedConstructor &&
- //           returnTypeInference == null);
+        //       assert !(funcType == SqlFunctionCategory.UserDefinedConstructor
+        // &&           returnTypeInference == null);
 
         this.sqlIdentifier = sqlIdentifier;
         this.functionType = funcType;
         this.paramTypes = paramTypes;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -136,8 +134,7 @@ public class SqlFunction extends SqlOperator
     }
 
     /**
-     * @return fully qualified name of function, or null for a builtin
-     * function
+     * @return fully qualified name of function, or null for a builtin function
      */
     public SqlIdentifier getSqlIdentifier()
     {
@@ -152,7 +149,9 @@ public class SqlFunction extends SqlOperator
         if (sqlIdentifier != null) {
             return sqlIdentifier;
         }
-        return new SqlIdentifier(getName(), SqlParserPos.ZERO);
+        return new SqlIdentifier(
+                getName(),
+                SqlParserPos.ZERO);
     }
 
     /**
@@ -181,9 +180,9 @@ public class SqlFunction extends SqlOperator
     }
 
     /**
-     * Returns whether this function allows a <code>DISTINCT</code> or
-     * <code>ALL</code> quantifier. The default is <code>false</code>; some
-     * aggregate functions return <code>true</code>.
+     * Returns whether this function allows a <code>DISTINCT</code> or <code>
+     * ALL</code> quantifier. The default is <code>false</code>; some aggregate
+     * functions return <code>true</code>.
      */
     public boolean isQuantifierAllowed()
     {
@@ -209,23 +208,26 @@ public class SqlFunction extends SqlOperator
     }
 
     /**
-     * Throws a validation error if a DISTINCT or ALL quantifier is present
-     * but not allowed.
+     * Throws a validation error if a DISTINCT or ALL quantifier is present but
+     * not allowed.
      */
     protected void validateQuantifier(SqlValidator validator, SqlCall call)
     {
         if ((null != call.getFunctionQuantifier()) && !isQuantifierAllowed()) {
-            throw validator.newValidationError(call.getFunctionQuantifier(),
-                EigenbaseResource.instance()
-                .FunctionQuantifierNotAllowed.ex(call.getOperator().getName()));
+            throw validator.newValidationError(
+                call.getFunctionQuantifier(),
+                EigenbaseResource.instance().FunctionQuantifierNotAllowed.ex(
+                    call.getOperator().getName()));
         }
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
-        final SqlNode[] operands = call.operands;
-        RelDataType[] argTypes = new RelDataType[operands.length];
+        final SqlNode [] operands = call.operands;
+        RelDataType [] argTypes = new RelDataType[operands.length];
 
         // Scope for operands. Usually the same as 'scope'.
         final SqlValidatorScope operandScope = scope.getOperandScope(call);
@@ -244,12 +246,13 @@ public class SqlFunction extends SqlOperator
                 argTypes,
                 getFunctionType());
         if (getFunctionType() == SqlFunctionCategory.UserDefinedConstructor) {
-            return validator.deriveConstructorType(
-                scope,
-                call,
-                this,
-                function,
-                argTypes);
+            return
+                validator.deriveConstructorType(
+                    scope,
+                    call,
+                    this,
+                    function,
+                    argTypes);
         }
         if (function == null) {
             validator.handleUnresolvedFunction(
@@ -264,9 +267,10 @@ public class SqlFunction extends SqlOperator
         // choke on the unresolved function.
         call.setOperator(function);
         return function.validateOperands(
-            validator, operandScope, call);
+                validator,
+                operandScope,
+                call);
     }
 }
-
 
 // End SqlFunction.java

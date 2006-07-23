@@ -21,30 +21,34 @@
 */
 package org.eigenbase.rel.metadata;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
 
 /**
- * RelMdPercentageOriginalRows supplies a default implementation of
- * {@link RelMetadataQuery#getPercentageOriginalRows} for the standard
- * logical algebra.
+ * RelMdPercentageOriginalRows supplies a default implementation of {@link
+ * RelMetadataQuery#getPercentageOriginalRows} for the standard logical algebra.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
+public class RelMdPercentageOriginalRows
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public Double getPercentageOriginalRows(AggregateRelBase rel)
     {
         // REVIEW jvs 28-Mar-2006: The assumption here seems to be that
         // aggregation does not apply any filtering, so it does not modify the
         // percentage.  That's very much oversimplified.
-        
+
         return RelMetadataQuery.getPercentageOriginalRows(
-            rel.getChild());
+                rel.getChild());
     }
 
     public Double getPercentageOriginalRows(UnionRelBase rel)
@@ -61,7 +65,7 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         // was the desire to avoid division by zero, which I don't know how to
         // handle so I punt, meaning we return a totally wrong answer in the
         // case where a huge table has been completely filtered away.
-        
+
         for (RelNode input : rel.getInputs()) {
             double rowCount = RelMetadataQuery.getRowCount(input);
             double percentage =
@@ -74,24 +78,23 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
 
         return quotientForPercentage(numerator, denominator);
     }
-    
+
     public Double getPercentageOriginalRows(JoinRelBase rel)
     {
         // Assume any single-table filter conditions have already
         // been pushed down.
-        
+
         // REVIEW jvs 28-Mar-2006: As with aggregation, this is
         // oversimplified.
-        
+
         // REVIEW jvs 28-Mar-2006:  need any special casing for SemiJoinRel?
-    
-        double left =
-            RelMetadataQuery.getPercentageOriginalRows(rel.getLeft());
-        
+
+        double left = RelMetadataQuery.getPercentageOriginalRows(rel.getLeft());
+
         double right =
             RelMetadataQuery.getPercentageOriginalRows(rel.getRight());
 
-        return left*right;
+        return left * right;
     }
 
     // Catch-all rule when none of the others apply.
@@ -118,16 +121,18 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         // Compute product of percentage filtering from this rel (assuming any
         // filtering is the effect of single-table filters) with the percentage
         // filtering performed by the child.
-        Double relPercentage = quotientForPercentage(
-            RelMetadataQuery.getRowCount(rel),
-            RelMetadataQuery.getRowCount(child));
+        Double relPercentage =
+            quotientForPercentage(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getRowCount(child));
         if (relPercentage == null) {
             return null;
         }
         double percent = relPercentage * childPercentage;
+
         // this check is needed in cases where this method is called on a
         // physical rel
-        if (percent < 0.0 || percent > 1.0) {
+        if ((percent < 0.0) || (percent > 1.0)) {
             return null;
         }
         return relPercentage * childPercentage;
@@ -143,7 +148,7 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         }
         return cost;
     }
-    
+
     // Ditto for getNonCumulativeCost
     public RelOptCost getNonCumulativeCost(RelNode rel)
     {
@@ -154,9 +159,10 @@ public class RelMdPercentageOriginalRows extends ReflectiveRelMetadataProvider
         Double numerator,
         Double denominator)
     {
-        if (numerator == null || denominator == null) {
+        if ((numerator == null) || (denominator == null)) {
             return null;
         }
+
         // may need epsilon instead
         if (denominator == 0.0) {
             // cap at 100%

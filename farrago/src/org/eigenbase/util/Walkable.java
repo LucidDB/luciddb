@@ -20,26 +20,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
-
 
 /**
  * Objects which can be tree-walked by Walker.
  *
- * @see Walker
  * @version $Id$
+ * @see Walker
  */
 public interface Walkable<T>
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns an array of the object's children.  Those which are not
-     * Walkable are ignored.
+     * Returns an array of the object's children. Those which are not Walkable
+     * are ignored.
      */
     public abstract T [] getChildren();
 }
-
 
 // End Walkable.java

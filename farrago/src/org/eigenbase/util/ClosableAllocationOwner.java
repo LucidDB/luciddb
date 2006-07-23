@@ -24,15 +24,17 @@ package org.eigenbase.util;
 
 /**
  * ClosableAllocationOwner represents an object which can take ownership of
- * ClosableAllocations and guarantee that they will be cleaned up correctly
- * when its own closeAllocation() is called.
+ * ClosableAllocations and guarantee that they will be cleaned up correctly when
+ * its own closeAllocation() is called.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface ClosableAllocationOwner extends ClosableAllocation
+public interface ClosableAllocationOwner
+    extends ClosableAllocation
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Assigns ownership of a ClosableAllocation to this owner.
@@ -41,6 +43,5 @@ public interface ClosableAllocationOwner extends ClosableAllocation
      */
     public void addAllocation(ClosableAllocation allocation);
 }
-
 
 // End ClosableAllocationOwner.java

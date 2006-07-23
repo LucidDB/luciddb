@@ -21,28 +21,34 @@
 */
 package net.sf.farrago.query;
 
+import java.sql.*;
+
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.util.*;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-
-import java.sql.*;
 
 /**
- * FarragoReentrantStmt provides infrastructure for safely executing a
- * reentrant statement as part of the preparation of some outer statement.
- * The caller is required to define a subclass which executes the
- * internal statement; the base class takes care of releasing resources
- * correctly regardless of how the internal statement fares.
+ * FarragoReentrantStmt provides infrastructure for safely executing a reentrant
+ * statement as part of the preparation of some outer statement. The caller is
+ * required to define a subclass which executes the internal statement; the base
+ * class takes care of releasing resources correctly regardless of how the
+ * internal statement fares.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoReentrantStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoSessionPreparingStmt preparingStmt;
     private FarragoSessionStmtContext stmtContext;
+
+    //~ Methods ----------------------------------------------------------------
 
     protected FarragoSessionPreparingStmt getPreparingStmt()
     {
@@ -59,26 +65,25 @@ public abstract class FarragoReentrantStmt
      */
     protected abstract void executeImpl()
         throws Exception;
-    
+
     /**
-     * Executes the reentrant statement; subclass specified
-     * what to do in {@link #executeImpl}.
+     * Executes the reentrant statement; subclass specified what to do in {@link
+     * #executeImpl}.
      *
      * @param session session on which to execute
      * @param allocateSession if true, allocate a re-entrant session; if false,
-     *                        use the given session directly
+     * use the given session directly
      */
     public void execute(FarragoSession session, boolean allocateSession)
     {
         if (allocateSession) {
             session = session.getSessionFactory().newReentrantSession(session);
         }
-        
+
         stmtContext = session.newStmtContext(null);
-        FarragoSessionStmtValidator stmtValidator =
-            session.newStmtValidator();
+        FarragoSessionStmtValidator stmtValidator = session.newStmtValidator();
         try {
-            preparingStmt = 
+            preparingStmt =
                 session.getPersonality().newPreparingStmt(stmtValidator);
             preparingStmt.preImplement();
             executeImpl();

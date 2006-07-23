@@ -25,9 +25,10 @@ package org.eigenbase.sql.validate;
 // NOTE:  This class gets compiled independently of everything else so that
 // resource generation can use reflection.  That means it must have no
 // dependencies on other Eigenbase/Farrago code.
-import java.util.logging.Logger;
+import java.util.logging.*;
 
-import org.eigenbase.util14.EigenbaseValidatorException;
+import org.eigenbase.util14.*;
+
 
 /**
  * Exception thrown while validating a SQL statement.
@@ -37,19 +38,20 @@ import org.eigenbase.util14.EigenbaseValidatorException;
  * containing the line/column context.
  *
  * @author jhyde
- * @since Oct 28, 2004
  * @version $Id$
- **/
+ * @since Oct 28, 2004
+ */
 public class SqlValidatorException
     extends Exception
     implements EigenbaseValidatorException
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static Logger tracer =
         Logger.getLogger("org.eigenbase.util.EigenbaseException");
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new SqlValidatorException object.
@@ -59,7 +61,8 @@ public class SqlValidatorException
      */
     public SqlValidatorException(
         String message,
-        Throwable cause) {
+        Throwable cause)
+    {
         super(message, cause);
 
         // TODO: see note in EigenbaseException constructor

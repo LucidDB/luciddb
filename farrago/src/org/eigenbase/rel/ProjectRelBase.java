@@ -20,41 +20,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.relopt.*;
+import java.util.*;
+
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.List;
 
 /**
- * <code>ProjectRelBase</code> is an abstract base class for implementations
- * of {@link ProjectRel}.
+ * <code>ProjectRelBase</code> is an abstract base class for implementations of
+ * {@link ProjectRel}.
  */
-public abstract class ProjectRelBase extends SingleRel
+public abstract class ProjectRelBase
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RexNode [] exps;
 
-    /** Values defined in {@link Flags}. */
+    /**
+     * Values defined in {@link Flags}.
+     */
     protected int flags;
 
     private final List<RelCollation> collationList;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Project.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param traits traits of this rel
      * @param child input relational expression
      * @param exps set of expressions for the input columns
@@ -77,12 +79,11 @@ public abstract class ProjectRelBase extends SingleRel
         this.rowType = rowType;
         this.flags = flags;
         this.collationList =
-            collationList.isEmpty() ? RelCollation.emptyList :
-            collationList;
+            collationList.isEmpty() ? RelCollation.emptyList : collationList;
         assert isValid(true);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public List<RelCollation> getCollationList()
     {
@@ -95,7 +96,7 @@ public abstract class ProjectRelBase extends SingleRel
     }
 
     // override AbstractRelNode
-    public RexNode[] getChildExps()
+    public RexNode [] getChildExps()
     {
         return getProjectExps();
     }
@@ -119,11 +120,16 @@ public abstract class ProjectRelBase extends SingleRel
             assert !fail;
             return false;
         }
-        if (!RexUtil.compatibleTypes(exps, getRowType(), true)) {
+        if (!RexUtil.compatibleTypes(
+                exps,
+                getRowType(),
+                true)) {
             assert !fail;
             return false;
         }
-        Checker checker = new Checker(fail, getChild());
+        Checker checker = new Checker(
+                fail,
+                getChild());
         for (RexNode exp : exps) {
             exp.accept(checker);
         }
@@ -156,7 +162,7 @@ public abstract class ProjectRelBase extends SingleRel
     {
         int i = 0;
         terms[i++] = "child";
-        final RelDataTypeField[] fields = rowType.getFields();
+        final RelDataTypeField [] fields = rowType.getFields();
         for (int j = 0; j < fields.length; j++) {
             String fieldName = fields[j].getName();
             if (fieldName == null) {
@@ -174,43 +180,46 @@ public abstract class ProjectRelBase extends SingleRel
     }
 
     /**
-     * Burrows into a synthetic record and returns the underlying relation
-     * which provides the field called <code>fieldName</code>.
+     * Burrows into a synthetic record and returns the underlying relation which
+     * provides the field called <code>fieldName</code>.
      */
     public JavaRel implementFieldAccess(
         JavaRelImplementor implementor,
         String fieldName)
     {
         if (!isBoxed()) {
-            return implementor.implementFieldAccess(
-                (JavaRel) getChild(), fieldName);
+            return
+                implementor.implementFieldAccess((JavaRel) getChild(),
+                    fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
         return implementor.findRel((JavaRel) this, exps[field]);
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     public interface Flags
     {
         int AnonFields = 2;
 
         /**
-         * Whether the resulting row is to be a synthetic class whose fields
-         * are the aliases of the fields. <code>boxed</code> must be true
-         * unless there is only one field: <code>select {dept.deptno} from
-         * dept</code> is boxed, <code>select dept.deptno from dept</code> is
-         * not.
+         * Whether the resulting row is to be a synthetic class whose fields are
+         * the aliases of the fields. <code>boxed</code> must be true unless
+         * there is only one field: <code>select {dept.deptno} from dept</code>
+         * is boxed, <code>select dept.deptno from dept</code> is not.
          */
         int Boxed = 1;
         int None = 0;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Visitor which walks over a program and checks validity.
      */
-    private static class Checker extends RexVisitorImpl<Boolean>
+    private static class Checker
+        extends RexVisitorImpl<Boolean>
     {
         private final boolean fail;
         private final RelNode child;
@@ -226,15 +235,18 @@ public abstract class ProjectRelBase extends SingleRel
         public Boolean visitInputRef(RexInputRef inputRef)
         {
             final int index = inputRef.getIndex();
-            final RelDataTypeField[] fields = child.getRowType().getFields();
-            if (index < 0 || index >= fields.length) {
+            final RelDataTypeField [] fields = child.getRowType().getFields();
+            if ((index < 0) || (index >= fields.length)) {
                 assert !fail;
                 ++failCount;
                 return false;
             }
             if (!RelOptUtil.eq(
-                "inputRef", inputRef.getType(),
-                "underlying field", fields[index].getType(), fail)) {
+                    "inputRef",
+                    inputRef.getType(),
+                    "underlying field",
+                    fields[index].getType(),
+                    fail)) {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -257,15 +269,18 @@ public abstract class ProjectRelBase extends SingleRel
             assert refType.isStruct();
             final RelDataTypeField field = fieldAccess.getField();
             final int index = field.getIndex();
-            if (index < 0 || index > refType.getFields().length) {
+            if ((index < 0) || (index > refType.getFields().length)) {
                 assert !fail;
                 ++failCount;
                 return false;
             }
             final RelDataTypeField typeField = refType.getFields()[index];
             if (!RelOptUtil.eq(
-                "type1", typeField.getType(),
-                "type2", fieldAccess.getType(), fail)) {
+                    "type1",
+                    typeField.getType(),
+                    "type2",
+                    fieldAccess.getType(),
+                    fail)) {
                 assert !fail;
                 ++failCount;
                 return false;
@@ -274,6 +289,5 @@ public abstract class ProjectRelBase extends SingleRel
         }
     }
 }
-
 
 // End ProjectRelBase.java

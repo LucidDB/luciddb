@@ -20,49 +20,67 @@
 */
 package com.disruptivetech.farrago.rel;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.farrago.fem.fennel.FemCollectTupleStreamDef;
-import net.sf.farrago.fem.fennel.FemTupleDescriptor;
-import net.sf.farrago.catalog.FarragoRepos;
+
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.CollectRel;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * FennelPullCollectRel is the relational expression corresponding to a collect
  * implemented inside of Fennel.
  *
- * <p>Rules:<ul>
+ * <p>Rules:
+ *
+ * <ul>
  * <li>{@link FennelCollectRule} creates this from a {@link CollectRel}.</li>
- * </ul></p>
+ * </ul>
+ * </p>
  *
  * @author Wael Chatila
- * @since Dec 11, 2004
  * @version $Id$
+ * @since Dec 11, 2004
  */
-public class FennelPullCollectRel extends FennelSingleRel
+public class FennelPullCollectRel
+    extends FennelSingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final String name;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FennelPullCollectRel(
-        RelOptCluster cluster, RelNode child, String name) {
-        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
+        RelOptCluster cluster,
+        RelNode child,
+        String name)
+    {
+        super(
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            child);
         this.name = name;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected RelDataType deriveRowType()
     {
         return CollectRel.deriveCollectRowType(this, name);
     }
 
-    public RelOptCost computeSelfCost(RelOptPlanner planner) {
+    public RelOptCost computeSelfCost(RelOptPlanner planner)
+    {
         return planner.makeTinyCost();
     }
 
-    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor) {
+    public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
+    {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemCollectTupleStreamDef collectStreamDef =
             repos.newFemCollectTupleStreamDef();
@@ -70,24 +88,32 @@ public class FennelPullCollectRel extends FennelSingleRel
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()),
             collectStreamDef);
-        
+
         FemTupleDescriptor outTupleDesc = repos.newFemTupleDescriptor();
-        RelDataType type=
+        RelDataType type =
             getCluster().getTypeFactory().createSqlType(
-                SqlTypeName.Varbinary, 4096);
-        type = getCluster().getTypeFactory().createTypeWithNullability(
-            type, true);
+                SqlTypeName.Varbinary,
+                4096);
+        type =
+            getCluster().getTypeFactory().createTypeWithNullability(
+                type,
+                true);
         FennelRelUtil.addTupleAttrDescriptor(repos, outTupleDesc, type);
         collectStreamDef.setOutputDesc(outTupleDesc);
         return collectStreamDef;
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone() {
+    public Object clone()
+    {
         FennelPullCollectRel clone =
             new FennelPullCollectRel(
-                getCluster(), RelOptUtil.clone(getChild()),name);
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                name);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
+
+// End FennelPullCollectRel.java

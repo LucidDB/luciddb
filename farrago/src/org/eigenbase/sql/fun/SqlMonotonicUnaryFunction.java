@@ -22,20 +22,23 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlOperandTypeChecker;
-import org.eigenbase.sql.type.SqlOperandTypeInference;
-import org.eigenbase.sql.type.SqlReturnTypeInference;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
- * Base class for unary operators such as FLOOR/CEIL
- * which are monotonic for monotonic inputs.
+ * Base class for unary operators such as FLOOR/CEIL which are monotonic for
+ * monotonic inputs.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlMonotonicUnaryFunction extends SqlFunction
+public class SqlMonotonicUnaryFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlMonotonicUnaryFunction(
         String name,
         SqlKind kind,
@@ -45,14 +48,19 @@ public class SqlMonotonicUnaryFunction extends SqlFunction
         SqlFunctionCategory funcType)
     {
         super(
-            name, kind, returnTypeInference,
-            operandTypeInference, operandTypeChecker,
+            name,
+            kind,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker,
             funcType);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
-        SqlNode node = (SqlNode)call.operands[0];
+        SqlNode node = (SqlNode) call.operands[0];
         return scope.isMonotonic(node);
     }
 }

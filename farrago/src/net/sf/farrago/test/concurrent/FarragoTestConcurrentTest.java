@@ -21,21 +21,17 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.LineNumberReader;
-import java.io.StringReader;
-import java.util.regex.Pattern;
+import java.io.*;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.*;
 
-import net.sf.farrago.test.FarragoSqlTest;
-import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.util.FarragoProperties;
+import net.sf.farrago.util.*;
+
 
 /**
- * FarragoTestConcurrentTest executes a variety of SQL DML and DDL
- * commands via a multi-threaded test harness in an effort to detect
- * errors in concurrent execution.
+ * FarragoTestConcurrentTest executes a variety of SQL DML and DDL commands via
+ * a multi-threaded test harness in an effort to detect errors in concurrent
+ * execution.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -43,29 +39,31 @@ import net.sf.farrago.util.FarragoProperties;
 public class FarragoTestConcurrentTest
     extends FarragoTestConcurrentScriptedTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoTestConcurrentTest(String name)
         throws Exception
     {
         super(name);
     }
-    
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Test suite()
         throws Exception
     {
-        return gatherSuite(
-            FarragoProperties.instance().testFilesetConcurrent.get(true),
-            new FarragoConcurrentSqlTestFactory() {
-                public FarragoTestConcurrentTestCase createSqlTest(
-                    String testName) throws Exception
-                {
-                    return new FarragoTestConcurrentTest(testName);
-                }
-            });
+        return
+            gatherSuite(
+                FarragoProperties.instance().testFilesetConcurrent.get(true),
+                new FarragoConcurrentSqlTestFactory() {
+                    public FarragoTestConcurrentTestCase createSqlTest(
+                        String testName)
+                        throws Exception
+                    {
+                        return new FarragoTestConcurrentTest(testName);
+                    }
+                });
     }
 
     // REVIEW: SZ: 10/21/2004: Copied this from FarragoSqlTest.  If
@@ -88,7 +86,7 @@ public class FarragoTestConcurrentTest
         return wrappedSuite(suite);
     }
 
-    // Copied this from FarragoSqlTest.  
+    // Copied this from FarragoSqlTest.
     protected void setUp()
         throws Exception
     {
@@ -104,7 +102,8 @@ public class FarragoTestConcurrentTest
         Runtime rt = Runtime.getRuntime();
         rt.gc();
         rt.gc();
-        tracer.info("Java heap in use after gc = "
+        tracer.info(
+            "Java heap in use after gc = "
             + (rt.totalMemory() - rt.freeMemory()));
     }
 
@@ -117,7 +116,7 @@ public class FarragoTestConcurrentTest
         runScript(getName());
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     public interface FarragoConcurrentSqlTestFactory
     {
@@ -125,3 +124,5 @@ public class FarragoTestConcurrentTest
             throws Exception;
     }
 }
+
+// End FarragoTestConcurrentTest.java

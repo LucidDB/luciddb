@@ -11,11 +11,11 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -24,41 +24,53 @@ package org.eigenbase.util.property;
 
 import java.util.*;
 
+
 /**
  * Base class for properties which can respond to triggers.
  *
- * <p>If you wish to be notified of changes to properties, use the
- * {@link Property#addTrigger(Trigger)} method to register a callback.
+ * <p>If you wish to be notified of changes to properties, use the {@link
+ * Property#addTrigger(Trigger)} method to register a callback.
  *
  * @author Julian Hyde
- * @since 5 July 2005
  * @version $Id$
+ * @since 5 July 2005
  */
-public class TriggerableProperties extends Properties
+public class TriggerableProperties
+    extends Properties
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final Map triggers = new HashMap();
     protected final Map properties = new HashMap();
 
-    protected TriggerableProperties() {
+    //~ Constructors -----------------------------------------------------------
+
+    protected TriggerableProperties()
+    {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Sets the value of a property.
      *
      * <p>If the previous value does not equal the new value, executes any
-     * {@link Trigger}s associated with the property, in order of their
-     * {@link Trigger#phase() phase}.
+     * {@link Trigger}s associated with the property, in order of their {@link
+     * Trigger#phase() phase}.
      *
      * @param key
      * @param value
+     *
      * @return the old value
      */
     public synchronized Object setProperty(
-            final String key, final String value)
+        final String key,
+        final String value)
     {
         String oldValue = super.getProperty(key);
         Object object = super.setProperty(key, value);
-        if (oldValue == null && object != null) {
+        if ((oldValue == null) && (object != null)) {
             oldValue = object.toString();
         }
 
@@ -66,8 +78,8 @@ public class TriggerableProperties extends Properties
         // its triggers. If one of those triggers fires a veto exception, roll
         // back the change.
         Property property = (Property) properties.get(key);
-        if (property != null &&
-                triggersAreEnabled()) {
+        if ((property != null)
+            && triggersAreEnabled()) {
             try {
                 property.onChange(oldValue, value);
             } catch (Trigger.VetoRT vex) {
@@ -79,6 +91,7 @@ public class TriggerableProperties extends Properties
                 } catch (Trigger.VetoRT ex) {
                     // ignore during reset
                 }
+
                 // Re-throw.
                 throw vex;
             }
@@ -87,8 +100,7 @@ public class TriggerableProperties extends Properties
     }
 
     /**
-     * Whether triggers are enabled.
-     * Derived class can override.
+     * Whether triggers are enabled. Derived class can override.
      */
     public boolean triggersAreEnabled()
     {
@@ -96,13 +108,14 @@ public class TriggerableProperties extends Properties
     }
 
     /**
-     * This is ONLY called during a veto
-     * operation. It calls the super class {@link #setProperty}.
+     * This is ONLY called during a veto operation. It calls the super class
+     * {@link #setProperty}.
      *
      * @param key
      * @param oldValue
      */
-    private void superSetProperty(String key, String oldValue) {
+    private void superSetProperty(String key, String oldValue)
+    {
         if (oldValue != null) {
             super.setProperty(key, oldValue);
         }
@@ -110,27 +123,28 @@ public class TriggerableProperties extends Properties
 
     static boolean equals(Object o1, Object o2)
     {
-        return o1 == null ?
-                o2 == null :
-                o2 != null && o1.equals(o2);
+        return (o1 == null) ? (o2 == null) : ((o2 != null) && o1.equals(o2));
     }
 
     /**
-     * Registers a property with this properties object to make it available
-     * for callbacks.
+     * Registers a property with this properties object to make it available for
+     * callbacks.
      */
     public void register(Property property)
     {
-        properties.put(property.getPath(), property);
+        properties.put(
+            property.getPath(),
+            property);
     }
 
     /**
      * Returns an array of registered properties.
      */
-    public Property[] getProperties()
+    public Property [] getProperties()
     {
         final Collection propertyList = properties.values();
-        return (Property[]) propertyList.toArray(
+        return
+            (Property []) propertyList.toArray(
                 new Property[propertyList.size()]);
     }
 }

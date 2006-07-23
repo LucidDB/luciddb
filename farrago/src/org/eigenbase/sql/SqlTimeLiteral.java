@@ -21,29 +21,38 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.text.*;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.*;
+
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * A SQL literal representing a TIME value, for example
- * <code>TIME '14:33:44.567'</code>.
+ * A SQL literal representing a TIME value, for example <code>TIME
+ * '14:33:44.567'</code>.
  *
  * <p>Create values using {@link SqlLiteral#createTime}.
- **/
-public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
+ */
+public class SqlTimeLiteral
+    extends SqlAbstractDateTimeLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     SqlTimeLiteral(
         Calendar t,
         int precision,
         boolean hasTZ,
         SqlParserPos pos)
     {
-        super(t, hasTZ, SqlTypeName.Time, precision,
-            SqlParserUtil.TimeFormatStr, pos);
+        super(t,
+            hasTZ,
+            SqlTypeName.Time,
+            precision,
+            SqlParserUtil.TimeFormatStr,
+            pos);
     }
 
     SqlTimeLiteral(
@@ -56,10 +65,16 @@ public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
         super(t, hasTZ, SqlTypeName.Time, precision, format, pos);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlTimeLiteral(
-            (Calendar) value, precision, hasTimeZone, formatString, pos);
+        return
+            new SqlTimeLiteral((Calendar) value,
+                precision,
+                hasTimeZone,
+                formatString,
+                pos);
     }
 
     public String toString()
@@ -72,8 +87,7 @@ public class SqlTimeLiteral extends SqlAbstractDateTimeLiteral
      */
     public String toFormattedString()
     {
-        String result =
-            new SimpleDateFormat(formatString).format(getTime());
+        String result = new SimpleDateFormat(formatString).format(getTime());
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);

@@ -25,14 +25,19 @@ import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.server.*;
 
+
 /**
  * FarragoServerTest tests Farrago client/server connections via VJDBC.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoVjdbcServerTest extends FarragoServerTest
+public class FarragoVjdbcServerTest
+    extends FarragoServerTest
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Initializes a new FarragoVjdbcServerTest.
      *
@@ -43,6 +48,8 @@ public class FarragoVjdbcServerTest extends FarragoServerTest
     {
         super(testCaseName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected FarragoAbstractServer newServer()
     {

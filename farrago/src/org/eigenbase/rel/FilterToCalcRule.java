@@ -20,11 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
 
@@ -32,22 +31,24 @@ import org.eigenbase.rex.*;
  * Planner rule which converts a {@link FilterRel} to a {@link CalcRel}.
  *
  * <p>The rule does <em>NOT</em> fire if the child is a {@link FilterRel} or a
- * {@link ProjectRel} (we assume they they will be converted using
- * {@link FilterToCalcRule} or {@link ProjectToCalcRule}) or a {@link CalcRel}.
- * This {@link FilterRel} will eventually be converted by
- * {@link MergeFilterOntoCalcRule}.
+ * {@link ProjectRel} (we assume they they will be converted using {@link
+ * FilterToCalcRule} or {@link ProjectToCalcRule}) or a {@link CalcRel}. This
+ * {@link FilterRel} will eventually be converted by {@link
+ * MergeFilterOntoCalcRule}.
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
- **/
-public class FilterToCalcRule extends RelOptRule
+ * @since Mar 7, 2004
+ */
+public class FilterToCalcRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final FilterToCalcRule instance = new FilterToCalcRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private FilterToCalcRule()
     {
@@ -56,7 +57,7 @@ public class FilterToCalcRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -76,11 +77,14 @@ public class FilterToCalcRule extends RelOptRule
 
         final CalcRel calc =
             new CalcRel(
-                filter.getCluster(), RelOptUtil.clone(filter.traits), rel,
-                inputRowType, program, RelCollation.emptyList);
+                filter.getCluster(),
+                RelOptUtil.clone(filter.traits),
+                rel,
+                inputRowType,
+                program,
+                RelCollation.emptyList);
         call.transformTo(calc);
     }
 }
-
 
 // End FilterToCalcRule.java

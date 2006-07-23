@@ -23,6 +23,7 @@
 package net.sf.farrago.catalog;
 
 import java.util.*;
+import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
@@ -34,12 +35,11 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
 import org.eigenbase.jmi.*;
-import org.netbeans.mdr.handlers.BaseObjectHandler;
+import org.eigenbase.util.*;
 
-import java.util.logging.Logger;
+import org.netbeans.mdr.handlers.*;
+
 
 /**
  * Implementation of {@link FarragoRepos} using a MDR repository.
@@ -47,16 +47,21 @@ import java.util.logging.Logger;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
+public abstract class FarragoReposImpl
+    extends FarragoMetadataFactoryImpl
     implements FarragoRepos
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger tracer = FarragoTrace.getReposTracer();
 
-    /** TODO:  look this up from repository */
+    /**
+     * TODO: look this up from repository
+     */
     private static final int maxNameLength = 128;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private boolean isFennelEnabled;
 
@@ -73,7 +78,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
 
     private Map<String, FarragoSequenceAccessor> sequenceMap;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Opens a Farrago repository.
@@ -85,13 +90,15 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         sequenceMap = new HashMap<String, FarragoSequenceAccessor>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // TODO jvs 30-Nov-2005:  rename these methods; initGraph initializes
     // other stuff besides the model graph
 
     /**
      * Initializes the model graph. The constructor of a concrete subclass must
-     * call this after the repository has been initialized, and
-     * {@link #getRootPackage()} is available.
+     * call this after the repository has been initialized, and {@link
+     * #getRootPackage()} is available.
      */
     protected void initGraph()
     {
@@ -102,19 +109,20 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     protected void initGraphOnly()
     {
         ClassLoader classLoader = BaseObjectHandler.getDefaultClassLoader();
-        modelGraph = new JmiModelGraph(getRootPackage(), classLoader, true);
+        modelGraph = new JmiModelGraph(
+                getRootPackage(),
+                classLoader,
+                true);
         modelView = new JmiModelView(modelGraph);
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     protected FemFarragoConfig getDefaultConfig()
     {
         // TODO: multiple named configurations.  For now, build should have
         // imported exactly one configuration named Current.
         Collection<FemFarragoConfig> configs =
-            (Collection<FemFarragoConfig>) 
-            getConfigPackage().getFemFarragoConfig().refAllOfClass();
+            (Collection<FemFarragoConfig>) getConfigPackage()
+            .getFemFarragoConfig().refAllOfClass();
 
         assert (configs.size() == 1);
         FemFarragoConfig defaultConfig = configs.iterator().next();
@@ -191,18 +199,22 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      * including its type.
      *
      * @param modelElement catalog object
+     *
      * @return localized name
      */
     public String getLocalizedObjectName(
         CwmModelElement modelElement)
     {
-        return getLocalizedObjectName(modelElement, modelElement.refClass());
+        return getLocalizedObjectName(
+                modelElement,
+                modelElement.refClass());
     }
 
     /**
      * Formats the localized name for an unqualified typeless object.
      *
      * @param name object name
+     *
      * @return localized name
      */
     public String getLocalizedObjectName(
@@ -216,8 +228,8 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      *
      * @param modelElement catalog object
      * @param refClass if non-null, use this as the type of the object, e.g.
-     *        "table SCHEMA.TABLE"; if null, don't include type (e.g. just
-     *        "SCHEMA.TABLE")
+     * "table SCHEMA.TABLE"; if null, don't include type (e.g. just
+     * "SCHEMA.TABLE")
      *
      * @return localized name
      */
@@ -230,10 +242,11 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         if (namespace != null) {
             qualifierName = namespace.getName();
         }
-        return getLocalizedObjectName(
-            qualifierName,
-            modelElement.getName(),
-            refClass);
+        return
+            getLocalizedObjectName(
+                qualifierName,
+                modelElement.getName(),
+                refClass);
     }
 
     /**
@@ -241,10 +254,10 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      * exist yet.
      *
      * @param qualifierName name of containing object, or null for unqualified
-     *        name
+     * name
      * @param objectName name of object
-     * @param refClass if non-null, the object type to use in the name; if
-     *        null, no type is prepended
+     * @param refClass if non-null, the object type to use in the name; if null,
+     * no type is prepended
      *
      * @return localized name
      */
@@ -276,7 +289,7 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      *
      * @param refClass class of metadata, e.g. CwmTableClass
      *
-     * @return localized name,  e.g. "table"
+     * @return localized name, e.g. "table"
      */
     public String getLocalizedClassName(RefClass refClass)
     {
@@ -301,8 +314,10 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
      */
     public CwmCatalog getCatalog(String catalogName)
     {
-        return FarragoCatalogUtil.getModelElementByName(
-            allOfType(CwmCatalog.class), catalogName);
+        return
+            FarragoCatalogUtil.getModelElementByName(
+                allOfType(CwmCatalog.class),
+                catalogName);
     }
 
     // implement FarragoRepos
@@ -423,11 +438,11 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         }
         throw Util.newInternal("Unknown metadata factory '" + prefix + "'");
     }
-    
+
     public FarragoSequenceAccessor getSequenceAccessor(
         String mofId)
     {
-        synchronized(sequenceMap) {
+        synchronized (sequenceMap) {
             FarragoSequenceAccessor sequence = sequenceMap.get(mofId);
             if (sequence != null) {
                 return sequence;
@@ -440,29 +455,27 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
     }
 
     /* (non-Javadoc)
-     * @see net.sf.farrago.catalog.FarragoRepos#expandProperties(java.lang.String)
+     * @see
+     * net.sf.farrago.catalog.FarragoRepos#expandProperties(java.lang.String)
      */
     public String expandProperties(String value)
     {
         return FarragoProperties.instance().expandProperties(value);
     }
 
-    private RefClass findRefClass(
-        Class<? extends RefObject> clazz)
+    private RefClass findRefClass(Class<? extends RefObject> clazz)
     {
         JmiClassVertex vertex = modelGraph.getVertexForJavaInterface(clazz);
         return vertex.getRefClass();
     }
 
-    public <T extends RefObject>
-    Collection<T> allOfClass(Class<T> clazz)
+    public <T extends RefObject> Collection<T> allOfClass(Class<T> clazz)
     {
         RefClass refClass = findRefClass(clazz);
         return (Collection<T>) refClass.refAllOfClass();
     }
 
-    public <T extends RefObject>
-    Collection<T> allOfType(Class<T> clazz)
+    public <T extends RefObject> Collection<T> allOfType(Class<T> clazz)
     {
         RefClass refClass = findRefClass(clazz);
         return (Collection<T>) refClass.refAllOfType();
@@ -474,6 +487,5 @@ public abstract class FarragoReposImpl extends FarragoMetadataFactoryImpl
         return null;
     }
 }
-
 
 // End FarragoReposImpl.java

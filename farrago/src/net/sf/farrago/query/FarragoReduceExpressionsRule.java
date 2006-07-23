@@ -21,40 +21,49 @@
 */
 package net.sf.farrago.query;
 
+import java.math.*;
+
+import java.sql.*;
+
+import java.util.*;
+import java.util.logging.*;
+import java.util.regex.*;
+
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
-import java.math.*;
-import java.util.regex.*;
-import java.util.logging.*;
-import java.sql.*;
-
-import net.sf.farrago.trace.*;
-import net.sf.farrago.session.*;
 
 /**
- * FarragoReduceExpressionsRule applies various simplifying transformations
- * on RexNode trees.  Currently, the only transformation is constant
- * reduction, which evaluates constant subtrees, replacing them with
- * a corresponding RexLiteral.
+ * FarragoReduceExpressionsRule applies various simplifying transformations on
+ * RexNode trees. Currently, the only transformation is constant reduction,
+ * which evaluates constant subtrees, replacing them with a corresponding
+ * RexLiteral.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoReduceExpressionsRule extends RelOptRule
+public class FarragoReduceExpressionsRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger tracer = FarragoTrace.getOptimizerRuleTracer();
 
     public static final Pattern EXCLUSION_PATTERN =
         Pattern.compile("FarragoReduceExpressionsRule.*");
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoReduceExpressionsRule object.
      *
@@ -70,6 +79,8 @@ public class FarragoReduceExpressionsRule extends RelOptRule
             + ReflectUtil.getUnqualifiedClassName(relClass);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
@@ -78,9 +89,10 @@ public class FarragoReduceExpressionsRule extends RelOptRule
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
 
         // Find reducible expressions.
-        List<RexNode> reducibleExps = findReducibleExps(
-            rel.getCluster().getTypeFactory(),
-            exps);
+        List<RexNode> reducibleExps =
+            findReducibleExps(
+                rel.getCluster().getTypeFactory(),
+                exps);
         if (reducibleExps.isEmpty()) {
             return;
         }
@@ -107,31 +119,33 @@ public class FarragoReduceExpressionsRule extends RelOptRule
         RexNode [] newExps = new RexNode[exps.length];
         System.arraycopy(exps, 0, newExps, 0, exps.length);
         exps = newExps;
-        RexReplacer replacer = new RexReplacer(
-            rexBuilder,
-            reducibleExps,
-            reducedValues,
-            (rel instanceof ProjectRel));
+        RexReplacer replacer =
+            new RexReplacer(
+                rexBuilder,
+                reducibleExps,
+                reducedValues,
+                (rel instanceof ProjectRel));
         for (int i = 0; i < exps.length; ++i) {
             exps[i] = replacer.apply(exps[i]);
         }
 
         RelNode newRel;
         if (rel instanceof FilterRel) {
-            assert(exps.length == 1);
+            assert (exps.length == 1);
             FilterRel oldRel = (FilterRel) rel;
             newRel = CalcRel.createFilter(
-                oldRel.getChild(),
-                exps[0]);
+                    oldRel.getChild(),
+                    exps[0]);
         } else if (rel instanceof ProjectRel) {
             ProjectRel oldRel = (ProjectRel) rel;
-            newRel = new ProjectRel(
-                oldRel.getCluster(),
-                oldRel.getChild(),
-                exps,
-                oldRel.getRowType(),
-                ProjectRel.Flags.Boxed,
-                RelCollation.emptyList);
+            newRel =
+                new ProjectRel(
+                    oldRel.getCluster(),
+                    oldRel.getChild(),
+                    exps,
+                    oldRel.getRowType(),
+                    ProjectRel.Flags.Boxed,
+                    RelCollation.emptyList);
         } else {
             throw Util.needToImplement(rel);
         }
@@ -140,10 +154,9 @@ public class FarragoReduceExpressionsRule extends RelOptRule
 
     private FarragoSession getSession(RelNode rel)
     {
-        FarragoSessionPlanner planner = (FarragoSessionPlanner)
-            rel.getCluster().getPlanner();
-        FarragoSessionPreparingStmt preparingStmt =
-            planner.getPreparingStmt();
+        FarragoSessionPlanner planner =
+            (FarragoSessionPlanner) rel.getCluster().getPlanner();
+        FarragoSessionPreparingStmt preparingStmt = planner.getPreparingStmt();
         return preparingStmt.getSession();
     }
 
@@ -153,26 +166,46 @@ public class FarragoReduceExpressionsRule extends RelOptRule
     {
         List<RexNode> result = new ArrayList<RexNode>();
         ConstantGardener gardener = new ConstantGardener(
-            typeFactory,
-            result);
+                typeFactory,
+                result);
         for (RexNode exp : exps) {
             gardener.analyze(exp);
         }
         return result;
     }
 
+    // TODO jvs 26-May-2006:  Get rid of this.
+    private static SqlTypeName broadenType(SqlTypeName typeName)
+    {
+        if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+                typeName)) {
+            return SqlTypeName.Double;
+        } else if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(
+                typeName)) {
+            return SqlTypeName.Decimal;
+        } else if (SqlTypeFamily.Character.getTypeNames().contains(typeName)) {
+            return SqlTypeName.Char;
+        } else if (SqlTypeFamily.Binary.getTypeNames().contains(typeName)) {
+            return SqlTypeName.Binary;
+        } else {
+            return typeName;
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Replaces expressions with their reductions.  Note that
-     * we only have to look for RexCall, since nothing else is
-     * reducible in the first place.
+     * Replaces expressions with their reductions. Note that we only have to
+     * look for RexCall, since nothing else is reducible in the first place.
      */
-    private static class RexReplacer extends RexShuttle
+    private static class RexReplacer
+        extends RexShuttle
     {
         private final RexBuilder rexBuilder;
         private final List<RexNode> reducibleExps;
         private final List<RexNode> reducedValues;
         private final boolean addCasts;
-        
+
         RexReplacer(
             RexBuilder rexBuilder,
             List<RexNode> reducibleExps,
@@ -198,16 +231,16 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                 // that the result is still nullable, even though
                 // we know it isn't.
                 replacement = rexBuilder.makeCast(
-                    call.getType(),
-                    replacement);
+                        call.getType(),
+                        replacement);
             }
             return replacement;
         }
     }
 
     /**
-     * Evaluates constant expressions via a reentrant query
-     * of the form "VALUES (exp1, exp2, exp3, ...)".
+     * Evaluates constant expressions via a reentrant query of the form "VALUES
+     * (exp1, exp2, exp3, ...)".
      */
     private static class ReentrantValuesStmt
         extends FarragoReentrantStmt
@@ -226,29 +259,32 @@ public class FarragoReduceExpressionsRule extends RelOptRule
             this.exprs = exprs;
             this.results = results;
         }
-        
+
         protected void executeImpl()
             throws Exception
         {
-            RelNode oneRowRel = new OneRowRel(
-                getPreparingStmt().getRelOptCluster());
+            RelNode oneRowRel =
+                new OneRowRel(
+                    getPreparingStmt().getRelOptCluster());
             RelNode projectRel = CalcRel.createProject(
-                oneRowRel,
-                exprs,
-                null);
+                    oneRowRel,
+                    exprs,
+                    null);
 
             // NOTE jvs 26-May-2006: To avoid an infinite loop, we need to
             // make sure the reentrant planner does NOT have
             // FarragoReduceExpressionsRule enabled!
             FarragoPreparingStmt preparingStmt =
                 (FarragoPreparingStmt) getPreparingStmt();
-            FarragoSessionPlanner reentrantPlanner =
-                preparingStmt.getPlanner();
+            FarragoSessionPlanner reentrantPlanner = preparingStmt.getPlanner();
             reentrantPlanner.setRuleDescExclusionFilter(
                 EXCLUSION_PATTERN);
-            
+
             getStmtContext().prepare(
-                projectRel, SqlKind.Select, true, getPreparingStmt());
+                projectRel,
+                SqlKind.Select,
+                true,
+                getPreparingStmt());
             getStmtContext().execute();
             ResultSet resultSet = getStmtContext().getResultSet();
             resultSet.next();
@@ -270,8 +306,8 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                 if (resultSet.wasNull()) {
                     result = rexBuilder.constantNull();
                     result = rexBuilder.makeCast(
-                        expr.getType(),
-                        result);
+                            expr.getType(),
+                            result);
                 } else {
                     // TODO jvs 26-May-2006:  See comment on RexLiteral
                     // constructor regarding SqlTypeFamily.
@@ -282,9 +318,10 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                             false);
                     if (stringValue == null) {
                         try {
-                            result = rexBuilder.makeApproxLiteral(
-                                new BigDecimal(doubleValue),
-                                literalType);
+                            result =
+                                rexBuilder.makeApproxLiteral(
+                                    new BigDecimal(doubleValue),
+                                    literalType);
                         } catch (NumberFormatException ex) {
                             // Infinity or NaN.  For these rare cases,
                             // just skip constant reduction.
@@ -292,7 +329,8 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                             result = null;
                         }
                     } else {
-                            result = RexLiteral.fromJdbcString(
+                        result =
+                            RexLiteral.fromJdbcString(
                                 literalType,
                                 typeName,
                                 stringValue);
@@ -305,51 +343,27 @@ public class FarragoReduceExpressionsRule extends RelOptRule
                 }
                 results.add(result);
             }
-            assert(!resultSet.next());
+            assert (!resultSet.next());
             resultSet.close();
         }
     }
 
-    // TODO jvs 26-May-2006:  Get rid of this.
-    private static SqlTypeName broadenType(SqlTypeName typeName)
-    {
-        if (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(typeName))
-        {
-            return SqlTypeName.Double;
-        }
-        else if (SqlTypeFamily.ExactNumeric.getTypeNames().contains(typeName))
-        {
-            return SqlTypeName.Decimal;
-        }
-        else if (SqlTypeFamily.Character.getTypeNames().contains(typeName))
-        {
-            return SqlTypeName.Char;
-        }
-        else if (SqlTypeFamily.Binary.getTypeNames().contains(typeName))
-        {
-            return SqlTypeName.Binary;
-        } else {
-            return typeName;
-        }
-    }
-    
     /**
      * Beware of the 3 Bees.
      */
-    private static class ConstantGardener extends RexVisitorImpl<Void>
+    private static class ConstantGardener
+        extends RexVisitorImpl<Void>
     {
         enum Constancy {
-            NON_CONSTANT,
-            REDUCIBLE_CONSTANT,
-            IRREDUCIBLE_CONSTANT
-        };
+            NON_CONSTANT, REDUCIBLE_CONSTANT, IRREDUCIBLE_CONSTANT
+        }
 
         private final RelDataTypeFactory typeFactory;
-        
+
         private final List<Constancy> stack;
 
         private final List<RexNode> result;
-        
+
         ConstantGardener(RelDataTypeFactory typeFactory, List<RexNode> result)
         {
             // go deep
@@ -361,12 +375,12 @@ public class FarragoReduceExpressionsRule extends RelOptRule
 
         public void analyze(RexNode exp)
         {
-            assert(stack.isEmpty());
-            
+            assert (stack.isEmpty());
+
             exp.accept(this);
 
             // Deal with top of stack
-            assert(stack.size() == 1);
+            assert (stack.size() == 1);
             Constancy rootConstancy = stack.get(0);
             if (rootConstancy == Constancy.REDUCIBLE_CONSTANT) {
                 // The entire subtree was constant, so add it to the result.
@@ -432,9 +446,10 @@ public class FarragoReduceExpressionsRule extends RelOptRule
 
             // look for NON_CONSTANT operands
             int nOperands = call.getOperands().length;
-            List<Constancy> operandStack = stack.subList(
-                stack.size() - nOperands,
-                stack.size());
+            List<Constancy> operandStack =
+                stack.subList(
+                    stack.size() - nOperands,
+                    stack.size());
             for (Constancy operandConstancy : operandStack) {
                 if (operandConstancy == Constancy.NON_CONSTANT) {
                     callConstancy = Constancy.NON_CONSTANT;

@@ -24,19 +24,27 @@ package net.sf.farrago.jdbc.param;
 
 import java.sql.Time;
 import java.sql.Timestamp;
+
 import java.util.Calendar;
 import java.util.TimeZone;
 
+
 /**
  * FarragoJdbcEngineTimeParamDef defines a time parameter.
- * 
+ *
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
+class FarragoJdbcTimeParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoJdbcTimeParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
@@ -44,10 +52,14 @@ class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
         super(paramName, paramMetaData);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
-        return scrubValue(x, Calendar.getInstance(gmtZone));
+        return scrubValue(
+                x,
+                Calendar.getInstance(gmtZone));
     }
 
     // implement FarragoSessionStmtParamDef
@@ -100,3 +112,5 @@ class FarragoJdbcTimeParamDef extends FarragoJdbcParamDef
         return new Time(cal.getTimeInMillis());
     }
 }
+
+// End FarragoJdbcTimeParamDef.java

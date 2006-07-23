@@ -29,14 +29,19 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
  * FennelMergeRel represents the Fennel implementation of UNION ALL.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelMergeRel extends FennelMultipleRel
+class FennelMergeRel
+    extends FennelMultipleRel
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FennelMergeRel object.
      *
@@ -45,10 +50,12 @@ class FennelMergeRel extends FennelMultipleRel
      */
     FennelMergeRel(
         RelOptCluster cluster,
-        RelNode[] inputs)
+        RelNode [] inputs)
     {
         super(cluster, inputs);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public double getRows()
@@ -60,9 +67,11 @@ class FennelMergeRel extends FennelMultipleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         return planner.makeCost(
-            RelMetadataQuery.getRowCount(this), 0.0, 0.0);
+                RelMetadataQuery.getRowCount(this),
+                0.0,
+                0.0);
     }
-    
+
     // implement RelNode
     protected RelDataType deriveRowType()
     {
@@ -70,7 +79,7 @@ class FennelMergeRel extends FennelMultipleRel
         // the first input type
         return inputs[0].getRowType();
     }
-    
+
     // implement RelNode
     public Object clone()
     {
@@ -81,26 +90,27 @@ class FennelMergeRel extends FennelMultipleRel
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        String[] names = new String[inputs.length];
+        String [] names = new String[inputs.length];
 
-        for(int i = 0; i < inputs.length; i++) {
+        for (int i = 0; i < inputs.length; i++) {
             names[i] = "child#" + i;
         }
         pw.explain(
-            this, names, new Object[] { });
+            this,
+            names,
+            new Object[] {});
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
-        
-        FemMergeStreamDef mergeStream =
-            repos.newFemMergeStreamDef();
+
+        FemMergeStreamDef mergeStream = repos.newFemMergeStreamDef();
         mergeStream.setSequential(true);
 
         for (int i = 0; i < inputs.length; i++) {

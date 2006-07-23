@@ -20,25 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-
 /**
- * A <code>RexAction</code> is called when a {@link RexPattern}
- * finds a match. It yields a {@link RexNode} by substituting the matching
- * tokens.
+ * A <code>RexAction</code> is called when a {@link RexPattern} finds a match.
+ * It yields a {@link RexNode} by substituting the matching tokens.
  *
  * @author jhyde
- * @since May 3, 2002
  * @version $Id$
- **/
+ * @since May 3, 2002
+ */
 public interface RexAction
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     void onMatch(RexNode [] tokens);
 }
-
 
 // End RexAction.java

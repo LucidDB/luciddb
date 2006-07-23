@@ -20,15 +20,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.io.*;
 
-import javax.sql.DataSource;
+import java.sql.*;
+
+import javax.sql.*;
 
 
 /**
@@ -36,18 +34,19 @@ import javax.sql.DataSource;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Sep 7, 2003
  */
-public class JdbcDataSource implements DataSource
+public class JdbcDataSource
+    implements DataSource
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String url;
     private PrintWriter logWriter;
     private int loginTimeout;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a JDBC data source.
@@ -62,7 +61,7 @@ public class JdbcDataSource implements DataSource
         this.url = url;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Connection getConnection()
         throws SQLException
@@ -113,6 +112,5 @@ public class JdbcDataSource implements DataSource
         return loginTimeout;
     }
 }
-
 
 // End JdbcDataSource.java

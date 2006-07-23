@@ -23,6 +23,7 @@ package org.eigenbase.sql;
 
 import org.eigenbase.reltype.*;
 
+
 /**
  * <code>ExplicitOperatorBinding</code> implements {@link SqlOperatorBinding}
  * via an underlying array of known operand types.
@@ -30,13 +31,19 @@ import org.eigenbase.reltype.*;
  * @author Wael Chatila
  * @version $Id$
  */
-public class ExplicitOperatorBinding extends SqlOperatorBinding
+public class ExplicitOperatorBinding
+    extends SqlOperatorBinding
 {
-    private final RelDataType[] types;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final RelDataType [] types;
+
+    //~ Constructors -----------------------------------------------------------
 
     public ExplicitOperatorBinding(
         SqlOperatorBinding delegate,
-        RelDataType[] types)
+        RelDataType [] types)
     {
         this(
             delegate.getTypeFactory(),
@@ -47,12 +54,14 @@ public class ExplicitOperatorBinding extends SqlOperatorBinding
     public ExplicitOperatorBinding(
         RelDataTypeFactory typeFactory,
         SqlOperator operator,
-        RelDataType[] types)
+        RelDataType [] types)
     {
         super(typeFactory, operator);
         this.types = types;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement SqlOperatorBinding
     public int getOperandCount()
     {

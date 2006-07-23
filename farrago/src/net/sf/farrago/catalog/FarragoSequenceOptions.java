@@ -21,6 +21,8 @@
 */
 package net.sf.farrago.catalog;
 
+import java.util.*;
+
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 
@@ -28,7 +30,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * A class for tracking sequence generator options.
@@ -38,22 +39,30 @@ import java.util.*;
  */
 public class FarragoSequenceOptions
 {
-    private enum OptionType 
-    {
+
+    //~ Enums ------------------------------------------------------------------
+
+    private enum OptionType {
         START, INCREMENT, MINVALUE, MAXVALUE, CYCLE;
     }
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private String name;
     private Properties props;
     private boolean generatedAlways;
     private long lowerLimit, upperLimit;
     private RelDataType dataType;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoSequenceOptions(String name)
     {
         this.name = name;
         props = new Properties();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void setGeneratedAlways(boolean value)
     {
@@ -65,7 +74,7 @@ public class FarragoSequenceOptions
         return generatedAlways;
     }
 
-    public void setStart(Long value) 
+    public void setStart(Long value)
     {
         setOption(OptionType.START, value);
     }
@@ -79,7 +88,7 @@ public class FarragoSequenceOptions
     {
         setOption(OptionType.INCREMENT, value);
     }
-    
+
     public Long getIncrement()
     {
         return (Long) getOption(OptionType.INCREMENT);
@@ -100,7 +109,7 @@ public class FarragoSequenceOptions
         Long minOption = getMin();
         return (minOption == null) ? minDefault : minOption;
     }
-    
+
     public void setMax(Long value)
     {
         setOption(OptionType.MAXVALUE, value);
@@ -111,7 +120,7 @@ public class FarragoSequenceOptions
         return (Long) getOption(OptionType.MAXVALUE);
     }
 
-    private long getMaxResolved(long maxDefault) 
+    private long getMaxResolved(long maxDefault)
     {
         Long maxOption = getMax();
         return (maxOption == null) ? maxDefault : maxOption;
@@ -121,7 +130,7 @@ public class FarragoSequenceOptions
     {
         setOption(OptionType.CYCLE, value);
     }
-    
+
     public Boolean getCycle()
     {
         return (Boolean) getOption(OptionType.CYCLE);
@@ -131,11 +140,12 @@ public class FarragoSequenceOptions
     {
         if (isSet(opt)) {
             FarragoResource.instance().ValidatorDuplicateSequenceOption.ex(
-                opt.toString(), name);
+                opt.toString(),
+                name);
         }
         props.put(opt, value);
     }
-    
+
     private Object getOption(OptionType opt)
     {
         return props.get(opt);
@@ -150,7 +160,7 @@ public class FarragoSequenceOptions
      * Initialize a newly created sequence
      */
     public void init(
-        FemSequenceGenerator sequence, 
+        FemSequenceGenerator sequence,
         RelDataType dataType)
     {
         applyTo(sequence, dataType, true);
@@ -168,7 +178,7 @@ public class FarragoSequenceOptions
 
     /**
      * Apply options to a sequence
-     * 
+     *
      * @param sequence the sequence to be modified
      * @param dataType the data type of the sequence
      * @param create whether to begin with existing sequence
@@ -184,7 +194,7 @@ public class FarragoSequenceOptions
         long increment, min, max;
         boolean cycle, expired;
         if (create) {
-            // set most default values, except start, 
+            // set most default values, except start,
             // which is based on other values
             start = null;
             increment = 1L;
@@ -225,10 +235,11 @@ public class FarragoSequenceOptions
                 break;
             default:
                 Util.permAssert(
-                    false, "invalid sequence option");
+                    false,
+                    "invalid sequence option");
             }
         }
-        if (create && start == null) {
+        if (create && (start == null)) {
             start = (increment > 0) ? min : max;
         }
 
@@ -241,7 +252,7 @@ public class FarragoSequenceOptions
         // allow alter sequence to reenable an expired sequence
         if (expired) {
             long nextVal = start + increment;
-            boolean sufficientRange = 
+            boolean sufficientRange =
                 (increment > 0) ? (nextVal <= max) : (nextVal >= min);
             if (sufficientRange) {
                 start = nextVal;
@@ -253,16 +264,18 @@ public class FarragoSequenceOptions
         }
 
         if (increment == 0) {
-            throw FarragoResource.instance()
-            .ValidatorZeroSequenceIncrement.ex(name);
+            throw FarragoResource.instance().ValidatorZeroSequenceIncrement.ex(
+                name);
         }
         if (min > max) {
-            throw FarragoResource.instance()
-            .ValidatorInvalidSequenceMin.ex(min, max);
+            throw FarragoResource.instance().ValidatorInvalidSequenceMin.ex(min,
+                max);
         }
-        if (min > start || start > max) {
-            throw FarragoResource.instance()
-            .ValidatorInvalidSequenceStart.ex(start, min, max);
+        if ((min > start) || (start > max)) {
+            throw FarragoResource.instance().ValidatorInvalidSequenceStart.ex(
+                start,
+                min,
+                max);
         }
 
         // initialize sequence
@@ -284,8 +297,7 @@ public class FarragoSequenceOptions
                 name);
         }
         int precision = dataType.getPrecision();
-        if (precision > SqlTypeName.MAX_NUMERIC_PRECISION)
-        {
+        if (precision > SqlTypeName.MAX_NUMERIC_PRECISION) {
             // allow the validator to catch this error later
             return;
         }
@@ -304,9 +316,10 @@ public class FarragoSequenceOptions
      */
     private void validateValue(long value)
     {
-        if (value < lowerLimit || value > upperLimit) {
-            throw FarragoResource.instance().ParameterValueOutOfRange
-            .ex(Long.toString(value), dataType.toString());
+        if ((value < lowerLimit) || (value > upperLimit)) {
+            throw FarragoResource.instance().ParameterValueOutOfRange.ex(
+                Long.toString(value),
+                dataType.toString());
         }
     }
 }

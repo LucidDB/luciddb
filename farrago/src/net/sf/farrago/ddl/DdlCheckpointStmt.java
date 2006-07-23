@@ -22,16 +22,17 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlCheckpointStmt represents a CHECKPOINT statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlCheckpointStmt extends DdlStmt
+public class DdlCheckpointStmt
+    extends DdlStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlCheckpointStmt.
@@ -41,7 +42,7 @@ public class DdlCheckpointStmt extends DdlStmt
         super(null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -49,6 +50,5 @@ public class DdlCheckpointStmt extends DdlStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlCheckpointStmt.java

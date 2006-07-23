@@ -21,11 +21,12 @@
 */
 package org.eigenbase.rel.metadata;
 
-import org.eigenbase.util.*;
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * CachingRelMetadataProvider implements the {@link RelMetadataProvider}
@@ -34,14 +35,20 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class CachingRelMetadataProvider implements RelMetadataProvider
+public class CachingRelMetadataProvider
+    implements RelMetadataProvider
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Map<List, CacheEntry> cache;
-    
+
     private final RelMetadataProvider underlyingProvider;
-    
+
     private final RelOptPlanner planner;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public CachingRelMetadataProvider(
         RelMetadataProvider underlyingProvider,
         RelOptPlanner planner)
@@ -51,7 +58,9 @@ public class CachingRelMetadataProvider implements RelMetadataProvider
 
         cache = new HashMap<List, CacheEntry>();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelMetadataProvider
     public Object getRelMetadata(
         RelNode rel,
@@ -83,10 +92,13 @@ public class CachingRelMetadataProvider implements RelMetadataProvider
                 // Cache results are stale.
             }
         }
-        
+
         // Cache miss or stale.
-        Object result = underlyingProvider.getRelMetadata(
-            rel, metadataQueryName, args);
+        Object result =
+            underlyingProvider.getRelMetadata(
+                rel,
+                metadataQueryName,
+                args);
         if (result != null) {
             entry = new CacheEntry();
             entry.timestamp = timestamp;
@@ -96,7 +108,9 @@ public class CachingRelMetadataProvider implements RelMetadataProvider
         return result;
     }
 
-    private static class CacheEntry 
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class CacheEntry
     {
         long timestamp;
 

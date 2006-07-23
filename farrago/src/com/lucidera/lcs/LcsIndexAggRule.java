@@ -27,60 +27,78 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
  * A rule for directly aggregating off of an unclustered index scan.
  *
  * @author John Pham
  * @version $Id$
  */
-public class LcsIndexAggRule extends RelOptRule
+public class LcsIndexAggRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * The singletons
-     * 
+     *
      * <p>TODO: handle CalcRel after sort order has been cleaned up
      */
     public final static LcsIndexAggRule instanceRenameRowScan =
         new LcsIndexAggRule(
-            new RelOptRuleOperand(AggregateRel.class, 
+            new RelOptRuleOperand(
+                AggregateRel.class,
                 new RelOptRuleOperand[] {
-                new RelOptRuleOperand(FennelRenameRel.class,
-                    new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, 
-                        RelOptRuleOperand.noOperands)
-                })}), "rename row scan");
+                    new RelOptRuleOperand(
+                        FennelRenameRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(LcsRowScanRel.class,
+                                RelOptRuleOperand.noOperands)
+                        })
+                }),
+            "rename row scan");
 
     public final static LcsIndexAggRule instanceRenameNormalizer =
         new LcsIndexAggRule(
-            new RelOptRuleOperand(AggregateRel.class, 
+            new RelOptRuleOperand(
+                AggregateRel.class,
                 new RelOptRuleOperand[] {
-                new RelOptRuleOperand(FennelRenameRel.class,
-                    new RelOptRuleOperand[] {
-                    new RelOptRuleOperand(LcsNormalizerRel.class, 
+                    new RelOptRuleOperand(
+                        FennelRenameRel.class,
                         new RelOptRuleOperand[] {
-                        new RelOptRuleOperand(LcsIndexOnlyScanRel.class, null)
-                })})}), "rename normalizer");
-    
-    //~ Constructors ----------------------------------------------------------
-    
+                            new RelOptRuleOperand(
+                                LcsNormalizerRel.class,
+                                new RelOptRuleOperand[] {
+                                    new RelOptRuleOperand(
+                                        LcsIndexOnlyScanRel.class,
+                                        null)
+                                })
+                        })
+                }),
+            "rename normalizer");
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new LcsIndexOnlyAccessRule object.
      */
     public LcsIndexAggRule(
-        RelOptRuleOperand operand, String id)
+        RelOptRuleOperand operand,
+        String id)
     {
         super(operand);
         description = "LcsIndexAggRule: " + id;
     }
-    
-    //~ Methods ---------------------------------------------------------------
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
-    
+
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
@@ -90,7 +108,8 @@ public class LcsIndexAggRule extends RelOptRule
         LcsIndexOnlyScanRel indexOnlyScan = null;
         if (call.rels[2] instanceof LcsRowScanRel) {
             rowScan = (LcsRowScanRel) call.rels[2];
-            // NOTE: Here we check for no inputs because RelOptRuleOperand 
+
+            // NOTE: Here we check for no inputs because RelOptRuleOperand
             // seems to allow a row scan with inputs
             if (rowScan.getInputs().length > 0) {
                 return;
@@ -99,27 +118,30 @@ public class LcsIndexAggRule extends RelOptRule
             assert (call.rels[2] instanceof LcsNormalizerRel);
             assert (call.rels[3] instanceof LcsIndexOnlyScanRel);
             indexOnlyScan = (LcsIndexOnlyScanRel) call.rels[3];
-            Integer[] proj = indexOnlyScan.getOutputProj();
-            if (!projectionSatisfiesGroupBy(proj, aggRel.getGroupCount())) {
+            Integer [] proj = indexOnlyScan.getOutputProj();
+            if (!projectionSatisfiesGroupBy(
+                    proj,
+                    aggRel.getGroupCount())) {
                 return;
             }
         }
-        
+
         if (indexOnlyScan == null) {
-            // Try to convert a row scan into an index only scan. Find the 
-            // thinnest index that satisfies the row scan projection and 
+            // Try to convert a row scan into an index only scan. Find the
+            // thinnest index that satisfies the row scan projection and
             // the aggregate's required sort order
             LcsIndexGuide indexGuide = rowScan.lcsTable.getIndexGuide();
             FemLocalIndex bestIndex = null;
-            Integer[] bestProj = null;
+            Integer [] bestProj = null;
             for (FemLocalIndex index : indexGuide.getUnclusteredIndexes()) {
-                Integer[] proj = 
+                Integer [] proj =
                     indexGuide.findIndexOnlyProjection(rowScan, index);
-                if (projectionSatisfiesGroupBy(proj, aggRel.getGroupCount())){
+                if (projectionSatisfiesGroupBy(
+                        proj,
+                        aggRel.getGroupCount())) {
                     int indexSize = index.getIndexedFeature().size();
-                    if (bestIndex == null 
-                        || bestIndex.getIndexedFeature().size() > indexSize) 
-                    {
+                    if ((bestIndex == null)
+                        || (bestIndex.getIndexedFeature().size() > indexSize)) {
                         bestIndex = index;
                         bestProj = proj;
                     }
@@ -128,49 +150,52 @@ public class LcsIndexAggRule extends RelOptRule
             if (bestIndex == null) {
                 return;
             }
-            indexOnlyScan = new LcsIndexOnlyScanRel(
-                rowScan,
-                bestIndex,
-                bestProj);
+            indexOnlyScan =
+                new LcsIndexOnlyScanRel(
+                    rowScan,
+                    bestIndex,
+                    bestProj);
         }
 
         RelDataType renameType = renameRel.getRowType();
         RelDataType indexType = indexOnlyScan.getRowType();
-        String[] fieldNames = new String[indexType.getFieldCount()];
+        String [] fieldNames = new String[indexType.getFieldCount()];
         for (int i = 0; i < fieldNames.length; i++) {
-            RelDataType type = 
+            RelDataType type =
                 (i < renameType.getFieldCount()) ? renameType : indexType;
             fieldNames[i] = type.getFields()[i].getName();
         }
-        RelNode indexRename = new FennelRenameRel(
-            renameRel.getCluster(),
-            indexOnlyScan,
-            fieldNames,
-            renameRel.getTraits());
+        RelNode indexRename =
+            new FennelRenameRel(
+                renameRel.getCluster(),
+                indexOnlyScan,
+                fieldNames,
+                renameRel.getTraits());
 
-        RelNode indexAgg = new LcsIndexAggRel(
-            aggRel.getCluster(), 
-            indexRename, 
-            aggRel.getGroupCount(), 
-            aggRel.getAggCalls());
-
+        RelNode indexAgg =
+            new LcsIndexAggRel(
+                aggRel.getCluster(),
+                indexRename,
+                aggRel.getGroupCount(),
+                aggRel.getAggCalls());
 
         call.transformTo(indexAgg);
     }
-    
+
     /**
-     * Determines whether a projection from an index scan can meet the 
-     * group by requirements of an aggregate. The index scan columns are 
-     * sorted in order, and the group by columns are required to be sorted 
-     * in order, so the index scan projection should be a prefix of the 
-     * index scan: 0, 1, 2, ... etc.
-     * 
+     * Determines whether a projection from an index scan can meet the group by
+     * requirements of an aggregate. The index scan columns are sorted in order,
+     * and the group by columns are required to be sorted in order, so the index
+     * scan projection should be a prefix of the index scan: 0, 1, 2, ... etc.
+     *
      * @param proj the projection from an index
-     * @param groupCount the number of columns to be grouped. the columns 
-     *   are assumed to be the prefix of input to the aggregate
+     * @param groupCount the number of columns to be grouped. the columns are
+     * assumed to be the prefix of input to the aggregate
+     *
      * @return
      */
-    private boolean projectionSatisfiesGroupBy(Integer[] proj, int groupCount) 
+    private boolean projectionSatisfiesGroupBy(Integer [] proj,
+        int groupCount)
     {
         if (proj == null) {
             return false;

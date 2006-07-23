@@ -23,41 +23,44 @@
 package net.sf.farrago.runtime;
 
 import java.sql.*;
+
 import java.util.logging.*;
 
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.jdbc.FarragoJdbcUtil;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 
 
 /**
- * FarragoTupleIterResultSet is a refinement of TupleIterResultSet
- * which exposes Farrago datatype semantics.
+ * FarragoTupleIterResultSet is a refinement of TupleIterResultSet which exposes
+ * Farrago datatype semantics.
  *
  * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTupleIterResultSet extends TupleIterResultSet
+public class FarragoTupleIterResultSet
+    extends TupleIterResultSet
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
         FarragoTrace.getFarragoTupleIterResultSetTracer();
     private static final Logger jdbcTracer =
         FarragoTrace.getFarragoJdbcEngineDriverTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionRuntimeContext runtimeContext;
     private RelDataType rowType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoTupleIterResultSet object.
@@ -73,7 +76,9 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
         RelDataType rowType,
         FarragoSessionRuntimeContext runtimeContext)
     {
-        super(tupleIter, new SyntheticColumnGetter(clazz));
+        super(
+            tupleIter,
+            new SyntheticColumnGetter(clazz));
         this.rowType = rowType;
         this.runtimeContext = runtimeContext;
         if (tracer.isLoggable(Level.FINE)) {
@@ -81,7 +86,7 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement ResultSet
     public boolean next()
@@ -152,6 +157,5 @@ public class FarragoTupleIterResultSet extends TupleIterResultSet
         return obj;
     }
 }
-
 
 // End FarragoTupleIterResultSet.java

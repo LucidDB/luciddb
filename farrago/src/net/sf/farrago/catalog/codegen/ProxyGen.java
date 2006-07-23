@@ -23,36 +23,38 @@
 package net.sf.farrago.catalog.codegen;
 
 import java.io.*;
+
 import java.lang.reflect.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.catalog.FarragoModelLoader;
+import net.sf.farrago.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
  * ProxyGen generates read-only C++ JNI proxies for MDR-generated Java
- * interfaces (something like a stripped-down JACE).  It uses an unholy mix
- * of Java/JMI navel-scrutiny.  For an example of its output, see
+ * interfaces (something like a stripped-down JACE). It uses an unholy mix of
+ * Java/JMI navel-scrutiny. For an example of its output, see
  * FemGeneratedClasses.h and FemGeneratedMethods.h in //open/fennel/farrago.
  *
- * <p>
- * To understand this generator, it's important to distinguish among
- * MOF/UML/JMI classes (which are metadata objects), repository-generated
- * Java interfaces, and the C++ proxy classes generated here.
- * </p>
+ * <p>To understand this generator, it's important to distinguish among
+ * MOF/UML/JMI classes (which are metadata objects), repository-generated Java
+ * interfaces, and the C++ proxy classes generated here.</p>
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class ProxyGen
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Comparator classNameComparator =
         new Comparator() {
@@ -67,12 +69,16 @@ public class ProxyGen
         };
 
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Map from Class to corresponding C++ type name as String. */
+    /**
+     * Map from Class to corresponding C++ type name as String.
+     */
     private Map cppTypeMap = new HashMap();
 
-    /** Map from Class to RefClass for everything in genInterfaces. */
+    /**
+     * Map from Class to RefClass for everything in genInterfaces.
+     */
     private Map javaToJmiMap = new HashMap();
 
     /**
@@ -81,7 +87,9 @@ public class ProxyGen
      */
     private Map javaTypeMap = new HashMap();
 
-    /** PrintWriter used to generate output. */
+    /**
+     * PrintWriter used to generate output.
+     */
     private PrintWriter pw;
 
     /**
@@ -98,14 +106,14 @@ public class ProxyGen
 
     /**
      * Set containing interfaces (represented as Class objects) whose proxy
-     * definition has not yet been generated.  This is used to induce
-     * topological order for the inheritance graph.
+     * definition has not yet been generated. This is used to induce topological
+     * order for the inheritance graph.
      */
     private Set undefinedInterfaces = new HashSet();
 
     /**
-     * Set containing all interfaces (represented as Class objects) for
-     * which C++ enums are to be generated.
+     * Set containing all interfaces (represented as Class objects) for which
+     * C++ enums are to be generated.
      */
     private Set genEnums = new HashSet();
     private String genPrefix;
@@ -113,7 +121,7 @@ public class ProxyGen
     private String visitorClassName;
     private String visitorBaseName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Initialize a new ProxyGen.
@@ -154,7 +162,7 @@ public class ProxyGen
         cppTypeMap.put(String.class, "std::string");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Adds all classes from a JMI package to the set of interfaces to be
@@ -175,8 +183,8 @@ public class ProxyGen
     }
 
     /**
-     * Adds all classes from a JMI package to the set of interfaces to use
-     * as bases.
+     * Adds all classes from a JMI package to the set of interfaces to use as
+     * bases.
      *
      * @param refPackage the source JMI package
      */
@@ -271,11 +279,13 @@ public class ProxyGen
 
         // Finally, generate the visitor interface with a visitor method
         // overload for each class.
-        pw.println("class " + visitorClassName + " : virtual public "
+        pw.println(
+            "class " + visitorClassName + " : virtual public "
             + visitorBaseName);
         pw.println("{");
         pw.println("public:");
-        pw.println("static JniProxyVisitTable<" + visitorClassName
+        pw.println(
+            "static JniProxyVisitTable<" + visitorClassName
             + "> visitTbl;");
         for (int i = 0; i < interfaces.length; i++) {
             Class clazz = interfaces[i];
@@ -323,7 +333,8 @@ public class ProxyGen
 
         // First, generate static definitions such as all method ID's used by
         // generated getters.
-        pw.println("JniProxyVisitTable<" + visitorClassName + "> "
+        pw.println(
+            "JniProxyVisitTable<" + visitorClassName + "> "
             + visitorClassName + "::visitTbl;");
         pw.println();
         Class [] interfaces = toSortedArray(genInterfaces);
@@ -334,7 +345,8 @@ public class ProxyGen
 
         // Next, generate the static method which performs the JNI lookup for
         // methods.
-        pw.println("void staticInit" + genPrefix
+        pw.println(
+            "void staticInit" + genPrefix
             + "(JniEnvRef pEnv,JniProxyVisitTableBase &visitTbl)");
         pw.println("{");
         pw.println("jclass jClass;");
@@ -453,29 +465,21 @@ public class ProxyGen
 
     /**
      * Main generator entry point invoked by build.xml (target
-     * "generateFemCpp").  The catalog must already exist before running the
+     * "generateFemCpp"). The catalog must already exist before running the
      * generator.
      *
      * @param args
+     *
      * <ul>
-     *
      * <li>args[0] = filename for C++ class definition output
-     *
      * <li>args[1] = filename for C++ class implementation output
-     *
      * <li>args[2] = filename for C++ enumeration output
-     *
      * <li>args[3] = qualified name of source model package
-     *
      * <li>args[4] = prefix to use for generated objects
-     *
-     * <li>args[5] = (optional) qualified name of model package
-     * to reference as base; if this is not specified, generated
-     * objects are base classes
-     *
-     * <li>args[6] = (optional) prefix to reference for base classes;
-     * must be specified together with previous argument
-     *
+     * <li>args[5] = (optional) qualified name of model package to reference
+     * as base; if this is not specified, generated objects are base classes
+     * <li>args[6] = (optional) prefix to reference for base classes; must be
+     * specified together with previous argument
      * </ul>
      */
     public static void main(String [] args)
@@ -537,7 +541,8 @@ public class ProxyGen
     {
         String [] sourcePackageNames = qualifiedName.split("\\.");
         RefPackage sourcePackage =
-            JmiUtil.getSubPackage(rootPackage, sourcePackageNames,
+            JmiUtil.getSubPackage(rootPackage,
+                sourcePackageNames,
                 sourcePackageNames.length);
         assert (sourcePackage != null);
         return sourcePackage;
@@ -560,8 +565,9 @@ public class ProxyGen
             prefix = genPrefix;
         }
 
-        return ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(prefix,
-            "Proxy");
+        return
+            ReflectUtil.getUnqualifiedClassName(clazz).replaceFirst(prefix,
+                "Proxy");
     }
 
     /**
@@ -595,8 +601,9 @@ public class ProxyGen
                     Reference reference = (Reference) obj;
                     String endName = reference.getReferencedEnd().getName();
                     if (endName.equalsIgnoreCase(attrName)) {
-                        return "SharedProxy"
-                        + reference.getReferencedEnd().getType().getName();
+                        return
+                            "SharedProxy"
+                            + reference.getReferencedEnd().getType().getName();
                     }
                 }
                 if (obj instanceof Attribute) {
@@ -617,8 +624,8 @@ public class ProxyGen
     }
 
     /**
-     * Decides whether a Java method is a getter for a JMI attribute.  We
-     * ignore all others.
+     * Decides whether a Java method is a getter for a JMI attribute. We ignore
+     * all others.
      *
      * @param method the Java method
      *
@@ -627,7 +634,8 @@ public class ProxyGen
     private boolean isGetter(Method method)
     {
         String methodName = method.getName();
-        return (methodName.startsWith("get") || methodName.startsWith("is"))
+        return
+            (methodName.startsWith("get") || methodName.startsWith("is"))
             && (method.getParameterTypes().length == 0);
     }
 
@@ -674,9 +682,11 @@ public class ProxyGen
         pw.println("\");");
         pw.print("visitTbl.addMethod(");
         pw.print("jClass,");
-        pw.print("JniProxyVisitTable<" + visitorClassName
+        pw.print(
+            "JniProxyVisitTable<" + visitorClassName
             + ">::SharedVisitorMethod(");
-        pw.print("new JniProxyVisitTable<" + visitorClassName
+        pw.print(
+            "new JniProxyVisitTable<" + visitorClassName
             + ">::VisitorMethodImpl<");
         pw.print(getCppClassName(clazz));
         pw.println(">));");
@@ -715,13 +725,12 @@ public class ProxyGen
      * @param clazz the Java interface
      *
      * @return the corresponding JMI class, or null if clazz not in set of
-     *         interfaces to be generated
+     * interfaces to be generated
      */
     private RefClass toJmiClass(Class clazz)
     {
         return (RefClass) javaToJmiMap.get(clazz);
     }
 }
-
 
 // End ProxyGen.java

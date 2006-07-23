@@ -22,18 +22,23 @@ package com.lucidera.farrago.fennel;
 
 import org.eigenbase.util.*;
 
+
 /**
- * JNI interface for LucidEra extensions to Fennel which are used by
- * Farrago.
+ * JNI interface for LucidEra extensions to Fennel which are used by Farrago.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class LucidEraJni
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
         Util.loadLibrary("farrago_lu");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public static native void registerStreamFactory(long hStreamGraph);
 }

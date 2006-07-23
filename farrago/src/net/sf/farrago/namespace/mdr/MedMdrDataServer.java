@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
@@ -36,12 +37,14 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
+
 import org.netbeans.api.mdr.*;
 
 
@@ -49,15 +52,17 @@ import org.netbeans.api.mdr.*;
 // TODO:  throw exception on unknown option?
 
 /**
- * MedMdrDataServer implements the {@link FarragoMedDataServer} interface
- * for MDR data.
+ * MedMdrDataServer implements the {@link FarragoMedDataServer} interface for
+ * MDR data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMdrDataServer extends MedAbstractDataServer
+public class MedMdrDataServer
+    extends MedAbstractDataServer
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_STORAGE_FACTORY_CLASS =
         "STORAGE_FACTORY_CLASS";
@@ -66,7 +71,7 @@ public class MedMdrDataServer extends MedAbstractDataServer
     public static final String PROP_ROOT_PACKAGE_NAME = "ROOT_PACKAGE_NAME";
     public static final String PROP_SCHEMA_NAME = "SCHEMA_NAME";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     FarragoRepos repos;
     MDRepository repository;
@@ -75,7 +80,7 @@ public class MedMdrDataServer extends MedAbstractDataServer
     boolean foreignRepository;
     String schemaName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMdrDataServer(
         String serverMofId,
@@ -86,7 +91,7 @@ public class MedMdrDataServer extends MedAbstractDataServer
         this.repos = repos;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the root package
@@ -128,7 +133,8 @@ public class MedMdrDataServer extends MedAbstractDataServer
         schemaName = getNonStorageProperty(props, PROP_SCHEMA_NAME);
 
         if (extentName != null) {
-            initAsForeignServer(storageFactoryClassName, extentName,
+            initAsForeignServer(storageFactoryClassName,
+                extentName,
                 storageProps);
         } else {
             initAsCatalogServer();
@@ -217,11 +223,12 @@ public class MedMdrDataServer extends MedAbstractDataServer
         assert (className != null);
 
         MedMdrNameDirectory directory = getMdrNameDirectory();
-        return directory.lookupColumnSetAndImposeType(
-            typeFactory,
-            className.split("\\."),
-            localName,
-            rowType);
+        return
+            directory.lookupColumnSetAndImposeType(
+                typeFactory,
+                className.split("\\."),
+                localName,
+                rowType);
     }
 
     // implement FarragoMedDataServer
@@ -257,14 +264,14 @@ public class MedMdrDataServer extends MedAbstractDataServer
     {
         Variable connectionVariable =
             new Variable(OJPreparingStmt.connectionVariable);
-        return new MethodCall(
-            connectionVariable,
-            "getDataServerRuntimeSupport",
-            new ExpressionList(
-                Literal.makeLiteral(getServerMofId()),
-                arg));
+        return
+            new MethodCall(
+                connectionVariable,
+                "getDataServerRuntimeSupport",
+                new ExpressionList(
+                    Literal.makeLiteral(getServerMofId()),
+                    arg));
     }
 }
-
 
 // End MedMdrDataServer.java

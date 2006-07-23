@@ -25,24 +25,26 @@ package net.sf.farrago.db;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.fennel.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-import net.sf.farrago.plugin.*;
-
 import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.plugin.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
 
 /**
- * FarragoDbSessionFactory is a basic implementation for the
- * {@link net.sf.farrago.session.FarragoSessionFactory} interface.
+ * FarragoDbSessionFactory is a basic implementation for the {@link
+ * net.sf.farrago.session.FarragoSessionFactory} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbSessionFactory implements FarragoSessionFactory
+public class FarragoDbSessionFactory
+    implements FarragoSessionFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionFactory
     public FarragoSession newSession(
@@ -55,21 +57,20 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     // implement FarragoSessionFactory
     public FarragoSession newReentrantSession(FarragoSession session)
     {
-        FarragoSessionVariables sessionVars = 
+        FarragoSessionVariables sessionVars =
             session.getSessionVariables().cloneVariables();
-        
-        FarragoSession reentrantSession =
-            session.cloneSession(sessionVars);
-        
+
+        FarragoSession reentrantSession = session.cloneSession(sessionVars);
+
         return reentrantSession;
     }
-    
+
     // implement FarragoSessionFactory
     public void releaseReentrantSession(FarragoSession session)
     {
         session.closeAllocation();
     }
-    
+
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,
@@ -85,7 +86,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
 
     // implement FarragoSessionFactory
     public FarragoSessionModelExtension newModelExtension(
-        FarragoPluginClassLoader pluginClassLoader, 
+        FarragoPluginClassLoader pluginClassLoader,
         FemJar femJar)
     {
         String url = FarragoCatalogUtil.getJarUrl(femJar);
@@ -95,8 +96,9 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
             Class factoryClass =
                 pluginClassLoader.loadClassFromJarUrlManifest(url, attr);
             FarragoSessionModelExtensionFactory factory =
-                (FarragoSessionModelExtensionFactory)
-                pluginClassLoader.newPluginInstance(factoryClass);
+                (FarragoSessionModelExtensionFactory) pluginClassLoader
+                .newPluginInstance(factoryClass);
+
             // TODO:  trace info about extension
             FarragoSessionModelExtension modelExtension =
                 factory.newModelExtension();
@@ -105,7 +107,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
             throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }
     }
-    
+
     // implement FarragoSessionFactory
     public FennelCmdExecutor newFennelCmdExecutor()
     {
@@ -117,8 +119,11 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         FarragoAllocationOwner owner,
         boolean userRepos)
     {
-        return new FarragoMdrReposImpl(
-            owner, new FarragoModelLoader(), userRepos);
+        return
+            new FarragoMdrReposImpl(
+                owner,
+                new FarragoModelLoader(),
+                userRepos);
     }
 
     // implement FarragoSessionFactory
@@ -134,18 +139,18 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     {
         return new FarragoDbNullTxnMgr();
     }
-    
+
     // implement FarragoSessionFactory
     public void applyFennelExtensionParameters(Map map)
     {
     }
-    
+
     // implement FarragoSessionFactory
     public void specializedInitialization(FarragoAllocationOwner owner)
     {
     }
 
-    // implement FarragoSessionFactory    
+    // implement FarragoSessionFactory
     public void specializedShutdown()
     {
     }
@@ -155,7 +160,7 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
     {
         FarragoDbSingleton.shutdownConditional(0);
     }
-    
+
     // implement FarragoSessionFactory
     public void defineResourceBundles(
         List bundleList)
@@ -163,6 +168,5 @@ public class FarragoDbSessionFactory implements FarragoSessionFactory
         bundleList.add(FarragoResource.instance());
     }
 }
-
 
 // End FarragoDbSessionFactory.java

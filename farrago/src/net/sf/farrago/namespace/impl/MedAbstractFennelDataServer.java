@@ -21,17 +21,19 @@
 */
 package net.sf.farrago.namespace.impl;
 
+import java.sql.*;
+
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.util.*;
 
-import java.util.*;
-import java.sql.*;
 
 /**
- * MedAbstractFennelDataServer refines {@link MedAbstractLocalDataServer}
- * with abstract support for using Fennel's btree indexing.
+ * MedAbstractFennelDataServer refines {@link MedAbstractLocalDataServer} with
+ * abstract support for using Fennel's btree indexing.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -39,8 +41,13 @@ import java.sql.*;
 public abstract class MedAbstractFennelDataServer
     extends MedAbstractLocalDataServer
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected FarragoRepos repos;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     protected MedAbstractFennelDataServer(
         String serverMofId,
         Properties props,
@@ -49,6 +56,8 @@ public abstract class MedAbstractFennelDataServer
         super(serverMofId, props);
         this.repos = repos;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataServer
     public Object getRuntimeSupport(Object param)
@@ -69,7 +78,7 @@ public abstract class MedAbstractFennelDataServer
             repos.endTransientTxn();
         }
     }
-    
+
     // implement FarragoMedLocalDataServer
     public void dropIndex(
         FemLocalIndex index,
@@ -94,7 +103,7 @@ public abstract class MedAbstractFennelDataServer
 
     // implement FarragoMedLocalDataServer
     public void computeIndexStats(
-        FemLocalIndex index, 
+        FemLocalIndex index,
         long rootPageId,
         boolean estimate)
     {
@@ -121,14 +130,13 @@ public abstract class MedAbstractFennelDataServer
         cmd.setIndexId(JmiUtil.getObjectId(index));
         prepareIndexCmd(cmd, index);
     }
-    
+
     /**
-     * Prepares an index command based on the catalog definition
-     * of the index.  The parameterization details of command
-     * preparation are subclass-dependent.
+     * Prepares an index command based on the catalog definition of the index.
+     * The parameterization details of command preparation are
+     * subclass-dependent.
      *
      * @param cmd command to be initialized
-     *
      * @param index catalog definition of index
      */
     protected abstract void prepareIndexCmd(

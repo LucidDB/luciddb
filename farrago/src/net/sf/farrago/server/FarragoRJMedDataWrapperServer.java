@@ -22,39 +22,42 @@
 */
 package net.sf.farrago.server;
 
-import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
-import net.sf.farrago.jdbc.FarragoConnection;
-import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
-import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
+import java.rmi.*;
+import java.rmi.server.*;
 
-import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
-import java.rmi.server.Unreferenced;
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
-import java.util.Locale;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.rmi.*;
+
 
 /**
  * RMI server-side implementation of {@link FarragoMedDataWrapper}.
  *
  * <p>This object is constructed with a factory for creating a data wrapper.
- * Each method grabs a data wrapper from the factory, and releases it at the
- * end of the method. This class is therefore stateless: data wrappers are
- * never held between calls.
+ * Each method grabs a data wrapper from the factory, and releases it at the end
+ * of the method. This class is therefore stateless: data wrappers are never
+ * held between calls.
  *
  * @author Tim Leung
  * @version $Id$
  */
-class FarragoRJMedDataWrapperServer 
+class FarragoRJMedDataWrapperServer
     extends UnicastRemoteObject
-    implements FarragoRJMedDataWrapperInterface, Unreferenced
+    implements FarragoRJMedDataWrapperInterface,
+        Unreferenced
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoConnection farragoConnection;
     private final String mofId;
     private final String libraryName;
     private final Properties options;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoRJMedDataWrapperServer(
         FarragoConnection farragoConnection,
@@ -72,20 +75,24 @@ class FarragoRJMedDataWrapperServer
         this.options = (Properties) options.clone();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void unreferenced()
     {
         //cache_.unloadWrapper(mofId_, libraryName_, options_);
     }
 
     public FarragoRJDriverPropertyInfo [] getPluginPropertyInfo(
-            Locale locale,
-            Properties wrapperProps)
-            throws RemoteException
-        {
-            return makeSerializable(
+        Locale locale,
+        Properties wrapperProps)
+        throws RemoteException
+    {
+        return
+            makeSerializable(
                 getWrapper().getPluginPropertyInfo(
-                    locale, wrapperProps));
-        }
+                    locale,
+                    wrapperProps));
+    }
 
     public FarragoRJDriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
@@ -93,9 +100,12 @@ class FarragoRJMedDataWrapperServer
         Properties serverProps)
         throws RemoteException
     {
-        return makeSerializable(
-            getWrapper().getServerPropertyInfo(
-                locale, wrapperProps, serverProps));
+        return
+            makeSerializable(
+                getWrapper().getServerPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnSetPropertyInfo(
@@ -105,9 +115,13 @@ class FarragoRJMedDataWrapperServer
         Properties tableProps)
         throws RemoteException
     {
-        return makeSerializable(
-            getWrapper().getColumnSetPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps)); 
+        return
+            makeSerializable(
+                getWrapper().getColumnSetPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps));
     }
 
     public FarragoRJDriverPropertyInfo [] getColumnPropertyInfo(
@@ -118,12 +132,18 @@ class FarragoRJMedDataWrapperServer
         Properties columnProps)
         throws RemoteException
     {
-        return makeSerializable(
-            getWrapper().getColumnPropertyInfo(
-                locale, wrapperProps, serverProps, tableProps, columnProps)); 
+        return
+            makeSerializable(
+                getWrapper().getColumnPropertyInfo(
+                    locale,
+                    wrapperProps,
+                    serverProps,
+                    tableProps,
+                    columnProps));
     }
 
-    public boolean isForeign() throws RemoteException
+    public boolean isForeign()
+        throws RemoteException
     {
         return getWrapper().isForeign();
     }
@@ -131,11 +151,12 @@ class FarragoRJMedDataWrapperServer
     /**
      * Gets wrapper information from the server.
      *
-     * <p>This {@link FarragoMedDataWrapperInfo} is leak-proof -- unlike
-     * a {@link FarragoMedDataWrapper}, we don't have to worry about freeing
-     * it.
+     * <p>This {@link FarragoMedDataWrapperInfo} is leak-proof -- unlike a
+     * {@link FarragoMedDataWrapper}, we don't have to worry about freeing it.
      */
-    private FarragoMedDataWrapperInfo getWrapper() throws RemoteException {
+    private FarragoMedDataWrapperInfo getWrapper()
+        throws RemoteException
+    {
         try {
             return farragoConnection.getWrapper(mofId, libraryName, options);
         } catch (SQLException e) {
@@ -143,15 +164,17 @@ class FarragoRJMedDataWrapperServer
         }
     }
 
-    private FarragoRJDriverPropertyInfo [] 
-        makeSerializable(DriverPropertyInfo [] infos) {
-
-        FarragoRJDriverPropertyInfo dpis[] = 
+    private FarragoRJDriverPropertyInfo [] makeSerializable(
+        DriverPropertyInfo [] infos)
+    {
+        FarragoRJDriverPropertyInfo [] dpis =
             new FarragoRJDriverPropertyInfo[infos.length];
-        
+
         for (int i = 0; i < infos.length; i++) {
             dpis[i] = new FarragoRJDriverPropertyInfo(infos[i]);
         }
         return dpis;
     }
 }
+
+// End FarragoRJMedDataWrapperServer.java

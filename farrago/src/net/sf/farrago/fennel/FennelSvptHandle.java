@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.fennel;
 
-
 /**
  * FennelSvptHandle is an opaque handle to a Fennel savepoint.
  *
@@ -31,18 +30,19 @@ package net.sf.farrago.fennel;
  */
 public class FennelSvptHandle
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final long svptHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FennelSvptHandle(long svptHandle)
     {
         this.svptHandle = svptHandle;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return underlying handle as long
@@ -52,6 +52,5 @@ public class FennelSvptHandle
         return svptHandle;
     }
 }
-
 
 // End FennelSvptHandle.java

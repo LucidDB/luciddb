@@ -23,23 +23,51 @@
 package net.sf.farrago.server;
 
 import java.io.*;
+
 import java.util.*;
 
 import net.sf.farrago.jdbc.engine.*;
 
+
 /**
- * @deprecated use FarragoRmiJdbcServer instead; this is hanging
- * around for a while to avoid breaking dependencies
- *
  * @author John V. Sichi
  * @version $Id$
+ * @deprecated use FarragoRmiJdbcServer instead; this is hanging around for a
+ * while to avoid breaking dependencies
  */
-public class FarragoServer extends FarragoRmiJdbcServer
+public class FarragoServer
+    extends FarragoRmiJdbcServer
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Defines the main entry point for the Farrago server.  Customized servers
+     * Creates a new FarragoServer instance, with console output to System.out.
+     * This constructor can be used to embed a FarragoServer inside of another
+     * container such as a J2EE app server.
+     */
+    public FarragoServer()
+    {
+        super();
+    }
+
+    /**
+     * Creates a new FarragoServer instance, with redirected console output.
+     * This constructor can be used to embed a FarragoServer inside of another
+     * container such as a J2EE app server.
+     *
+     * @param pw receives console output
+     */
+    public FarragoServer(PrintWriter pw)
+        throws Exception
+    {
+        super(pw);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Defines the main entry point for the Farrago server. Customized servers
      * can provide their own which call start() with an extended implementation
      * of {@link net.sf.farrago.jdbc.engine.FarragoJdbcServerDriver}.
      *
@@ -52,30 +80,6 @@ public class FarragoServer extends FarragoRmiJdbcServer
         server.start(new FarragoJdbcEngineDriver());
         server.runConsole();
     }
-
-    /**
-     * Creates a new FarragoServer instance, with console output to System.out.
-     * This constructor can be used to embed a FarragoServer inside
-     * of another container such as a J2EE app server.
-     */
-    public FarragoServer()
-    {
-        super();
-    }
-
-    /**
-     * Creates a new FarragoServer instance, with redirected console output.
-     * This constructor can be used to embed a FarragoServer inside
-     * of another container such as a J2EE app server.
-     *
-     * @param pw receives console output
-     */
-    public FarragoServer(PrintWriter pw)
-        throws Exception
-    {
-        super(pw);
-    }
 }
-
 
 // End FarragoServer.java

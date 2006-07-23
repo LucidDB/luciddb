@@ -21,43 +21,47 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.security.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
-import java.util.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import net.sf.farrago.resource.*;
-    
+
+
 /**
  * DdlGrantRoleStmt represents a DDL GRANT ROLE statement.
- * 
  *
  * @author Quoc Tai Tran
  * @version $Id$
  */
-public class DdlGrantRoleStmt extends DdlGrantStmt
+public class DdlGrantRoleStmt
+    extends DdlGrantStmt
 {
-    protected List roleList;
-    
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
+
+    protected List roleList;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlGrantRoleStmt.
-     *
      */
     public DdlGrantRoleStmt()
     {
         super();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -68,23 +72,25 @@ public class DdlGrantRoleStmt extends DdlGrantStmt
     // implement FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
-        FarragoRepos repos =  ddlValidator.getRepos();
+        FarragoRepos repos = ddlValidator.getRepos();
 
         FemAuthId grantorAuthId = determineGrantor(ddlValidator);
 
-        // TODO: Check that for all roles to be granted 
-        // (a) the grantor must be the owner. Or
-        // (b) the owner has been granted with Admin Option. Need model change!
-        
+        // TODO: Check that for all roles to be granted  (a) the grantor must be
+        // the owner. Or (b) the owner has been granted with Admin Option. Need
+        // model change!
+
         Iterator iter = granteeList.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             // process the next grantee
             SqlIdentifier granteeId = (SqlIdentifier) iter.next();
 
             // Find the repository element id for the grantee,  create one if
             // it does not exist
-            FemAuthId granteeAuthId = FarragoCatalogUtil.getAuthIdByName(
-                repos, granteeId.getSimple());
+            FemAuthId granteeAuthId =
+                FarragoCatalogUtil.getAuthIdByName(
+                    repos,
+                    granteeId.getSimple());
 
             // for each role in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
@@ -92,22 +98,25 @@ public class DdlGrantRoleStmt extends DdlGrantStmt
             Iterator iterRole = roleList.iterator();
             while (iterRole.hasNext()) {
                 SqlIdentifier roleId = (SqlIdentifier) iterRole.next();
-                
+
                 // create a privilege object and set its properties
-                FemGrant grant = FarragoCatalogUtil.newRoleGrant(
-                    repos, grantorAuthId.getName(), granteeId.getSimple(),
-                    roleId.getSimple());                
-                
+                FemGrant grant =
+                    FarragoCatalogUtil.newRoleGrant(
+                        repos,
+                        grantorAuthId.getName(),
+                        granteeId.getSimple(),
+                        roleId.getSimple());
+
                 // set the privilege name (i.e. action) and properties
                 grant.setWithGrantOption(grantOption);
             }
         }
-    }    
+    }
 
     public void setRoleList(List roleList)
     {
         this.roleList = roleList;
-    }    
+    }
 }
 
 // End DdlGrantRoleStmt.java

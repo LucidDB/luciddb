@@ -23,10 +23,13 @@
 package net.sf.farrago.test.regression;
 
 import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import junit.extensions.*;
+
 import junit.framework.*;
 
 import net.sf.farrago.fem.config.*;
@@ -41,9 +44,11 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSorterTest extends FarragoTestCase
+public class FarragoSorterTest
+    extends FarragoTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static File testdataDir;
     private static long externalCount = -1;
@@ -68,7 +73,7 @@ public class FarragoSorterTest extends FarragoTestCase
      */
     private static final long EXTERNAL_SCALE_FACTOR = 20;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoSorterTest(String testName)
         throws Exception
@@ -76,7 +81,7 @@ public class FarragoSorterTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -120,8 +125,7 @@ public class FarragoSorterTest extends FarragoTestCase
         testdataDir = new File(testdataDir, "data");
 
         // wipe out any existing contents
-        FarragoFileAllocation dirAlloc =
-            new FarragoFileAllocation(testdataDir);
+        FarragoFileAllocation dirAlloc = new FarragoFileAllocation(testdataDir);
         dirAlloc.closeAllocation();
         testdataDir.mkdir();
     }
@@ -129,7 +133,8 @@ public class FarragoSorterTest extends FarragoTestCase
     private void createForeignTable()
         throws Exception
     {
-        stmt.executeUpdate("create foreign table sortertest.\"" + getName()
+        stmt.executeUpdate(
+            "create foreign table sortertest.\"" + getName()
             + "\"(" + "pk bigint not null," + "val bigint not null) "
             + "server csv_server " + "options (table_name '" + getName()
             + "')");
@@ -187,7 +192,8 @@ public class FarragoSorterTest extends FarragoTestCase
         createForeignTable();
 
         resultSet =
-            stmt.executeQuery("select pk,val from sortertest.\"" + getName()
+            stmt.executeQuery(
+                "select pk,val from sortertest.\"" + getName()
                 + "\" order by val");
 
         long sortSum = 0;
@@ -295,7 +301,7 @@ public class FarragoSorterTest extends FarragoTestCase
                 externalCount * SPARSE_FACTOR));
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     private static abstract class DistributionGenerator
     {
@@ -353,6 +359,5 @@ public class FarragoSorterTest extends FarragoTestCase
         }
     }
 }
-
 
 // End FarragoSorterTest.java

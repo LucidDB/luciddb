@@ -20,26 +20,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
+
+import java.io.*;
+
+import java.math.*;
 
 import java.nio.*;
 import java.nio.charset.*;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.util.Calendar;
+import java.util.*;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
-import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -48,104 +46,100 @@ import org.eigenbase.util14.ConversionUtil;
  * <p>There are several methods for creating literals in {@link RexBuilder}:
  * {@link RexBuilder#makeLiteral(boolean)} and so forth.</p>
  *
- *
- * <p>How is the value stored? In that respect, the class is somewhat of a
- * black box. There is a {@link #getValue} method which returns the value as
- * an object, but the type of that value is implementation detail, and it is
- * best that your code does not depend upon that knowledge. It is better to
- * use task-oriented methods such as {@link #getValue2} and
- * {@link #toJavaString}.</p>
+ * <p>How is the value stored? In that respect, the class is somewhat of a black
+ * box. There is a {@link #getValue} method which returns the value as an
+ * object, but the type of that value is implementation detail, and it is best
+ * that your code does not depend upon that knowledge. It is better to use
+ * task-oriented methods such as {@link #getValue2} and {@link
+ * #toJavaString}.</p>
  *
  * <p>The allowable types and combinations are:
+ *
  * <table>
  * <tr>
- *   <th>TypeName</th>
- *   <th>Meaing</th>
- *   <th>Value type</th>
+ * <th>TypeName</th>
+ * <th>Meaing</th>
+ * <th>Value type</th>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Null}</td>
- *   <td>The null value. It has its own special type.</td>
- *   <td>null</td>
+ * <td>{@link SqlTypeName#Null}</td>
+ * <td>The null value. It has its own special type.</td>
+ * <td>null</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Boolean}</td>
- *   <td>Boolean, namely <code>TRUE</code>,
- *       <code>FALSE</code> or
- *       <code>UNKNOWN</code>.</td>
- *   <td>{@link Boolean}, or null represents the UNKNOWN value</td>
+ * <td>{@link SqlTypeName#Boolean}</td>
+ * <td>Boolean, namely <code>TRUE</code>, <code>FALSE</code> or <code>
+ * UNKNOWN</code>.</td>
+ * <td>{@link Boolean}, or null represents the UNKNOWN value</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Decimal}</td>
- *   <td>Exact number, for example <code>0</code>,
- *       <code>-.5</code>,
- *       <code>12345</code>.</td>
- *   <td>{@link BigDecimal}</td>
+ * <td>{@link SqlTypeName#Decimal}</td>
+ * <td>Exact number, for example <code>0</code>, <code>-.5</code>, <code>
+ * 12345</code>.</td>
+ * <td>{@link BigDecimal}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Double}</td>
- *   <td>Approximate number, for example <code>6.023E-23</code>.</td>
- *   <td>{@link BigDecimal}</td>
+ * <td>{@link SqlTypeName#Double}</td>
+ * <td>Approximate number, for example <code>6.023E-23</code>.</td>
+ * <td>{@link BigDecimal}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Date}</td>
- *   <td>Date, for example <code>DATE '1969-04'29'</code></td>
- *   <td>{@link Calendar}</td>
+ * <td>{@link SqlTypeName#Date}</td>
+ * <td>Date, for example <code>DATE '1969-04'29'</code></td>
+ * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Time}</td>
- *   <td>Time, for example <code>TIME '18:37:42.567'</code></td>
- *   <td>{@link Calendar}</td>
+ * <td>{@link SqlTypeName#Time}</td>
+ * <td>Time, for example <code>TIME '18:37:42.567'</code></td>
+ * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Timestamp}</td>
- *   <td>Timestamp, for example
- *       <code>TIMESTAMP '1969-04-29 18:37:42.567'</code></td>
- *   <td>{@link Calendar}</td>
+ * <td>{@link SqlTypeName#Timestamp}</td>
+ * <td>Timestamp, for example <code>TIMESTAMP '1969-04-29
+ * 18:37:42.567'</code></td>
+ * <td>{@link Calendar}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Char}</td>
- *   <td>Character constant, for example
- *       <code>'Hello, world!'</code>,
- *       <code>''</code>,
- *       <code>_N'Bonjour'</code>,
- *       <code>_ISO-8859-1'It''s superman!' COLLATE SHIFT_JIS$ja_JP$2</code>.
- *       These are always CHAR, never VARCHAR.</td>
- *   <td>{@link NlsString}</td>
+ * <td>{@link SqlTypeName#Char}</td>
+ * <td>Character constant, for example <code>'Hello, world!'</code>, <code>
+ * ''</code>, <code>_N'Bonjour'</code>, <code>_ISO-8859-1'It''s superman!'
+ * COLLATE SHIFT_JIS$ja_JP$2</code>. These are always CHAR, never VARCHAR.</td>
+ * <td>{@link NlsString}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Binary}</td>
- *   <td>Binary constant, for example <code>X'7F34'</code>. (The number of
- *       hexits must be even; see above.)
- *       These constants are always BINARY, never VARBINARY.</td>
- *   <td>{@link ByteBuffer}</td>
+ * <td>{@link SqlTypeName#Binary}</td>
+ * <td>Binary constant, for example <code>X'7F34'</code>. (The number of hexits
+ * must be even; see above.) These constants are always BINARY, never
+ * VARBINARY.</td>
+ * <td>{@link ByteBuffer}</td>
  * </tr>
  * <tr>
- *   <td>{@link SqlTypeName#Symbol}</td>
- *   <td>A symbol is a special type used to make parsing easier; it is not
- *       part of the SQL standard, and is not exposed to end-users.
- *       It is used to hold a flag, such as the LEADING flag in a call to the
- *       function <code>TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.
- *   </td>
- *   <td>A class which implements the {@link EnumeratedValues.Value}
- *       interface</td>
+ * <td>{@link SqlTypeName#Symbol}</td>
+ * <td>A symbol is a special type used to make parsing easier; it is not part of
+ * the SQL standard, and is not exposed to end-users. It is used to hold a flag,
+ * such as the LEADING flag in a call to the function <code>
+ * TRIM([LEADING|TRAILING|BOTH] chars FROM string)</code>.</td>
+ * <td>A class which implements the {@link EnumeratedValues.Value}
+ * interface</td>
  * </tr>
  * </table>
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
- **/
-public class RexLiteral extends RexNode
+ * @since Nov 24, 2003
+ */
+public class RexLiteral
+    extends RexNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * The value of this literal. Must be consistent with its type, as per
-     * {@link #valueMatchesType}. For example, you can't store an
-     * {@link Integer} value here just because you feel like it -- all numbers
-     * are represented by a {@link BigDecimal}. But since this field is
-     * private, it doesn't really matter how the values are stored.
+     * {@link #valueMatchesType}. For example, you can't store an {@link
+     * Integer} value here just because you feel like it -- all numbers are
+     * represented by a {@link BigDecimal}. But since this field is private, it
+     * doesn't really matter how the values are stored.
      */
     private final Comparable value;
 
@@ -158,15 +152,15 @@ public class RexLiteral extends RexNode
     // for exactly this purpose (to avoid the confusion which results
     // from overloading SqlTypeName).
     /**
-     * An indication of the broad type of this literal -- even if its type
-     * isn't a SQL type. Sometimes this will be different than the SQL type;
-     * for example, all exact numbers, including integers have typeName
-     * {@link SqlTypeName#Decimal}. See {@link #valueMatchesType} for the
-     * definitive story.
+     * An indication of the broad type of this literal -- even if its type isn't
+     * a SQL type. Sometimes this will be different than the SQL type; for
+     * example, all exact numbers, including integers have typeName {@link
+     * SqlTypeName#Decimal}. See {@link #valueMatchesType} for the definitive
+     * story.
      */
     private final SqlTypeName typeName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>RexLiteral</code>.
@@ -192,7 +186,7 @@ public class RexLiteral extends RexNode
         this.digest = toJavaString(value, typeName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return whether value is appropriate for its type (we have rules about
@@ -223,11 +217,13 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Binary_ordinal:
             return value instanceof ByteBuffer;
         case SqlTypeName.Char_ordinal:
+
             // A SqlLiteral's charset and collation are optional; not so a
             // RexLiteral.
-            return value instanceof NlsString &&
-                ((NlsString) value).getCharset() != null &&
-                ((NlsString) value).getCollation() != null;
+            return
+                (value instanceof NlsString)
+                && (((NlsString) value).getCharset() != null)
+                && (((NlsString) value).getCollation() != null);
         case SqlTypeName.Symbol_ordinal:
             return value instanceof EnumeratedValues.Value;
         case SqlTypeName.Integer_ordinal: // not allowed -- use Decimal
@@ -258,10 +254,12 @@ public class RexLiteral extends RexNode
     }
 
     /**
-     * Prints a value as a Java string. The value must be consistent with
-     * the type, as per {@link #valueMatchesType}.
+     * Prints a value as a Java string. The value must be consistent with the
+     * type, as per {@link #valueMatchesType}.
      *
-     * <p>Typical return values:<ul>
+     * <p>Typical return values:
+     *
+     * <ul>
      * <li>true</li>
      * <li>null</li>
      * <li>"Hello, world!"</li>
@@ -305,8 +303,10 @@ public class RexLiteral extends RexNode
             break;
         case SqlTypeName.Binary_ordinal:
             assert value instanceof ByteBuffer;
-            pw.print(ConversionUtil.toStringFromByteArray(
-                         ((ByteBuffer) value).array(), 16));
+            pw.print(
+                ConversionUtil.toStringFromByteArray(
+                    ((ByteBuffer) value).array(),
+                    16));
             break;
         case SqlTypeName.Null_ordinal:
             assert value == null;
@@ -338,36 +338,37 @@ public class RexLiteral extends RexNode
     }
 
     /**
-     * Converts a Jdbc string into a RexLiteral. This method accepts a 
-     * string, as returned by the Jdbc method ResultSet.getString(), and 
-     * restores the string into an equivalent RexLiteral. It allows one 
-     * to use Jdbc strings as a common format for data.
-     * 
-     * <p>If a null literal is provided, then a null pointer will be 
-     * returned.
-     * 
+     * Converts a Jdbc string into a RexLiteral. This method accepts a string,
+     * as returned by the Jdbc method ResultSet.getString(), and restores the
+     * string into an equivalent RexLiteral. It allows one to use Jdbc strings
+     * as a common format for data.
+     *
+     * <p>If a null literal is provided, then a null pointer will be returned.
+     *
      * @param type data type of literal to be read
      * @param typeName type family of literal
-     * @param literal the (non-SQL encoded) string representation, as 
-     * returned by the Jdbc call to return a column as a string
-     * 
+     * @param literal the (non-SQL encoded) string representation, as returned
+     * by the Jdbc call to return a column as a string
+     *
      * @return a typed RexLiteral, or null
      */
     public static RexLiteral fromJdbcString(
-        RelDataType type, 
+        RelDataType type,
         SqlTypeName typeName,
         String literal)
     {
         if (literal == null) {
             return null;
         }
-        
+
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             Charset charset = type.getCharset();
             SqlCollation collation = type.getCollation();
-            NlsString str = 
-                new NlsString(literal, charset.name(), collation);
+            NlsString str = new NlsString(
+                    literal,
+                    charset.name(),
+                    collation);
             return new RexLiteral(str, type, typeName);
         case SqlTypeName.Boolean_ordinal:
             boolean b = ConversionUtil.toBoolean(literal);
@@ -376,7 +377,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Double_ordinal:
             BigDecimal d = new BigDecimal(literal);
             return new RexLiteral(d, type, typeName);
-       case SqlTypeName.Binary_ordinal:
+        case SqlTypeName.Binary_ordinal:
             byte [] bytes = ConversionUtil.toByteArrayFromString(literal, 16);
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             return new RexLiteral(buffer, type, typeName);
@@ -388,15 +389,19 @@ public class RexLiteral extends RexNode
             String format = getCalendarFormat(typeName);
             Calendar cal = null;
             if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal) {
-                SqlParserUtil.PrecisionTime ts = 
+                SqlParserUtil.PrecisionTime ts =
                     SqlParserUtil.parsePrecisionDateTimeLiteral(
-                        literal, format, null);
+                        literal,
+                        format,
+                        null);
                 if (ts != null) {
                     cal = ts.getCalendar();
                 }
             } else {
                 cal = SqlParserUtil.parseDateFormat(
-                    literal, format, null);
+                        literal,
+                        format,
+                        null);
             }
             if (cal == null) {
                 throw Util.newInternal(
@@ -405,10 +410,12 @@ public class RexLiteral extends RexNode
             }
             return new RexLiteral(cal, type, typeName);
         case SqlTypeName.Symbol_ordinal:
-            // Symbols are for internal use
+
+        // Symbols are for internal use
         case SqlTypeName.IntervalDayTime_ordinal:
         case SqlTypeName.IntervalYearMonth_ordinal:
-            // Intervals are not yet encoded as strings
+
+        // Intervals are not yet encoded as strings
         default:
             throw Util.newInternal("fromJdbcString: unsupported type");
         }
@@ -432,7 +439,7 @@ public class RexLiteral extends RexNode
     {
         return typeName;
     }
-    
+
     public RelDataType getType()
     {
         return type;
@@ -466,7 +473,7 @@ public class RexLiteral extends RexNode
         case SqlTypeName.Char_ordinal:
             return ((NlsString) value).getValue();
         case SqlTypeName.Decimal_ordinal:
-            return new Long(((BigDecimal)value).unscaledValue().longValue());
+            return new Long(((BigDecimal) value).unscaledValue().longValue());
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
@@ -481,7 +488,7 @@ public class RexLiteral extends RexNode
         return ((Boolean) ((RexLiteral) node).value).booleanValue();
     }
 
-    public boolean isAlwaysTrue() 
+    public boolean isAlwaysTrue()
     {
         Util.pre(typeName.getOrdinal() == SqlTypeName.Boolean_ordinal,
             "typeName.getOrdinal() == SqlTypeName.Boolean_ordinal");
@@ -490,7 +497,8 @@ public class RexLiteral extends RexNode
 
     public boolean equals(Object obj)
     {
-        return (obj instanceof RexLiteral)
+        return
+            (obj instanceof RexLiteral)
             && equals(((RexLiteral) obj).value, value);
     }
 
@@ -508,8 +516,7 @@ public class RexLiteral extends RexNode
     public static String stringValue(RexNode node)
     {
         final Comparable value = findValue(node);
-        return value == null ? null :
-            ((NlsString) value).getValue();
+        return (value == null) ? null : ((NlsString) value).getValue();
     }
 
     private static Comparable findValue(RexNode node)
@@ -534,7 +541,8 @@ public class RexLiteral extends RexNode
 
     public static boolean isNullLiteral(RexNode node)
     {
-        return node instanceof RexLiteral
+        return
+            (node instanceof RexLiteral)
             && (((RexLiteral) node).value == null);
     }
 
@@ -555,6 +563,5 @@ public class RexLiteral extends RexNode
         return visitor.visitLiteral(this);
     }
 }
-
 
 // End RexLiteral.java

@@ -22,35 +22,37 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
+import net.sf.farrago.fem.fennel.*;
 
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FennelRel defines the interface which must be implemented by any
- * {@link RelNode} corresponding to a C++ physical implementation conforming
- * to the fennel::ExecStream interface.
+ * FennelRel defines the interface which must be implemented by any {@link
+ * RelNode} corresponding to a C++ physical implementation conforming to the
+ * fennel::ExecStream interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FennelRel extends RelNode
+public interface FennelRel
+    extends RelNode
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Calling convention which transfers data as rows in Fennel tuple
-     * format (implementations must conform to the fennel::ExecStream
-     * interface).
+     * Calling convention which transfers data as rows in Fennel tuple format
+     * (implementations must conform to the fennel::ExecStream interface).
      */
     public static final CallingConvention FENNEL_EXEC_CONVENTION =
-        new CallingConvention("FENNEL_EXEC",
-            CallingConvention.generateOrdinal(), FennelRel.class);
-    
-    //~ Methods ---------------------------------------------------------------
+        new CallingConvention(
+            "FENNEL_EXEC",
+            CallingConvention.generateOrdinal(),
+            FennelRel.class);
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Converts this relational expression to {@link FemExecutionStreamDef}
@@ -65,9 +67,9 @@ public interface FennelRel extends RelNode
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor);
 
     /**
-     * Visits this relational expression as part of the implementation
-     * process. Fennel relational expressions are implemented in a two-phase
-     * process: first call this method, then call {@link #toStreamDef}.
+     * Visits this relational expression as part of the implementation process.
+     * Fennel relational expressions are implemented in a two-phase process:
+     * first call this method, then call {@link #toStreamDef}.
      */
     Object implementFennelChild(FennelRelImplementor implementor);
 
@@ -79,6 +81,5 @@ public interface FennelRel extends RelNode
      */
     public RelFieldCollation [] getCollations();
 }
-
 
 // End FennelRel.java

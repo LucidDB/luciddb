@@ -24,19 +24,25 @@ package org.eigenbase.runtime;
 
 import java.util.*;
 
+
 /**
- * <code>RestartableCollectionTupleIter</code> implements the
- * {@link TupleIter} interface in terms of an underlying
- * {@link Collection}.  It is used to implement
- * {@link org.eigenbase.oj.rel.IterOneRowRel}.
+ * <code>RestartableCollectionTupleIter</code> implements the {@link TupleIter}
+ * interface in terms of an underlying {@link Collection}. It is used to
+ * implement {@link org.eigenbase.oj.rel.IterOneRowRel}.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class RestartableCollectionTupleIter implements TupleIter
+public class RestartableCollectionTupleIter
+    implements TupleIter
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Collection collection;
     private Iterator iterator;
+
+    //~ Constructors -----------------------------------------------------------
 
     // this handles the case where we thought a join was one-to-many
     // but it's actually one-to-one
@@ -49,12 +55,14 @@ public class RestartableCollectionTupleIter implements TupleIter
         }
         iterator = collection.iterator();
     }
-    
+
     public RestartableCollectionTupleIter(Collection collection)
     {
         this.collection = collection;
         iterator = collection.iterator();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement TupleIter
     public Object fetchNext()
@@ -65,7 +73,7 @@ public class RestartableCollectionTupleIter implements TupleIter
 
         return NoDataReason.END_OF_DATA;
     }
-    
+
     // implement TupleIter
     public void restart()
     {

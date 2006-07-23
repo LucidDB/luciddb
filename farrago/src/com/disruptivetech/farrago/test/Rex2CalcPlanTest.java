@@ -20,55 +20,51 @@
 */
 package com.disruptivetech.farrago.test;
 
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
-import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import junit.framework.AssertionFailedError;
-import junit.framework.Test;
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
-import net.sf.farrago.query.FarragoPreparingStmt;
-import net.sf.farrago.session.FarragoSessionStmtValidator;
-import net.sf.farrago.test.FarragoTestCase;
-import openjava.mop.*;
-import openjava.ptree.ClassDeclaration;
-import openjava.ptree.MemberDeclarationList;
-import openjava.ptree.ModifierList;
-import org.eigenbase.oj.util.JavaRexBuilder;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rel.*;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorUtil;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParseException;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql2rel.SqlToRelConverter;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
-import org.eigenbase.util.TestUtil;
-import org.eigenbase.test.DiffRepository;
+import com.disruptivetech.farrago.calc.*;
 
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.test.*;
+
+import openjava.mop.*;
+
+import openjava.ptree.*;
+
+import org.eigenbase.oj.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.sql2rel.*;
+import org.eigenbase.test.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Validates that rex expressions get translated to the correct
- * calculator program.
+ * Validates that rex expressions get translated to the correct calculator
+ * program.
  *
  * @author Wael Chatila
- * @since Feb 3, 2004
  * @version $Id$
- **/
-public class Rex2CalcPlanTest extends FarragoTestCase
+ * @since Feb 3, 2004
+ */
+public class Rex2CalcPlanTest
+    extends FarragoTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static TestContext testContext;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public Rex2CalcPlanTest(String testName)
         throws Exception
@@ -76,7 +72,7 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected void setUp()
         throws Exception
@@ -86,10 +82,10 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         FarragoJdbcEngineConnection farragoConn =
             (FarragoJdbcEngineConnection) connection;
         TestContext testContext = getTestContext();
-        testContext.stmtValidator =
-            farragoConn.getSession().newStmtValidator();
-        testContext.stmt = (FarragoPreparingStmt) farragoConn.getSession()
-            .getPersonality().newPreparingStmt(testContext.stmtValidator);
+        testContext.stmtValidator = farragoConn.getSession().newStmtValidator();
+        testContext.stmt =
+            (FarragoPreparingStmt) farragoConn.getSession().getPersonality()
+            .newPreparingStmt(testContext.stmtValidator);
     }
 
     protected void tearDown()
@@ -121,12 +117,12 @@ public class Rex2CalcPlanTest extends FarragoTestCase
      * the contents of a reference file with the same name as the current test.
      *
      * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
-     *   WHERE</code>".
-     * @param nullSemantics If true, adds logic to ensure that a
-     *   <code>WHERE</code> clause which evalutes to <code>NULL</code> will
-     *   filter out rows (as if it had evaluated to <code>FALSE</code>).
+     * WHERE</code>".
+     * @param nullSemantics If true, adds logic to ensure that a <code>
+     * WHERE</code> clause which evalutes to <code>NULL</code> will filter out
+     * rows (as if it had evaluated to <code>FALSE</code>).
      * @param shortCircuit Generate short-circuit logic to optimize logical
-     *   operations such as <code>AND</code> and <code>OR</OR> conditions.
+     * operations such as <code>AND</code> and <code>OR</OR> conditions.
      */
     private void check(
         String sql,
@@ -142,8 +138,10 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         // Create a program builder, and add the project expressions.
         final RexProgramBuilder programBuilder =
-            new RexProgramBuilder(filter.getInput(0).getRowType(), rexBuilder);
-        final RexNode[] projectExps = project.getProjectExps();
+            new RexProgramBuilder(
+                filter.getInput(0).getRowType(),
+                rexBuilder);
+        final RexNode [] projectExps = project.getProjectExps();
         for (int i = 0; i < projectExps.length; i++) {
             programBuilder.addProject(
                 projectExps[i],
@@ -158,8 +156,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
                     SqlStdOperatorTable.isTrueOperator,
                     condition);
             condition =
-                new RexTransformer(condition, rexBuilder).
-                transformNullSemantics();
+                new RexTransformer(condition, rexBuilder)
+                .transformNullSemantics();
         }
         if (condition != null) {
             programBuilder.addCondition(condition);
@@ -170,18 +168,19 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         // rewrite decimals
         ReduceDecimalsRule rule = new ReduceDecimalsRule();
         RexShuttle shuttle = rule.new DecimalShuttle(rexBuilder);
-        RexProgramBuilder updater = RexProgramBuilder.create(
-            rexBuilder,
-            program.getInputRowType(),
-            program.getExprList(),
-            program.getProjectList(),
-            program.getCondition(),
-            program.getOutputRowType(),
-            shuttle,
-            true);
+        RexProgramBuilder updater =
+            RexProgramBuilder.create(
+                rexBuilder,
+                program.getInputRowType(),
+                program.getExprList(),
+                program.getProjectList(),
+                program.getCondition(),
+                program.getOutputRowType(),
+                shuttle,
+                true);
         program = updater.getProgram();
 
-        RexToCalcTranslator translator = 
+        RexToCalcTranslator translator =
             new RexToCalcTranslator(rexBuilder, rootRel);
         translator.setGenerateShortCircuit(shortCircuit);
         translator.setGenerateComments(doComments);
@@ -203,22 +202,21 @@ public class Rex2CalcPlanTest extends FarragoTestCase
     }
 
     /**
-     * This method is modeled after the check() method above.  It performs the
+     * This method is modeled after the check() method above. It performs the
      * same function but targeted to the needs of checking Aggregation functions
-     *
      * Compiles a SQL statement, and compares the generated calc program with
      * the contents of a reference file with the same name as the current test.
      *
      * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
-     *   WHERE</code>".
+     * WHERE</code>".
      * @param shortCircuit Generate short-circuit logic to optimize logical
-     *   operations such as <code>AND</code> and <code>OR</OR> conditions.
+     * operations such as <code>AND</code> and <code>OR</OR> conditions.
      * @param expectedInit String holds the section name in the ref file to
-     *   compare output against for the init function.
+     * compare output against for the init function.
      * @param expectedAdd String holds the section name in the ref file to
-     *   compare output against for the add function.
+     * compare output against for the add function.
      * @param expectedDrop String holds the section name in the ref file to
-     *   compare output against for the drop function.
+     * compare output against for the drop function.
      */
     private void checkAgg(
         String sql,
@@ -241,18 +239,20 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             new RexProgramBuilder(inputRowType, rexBuilder);
         for (int i = 0; i < aggregate.getAggCalls().length; i++) {
             AggregateRelBase.Call aggCall = aggregate.getAggCalls()[i];
-            RexNode[] exprs = new RexNode[aggCall.getArgs().length];
+            RexNode [] exprs = new RexNode[aggCall.getArgs().length];
             for (int j = 0; j < aggCall.getArgs().length; j++) {
                 int argOperand = aggCall.getArgs()[j];
-                exprs[j] = rexBuilder.makeInputRef(
-                    inputRowType.getFields()[argOperand].getType(),
-                    argOperand);
+                exprs[j] =
+                    rexBuilder.makeInputRef(
+                        inputRowType.getFields()[argOperand].getType(),
+                        argOperand);
             }
-            RexNode call = rexBuilder.makeCall(
-                (SqlOperator) aggCall.getAggregation(),
-                exprs);
+            RexNode call =
+                rexBuilder.makeCall((SqlOperator) aggCall.getAggregation(),
+                    exprs);
             programBuilder.addProject(
-                call, aggregate.getRowType().getFields()[i].getName());
+                call,
+                aggregate.getRowType().getFields()[i].getName());
         }
 
         final RexProgram program = programBuilder.getProgram();
@@ -261,15 +261,18 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             new RexToCalcTranslator(rexBuilder, aggregate);
         translator.setGenerateShortCircuit(shortCircuit);
         translator.setGenerateComments(doComments);
-        String[] programs = new String[3];
+        String [] programs = new String[3];
         translator.getAggProgram(program, programs);
 
         DiffRepository diffRepos = getDiffRepos();
-        diffRepos.assertEquals("expectedInit", expectedInit,
+        diffRepos.assertEquals("expectedInit",
+            expectedInit,
             TestUtil.NL + programs[0]);
-        diffRepos.assertEquals("expectedAdd", expectedAdd,  
+        diffRepos.assertEquals("expectedAdd",
+            expectedAdd,
             TestUtil.NL + programs[1]);
-        diffRepos.assertEquals("expectedDrop", expectedDrop,
+        diffRepos.assertEquals("expectedDrop",
+            expectedDrop,
             TestUtil.NL + programs[2]);
     }
 
@@ -291,15 +294,17 @@ public class Rex2CalcPlanTest extends FarragoTestCase
                 typeFactory);
         final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
         final SqlToRelConverter converter =
-            new SqlToRelConverter(validator,
-                testContext.stmt.getRelOptSchema(), testContext.env,
+            new SqlToRelConverter(
+                validator,
+                testContext.stmt.getRelOptSchema(),
+                testContext.env,
                 testContext.stmt.getPlanner(),
-                testContext.stmt, rexBuilder);
+                testContext.stmt,
+                rexBuilder);
         RelNode rootRel = converter.convertQuery(sqlQuery, true, true);
         assertTrue(rootRel != null);
         return rootRel;
     }
-
 
     public static TestContext getTestContext()
     {
@@ -309,8 +314,374 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         return testContext;
     }
 
+    //--- Tests ------------------------------------------------
+    public void testSimplePassThroughFilter()
+    {
+        String sql = "SELECT empno,empno FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
 
-    //~ Inner Classes ---------------------------------------------------------
+    public void testAggCount()
+    {
+        String sql = "SELECT COUNT(empno) FROM emps";
+        checkAgg(sql,
+            false,
+            "${expectedInit}",
+            "${expectedAdd}",
+            "${expectedDrop}");
+    }
+
+    public void testAggSum()
+    {
+        checkAgg("SELECT SUM(empno+5) FROM emps",
+            false,
+            "${expectedInit}",
+            "${expectedAdd}",
+            "${expectedDrop}");
+    }
+
+    public void _testAggSumExp()
+    {
+        checkAgg(
+            "SELECT empno, SUM(empno+deptno), COUNT(empno) "
+            + "FROM emps "
+            + "GROUP BY empno,deptno",
+            false,
+            "${expectedInit}",
+            "${expectedAdd}",
+            "${expectedDrop}");
+    }
+
+    public void _testAggMin()
+    {
+        checkAgg("SELECT MIN(empno) FROM emps ",
+            false,
+            "${expectedInit}",
+            "${expectedAdd}",
+            "${expectedDrop}");
+    }
+
+    public void _testWindowedMinMax()
+    {
+        checkAgg(
+            "SELECT MIN(empno) OVER last3, MAX(empno) OVER last3 "
+            + "FROM emps WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            false,
+            "${expectedInit}",
+            "${expectedAdd}",
+            "${expectedDrop}");
+    }
+
+    public void testSimplyEqualsFilter()
+    {
+        String sql = "select empno from emps where empno=123";
+        check(sql, true, false);
+    }
+
+    public void testSimplyEqualsFilterWithComments()
+    {
+        String sql = "select empno from emps where name='Wael' and 123=0";
+        check(sql, false, false);
+    }
+
+    public void testSimplyEqualsFilterShortCircuit()
+    {
+        String sql = "select empno from emps where empno=123";
+        check(sql, true, true);
+    }
+
+    public void testBooleanExpressions()
+    {
+        //AND has higher precedence than OR
+        String sql =
+            "SELECT empno FROM emps WHERE true and not true or false and (not true and true)";
+        check(sql, false, false);
+    }
+
+    public void testScalarExpression()
+    {
+        String sql = "SELECT 2-2*2+2/2-2  FROM emps WHERE empno > 10";
+        check(sql, true, false);
+    }
+
+    public void testMixedExpression()
+    {
+        String sql =
+            "SELECT name, 2*2  FROM emps WHERE name = 'Fred' AND  empno > 10";
+        check(sql, true, false);
+    }
+
+    public void testNumbers()
+    {
+        String sql =
+            "SELECT "
+            + "-(1+-2.*-3.e-1/-.4)>=+5, "
+            + " 1e200 / 0.4"
+            + "FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testHexBitBinaryString()
+    {
+        String sql = "SELECT X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testStringLiterals()
+    {
+        String sql =
+            "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testSimpleCompare()
+    {
+        String sql =
+            "SELECT "
+            + "1<>2"
+            + ",1=2 is true is false is null is unknown"
+            + ",true is not true "
+            + ",true is not false"
+            + ",true is not null "
+            + ",true is not unknown"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testArithmeticOperators()
+    {
+        String sql =
+            "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), "
+            + "ABS(1.1), LN(1), LOG10(1) FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testFunctionInFunction()
+    {
+        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testCaseExpressions()
+    {
+        String sql =
+            "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end"
+            + ",case when 1=1 then 1+1+2 else 2+10 end"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testNullifExpression()
+    {
+        String sql = "SELECT nullif(1,2) "
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testCoalesce()
+    {
+        String sql = "SELECT coalesce(1,2,3) FROM emps WHERE empno > 10";
+
+        //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2
+        //ELSE 3) END
+        check(sql, false, false);
+    }
+
+    public void testCase1()
+    {
+        String sql =
+            "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END "
+            + "FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testCase2()
+    {
+        String sql1 =
+            "SELECT CASE WHEN slacker then 2 when TRUE THEN 0 ELSE 1 END "
+            + "FROM emps WHERE empno > 10";
+        check(sql1, false, false);
+    }
+
+    public void testCase3()
+    {
+        String sql2 =
+            "select CASE 1 WHEN 1 THEN cast(null as integer) else 0 END "
+            + "FROM emps WHERE empno > 10";
+        check(sql2, false, false);
+    }
+
+    public void testCharEq()
+    {
+        checkCharOp("=", "EQ");
+    }
+
+    public void testCharNe()
+    {
+        checkCharOp("<>", "NE");
+    }
+
+    public void testCharGt()
+    {
+        checkCharOp(">", "GT");
+    }
+
+    public void testCharLt()
+    {
+        checkCharOp("<", "LT");
+    }
+
+    public void testCharGe()
+    {
+        checkCharOp(">=", "GE");
+    }
+
+    public void testCharLe()
+    {
+        checkCharOp("<=", "LE");
+    }
+
+    private void checkCharOp(final String op, final String instr)
+    {
+        String sql = "SELECT 'a' " + op
+            + "'b' FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testBinaryGt()
+    {
+        checkBinaryOp(">", "GT");
+    }
+
+    private void checkBinaryOp(final String op, final String instr)
+    {
+        String sql = "SELECT x'ff' " + op
+            + "x'01' FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testStringFunctions()
+    {
+        String sql =
+            "SELECT "
+            + "char_length('a'),"
+            + "upper('a'),"
+            + "lower('a'),"
+            + "position('a' in 'a'),"
+            + "trim('a' from 'a'),"
+            + "overlay('a' placing 'a' from 1),"
+            + "substring('a' from 1),"
+            + "substring(cast('a' as char(2)) from 1),"
+            + "substring('a' from 1 for 10),"
+            + "substring('a' from 'a' for '\\' ),"
+            + "'a'||'a'||'b'"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testPosition()
+    {
+        String sql =
+            "SELECT "
+            + "position('a' in  cast('a' as char(1))),"
+            + "position('a' in  cast('ba' as char(2))),"
+            + "position(cast('abc' as char(3)) in 'bbabc')"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testOverlay()
+    {
+        String sql =
+            "SELECT "
+            + "overlay('12' placing cast('abc' as char(3)) from 1),"
+            + "overlay(cast('12' as char(3)) placing 'abc' from 1)"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testLikeAndSimilar()
+    {
+        String sql =
+            "SELECT "
+            + "'a' like 'b'"
+            + ",'a' like 'b' escape 'c'"
+            + ",'a' similar to 'a'"
+            + ",'a' similar to 'a' escape 'c'"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testBetween1()
+    {
+        String sql1 = "select empno  from emps where empno between 40 and 60";
+        check(sql1, false, false);
+    }
+
+    public void testBetween2()
+    {
+        String sql2 =
+            "select empno  from emps where empno between asymmetric 40 and 60";
+        check(sql2, false, false);
+    }
+
+    public void testBetween3()
+    {
+        String sql3 =
+            "select empno  from emps where empno not between 40 and 60";
+        check(sql3, false, false);
+    }
+
+    public void testBetween4()
+    {
+        String sql4 =
+            "select empno  from emps where empno between symmetric 40 and 60";
+        check(sql4, false, false);
+    }
+
+    public void testCastNull()
+    {
+        String sql =
+            "SELECT "
+            + "cast(null as varchar(1))"
+            + ", cast(null as integer)"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testJdbcFunctionSyntax()
+    {
+        String sql =
+            "SELECT "
+            + "{fn log(1.0)}"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testMixingTypes()
+    {
+        String sql = "SELECT "
+            + "1+1.0"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    public void testCastCharTypesToNumbersAndBack()
+    {
+        String sql =
+            "SELECT "
+            + "cast(123 as varchar(3))"
+            + ",cast(123 as char(3))"
+            + ",cast(12.3 as varchar(3))"
+            + ",cast(12.3 as char(3))"
+            + ",cast('123' as bigint)"
+            + ",cast('123' as tinyint)"
+            + ",cast('123' as double)"
+            + " FROM emps WHERE empno > 10";
+        check(sql, false, false);
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Contains context shared between unit tests.
@@ -355,7 +726,8 @@ public class Rex2CalcPlanTest extends FarragoTestCase
 
         protected String getTempClassName()
         {
-            return "Dummy_"
+            return
+                "Dummy_"
                 + Integer.toHexString(this.hashCode() + executionCount++);
         }
 
@@ -369,308 +741,6 @@ public class Rex2CalcPlanTest extends FarragoTestCase
             return SaffronProperties.instance().packageName.get();
         }
     }
-
-    //--- Tests ------------------------------------------------
-    public void testSimplePassThroughFilter() {
-        String sql="SELECT empno,empno FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testAggCount()
-    {
-        String sql = "SELECT COUNT(empno) FROM emps";
-        checkAgg(sql, false, "${expectedInit}", "${expectedAdd}", "${expectedDrop}");
-    }
-
-    public void testAggSum()
-    {
-        checkAgg("SELECT SUM(empno+5) FROM emps",
-            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
-    }
-
-    public void _testAggSumExp()
-    {
-        checkAgg(
-            "SELECT empno, SUM(empno+deptno), COUNT(empno) "+
-            "FROM emps "+
-            "GROUP BY empno,deptno",
-            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
-    }
-
-    public void _testAggMin()
-    {
-        checkAgg("SELECT MIN(empno) FROM emps ",
-            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
-    }
-
-    public void _testWindowedMinMax()
-    {
-        checkAgg("SELECT MIN(empno) OVER last3, MAX(empno) OVER last3 " +
-            "FROM emps WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
-            false,"${expectedInit}", "${expectedAdd}", "${expectedDrop}");
-    }
-
-    public void testSimplyEqualsFilter()
-    {
-        String sql="select empno from emps where empno=123";
-        check(sql, true,false);
-    }
-
-    public void testSimplyEqualsFilterWithComments()
-    {
-        String sql="select empno from emps where name='Wael' and 123=0";
-        check(sql, false,false);
-    }
-
-    public void testSimplyEqualsFilterShortCircuit()
-    {
-        String sql="select empno from emps where empno=123";
-        check(sql, true,true);
-    }
-
-    public void testBooleanExpressions() {
-        //AND has higher precedence than OR
-        String sql="SELECT empno FROM emps WHERE true and not true or false and (not true and true)";
-        check(sql,false,false);
-    }
-
-    public void testScalarExpression() {
-        String sql="SELECT 2-2*2+2/2-2  FROM emps WHERE empno > 10";
-        check(sql, true,false);
-    }
-
-
-
-    public void testMixedExpression() {
-        String sql="SELECT name, 2*2  FROM emps WHERE name = 'Fred' AND  empno > 10";
-        check(sql,true,false);
-    }
-
-    public void testNumbers() {
-        String sql="SELECT " +
-            "-(1+-2.*-3.e-1/-.4)>=+5, " +
-            " 1e200 / 0.4" +
-            "FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testHexBitBinaryString() {
-        String sql = "SELECT X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testStringLiterals() {
-        String sql= "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testSimpleCompare() {
-        String sql = "SELECT "+
-            "1<>2" +
-            ",1=2 is true is false is null is unknown"+
-            ",true is not true "+
-            ",true is not false"+
-            ",true is not null "+
-            ",true is not unknown"+
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testArithmeticOperators() {
-        String sql = "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), " +
-            "ABS(1.1), LN(1), LOG10(1) FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testFunctionInFunction() {
-        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testCaseExpressions() {
-        String sql = "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end" +
-            ",case when 1=1 then 1+1+2 else 2+10 end" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testNullifExpression() {
-        String sql = "SELECT nullif(1,2) "+
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testCoalesce() {
-        String sql = "SELECT coalesce(1,2,3) FROM emps WHERE empno > 10";
-        //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2 ELSE 3) END
-        check(sql, false,false);
-    }
-
-    public void testCase1() {
-        String sql = "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END " +
-            "FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testCase2() {
-        String sql1 = "SELECT CASE WHEN slacker then 2 when TRUE THEN 0 ELSE 1 END " +
-            "FROM emps WHERE empno > 10";
-        check(sql1, false,false);
-    }
-
-    public void testCase3() {
-        String sql2= "select CASE 1 WHEN 1 THEN cast(null as integer) else 0 END " +
-            "FROM emps WHERE empno > 10";
-        check(sql2, false,false);
-    }
-
-    public void testCharEq() {
-        checkCharOp("=", "EQ");
-    }
-
-    public void testCharNe() {
-        checkCharOp("<>", "NE");
-    }
-
-    public void testCharGt() {
-        checkCharOp(">", "GT");
-    }
-
-    public void testCharLt() {
-        checkCharOp("<", "LT");
-    }
-
-    public void testCharGe() {
-        checkCharOp(">=", "GE");
-    }
-
-    public void testCharLe() {
-        checkCharOp("<=", "LE");
-    }
-
-    private void checkCharOp(final String op, final String instr) {
-        String sql = "SELECT 'a' " + op +
-            "'b' FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testBinaryGt() {
-        checkBinaryOp(">", "GT");
-    }
-
-    private void checkBinaryOp(final String op, final String instr) {
-        String sql = "SELECT x'ff' " + op +
-            "x'01' FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testStringFunctions() {
-        String sql =
-            "SELECT " +
-            "char_length('a')," +
-            "upper('a')," +
-            "lower('a')," +
-            "position('a' in 'a')," +
-            "trim('a' from 'a')," +
-            "overlay('a' placing 'a' from 1)," +
-            "substring('a' from 1)," +
-            "substring(cast('a' as char(2)) from 1)," +
-            "substring('a' from 1 for 10)," +
-            "substring('a' from 'a' for '\\' )," +
-            "'a'||'a'||'b'" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testPosition() {
-        String sql =
-            "SELECT " +
-            "position('a' in  cast('a' as char(1)))," +
-            "position('a' in  cast('ba' as char(2)))," +
-            "position(cast('abc' as char(3)) in 'bbabc')" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testOverlay() {
-        String sql =
-            "SELECT " +
-            "overlay('12' placing cast('abc' as char(3)) from 1)," +
-            "overlay(cast('12' as char(3)) placing 'abc' from 1)" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testLikeAndSimilar() {
-        String sql =
-            "SELECT "+
-            "'a' like 'b'" +
-            ",'a' like 'b' escape 'c'" +
-            ",'a' similar to 'a'" +
-            ",'a' similar to 'a' escape 'c'" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testBetween1() {
-        String sql1="select empno  from emps where empno between 40 and 60";
-        check(sql1, false,false);
-    }
-
-    public void testBetween2() {
-        String sql2="select empno  from emps where empno between asymmetric 40 and 60";
-        check(sql2, false,false);
-    }
-
-    public void testBetween3() {
-        String sql3 ="select empno  from emps where empno not between 40 and 60";
-        check(sql3, false,false);
-    }
-
-    public void testBetween4() {
-        String sql4 ="select empno  from emps where empno between symmetric 40 and 60";
-        check(sql4, false,false);
-    }
-
-    public void testCastNull() {
-        String sql =
-            "SELECT " +
-            "cast(null as varchar(1))" +
-            ", cast(null as integer)" +
-            " FROM emps WHERE empno > 10";
-       check(sql, false,false);
-    }
-
-    public void testJdbcFunctionSyntax() {
-        String sql =
-            "SELECT " +
-            "{fn log(1.0)}" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testMixingTypes() {
-        String sql =
-            "SELECT " +
-            "1+1.0" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
-    public void testCastCharTypesToNumbersAndBack() {
-        String sql =
-            "SELECT " +
-            "cast(123 as varchar(3))" +
-            ",cast(123 as char(3))" +
-            ",cast(12.3 as varchar(3))" +
-            ",cast(12.3 as char(3))" +
-            ",cast('123' as bigint)" +
-            ",cast('123' as tinyint)" +
-            ",cast('123' as double)" +
-            " FROM emps WHERE empno > 10";
-        check(sql, false,false);
-    }
-
 }
 
 // End Rex2CalcPlanTest.java

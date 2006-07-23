@@ -28,10 +28,10 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+
 /**
  * LcsModificationRule is a rule for converting an abstract {@link
- * FarragoIndexBuilderRel} into a corresponding
- * {@link LcsIndexBuilderRel}.
+ * FarragoIndexBuilderRel} into a corresponding {@link LcsIndexBuilderRel}.
  *
  * <p>TODO: this rule was copied from FtrsIndexBuilderRule; consider
  * generalizing it.
@@ -39,17 +39,23 @@ import org.eigenbase.util.*;
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexBuilderRule extends RelOptRule
+class LcsIndexBuilderRule
+    extends RelOptRule
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new LcsIndexBuilderRule object.
      */
     public LcsIndexBuilderRule()
     {
         super(new RelOptRuleOperand(
-            FarragoIndexBuilderRel.class,
-            null));
+                FarragoIndexBuilderRel.class,
+                null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -70,7 +76,8 @@ class LcsIndexBuilderRule extends RelOptRule
         RelNode inputRel = builderRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                call.rels[0].getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 inputRel);
         if (fennelInput == null) {
             return;

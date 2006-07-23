@@ -23,17 +23,24 @@ package org.eigenbase.jmi;
 
 import javax.jmi.reflect.*;
 
+
 /**
- * JmiRestrictException is thrown when a change is made with the RESTRICT
- * option and dependencies are encountered.
+ * JmiRestrictException is thrown when a change is made with the RESTRICT option
+ * and dependencies are encountered.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiRestrictException extends RuntimeException
+public class JmiRestrictException
+    extends RuntimeException
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RefObject obj;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public JmiRestrictException(RefObject obj)
     {
         this.obj = obj;

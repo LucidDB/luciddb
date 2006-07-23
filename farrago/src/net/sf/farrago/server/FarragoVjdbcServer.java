@@ -21,24 +21,40 @@
 */
 package net.sf.farrago.server;
 
-import net.sf.farrago.jdbc.engine.*;
-
-import de.simplicit.vjdbc.server.rmi.*;
 import de.simplicit.vjdbc.server.config.*;
+import de.simplicit.vjdbc.server.rmi.*;
 
 import java.io.*;
 
+import net.sf.farrago.jdbc.engine.*;
+
+
 /**
- * FarragoVjdbcServer is a wrapper which configures a VJDBC server 
- * to listen for connections on behalf of a Farrago DBMS engine.
+ * FarragoVjdbcServer is a wrapper which configures a VJDBC server to listen for
+ * connections on behalf of a Farrago DBMS engine.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoVjdbcServer extends FarragoAbstractServer
+public class FarragoVjdbcServer
+    extends FarragoAbstractServer
 {
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoVjdbcServer()
+    {
+    }
+
+    public FarragoVjdbcServer(PrintWriter pw)
+    {
+        super(pw);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Defines the main entry point for the Farrago server.  Customized servers
+     * Defines the main entry point for the Farrago server. Customized servers
      * can provide their own which call start() with an extended implementation
      * of {@link net.sf.farrago.jdbc.engine.FarragoJdbcServerDriver}.
      *
@@ -52,15 +68,6 @@ public class FarragoVjdbcServer extends FarragoAbstractServer
         server.runConsole();
     }
 
-    public FarragoVjdbcServer()
-    {
-    }
-
-    public FarragoVjdbcServer(PrintWriter pw)
-    {
-        super(pw);
-    }
-    
     protected int startNetwork(FarragoJdbcServerDriver jdbcDriver)
         throws Exception
     {
@@ -72,7 +79,7 @@ public class FarragoVjdbcServer extends FarragoAbstractServer
         configFarrago.setConnectionPooling(false);
         configFarrago.setPrefetchResultSetMetaData(true);
         vjdbcConfig.addConnection(configFarrago);
-        
+
         // NOTE:  This odd sequence is required because of the
         // way the VJdbcConfiguration singleton works.
         VJdbcConfiguration.init(vjdbcConfig);

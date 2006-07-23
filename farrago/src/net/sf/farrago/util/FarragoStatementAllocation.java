@@ -26,27 +26,29 @@ import java.sql.*;
 
 
 /**
- * FarragoStatementAllocation takes care of closing a JDBC Statement
- * (and its associated ResultSet if any).
+ * FarragoStatementAllocation takes care of closing a JDBC Statement (and its
+ * associated ResultSet if any).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoStatementAllocation implements FarragoAllocation
+public class FarragoStatementAllocation
+    implements FarragoAllocation
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private Statement stmt;
     private ResultSet resultSet;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoStatementAllocation(Statement stmt)
     {
         this.stmt = stmt;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setResultSet(ResultSet resultSet)
     {
@@ -76,6 +78,5 @@ public class FarragoStatementAllocation implements FarragoAllocation
         return resultSet;
     }
 }
-
 
 // End FarragoStatementAllocation.java

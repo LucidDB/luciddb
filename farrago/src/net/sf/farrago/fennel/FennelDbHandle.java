@@ -23,6 +23,7 @@
 package net.sf.farrago.fennel;
 
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -39,22 +40,23 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelDbHandle is a public wrapper for FennelStorage, and represents
- * a handle to a loaded Fennel database.
+ * FennelDbHandle is a public wrapper for FennelStorage, and represents a handle
+ * to a loaded Fennel database.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelDbHandle implements FarragoAllocation
+public class FennelDbHandle
+    implements FarragoAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    private static final Logger tracer =
-        FarragoTrace.getFennelDbHandleTracer();
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final Logger tracer = FarragoTrace.getFennelDbHandleTracer();
     private static final Logger jhTracer =
         FarragoTrace.getFennelJavaHandleTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final FarragoMetadataFactory metadataFactory;
     private final FarragoTransientTxnContext transientTxnContext;
@@ -62,21 +64,17 @@ public class FennelDbHandle implements FarragoAllocation
     private Map handleAssociationsMap;
     private long dbHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Opens a Fennel database.
      *
      * @param metadataFactory FarragoMetadataFactory for creating Fem instances
-     *
      * @param transientTxnContext context for transient metadata transactions
-     *
      * @param owner the object which will be made responsible for this
      * database's allocation
-     *
-     * @param cmdExecutor FennelCmdExecutor to use for executing all
-     * commands on this database
-     *
+     * @param cmdExecutor FennelCmdExecutor to use for executing all commands on
+     * this database
      * @param cmd instance of FemCmdOpenDatabase with all parameters set
      */
     public FennelDbHandle(
@@ -97,7 +95,7 @@ public class FennelDbHandle implements FarragoAllocation
         owner.addAllocation(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     FarragoMetadataFactory getMetadataFactory()
     {
@@ -156,8 +154,8 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Constructs a FemTupleAccessor for a FemTupleDescriptor.  This shouldn't
-     * be called directly except from FennelRelUtil.
+     * Constructs a FemTupleAccessor for a FemTupleDescriptor. This shouldn't be
+     * called directly except from FennelRelUtil.
      *
      * @param tupleDesc source FemTupleDescriptor
      *
@@ -178,8 +176,8 @@ public class FennelDbHandle implements FarragoAllocation
     }
 
     /**
-     * Executes a FemCmd object.  If the command produces a resultHandle, it
-     * will be set after successful execution.
+     * Executes a FemCmd object. If the command produces a resultHandle, it will
+     * be set after successful execution.
      *
      * @param cmd instance of FemCmd with all parameters set
      *
@@ -200,11 +198,11 @@ public class FennelDbHandle implements FarragoAllocation
             exportList.add(cmd);
         }
 
-        // TODO:  hash on cmd class instead of iterating below
-        // Handles require special treatment.  For tracing, input handles have
-        // to be added to exportList explicitly since they aren't reachable via
-        // composition associations.  So walk the handleAssociations list and
-        // determine which handles this command uses.
+        // TODO:  hash on cmd class instead of iterating below Handles require
+        // special treatment.  For tracing, input handles have to be added to
+        // exportList explicitly since they aren't reachable via composition
+        // associations.  So walk the handleAssociations list and determine
+        // which handles this command uses.
         RefPackage fennelPackage = cmd.refImmediatePackage();
         Collection handleAssociations = getHandleAssociations(fennelPackage);
         Iterator assocIter = handleAssociations.iterator();
@@ -212,8 +210,8 @@ public class FennelDbHandle implements FarragoAllocation
             RefAssociation refAssoc = (RefAssociation) assocIter.next();
             AssociationEnd assocEnd = (AssociationEnd) assocIter.next();
             if (!cmd.refIsInstanceOf(
-                        assocEnd.getType(),
-                        true)) {
+                    assocEnd.getType(),
+                    true)) {
                 continue;
             }
             if (assocEnd.otherEnd().getName().equals("ResultHandle")) {
@@ -225,7 +223,8 @@ public class FennelDbHandle implements FarragoAllocation
                 RefClass resultHandleClass =
                     fennelPackage.refClass(resultHandleType);
                 resultHandle =
-                    (FemHandle) resultHandleClass.refCreateInstance(Collections.EMPTY_LIST);
+                    (FemHandle) resultHandleClass.refCreateInstance(
+                        Collections.EMPTY_LIST);
 
                 // Remember the new handle in the command so the caller can
                 // access it later.
@@ -256,9 +255,10 @@ public class FennelDbHandle implements FarragoAllocation
         if (resultHandle != null) {
             resultHandle.setLongHandle(resultHandleLong);
             if (exportList != null) {
-                tracer.fine("Returning " + resultHandleClassName + " = '"
-                            + resultHandleLong +
-                            "(" + Long.toHexString(resultHandleLong) + ")'");
+                tracer.fine(
+                    "Returning " + resultHandleClassName + " = '"
+                    + resultHandleLong
+                    + "(" + Long.toHexString(resultHandleLong) + ")'");
             }
         }
 
@@ -268,12 +268,11 @@ public class FennelDbHandle implements FarragoAllocation
 
     /**
      * Creates a native handle for a Java object for reference by XML commands.
-     * After this, the Java object cannot be garbage collected until
-     * its owner explicitly calls closeAllocation.
+     * After this, the Java object cannot be garbage collected until its owner
+     * explicitly calls closeAllocation.
      *
      * @param owner the object which will be made responsible for the handle's
      * allocation as a result of this call
-     *
      * @param obj object for which to create a handle, or null to create a
      * placeholder handle
      *
@@ -287,7 +286,8 @@ public class FennelDbHandle implements FarragoAllocation
         FennelJavaHandle h = new FennelJavaHandle(hJavaObj);
         owner.addAllocation(h);
         if (jhTracer.isLoggable(Level.FINE)) {
-            jhTracer.fine("java handle " + h +", object " + obj +", owner " + owner);
+            jhTracer.fine(
+                "java handle " + h + ", object " + obj + ", owner " + owner);
         }
         return h;
     }
@@ -303,7 +303,7 @@ public class FennelDbHandle implements FarragoAllocation
         Object obj)
     {
         if (jhTracer.isLoggable(Level.FINE)) {
-            jhTracer.fine("java handle "+handle+", set object "+obj);
+            jhTracer.fine("java handle " + handle + ", set object " + obj);
         }
         FennelStorage.setObjectHandle(handle, obj);
     }
@@ -327,10 +327,10 @@ public class FennelDbHandle implements FarragoAllocation
 
     public EigenbaseException handleNativeException(SQLException ex)
     {
-        return FarragoResource.instance().FennelUntranslated.ex(
-            ex.getMessage());
+        return
+            FarragoResource.instance().FennelUntranslated.ex(
+                ex.getMessage());
     }
 }
-
 
 // End FennelDbHandle.java

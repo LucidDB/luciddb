@@ -34,10 +34,12 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
+public class FarragoResultSetMetaData
+    extends FarragoJdbcMetaDataImpl
     implements ResultSetMetaData
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoResultSetMetaData object.
@@ -49,7 +51,7 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
         super(rowType);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement ResultSetMetaData
     public boolean isAutoIncrement(int column)
@@ -198,6 +200,5 @@ public class FarragoResultSetMetaData extends FarragoJdbcMetaDataImpl
         return isFieldWritable(column);
     }
 }
-
 
 // End FarragoResultSetMetaData.java

@@ -22,47 +22,40 @@
 */
 package net.sf.farrago.ddl.gen;
 
-import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
+import java.lang.reflect.*;
 
-import net.sf.farrago.cwm.core.CwmClassifier;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.fem.med.FemStoredColumn;
-import net.sf.farrago.fem.sql2003.FemKeyComponent;
-import net.sf.farrago.fem.sql2003.FemPrimaryKeyConstraint;
+import java.util.*;
 
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.ReflectUtil;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
- * Base class for DDL generators which use the visitor pattern to
- * generate DDL given a catalog object.
- *
- * Escape rules:
- *
- * 1. In a SET SCHEMA command, apostrophes (') and quotes (")
- * enclose the schema name, like this:  '"Foo"'.  In this context,
- * apostrophes and quotes must be escaped.
- *
- * 2. CREATE and DROP commands use quotes (") to enclose the object name.
- * Only quotes are escaped.
+ * Base class for DDL generators which use the visitor pattern to generate DDL
+ * given a catalog object. Escape rules: 1. In a SET SCHEMA command, apostrophes
+ * (') and quotes (") enclose the schema name, like this: '"Foo"'. In this
+ * context, apostrophes and quotes must be escaped. 2. CREATE and DROP commands
+ * use quotes (") to enclose the object name. Only quotes are escaped.
  *
  * @author Jason Ouellette
  * @version $Id$
- **/
+ */
 public abstract class DdlGenerator
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static String VALUE_NULL = "NULL";
     protected static String NL = System.getProperty("line.separator");
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
-    public void generateSetSchema(GeneratedDdlStmt stmt, String schemaName) {
+    public void generateSetSchema(GeneratedDdlStmt stmt, String schemaName)
+    {
         if (schemaName != null) {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
@@ -70,22 +63,32 @@ public abstract class DdlGenerator
             stmt.addStmt(sb.toString());
         }
     }
-    
-    public void generateCreate(CwmModelElement e, GeneratedDdlStmt stmt) {
+
+    public void generateCreate(CwmModelElement e, GeneratedDdlStmt stmt)
+    {
         generate("create", e, stmt);
     }
 
-    public void generateDrop(CwmModelElement e, GeneratedDdlStmt stmt) {
+    public void generateDrop(CwmModelElement e, GeneratedDdlStmt stmt)
+    {
         generate("drop", e, stmt);
     }
 
-    private void generate(String method, CwmModelElement e, GeneratedDdlStmt stmt) {
-        Method m = ReflectUtil.lookupVisitMethod(this.getClass(),
+    private void generate(String method,
+        CwmModelElement e,
+        GeneratedDdlStmt stmt)
+    {
+        Method m =
+            ReflectUtil.lookupVisitMethod(
+                this.getClass(),
                 e.getClass(),
-                method, Arrays.asList(new Class[] { GeneratedDdlStmt.class }));
+                method,
+                Arrays.asList(new Class[] { GeneratedDdlStmt.class }));
         if (m != null) {
             try {
-                m.invoke(this, new Object[] { e, stmt });
+                m.invoke(
+                    this,
+                    new Object[] { e, stmt });
             } catch (Throwable t) {
                 //TODO: handle
                 t.printStackTrace();
@@ -99,11 +102,13 @@ public abstract class DdlGenerator
     }
 
     /**
-     * Escape strings for SQL.  Converts quotes (") into double
-     * quotes ("") and apostrophes (') into double apostrophes ('').
+     * Escape strings for SQL. Converts quotes (") into double quotes ("") and
+     * apostrophes (') into double apostrophes ('').
      *
      * @param str String to escape
+     *
      * @return escapes version of <code>str</code>
+     *
      * @see com.sqlstream.plugin.impl.DdlGenerator.
      */
     protected static String escapeApostrophesAndQuotes(String str)
@@ -122,11 +127,12 @@ public abstract class DdlGenerator
     }
 
     /**
-     * Escape strings for SQL.  Converts quotes (") into double
-     * quotes ("").
+     * Escape strings for SQL. Converts quotes (") into double quotes ("").
      *
      * @param str String to escape
+     *
      * @return escapes version of <code>str</code>
+     *
      * @see com.sqlstream.plugin.impl.DdlGenerator.
      */
     protected static String escapeQuotes(String str)
@@ -182,7 +188,8 @@ public abstract class DdlGenerator
                 Iterator i = keyComponent.iterator();
                 while (i.hasNext()) {
                     FemKeyComponent kc = (FemKeyComponent) i.next();
-                    if (kc.getKeyConstraint() instanceof FemPrimaryKeyConstraint) {
+                    if (kc.getKeyConstraint()
+                        instanceof FemPrimaryKeyConstraint) {
                         result = true;
                         break;
                     }
@@ -192,3 +199,5 @@ public abstract class DdlGenerator
         return result;
     }
 }
+
+// End DdlGenerator.java

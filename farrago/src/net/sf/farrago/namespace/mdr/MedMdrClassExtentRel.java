@@ -31,6 +31,7 @@ import javax.jmi.reflect.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -44,19 +45,20 @@ import org.eigenbase.runtime.*;
 
 
 /**
- * MedMdrClassExtentRel is the relational expression corresponding
- * to a scan over all rows of a MedMdrClassExtent.
+ * MedMdrClassExtentRel is the relational expression corresponding to a scan
+ * over all rows of a MedMdrClassExtent.
  *
- *<p>
- *
- * TODO:  support push-down of projection and filtering
+ * <p>TODO: support push-down of projection and filtering
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
+class MedMdrClassExtentRel
+    extends TableAccessRelBase
+    implements JavaRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Refinement for super.table.
@@ -65,7 +67,7 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
     Class<? extends RefObject> rowClass;
     boolean useReflection;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public MedMdrClassExtentRel(
         RelOptCluster cluster,
@@ -73,21 +75,26 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         RelOptConnection connection)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.ITERATOR),
-            mdrClassExtent, connection);
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            mdrClassExtent,
+            connection);
         this.mdrClassExtent = mdrClassExtent;
 
         rowClass = JmiUtil.getClassForRefClass(mdrClassExtent.refClass);
         useReflection = (rowClass == RefObject.class);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public Object clone()
     {
         MedMdrClassExtentRel clone =
-            new MedMdrClassExtentRel(getCluster(), mdrClassExtent, connection);
+            new MedMdrClassExtentRel(
+                getCluster(),
+                mdrClassExtent,
+                connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -145,11 +152,12 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
             nameList.add(Literal.makeLiteral(runtimeName[i]));
         }
 
-        return mdrClassExtent.directory.server.generateRuntimeSupportCall(
-            new ArrayAllocationExpression(
-                TypeName.forOJClass(OJSystem.STRING),
-                new ExpressionList(null),
-                new ArrayInitializer(nameList)));
+        return
+            mdrClassExtent.directory.server.generateRuntimeSupportCall(
+                new ArrayAllocationExpression(
+                    TypeName.forOJClass(OJSystem.STRING),
+                    new ExpressionList(null),
+                    new ArrayInitializer(nameList)));
     }
 
     public Expression getCollectionExpression()
@@ -159,11 +167,13 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
                 OJClass.forClass(RefClass.class),
                 getRefBaseObjectRuntimeExpression(mdrClassExtent.refClass));
         Expression collectionExpression =
-            new MethodCall(metaClassExpression, "refAllOfType",
+            new MethodCall(
+                metaClassExpression,
+                "refAllOfType",
                 new ExpressionList());
         return collectionExpression;
     }
-    
+
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
@@ -177,17 +187,28 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
 
         final RexProgram program =
             RexProgram.create(
-                inputRowType, rexExps, null, outputRowType,
+                inputRowType,
+                rexExps,
+                null,
+                outputRowType,
                 getCluster().getRexBuilder());
 
         Expression collectionExpression = getCollectionExpression();
-        Expression adapterExp = new AllocationExpression(
-            OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
-            new ExpressionList(
-                collectionExpression));
-        return IterCalcRel.implementAbstractTupleIter(
-            implementor, this, adapterExp, varInputRow, inputRowType,
-            outputRowType, program, null);
+        Expression adapterExp =
+            new AllocationExpression(
+                OJUtil.typeNameForClass(RestartableCollectionTupleIter.class),
+                new ExpressionList(
+                    collectionExpression));
+        return
+            IterCalcRel.implementAbstractTupleIter(
+                implementor,
+                this,
+                adapterExp,
+                varInputRow,
+                inputRowType,
+                outputRowType,
+                program,
+                null);
     }
 
     RexNode [] implementProjection(Expression inputRow)
@@ -207,7 +228,8 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         List<StructuralFeature> features =
             JmiUtil.getFeatures(
                 mdrClassExtent.refClass,
-                StructuralFeature.class, false);
+                StructuralFeature.class,
+                false);
         int n = features.size();
         Expression [] accessorExps = new Expression[n + 2];
         RelDataTypeField [] outputFields = outputRowType.getFields();
@@ -264,7 +286,9 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         RexNode [] rexExps = new RexNode[accessorExps.length];
         for (int i = 0; i < accessorExps.length; ++i) {
             rexExps[i] =
-                javaRexBuilder.makeJava(getCluster().getEnv(), accessorExps[i]);
+                javaRexBuilder.makeJava(
+                    getCluster().getEnv(),
+                    accessorExps[i]);
 
             // REVIEW:  This cast may cause the generated code to forget
             // something important like pad/truncate.
@@ -276,6 +300,5 @@ class MedMdrClassExtentRel extends TableAccessRelBase implements JavaRel
         return rexExps;
     }
 }
-
 
 // End MedMdrClassExtentRel.java

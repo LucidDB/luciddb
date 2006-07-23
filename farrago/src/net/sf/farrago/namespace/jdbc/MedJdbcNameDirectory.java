@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
@@ -33,22 +34,24 @@ import net.sf.farrago.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.util.*;
 
 
 /**
- * MedJdbcNameDirectory implements the FarragoMedNameDirectory
- * interface by mapping the metadata provided by any JDBC driver.
+ * MedJdbcNameDirectory implements the FarragoMedNameDirectory interface by
+ * mapping the metadata provided by any JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcNameDirectory extends MedAbstractNameDirectory
+class MedJdbcNameDirectory
+    extends MedAbstractNameDirectory
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedJdbcDataServer server;
 
@@ -56,7 +59,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
     final boolean shouldSubstituteTypes;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedJdbcNameDirectory(MedJdbcDataServer server)
     {
@@ -67,13 +70,14 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
     {
         this.server = server;
         this.schemaName = schemaName;
-        shouldSubstituteTypes = getBooleanProperty(
-            server.getProperties(),
-            MedJdbcDataServer.PROP_TYPE_SUBSTITUTION,
-            true);
+        shouldSubstituteTypes =
+            getBooleanProperty(
+                server.getProperties(),
+                MedJdbcDataServer.PROP_TYPE_SUBSTITUTION,
+                true);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedNameDirectory
     public FarragoMedColumnSet lookupColumnSet(
@@ -82,9 +86,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         String [] localName)
         throws SQLException
     {
-        return lookupColumnSetAndImposeType(
-            typeFactory, foreignName,
-            localName, null);
+        return
+            lookupColumnSetAndImposeType(
+                typeFactory,
+                foreignName,
+                localName,
+                null);
     }
 
     FarragoMedColumnSet lookupColumnSetAndImposeType(
@@ -100,16 +107,15 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
         String [] foreignQualifiedName;
         if (server.schemaName != null) {
-            foreignQualifiedName =
-                new String [] { foreignName };
+            foreignQualifiedName = new String[] { foreignName };
         } else if (server.catalogName != null) {
-            foreignQualifiedName =
-                new String [] { server.catalogName, schemaName, foreignName };
+            foreignQualifiedName = new String[] {
+                    server.catalogName, schemaName, foreignName
+                };
         } else {
-            foreignQualifiedName =
-                new String [] { schemaName, foreignName };
+            foreignQualifiedName = new String[] { schemaName, foreignName };
         }
-        
+
         SqlDialect dialect = new SqlDialect(server.databaseMetaData);
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
         SqlSelect select =
@@ -146,8 +152,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                         md = ps.getMetaData();
                     }
                 } catch (SQLException ex) {
-                    // Some drivers can't return metadata before execution.
-                    // Fall through to recovery below.
+                    // Some drivers can't return metadata before execution. Fall
+                    // through to recovery below.
                 }
                 if (md == null) {
                     if (ps != null) {
@@ -158,9 +164,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     }
                     md = rs.getMetaData();
                 }
-                rowType = typeFactory.createResultSetType(
-                    md,
-                    shouldSubstituteTypes);
+                rowType =
+                    typeFactory.createResultSetType(
+                        md,
+                        shouldSubstituteTypes);
             } finally {
                 if (rs != null) {
                     rs.close();
@@ -177,9 +184,14 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             // row type is compatible with the imposed row type?
         }
 
-        return new MedJdbcColumnSet(
-            this, foreignQualifiedName, localName, select,
-            dialect, rowType);
+        return
+            new MedJdbcColumnSet(
+                this,
+                foreignQualifiedName,
+                localName,
+                select,
+                dialect,
+                rowType);
     }
 
     String normalizeQueryString(String sql)
@@ -199,7 +211,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             return null;
         }
     }
-    
+
     // implement FarragoMedNameDirectory
     public boolean queryMetadata(
         FarragoMedMetadataQuery query,
@@ -207,32 +219,40 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         if (schemaName == null) {
-            boolean wantSchemas = query.getResultObjectTypes().contains(
-                FarragoMedMetadataQuery.OTN_SCHEMA);
+            boolean wantSchemas =
+                query.getResultObjectTypes().contains(
+                    FarragoMedMetadataQuery.OTN_SCHEMA);
             if (wantSchemas) {
                 return querySchemas(query, sink);
             }
             return true;
         } else {
-            boolean wantTables = query.getResultObjectTypes().contains(
-                FarragoMedMetadataQuery.OTN_TABLE);
-            boolean wantColumns = query.getResultObjectTypes().contains(
-                FarragoMedMetadataQuery.OTN_COLUMN);
+            boolean wantTables =
+                query.getResultObjectTypes().contains(
+                    FarragoMedMetadataQuery.OTN_TABLE);
+            boolean wantColumns =
+                query.getResultObjectTypes().contains(
+                    FarragoMedMetadataQuery.OTN_COLUMN);
             List tableListActual = new ArrayList();
             List tableListOptimized = new ArrayList();
+
             // FRG-137: Since we rely on queryTable to populate the lists, we
             // need to do it for wantColumns even when !wantTables.
             if (wantTables || wantColumns) {
                 if (!queryTables(
-                        query, sink, tableListActual, tableListOptimized))
-                {
+                        query,
+                        sink,
+                        tableListActual,
+                        tableListOptimized)) {
                     return false;
                 }
             }
             if (wantColumns) {
                 if (!queryColumns(
-                        query, sink, tableListActual, tableListOptimized))
-                {
+                        query,
+                        sink,
+                        tableListActual,
+                        tableListOptimized)) {
                     return false;
                 }
             }
@@ -245,8 +265,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         FarragoMedMetadataSink sink)
         throws SQLException
     {
-        assert(schemaName == null);
-        
+        assert (schemaName == null);
+
         ResultSet resultSet;
         try {
             resultSet = server.databaseMetaData.getSchemas();
@@ -280,7 +300,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
         return true;
     }
-    
+
     private boolean queryTables(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
@@ -288,25 +308,28 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         List tableListOptimized)
         throws SQLException
     {
-        assert(schemaName != null);
-        
+        assert (schemaName != null);
+
         // In order to optimize column retrieval, we keep track of the
         // number of tables returned by our metadata query and the
         // ones actually accepted by the sink.  It would be better
         // to let the optimizer handle this, but KISS for now.
         int nTablesReturned = 0;
-        
+
         String schemaPattern = getSchemaPattern();
-        String tablePattern = getFilterPattern(
-            query, FarragoMedMetadataQuery.OTN_TABLE);
-            
+        String tablePattern =
+            getFilterPattern(
+                query,
+                FarragoMedMetadataQuery.OTN_TABLE);
+
         ResultSet resultSet;
         try {
-            resultSet = server.databaseMetaData.getTables(
-                server.catalogName,
-                schemaPattern,
-                tablePattern,
-                server.tableTypes);
+            resultSet =
+                server.databaseMetaData.getTables(
+                    server.catalogName,
+                    schemaPattern,
+                    tablePattern,
+                    server.tableTypes);
             if (resultSet == null) {
                 return false;
             }
@@ -329,11 +352,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     props.put(MedJdbcDataServer.PROP_SCHEMA_NAME, schemaName);
                 }
                 props.put(MedJdbcDataServer.PROP_TABLE_NAME, tableName);
-                boolean include = sink.writeObjectDescriptor(
-                    tableName,
-                    FarragoMedMetadataQuery.OTN_TABLE,
-                    remarks,
-                    props);
+                boolean include =
+                    sink.writeObjectDescriptor(
+                        tableName,
+                        FarragoMedMetadataQuery.OTN_TABLE,
+                        remarks,
+                        props);
                 if (include) {
                     tableListActual.add(tableName);
                 }
@@ -344,9 +368,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
 
         // decide on column retrieval plan
         double dMatching = (double) tableListActual.size();
+
         // +1:  avoid division by zero
         double dReturned = (double) nTablesReturned + 1;
-        if (dMatching / dReturned > 0.3) {
+        if ((dMatching / dReturned) > 0.3) {
             // a significant portion of the tables returned are matches,
             // so just scan all columns at once and post-filter them,
             // rather than making repeated single-table metadata calls
@@ -354,10 +379,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         } else {
             tableListOptimized.addAll(tableListActual);
         }
-        
+
         return true;
     }
-    
+
     private boolean queryColumns(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
@@ -366,8 +391,12 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         if (tableListOptimized.equals(Collections.singletonList("*"))) {
-            return queryColumnsImpl(
-                query, sink, null, new HashSet(tableListActual));
+            return
+                queryColumnsImpl(
+                    query,
+                    sink,
+                    null,
+                    new HashSet(tableListActual));
         } else {
             Iterator iter = tableListOptimized.iterator();
             while (iter.hasNext()) {
@@ -379,7 +408,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             return true;
         }
     }
-    
+
     private boolean queryColumnsImpl(
         FarragoMedMetadataQuery query,
         FarragoMedMetadataSink sink,
@@ -392,21 +421,24 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         if (tableName != null) {
             tablePattern = tableName;
         } else {
-            tablePattern = getFilterPattern(
-                query, 
-                FarragoMedMetadataQuery.OTN_TABLE);
+            tablePattern =
+                getFilterPattern(
+                    query,
+                    FarragoMedMetadataQuery.OTN_TABLE);
         }
-        String columnPattern = getFilterPattern(
-            query, 
-            FarragoMedMetadataQuery.OTN_COLUMN);
-            
+        String columnPattern =
+            getFilterPattern(
+                query,
+                FarragoMedMetadataQuery.OTN_COLUMN);
+
         ResultSet resultSet;
         try {
-            resultSet = server.databaseMetaData.getColumns(
-                server.catalogName,
-                schemaPattern,
-                tablePattern,
-                columnPattern);
+            resultSet =
+                server.databaseMetaData.getColumns(
+                    server.catalogName,
+                    schemaPattern,
+                    tablePattern,
+                    columnPattern);
             if (resultSet == null) {
                 return false;
             }
@@ -414,7 +446,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
             // assume unsupported
             return false;
         }
-        
+
         try {
             while (resultSet.next()) {
                 String schemaName = resultSet.getString(2);
@@ -432,7 +464,8 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
                     resultSet.getInt(11) != DatabaseMetaData.columnNoNulls;
                 RelDataType type =
                     sink.getTypeFactory().createJdbcColumnType(
-                        resultSet, shouldSubstituteTypes);
+                        resultSet,
+                        shouldSubstituteTypes);
                 String remarks = resultSet.getString(12);
                 String defaultValue = resultSet.getString(13);
                 int ordinalZeroBased = resultSet.getInt(17) - 1;
@@ -448,7 +481,7 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         } finally {
             resultSet.close();
         }
-        
+
         return true;
     }
 
@@ -467,10 +500,10 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         String typeName)
     {
         String pattern = "%";
-        FarragoMedMetadataFilter filter = (FarragoMedMetadataFilter)
-            query.getFilterMap().get(typeName);
+        FarragoMedMetadataFilter filter =
+            (FarragoMedMetadataFilter) query.getFilterMap().get(typeName);
         if (filter != null) {
-            if (!filter.isExclusion() && filter.getPattern() != null) {
+            if (!filter.isExclusion() && (filter.getPattern() != null)) {
                 pattern = filter.getPattern();
             }
         }
@@ -485,6 +518,5 @@ class MedJdbcNameDirectory extends MedAbstractNameDirectory
         return s1.equals(s2);
     }
 }
-
 
 // End MedJdbcNameDirectory.java

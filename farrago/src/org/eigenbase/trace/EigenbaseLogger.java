@@ -20,65 +20,88 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.trace;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import java.util.logging.*;
+
 
 /**
- * This class is a small extension to {@link Logger}.
- * {@link Logger#log(Level level, String msg, Object[] params)}
- * is expensive to call, since the caller must always allocate and fill in the array <code>params</code>,
- * even when <code>level</code> will prevent a message being logged.
- * On the other hand, 
- * {@link Logger#log(Level level, String msg)} and
- * {@link Logger#log(Level level, String msg, Object)} do not have this problem.
- * As a workaround this class provides {@link #log(Level, String msg, Object, Object)} etc.
- * (The varargs feature of java 1.5 half-solves this problem, by automatically wrapping args
- * in an array, but it does so without testing the level.)
- *
- * Usage: replace:
- * <code> static final Logger tracer = EigenbaseTracer.getMyTracer();</code>
- * by:
- * <code> static final EigenbaseLogger tracer = new EigenbaseLogger(EigenbaseTracer.getMyTracer());</code>
+ * This class is a small extension to {@link Logger}. {@link Logger#log(Level
+ * level, String msg, Object[] params)} is expensive to call, since the caller
+ * must always allocate and fill in the array <code>params</code>, even when
+ * <code>level</code> will prevent a message being logged. On the other hand,
+ * {@link Logger#log(Level level, String msg)} and {@link Logger#log(Level
+ * level, String msg, Object)} do not have this problem. As a workaround this
+ * class provides {@link #log(Level, String msg, Object, Object)} etc. (The
+ * varargs feature of java 1.5 half-solves this problem, by automatically
+ * wrapping args in an array, but it does so without testing the level.) Usage:
+ * replace: <code>static final Logger tracer =
+ * EigenbaseTracer.getMyTracer();</code> by: <code>static final EigenbaseLogger
+ * tracer = new EigenbaseLogger(EigenbaseTracer.getMyTracer());</code>
  */
 public class EigenbaseLogger
 {
-    private final Logger logger;        // delegate
 
+    //~ Instance fields --------------------------------------------------------
+
+    private final Logger logger; // delegate
+
+    //~ Constructors -----------------------------------------------------------
 
     public EigenbaseLogger(Logger logger)
     {
-        assert(logger != null);
+        assert (logger != null);
         this.logger = logger;
     }
 
+    //~ Methods ----------------------------------------------------------------
 
-    /** Conditionally logs a message with two Object parameters */
+    /**
+     * Conditionally logs a message with two Object parameters
+     */
     public void log(Level level, String msg, Object arg1, Object arg2)
     {
         if (logger.isLoggable(level)) {
-            logger.log(level, msg, new Object[] {arg1, arg2});
+            logger.log(
+                level,
+                msg,
+                new Object[] { arg1, arg2 });
         }
-
     }
 
-    /** Conditionally logs a message with three Object parameters */
-    public void log(Level level, String msg, Object arg1, Object arg2, Object arg3)
+    /**
+     * Conditionally logs a message with three Object parameters
+     */
+    public void log(Level level,
+        String msg,
+        Object arg1,
+        Object arg2,
+        Object arg3)
     {
         if (logger.isLoggable(level)) {
-            logger.log(level, msg, new Object[] {arg1, arg2, arg3});
+            logger.log(
+                level,
+                msg,
+                new Object[] { arg1, arg2, arg3 });
         }
-
     }
 
-    /** Conditionally logs a message with four Object parameters */
-    public void log(Level level, String msg, Object arg1, Object arg2, Object arg3, Object arg4)
+    /**
+     * Conditionally logs a message with four Object parameters
+     */
+    public void log(Level level,
+        String msg,
+        Object arg1,
+        Object arg2,
+        Object arg3,
+        Object arg4)
     {
         if (logger.isLoggable(level)) {
-            logger.log(level, msg, new Object[] {arg1, arg2, arg3, arg4});
+            logger.log(
+                level,
+                msg,
+                new Object[] { arg1, arg2, arg3, arg4 });
         }
-
     }
 
     // We expose and delegate the commonly used part of the Logger interface.
@@ -98,7 +121,7 @@ public class EigenbaseLogger
         logger.log(level, msg, param1);
     }
 
-    public void log(Level level, String msg, Object params[])
+    public void log(Level level, String msg, Object [] params)
     {
         logger.log(level, msg, params);
     }
@@ -144,4 +167,4 @@ public class EigenbaseLogger
     }
 }
 
-
+// End EigenbaseLogger.java

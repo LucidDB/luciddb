@@ -20,62 +20,74 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.*;
 
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelVisitor;
+import java.util.*;
+import java.util.logging.*;
+
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
  * A <code>RelSubset</code> is set of expressions in a set which have the same
- * calling convention.  An expression may be in more than one sub-set of a
- * set; the same expression is used.
+ * calling convention. An expression may be in more than one sub-set of a set;
+ * the same expression is used.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 16 December, 2001
  */
-public class RelSubset extends AbstractRelNode
+public class RelSubset
+    extends AbstractRelNode
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** List of the relational expressions for which this subset is an input. */
+    /**
+     * List of the relational expressions for which this subset is an input.
+     */
     final List<RelNode> parents;
 
-    /** The relational expressions in this subset. */
+    /**
+     * The relational expressions in this subset.
+     */
     final List<RelNode> rels;
 
-    /** cost of best known plan (it may have improved since) */
+    /**
+     * cost of best known plan (it may have improved since)
+     */
     RelOptCost bestCost;
 
-    /** The set this subset belongs to. */
+    /**
+     * The set this subset belongs to.
+     */
     final RelSet set;
 
-    /** best known plan */
+    /**
+     * best known plan
+     */
     RelNode best;
 
-    /** whether findBestPlan is being called */
+    /**
+     * whether findBestPlan is being called
+     */
     boolean active;
 
-    /** Timestamp for metadata validity */
+    /**
+     * Timestamp for metadata validity
+     */
     long timestamp;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     RelSubset(
         RelOptCluster cluster,
@@ -90,23 +102,20 @@ public class RelSubset extends AbstractRelNode
         recomputeDigest();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // REVIEW jvs 15-Mar-2005: I disabled this exception because there is
     // actually code which walks over trees containing RelSubsets (in
     // RelOptUtil), and that code was special casing traversal of RelSubset,
     // which isn't right.
     /**
-     * There are no children, as such.  We throw an exception because you
-     * probably don't want to be walking over trees which contain
-     * <code>RelSubset</code>s.
+     * There are no children, as such. We throw an exception because you
+     * probably don't want to be walking over trees which contain <code>
+     * RelSubset</code>s.
      */
     /*
-    public RelNode [] getInputs()
-    {
-        throw new UnsupportedOperationException();
-    }
-    */
+    public RelNode [] getInputs() { throw new UnsupportedOperationException(); }
+     */
 
     public Set<String> getVariablesSet()
     {
@@ -145,7 +154,7 @@ public class RelSubset extends AbstractRelNode
     {
         StringBuffer s = new StringBuffer();
         s.append(id).append(": RelSubset(");
-        for(int i = 0; i < traits.size(); i++) {
+        for (int i = 0; i < traits.size(); i++) {
             if (i > 0) {
                 s.append(", ");
             }
@@ -153,14 +162,16 @@ public class RelSubset extends AbstractRelNode
         }
         s.append(')');
 
-        pw.explainSubset(s.toString(), rels.get(0));
+        pw.explainSubset(
+            s.toString(),
+            rels.get(0));
     }
 
     protected String computeDigest()
     {
         StringBuffer digest = new StringBuffer("Subset#");
         digest.append(set.id);
-        for(int i = 0; i < traits.size(); i++) {
+        for (int i = 0; i < traits.size(); i++) {
             digest.append('.').append(traits.getTrait(i));
         }
         return digest.toString();
@@ -216,10 +227,13 @@ public class RelSubset extends AbstractRelNode
 
         // If this isn't the first rel in the set, it must have compatible
         // row type.
-        assert set.rel == null ||
-            RelOptUtil.equal(
-                "rowtype of new rel", rel.getRowType(),
-                "rowtype of set", getRowType(), true);
+        assert (set.rel == null)
+            || RelOptUtil.equal(
+                "rowtype of new rel",
+                rel.getRowType(),
+                "rowtype of set",
+                getRowType(),
+                true);
         rels.add(rel);
         set.addInternal(rel);
         Set<String> variablesSet = RelOptUtil.getVariablesSet(rel);
@@ -264,10 +278,11 @@ public class RelSubset extends AbstractRelNode
         RelNode rel)
     {
         ++timestamp;
-        
+
         final RelOptCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
-            tracer.finer("Subset cost improved: subset [" + this
+            tracer.finer(
+                "Subset cost improved: subset [" + this
                 + "] cost was " + bestCost + " now " + cost);
             bestCost = cost;
             best = rel;
@@ -293,13 +308,14 @@ public class RelSubset extends AbstractRelNode
         variableSet.addAll(getVariablesSet());
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Visitor which walks over a tree of {@link RelSet}s, replacing each node
      * with the cheapest implementation of the expression.
      */
-    class CheapestPlanReplacer extends RelVisitor
+    class CheapestPlanReplacer
+        extends RelVisitor
     {
         VolcanoPlanner planner;
 
@@ -324,16 +340,16 @@ public class RelSubset extends AbstractRelNode
                         StringWriter sw = new StringWriter();
                         final PrintWriter pw = new PrintWriter(sw);
                         pw.println(
-                            "Node [" + subset.getDescription() +
-                            "] could not be implemented; planner state:");
+                            "Node [" + subset.getDescription()
+                            + "] could not be implemented; planner state:");
                         planner.dump(pw);
                         pw.flush();
                         tracer.warning(sw.toString());
                     }
                     Error e =
                         Util.newInternal(
-                            "node could not be implemented: " +
-                            subset.getDigest());
+                            "node could not be implemented: "
+                            + subset.getDigest());
                     tracer.throwing(
                         getClass().getName(),
                         "visit",
@@ -362,6 +378,5 @@ public class RelSubset extends AbstractRelNode
         }
     }
 }
-
 
 // End RelSubset.java

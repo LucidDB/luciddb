@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.rules;
 
 import org.eigenbase.rel.*;
@@ -28,22 +27,25 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * A MultiJoinRel represents a join of N inputs, whereas other join relnodes
  * represent strictly binary joins.
  *
- * @version $Id$
  * @author Zelaine Fong
+ * @version $Id$
  */
-public final class MultiJoinRel extends AbstractRelNode
+public final class MultiJoinRel
+    extends AbstractRelNode
 {
-    //~ Instance fields -------------------------------------------------------
- 
-    private RelNode[] inputs;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private RelNode [] inputs;
     RexNode joinFilter;
     RelDataType rowType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * @param cluster cluster that join belongs to
@@ -53,29 +55,32 @@ public final class MultiJoinRel extends AbstractRelNode
      */
     public MultiJoinRel(
         RelOptCluster cluster,
-        RelNode[] inputs,
+        RelNode [] inputs,
         RexNode joinFilter,
         RelDataType rowType)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE));
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE));
         this.inputs = inputs;
         this.joinFilter = joinFilter;
         this.rowType = rowType;
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        MultiJoinRel clone = new MultiJoinRel(
-            getCluster(),
-            RelOptUtil.clone(inputs),
-            RexUtil.clone(joinFilter),
-            getCluster().getTypeFactory().copyType(rowType));
+        MultiJoinRel clone =
+            new MultiJoinRel(
+                getCluster(),
+                RelOptUtil.clone(inputs),
+                RexUtil.clone(joinFilter),
+                getCluster().getTypeFactory().copyType(rowType));
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     public void explain(RelOptPlanWriter pw)
     {
         String [] terms = new String[inputs.length + 1];
@@ -86,24 +91,24 @@ public final class MultiJoinRel extends AbstractRelNode
         pw.explain(
             this,
             terms,
-            new Object [] { });
+            new Object[] {});
     }
-    
+
     public RelDataType deriveRowType()
     {
         return rowType;
     }
-    
-    public RelNode[] getInputs()
+
+    public RelNode [] getInputs()
     {
         return inputs;
     }
-    
-    public RexNode[] getChildExps()
+
+    public RexNode [] getChildExps()
     {
         return new RexNode[] { joinFilter };
     }
-    
+
     public void replaceInput(
         int ordinalInParent,
         RelNode p)

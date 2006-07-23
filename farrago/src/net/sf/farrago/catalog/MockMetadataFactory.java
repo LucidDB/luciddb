@@ -21,70 +21,89 @@
 */
 package net.sf.farrago.catalog;
 
-import org.eigenbase.jmi.mem.*;
-import org.eigenbase.xom.*;
-import org.eigenbase.util.*;
+import java.io.*;
+
+import java.lang.reflect.*;
+
+import java.util.*;
+
+import javax.jmi.reflect.*;
 
 import net.sf.farrago.fem.fennel.*;
 
-import javax.jmi.reflect.*;
-import java.io.*;
-import java.lang.reflect.*;
-import java.util.*;
+import org.eigenbase.jmi.mem.*;
+import org.eigenbase.util.*;
+import org.eigenbase.xom.*;
+
 
 /**
- * Helps create a mock implementation of an MDR metadata factory interface.
- * Mock implementation of metadata factories which implements
- * the MDR interfaces using dynamic proxies. Since this implementation
- * does not persist objects, or even require a repository instance, it is
- * ideal for testing purposes.
+ * Helps create a mock implementation of an MDR metadata factory interface. Mock
+ * implementation of metadata factories which implements the MDR interfaces
+ * using dynamic proxies. Since this implementation does not persist objects, or
+ * even require a repository instance, it is ideal for testing purposes.
  *
  * <p>The name of the class is misleading; it is not itself a metadata factory.
- * MockMetadataFactory uses dynamic proxies (see {@link Proxy}) to
- * generate the necessary interfaces on the fly. Inside every proxy is
- * an instance of {@link ElementImpl}, which stores attributes in a
- * {@link HashMap} and implements the {@link InvocationHandler}
- * interface required by the proxy. There are specialized subtypes of
- * {@link ElementImpl} for packages and classes.
+ * MockMetadataFactory uses dynamic proxies (see {@link Proxy}) to generate the
+ * necessary interfaces on the fly. Inside every proxy is an instance of {@link
+ * ElementImpl}, which stores attributes in a {@link HashMap} and implements the
+ * {@link InvocationHandler} interface required by the proxy. There are
+ * specialized subtypes of {@link ElementImpl} for packages and classes.
  *
- * <p>Since there is no repository to provide metadata, the factory infers
- * the object model from the Java interfaces:
+ * <p>Since there is no repository to provide metadata, the factory infers the
+ * object model from the Java interfaces:
+ *
  * <ul>
  * <li>Each 'get' method is assumed to be an attribute.
- * <li>If the return type extends {@link RefClass}, a factory is created
- *     when the object is initialized.
+ * <li>If the return type extends {@link RefClass}, a factory is created when
+ * the object is initialized.
  * <li>If the return type extends {@link RefPackage}, a sub-package is created
- *     when the object is initialized.
- * <li>If the return type extends {@link Collection}, a collection attribute
- *     is created.
+ * when the object is initialized.
+ * <li>If the return type extends {@link Collection}, a collection attribute is
+ * created.
  * <li>All other types are presumed to be regular attributes.
  * </ul>
  */
-public abstract class MockMetadataFactory extends JmiMemFactory
+public abstract class MockMetadataFactory
+    extends JmiMemFactory
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public MockMetadataFactory()
     {
         super();
         initRelationshipMap();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Registers relationships which we want to be maintained as two-way
      * relationships. This is necessary because we cannot deduce inverse
-     * relationships using Java reflection. <p>
+     * relationships using Java reflection.
      *
-     * Derived classes can add override to define additional relationships.
+     * <p>Derived classes can add override to define additional relationships.
      */
     protected void initRelationshipMap()
     {
         createRelationship(
-            FemExecutionStreamDef.class, "InputFlow", true,
-            FemExecStreamDataFlow.class, "Consumer", false);
+            FemExecutionStreamDef.class,
+            "InputFlow",
+            true,
+            FemExecStreamDataFlow.class,
+            "Consumer",
+            false);
         createRelationship(
-            FemExecutionStreamDef.class, "OutputFlow", true,
-            FemExecStreamDataFlow.class, "Producer", false);
+            FemExecutionStreamDef.class,
+            "OutputFlow",
+            true,
+            FemExecStreamDataFlow.class,
+            "Producer",
+            false);
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Abstract base class for an iterator over a JMI object and its children.
      *
@@ -105,41 +124,50 @@ public abstract class MockMetadataFactory extends JmiMemFactory
             List refValues = new ArrayList();
             extractProperties(
                 o,
-                attrNames, attrValues,
-                collectionNames, collectionValues,
-                refNames, refValues);
+                attrNames,
+                attrValues,
+                collectionNames,
+                collectionValues,
+                refNames,
+                refValues);
             visit(
                 o,
-                attrNames, attrValues,
-                collectionNames, collectionValues,
-                refNames, refValues);
+                attrNames,
+                attrValues,
+                collectionNames,
+                collectionValues,
+                refNames,
+                refValues);
         }
 
         /**
-         * From a data object, builds lists of attributes, collections,
-         * and references.
+         * From a data object, builds lists of attributes, collections, and
+         * references.
          */
         protected void extractProperties(
             Object o,
-            List attrNames, List attrValues,
-            List collectionNames, List collectionValues,
-            List refNames, List refValues)
+            List attrNames,
+            List attrValues,
+            List collectionNames,
+            List collectionValues,
+            List refNames,
+            List refValues)
         {
             Class clazz = o.getClass();
-            Method[] methods = sortMethods(clazz.getMethods());
+            Method [] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();
-                if (methodName.startsWith("get") &&
-                    method.getParameterTypes().length == 0 &&
-                    method.getDeclaringClass() != Object.class) {
+                if (methodName.startsWith("get")
+                    && (method.getParameterTypes().length == 0)
+                    && (method.getDeclaringClass() != Object.class)) {
                     String attrName =
-                        methodName.substring(3, 4).toLowerCase() +
-                        methodName.substring(4);
+                        methodName.substring(3, 4).toLowerCase()
+                        + methodName.substring(4);
                     Class attrClass = method.getReturnType();
                     Object attrValue;
                     try {
-                        attrValue = method.invoke(o, (Object[]) null);
+                        attrValue = method.invoke(o, (Object []) null);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(e);
                     } catch (InvocationTargetException e) {
@@ -148,7 +176,8 @@ public abstract class MockMetadataFactory extends JmiMemFactory
                     if (Collection.class.isAssignableFrom(attrClass)) {
                         collectionNames.add(attrName);
                         collectionValues.add((Collection) attrValue);
-                    } else if (RefBaseObject.class.isAssignableFrom(attrClass)) {
+                    } else if (RefBaseObject.class.isAssignableFrom(
+                            attrClass)) {
                         refNames.add(attrName);
                         refValues.add((RefBaseObject) attrValue);
                     } else {
@@ -172,7 +201,8 @@ public abstract class MockMetadataFactory extends JmiMemFactory
     /**
      * Formats a JMI object as XML.
      */
-    public static class JmiPrinter extends JmiVisitor
+    public static class JmiPrinter
+        extends JmiVisitor
     {
         // ~ Data members
         protected final XMLOutput xmlOutput;
@@ -234,7 +264,9 @@ public abstract class MockMetadataFactory extends JmiMemFactory
 
         protected void onAttribute(String attrName, Object attrValue)
         {
-            xmlOutput.attribute(attrName, String.valueOf(attrValue));
+            xmlOutput.attribute(
+                attrName,
+                String.valueOf(attrValue));
         }
 
         protected void onElement(Object o)
@@ -245,9 +277,8 @@ public abstract class MockMetadataFactory extends JmiMemFactory
         {
             String className = o.getClass().getInterfaces()[0].getName();
             int dot = className.lastIndexOf('.');
-            String tagName = (dot >= 0) ?
-                className.substring(dot + 1) :
-                className;
+            String tagName =
+                (dot >= 0) ? className.substring(dot + 1) : className;
             return tagName;
         }
     }

@@ -21,25 +21,24 @@
 */
 package net.sf.farrago.runtime;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.nio.*;
 
-import net.sf.farrago.trace.FarragoTrace;
+import java.util.logging.*;
 
-import org.eigenbase.util.ArrayQueue;
+import net.sf.farrago.trace.*;
+
+import org.eigenbase.util.*;
+
 
 /**
- * FennelPipeTupleIter implements the {@link TupleIter} interface, receiving 
- * data from a producer as {@link ByteBuffer} objects, and unmarshalling them 
- * to a consumer.
+ * FennelPipeTupleIter implements the {@link TupleIter} interface, receiving
+ * data from a producer as {@link ByteBuffer} objects, and unmarshalling them to
+ * a consumer.
  *
- * <p>A FennelPipeTupleIter has a C++ peer, a JavaSinkExecstream.
- * The peer sends marshalled data, wrapped as a ByteBuffer.
- * The reader has a current buffer from which it unmarshals rows on demand,
- * and a queue of buffers to read next.
- * The queue is synchronized; but it is left available to the writer between 
+ * <p>A FennelPipeTupleIter has a C++ peer, a JavaSinkExecstream. The peer sends
+ * marshalled data, wrapped as a ByteBuffer. The reader has a current buffer
+ * from which it unmarshals rows on demand, and a queue of buffers to read next.
+ * The queue is synchronized; but it is left available to the writer between
  * TupleIter calls (#fetchNext()). Otherwise, if it were unavailable for a long
  * time, the peer XO would block, which is a severe problem for a single-thread
  * XO scheduler.
@@ -47,42 +46,24 @@ import org.eigenbase.util.ArrayQueue;
  * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
-public class FennelPipeTupleIter extends FennelAbstractTupleIter
+public class FennelPipeTupleIter
+    extends FennelAbstractTupleIter
 {
-    protected static final Logger tracer = 
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final Logger tracer =
         FarragoTrace.getFennelPipeIteratorTracer();
 
-    // byteBuffer is the current buffer, and belongs exclusively to the reader (this object)
+    //~ Instance fields --------------------------------------------------------
 
-    private ArrayQueue moreBuffers = null; // buffers from the writer, not yet read
+    // byteBuffer is the current buffer, and belongs exclusively to the reader
+    // (this object)
 
-    /** adds a buffer to the buffer queue. The writer peer calls this. */
-    private void enqueue(ByteBuffer bb)
-    {
-        synchronized(moreBuffers) {
-            moreBuffers.offer(bb);
-            if (moreBuffers.size() == 1)    // was empty
-                moreBuffers.notify();        // REVIEW mb: Use Semaphore instead?
-        }
-    }
+    private ArrayQueue moreBuffers = null; // buffers from the writer, not yet
+                                           // read
 
-    /** Gets the head buffer from the queue. If the queue is empty, blocks until a buffer arrives. */
-    private ByteBuffer dequeue()
-    {
-        Object head = null;
-        synchronized(moreBuffers) {
-            head =  moreBuffers.poll();
-            while (head == null) {
-                try {
-                    moreBuffers.wait();
-                } catch (InterruptedException e) {
-                }
-                head = moreBuffers.poll();
-            }
-        }
-        return (ByteBuffer) head;
-    }
-
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * creates a new FennelPipeTupleIter object.
@@ -105,18 +86,54 @@ public class FennelPipeTupleIter extends FennelAbstractTupleIter
         byteBuffer.limit(0);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * adds a buffer to the buffer queue. The writer peer calls this.
+     */
+    private void enqueue(ByteBuffer bb)
+    {
+        synchronized (moreBuffers) {
+            moreBuffers.offer(bb);
+            if (moreBuffers.size() == 1) { // was empty
+                moreBuffers.notify(); // REVIEW mb: Use Semaphore instead?
+            }
+        }
+    }
+
+    /**
+     * Gets the head buffer from the queue. If the queue is empty, blocks until
+     * a buffer arrives.
+     */
+    private ByteBuffer dequeue()
+    {
+        Object head = null;
+        synchronized (moreBuffers) {
+            head = moreBuffers.poll();
+            while (head == null) {
+                try {
+                    moreBuffers.wait();
+                } catch (InterruptedException e) {
+                }
+                head = moreBuffers.poll();
+            }
+        }
+        return (ByteBuffer) head;
+    }
+
     // override FennelAbstractTupleIter to trace
     public void restart()
     {
         tracer.fine(this.toString());
         super.restart();
     }
-    
+
     // override FennelAbstractTupleIter
     protected void traceNext(Object val)
     {
-        if (tracer.isLoggable(Level.FINER)) 
-            tracer.finer(getStatus(this.toString())+" => " + val);
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(getStatus(this.toString()) + " => " + val);
+        }
     }
 
     // implement TupleIter
@@ -128,10 +145,11 @@ public class FennelPipeTupleIter extends FennelAbstractTupleIter
     protected int populateBuffer()
     {
         tracer.fine(this + " reader waits");
-        byteBuffer = dequeue();         // get next buffer; may block
-        int n = byteBuffer.limit(); 
-        if (n > 0)
+        byteBuffer = dequeue(); // get next buffer; may block
+        int n = byteBuffer.limit();
+        if (n > 0) {
             bufferAsArray = byteBuffer.array();
+        }
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(getStatus(this.toString()) + " => " + n);
         }
@@ -140,57 +158,59 @@ public class FennelPipeTupleIter extends FennelAbstractTupleIter
 
     /**
      * Gets a direct ByteBuffer suitable for #write. The C++ caller may pin the
-     * backing array (JNI GetByteArrayElements), copy data, and then pass back the
-     * ByteBuffer by calling #write.
+     * backing array (JNI GetByteArrayElements), copy data, and then pass back
+     * the ByteBuffer by calling #write.
      */
     public ByteBuffer getByteBuffer(int size)
     {
         // REVIEW mb 8/22/05 Why not call ByteBuffer.allocateDirect(size) ?
         // Why can't C++ peer call it directly?
         // Or else recycle buffer with a free list.
-        byte b[] = new byte[size];
+        byte [] b = new byte[size];
         ByteBuffer bb = ByteBuffer.wrap(b);
         bb.order(ByteOrder.nativeOrder());
         bb.clear();
         return bb;
     }
 
-
     /**
-     * Writes the contents of a byte buffer into this iterator.
-     * To avoid an extra copy here, the buffer should be direct and expose
-     * its backing array (ie <code>byteBufer.hasArray() == true</code>).
-     * (Unfortunately the result of JNI NewDirectByteBuffer() need not have
-     * a backing array).
-     
+     * Writes the contents of a byte buffer into this iterator. To avoid an
+     * extra copy here, the buffer should be direct and expose its backing array
+     * (ie <code>byteBufer.hasArray() == true</code>). (Unfortunately the result
+     * of JNI NewDirectByteBuffer() need not have a backing array).
+     *
      * <p>This method is called by the producer, typically from JNI.
-     * <p>The limit of the byte buffer is ignored; the
-     * <code>bblen</code> parameter is used instead.
-
-     * @param bb     A ByteBuffer containing the new data
-     * @param bblen  size of {@code bb} in bytes; 0 means end of data.
+     *
+     * <p>The limit of the byte buffer is ignored; the <code>bblen</code>
+     * parameter is used instead.
+     *
+     * @param bb A ByteBuffer containing the new data
+     * @param bblen size of {@code bb} in bytes; 0 means end of data.
      */
-    public void write(ByteBuffer bb, int bblen) throws Throwable
+    public void write(ByteBuffer bb, int bblen)
+        throws Throwable
     {
         try {
             bb.limit(bblen);
             bb.position(0);
-            if (!bb.hasArray())  {
+            if (!bb.hasArray()) {
                 // argh, have to wrap a copy of the new data
                 tracer.fine("copies buffer");
-                byte b[] = new byte[bblen];
+                byte [] b = new byte[bblen];
                 bb.rewind();
                 bb.get(b);
                 bb = ByteBuffer.wrap(b);
             }
-                
-            tracer.fine(this + " writer waits (buf: " + bb + " bytes: " + bblen);
+
+            tracer.fine(
+                this + " writer waits (buf: " + bb + " bytes: " + bblen);
             enqueue(bb);
             tracer.fine(this + " writer proceeds");
-            
         } catch (Throwable e) {
             tracer.throwing(null, null, e);
             throw e;
         }
     }
 }
+
+// End FennelPipeTupleIter.java

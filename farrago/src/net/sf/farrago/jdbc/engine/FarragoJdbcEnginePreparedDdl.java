@@ -37,15 +37,14 @@ import net.sf.farrago.session.*;
 public class FarragoJdbcEnginePreparedDdl
     extends FarragoJdbcEnginePreparedStatement
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcEnginePreparedDdl object.
      *
      * @param connection the connection creating this statement
-     *
      * @param stmtContext the underyling FarragoSessionStmtContext (unprepared)
-     *
      * @param sql the text of the DDL statement
      */
     FarragoJdbcEnginePreparedDdl(
@@ -56,7 +55,7 @@ public class FarragoJdbcEnginePreparedDdl
         super(connection, stmtContext, sql);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement PreparedStatement
     public boolean execute()
@@ -95,6 +94,5 @@ public class FarragoJdbcEnginePreparedDdl
         }
     }
 }
-
 
 // End FarragoJdbcEnginePreparedDdl.java

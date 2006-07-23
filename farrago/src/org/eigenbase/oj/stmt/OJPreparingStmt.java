@@ -20,58 +20,57 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.stmt;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.io.*;
+
+import java.lang.reflect.*;
+
 import java.util.Enumeration;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.javac.*;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
+import org.eigenbase.runtime.Iterable;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.trace.*;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-import org.eigenbase.runtime.Iterable;
 
 /**
- * <code>OJPreparingStmt</code> is an abstract base for classes which
- * implement the process of preparing and executing SQL expressions
- * by generating OpenJava code.
+ * <code>OJPreparingStmt</code> is an abstract base for classes which implement
+ * the process of preparing and executing SQL expressions by generating OpenJava
+ * code.
  */
 public abstract class OJPreparingStmt
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String connectionVariable = "connection";
     private static final Logger tracer = EigenbaseTrace.getStatementTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private String queryString = null;
     protected Environment env;
 
-    /** CallingConvention via which results should be returned by execution. */
+    /**
+     * CallingConvention via which results should be returned by execution.
+     */
     private CallingConvention resultCallingConvention;
 
     protected JavaCompiler javaCompiler;
@@ -79,27 +78,28 @@ public abstract class OJPreparingStmt
 
     protected EigenbaseTimingTracer timingTracer;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a statement.
      *
      * @param connection Connection statement belongs to; may be null, but only
-     *   if this statement implements {@link RelOptConnection}
+     * if this statement implements {@link RelOptConnection}
      *
      * @pre connection != null || this instanceof RelOptConnection
      */
     public OJPreparingStmt(RelOptConnection connection)
     {
         this.connection =
-            ((connection == null) && this instanceof RelOptConnection)
-            ? (RelOptConnection) this : connection;
+            ((connection == null) && (this instanceof RelOptConnection))
+            ? (RelOptConnection) this
+            : connection;
         Util.pre(this.connection != null,
             "connection != null || this instanceof RelOptConnection");
         this.resultCallingConvention = CallingConvention.RESULT_SET;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Environment getEnvironment()
     {
@@ -129,7 +129,8 @@ public abstract class OJPreparingStmt
                 }
             }
             if (argument == null) {
-                throw Util.newInternal("variable '" + parameterName
+                throw Util.newInternal(
+                    "variable '" + parameterName
                     + "' not found");
             }
             args[i] = argument.value;
@@ -151,8 +152,12 @@ public abstract class OJPreparingStmt
         String className = getTempClassName();
         env = new FileEnvironment(env, packageName, className);
         ClassDeclaration decl =
-            new ClassDeclaration(new ModifierList(ModifierList.PUBLIC),
-                className, null, null, new MemberDeclarationList());
+            new ClassDeclaration(
+                new ModifierList(ModifierList.PUBLIC),
+                className,
+                null,
+                null,
+                new MemberDeclarationList());
         OJClass clazz = new OJClass(env, null, decl);
         env.record(
             clazz.getName(),
@@ -170,8 +175,8 @@ public abstract class OJPreparingStmt
                         new EnumerationIterator((Enumeration) argument.value);
                     argument.clazz = argument.value.getClass();
                 }
-                if (argument.value instanceof Iterator
-                        && !(argument.value instanceof Iterable)) {
+                if ((argument.value instanceof Iterator)
+                    && !(argument.value instanceof Iterable)) {
                     argument.value =
                         new BufferedIterator((Iterator) argument.value);
                     argument.clazz = argument.value.getClass();
@@ -195,7 +200,9 @@ public abstract class OJPreparingStmt
 
     protected void bindArgument(Argument arg)
     {
-        env.bindVariable(arg.getName(),arg.getType());
+        env.bindVariable(
+            arg.getName(),
+            arg.getType());
     }
 
     public PreparedResult prepareSql(
@@ -204,14 +211,18 @@ public abstract class OJPreparingStmt
         SqlValidator validator,
         boolean needsValidation)
     {
-        return prepareSql(
-            sqlQuery, sqlQuery, runtimeContextClass, validator,
-            needsValidation);
+        return
+            prepareSql(
+                sqlQuery,
+                sqlQuery,
+                runtimeContextClass,
+                validator,
+                needsValidation);
     }
-    
+
     /**
-     * Prepares a statement for execution, starting from a parse tree and
-     * using a user-supplied validator.
+     * Prepares a statement for execution, starting from a parse tree and using
+     * a user-supplied validator.
      */
     public PreparedResult prepareSql(
         SqlNode sqlQuery,
@@ -226,8 +237,10 @@ public abstract class OJPreparingStmt
             runtimeContextClass = connection.getClass();
         }
 
-        final Argument [] arguments = {
-                new Argument(connectionVariable, runtimeContextClass,
+        final Argument [] arguments =
+            {
+                new Argument(connectionVariable,
+                    runtimeContextClass,
                     connection)
             };
         ClassDeclaration decl = init(arguments);
@@ -256,40 +269,55 @@ public abstract class OJPreparingStmt
             SqlExplainLevel detailLevel = sqlExplain.getDetailLevel();
             switch (explainDepth) {
             case Type:
-                return new PreparedExplanation(
-                    resultType, null, explainAsXml, detailLevel);
+                return
+                    new PreparedExplanation(
+                        resultType,
+                        null,
+                        explainAsXml,
+                        detailLevel);
             case Logical:
-                return new PreparedExplanation(
-                    null, rootRel, explainAsXml, detailLevel);
+                return
+                    new PreparedExplanation(
+                        null,
+                        rootRel,
+                        explainAsXml,
+                        detailLevel);
             case Physical:
             default:
-                rootRel = optimize(rootRel.getRowType(), rootRel);
-                return new PreparedExplanation(
-                    null, rootRel, explainAsXml, detailLevel);
+                rootRel = optimize(
+                        rootRel.getRowType(),
+                        rootRel);
+                return
+                    new PreparedExplanation(
+                        null,
+                        rootRel,
+                        explainAsXml,
+                        detailLevel);
             }
         }
 
         rootRel = optimize(resultType, rootRel);
-        
+
         if (timingTracer != null) {
             timingTracer.traceTime("end optimization");
         }
 
-        return implement(
-            resultType,
-            rootRel,
-            sqlNodeOriginal.getKind(),
-            decl,
-            arguments);
+        return
+            implement(
+                resultType,
+                rootRel,
+                sqlNodeOriginal.getKind(),
+                decl,
+                arguments);
     }
 
     /**
      * Optimizes a query plan.
      *
-     * @param logicalRowType logical row type of relational expression
-     *   (before struct fields are flattened, or field names are renamed
-     *   for uniqueness)
+     * @param logicalRowType logical row type of relational expression (before
+     * struct fields are flattened, or field names are renamed for uniqueness)
      * @param rootRel root of a relational expression
+     *
      * @return an equivalent optimized relational expression
      */
     protected RelNode optimize(RelDataType logicalRowType, RelNode rootRel)
@@ -313,7 +341,8 @@ public abstract class OJPreparingStmt
         // Make sure non-CallingConvention traits, if any, are preserved
         RelTraitSet desiredTraits = RelOptUtil.clone(rootRel.getTraits());
         desiredTraits.setTrait(
-            CallingConventionTraitDef.instance, resultCallingConvention);
+            CallingConventionTraitDef.instance,
+            resultCallingConvention);
         return desiredTraits;
     }
 
@@ -324,6 +353,7 @@ public abstract class OJPreparingStmt
      * @param sqlKind SqlKind of the original statement.
      * @param decl ClassDeclaration of the generated result.
      * @param args argument list of the generated result.
+     *
      * @return an executable plan, a {@link PreparedExecution}.
      */
     private PreparedExecution implement(
@@ -340,32 +370,36 @@ public abstract class OJPreparingStmt
         if (timingTracer != null) {
             timingTracer.traceTime("end codegen");
         }
-        
+
         boolean isDml = sqlKind.isA(SqlKind.Dml);
         ParseTree parseTree = expr;
         BoundMethod boundMethod = compileAndBind(decl, parseTree, args);
-        
+
         if (timingTracer != null) {
             timingTracer.traceTime("end compilation");
         }
-        
+
         final PreparedExecution plan =
             new PreparedExecution(
-                parseTree, rootRel.getRowType(), isDml, boundMethod);
+                parseTree,
+                rootRel.getRowType(),
+                isDml,
+                boundMethod);
         return plan;
     }
 
     /**
      * Prepares a statement for execution, starting from a relational expression
      * (ie a logical or a physical query plan).
+     *
      * @param rowType
      * @param rootRel root of the relational expression.
      * @param sqlKind SqlKind for the relational expression: only
-     *   SqlKind.Explain and SqlKind.Dml are special cases.
+     * SqlKind.Explain and SqlKind.Dml are special cases.
      * @param needOpt true for a logical query plan (still needs to be
-     *   optimized), false for a physical plan.
-     * @param decl openjava ClassDeclaration for the code generated to
-     * implement the statement.
+     * optimized), false for a physical plan.
+     * @param decl openjava ClassDeclaration for the code generated to implement
+     * the statement.
      * @param args openjava argument list for the generated code.
      */
     public PreparedResult prepareSql(
@@ -374,10 +408,12 @@ public abstract class OJPreparingStmt
         SqlKind sqlKind,
         boolean needOpt,
         ClassDeclaration decl,
-        Argument[] args)
+        Argument [] args)
     {
         if (needOpt) {
-            rootRel = optimize(rootRel.getRowType(), rootRel);
+            rootRel = optimize(
+                    rootRel.getRowType(),
+                    rootRel);
         }
         return implement(rowType, rootRel, sqlKind, decl, args);
     }
@@ -448,7 +484,7 @@ public abstract class OJPreparingStmt
                 pakkage = Object.class.getPackage();
             }
             if (!Modifier.isPrivate(modifiers)
-                    && pakkage.getName().equals(fromPackageName)) {
+                && pakkage.getName().equals(fromPackageName)) {
                 return c;
             }
         }
@@ -472,7 +508,7 @@ public abstract class OJPreparingStmt
             tracer.log(
                 Level.FINE,
                 "Before compile, parse tree",
-                new Object [] { parseTree });
+                new Object[] { parseTree });
         }
         ClassCollector classCollector = new ClassCollector(env);
         Util.discard(OJUtil.go(classCollector, parseTree));
@@ -558,19 +594,23 @@ public abstract class OJPreparingStmt
             returnType);
         String packageName = getTempPackageName();
         CompilationUnit compUnit =
-            new CompilationUnit(packageName, new String[0],
+            new CompilationUnit(
+                packageName,
+                new String[0],
                 new ClassDeclarationList(decl));
 
         if (queryString != null) {
             // use single line comments to avoid issues with */ in literals
-            compUnit.setComment("// "
+            compUnit.setComment(
+                "// "
                 + queryString.replaceAll("\n", "\n// ") + "\n");
         }
         String s = compUnit.toString();
         String className = decl.getName();
         packageName = compUnit.getPackage(); // e.g. "abc.def", or null
-        return compile(packageName, className, s, parameterTypes,
-            parameterNames);
+        return
+            compile(packageName, className, s, parameterTypes,
+                parameterNames);
     }
 
     private BoundMethod compile(
@@ -599,11 +639,12 @@ public abstract class OJPreparingStmt
 
     /**
      * Compile a single class with the given source in the given package.
-     * 
+     *
      * @param packageName package name, if null the className must be fully
-     *                    qualified
+     * qualified
      * @param className simple class name unless packageName is null
      * @param source source code for the class
+     *
      * @return a Class based on source
      */
     protected Class compileClass(
@@ -643,11 +684,13 @@ public abstract class OJPreparingStmt
 
         if (writeJavaFile) {
             try {
-                javaFile.getParentFile().mkdirs(); // make any necessary parent directories
+                javaFile.getParentFile().mkdirs(); // make any necessary parent
+                                                   // directories
                 final boolean print =
                     SaffronProperties.instance().printBeforeCompile.get();
                 if (print) {
-                    System.out.println("Compiling " + javaFile + ", class "
+                    System.out.println(
+                        "Compiling " + javaFile + ", class "
                         + fullClassName);
                 }
                 FileWriter fw = new FileWriter(javaFile);
@@ -671,13 +714,13 @@ public abstract class OJPreparingStmt
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * An <code>Argument</code> supplies a name/value pair to a statement. The
-     * class of the argument is usually superfluous, but is necessary when
-     * the value is a primitive type (such as <code>int</code>, as opposed to
-     * {@link Integer}), or is a superclass of the object's runtime type.
+     * class of the argument is usually superfluous, but is necessary when the
+     * value is a primitive type (such as <code>int</code>, as opposed to {@link
+     * Integer}), or is a superclass of the object's runtime type.
      */
     public static class Argument
     {
@@ -699,8 +742,8 @@ public abstract class OJPreparingStmt
         }
 
         /**
-         * Creates an argument whose type is the runtime type of
-         * <code>value</code>.
+         * Creates an argument whose type is the runtime type of <code>
+         * value</code>.
          */
         public Argument(
             String name,
@@ -718,7 +761,10 @@ public abstract class OJPreparingStmt
             String name,
             int value)
         {
-            this(name, java.lang.Integer.TYPE, new Integer(value));
+            this(
+                name,
+                java.lang.Integer.TYPE,
+                new Integer(value));
         }
 
         public OJClass getType()
@@ -737,6 +783,5 @@ public abstract class OJPreparingStmt
         }
     }
 }
-
 
 // End OJPreparingStmt.java

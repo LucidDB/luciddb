@@ -22,14 +22,13 @@
 package org.eigenbase.jmi;
 
 /**
- * JmiDeletionAction enumerates the possible actions to take when
- * a {@link JmiDeletionRule} applies.
+ * JmiDeletionAction enumerates the possible actions to take when a {@link
+ * JmiDeletionRule} applies.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum JmiDeletionAction
-{
+public enum JmiDeletionAction {
     /**
      * Prevent the original modification from taking place.
      */
@@ -48,4 +47,12 @@ public enum JmiDeletionAction
     CASCADE
 }
 
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
+// End JmiDeletionAction.java
 // End JmiDeletionAction.java

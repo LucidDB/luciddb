@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.defimpl;
 
-import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
+import net.sf.farrago.session.*;
+
 
 /**
- * FarragoVolcanoPersonalityFactory implements the
- * {@link FarragoSessionPersonalityFactory} interface by
- * using Volcano to implement cost-based optimization.
+ * FarragoVolcanoPersonalityFactory implements the {@link
+ * FarragoSessionPersonalityFactory} interface by using Volcano to implement
+ * cost-based optimization.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -35,6 +36,9 @@ import net.sf.farrago.db.*;
 public class FarragoVolcanoPersonalityFactory
     implements FarragoSessionPersonalityFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,
@@ -43,8 +47,10 @@ public class FarragoVolcanoPersonalityFactory
         return new FarragoVolcanoSessionPersonality((FarragoDbSession) session);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class FarragoVolcanoSessionPersonality
-         extends FarragoDefaultSessionPersonality
+        extends FarragoDefaultSessionPersonality
     {
         protected FarragoVolcanoSessionPersonality(FarragoDbSession session)
         {

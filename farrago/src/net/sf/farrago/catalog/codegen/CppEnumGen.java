@@ -23,7 +23,9 @@
 package net.sf.farrago.catalog.codegen;
 
 import java.io.*;
+
 import java.lang.reflect.*;
+
 import java.util.*;
 
 import net.sf.farrago.util.*;
@@ -34,19 +36,20 @@ import net.sf.farrago.util.*;
 // temporary parking space
 
 /**
- * CppEnumGen is a tool for generating a C++ enumeration based on
- * the public static final data members of a Java class.
+ * CppEnumGen is a tool for generating a C++ enumeration based on the public
+ * static final data members of a Java class.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class CppEnumGen
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private PrintWriter pw;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new CppEnumGen.
@@ -58,26 +61,21 @@ public class CppEnumGen
         this.pw = pw;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Generates a single enumeration.  Enumeration values (and their names) is
+     * Generates a single enumeration. Enumeration values (and their names) is
      * based on the subset of non-inherited public static final data members
-     * contained by enumClass and having exact type enumSymbolType.
-     * Enumeration order (and hence implied ordinals) is based on the result of
-     * {@link Class#getDeclaredFields}.
+     * contained by enumClass and having exact type enumSymbolType. Enumeration
+     * order (and hence implied ordinals) is based on the result of {@link
+     * Class#getDeclaredFields}.
      *
-     *<p>
-     *
-     * TODO:  support integer ordinals
+     * <p>TODO: support integer ordinals
      *
      * @param enumName name to give C++ enum
-     *
-     * @param enumClass Java class to be interpreted as an enumeration;
-     * this class's name is used as the enumeration name
-     *
-     * @param enumSymbolType Java class used to determine enumeration
-     * membership
+     * @param enumClass Java class to be interpreted as an enumeration; this
+     * class's name is used as the enumeration name
+     * @param enumSymbolType Java class used to determine enumeration membership
      */
     public void generateEnumForClass(
         String enumName,
@@ -133,6 +131,5 @@ public class CppEnumGen
         pw.println();
     }
 }
-
 
 // End CppEnumGen.java

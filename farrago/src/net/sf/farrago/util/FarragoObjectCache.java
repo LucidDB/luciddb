@@ -31,47 +31,46 @@ import org.eigenbase.util.*;
 
 
 /**
- * FarragoObjectCache implements generic object caching.  It doesn't use
+ * FarragoObjectCache implements generic object caching. It doesn't use
  * SoftReferences since from what I've read, typical JVM implementations don't
  * give good results.
  *
- *<p>
- *
- * Key objects must implement hashCode/equals properly since FarragoObjectCache
- * is based on a HashMap internally.
+ * <p>Key objects must implement hashCode/equals properly since
+ * FarragoObjectCache is based on a HashMap internally.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoObjectCache implements FarragoAllocation
+public class FarragoObjectCache
+    implements FarragoAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getObjectCacheTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * Map from cache key to EntryImpl.  To avoid deadlock, synchronization
-     * order is always map first, entry second.
+     * Map from cache key to EntryImpl. To avoid deadlock, synchronization order
+     * is always map first, entry second.
      */
-    private MultiMap<Object,EntryImpl> mapKeyToEntry;
+    private MultiMap<Object, EntryImpl> mapKeyToEntry;
     private long bytesMax;
 
     /**
-     * Number of bytes currently in use by cached objects.  This and bytesMax
-     * are synchronized via mapKeyToEntry monitor.
+     * Number of bytes currently in use by cached objects. This and bytesMax are
+     * synchronized via mapKeyToEntry monitor.
      */
     private long bytesUsed;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an empty cache.
      *
      * @param owner FarragoAllocationOwner for this cache, to make sure
      * everything gets discarded eventually
-     *
      * @param bytesMax maximum number of bytes to cache
      */
     public FarragoObjectCache(
@@ -84,19 +83,17 @@ public class FarragoObjectCache implements FarragoAllocation
         bytesUsed = 0;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Pins an entry in the cache.  When the caller is done with it, the
-     * returned entry must be unpinned, otherwise the entry can never be
-     * discarded from the cache.
+     * Pins an entry in the cache. When the caller is done with it, the returned
+     * entry must be unpinned, otherwise the entry can never be discarded from
+     * the cache.
      *
      * @param key key of the entry to pin
-     *
      * @param factory CachedObjectFactory to call if an existing entry can't be
      * used, in which case a new entry will be created and initialized by
      * calling the factory's initializeEntry method
-     *
      * @param exclusive if true, only reuse unpinned entries
      *
      * @return pinned Entry
@@ -143,8 +140,8 @@ public class FarragoObjectCache implements FarragoAllocation
             }
         }
 
-        // TODO jvs 15-July-2004:  break up this oversized method
-        // release map lock since construction work below may be time-consuming
+        // TODO jvs 15-July-2004:  break up this oversized method release map
+        // lock since construction work below may be time-consuming
         boolean unpinEntry = false;
         try {
             synchronized (entry) {
@@ -157,8 +154,8 @@ public class FarragoObjectCache implements FarragoAllocation
                             success = true;
                             tracer.finer("initialized new cache entry");
                         } finally {
-                            // NOTE: an exception can leave a failed entry
-                            // lying around.  It would be nice to get rid of it
+                            // NOTE: an exception can leave a failed entry lying
+                            // around.  It would be nice to get rid of it
                             // immediately, but it's tricky since someone else
                             // may already be waiting for it.
                             if (!success) {
@@ -195,7 +192,8 @@ public class FarragoObjectCache implements FarragoAllocation
 
                     if (entry.value != null) {
                         if (tracer.isLoggable(Level.FINE)) {
-                            tracer.fine("returning entry with pin count = "
+                            tracer.fine(
+                                "returning entry with pin count = "
                                 + entry.pinCount);
                         }
 
@@ -204,9 +202,9 @@ public class FarragoObjectCache implements FarragoAllocation
                     }
 
                     // Someone else's attempt must have failed; we'll give it a
-                    // shot ourselves.  Most likely we'll fail too, but doing
-                    // it this way is easier than trying to replicate the
-                    // original exception.
+                    // shot ourselves.  Most likely we'll fail too, but doing it
+                    // this way is easier than trying to replicate the original
+                    // exception.
                     entry.constructionThread = currentThread;
                 }
             }
@@ -222,9 +220,10 @@ public class FarragoObjectCache implements FarragoAllocation
         // return an unpinned entry and to account for its memory.
         if (tracer.isLoggable(Level.FINE)) {
             long cacheSize = bytesUsed + entry.memoryUsage;
-            tracer.fine("returning new entry, pin count "+entry.pinCount+
-                        ", size "+entry.memoryUsage+", cache size "+cacheSize+
-                        ", key "+entry.key);
+            tracer.fine(
+                "returning new entry, pin count " + entry.pinCount
+                + ", size " + entry.memoryUsage + ", cache size " + cacheSize
+                + ", key " + entry.key);
         }
         adjustMemoryUsage(entry.memoryUsage);
         return entry;
@@ -265,7 +264,7 @@ public class FarragoObjectCache implements FarragoAllocation
             discardEntry(discard);
         }
         if (tracer.isLoggable(Level.FINE)) {
-            tracer.finer("cache size after discards = "+bytesUsed);
+            tracer.finer("cache size after discards = " + bytesUsed);
         }
 
         // REVIEW:  in some circumstances, we want to fail if overdraft is
@@ -287,7 +286,7 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Unpins an entry returned by pin.  After unpin, the caller should
+     * Unpins an entry returned by pin. After unpin, the caller should
      * immediately nullify its reference to the entry, its key, its value, and
      * any sub-objects so that they can be garbage collected.
      *
@@ -310,8 +309,9 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Removes an entry from the cache, but does not close its value.
-     * The entry must be exclusive: pinned only by the caller.
+     * Removes an entry from the cache, but does not close its value. The entry
+     * must be exclusive: pinned only by the caller.
+     *
      * @return the former value of the entry.
      */
     public Object detach(Entry e)
@@ -319,16 +319,19 @@ public class FarragoObjectCache implements FarragoAllocation
         EntryImpl entry = (EntryImpl) e;
         Object val = entry.value;
         synchronized (mapKeyToEntry) {
-            synchronized(e) {
+            synchronized (e) {
                 if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine("Detaching entry " + entry.key.toString() +
-                                ", size " + entry.memoryUsage);
+                    tracer.fine(
+                        "Detaching entry " + entry.key.toString()
+                        + ", size " + entry.memoryUsage);
                 }
                 assert (entry.pinCount == 1) : entry.pinCount;
-                mapKeyToEntry.removeMulti(entry.getKey(), entry);
+                mapKeyToEntry.removeMulti(
+                    entry.getKey(),
+                    entry);
                 bytesUsed -= entry.memoryUsage;
                 if (tracer.isLoggable(Level.FINER)) {
-                    tracer.finer("cache size now "+bytesUsed);
+                    tracer.finer("cache size now " + bytesUsed);
                 }
                 entry.value = null;
             }
@@ -336,10 +339,10 @@ public class FarragoObjectCache implements FarragoAllocation
         return val;
     }
 
-
     /**
-     * Discards any entries associated with a key.
-     * If the bound value of an entry is a ClosableObject, it will be closed.
+     * Discards any entries associated with a key. If the bound value of an
+     * entry is a ClosableObject, it will be closed.
+     *
      * @param key key of the Entry to discard
      */
     public void discard(Object key)
@@ -375,8 +378,9 @@ public class FarragoObjectCache implements FarragoAllocation
     {
         synchronized (entry) {
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Discarding entry " + entry.key.toString() +
-                            ", size " + entry.memoryUsage);
+                tracer.fine(
+                    "Discarding entry " + entry.key.toString()
+                    + ", size " + entry.memoryUsage);
             }
 
             assert (entry.pinCount == 0) : entry.pinCount;
@@ -399,11 +403,11 @@ public class FarragoObjectCache implements FarragoAllocation
         assert (bytesUsed == 0);
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
-     * Factory interface for producing cached objects.  This must be
-     * implemented by callers to FarragoObjectCache.
+     * Factory interface for producing cached objects. This must be implemented
+     * by callers to FarragoObjectCache.
      */
     public static interface CachedObjectFactory
     {
@@ -411,7 +415,6 @@ public class FarragoObjectCache implements FarragoAllocation
          * Initialize a cache entry.
          *
          * @param key key of the object to be constructed
-         *
          * @param entry to initialize by calling its initialize() method
          */
         public void initializeEntry(
@@ -428,9 +431,8 @@ public class FarragoObjectCache implements FarragoAllocation
          * Initializes the entry.
          *
          * @param value the value to associate with the entry's key; if this
-         * Object implements FarragoAllocation, it will be closed when
-         * discarded from the cache
-         *
+         * Object implements FarragoAllocation, it will be closed when discarded
+         * from the cache
          * @param memoryUsage approximate total number of bytes of memory used
          * by entry (combination of key, value, and any sub-objects)
          */
@@ -440,25 +442,26 @@ public class FarragoObjectCache implements FarragoAllocation
     }
 
     /**
-     * Interface for a cache entry; same as Map.Entry except that
-     * there is no requirement on equals/hashCode.  This is implemented by
+     * Interface for a cache entry; same as Map.Entry except that there is no
+     * requirement on equals/hashCode. This is implemented by
      * FarragoObjectCache.
      *
-     *<p>
-     *
-     * Entry extends FarragoAllocation; its closeAllocation implementation
+     * <p>Entry extends FarragoAllocation; its closeAllocation implementation
      * calls unpin.
      */
-    public interface Entry extends FarragoAllocation
+    public interface Entry
+        extends FarragoAllocation
     {
         public Object getKey();
 
         public Object getValue();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    private class EntryImpl implements Entry, UninitializedEntry
+    private class EntryImpl
+        implements Entry,
+            UninitializedEntry
     {
         // NOTE jvs 15-July-2004: entry attribute synchronization is
         // fine-grained; pinCount is protected by mapKeyToEntry's
@@ -497,6 +500,5 @@ public class FarragoObjectCache implements FarragoAllocation
         }
     }
 }
-
 
 // End FarragoObjectCache.java

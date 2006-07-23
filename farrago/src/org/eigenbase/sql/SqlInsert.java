@@ -20,22 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
- * A <code>SqlInsert</code> is a node of a parse tree which represents
- * an INSERT statement.
+ * A <code>SqlInsert</code> is a node of a parse tree which represents an INSERT
+ * statement.
  */
-public class SqlInsert extends SqlCall
+public class SqlInsert
+    extends SqlCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int KEYWORDS_OPERAND = 0;
@@ -44,7 +44,7 @@ public class SqlInsert extends SqlCall
     public static final int TARGET_COLUMN_LIST_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlInsert(
         SqlSpecialOperator operator,
@@ -54,17 +54,20 @@ public class SqlInsert extends SqlCall
         SqlNodeList columnList,
         SqlParserPos pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], pos);
+        super(
+            operator,
+            new SqlNode[OPERAND_COUNT],
+            pos);
 
         Util.pre(keywords != null, "keywords != null");
-    
+
         operands[KEYWORDS_OPERAND] = keywords;
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[SOURCE_OPERAND] = source;
         operands[TARGET_COLUMN_LIST_OPERAND] = columnList;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the identifier for the target table of the insertion
@@ -95,15 +98,14 @@ public class SqlInsert extends SqlCall
     {
         final SqlNodeList keywords = (SqlNodeList) operands[KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
-            SqlInsertKeyword keyword = 
-                (SqlInsertKeyword)SqlLiteral.symbolValue(keywords.get(i));
+            SqlInsertKeyword keyword =
+                (SqlInsertKeyword) SqlLiteral.symbolValue(keywords.get(i));
             if (keyword == modifier) {
                 return keywords.get(i);
             }
         }
         return null;
     }
-
 
     // implement SqlNode
     public void unparse(
@@ -114,15 +116,20 @@ public class SqlInsert extends SqlCall
         writer.startList(SqlWriter.FrameType.Select);
         writer.sep("INSERT INTO");
         getTargetTable().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
         if (getTargetColumnList() != null) {
             getTargetColumnList().unparse(
-                writer, getOperator().getLeftPrec(),
+                writer,
+                getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
         writer.newlineAndIndent();
         getSource().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
     }
 
     public void validate(SqlValidator validator, SqlValidatorScope scope)
@@ -130,6 +137,5 @@ public class SqlInsert extends SqlCall
         validator.validateInsert(this);
     }
 }
-
 
 // End SqlInsert.java

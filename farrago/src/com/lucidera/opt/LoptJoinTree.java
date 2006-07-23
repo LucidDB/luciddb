@@ -20,25 +20,31 @@
 */
 package com.lucidera.opt;
 
-import org.eigenbase.rel.*;
-
 import java.util.*;
 
+import org.eigenbase.rel.*;
+
+
 /**
- * LoptJoinTree implements a utility class used to store a JoinRel tree and
- * the factors that make up the tree.  Because RelNodes can be duplicated in
- * a query when you have a self-join, factor ids are needed to distinguish
- * between the different join inputs that correspond to identical tables.
- * The class associates factor ids with a join tree, matching the order of
- * the factor ids with the order of those factors in the join tree.
- * 
+ * LoptJoinTree implements a utility class used to store a JoinRel tree and the
+ * factors that make up the tree. Because RelNodes can be duplicated in a query
+ * when you have a self-join, factor ids are needed to distinguish between the
+ * different join inputs that correspond to identical tables. The class
+ * associates factor ids with a join tree, matching the order of the factor ids
+ * with the order of those factors in the join tree.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
 public class LoptJoinTree
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private BinaryTree factorTree;
     private RelNode joinTree;
+
+    //~ Constructors -----------------------------------------------------------
 
     // creates a jointree consisting of a single node
     public LoptJoinTree(RelNode joinTree, int factorId)
@@ -58,12 +64,15 @@ public class LoptJoinTree
     // corresponding to the left and right subtrees of the join
     public LoptJoinTree(
         RelNode joinTree,
-        BinaryTree leftFactorTree, BinaryTree rightFactorTree)
+        BinaryTree leftFactorTree,
+        BinaryTree rightFactorTree)
     {
         factorTree = new BinaryTree(leftFactorTree, rightFactorTree);
         this.joinTree = joinTree;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public RelNode getJoinTree()
     {
         return joinTree;
@@ -71,14 +80,18 @@ public class LoptJoinTree
 
     public LoptJoinTree getLeft()
     {
-        return new LoptJoinTree(
-            ((JoinRel) joinTree).getLeft(), factorTree.getLeft());
+        return
+            new LoptJoinTree(
+                ((JoinRel) joinTree).getLeft(),
+                factorTree.getLeft());
     }
 
     public LoptJoinTree getRight()
     {
-        return new LoptJoinTree(
-            ((JoinRel) joinTree).getRight(), factorTree.getRight());
+        return
+            new LoptJoinTree(
+                ((JoinRel) joinTree).getRight(),
+                factorTree.getRight());
     }
 
     public BinaryTree getFactorTree()
@@ -90,27 +103,29 @@ public class LoptJoinTree
     {
         factorTree.getTreeOrder(treeOrder);
     }
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     // Simple binary tree class that stores an id in the leaf nodes
     private class BinaryTree
     {
         private int id;
         private BinaryTree left;
         private BinaryTree right;
-        
+
         public BinaryTree(int rootId)
         {
             this.id = rootId;
             this.left = null;
             this.right = null;
         }
-        
+
         public BinaryTree(BinaryTree left, BinaryTree right)
         {
             this.left = left;
             this.right = right;
         }
-        
+
         public BinaryTree getLeft()
         {
             return left;
@@ -123,7 +138,7 @@ public class LoptJoinTree
 
         public void getTreeOrder(List<Integer> treeOrder)
         {
-            if (left == null && right == null) {
+            if ((left == null) && (right == null)) {
                 treeOrder.add(id);
             } else {
                 left.getTreeOrder(treeOrder);

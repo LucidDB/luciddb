@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import java.util.*;
@@ -30,36 +29,37 @@ import org.eigenbase.reltype.*;
 
 
 /**
- * A <code>TableAccessRel</code> reads all the rows from a {@link
- * RelOptTable}.
+ * A <code>TableAccessRel</code> reads all the rows from a {@link RelOptTable}.
  *
- * <p> If the table is a {@link net.sf.saffron.ext.JdbcTable}, then this is
+ * <p>If the table is a {@link net.sf.saffron.ext.JdbcTable}, then this is
  * literally possible. But for other kinds of tables, there may be many ways to
  * read the data from the table. For some kinds of table, it may not even be
- * possible to read all of the rows unless some narrowing constraint is
- * applied. In the example of the {@link net.sf.saffron.ext.ReflectSchema}
- * schema,
+ * possible to read all of the rows unless some narrowing constraint is applied.
+ * In the example of the {@link net.sf.saffron.ext.ReflectSchema} schema,
  *
  * <blockquote>
  * <pre>select from fields</pre>
  * </blockquote>
+ *
  * cannot be implemented, but
+ *
  * <blockquote>
  * <pre>select from fields as f
  * where f.getClass().getName().equals("java.lang.String")</pre>
  * </blockquote>
+ *
  * can. It is the optimizer's responsibility to find these ways, by applying
- * transformation rules.
- * </p>
+ * transformation rules.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 10 November, 2001
  */
-public final class TableAccessRel extends TableAccessRelBase
+public final class TableAccessRel
+    extends TableAccessRelBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public TableAccessRel(
         RelOptCluster cluster,
@@ -67,10 +67,11 @@ public final class TableAccessRel extends TableAccessRelBase
         RelOptConnection connection)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.NONE), table,
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            table,
             connection);
     }
 }
-
 
 // End TableAccessRel.java

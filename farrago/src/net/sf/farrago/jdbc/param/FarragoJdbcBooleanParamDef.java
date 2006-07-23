@@ -22,22 +22,29 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.util14.*;
+
 
 /**
  * FarragoJdbcEngineBooleanParamDef defines a boolean parameter.
- * 
+ *
  * @author Angel Chang
  * @version $Id$
  */
-class FarragoJdbcBooleanParamDef extends FarragoJdbcParamDef
+class FarragoJdbcBooleanParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     FarragoJdbcBooleanParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData)
     {
         super(paramName, paramMetaData);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
@@ -74,3 +81,5 @@ class FarragoJdbcBooleanParamDef extends FarragoJdbcParamDef
         }
     }
 }
+
+// End FarragoJdbcBooleanParamDef.java

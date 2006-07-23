@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import openjava.ptree.*;
@@ -29,8 +28,7 @@ import org.eigenbase.rex.*;
 
 
 /**
- * OJRexImplementor translates a call to a particular operator to OpenJava
- * code.
+ * OJRexImplementor translates a call to a particular operator to OpenJava code.
  *
  * <p>Implementors are held in a {@link OJRexImplementorTable}.
  *
@@ -39,17 +37,16 @@ import org.eigenbase.rex.*;
  */
 public interface OJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Implements a single {@link RexCall}.
      *
      * @param translator provides translation context
-     *
      * @param call the call to be translated
-     *
-     * @param operands call's operands, which have already
-     * been translated independently
+     * @param operands call's operands, which have already been translated
+     * independently
      */
     public Expression implement(
         RexToOJTranslator translator,
@@ -65,6 +62,5 @@ public interface OJRexImplementor
      */
     public boolean canImplement(RexCall call);
 }
-
 
 // End OJRexImplementor.java

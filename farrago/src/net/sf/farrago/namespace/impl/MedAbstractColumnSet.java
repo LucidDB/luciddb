@@ -24,31 +24,33 @@ package net.sf.farrago.namespace.impl;
 
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.catalog.*;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 
 
 /**
- * MedAbstractColumnSet is an abstract base class for implementations
- * of the {@link FarragoMedColumnSet} interface.
+ * MedAbstractColumnSet is an abstract base class for implementations of the
+ * {@link FarragoMedColumnSet} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractColumnSet extends RelOptAbstractTable
+public abstract class MedAbstractColumnSet
+    extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String [] localName;
     private final String [] foreignName;
@@ -58,22 +60,17 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     private CwmNamedColumnSet cwmColumnSet;
     private SqlAccessType allowedAccess;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MedAbstractColumnSet.
      *
-     * @param localName name of this ColumnSet as it will be known
-     * within the Farrago system
-     *
-     * @param foreignName name of this ColumnSet as it is known
-     * on the foreign server; may be null if no meaningful name
-     * exists
-     *
+     * @param localName name of this ColumnSet as it will be known within the
+     * Farrago system
+     * @param foreignName name of this ColumnSet as it is known on the foreign
+     * server; may be null if no meaningful name exists
      * @param rowType row type descriptor
-     *
      * @param tableProps table-level properties
-     *
      * @param columnPropMap column-level properties (map from column name to
      * Properties object)
      */
@@ -92,7 +89,7 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         this.allowedAccess = SqlAccessType.ALL;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public String [] getQualifiedName()
@@ -101,8 +98,7 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     }
 
     /**
-     * @return the name this ColumnSet is known by within
-     * the Farrago system
+     * @return the name this ColumnSet is known by within the Farrago system
      */
     public String [] getLocalName()
     {
@@ -176,22 +172,18 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
     }
 
     /**
-     * Provides an implementation of the toRel interface method
-     * in terms of an underlying UDX.
+     * Provides an implementation of the toRel interface method in terms of an
+     * underlying UDX.
      *
      * @param cluster same as for toRel
-     *
      * @param connection same as for toRel
-     *
      * @param udxSpecificName specific name with which the UDX was created
      * (either via the SPECIFIC keyword or the invocation name if SPECIFIC was
      * not specified); this can be a qualified name, possibly with quoted
      * identifiers, e.g. x.y.z or x."y".z
-     *
      * @param serverMofId if not null, the invoked UDX can access the data
      * server with the given MOFID at runtime via {@link
      * FarragoUdrRuntime.getDataServerRuntimeSupport}
-     *
      * @param args arguments to UDX invocation
      *
      * @return generated relational expression producing the UDX results
@@ -241,24 +233,28 @@ public abstract class MedAbstractColumnSet extends RelOptAbstractTable
         // type descriptor for the result of the call.
         RexBuilder rexBuilder = cluster.getRexBuilder();
         RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-        RelDataType resultType = typeFactory.createTypeWithNullability(
-            getRowType(), true);
-        
+        RelDataType resultType =
+            typeFactory.createTypeWithNullability(
+                getRowType(),
+                true);
+
         // Create a relational algebra expression for invoking the UDX.
         RexNode rexCall = rexBuilder.makeCall(udx, args);
         RelNode udxRel =
             new FarragoJavaUdxRel(
-                cluster, rexCall, resultType, serverMofId,
+                cluster,
+                rexCall,
+                resultType,
+                serverMofId,
                 RelNode.emptyArray);
 
         // Optimizer wants us to preserve original types,
         // so cast back for the final result.
         return RelOptUtil.createCastRel(
-            udxRel,
-            getRowType(),
-            true);
+                udxRel,
+                getRowType(),
+                true);
     }
 }
-
 
 // End MedAbstractColumnSet.java

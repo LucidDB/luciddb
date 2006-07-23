@@ -23,31 +23,33 @@
 package net.sf.farrago.util;
 
 import java.io.*;
+
 import java.util.logging.*;
 
 import net.sf.farrago.trace.*;
 
 
 /**
- * FarragoFileAllocation takes care of deleting a File when it is closed.  If
- * the File is a directory, the directory and everything under it is deleted.
+ * FarragoFileAllocation takes care of deleting a File when it is closed. If the
+ * File is a directory, the directory and everything under it is deleted.
  * Deletion failure is traced as a warning but does not result in an exception.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoFileAllocation implements FarragoAllocation
+public class FarragoFileAllocation
+    implements FarragoAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    private static final Logger tracer =
-        FarragoTrace.getFileAllocationTracer();
+    //~ Static fields/initializers ---------------------------------------------
 
-    //~ Instance fields -------------------------------------------------------
+    private static final Logger tracer = FarragoTrace.getFileAllocationTracer();
+
+    //~ Instance fields --------------------------------------------------------
 
     private File file;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoFileAllocation.
@@ -59,7 +61,7 @@ public class FarragoFileAllocation implements FarragoAllocation
         this.file = file;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoAllocation
     public void closeAllocation()
@@ -97,6 +99,5 @@ public class FarragoFileAllocation implements FarragoAllocation
         }
     }
 }
-
 
 // End FarragoFileAllocation.java

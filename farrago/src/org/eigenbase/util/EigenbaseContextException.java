@@ -26,11 +26,15 @@ package org.eigenbase.util;
 // dependencies on other Eigenbase code.
 
 /**
- * Exception which contains information about the textual context of the
- * causing exception.
+ * Exception which contains information about the textual context of the causing
+ * exception.
  */
-public class EigenbaseContextException extends EigenbaseException
+public class EigenbaseContextException
+    extends EigenbaseException
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private int posLine;
 
     private int posColumn;
@@ -39,9 +43,11 @@ public class EigenbaseContextException extends EigenbaseException
 
     private int endPosColumn;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new EigenbaseContextException object.
-     * This constructor is for use by the generated factory.
+     * Creates a new EigenbaseContextException object. This constructor is for
+     * use by the generated factory.
      *
      * @param message error message
      * @param cause underlying cause, must not be null
@@ -56,25 +62,30 @@ public class EigenbaseContextException extends EigenbaseException
      *
      * @param message error message
      * @param cause underlying cause, must not be null
-     * @param posLine        1-based start line number
-     * @param posColumn      1-based start column number
-     * @param endPosLine     1-based end line number
-     * @param endPosColumn   1-based end column number
+     * @param posLine 1-based start line number
+     * @param posColumn 1-based start column number
+     * @param endPosLine 1-based end line number
+     * @param endPosColumn 1-based end column number
      */
     public EigenbaseContextException(
-        String message, Throwable cause,
-        int posLine, int posColumn, int endPosLine, int endPosColumn)
+        String message,
+        Throwable cause,
+        int posLine,
+        int posColumn,
+        int endPosLine,
+        int endPosColumn)
     {
         super(message, cause);
-        assert(cause != null);
+        assert (cause != null);
         setPosition(posLine, posColumn, endPosLine, endPosColumn);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Sets a textual position at which this exception was detected.
      *
      * @param posLine 1-based line number
-     *
      * @param posColumn 1-based column number
      */
     public void setPosition(int posLine, int posColumn)
@@ -88,13 +99,15 @@ public class EigenbaseContextException extends EigenbaseException
     /**
      * Sets a textual range at which this exception was detected.
      *
-     * @param posLine        1-based start line number
-     * @param posColumn      1-based start column number
-     * @param endPosLine     1-based end line number
-     * @param endPosColumn   1-based end column number
+     * @param posLine 1-based start line number
+     * @param posColumn 1-based start column number
+     * @param endPosLine 1-based end line number
+     * @param endPosColumn 1-based end column number
      */
-    public void setPosition(int posLine, int posColumn,
-                            int endPosLine, int endPosColumn)
+    public void setPosition(int posLine,
+        int posColumn,
+        int endPosLine,
+        int endPosColumn)
     {
         this.posLine = posLine;
         this.posColumn = posColumn;
@@ -127,7 +140,8 @@ public class EigenbaseContextException extends EigenbaseException
     }
 
     /**
-     * @return 1-based ending column number, or 0 for missing position information
+     * @return 1-based ending column number, or 0 for missing position
+     * information
      */
     public int getEndPosColumn()
     {

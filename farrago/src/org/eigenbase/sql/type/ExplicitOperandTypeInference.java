@@ -22,26 +22,33 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
- * ExplicitOperandTypeInferences implements {@link SqlOperandTypeInference}
- * by explicity supplying a type for each parameter.
+ * ExplicitOperandTypeInferences implements {@link SqlOperandTypeInference} by
+ * explicity supplying a type for each parameter.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ExplicitOperandTypeInference implements SqlOperandTypeInference
+public class ExplicitOperandTypeInference
+    implements SqlOperandTypeInference
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType [] paramTypes;
+
+    //~ Constructors -----------------------------------------------------------
 
     public ExplicitOperandTypeInference(RelDataType [] paramTypes)
     {
         this.paramTypes = paramTypes;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void inferOperandTypes(
         SqlCallBinding callBinding,

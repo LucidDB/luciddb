@@ -21,46 +21,49 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
+import java.math.*;
+
+import java.nio.*;
 
 import java.util.*;
-import java.math.*;
-import java.nio.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * SargEndpoint represents an endpoint of a ({@link SargInterval}).
  *
- *<p>
- *
- * Instances of SargEndpoint are immutable from outside this package.
- * Subclass {@link SargMutableEndpoint} is provided for manipulation
- * from outside the package.
+ * <p>Instances of SargEndpoint are immutable from outside this package.
+ * Subclass {@link SargMutableEndpoint} is provided for manipulation from
+ * outside the package.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargEndpoint implements Comparable<SargEndpoint>
+public class SargEndpoint
+    implements Comparable<SargEndpoint>
 {
     // TODO jvs 16-Jan-2006:  special pattern prefix support for LIKE operator
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Factory which produced this endpoint.
      */
     protected final SargFactory factory;
-    
+
     /**
      * Datatype for endpoint value.
      */
     protected final RelDataType dataType;
-    
+
     /**
-     * Coordinate for this endpoint,
-     * constrained to be either {@link RexLiteral} or {@link RexDynamicParam},
-     * or null to represent infinity (positive or negative infinity is
-     * implied by boundType).
+     * Coordinate for this endpoint, constrained to be either {@link RexLiteral}
+     * or {@link RexDynamicParam}, or null to represent infinity (positive or
+     * negative infinity is implied by boundType).
      */
     protected RexNode coordinate;
 
@@ -74,6 +77,8 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     protected SargStrictness strictness;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * @see SargFactory.newEndpoint
      */
@@ -85,9 +90,11 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         strictness = SargStrictness.OPEN;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     void copyFrom(SargEndpoint other)
     {
-        assert(getDataType() == other.getDataType());
+        assert (getDataType() == other.getDataType());
         if (other.isFinite()) {
             setFinite(
                 other.getBoundType(),
@@ -97,9 +104,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             setInfinity(other.getInfinitude());
         }
     }
-    
+
     /**
-     * Sets this endpoint to either negative or positive infinity.  An infinite
+     * Sets this endpoint to either negative or positive infinity. An infinite
      * endpoint implies an open bound (negative infinity implies a lower bound,
      * while positive infinity implies an upper bound).
      *
@@ -107,7 +114,7 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     void setInfinity(int infinitude)
     {
-        assert((infinitude == -1) || (infinitude == 1));
+        assert ((infinitude == -1) || (infinitude == 1));
 
         if (infinitude == -1) {
             boundType = SargBoundType.LOWER;
@@ -117,14 +124,12 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         strictness = SargStrictness.OPEN;
         coordinate = null;
     }
-    
+
     /**
      * Sets a finite value for this endpoint.
      *
      * @param boundType bound type (upper/lower)
-     *
      * @param strictness boundary strictness
-     *
      * @param coordinate endpoint position
      */
     void setFinite(
@@ -133,14 +138,14 @@ public class SargEndpoint implements Comparable<SargEndpoint>
         RexNode coordinate)
     {
         // validate the input
-        assert(coordinate != null);
+        assert (coordinate != null);
         if (!(coordinate instanceof RexDynamicParam)) {
-            assert(coordinate instanceof RexLiteral);
+            assert (coordinate instanceof RexLiteral);
             RexLiteral literal = (RexLiteral) coordinate;
             if (!RexLiteral.isNullLiteral(literal)) {
-                assert(SqlTypeUtil.canAssignFrom(
-                           dataType,
-                           literal.getType()));
+                assert (SqlTypeUtil.canAssignFrom(
+                            dataType,
+                            literal.getType()));
             }
         }
 
@@ -158,9 +163,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             // conversion logic.
             return;
         }
-        
+
         RexLiteral literal = (RexLiteral) coordinate;
-        
+
         if (RexLiteral.isNullLiteral(literal)) {
             return;
         }
@@ -179,7 +184,7 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             // precision, need to handle that here.
             return;
         }
-        
+
         // rounding takes precedence over the strictness flag.
         //  Input        round    strictness    output    effective strictness
         //    >5.9        down            -1       >=6        0
@@ -212,16 +217,21 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     {
         // For character strings, have to deal with truncation (complicated by
         // padding rules).
-        
+
         String s = value.getValue();
         if (s.length() <= dataType.getPrecision()) {
             // No truncation required.
             return 0;
         }
-        String truncated = s.substring(0, dataType.getPrecision());
-        coordinate = factory.getRexBuilder().makeCharLiteral(
-            new NlsString(
-                truncated, value.getCharsetName(), value.getCollation()));
+        String truncated = s.substring(
+                0,
+                dataType.getPrecision());
+        coordinate =
+            factory.getRexBuilder().makeCharLiteral(
+                new NlsString(
+                    truncated,
+                    value.getCharsetName(),
+                    value.getCollation()));
 
         // NOTE jvs 19-Feb-2006:  this implements the PAD SPACE attribute
         // on collation.  If we ever support the NO PAD attribute,
@@ -247,16 +257,20 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     private int convertBytes(ByteBuffer value)
     {
         // For binary strings, have to deal with truncation.
-        
+
         byte [] a = value.array();
         if (a.length <= dataType.getPrecision()) {
             // No truncation required.
             return 0;
         }
         byte [] truncated = new byte[dataType.getPrecision()];
-        System.arraycopy(a, 0, truncated, 0, dataType.getPrecision());
+        System.arraycopy(
+            a,
+            0,
+            truncated,
+            0,
+            dataType.getPrecision());
         coordinate = factory.getRexBuilder().makeBinaryLiteral(truncated);
-
 
         // Truncation is always "down" in coordinate space, so rounding
         // compensation is always "up".
@@ -274,17 +288,18 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
         // For exact numerics, we have to deal with rounding/overflow fun and
         // games.
-        
+
         // REVIEW jvs 19-Feb-2006: Why do we make things complicated with
         // RoundingMode.HALF_UP?  We could just use RoundingMode.FLOOR so the
         // compensation direction would always be the same.  Maybe because this
         // code was ported from Broadbase, where the conversion library didn't
         // support multiple rounding modes.
-        
-        BigDecimal roundedValue = value.setScale(
-            dataType.getScale(),
-            RoundingMode.HALF_UP);
-        
+
+        BigDecimal roundedValue =
+            value.setScale(
+                dataType.getScale(),
+                RoundingMode.HALF_UP);
+
         if (roundedValue.precision() > dataType.getPrecision()) {
             // Overflow.  Convert to infinity.  Note that this may
             // flip the bound type, which isn't really correct,
@@ -293,9 +308,10 @@ public class SargEndpoint implements Comparable<SargEndpoint>
             return 0;
         }
 
-        coordinate = factory.getRexBuilder().makeExactLiteral(
-            roundedValue,
-            dataType);
+        coordinate =
+            factory.getRexBuilder().makeExactLiteral(
+                roundedValue,
+                dataType);
 
         // The sign of roundingCompensation should be the opposite of the
         // rounding direction, so subtract post-rounding value from
@@ -304,8 +320,8 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     }
 
     /**
-     * @return true if this endpoint represents a closed (exact) bound; false
-     * if open (strict)
+     * @return true if this endpoint represents a closed (exact) bound; false if
+     * open (strict)
      */
     public boolean isClosed()
     {
@@ -330,8 +346,8 @@ public class SargEndpoint implements Comparable<SargEndpoint>
     }
 
     /**
-     * @return -1 for negative infinity, +1 for positive infinity, 0 for
-     * a finite endpoint
+     * @return -1 for negative infinity, +1 for positive infinity, 0 for a
+     * finite endpoint
      */
     public int getInfinitude()
     {
@@ -383,9 +399,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
     /**
      * Tests whether this endpoint "touches" another one (not necessarily
-     * overlapping).  For example, the upper bound of the interval (1, 10)
-     * touches the lower bound of the interval [10, 20), but not
-     * of the interval (10, 20).
+     * overlapping). For example, the upper bound of the interval (1, 10)
+     * touches the lower bound of the interval [10, 20), but not of the interval
+     * (10, 20).
      *
      * @param other the other endpoint to test
      *
@@ -393,18 +409,16 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     public boolean isTouching(SargEndpoint other)
     {
-        assert(getDataType() == other.getDataType());
+        assert (getDataType() == other.getDataType());
 
         if (!isFinite() || !other.isFinite()) {
             return false;
         }
 
         if ((coordinate instanceof RexDynamicParam)
-            || (other.coordinate instanceof RexDynamicParam))
-        {
+            || (other.coordinate instanceof RexDynamicParam)) {
             if ((coordinate instanceof RexDynamicParam)
-                && (other.coordinate instanceof RexDynamicParam))
-            {
+                && (other.coordinate instanceof RexDynamicParam)) {
                 // make sure it's the same param
                 RexDynamicParam p1 = (RexDynamicParam) coordinate;
                 RexDynamicParam p2 = (RexDynamicParam) other.coordinate;
@@ -424,9 +438,9 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
     static int compareCoordinates(RexNode coord1, RexNode coord2)
     {
-        assert(coord1 instanceof RexLiteral);
-        assert(coord2 instanceof RexLiteral);
-        
+        assert (coord1 instanceof RexLiteral);
+        assert (coord2 instanceof RexLiteral);
+
         // null values always sort lowest
         boolean isNull1 = RexLiteral.isNullLiteral(coord1);
         boolean isNull2 = RexLiteral.isNullLiteral(coord2);
@@ -488,7 +502,8 @@ public class SargEndpoint implements Comparable<SargEndpoint>
 
         // both are finite:  compare coordinates
         int c = compareCoordinates(
-            getCoordinate(), other.getCoordinate());
+                getCoordinate(),
+                other.getCoordinate());
 
         if (c != 0) {
             return c;
@@ -512,15 +527,15 @@ public class SargEndpoint implements Comparable<SargEndpoint>
      */
     public SargStrictness getStrictnessComplement()
     {
-        return (strictness == SargStrictness.OPEN)
-            ? SargStrictness.CLOSED
+        return
+            (strictness == SargStrictness.OPEN) ? SargStrictness.CLOSED
             : SargStrictness.OPEN;
     }
 
     /**
-     * @return -1 for infinitesimally below (open upper bound,
-     * strictly less than), 0 for exact equality (closed bound), 1 for
-     * infinitesimally above (open lower bound, strictly greater than)
+     * @return -1 for infinitesimally below (open upper bound, strictly less
+     * than), 0 for exact equality (closed bound), 1 for infinitesimally above
+     * (open lower bound, strictly greater than)
      */
     public int getStrictnessSign()
     {

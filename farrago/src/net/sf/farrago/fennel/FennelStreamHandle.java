@@ -22,28 +22,28 @@
 */
 package net.sf.farrago.fennel;
 
-
 /**
- * FennelStreamHandle is an opaque handle to an underlying node in
- * a {@link FennelStreamGraph}.
+ * FennelStreamHandle is an opaque handle to an underlying node in a {@link
+ * FennelStreamGraph}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FennelStreamHandle
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final long streamHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FennelStreamHandle(long streamHandle)
     {
         this.streamHandle = streamHandle;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return underlying handle as long
@@ -53,6 +53,5 @@ public class FennelStreamHandle
         return streamHandle;
     }
 }
-
 
 // End FennelStreamHandle.java

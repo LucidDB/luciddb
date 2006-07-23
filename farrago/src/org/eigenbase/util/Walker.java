@@ -20,25 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.io.PrintWriter;
-import java.util.Stack;
-import java.util.Iterator;
+import java.io.*;
+
+import java.util.*;
 
 
 /**
- * Walks over a tree, returning nodes in prefix order.  Objects which are an
- * instance of <code>Walkable</code> supply their children using
- * <code>getChildren()</code>; other objects are assumed to have no children.
- * Do not modify the tree during the enumeration. Example use:<code>Tree t;
- * Walker w = new Walker(t); while (w.hasMoreElements()) { Tree node = (Tree)
- * w.nextNode(); System.out.println(node.toString()); }</code>
+ * Walks over a tree, returning nodes in prefix order. Objects which are an
+ * instance of <code>Walkable</code> supply their children using <code>
+ * getChildren()</code>; other objects are assumed to have no children. Do not
+ * modify the tree during the enumeration. Example use:<code>Tree t; Walker w =
+ * new Walker(t); while (w.hasMoreElements()) { Tree node = (Tree) w.nextNode();
+ * System.out.println(node.toString()); }</code>
  */
-public class Walker<T extends Walkable<T> > implements Iterator<T>
+public class Walker<T extends Walkable<T>>
+    implements Iterator<T>
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     Frame currentFrame;
     Object nextNode;
@@ -49,7 +50,7 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
     // nextElement()) because it may no longer be on the stack.
     Stack stack;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public Walker(T root)
     {
@@ -58,7 +59,7 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
         visit(null, root);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void remove()
     {
@@ -83,8 +84,9 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
     public int getAncestorOrdinal(int iDepth)
     {
         Frame f = getAncestorFrame(iDepth);
-        return (f == null) ? (-1)
-        : ((f.parent == null) ? 0 : arrayFind(f.parent.children, f.node));
+        return
+            (f == null) ? (-1)
+            : ((f.parent == null) ? 0 : arrayFind(f.parent.children, f.node));
     }
 
     /**
@@ -101,19 +103,20 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
     }
 
     /**
-     * Gets the ordinal within its parent node of the current node.  Returns 0
-     * for the root element.  Equivalent to getAncestorOrdinal(0).
+     * Gets the ordinal within its parent node of the current node. Returns 0
+     * for the root element. Equivalent to getAncestorOrdinal(0).
      */
     public int getOrdinal()
     {
         // We can't use currentFrame.parent.iChild because moveToNext() may
         // have changed it.
-        return (currentFrame.parent == null) ? 0
-        : arrayFind(currentFrame.parent.children, currentFrame.node);
+        return
+            (currentFrame.parent == null) ? 0
+            : arrayFind(currentFrame.parent.children, currentFrame.node);
     }
 
     /**
-     * Returns the current object.  Not valid until nextElement() has been
+     * Returns the current object. Not valid until nextElement() has been
      * called.
      */
     public Object currentElement()
@@ -128,7 +131,7 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
 
     /**
      * Returns level in the tree of the current element (that is, last element
-     * returned from nextElement()).  The level of the root element is 0.
+     * returned from nextElement()). The level of the root element is 0.
      */
     public int level()
     {
@@ -143,26 +146,27 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
     {
         PrintWriter pw = new PrintWriter(System.out);
         Region usa =
-            new Region("USA",
-                new Region [] {
+            new Region(
+                "USA",
+                new Region[] {
                     new Region(
                         "CA",
-                        new Region [] {
+                        new Region[] {
                             new Region(
                                 "San Francisco",
-                                new Region [] {
+                                new Region[] {
                                     new Region(
                                         "WesternAddition",
-                                        new Region [] {
+                                        new Region[] {
                                             new Region("Haight", null)
                                         }), new Region("Soma", null)
                                 }), new Region("Los Angeles", null)
                         }),
-                    new Region(
+                new Region(
                         "WA",
-                        new Region [] {
+                        new Region[] {
                             new Region("Seattle", null),
-                            new Region("Tacoma", null)
+                    new Region("Tacoma", null)
                         })
                 });
 
@@ -237,9 +241,9 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
     }
 
     /**
-     * Tell walker that we don't want to visit any (more) children of this
-     * node.  The next node visited will be (a return visit to) the node's
-     * parent.  Not valid until nextElement() has been called.
+     * Tell walker that we don't want to visit any (more) children of this node.
+     * The next node visited will be (a return visit to) the node's parent. Not
+     * valid until nextElement() has been called.
      */
     public void prune()
     {
@@ -310,7 +314,7 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
         do {
             Frame frame = (Frame) stack.peek();
             if ((frame.children != null)
-                    && (++frame.iChild < frame.children.length)) {
+                && (++frame.iChild < frame.children.length)) {
                 // Here is an unvisited child.  Visit it.
                 visit(frame, frame.children[frame.iChild]);
                 return;
@@ -328,13 +332,13 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
         stack.addElement(new Frame(parent, node));
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     class Frame
     {
         Frame parent;
         T node;
-        T[] children;
+        T [] children;
         int iChild;
 
         Frame(
@@ -348,7 +352,8 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
         }
     }
 
-    private static class Region implements Walkable<Region>
+    private static class Region
+        implements Walkable<Region>
     {
         String name;
         Region [] children;
@@ -366,8 +371,7 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
             return children;
         }
 
-        public static void walkUntil(
-            Walker<Region> walker,
+        public static void walkUntil(Walker<Region> walker,
             String name)
         {
             while (walker.hasNext()) {
@@ -379,6 +383,5 @@ public class Walker<T extends Walkable<T> > implements Iterator<T>
         }
     }
 }
-
 
 // End Walker.java

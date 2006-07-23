@@ -21,9 +21,10 @@
 */
 package org.eigenbase.rel.metadata;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 
-import java.util.*;
 
 /**
  * ChainedRelMetadataProvider implements the {@link RelMetadataProvider}
@@ -32,9 +33,15 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class ChainedRelMetadataProvider implements RelMetadataProvider
+public class ChainedRelMetadataProvider
+    implements RelMetadataProvider
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private List<RelMetadataProvider> providers;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new empty chain.
@@ -44,16 +51,16 @@ public class ChainedRelMetadataProvider implements RelMetadataProvider
         providers = new ArrayList<RelMetadataProvider>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Adds a provider, giving it higher priority than all those already in
-     * chain.  Chain order matters, since the first provider which answers a
+     * chain. Chain order matters, since the first provider which answers a
      * query is used.
      *
      * @param provider provider to add
-     *
-     * @param metadataQueryNames set of metadata query names
-     * this provider knows how to answer; if null,
-     * provider will be tried for all queries
+     * @param metadataQueryNames set of metadata query names this provider knows
+     * how to answer; if null, provider will be tried for all queries
      */
     public void addProvider(
         RelMetadataProvider provider)
@@ -68,8 +75,11 @@ public class ChainedRelMetadataProvider implements RelMetadataProvider
         Object [] args)
     {
         for (RelMetadataProvider provider : providers) {
-            Object result = provider.getRelMetadata(
-                rel, metadataQueryName, args);
+            Object result =
+                provider.getRelMetadata(
+                    rel,
+                    metadataQueryName,
+                    args);
             if (result != null) {
                 return result;
             }

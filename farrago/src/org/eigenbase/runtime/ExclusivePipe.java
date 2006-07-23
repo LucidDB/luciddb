@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
 
 
 /**
@@ -37,19 +36,26 @@ import java.nio.ByteBuffer;
  * number of bytes into the buffer, then yields. The consumer must read all of
  * the data in the buffer before yielding back to the producer.
  *
- * @testcase {@link org.eigenbase.test.ExclusivePipeTest}
- *
  * @author jhyde
  * @version $Id$
+ * @testcase
  */
-public class ExclusivePipe extends Interlock
+public class ExclusivePipe
+    extends Interlock
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final ByteBuffer buf;
+
+    //~ Constructors -----------------------------------------------------------
 
     public ExclusivePipe(ByteBuffer buf)
     {
         this.buf = buf;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the buffer.

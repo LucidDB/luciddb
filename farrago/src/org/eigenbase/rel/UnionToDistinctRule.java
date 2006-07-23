@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
@@ -31,16 +30,18 @@ import org.eigenbase.relopt.*;
  * (<code>all</code> = <code>false</code>) into an {@link AggregateRel} on top
  * of a non-distinct {@link UnionRel} (<code>all</code> = <code>true</code>).
  */
-public class UnionToDistinctRule extends RelOptRule
+public class UnionToDistinctRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public UnionToDistinctRule()
     {
         super(new RelOptRuleOperand(UnionRel.class, null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -48,11 +49,13 @@ public class UnionToDistinctRule extends RelOptRule
         if (union.all) {
             return; // nothing to do
         }
-        UnionRel unionAll = new UnionRel(
-            union.getCluster(), union.inputs, true);
+        UnionRel unionAll =
+            new UnionRel(
+                union.getCluster(),
+                union.inputs,
+                true);
         call.transformTo(RelOptUtil.createDistinctRel(unionAll));
     }
 }
-
 
 // End UnionToDistinctRule.java

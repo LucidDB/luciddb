@@ -21,24 +21,30 @@
 */
 package org.eigenbase.sql.type;
 
+import java.util.*;
+
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
- * Parameter type-checking strategy where all operand types must be
- * the same.
+ * Parameter type-checking strategy where all operand types must be the same.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SameOperandTypeChecker implements SqlOperandTypeChecker
+public class SameOperandTypeChecker
+    implements SqlOperandTypeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final int nOperands;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SameOperandTypeChecker(
         int nOperands)
@@ -46,22 +52,25 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
         this.nOperands = nOperands;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement SqlOperandTypeChecker
     public boolean checkOperandTypes(
-        SqlCallBinding callBinding, boolean throwOnFailure)
+        SqlCallBinding callBinding,
+        boolean throwOnFailure)
     {
         return checkOperandTypesImpl(
-            callBinding,
-            throwOnFailure,
-            callBinding);
+                callBinding,
+                throwOnFailure,
+                callBinding);
     }
-    
+
     private boolean checkOperandTypesImpl(
         SqlOperatorBinding operatorBinding,
         boolean throwOnFailure,
         SqlCallBinding callBinding)
     {
-        assert !(throwOnFailure && callBinding == null);
+        assert !(throwOnFailure && (callBinding == null));
         RelDataType [] types = new RelDataType[nOperands];
         for (int i = 0; i < nOperands; ++i) {
             if (operatorBinding.isOperandNull(i, false)) {
@@ -80,6 +89,7 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
                 if (!throwOnFailure) {
                     return false;
                 }
+
                 // REVIEW jvs 5-June-2005: Why don't we use
                 // newValidationSignatureError() here?  It gives more
                 // specific diagnostics.
@@ -101,11 +111,13 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
                 return false;
             }
             for (int i = 0; i < n; ++i) {
-                RelDataTypeField field1 = (RelDataTypeField)
-                    type1.getFieldList().get(i);
-                RelDataTypeField field2 = (RelDataTypeField)
-                    type2.getFieldList().get(i);
-                if (!checkTypePair(field1.getType(), field2.getType())) {
+                RelDataTypeField field1 =
+                    (RelDataTypeField) type1.getFieldList().get(i);
+                RelDataTypeField field2 =
+                    (RelDataTypeField) type2.getFieldList().get(i);
+                if (!checkTypePair(
+                        field1.getType(),
+                        field2.getType())) {
                     return false;
                 }
             }
@@ -113,6 +125,7 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
         }
         RelDataTypeFamily family1 = null;
         RelDataTypeFamily family2 = null;
+
         // REVIEW jvs 2-June-2005:  This is needed to keep
         // the Saffron type system happy.
         if (type1.getSqlTypeName() != null) {
@@ -134,16 +147,14 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
     }
 
     /**
-     * Similar functionality to
-     * {@link #checkOperandTypes(SqlCallBinding, boolean)},
-     * but not part of the interface, and cannot throw an error.
+     * Similar functionality to {@link #checkOperandTypes(SqlCallBinding,
+     * boolean)}, but not part of the interface, and cannot throw an error.
      */
     public boolean checkOperandTypes(
         SqlOperatorBinding operatorBinding)
     {
         return checkOperandTypesImpl(operatorBinding, false, null);
     }
-
 
     // implement SqlOperandTypeChecker
     public SqlOperandCountRange getOperandCountRange()
@@ -156,7 +167,10 @@ public class SameOperandTypeChecker implements SqlOperandTypeChecker
     {
         String [] array = new String[nOperands];
         Arrays.fill(array, "EQUIVALENT_TYPE");
-        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(array));
+        return SqlUtil.getAliasedSignature(
+                op,
+                opName,
+                Arrays.asList(array));
     }
 }
 

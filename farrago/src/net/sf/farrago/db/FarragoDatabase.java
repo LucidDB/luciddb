@@ -23,65 +23,68 @@
 package net.sf.farrago.db;
 
 import java.io.*;
-import java.sql.*;
-import java.util.*;
+
 import java.net.*;
-import java.util.concurrent.atomic.AtomicLong;
+
+import java.sql.*;
+
+import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.ojrex.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 
 import org.netbeans.mdr.handlers.*;
 
+
 /**
  * FarragoDatabase is a top-level singleton representing an instance of a
  * Farrago database engine.
  *
- *<p>
- *
- * NOTE jvs 14-Dec-2005:  FarragoDatabase inherits from FarragoDbSingleton
- * for backwards compatibility.  This tie may eventually be severed
- * so that multiple instances of FarragoDatabase can be created in the
- * same JVM.
+ * <p>NOTE jvs 14-Dec-2005: FarragoDatabase inherits from FarragoDbSingleton for
+ * backwards compatibility. This tie may eventually be severed so that multiple
+ * instances of FarragoDatabase can be created in the same JVM.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDatabase extends FarragoDbSingleton
+public class FarragoDatabase
+    extends FarragoDbSingleton
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
     // FarragoDbSession.prepare is resolved.
     public static final Object DDL_LOCK = new Integer(1994);
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos systemRepos;
     private FarragoRepos userRepos;
@@ -92,7 +95,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     private List<FarragoSessionModelExtension> modelExtensions;
     private FarragoDdlLockManager ddlLockManager;
     private FarragoSessionTxnMgr txnMgr;
-    
+
     /**
      * Cache of all sorts of stuff.
      */
@@ -112,15 +115,15 @@ public class FarragoDatabase extends FarragoDbSingleton
      * Provides unique identifiers for sessions and statements.
      */
     private AtomicLong uniqueId = new AtomicLong(1);
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>FarragoDatabase</code>.
      *
      * @param sessionFactory factory for various database-level objects
-     * @param init whether to initialize the system catalog (the first time
-     *     the database is started)
+     * @param init whether to initialize the system catalog (the first time the
+     * database is started)
      */
     public FarragoDatabase(
         FarragoSessionFactory sessionFactory,
@@ -130,7 +133,7 @@ public class FarragoDatabase extends FarragoDbSingleton
             instance = this;
         }
         try {
-            FarragoCompoundAllocation startOfWorldAllocation = 
+            FarragoCompoundAllocation startOfWorldAllocation =
                 new FarragoCompoundAllocation();
             this.addAllocation(startOfWorldAllocation);
 
@@ -150,15 +153,15 @@ public class FarragoDatabase extends FarragoDbSingleton
             // extension model JMI interfaces in plugin jars.
             pluginClassLoader = new FarragoPluginClassLoader();
             BaseObjectHandler.setClassLoaderProvider(
-                new ClassLoaderProvider() 
-                {
+                new ClassLoaderProvider() {
                     public ClassLoader getClassLoader()
                     {
                         return pluginClassLoader;
                     }
 
                     public Class defineClass(
-                        String className, byte [] classfile)
+                        String className,
+                        byte [] classfile)
                     {
                         return null;
                     }
@@ -177,10 +180,12 @@ public class FarragoDatabase extends FarragoDbSingleton
             // REVIEW:  system/user configuration
             FemFarragoConfig currentConfig = systemRepos.getCurrentConfig();
 
-            tracer.config("java.class.path = "
+            tracer.config(
+                "java.class.path = "
                 + System.getProperty("java.class.path"));
 
-            tracer.config("java.library.path = "
+            tracer.config(
+                "java.library.path = "
                 + System.getProperty("java.library.path"));
 
             if (systemRepos.isFennelEnabled()) {
@@ -203,8 +208,9 @@ public class FarragoDatabase extends FarragoDbSingleton
             // TODO:  parameter for cache size limit
             dataWrapperCache = new FarragoObjectCache(this, Long.MAX_VALUE);
 
-            ojRexImplementorTable = new FarragoOJRexImplementorTable(
-                SqlStdOperatorTable.instance());
+            ojRexImplementorTable =
+                new FarragoOJRexImplementorTable(
+                    SqlStdOperatorTable.instance());
 
             // Create instances of plugin model extensions for shared use
             // by all sessions.
@@ -254,7 +260,7 @@ public class FarragoDatabase extends FarragoDbSingleton
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the shared code cache for this database
@@ -281,8 +287,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     }
 
     /**
-     * @return list of installed {@link FarragoSessionModelExtension}
-     * instances
+     * @return list of installed {@link FarragoSessionModelExtension} instances
      */
     public List<FarragoSessionModelExtension> getModelExtensions()
     {
@@ -299,9 +304,10 @@ public class FarragoDatabase extends FarragoDbSingleton
 
     private File getBootUrlFile()
     {
-        return new File(
-            FarragoProperties.instance().getCatalogDir(),
-            "FarragoBootUrls.lst");
+        return
+            new File(
+                FarragoProperties.instance().getCatalogDir(),
+                "FarragoBootUrls.lst");
     }
 
     private void loadBootUrls()
@@ -321,8 +327,9 @@ public class FarragoDatabase extends FarragoDbSingleton
                 if (line == null) {
                     break;
                 }
-                URL url = new URL(
-                    FarragoProperties.instance().expandProperties(line));
+                URL url =
+                    new URL(
+                        FarragoProperties.instance().expandProperties(line));
                 pluginClassLoader.addPluginUrl(url);
             }
         } catch (Throwable ex) {
@@ -335,7 +342,9 @@ public class FarragoDatabase extends FarragoDbSingleton
         // append
         FileWriter fileWriter = null;
         try {
-            fileWriter = new FileWriter(getBootUrlFile(), true);
+            fileWriter = new FileWriter(
+                    getBootUrlFile(),
+                    true);
             PrintWriter pw = new PrintWriter(fileWriter);
             pw.println(url);
             pw.close();
@@ -351,14 +360,15 @@ public class FarragoDatabase extends FarragoDbSingleton
     {
         List resourceBundles = new ArrayList();
         sessionFactory.defineResourceBundles(resourceBundles);
-        
+
         modelExtensions = new ArrayList<FarragoSessionModelExtension>();
         Collection<FemJar> allJars = systemRepos.allOfClass(FemJar.class);
         for (FemJar jar : allJars) {
             if (jar.isModelExtension()) {
                 FarragoSessionModelExtension modelExtension =
                     sessionFactory.newModelExtension(
-                        pluginClassLoader, jar);
+                        pluginClassLoader,
+                        jar);
                 modelExtensions.add(modelExtension);
                 modelExtension.defineResourceBundles(resourceBundles);
             }
@@ -388,7 +398,8 @@ public class FarragoDatabase extends FarragoDbSingleton
         Throwable ex,
         boolean suppressExcns)
     {
-        tracer.warning("Caught " + ex.getClass().getName()
+        tracer.warning(
+            "Caught " + ex.getClass().getName()
             + " during database shutdown:" + ex.getMessage());
         if (!suppressExcns) {
             tracer.log(Level.SEVERE, "warnOnClose", ex);
@@ -419,7 +430,7 @@ public class FarragoDatabase extends FarragoDbSingleton
             return;
         }
         int n = FennelStorage.getHandleCount();
-        assert (n == 0): "FennelStorage.getHandleCount() == " + n;
+        assert (n == 0) : "FennelStorage.getHandleCount() == " + n;
     }
 
     private void loadFennel(
@@ -433,9 +444,9 @@ public class FarragoDatabase extends FarragoDbSingleton
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
         Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
-        
+
         sessionFactory.applyFennelExtensionParameters(attributeMap);
-        
+
         FemDatabaseParam param;
         Iterator iter = attributeMap.entrySet().iterator();
         while (iter.hasNext()) {
@@ -464,7 +475,8 @@ public class FarragoDatabase extends FarragoDbSingleton
             param = (FemDatabaseParam) iter.next();
 
             // REVIEW:  use Fennel tracer instead?
-            tracer.config("Fennel parameter " + param.getName() + "="
+            tracer.config(
+                "Fennel parameter " + param.getName() + "="
                 + param.getValue());
         }
 
@@ -473,7 +485,11 @@ public class FarragoDatabase extends FarragoDbSingleton
         NativeTrace.createInstance("net.sf.fennel.");
 
         fennelDbHandle =
-            new FennelDbHandle(systemRepos, systemRepos, this, cmdExecutor, cmd);
+            new FennelDbHandle(systemRepos,
+                systemRepos,
+                this,
+                cmdExecutor,
+                cmd);
 
         tracer.config("Fennel successfully loaded");
     }
@@ -517,123 +533,142 @@ public class FarragoDatabase extends FarragoDbSingleton
     {
         return ddlLockManager;
     }
-    
+
     /**
      * Gets a unique identifier: never 0.
+     *
      * @return next unique identifier
      */
     public long getUniqueId()
     {
         return uniqueId.incrementAndGet();
     }
-    
-    // REVIEW mberkowitz 28-Mar-06: Is it better for the FarragoDatabase 
+
+    // REVIEW mberkowitz 28-Mar-06: Is it better for the FarragoDatabase
     // to save a map (id -> FarragoSessionInfo)
     // and a map (id -> FarragoSessionExecutingStmtInfo)?
 
-    /** look up session info by session id.
+    /**
+     * look up session info by session id.
+     *
      * @param id
+     *
      * @return FarragoSessionInfo
      */
     public FarragoSessionInfo findSessionInfo(long id)
     {
         for (FarragoSession s : getSessions(this)) {
             FarragoSessionInfo info = s.getSessionInfo();
-            if (info.getId() == id)
+            if (info.getId() == id) {
                 return info;
+            }
         }
         return null;
     }
 
-    /** look up executing statement info by statement id.
+    /**
+     * look up executing statement info by statement id.
+     *
      * @param id
-     * @return FarragoSessionExecutingStmtInfo 
+     *
+     * @return FarragoSessionExecutingStmtInfo
      */
     public FarragoSessionExecutingStmtInfo findExecutingStmtInfo(long id)
     {
         for (FarragoSession s : getSessions(this)) {
             FarragoSessionExecutingStmtInfo info =
                 s.getSessionInfo().getExecutingStmtInfo(id);
-            if (info != null)
+            if (info != null) {
                 return info;
+            }
         }
         return null;
     }
 
-    /** 
+    /**
      * Kill a farrago session.
+     *
      * @param id session identifier
      */
-    public void killSession(long id) throws Throwable
+    public void killSession(long id)
+        throws Throwable
     {
-        tracer.info("killSession "+ id);
+        tracer.info("killSession " + id);
         FarragoSessionInfo info = findSessionInfo(id);
         if (info == null) {
             throw FarragoResource.instance().SessionNotFound.ex(id);
         }
         FarragoDbSession target = (FarragoDbSession) info.getSession();
         if (target.isClosed()) {
-            tracer.info("killSession "+ id +": already closed");
+            tracer.info("killSession " + id + ": already closed");
             return;
         }
         target.kill();
     }
 
-    private void kill(FarragoSessionExecutingStmtInfo info) throws Throwable
+    private void kill(FarragoSessionExecutingStmtInfo info)
+        throws Throwable
     {
         FarragoSessionStmtContext stmt = info.getStmtContext();
         if (stmt == null) {
             Long id = info.getId();
-            tracer.info("killExecutingStmt "+ id +": statement not found");
-            throw new Throwable("executing statement not found: "+id); // i18n
+            tracer.info("killExecutingStmt " + id + ": statement not found");
+            throw new Throwable("executing statement not found: " + id); // i18n
         }
         if (tracer.isLoggable(Level.INFO)) {
             tracer.info(
-                "killStatement "+ info.getId() + 
-                "(session "+ stmt.getSession().getSessionInfo().getId() + "), " +
-                stmt.getSql());
+                "killStatement " + info.getId()
+                + "(session " + stmt.getSession().getSessionInfo().getId()
+                + "), "
+                + stmt.getSql());
         }
         stmt.cancel();
         stmt.unprepare();
     }
 
-
     /**
      * Kill an executing statement: cancel it and deallocate it.
-     * @param  id statement id
+     *
+     * @param id statement id
      */
-    public void killExecutingStmt(long id) throws Throwable
+    public void killExecutingStmt(long id)
+        throws Throwable
     {
         tracer.info("killExecutingStmt " + id);
         FarragoSessionExecutingStmtInfo info = findExecutingStmtInfo(id);
         if (info == null) {
-            tracer.info("killExecutingStmt "+ id +": statement not found");
-            throw new Throwable("executing statement not found: "+id); // i18n
+            tracer.info("killExecutingStmt " + id + ": statement not found");
+            throw new Throwable("executing statement not found: " + id); // i18n
         }
         kill(info);
     }
 
     /**
      * Kills all statements that are executing SQL that matches a given pattern,
-     * but does not match a second pattern.
-     * Not an error if none match.
+     * but does not match a second pattern. Not an error if none match.
+     *
      * @param match pattern to match. Null string matches nothing, to be safe.
      * @param nomatch pattern not to match
+     *
      * @return count of killed statements.
      */
-    public int killExecutingStmtMatching(String match, String nomatch) throws Throwable
+    public int killExecutingStmtMatching(String match, String nomatch)
+        throws Throwable
     {
         int ct = 0;
-        tracer.info("killExecutingStmtMatching " + match + " but not " + nomatch);
+        tracer.info(
+            "killExecutingStmtMatching " + match + " but not " + nomatch);
 
         // scan all statements
         if (match.length() > 0) {
             for (FarragoSession sess : getSessions(this)) {
                 FarragoSessionInfo sessInfo = sess.getSessionInfo();
                 for (Long id : sessInfo.getExecutingStmtIds()) {
-                    FarragoSessionExecutingStmtInfo info = sessInfo.getExecutingStmtInfo(id);
-                    if (info.getSql().contains(nomatch))
+                    FarragoSessionExecutingStmtInfo info =
+                        sessInfo.getExecutingStmtInfo(id);
+                    if (info.getSql().contains(nomatch)) {
                         continue;
+                    }
                     if (info.getSql().contains(match)) {
                         kill(info);
                         ct++;
@@ -646,16 +681,13 @@ public class FarragoDatabase extends FarragoDbSingleton
     }
 
     /**
-     * Prepares an SQL expression; uses a cached implementation if
-     * available, otherwise caches the one generated here.
+     * Prepares an SQL expression; uses a cached implementation if available,
+     * otherwise caches the one generated here.
      *
      * @param stmtValidator generic stmt validator
-     *
      * @param sqlNode the parsed form of the statement
-     *
-     * @param owner the FarragoAllocationOwner which will be responsible for
-     * the returned stmt
-     *
+     * @param owner the FarragoAllocationOwner which will be responsible for the
+     * returned stmt
      * @param analyzedSql receives information about a prepared expression
      *
      * @return statement implementation, or null when analyzedSql is non-null
@@ -674,14 +706,16 @@ public class FarragoDatabase extends FarragoDbSingleton
 
     /**
      * Implements a logical or physical query plan but does not execute it.
+     *
      * @param prep the FarragoSessionPreparingStmt that is managing the query.
      * @param rootRel root of query plan (relational expression)
      * @param sqlKind SqlKind for the relational expression: only
-     *   SqlKind.Explain and SqlKind.Dml are special cases.
+     * SqlKind.Explain and SqlKind.Dml are special cases.
      * @param logical true for a logical query plan (still needs to be
-     *   optimized), false for a physical plan.
-     * @param owner the FarragoAllocationOwner which will be responsible for
-     * the returned stmt
+     * optimized), false for a physical plan.
+     * @param owner the FarragoAllocationOwner which will be responsible for the
+     * returned stmt
+     *
      * @return statement implementation
      */
     public FarragoSessionExecutableStmt implementStmt(
@@ -709,10 +743,10 @@ public class FarragoDatabase extends FarragoDbSingleton
     {
         final EigenbaseTimingTracer timingTracer =
             stmt.getStmtValidator().getTimingTracer();
-        
+
         // REVIEW jvs 27-Aug-2005:  what are the security implications of
         // EXPLAIN PLAN?
-        
+
         // It would be silly to cache EXPLAIN PLAN results, so deal with them
         // directly.
         if (sqlNode.isA(SqlKind.Explain)) {
@@ -728,18 +762,22 @@ public class FarragoDatabase extends FarragoDbSingleton
         final SqlNode validatedSqlNode;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
             Map nameToTypeMap = new HashMap();
-            for (RelDataTypeField field :
-                analyzedSql.paramRowType.getFieldList()) {
-                nameToTypeMap.put(field.getName(), field.getType());
+            for (RelDataTypeField field
+                : analyzedSql.paramRowType.getFieldList()) {
+                nameToTypeMap.put(
+                    field.getName(),
+                    field.getType());
             }
-            validatedSqlNode = sqlValidator.validateParameterizedExpression(
-                sqlNode, nameToTypeMap);
+            validatedSqlNode =
+                sqlValidator.validateParameterizedExpression(
+                    sqlNode,
+                    nameToTypeMap);
         } else {
             validatedSqlNode = sqlValidator.validate(sqlNode);
         }
 
         stmt.postValidate(validatedSqlNode);
-        
+
         timingTracer.traceTime("end validation");
 
         SqlDialect sqlDialect =
@@ -764,12 +802,12 @@ public class FarragoDatabase extends FarragoDbSingleton
             // storage defined yet.)
             analyzedSql.canonicalString = sql;
             stmt.analyzeSql(validatedSqlNode, analyzedSql);
-            
+
             timingTracer.traceTime("end analyzeSql");
 
             return null;
         }
-         
+
         FarragoObjectCache.Entry cacheEntry;
         FarragoObjectCache.CachedObjectFactory stmtFactory =
             new FarragoObjectCache.CachedObjectFactory() {
@@ -796,25 +834,29 @@ public class FarragoDatabase extends FarragoDbSingleton
             executableStmt =
                 (FarragoSessionExecutableStmt) cacheEntry.getValue();
 
-            // Sometimes the implementation of a statement cannot be shared, and must
-            // not be cached. Test this when the statement is prepared, and so
-            // already in the cache.
-            if (! stmt.mayCacheImplementation()) {
-                codeCache.detach(cacheEntry); 
+            // Sometimes the implementation of a statement cannot be shared, and
+            // must not be cached. Test this when the statement is prepared, and
+            // so already in the cache.
+            if (!stmt.mayCacheImplementation()) {
+                codeCache.detach(cacheEntry);
+
                 // does not close the FarragoSessionExecutableStmt
                 cacheEntry = null;
-
-            } else if (isStale(stmt.getRepos(), executableStmt)) {
+            } else if (isStale(
+                    stmt.getRepos(),
+                    executableStmt)) {
                 cacheEntry.closeAllocation();
-                codeCache.discard(sql); // closes the FarragoSessionExecutableStmt
+                codeCache.discard(sql); // closes the
+                                        // FarragoSessionExecutableStmt
                 cacheEntry = null;
                 executableStmt = null;
             }
         } while (executableStmt == null);
 
-        // REVIEW mb: what if stmt is not cached? 
-        if (cacheEntry != null)
+        // REVIEW mb: what if stmt is not cached?
+        if (cacheEntry != null) {
             owner.addAllocation(cacheEntry);
+        }
         return executableStmt;
     }
 
@@ -850,8 +892,8 @@ public class FarragoDatabase extends FarragoDbSingleton
                 CalcVirtualMachine vm =
                     userRepos.getCurrentConfig().getCalcVirtualMachine();
                 if (vm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-                    throw FarragoResource.instance().
-                        ValidatorCalcUnavailable.ex();
+                    throw FarragoResource.instance().ValidatorCalcUnavailable
+                    .ex();
                 }
             }
 
@@ -911,17 +953,20 @@ public class FarragoDatabase extends FarragoDbSingleton
     public static void main(String [] args)
     {
         FarragoDatabase database =
-            new FarragoDatabase(new FarragoDbSessionFactory(), true);
+            new FarragoDatabase(
+                new FarragoDbSessionFactory(),
+                true);
         database.close(false);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * 1 Hz task for background activities.  Currently all it does is re-read
-     * the trace configuration file whenever it changes.
+     * 1 Hz task for background activities. Currently all it does is re-read the
+     * trace configuration file whenever it changes.
      */
-    private class WatchdogTask extends TimerTask
+    private class WatchdogTask
+        extends TimerTask
     {
         private long prevTraceConfigTimestamp;
 
@@ -945,7 +990,8 @@ public class FarragoDatabase extends FarragoDbSingleton
                 } catch (IOException ex) {
                     // REVIEW:  do more?  There's a good chance this will end
                     // up in /dev/null.
-                    tracer.severe("Caught IOException while updating "
+                    tracer.severe(
+                        "Caught IOException while updating "
                         + "trace configuration:  " + ex.getMessage());
                 }
                 dumpTraceConfig();
@@ -953,7 +999,8 @@ public class FarragoDatabase extends FarragoDbSingleton
         }
     }
 
-    private class CheckpointTask extends TimerTask
+    private class CheckpointTask
+        extends TimerTask
     {
         // implement Runnable
         public void run()
@@ -962,7 +1009,8 @@ public class FarragoDatabase extends FarragoDbSingleton
         }
     }
 
-    private class ReposSwitcher implements FarragoAllocation
+    private class ReposSwitcher
+        implements FarragoAllocation
     {
         public void closeAllocation()
         {
@@ -970,6 +1018,5 @@ public class FarragoDatabase extends FarragoDbSingleton
         }
     }
 }
-
 
 // End FarragoDatabase.java

@@ -22,28 +22,36 @@
 package net.sf.farrago.server;
 
 import java.io.*;
+
 import java.rmi.*;
 import java.rmi.registry.*;
+
 import java.util.*;
 
 import net.sf.farrago.db.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.release.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.release.*;
 import net.sf.farrago.util.*;
 
+
 /**
- * FarragoAbstractServer is a common base for implementations of
- * Farrago network servers.
+ * FarragoAbstractServer is a common base for implementations of Farrago network
+ * servers.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoAbstractServer
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     protected static Registry rmiRegistry;
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final PrintWriter pw;
 
@@ -51,12 +59,12 @@ public abstract class FarragoAbstractServer
 
     protected int singleListenerPort;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoServer instance, with console output to System.out.
-     * This constructor can be used to embed a FarragoServer inside
-     * of another container such as a J2EE app server.
+     * This constructor can be used to embed a FarragoServer inside of another
+     * container such as a J2EE app server.
      */
     protected FarragoAbstractServer()
     {
@@ -65,8 +73,8 @@ public abstract class FarragoAbstractServer
 
     /**
      * Creates a new FarragoServer instance, with redirected console output.
-     * This constructor can be used to embed a FarragoAbstractServer inside
-     * of another container such as a J2EE app server.
+     * This constructor can be used to embed a FarragoAbstractServer inside of
+     * another container such as a J2EE app server.
      *
      * @param pw receives console output
      */
@@ -74,6 +82,8 @@ public abstract class FarragoAbstractServer
     {
         this.pw = pw;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected void configureNetwork(
         FarragoReleaseProperties releaseProps,
@@ -91,8 +101,7 @@ public abstract class FarragoAbstractServer
     /**
      * Starts the network.
      *
-     * @param jdbcDriver the JDBC driver which will be served
-     * to remote clients
+     * @param jdbcDriver the JDBC driver which will be served to remote clients
      *
      * @return network port on which server is configured to listen
      */
@@ -100,8 +109,8 @@ public abstract class FarragoAbstractServer
         throws Exception;
 
     /**
-     * Stops the network.  Default implementation is to call unbindRegistry,
-     * but subclasses can override.
+     * Stops the network. Default implementation is to call unbindRegistry, but
+     * subclasses can override.
      */
     protected void stopNetwork()
     {
@@ -112,7 +121,7 @@ public abstract class FarragoAbstractServer
     }
 
     /**
-     * Locates the RMI registry.  RMI-based servers should use this during
+     * Locates the RMI registry. RMI-based servers should use this during
      * startNetwork after creating a registry.
      */
     protected void locateRmiRegistry()
@@ -126,12 +135,11 @@ public abstract class FarragoAbstractServer
                 // TODO:  handle this better
             }
         }
-
     }
 
     /**
-     * Unbinds all items remaining in the RMI registry.  RMI-based
-     * servers should use this in stopNetwork.
+     * Unbinds all items remaining in the RMI registry. RMI-based servers should
+     * use this in stopNetwork.
      */
     protected void unbindRegistry()
     {
@@ -153,8 +161,7 @@ public abstract class FarragoAbstractServer
     /**
      * Starts the server.
      *
-     * @param jdbcDriver the JDBC driver which will be served
-     * to remote clients
+     * @param jdbcDriver the JDBC driver which will be served to remote clients
      */
     public void start(FarragoJdbcServerDriver jdbcDriver)
         throws Exception
@@ -221,12 +228,12 @@ public abstract class FarragoAbstractServer
     }
 
     /**
-     * Returns the number of ground references for this server.  Ground
-     * references are references pinned at startup time.  For the base
-     * implementation of FarragoServer this is always 1.  Farrago extensions,
-     * especially those that initialize resources via
-     * {@link FarragoSessionFactory#specializedInitialization(
-     *     FarragoAllocationOwner)}, may need to alter this value.
+     * Returns the number of ground references for this server. Ground
+     * references are references pinned at startup time. For the base
+     * implementation of FarragoServer this is always 1. Farrago extensions,
+     * especially those that initialize resources via {@link
+     * FarragoSessionFactory#specializedInitialization(
+     * FarragoAllocationOwner)}, may need to alter this value.
      *
      * @return the number of ground references for this server
      */
@@ -256,8 +263,8 @@ public abstract class FarragoAbstractServer
     }
 
     /**
-     * Implements console interaction from stdin after the server
-     * has successfully started.
+     * Implements console interaction from stdin after the server has
+     * successfully started.
      */
     public void runConsole()
     {

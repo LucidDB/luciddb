@@ -27,32 +27,43 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
+
 /**
- * HepRelVertex wraps a real {@link RelNode} as a vertex in a
- * DAG representing the entire query expression.
+ * HepRelVertex wraps a real {@link RelNode} as a vertex in a DAG representing
+ * the entire query expression.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class HepRelVertex extends AbstractRelNode
+public class HepRelVertex
+    extends AbstractRelNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Wrapped rel currently chosen for implementation of expression.
      */
     private RelNode currentRel;
 
+    //~ Constructors -----------------------------------------------------------
+
     HepRelVertex(RelNode rel)
     {
-        super(rel.getCluster(), rel.getTraits());
+        super(
+            rel.getCluster(),
+            rel.getTraits());
         currentRel = rel;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public Object clone()
     {
         return this;
     }
-    
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
@@ -78,13 +89,13 @@ public class HepRelVertex extends AbstractRelNode
     {
         return currentRel.isDistinct();
     }
-    
+
     // implement RelNode
     protected String computeDigest()
     {
         return "HepRelVertex(" + currentRel + ")";
     }
-    
+
     /**
      * Replaces the implementation for this expression with a new one.
      *

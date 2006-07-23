@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,20 +33,23 @@ import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * MedJdbcForeignDataWrapper implements the FarragoMedDataWrapper
- * interface by accessing foreign tables provided by any JDBC driver.
+ * MedJdbcForeignDataWrapper implements the FarragoMedDataWrapper interface by
+ * accessing foreign tables provided by any JDBC driver.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
+public class MedJdbcForeignDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_DRIVER_CLASS_NAME = "DRIVER_CLASS";
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new data wrapper instance.
@@ -54,7 +58,7 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -78,10 +82,13 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
         Properties serverProps)
     {
         // TODO:  use locale
-        
+
         DriverPropertyInfo [] driverArray = null;
-        boolean extOpts = getBooleanProperty(
-            serverProps, MedJdbcDataServer.PROP_EXT_OPTIONS, false);
+        boolean extOpts =
+            getBooleanProperty(
+                serverProps,
+                MedJdbcDataServer.PROP_EXT_OPTIONS,
+                false);
         String url = serverProps.getProperty(MedJdbcDataServer.PROP_URL);
         if ((url != null) && extOpts) {
             // User has proposed a URL, and they want extended properties.
@@ -92,21 +99,23 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
             driverProps.putAll(serverProps);
             MedJdbcDataServer.removeNonDriverProps(driverProps);
             try {
-                Driver driver = loadDriverClass(
-                    wrapperProps.getProperty(PROP_DRIVER_CLASS_NAME));
+                Driver driver =
+                    loadDriverClass(
+                        wrapperProps.getProperty(PROP_DRIVER_CLASS_NAME));
                 driverArray = driver.getPropertyInfo(url, driverProps);
             } catch (Throwable ex) {
                 // Squelch it and move on.
             }
         }
-        
+
         // serverProps takes precedence over wrapperProps
         Properties chainedProps = new Properties(wrapperProps);
         chainedProps.putAll(serverProps);
-        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
-            FarragoResource.instance(),
-            "MedJdbc",
-            chainedProps);
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedJdbc",
+                chainedProps);
         infoMap.addPropInfo(
             MedJdbcDataServer.PROP_DRIVER_CLASS,
             true);
@@ -117,6 +126,7 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
             MedJdbcDataServer.PROP_USER_NAME);
         infoMap.addPropInfo(
             MedJdbcDataServer.PROP_PASSWORD);
+
         // TODO jvs 19-June-2006: Other properties like catalog name; how
         // much should we expose?  Make it leveled via an "ADVANCED" property,
         // use DatabaseMetaData to make it smart with choices, and let wrapper
@@ -133,7 +143,10 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
             DriverPropertyInfo [] result =
                 new DriverPropertyInfo[mapArray.length + driverArray.length];
             System.arraycopy(mapArray, 0, result, 0, mapArray.length);
-            System.arraycopy(driverArray, 0, result, mapArray.length,
+            System.arraycopy(driverArray,
+                0,
+                result,
+                mapArray.length,
                 driverArray.length);
             return result;
         }
@@ -157,8 +170,7 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
     private Driver loadDriverClass(String driverClassName)
     {
         try {
-            return (Driver)
-                Driver.class.forName(driverClassName).newInstance();
+            return (Driver) Driver.class.forName(driverClassName).newInstance();
         } catch (Exception ex) {
             throw FarragoResource.instance().JdbcDriverLoadFailed.ex(
                 driverClassName,
@@ -189,6 +201,5 @@ public class MedJdbcForeignDataWrapper extends MedAbstractDataWrapper
         }
     }
 }
-
 
 // End MedJdbcForeignDataWrapper.java

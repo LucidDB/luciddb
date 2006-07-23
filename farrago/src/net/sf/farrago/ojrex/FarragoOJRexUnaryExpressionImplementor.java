@@ -25,17 +25,19 @@ package net.sf.farrago.ojrex;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
-import openjava.ptree.*;
-import openjava.mop.OJClass;
+import openjava.mop.*;
 
-import org.eigenbase.rex.*;
+import openjava.ptree.*;
+
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * FarragoOJRexUnaryExpressionImplementor implements Farrago specifics of
- * {@link org.eigenbase.oj.rex.OJRexImplementor} for row expressions which can be translated to
- * instances of OpenJava {@link UnaryExpression}.
+ * FarragoOJRexUnaryExpressionImplementor implements Farrago specifics of {@link
+ * org.eigenbase.oj.rex.OJRexImplementor} for row expressions which can be
+ * translated to instances of OpenJava {@link UnaryExpression}.
  *
  * @author Angel Chang
  * @version $Id$
@@ -43,11 +45,12 @@ import org.eigenbase.sql.type.SqlTypeName;
 public class FarragoOJRexUnaryExpressionImplementor
     extends FarragoOJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int ojUnaryExpressionOrdinal;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexUnaryExpressionImplementor(
         int ojUnaryExpressionOrdinal)
@@ -55,7 +58,7 @@ public class FarragoOJRexUnaryExpressionImplementor
         this.ojUnaryExpressionOrdinal = ojUnaryExpressionOrdinal;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -70,7 +73,8 @@ public class FarragoOJRexUnaryExpressionImplementor
 
         for (int i = 0; i < 1; ++i) {
             valueOperands[i] =
-                translator.convertPrimitiveAccess(operands[i], call.operands[i]);
+                translator.convertPrimitiveAccess(operands[i],
+                    call.operands[i]);
         }
 
         if (!call.getType().isNullable()) {
@@ -80,24 +84,31 @@ public class FarragoOJRexUnaryExpressionImplementor
         Variable varResult = translator.createScratchVariable(call.getType());
 
         Expression nullTest = null;
-        nullTest = translator.createNullTest(call.operands[0], operands[0],
-                                             nullTest);
+        nullTest =
+            translator.createNullTest(call.operands[0], operands[0],
+                nullTest);
         assert (nullTest != null);
 
         // TODO:  generalize to stuff other than NullablePrimitive
         Statement assignmentStmt =
-            new ExpressionStatement(new AssignmentExpression(
+            new ExpressionStatement(
+                new AssignmentExpression(
                     new FieldAccess(varResult,
                         NullablePrimitive.VALUE_FIELD_NAME),
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
 
         Statement ifStatement =
-            new IfStatement(nullTest,
-                new StatementList(translator.createSetNullStatement(
-                        varResult, true)),
-                new StatementList(translator.createSetNullStatement(
-                        varResult, false),
+            new IfStatement(
+                nullTest,
+                new StatementList(
+                    translator.createSetNullStatement(
+                        varResult,
+                        true)),
+                new StatementList(
+                    translator.createSetNullStatement(
+                        varResult,
+                        false),
                     assignmentStmt));
 
         translator.addStatement(ifStatement);
@@ -113,19 +124,20 @@ public class FarragoOJRexUnaryExpressionImplementor
         RelDataType returnType = call.getType();
 
         FarragoTypeFactory factory = translator.getFarragoTypeFactory();
-        Expression expr = new UnaryExpression(operands[0],
-                                   ojUnaryExpressionOrdinal);
-        if ((returnType.getSqlTypeName() != SqlTypeName.Boolean) &&
-            (factory.getClassForPrimitive(returnType) != null)) {
+        Expression expr =
+            new UnaryExpression(operands[0],
+                ojUnaryExpressionOrdinal);
+        if ((returnType.getSqlTypeName() != SqlTypeName.Boolean)
+            && (factory.getClassForPrimitive(returnType) != null)) {
             // Cast to correct primitive return type so compiler is happy
-            return new CastExpression(
-                OJClass.forClass(factory.getClassForPrimitive(returnType)),
-                expr);
+            return
+                new CastExpression(
+                    OJClass.forClass(factory.getClassForPrimitive(returnType)),
+                    expr);
         } else {
             return expr;
         }
     }
 }
-
 
 // End FarragoOJRexUnaryExpressionImplementor.java

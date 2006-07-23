@@ -20,27 +20,42 @@
 */
 package com.lucidera.farrago;
 
-import java.util.*;
-
 import com.lucidera.query.*;
+
+import java.util.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * LucidDbOperatorTable extends {@link SqlStdOperatorTable} with
- * the builtin operators specific to the LucidDb personality
+ * LucidDbOperatorTable extends {@link SqlStdOperatorTable} with the builtin
+ * operators specific to the LucidDb personality
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LucidDbOperatorTable extends SqlStdOperatorTable
+public class LucidDbOperatorTable
+    extends SqlStdOperatorTable
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static LucidDbOperatorTable instance;
-    
+
     private static LucidDbSpecialOperators specialOperators;
-    
+
+    public static final SqlFunction lcsRidFunc =
+        new SqlFunction("LCS_RID",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiAlwaysNullableBigint,
+            null,
+            SqlTypeStrategies.otcAny,
+            SqlFunctionCategory.Numeric);
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Retrieves the singleton, creating it if necessary.
      *
@@ -53,10 +68,10 @@ public class LucidDbOperatorTable extends SqlStdOperatorTable
             instance.init();
             specialOperators = new LucidDbSpecialOperators();
         }
-   
+
         return instance;
     }
-    
+
     /**
      * Returns the {@link org.eigenbase.util.Glossary#SingletonPattern
      * singleton} instance, creating it if necessary.
@@ -68,51 +83,45 @@ public class LucidDbOperatorTable extends SqlStdOperatorTable
         return ldbInstance();
     }
 
-    public static final SqlFunction lcsRidFunc =
-        new SqlFunction("LCS_RID", SqlKind.Function,
-            SqlTypeStrategies.rtiAlwaysNullableBigint, null,
-            SqlTypeStrategies.otcAny,
-            SqlFunctionCategory.Numeric);
-    
     public Set<SqlOperator> getSpecialOperators()
     {
         return specialOperators.getSpecialOperators();
     }
-    
+
     public boolean isSpecialOperator(SqlOperator op)
     {
         return specialOperators.isSpecialOperator(op);
     }
-    
+
     public boolean isSpecialColumnId(int colId)
     {
         return specialOperators.isSpecialColumnId(colId);
     }
-    
+
     public String getSpecialOpName(SqlOperator op)
     {
         return specialOperators.getSpecialOpName(op);
     }
-    
+
     public String getSpecialOpName(int colId)
     {
         return specialOperators.getSpecialOpName(colId);
     }
-    
+
     public SqlTypeName getSpecialOpRetTypeName(int colId)
     {
         return specialOperators.getSpecialOpRetTypeName(colId);
     }
-    
+
     public boolean isNullable(int colId)
     {
         return specialOperators.isNullable(colId);
     }
-    
+
     public Integer getSpecialOpColumnId(SqlOperator op)
     {
-       return specialOperators.getSpecialOpColumnId(op);
-    }   
+        return specialOperators.getSpecialOpColumnId(op);
+    }
 }
 
 // End LucidDbOperatorTable.java

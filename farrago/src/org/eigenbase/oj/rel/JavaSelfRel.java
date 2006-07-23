@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
-import openjava.ptree.Expression;
+import openjava.ptree.*;
 
 
 /**
@@ -31,38 +30,37 @@ import openjava.ptree.Expression;
  * expression which represents the current row of the expression.
  *
  * @author jhyde
- * @since May 24, 2004
  * @version $Id$
- **/
-public interface JavaSelfRel extends JavaRel
+ * @since May 24, 2004
+ */
+public interface JavaSelfRel
+    extends JavaRel
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns a Java expression which yields the current row of this
-     * relational expression. This method is called by the {@link
-     * JavaRelImplementor} the first time a piece of Java code wants to refer to
-     * this relation. The implementor then uses this expression to initialize
-     * a variable.
+     * Returns a Java expression which yields the current row of this relational
+     * expression. This method is called by the {@link JavaRelImplementor} the
+     * first time a piece of Java code wants to refer to this relation. The
+     * implementor then uses this expression to initialize a variable.
      *
-     * <p>
-     * If no code needs to refer to this relation, then the expression is
+     * <p>If no code needs to refer to this relation, then the expression is
      * never generated. This prevents generating useless code like
+     *
      * <blockquote>
      * <pre>Dummy_12f614.Ojp_1 oj_var8 = new Dummy_12f614.Ojp_1();</pre>
      * </blockquote>
-     * .
-     * </p>
      *
-     * <p>
-     * If a relational expression has one input relational expression
-     * which has the same row type, you may be able to share its variable.
-     * Call Implementor#bind(Rel,Rel) to do this.
+     * .</p>
+     *
+     * <p>If a relational expression has one input relational expression which
+     * has the same row type, you may be able to share its variable. Call
+     * Implementor#bind(Rel,Rel) to do this.
      *
      * @see JavaRelImplementor#bind(org.eigenbase.rel.RelNode,org.eigenbase.rel.RelNode)
      */
     Expression implementSelf(JavaRelImplementor implementor);
 }
-
 
 // End JavaSelfRel.java

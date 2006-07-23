@@ -22,16 +22,16 @@
 */
 package net.sf.farrago.query;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
-
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -41,11 +41,15 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-class FennelCartesianProductRel extends FennelDoubleRel
+class FennelCartesianProductRel
+    extends FennelDoubleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final JoinRelType joinType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelCartesianProductRel object.
@@ -54,7 +58,7 @@ class FennelCartesianProductRel extends FennelDoubleRel
      * @param left left input
      * @param right right input
      * @param fieldNameList If not null, the row type will have these field
-     *                      names
+     * names
      */
     public FennelCartesianProductRel(
         RelOptCluster cluster,
@@ -66,12 +70,16 @@ class FennelCartesianProductRel extends FennelDoubleRel
         super(cluster, left, right);
         assert joinType != null;
         this.joinType = joinType;
-        this.rowType = JoinRel.deriveJoinRowType(
-            left.getRowType(), right.getRowType(), joinType,
-            cluster.getTypeFactory(), fieldNameList);
+        this.rowType =
+            JoinRel.deriveJoinRowType(
+                left.getRowType(),
+                right.getRowType(),
+                joinType,
+                cluster.getTypeFactory(),
+                fieldNameList);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
@@ -92,14 +100,17 @@ class FennelCartesianProductRel extends FennelDoubleRel
     {
         // TODO:  account for buffering I/O and CPU
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return planner.makeCost(rowCount, 0,
-            rowCount * getRowType().getFieldList().size());
+        return
+            planner.makeCost(rowCount,
+                0,
+                rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
     public double getRows()
     {
-        return RelMetadataQuery.getRowCount(left)
+        return
+            RelMetadataQuery.getRowCount(left)
             * RelMetadataQuery.getRowCount(right);
     }
 
@@ -108,8 +119,8 @@ class FennelCartesianProductRel extends FennelDoubleRel
     {
         pw.explain(
             this,
-            new String [] { "left", "right", "leftouterjoin" },
-            new Object [] { new Boolean(isLeftOuter()) });
+            new String[] { "left", "right", "leftouterjoin" },
+            new Object[] { new Boolean(isLeftOuter()) });
     }
 
     private boolean isLeftOuter()
@@ -146,6 +157,5 @@ class FennelCartesianProductRel extends FennelDoubleRel
 
     // TODO:  implement getCollations()
 }
-
 
 // End FennelCartesianProductRel.java

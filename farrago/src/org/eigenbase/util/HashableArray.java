@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
 /**
@@ -30,48 +29,58 @@ package org.eigenbase.util;
  */
 public class HashableArray
 {
-    Object[] a;
 
-    public HashableArray(Object[] a)
+    //~ Instance fields --------------------------------------------------------
+
+    Object [] a;
+
+    //~ Constructors -----------------------------------------------------------
+
+    public HashableArray(Object [] a)
     {
-	this.a = a;
+        this.a = a;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // override Object
     public int hashCode()
     {
-	return arrayHashCode(a);
+        return arrayHashCode(a);
     }
-    
+
     // override Object
     public boolean equals(Object o)
     {
-	return o instanceof HashableArray &&
-	    arraysAreEqual(this.a, ((HashableArray) o).a);
+        return
+            (o instanceof HashableArray)
+            && arraysAreEqual(this.a, ((HashableArray) o).a);
     }
 
-    public static int arrayHashCode(Object[] a)
+    public static int arrayHashCode(Object [] a)
     {
-	// hash algorithm borrowed from java.lang.String
-	int h = 0;
-	for (int i = 0; i < a.length; i++) {
-	    h = 31 * h + a[i].hashCode();
-	}
-	return h;
+        // hash algorithm borrowed from java.lang.String
+        int h = 0;
+        for (int i = 0; i < a.length; i++) {
+            h = (31 * h) + a[i].hashCode();
+        }
+        return h;
     }
 
-    /** Returns whether two arrays are equal (deep compare). */
-    public static boolean arraysAreEqual(Object[] a1, Object[] a2)
+    /**
+     * Returns whether two arrays are equal (deep compare).
+     */
+    public static boolean arraysAreEqual(Object [] a1, Object [] a2)
     {
-	if (a1.length != a2.length) {
-	    return false;
-	}
-	for (int i = 0; i < a1.length; i++) {
-	    if (!a1[i].equals(a2[i])) {
-		return false;
-	    }
-	}
-	return true;
+        if (a1.length != a2.length) {
+            return false;
+        }
+        for (int i = 0; i < a1.length; i++) {
+            if (!a1[i].equals(a2[i])) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 

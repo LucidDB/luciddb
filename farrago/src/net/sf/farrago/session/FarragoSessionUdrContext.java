@@ -23,7 +23,7 @@ package net.sf.farrago.session;
 
 /**
  * This class provides internal support for the implementation of {@link
- * net.sf.farrago.runtime.FarragoUdrRuntime}.  One instance is allocated to
+ * net.sf.farrago.runtime.FarragoUdrRuntime}. One instance is allocated to
  * correspond to each code-generated method invocation.
  *
  * @author John V. Sichi
@@ -31,11 +31,16 @@ package net.sf.farrago.session;
  */
 public class FarragoSessionUdrContext
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String invocationId;
     private final String serverMofId;
 
     private FarragoSession session;
     private Object obj;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoSessionUdrContext(
         String invocationId,
@@ -46,6 +51,8 @@ public class FarragoSessionUdrContext
         this.obj = null;
         this.session = null;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getInvocationId()
     {

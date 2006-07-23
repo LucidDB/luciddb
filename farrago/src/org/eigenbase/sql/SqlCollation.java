@@ -20,17 +20,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import java.nio.charset.Charset;
-import java.util.Locale;
+import java.nio.charset.*;
 
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+import java.util.*;
+
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -38,12 +36,13 @@ import org.eigenbase.util.Util;
  * statement. It is immutable.
  *
  * @author wael
- * @since Mar 23, 2004
  * @version $Id$
- **/
+ * @since Mar 23, 2004
+ */
 public class SqlCollation
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final String collationName;
     protected final Charset charset;
@@ -51,10 +50,11 @@ public class SqlCollation
     protected final String strength;
     private final Coercibility coercibility;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Collation by its name and its coercibility
+     *
      * @param collation
      * @param coercibility
      */
@@ -88,11 +88,12 @@ public class SqlCollation
             coercibility);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean equals(Object o)
     {
-        return (o instanceof SqlCollation)
+        return
+            (o instanceof SqlCollation)
             && ((SqlCollation) o).getCollationName().equals(
                 this.getCollationName());
     }
@@ -101,11 +102,13 @@ public class SqlCollation
      * Returns the collating sequence (the collation name) and the coercibility
      * for the resulting value of a dyadic operator.
      *
-     * @sql.99 Part 2 Section 4.2.3 Table 2
-     *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
-     * @return the resulting collation sequence. The "no collating sequence" result is returned as null.
+     *
+     * @return the resulting collation sequence. The "no collating sequence"
+     * result is returned as null.
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 2
      */
     public static SqlCollation getCoercibilityDyadicOperator(
         SqlCollation col1,
@@ -118,12 +121,13 @@ public class SqlCollation
      * Returns the collating sequence (the collation name) and the coercibility
      * for the resulting value of a dyadic operator.
      *
-     * @sql.99 Part 2 Section 4.2.3 Table 2
-     *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
+     *
      * @return the resulting collation sequence. If no collating sequence could
      * be deduced a {@link EigenbaseResource#InvalidCompare} is thrown
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 2
      */
     public static SqlCollation getCoercibilityDyadicOperatorThrows(
         SqlCollation col1,
@@ -131,23 +135,26 @@ public class SqlCollation
     {
         SqlCollation ret = getCoercibilityDyadic(col1, col2);
         if (null == ret) {
-            throw EigenbaseResource.instance().InvalidCompare.ex(col1.collationName,
-                "" + col1.coercibility, col2.collationName,
+            throw EigenbaseResource.instance().InvalidCompare.ex(
+                col1.collationName,
+                "" + col1.coercibility,
+                col2.collationName,
                 "" + col2.coercibility);
         }
         return ret;
     }
 
     /**
-     * Returns the collating sequence (the collation name) to use for
-     * the resulting value of a comparison.
-     *
-     * @sql.99 Part 2 Section 4.2.3 Table 3
+     * Returns the collating sequence (the collation name) to use for the
+     * resulting value of a comparison.
      *
      * @param col1 first operand for the dyadic operation
      * @param col2 second operand for the dyadic operation
+     *
      * @return the resulting collation sequence. If no collating sequence could
      * be deduced a {@link EigenbaseResource#InvalidCompare} is thrown
+     *
+     * @sql.99 Part 2 Section 4.2.3 Table 3
      */
     public static String getCoercibilityDyadicComparison(
         SqlCollation col1,
@@ -169,16 +176,19 @@ public class SqlCollation
         if (col1.getCoercibility().equals(Coercibility.Coercible)) {
             switch (col2.getCoercibility().getOrdinal()) {
             case Coercibility.Coercible_ordinal:
-                return new SqlCollation(col2.collationName,
-                    Coercibility.Coercible);
+                return
+                    new SqlCollation(col2.collationName,
+                        Coercibility.Coercible);
             case Coercibility.Implicit_ordinal:
-                return new SqlCollation(col2.collationName,
-                    Coercibility.Implicit);
+                return
+                    new SqlCollation(col2.collationName,
+                        Coercibility.Implicit);
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.collationName,
-                    Coercibility.Explicit);
+                return
+                    new SqlCollation(col2.collationName,
+                        Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
             }
@@ -187,19 +197,22 @@ public class SqlCollation
         if (col1.getCoercibility().equals(Coercibility.Implicit)) {
             switch (col2.getCoercibility().getOrdinal()) {
             case Coercibility.Coercible_ordinal:
-                return new SqlCollation(col1.collationName,
-                    Coercibility.Implicit);
+                return
+                    new SqlCollation(col1.collationName,
+                        Coercibility.Implicit);
             case Coercibility.Implicit_ordinal:
                 if (col1.collationName.equals(col2.collationName)) {
-                    return new SqlCollation(col2.collationName,
-                        Coercibility.Implicit);
+                    return
+                        new SqlCollation(col2.collationName,
+                            Coercibility.Implicit);
                 }
                 return null;
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.collationName,
-                    Coercibility.Explicit);
+                return
+                    new SqlCollation(col2.collationName,
+                        Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
             }
@@ -212,8 +225,9 @@ public class SqlCollation
             case Coercibility.None_ordinal:
                 return null;
             case Coercibility.Explicit_ordinal:
-                return new SqlCollation(col2.collationName,
-                    Coercibility.Explicit);
+                return
+                    new SqlCollation(col2.collationName,
+                        Coercibility.Explicit);
             default:
                 throw new AssertionError("Should never come here");
             }
@@ -224,14 +238,17 @@ public class SqlCollation
             case Coercibility.Coercible_ordinal:
             case Coercibility.Implicit_ordinal:
             case Coercibility.None_ordinal:
-                return new SqlCollation(col1.collationName,
-                    Coercibility.Explicit);
+                return
+                    new SqlCollation(col1.collationName,
+                        Coercibility.Explicit);
             case Coercibility.Explicit_ordinal:
                 if (col1.collationName.equals(col2.collationName)) {
-                    return new SqlCollation(col2.collationName,
-                        Coercibility.Explicit);
+                    return
+                        new SqlCollation(col2.collationName,
+                            Coercibility.Explicit);
                 }
-                throw EigenbaseResource.instance().DifferentCollations.ex(col1.collationName,
+                throw EigenbaseResource.instance().DifferentCollations.ex(
+                    col1.collationName,
                     col2.collationName);
             }
         }
@@ -268,21 +285,23 @@ public class SqlCollation
         return coercibility;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * <blockquote>
-     * A &lt;character value expression&gt; consisting of a column reference has the coercibility characteristic
-     * Implicit, with collating sequence as defined when the column was created. A &lt;character value
-     * expression&gt; consisting of a value other than a column (e.g., a host variable or a literal) has the
-     * coercibility characteristic Coercible, with the default collation for its character repertoire. A &lt;character
-     * value expression&gt; simply containing a &lt;collate clause&gt; has the coercibility characteristic
-     * Explicit, with the collating sequence specified in the &lt;collate clause&gt;.
-     * </blockquote>
+     * <blockquote>A &lt;character value expression&gt; consisting of a column
+     * reference has the coercibility characteristic Implicit, with collating
+     * sequence as defined when the column was created. A &lt;character value
+     * expression&gt; consisting of a value other than a column (e.g., a host
+     * variable or a literal) has the coercibility characteristic Coercible,
+     * with the default collation for its character repertoire. A &lt;character
+     * value expression&gt; simply containing a &lt;collate clause&gt; has the
+     * coercibility characteristic Explicit, with the collating sequence
+     * specified in the &lt;collate clause&gt;.</blockquote>
      *
      * @sql.99 Part 2 Section 4.2.3
      */
-    public static class Coercibility extends EnumeratedValues.BasicValue
+    public static class Coercibility
+        extends EnumeratedValues.BasicValue
     {
         public static final int Explicit_ordinal = 0; /* strongest */
         public static final Coercibility Explicit =

@@ -23,13 +23,12 @@
 package net.sf.farrago.namespace.ftrs;
 
 import java.util.*;
-import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -40,40 +39,44 @@ import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.sarg.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 // TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
 // FtrsTableProjectionRule (say FtrsIndexAccessRule?).  Without combining them,
-// we currently miss the opportunity to use an index-only search
-// for {select name from sales.depts where name='Hector'}.
+// we currently miss the opportunity to use an index-only search for {select
+// name from sales.depts where name='Hector'}.
 
 /**
- * FtrsScanToSearchRule is a rule for converting FilterRel+FtrsIndexScanRel
- * into FtrsIndexSearchRel (when the filter has the appropriate form).
+ * FtrsScanToSearchRule is a rule for converting FilterRel+FtrsIndexScanRel into
+ * FtrsIndexSearchRel (when the filter has the appropriate form).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsScanToSearchRule extends RelOptRule
+class FtrsScanToSearchRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsScanToSearchRule object.
      */
     public FtrsScanToSearchRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -91,10 +94,10 @@ class FtrsScanToSearchRule extends RelOptRule
         RexBuilder rexBuilder = scan.getCluster().getRexBuilder();
         SargFactory sargFactory = new SargFactory(rexBuilder);
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-        
+
         RexNode filterExp = filter.getCondition();
         RexNode extraFilter = null;
-        
+
         List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(filterExp);
 
         if (sargBindingList.isEmpty()) {
@@ -107,23 +110,23 @@ class FtrsScanToSearchRule extends RelOptRule
         sargBindingList.remove(0);
 
         // and make the rest residual for now
-        RexNode residualRexNode = 
+        RexNode residualRexNode =
             rexAnalyzer.getResidualSargRexNode(sargBindingList);
 
-        RexNode postFilterRexNode =
-            rexAnalyzer.getPostFilterRexNode();
+        RexNode postFilterRexNode = rexAnalyzer.getPostFilterRexNode();
 
-        if (residualRexNode != null && postFilterRexNode != null) {
-            extraFilter = 
+        if ((residualRexNode != null) && (postFilterRexNode != null)) {
+            extraFilter =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.andOperator,
-                    residualRexNode, postFilterRexNode);
+                    residualRexNode,
+                    postFilterRexNode);
         } else if (residualRexNode != null) {
             extraFilter = residualRexNode;
         } else if (postFilterRexNode != null) {
             extraFilter = postFilterRexNode;
         }
-        
+
         RexInputRef fieldAccess = sargBinding.getInputRef();
         FemAbstractColumn filterColumn =
             scan.getColumnForFieldAccess(fieldAccess.getIndex());
@@ -132,19 +135,29 @@ class FtrsScanToSearchRule extends RelOptRule
         if (scan.index.isClustered()) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
-            Iterator iter = FarragoCatalogUtil.getTableIndexes(
-                repos, scan.ftrsTable.getCwmColumnSet()).iterator();
+            Iterator iter =
+                FarragoCatalogUtil.getTableIndexes(
+                    repos,
+                    scan.ftrsTable.getCwmColumnSet()).iterator();
             while (iter.hasNext()) {
                 FemLocalIndex index = (FemLocalIndex) iter.next();
                 considerIndex(
-                    index, scan, filterColumn, sargBinding.getExpr(), call,
+                    index,
+                    scan,
+                    filterColumn,
+                    sargBinding.getExpr(),
+                    call,
                     extraFilter);
             }
         } else {
             // if we're already working with an unclustered index scan, either
             // we can convert the filter or not; no other indexes are involved
             considerIndex(
-                scan.index, scan, filterColumn, sargBinding.getExpr(), call,
+                scan.index,
+                scan,
+                filterColumn,
+                sargBinding.getExpr(),
+                call,
                 extraFilter);
         }
     }
@@ -181,8 +194,8 @@ class FtrsScanToSearchRule extends RelOptRule
         if (!indexGuide.isValid(index)) {
             return;
         }
-        
-        final RelTraitSet callTraits = call.rels[0].getTraits(); 
+
+        final RelTraitSet callTraits = call.rels[0].getTraits();
 
         if (!index.isClustered() && origScan.index.isClustered()) {
             if (origScan.isOrderPreserving) {
@@ -193,9 +206,9 @@ class FtrsScanToSearchRule extends RelOptRule
         }
 
         // NOTE jvs 24-Jan-2006: I turned this optimization off because
-        // BTreeSearchUnique can no longer be used with interval inputs.
-        // Turning it back on requires verifying that all intervals are points,
-        // and then suppressing generation of directives.
+        // BTreeSearchUnique can no longer be used with interval inputs. Turning
+        // it back on requires verifying that all intervals are points, and then
+        // suppressing generation of directives.
         boolean isUnique;
         if (false) {
             isUnique =
@@ -221,32 +234,34 @@ class FtrsScanToSearchRule extends RelOptRule
 
         RelDataType keyRowType =
             typeFactory.createStructType(
-                new RelDataType [] {
+                new RelDataType[] {
                     directiveType,
-                    keyType,
-                    directiveType,
-                    keyType
+                keyType,
+                directiveType,
+                keyType
                 },
-                new String [] {
+                new String[] {
                     "lowerBoundDirective",
-                    "lowerBoundKey",
-                    "upperBoundDirective",
-                    "upperBoundKey"
+                "lowerBoundKey",
+                "upperBoundDirective",
+                "upperBoundKey"
                 });
-        RelNode sargRel = FennelRelUtil.convertSargExpr(
-            callTraits,
-            keyRowType,
-            origScan.getCluster(),
-            sargExpr);
+        RelNode sargRel =
+            FennelRelUtil.convertSargExpr(
+                callTraits,
+                keyRowType,
+                origScan.getCluster(),
+                sargExpr);
         RelNode keyInput =
             mergeTraitsAndConvert(
-                callTraits, FennelRel.FENNEL_EXEC_CONVENTION,
+                callTraits,
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 sargRel);
         assert (keyInput != null);
 
         // Set up projections for the search directive and key.
-        Integer [] inputDirectiveProj = new Integer [] { 0, 2 };
-        Integer [] inputKeyProj = new Integer [] { 1, 3 };
+        Integer [] inputDirectiveProj = new Integer[] { 0, 2 };
+        Integer [] inputKeyProj = new Integer[] { 1, 3 };
 
         if (!index.isClustered() && origScan.index.isClustered()) {
             // By itself, an unclustered index is not going to produce the
@@ -266,36 +281,49 @@ class FtrsScanToSearchRule extends RelOptRule
                     origScan.isOrderPreserving);
 
             FtrsIndexSearchRel unclusteredSearch =
-                new FtrsIndexSearchRel(unclusteredScan, keyInput, isUnique,
-                    false, inputKeyProj, null, inputDirectiveProj);
-            
+                new FtrsIndexSearchRel(unclusteredScan,
+                    keyInput,
+                    isUnique,
+                    false,
+                    inputKeyProj,
+                    null,
+                    inputDirectiveProj);
+
             FtrsIndexSearchRel clusteredSearch =
-                new FtrsIndexSearchRel(origScan, unclusteredSearch, true,
-                    false, null, null, null);
-            
+                new FtrsIndexSearchRel(origScan,
+                    unclusteredSearch,
+                    true,
+                    false,
+                    null,
+                    null,
+                    null);
+
             transformCall(call, clusteredSearch, extraFilter);
         } else {
             // A direct search against an index is easier.
             FtrsIndexSearchRel search =
-                new FtrsIndexSearchRel(origScan, keyInput, isUnique, false,
-                    inputKeyProj, null, inputDirectiveProj);
-            
+                new FtrsIndexSearchRel(origScan,
+                    keyInput,
+                    isUnique,
+                    false,
+                    inputKeyProj,
+                    null,
+                    inputDirectiveProj);
+
             transformCall(call, search, extraFilter);
         }
     }
-    
+
     private void transformCall(
         RelOptRuleCall call,
         RelNode searchRel,
         RexNode extraFilter)
     {
         if (extraFilter != null) {
-            searchRel =
-                CalcRel.createFilter(searchRel, extraFilter);
+            searchRel = CalcRel.createFilter(searchRel, extraFilter);
         }
         call.transformTo(searchRel);
     }
 }
-
 
 // End FtrsScanToSearchRule.java

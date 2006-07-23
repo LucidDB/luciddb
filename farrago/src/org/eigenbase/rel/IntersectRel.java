@@ -20,26 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * <code>IntersectRel</code> returns the intersection of the rows of its
- * inputs.  If "all" is true, then multiset intersection is performed;
- * otherwise, set intersection is performed (implying no duplicates in the
- * results).
+ * <code>IntersectRel</code> returns the intersection of the rows of its inputs.
+ * If "all" is true, then multiset intersection is performed; otherwise, set
+ * intersection is performed (implying no duplicates in the results).
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 23 September, 2001
  */
-public final class IntersectRel extends SetOpRel
+public final class IntersectRel
+    extends SetOpRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public IntersectRel(
         RelOptCluster cluster,
@@ -52,14 +52,18 @@ public final class IntersectRel extends SetOpRel
             inputs,
             all);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelNode
     public double getRows()
     {
         // REVIEW jvs 30-May-2005:  I just pulled this out of a hat.
         double dRows = Double.MAX_VALUE;
         for (int i = 0; i < inputs.length; i++) {
-            dRows = Math.min(dRows, RelMetadataQuery.getRowCount(inputs[i]));
+            dRows = Math.min(
+                    dRows,
+                    RelMetadataQuery.getRowCount(inputs[i]));
         }
         dRows *= 0.25;
         return dRows;
@@ -67,21 +71,24 @@ public final class IntersectRel extends SetOpRel
 
     public IntersectRel clone()
     {
-        IntersectRel clone = new IntersectRel(
-            getCluster(),
-            RelOptUtil.clone(inputs),
-            all);
+        IntersectRel clone =
+            new IntersectRel(
+                getCluster(),
+                RelOptUtil.clone(inputs),
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    public IntersectRel clone(RelNode[] inputs, boolean all)
+    public IntersectRel clone(RelNode [] inputs, boolean all)
     {
-        final IntersectRel clone = new IntersectRel(getCluster(), inputs, all);
+        final IntersectRel clone = new IntersectRel(
+                getCluster(),
+                inputs,
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End IntersectRel.java

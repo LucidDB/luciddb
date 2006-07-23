@@ -21,24 +21,28 @@
 */
 package org.eigenbase.sql.util;
 
+import java.util.*;
+
 import org.eigenbase.sql.*;
 
-import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Basic implementation of {@link SqlVisitor} which returns each leaf node
  * unchanged.
  *
  * <p>This class is useful as a base class for classes which implement the
- * {@link SqlVisitor} interface and have {@link SqlNode} as the return type.
- * The derived class can override whichever methods it chooses.
+ * {@link SqlVisitor} interface and have {@link SqlNode} as the return type. The
+ * derived class can override whichever methods it chooses.
  *
  * @author jhyde
  * @version $Id$
  */
-public class SqlShuttle extends SqlBasicVisitor<SqlNode>
+public class SqlShuttle
+    extends SqlBasicVisitor<SqlNode>
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode visit(SqlLiteral literal)
     {
         return literal;
@@ -93,20 +97,25 @@ public class SqlShuttle extends SqlBasicVisitor<SqlNode>
             newList.add(clonedOperand);
         }
         if (update) {
-            return new SqlNodeList(newList, nodeList.getParserPosition());
+            return new SqlNodeList(
+                    newList,
+                    nodeList.getParserPosition());
         } else {
             return nodeList;
         }
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Implementation of {@link ArgHandler} which deep-copies {@link SqlCall}s
      * and their operands.
      */
-    protected class CallCopyingArgHandler implements ArgHandler<SqlNode>
+    protected class CallCopyingArgHandler
+        implements ArgHandler<SqlNode>
     {
         boolean update;
-        SqlNode[] clonedOperands;
+        SqlNode [] clonedOperands;
         private final SqlCall call;
         private final boolean alwaysCopy;
 
@@ -121,18 +130,20 @@ public class SqlShuttle extends SqlBasicVisitor<SqlNode>
         public SqlNode result()
         {
             if (update || alwaysCopy) {
-                return call.getOperator().createCall(
-                    clonedOperands,
-                    call.getParserPosition(),
-                    call.getFunctionQuantifier());
+                return
+                    call.getOperator().createCall(
+                        clonedOperands,
+                        call.getParserPosition(),
+                        call.getFunctionQuantifier());
             } else {
                 return call;
             }
         }
 
-        public SqlNode visitChild(
-            SqlVisitor<SqlNode> visitor,
-            SqlNode expr, int i, SqlNode operand)
+        public SqlNode visitChild(SqlVisitor<SqlNode> visitor,
+            SqlNode expr,
+            int i,
+            SqlNode operand)
         {
             if (operand == null) {
                 return null;

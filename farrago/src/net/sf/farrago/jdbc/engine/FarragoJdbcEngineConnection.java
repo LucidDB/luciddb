@@ -23,22 +23,22 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.sql.*;
+
 import java.util.*;
 
-import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.session.*;
-import net.sf.farrago.jdbc.FarragoConnection;
-import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
-import net.sf.farrago.namespace.util.FarragoDataWrapperCache;
-import net.sf.farrago.namespace.FarragoMedDataWrapper;
-import net.sf.farrago.db.FarragoDbSession;
-import net.sf.farrago.db.FarragoDatabase;
-import net.sf.farrago.util.FarragoObjectCache;
-import net.sf.farrago.fem.med.FemDataWrapper;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+
 
 /**
  * FarragoJdbcEngineConnection implements the {@link java.sql.Connection}
@@ -48,22 +48,22 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * @version $Id$
  */
 public class FarragoJdbcEngineConnection
-    implements FarragoConnection, FarragoSessionConnectionSource
+    implements FarragoConnection,
+        FarragoSessionConnectionSource
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoSessionFactory sessionFactory;
     private FarragoSession session;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcEngineConnection object.
      *
      * @param url URL used to connect
-     *
      * @param info properties for this connection
-     *
      * @param sessionFactory FarragoSessionFactory governing this connection's
      * behavior
      */
@@ -86,7 +86,7 @@ public class FarragoJdbcEngineConnection
         session.setConnectionSource(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public FarragoSession getSession()
     {
@@ -96,8 +96,9 @@ public class FarragoJdbcEngineConnection
     // implement FarragoConnection
     public long getFarragoSessionId()
     {
-        if (session == null || session.isClosed())
+        if ((session == null) || session.isClosed()) {
             return 0;
+        }
         return session.getSessionInfo().getId();
     }
 
@@ -112,9 +113,9 @@ public class FarragoJdbcEngineConnection
     public Connection newConnection()
     {
         return new FarragoJdbcEngineConnection(
-            session.cloneSession(null));
+                session.cloneSession(null));
     }
-    
+
     // implement Connection
     public void setAutoCommit(boolean autoCommit)
         throws SQLException
@@ -142,7 +143,7 @@ public class FarragoJdbcEngineConnection
         throws SQLException
     {
         // TODO
-        return;     // until implemented, JDBC API doc says to silently ignore
+        return; // until implemented, JDBC API doc says to silently ignore
     }
 
     // implement Connection
@@ -202,9 +203,10 @@ public class FarragoJdbcEngineConnection
         try {
             // FarragoSessionStmtContext created without a param def factory
             // because plain Statements cannot use dynamic parameters.
-            return new FarragoJdbcEngineStatement(
-                this,
-                session.newStmtContext(null));
+            return
+                new FarragoJdbcEngineStatement(
+                    this,
+                    session.newStmtContext(null));
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -229,8 +231,7 @@ public class FarragoJdbcEngineConnection
     {
         validateSession();
 
-        FarragoSessionSavepoint farragoSavepoint =
-            validateSavepoint(savepoint);
+        FarragoSessionSavepoint farragoSavepoint = validateSavepoint(savepoint);
         try {
             session.rollback(farragoSavepoint);
         } catch (Throwable ex) {
@@ -296,8 +297,7 @@ public class FarragoJdbcEngineConnection
     {
         validateSession();
 
-        FarragoSessionSavepoint farragoSavepoint =
-            validateSavepoint(savepoint);
+        FarragoSessionSavepoint farragoSavepoint = validateSavepoint(savepoint);
         try {
             session.releaseSavepoint(farragoSavepoint);
         } catch (Throwable ex) {
@@ -322,7 +322,7 @@ public class FarragoJdbcEngineConnection
 
         FarragoSessionStmtContext stmtContext = null;
         try {
-            stmtContext = 
+            stmtContext =
                 session.newStmtContext(new FarragoJdbcEngineParamDefFactory());
             stmtContext.prepare(sql, false);
             FarragoJdbcEnginePreparedStatement preparedStmt;
@@ -499,7 +499,8 @@ public class FarragoJdbcEngineConnection
         throw new UnsupportedOperationException();
     }
 
-    protected void validateSession() throws SQLException
+    protected void validateSession()
+        throws SQLException
     {
         // REVIEW: SWZ: 4/19/2006: Some DDL can cause a shutdown.  In that
         // event, the session is closed.  FarragoTestCase doesn't handle
@@ -512,21 +513,21 @@ public class FarragoJdbcEngineConnection
                 FarragoResource.instance().JdbcConnSessionKilled.ex());
         }
     }
-    
+
     public String findMofId(String wrapperName)
         throws SQLException
     {
         validateSession();
-        
-        FarragoDbSession session = (FarragoDbSession)getSession();
+
+        FarragoDbSession session = (FarragoDbSession) getSession();
         SqlIdentifier wrapperSqlIdent =
             new SqlIdentifier(wrapperName, SqlParserPos.ZERO);
-        
+
         FemDataWrapper wrapper =
             FarragoCatalogUtil.getModelElementByName(
                 session.getRepos().allOfType(FemDataWrapper.class),
                 wrapperSqlIdent.getSimple());
-         
+
         if (wrapper != null) {
             if (!wrapper.isForeign()) {
                 wrapper = null;
@@ -535,8 +536,7 @@ public class FarragoJdbcEngineConnection
 
         if (wrapper != null) {
             return wrapper.refMofId();
-        }
-        else {
+        } else {
             return null;
         }
     }
@@ -548,9 +548,11 @@ public class FarragoJdbcEngineConnection
         throws SQLException
     {
         validateSession();
-        
+
         return new FleetingMedDataWrapperInfo(mofId, libraryName, options);
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Implementation of {@link FarragoMedDataWrapperInfo} which fleetingly
@@ -578,15 +580,16 @@ public class FarragoJdbcEngineConnection
 
         private FarragoMedDataWrapper getWrapper()
         {
-            assert(dataWrapperCache == null);
-            
-            final FarragoDbSession session = (FarragoDbSession)getSession();
+            assert (dataWrapperCache == null);
+
+            final FarragoDbSession session = (FarragoDbSession) getSession();
             final FarragoDatabase db = session.getDatabase();
             final FarragoObjectCache sharedCache = db.getDataWrapperCache();
 
-            dataWrapperCache = 
+            dataWrapperCache =
                 new FarragoDataWrapperCache(
-                    session, sharedCache,
+                    session,
+                    sharedCache,
                     db.getPluginClassLoader(),
                     session.getRepos(),
                     db.getFennelDbHandle(),
@@ -603,33 +606,35 @@ public class FarragoJdbcEngineConnection
             dataWrapperCache = null;
         }
 
-        public DriverPropertyInfo[] getPluginPropertyInfo(
-                Locale locale,
-                Properties wrapperProps)
-            {
-                FarragoMedDataWrapper dataWrapper = getWrapper();
-                try {
-                    return dataWrapper.getPluginPropertyInfo(locale, wrapperProps);
-                } finally {
-                    closeWrapperCache();
-                }
+        public DriverPropertyInfo [] getPluginPropertyInfo(
+            Locale locale,
+            Properties wrapperProps)
+        {
+            FarragoMedDataWrapper dataWrapper = getWrapper();
+            try {
+                return dataWrapper.getPluginPropertyInfo(locale, wrapperProps);
+            } finally {
+                closeWrapperCache();
             }
+        }
 
-        public DriverPropertyInfo[] getServerPropertyInfo(
+        public DriverPropertyInfo [] getServerPropertyInfo(
             Locale locale,
             Properties wrapperProps,
             Properties serverProps)
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return dataWrapper.getServerPropertyInfo(locale, wrapperProps,
-                    serverProps);
+                return
+                    dataWrapper.getServerPropertyInfo(locale,
+                        wrapperProps,
+                        serverProps);
             } finally {
                 closeWrapperCache();
             }
         }
 
-        public DriverPropertyInfo[] getColumnSetPropertyInfo(
+        public DriverPropertyInfo [] getColumnSetPropertyInfo(
             Locale locale,
             Properties wrapperProps,
             Properties serverProps,
@@ -637,14 +642,17 @@ public class FarragoJdbcEngineConnection
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return dataWrapper.getColumnSetPropertyInfo(locale,
-                    wrapperProps, serverProps, tableProps);
+                return
+                    dataWrapper.getColumnSetPropertyInfo(locale,
+                        wrapperProps,
+                        serverProps,
+                        tableProps);
             } finally {
                 closeWrapperCache();
             }
         }
 
-        public DriverPropertyInfo[] getColumnPropertyInfo(
+        public DriverPropertyInfo [] getColumnPropertyInfo(
             Locale locale,
             Properties wrapperProps,
             Properties serverProps,
@@ -653,8 +661,12 @@ public class FarragoJdbcEngineConnection
         {
             FarragoMedDataWrapper dataWrapper = getWrapper();
             try {
-                return dataWrapper.getColumnPropertyInfo(locale, wrapperProps,
-                    serverProps, tableProps, columnProps);
+                return
+                    dataWrapper.getColumnPropertyInfo(locale,
+                        wrapperProps,
+                        serverProps,
+                        tableProps,
+                        columnProps);
             } finally {
                 closeWrapperCache();
             }

@@ -27,51 +27,47 @@ import java.util.*;
 import javax.sql.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.type.*;
-
-import net.sf.farrago.fem.med.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 
 
 /**
- * FarragoDataWrapperCache serves as a private cache of
- * FarragoMedDataWrapper and FarragoMedDataServer instances.  It requires an
- * underlying shared FarragoObjectCache.
+ * FarragoDataWrapperCache serves as a private cache of FarragoMedDataWrapper
+ * and FarragoMedDataServer instances. It requires an underlying shared
+ * FarragoObjectCache.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDataWrapperCache extends FarragoPluginCache
+public class FarragoDataWrapperCache
+    extends FarragoPluginCache
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
 
     private DataSource loopbackDataSource;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an empty cache.
      *
      * @param owner FarragoAllocationOwner for this cache, to make sure
      * everything gets discarded eventually
-     *
      * @param sharedCache underlying shared cache
-     *
      * @param repos FarragoRepos for wrapper initialization
-     *
      * @param fennelDbHandle FennelDbHandle for wrapper initialization
-     *
-     * @param loopbackDataSource a DataSource for
-     * establishing a loopback connection into Farrago, or
-     * null if none is available
+     * @param loopbackDataSource a DataSource for establishing a loopback
+     * connection into Farrago, or null if none is available
      */
     public FarragoDataWrapperCache(
         FarragoAllocationOwner owner,
@@ -86,20 +82,18 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         this.loopbackDataSource = loopbackDataSource;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Loads a data wrapper, or uses a cached instance.  If the requested
-     * wrapper is already available in this private or in the shared cache, it
-     * can be used directly.  Otherwise, the wrapper is loaded, initialized,
-     * and cached at both levels.
+     * Loads a data wrapper, or uses a cached instance. If the requested wrapper
+     * is already available in this private or in the shared cache, it can be
+     * used directly. Otherwise, the wrapper is loaded, initialized, and cached
+     * at both levels.
      *
-     * @param mofId key by which the wrapper can be uniquely identified
-     * (Farrago uses the MofId of the catalog object representing the wrapper)
-     *
+     * @param mofId key by which the wrapper can be uniquely identified (Farrago
+     * uses the MofId of the catalog object representing the wrapper)
      * @param libraryName name of the library containing the wrapper
      * implementation
-     *
      * @param options wrapper-specific options
      *
      * @return loaded wrapper
@@ -116,8 +110,8 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         if (wrapper != null) {
             // verify if the private cache entry is valid (with matching
             // library name and options)
-            if (options.equals(wrapper.getProperties()) && 
-                libraryName.equals(wrapper.getLibraryName())) {
+            if (options.equals(wrapper.getProperties())
+                && libraryName.equals(wrapper.getLibraryName())) {
                 // already privately cached
                 return wrapper;
             }
@@ -131,15 +125,16 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
             getSharedCache().pin(mofId, factory, true);
 
         wrapper = (FarragoMedDataWrapper) entry.getValue();
+
         // if the share cache is invalid (mismatching library name or options),
-        // discard that entry and re-pin it (which will initialize a new entry 
+        // discard that entry and re-pin it (which will initialize a new entry
         // in the shared cache with the wrapper factory
-        if (!options.equals(wrapper.getProperties()) ||
-            !libraryName.equals(wrapper.getLibraryName())) {
+        if (!options.equals(wrapper.getProperties())
+            || !libraryName.equals(wrapper.getLibraryName())) {
             getSharedCache().discard(mofId);
             entry = getSharedCache().pin(mofId, factory, true);
         }
-            
+
         wrapper = (FarragoMedDataWrapper) addToPrivateCache(entry);
         return wrapper;
     }
@@ -147,12 +142,10 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
     /**
      * Loads a data server, or uses a cached instance.
      *
-     * @param mofId key by which the server can be uniquely identified
-     * (Farrago uses the MofId of the catalog object representing the server)
-     *
-     * @param dataWrapper FarragoMedDataWrapper which
-     * provides access to the server
-     *
+     * @param mofId key by which the server can be uniquely identified (Farrago
+     * uses the MofId of the catalog object representing the server)
+     * @param dataWrapper FarragoMedDataWrapper which provides access to the
+     * server
      * @param options server-specific options
      *
      * @return loaded server
@@ -195,12 +188,13 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FemDataWrapper femWrapper)
     {
         Properties props = getStorageOptionsAsProperties(femWrapper);
-        return loadWrapper(
-            femWrapper.refMofId(),
-            femWrapper.getLibraryFile(),
-            props);
+        return
+            loadWrapper(
+                femWrapper.refMofId(),
+                femWrapper.getLibraryFile(),
+                props);
     }
-    
+
     /**
      * Loads a data server based on its catalog definition.
      *
@@ -210,8 +204,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
      */
     public FarragoMedDataServer loadServerFromCatalog(FemDataServer femServer)
     {
-        Properties props =
-            getStorageOptionsAsProperties(femServer);
+        Properties props = getStorageOptionsAsProperties(femServer);
 
         String val;
         val = femServer.getType();
@@ -233,16 +226,15 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
             loadWrapperFromCatalog(femDataWrapper);
 
         return loadServer(
-            femServer.refMofId(),
-            dataWrapper,
-            props);
+                femServer.refMofId(),
+                dataWrapper,
+                props);
     }
 
     /**
      * Loads a FarragoMedColumnSet from its catalog definition.
      *
      * @param baseColumnSet column set definition
-     *
      * @param typeFactory factory for column types
      *
      * @return loaded column set
@@ -252,16 +244,15 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FarragoTypeFactory typeFactory)
     {
         FemDataServer femServer = baseColumnSet.getServer();
-        
+
         String [] qualifiedName =
-            new String [] {
+            new String[] {
                 baseColumnSet.getNamespace().getNamespace().getName(),
                 baseColumnSet.getNamespace().getName(),
                 baseColumnSet.getName()
             };
 
-        Properties props =
-            getStorageOptionsAsProperties(baseColumnSet);
+        Properties props = getStorageOptionsAsProperties(baseColumnSet);
 
         Map columnPropMap = new HashMap();
 
@@ -281,17 +272,22 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         FarragoMedColumnSet loadedColumnSet;
         try {
             loadedColumnSet =
-                medServer.newColumnSet(qualifiedName, props, typeFactory,
-                    rowType, columnPropMap);
+                medServer.newColumnSet(qualifiedName,
+                    props,
+                    typeFactory,
+                    rowType,
+                    columnPropMap);
         } catch (Throwable ex) {
             throw FarragoResource.instance().ForeignTableAccessFailed.ex(
                 typeFactory.getRepos().getLocalizedObjectName(
-                    baseColumnSet, null),
+                    baseColumnSet,
+                    null),
                 ex);
         }
 
         if (baseColumnSet.getAllowedAccess() == null) {
-            // Allowed access not specified, use allowed access from loadedColumnSet
+            // Allowed access not specified, use allowed access from
+            // loadedColumnSet
             baseColumnSet.setAllowedAccess(
                 loadedColumnSet.getAllowedAccess().toString());
         } else {
@@ -304,12 +300,14 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
         return loadedColumnSet;
     }
-    
+
     /**
      * Extracts the storage options for an element into a Properties. No
-     * duplicate property names are allowed. Inline property references
-     * (such as <code>${varname}</code> get expanded on read.
+     * duplicate property names are allowed. Inline property references (such as
+     * <code>${varname}</code> get expanded on read.
+     *
      * @param element FemElement we want the options from
+     *
      * @return Properties object populated with the storage options
      */
     public Properties getStorageOptionsAsProperties(
@@ -332,7 +330,7 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         return props;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     private class WrapperFactory
         implements FarragoObjectCache.CachedObjectFactory
@@ -360,7 +358,8 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
 
             FarragoMedDataWrapper wrapper =
                 (FarragoMedDataWrapper) initializePlugin(libraryName,
-                    "DataWrapperClassName", options);
+                    "DataWrapperClassName",
+                    options);
 
             // TODO:  some kind of resource usage estimations for wrappers
             entry.initialize(wrapper, 1);
@@ -409,6 +408,5 @@ public class FarragoDataWrapperCache extends FarragoPluginCache
         }
     }
 }
-
 
 // End FarragoDataWrapperCache.java

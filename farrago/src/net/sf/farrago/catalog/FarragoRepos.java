@@ -22,26 +22,21 @@
 */
 package net.sf.farrago.catalog;
 
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.CwmCatalog;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.config.FemFarragoConfig;
-import net.sf.farrago.util.FarragoAllocation;
-import net.sf.farrago.util.FarragoTransientTxnContext;
-import net.sf.farrago.util.FarragoProperties;
-import org.eigenbase.jmi.JmiModelGraph;
-import org.eigenbase.jmi.JmiModelView;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.netbeans.api.mdr.MDRepository;
+import java.util.*;
 
-import javax.jmi.reflect.RefClass;
-import javax.jmi.reflect.RefObject;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Collection;
-import java.nio.charset.Charset;
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.jmi.*;
+
+import org.netbeans.api.mdr.*;
+
 
 /**
  * FarragoRepos represents a loaded repository containing Farrago metadata.
@@ -49,11 +44,13 @@ import java.nio.charset.Charset;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoRepos extends FarragoAllocation,
-    FarragoTransientTxnContext,
-    FarragoMetadataFactory
+public interface FarragoRepos
+    extends FarragoAllocation,
+        FarragoTransientTxnContext,
+        FarragoMetadataFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return MDRepository storing this Farrago repository
@@ -96,11 +93,9 @@ public interface FarragoRepos extends FarragoAllocation,
     public String getDefaultCharsetName();
 
     /**
-     * @return the name of the default collation name for this repository.
-     * The value is of the form <i>charset$locale$strength</i>, as per
-     * {@link SqlParserUtil#parseCollation(String)}.
-     * The default is "ISO-8859-1$en_US".
-     *
+     * @return the name of the default collation name for this repository. The
+     * value is of the form <i>charset$locale$strength</i>, as per {@link
+     * SqlParserUtil#parseCollation(String)}. The default is "ISO-8859-1$en_US".
      */
     public String getDefaultCollationName();
 
@@ -114,6 +109,7 @@ public interface FarragoRepos extends FarragoAllocation,
      * including its type.
      *
      * @param modelElement catalog object
+     *
      * @return localized name
      */
     public String getLocalizedObjectName(
@@ -123,6 +119,7 @@ public interface FarragoRepos extends FarragoAllocation,
      * Formats the localized name for an unqualified typeless object.
      *
      * @param name object name
+     *
      * @return localized name
      */
     public String getLocalizedObjectName(
@@ -133,8 +130,8 @@ public interface FarragoRepos extends FarragoAllocation,
      *
      * @param modelElement catalog object
      * @param refClass if non-null, use this as the type of the object, e.g.
-     *        "table SCHEMA.TABLE"; if null, don't include type (e.g. just
-     *        "SCHEMA.TABLE")
+     * "table SCHEMA.TABLE"; if null, don't include type (e.g. just
+     * "SCHEMA.TABLE")
      *
      * @return localized name
      */
@@ -147,10 +144,10 @@ public interface FarragoRepos extends FarragoAllocation,
      * exist yet.
      *
      * @param qualifierName name of containing object, or null for unqualified
-     *        name
+     * name
      * @param objectName name of object
-     * @param refClass if non-null, the object type to use in the name; if
-     *        null, no type is prepended
+     * @param refClass if non-null, the object type to use in the name; if null,
+     * no type is prepended
      *
      * @return localized name
      */
@@ -164,7 +161,7 @@ public interface FarragoRepos extends FarragoAllocation,
      *
      * @param refClass class of metadata, e.g. CwmTableClass
      *
-     * @return localized name,  e.g. "table"
+     * @return localized name, e.g. "table"
      */
     public String getLocalizedClassName(RefClass refClass);
 
@@ -196,7 +193,7 @@ public interface FarragoRepos extends FarragoAllocation,
      *
      * @param element the element to tag
      * @param tagName name of tag to create; if a tag with this name already
-     *        exists, it will be updated
+     * exists, it will be updated
      * @param tagValue value to set
      *
      * @deprecated use setTagAnnotationValue instead
@@ -237,7 +234,7 @@ public interface FarragoRepos extends FarragoAllocation,
      *
      * @param element the element to tag
      * @param tagName name of tag to create; if a tag with this name already
-     *        exists, it will be updated
+     * exists, it will be updated
      * @param tagValue value to set
      *
      * @deprecated use setTagAnnotationValue instead
@@ -284,26 +281,28 @@ public interface FarragoRepos extends FarragoAllocation,
     public void endReposTxn(boolean rollback);
 
     /**
-     * Returns the metadata factory for a particular plugin.
-     * In particular, <code>getMetadataFactory("Fem")</code> returns this.
+     * Returns the metadata factory for a particular plugin. In particular,
+     * <code>getMetadataFactory("Fem")</code> returns this.
      *
      * @param prefix The name of the prefix which identifies the metadata
-     *   factory
+     * factory
      */
     Object getMetadataFactory(String prefix);
-    
+
     /**
      * Returns the an accessor for a sequence stored in the repository
-     * 
+     *
      * @param mofId the identifier for the sequence
      */
     public FarragoSequenceAccessor getSequenceAccessor(String mofId);
-    
+
     /**
-     * Returns the input string with property values substituted for
-     * variables of the form <code>${VARNAME}</code>, such as that done
-     * by {@link FarragoProperties#expandProperties(String)}..
+     * Returns the input string with property values substituted for variables
+     * of the form <code>${VARNAME}</code>, such as that done by {@link
+     * FarragoProperties#expandProperties(String)}..
+     *
      * @param value String we want to expand
+     *
      * @return expanded string, if value(s) were known
      */
     public String expandProperties(String value);
@@ -314,8 +313,7 @@ public interface FarragoRepos extends FarragoAllocation,
      * <p>This method has the same effect as {@link RefClass#refAllOfClass()},
      * but is preferable because it returns a typed collection.
      */
-    public <T extends RefObject>
-    Collection<T> allOfClass(Class<T> clazz);
+    public <T extends RefObject> Collection<T> allOfClass(Class<T> clazz);
 
     /**
      * Returns a collection of all instances of a given type.
@@ -323,15 +321,13 @@ public interface FarragoRepos extends FarragoAllocation,
      * <p>This method has the same effect as {@link RefClass#refAllOfType()},
      * but is preferable because it returns a typed collection.
      */
-    public <T extends RefObject>
-    Collection<T> allOfType(Class<T> clazz);
-    
+    public <T extends RefObject> Collection<T> allOfType(Class<T> clazz);
+
     /**
-     * Returns the FarragoModelLoader for this repos.
-     * May return null if not supported by implementation.
+     * Returns the FarragoModelLoader for this repos. May return null if not
+     * supported by implementation.
      */
     public FarragoModelLoader getModelLoader();
 }
-
 
 // End FarragoRepos.java

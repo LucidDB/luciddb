@@ -21,11 +21,12 @@
 */
 package net.sf.farrago.query;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.catalog.*;
 
 /**
  * FennelAggRel represents the Fennel implementation of aggregation.
@@ -33,9 +34,16 @@ import net.sf.farrago.catalog.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelAggRel extends AggregateRelBase implements FennelRel
+public class FennelAggRel
+    extends AggregateRelBase
+    implements FennelRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final FarragoRepos repos;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FennelAggRel(
         RelOptCluster cluster,
@@ -44,18 +52,24 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         Call [] aggCalls)
     {
         super(
-            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
-            child, groupCount, aggCalls);
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            child,
+            groupCount,
+            aggCalls);
         repos = FennelRelUtil.getRepos(this);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Object clone()
     {
-        FennelAggRel clone = new FennelAggRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            groupCount,
-            aggCalls);
+        FennelAggRel clone =
+            new FennelAggRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                groupCount,
+                aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -72,18 +86,21 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, getChild());
+        return implementor.visitChild(
+                this,
+                0,
+                getChild());
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
         defineAggStream(aggStream);
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             aggStream);
-        
+
         return aggStream;
     }
 
@@ -92,9 +109,10 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         aggStream.setGroupingPrefixSize(groupCount);
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
-            assert(!call.isDistinct());
+            assert (!call.isDistinct());
+
             // allow 0 for COUNT(*)
-            assert(call.args.length <= 1);
+            assert (call.args.length <= 1);
             AggFunction func = lookupAggFunction(call);
             FemAggInvocation aggInvocation = repos.newFemAggInvocation();
             aggInvocation.setFunction(func);
@@ -111,8 +129,9 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     public static AggFunction lookupAggFunction(
         AggregateRel.Call call)
     {
-        return AggFunctionEnum.forName(
-            "AGG_FUNC_" + call.getAggregation().getName());
+        return
+            AggFunctionEnum.forName(
+                "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

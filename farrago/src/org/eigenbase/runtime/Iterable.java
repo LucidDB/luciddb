@@ -20,26 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.util.Iterator;
+import java.util.*;
 
 
 /**
  * An object is <code>Iterable</code> if it has an {@link #iterator} method to
  * create an {@link Iterator} over its elements.
  *
- * <p>
- * Some implementations of this interface may allow only one iterator at a
+ * <p>Some implementations of this interface may allow only one iterator at a
  * time. For example, {@link BufferedIterator} simply restarts and returns
- * itself. Iterators received from previous calls to {@link #iterator} will
- * also restart.
- * </p>
+ * itself. Iterators received from previous calls to {@link #iterator} will also
+ * restart.</p>
  *
- * <p>
- * If an object implements this interface, it can be used as a relation in a
+ * <p>If an object implements this interface, it can be used as a relation in a
  * saffron relational expression. For example,
+ *
  * <blockquote>
  * <pre>Iterable iterable = new Iterable() {
  *     public Iterator iterator() {
@@ -57,26 +54,23 @@ import java.util.Iterator;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 1 May, 2002
  */
 public interface Iterable
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns an iterator over the elements in this collection. There are no
      * guarantees over the order in which the elements are returned.
      *
-     * <p>
-     * If this method is called twice on the same object, and the object is
-     * not modified in between times, the iterators produced may or may not
-     * be the same iterator, and may or may not return the elements in the
-     * same order, but must return the same objects.
-     * </p>
+     * <p>If this method is called twice on the same object, and the object is
+     * not modified in between times, the iterators produced may or may not be
+     * the same iterator, and may or may not return the elements in the same
+     * order, but must return the same objects.</p>
      */
     Iterator iterator();
 }
-
 
 // End Iterable.java

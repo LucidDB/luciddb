@@ -24,6 +24,7 @@ package org.eigenbase.jmi;
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.traverse.*;
 
+
 /**
  * JmiDependencyIterator defines a topological ordering iterator over a {@link
  * JmiDependencyGraph} (iteration proceeds from prerequisites to dependents).
@@ -32,11 +33,12 @@ import org._3pq.jgrapht.traverse.*;
  * @version $Id$
  */
 public class JmiDependencyIterator
-    extends TopologicalOrderIterator<
-        JmiDependencyVertex,
-        Edge<JmiDependencyVertex>,
-        Object>
+    extends TopologicalOrderIterator<JmiDependencyVertex,
+        Edge<JmiDependencyVertex>, Object>
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public JmiDependencyIterator(JmiDependencyGraph graph)
     {
         super(graph);

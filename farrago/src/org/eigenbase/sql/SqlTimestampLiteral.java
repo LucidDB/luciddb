@@ -21,31 +21,40 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.sql.*;
 
-import java.util.Calendar;
-import java.sql.Timestamp;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
+import java.text.*;
+
+import java.util.*;
+
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * A SQL literal representing a TIMESTAMP value, for example
- * <code>TIMESTAMP '1969-07-21 03:15 GMT'</code>.
+ * A SQL literal representing a TIMESTAMP value, for example <code>TIMESTAMP
+ * '1969-07-21 03:15 GMT'</code>.
  *
  * <p>Create values using {@link SqlLiteral#createTimestamp}.
  */
-public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
+public class SqlTimestampLiteral
+    extends SqlAbstractDateTimeLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlTimestampLiteral(
         Calendar cal,
         int precision,
         boolean hasTimeZone,
         SqlParserPos pos)
     {
-        super(cal, hasTimeZone, SqlTypeName.Timestamp, precision,
-            SqlParserUtil.TimestampFormatStr, pos);
+        super(cal,
+            hasTimeZone,
+            SqlTypeName.Timestamp,
+            precision,
+            SqlParserUtil.TimestampFormatStr,
+            pos);
     }
 
     public SqlTimestampLiteral(
@@ -59,6 +68,8 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
             format, pos);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Converts this literal to a {@link java.sql.Timestamp} object.
      */
@@ -70,17 +81,21 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
     /**
      * Converts this literal to a {@link java.sql.Time} object.
      */
-    public Time getTime() {
+    public Time getTime()
+    {
         long millis = getCal().getTimeInMillis();
-        int tzOffset =
-            Calendar.getInstance().getTimeZone().getOffset(millis);
+        int tzOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
         return new Time(millis - tzOffset);
     }
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlTimestampLiteral(
-            (Calendar) value, precision, hasTimeZone, formatString, pos);
+        return
+            new SqlTimestampLiteral((Calendar) value,
+                precision,
+                hasTimeZone,
+                formatString,
+                pos);
     }
 
     public String toString()
@@ -91,9 +106,9 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
     /**
      * Returns e.g. '03:05:67.456'.
      */
-    public String toFormattedString() {
-        String result =
-            new SimpleDateFormat(formatString).format(getTime());
+    public String toFormattedString()
+    {
+        String result = new SimpleDateFormat(formatString).format(getTime());
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);
@@ -109,7 +124,6 @@ public class SqlTimestampLiteral extends SqlAbstractDateTimeLiteral
         }
         return result;
     }
-
 }
 
 // End SqlTimestampLiteral.java

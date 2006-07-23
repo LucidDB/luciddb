@@ -20,24 +20,27 @@
 */
 package com.lucidera.opt;
 
-import java.util.BitSet;
-
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
-import org.eigenbase.relopt.*;
+import java.util.*;
 
 import net.sf.farrago.query.*;
 
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
+
+
 /**
- * LhxAggRule is a rule for transforming {@link AggregateRel} to
- * {@link LhxAggRel}.
+ * LhxAggRule is a rule for transforming {@link AggregateRel} to {@link
+ * LhxAggRel}.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxAggRule extends RelOptRule
+public class LhxAggRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LhxAggRule object.
@@ -49,7 +52,7 @@ public class LhxAggRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -79,14 +82,15 @@ public class LhxAggRule extends RelOptRule
                 return;
             }
         }
-        
+
         RelNode relInput = aggRel.getChild();
         RelNode fennelInput;
-        
+
         fennelInput =
             mergeTraitsAndConvert(
-                aggRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
-                    relInput);
+                aggRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                relInput);
         if (fennelInput == null) {
             return;
         }
@@ -99,14 +103,16 @@ public class LhxAggRule extends RelOptRule
         // Derive cardinality of RHS join keys.
         Double cndGroupByKey;
         BitSet groupByKeyMap = new BitSet();
-        
-        for (int i = 0; i < aggRel.getGroupCount(); i ++) {
+
+        for (int i = 0; i < aggRel.getGroupCount(); i++) {
             groupByKeyMap.set(i);
         }
-        
-        cndGroupByKey = RelMetadataQuery.getPopulationSize(
-            fennelInput, groupByKeyMap);
-        
+
+        cndGroupByKey =
+            RelMetadataQuery.getPopulationSize(
+                fennelInput,
+                groupByKeyMap);
+
         if ((cndGroupByKey == null) || (cndGroupByKey > numInputRows)) {
             cndGroupByKey = numInputRows;
         }

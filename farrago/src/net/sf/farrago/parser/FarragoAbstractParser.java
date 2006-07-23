@@ -22,28 +22,34 @@
 */
 package net.sf.farrago.parser;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-
 import java.io.*;
+
 import java.util.*;
 
-import org.eigenbase.util.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.sql.parser.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
 import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
- * FarragoAbstractParser is an abstract base for implementations
- * of the {@link FarragoSessionParser} interface.
+ * FarragoAbstractParser is an abstract base for implementations of the {@link
+ * FarragoSessionParser} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoAbstractParser implements FarragoSessionParser
+public abstract class FarragoAbstractParser
+    implements FarragoSessionParser
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected FarragoSessionStmtValidator stmtValidator;
 
     protected FarragoSessionDdlValidator ddlValidator;
@@ -51,6 +57,8 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     protected FarragoAbstractParserImpl parserImpl;
 
     protected String sourceString;
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionParser
     public SqlParserPos getCurrentPosition()
@@ -70,8 +78,10 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             return FarragoResource.instance().ValidatorNoPositionContext.ex(ex);
         } else {
             String msg = getCurrentPosition().toString();
-            return FarragoResource.instance().ValidatorPositionContext.ex(
-                msg, ex);
+            return
+                FarragoResource.instance().ValidatorPositionContext.ex(
+                    msg,
+                    ex);
         }
     }
 
@@ -122,10 +132,9 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 ex);
-
         } catch (SqlParseException spex) {
-            Throwable actualEx = (spex.getCause() == null) ? spex :
-                spex.getCause();
+            Throwable actualEx =
+                (spex.getCause() == null) ? spex : spex.getCause();
             Exception x = spex;
             final SqlParserPos pos = spex.getPos();
             if (pos != null) {
@@ -136,7 +145,6 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 x);
-
         } catch (Throwable ex) {
             SqlParseException spex = parserImpl.normalizeException(ex);
             Throwable actualEx = spex;
@@ -150,7 +158,6 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
             throw EigenbaseResource.instance().ParserError.ex(
                 actualEx.getMessage(),
                 x);
-
         } finally {
             sourceString = null;
         }
@@ -159,7 +166,7 @@ public abstract class FarragoAbstractParser implements FarragoSessionParser
     // implement FarragoSessionParser
     public String getSubstring(SqlParserPos start, SqlParserPos end)
     {
-        assert(sourceString != null);
+        assert (sourceString != null);
 
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);

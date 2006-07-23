@@ -20,28 +20,34 @@
 */
 package com.lucidera.lcs;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
-import java.util.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
 
 /**
- * A relation which expands bitmap tuples of the form 
- * [keys, bitmaps] into repetitious tuples of the form 
- * [keys]. One tuple will be output for each bit set in 
- * an input bitmap.
+ * A relation which expands bitmap tuples of the form [keys, bitmaps] into
+ * repetitious tuples of the form [keys]. One tuple will be output for each bit
+ * set in an input bitmap.
  *
  * @author John Pham
  * @version $Id$
  */
-public class LcsNormalizerRel extends FennelSingleRel
+public class LcsNormalizerRel
+    extends FennelSingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoRepos repos;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LcsNormalizerRel(
         RelOptCluster cluster,
@@ -50,53 +56,56 @@ public class LcsNormalizerRel extends FennelSingleRel
         super(cluster, child);
         repos = FennelRelUtil.getRepos(this);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement AbstractRelNode
     public AbstractRelNode clone()
     {
-        LcsNormalizerRel clone = 
-            new LcsNormalizerRel(getCluster(), getChild());
+        LcsNormalizerRel clone = new LcsNormalizerRel(
+                getCluster(),
+                getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     // implement AbstractRelNode
     protected RelDataType deriveRowType()
     {
         RelDataType childType = getChild().getRowType();
         List<RelDataTypeField> childFields = childType.getFieldList();
         final int nKeys = childFields.size() - 3;
-        final List<RelDataTypeField> keyFields = 
-            childFields.subList(0, nKeys);
-        
-        return getCluster().getTypeFactory().createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    return nKeys;
-                }
+        final List<RelDataTypeField> keyFields = childFields.subList(0, nKeys);
 
-                public String getFieldName(int index)
-                {
-                    return keyFields.get(index).getName();
-                }
+        return
+            getCluster().getTypeFactory().createStructType(
+                new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return nKeys;
+                    }
 
-                public RelDataType getFieldType(int index)
-                {
-                    return keyFields.get(index).getType();
-                }
-            });
+                    public String getFieldName(int index)
+                    {
+                        return keyFields.get(index).getName();
+                    }
+
+                    public RelDataType getFieldType(int index)
+                    {
+                        return keyFields.get(index).getType();
+                    }
+                });
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmNormalizerStreamDef normalizer = 
+        FemLbmNormalizerStreamDef normalizer =
             repos.newFemLbmNormalizerStreamDef();
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             normalizer);
-        
+
         return normalizer;
     }
 }

@@ -22,6 +22,7 @@
 package net.sf.farrago.syslib;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -33,19 +34,23 @@ import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.test.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
- * FarragoStatsUDR implements system procedures for manipulating
- * Farrago statistics stored in the repository. The procedures 
- * are intended to be used for testing purposes.
+ * FarragoStatsUDR implements system procedures for manipulating Farrago
+ * statistics stored in the repository. The procedures are intended to be used
+ * for testing purposes.
  *
  * @author John Pham
  * @version $Id$
  */
 public abstract class FarragoStatsUDR
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Sets the row count for a table
      */
@@ -54,17 +59,21 @@ public abstract class FarragoStatsUDR
         String schema,
         String table,
         long rowCount)
-    throws SQLException
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoStatsUtil.setTableRowCount(
-                sess, catalog, schema, table, rowCount);
+                sess,
+                catalog,
+                schema,
+                table,
+                rowCount);
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
     }
-    
+
     /**
      * Sets the page count for an index
      */
@@ -73,17 +82,21 @@ public abstract class FarragoStatsUDR
         String schema,
         String index,
         long pageCount)
-    throws SQLException
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoStatsUtil.setIndexPageCount(
-                sess, catalog, schema, index, pageCount);
+                sess,
+                catalog,
+                schema,
+                index,
+                pageCount);
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
     }
-    
+
     /**
      * Creates a column histogram
      */
@@ -97,18 +110,25 @@ public abstract class FarragoStatsUDR
         long sampleDistinctValues,
         int distributionType,
         String valueDigits)
-    throws SQLException
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoStatsUtil.createColumnHistogram(
-                sess, catalog, schema, table, column, 
-                distinctValues, samplePercent, sampleDistinctValues, 
-                distributionType, valueDigits);
+                sess,
+                catalog,
+                schema,
+                table,
+                column,
+                distinctValues,
+                samplePercent,
+                sampleDistinctValues,
+                distributionType,
+                valueDigits);
         } catch (Throwable e) {
             throw new SQLException(e.getMessage());
         }
-    }        
+    }
 }
 
 // End FarragoStatsUDR.java

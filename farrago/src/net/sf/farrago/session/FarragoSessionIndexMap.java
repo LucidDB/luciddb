@@ -36,7 +36,8 @@ import net.sf.farrago.namespace.util.*;
  */
 public interface FarragoSessionIndexMap
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Gets an index by its repository ID.
@@ -57,11 +58,10 @@ public interface FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index);
 
     /**
-     * Called on every reference to a temporary table.  Some implementations
-     * may use this to create empty temporary indexes on first reference.
+     * Called on every reference to a temporary table. Some implementations may
+     * use this to create empty temporary indexes on first reference.
      *
      * @param wrapperCache cache for looking up data wrappers
-     *
      * @param table the temporary table
      */
     public void instantiateTemporaryTable(
@@ -72,7 +72,6 @@ public interface FarragoSessionIndexMap
      * Creates an index and records its root in this map.
      *
      * @param wrapperCache cache for looking up data wrappers
-     *
      * @param index the index to create
      */
     public void createIndexStorage(
@@ -83,9 +82,7 @@ public interface FarragoSessionIndexMap
      * Drops an index and removes its root from this map.
      *
      * @param wrapperCache cache for looking up data wrappers
-     *
      * @param index the index to drop
-     *
      * @param truncate if true, only truncate storage; if false, drop storage
      * entirely
      */
@@ -96,9 +93,8 @@ public interface FarragoSessionIndexMap
 
     /**
      * Verifies an index and records its page count to the catalog
-     * 
+     *
      * @param wrapperCache cache for looking up data wrappers
-     * 
      * @param index the index to verify
      */
     public void computeIndexStats(
@@ -106,6 +102,5 @@ public interface FarragoSessionIndexMap
         FemLocalIndex index,
         boolean estimate);
 }
-
 
 // End FarragoSessionIndexMap.java

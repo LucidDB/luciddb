@@ -23,25 +23,32 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Strategy to infer the type of an operator call from the type of the
- * operands by using one {@link SqlReturnTypeInference} rule and a
- * combination of {@link SqlTypeTransform}s
+ * Strategy to infer the type of an operator call from the type of the operands
+ * by using one {@link SqlReturnTypeInference} rule and a combination of {@link
+ * SqlTypeTransform}s
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlTypeTransformCascade implements SqlReturnTypeInference
+public class SqlTypeTransformCascade
+    implements SqlReturnTypeInference
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlReturnTypeInference rule;
     private final SqlTypeTransform [] transforms;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a SqlTypeTransformCascade from a rule and an array of one or
-     * more transforms.
+     * Creates a SqlTypeTransformCascade from a rule and an array of one or more
+     * transforms.
      *
      * @pre null!=rule
      * @pre null!=transforms
@@ -72,7 +79,9 @@ public class SqlTypeTransformCascade implements SqlReturnTypeInference
         SqlReturnTypeInference rule,
         SqlTypeTransform transform)
     {
-        this(rule, new SqlTypeTransform [] { transform });
+        this(
+            rule,
+            new SqlTypeTransform[] { transform });
     }
 
     /**
@@ -87,14 +96,17 @@ public class SqlTypeTransformCascade implements SqlReturnTypeInference
         SqlTypeTransform transform0,
         SqlTypeTransform transform1)
     {
-        this(rule, new SqlTypeTransform [] { transform0, transform1 });
+        this(
+            rule,
+            new SqlTypeTransform[] { transform0, transform1 });
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
-        RelDataType ret =
-            rule.inferReturnType(opBinding);
+        RelDataType ret = rule.inferReturnType(opBinding);
         for (int i = 0; i < transforms.length; i++) {
             SqlTypeTransform transform = transforms[i];
             ret = transform.transformType(opBinding, ret);

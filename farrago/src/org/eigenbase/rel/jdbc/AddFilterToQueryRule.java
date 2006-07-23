@@ -20,48 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.jdbc;
 
-import org.eigenbase.rel.FilterRel;
-import org.eigenbase.rel.TableAccessRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.rex.RexToSqlTranslator;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlWriter;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.*;
 
 
 /**
  * <code>AddFilterToQueryRule</code> grafts a {@link FilterRel} onto a {@link
  * JdbcQuery}.
  *
- * <p> This rule only works if the query's select clause is "&#42;". If you
- * start with a {@link FilterRel} on a {@link org.eigenbase.rel.ProjectRel} on
- * a {@link TableAccessRel}, this will not be the
- * case. You can fix it by pushing the filter through the project.  (todo:
- * Implement a rule to do this.)  </p>
+ * <p>This rule only works if the query's select clause is "&#42;". If you start
+ * with a {@link FilterRel} on a {@link org.eigenbase.rel.ProjectRel} on a
+ * {@link TableAccessRel}, this will not be the case. You can fix it by pushing
+ * the filter through the project. (todo: Implement a rule to do this.)</p>
  *
  * @author jhyde
- * @since Nov 26, 2003
  * @version $Id$
+ * @since Nov 26, 2003
  */
-class AddFilterToQueryRule extends RelOptRule
+class AddFilterToQueryRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     AddFilterToQueryRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(JdbcQuery.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -74,11 +71,12 @@ class AddFilterToQueryRule extends RelOptRule
         SqlWriter writer = new SqlPrettyWriter(oldQuery.dialect);
         final RexToSqlTranslator translator = new RexToSqlTranslator();
         final SqlNode sqlCondition =
-            translator.translate(writer, filter.getCondition());
+            translator.translate(
+                writer,
+                filter.getCondition());
         query.sql.addWhere(sqlCondition);
         call.transformTo(query);
     }
 }
-
 
 // End AddFilterToQueryRule.java

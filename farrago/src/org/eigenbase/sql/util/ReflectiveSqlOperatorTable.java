@@ -22,37 +22,40 @@
 */
 package org.eigenbase.sql.util;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.util.MultiMap;
-import org.eigenbase.util.Util;
+import java.lang.reflect.*;
 
-import java.lang.reflect.Field;
 import java.util.*;
 
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
+
 /**
- * ReflectiveSqlOperatorTable implements the {@link SqlOperatorTable }
- * interface by reflecting the public fields of a subclass.
+ * ReflectiveSqlOperatorTable implements the {@link SqlOperatorTable } interface
+ * by reflecting the public fields of a subclass.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
+public abstract class ReflectiveSqlOperatorTable
+    implements SqlOperatorTable
 {
-    //~ Instance fields -------------------------------------------------------
 
-    private final MultiMap<String,SqlOperator> operators =
+    //~ Instance fields --------------------------------------------------------
+
+    private final MultiMap<String, SqlOperator> operators =
         new MultiMap<String, SqlOperator>();
 
-    private final Map<String,SqlOperator> mapNameToOp =
+    private final Map<String, SqlOperator> mapNameToOp =
         new HashMap<String, SqlOperator>();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected ReflectiveSqlOperatorTable()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Performs post-constructor initialization of an operator table. It can't
@@ -74,7 +77,6 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
                 } else if (SqlOperator.class.isAssignableFrom(field.getType())) {
                     SqlOperator op = (SqlOperator) field.get(this);
                     register(op);
-
                 }
             } catch (IllegalArgumentException e) {
                 throw Util.newInternal(e,
@@ -93,13 +95,12 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
         SqlSyntax syntax)
     {
         // NOTE jvs 3-Mar-2005:  ignore category until someone cares
-        
+
         List<SqlOperator> overloads = new ArrayList<SqlOperator>();
         String simpleName;
         if (opName.names.length > 1) {
             if (opName.names[opName.names.length - 2].equals(
-                    "INFORMATION_SCHEMA"))
-            {
+                    "INFORMATION_SCHEMA")) {
                 // per SQL99 Part 2 Section 10.4 Syntax Rule 7.b.ii.1
                 simpleName = opName.names[opName.names.length - 1];
             } else {
@@ -114,8 +115,7 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
             if (op.getSyntax() == syntax) {
                 overloads.add(op);
             } else if ((syntax == SqlSyntax.Function)
-                && (op instanceof SqlFunction))
-            {
+                && (op instanceof SqlFunction)) {
                 // this special case is needed for operators like CAST,
                 // which are treated as functions but have special syntax
                 overloads.add(op);
@@ -145,7 +145,9 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
     public void register(SqlOperator op)
     {
-        operators.putMulti(op.getName(), op);
+        operators.putMulti(
+            op.getName(),
+            op);
         if (op instanceof SqlBinaryOperator) {
             mapNameToOp.put(op.getName() + ":BINARY", op);
         } else if (op instanceof SqlPrefixOperator) {
@@ -157,14 +159,17 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
 
     /**
      * Registers a function in the table.
+     *
      * @param function
      */
     public void register(SqlFunction function)
     {
-        operators.putMulti(function.getName(), function);
+        operators.putMulti(
+            function.getName(),
+            function);
         SqlFunctionCategory funcType = function.getFunctionType();
         assert (funcType != null) : "Function type for " + function.getName()
-        + " not set";
+            + " not set";
     }
 
     // implement SqlOperatorTable
@@ -172,7 +177,8 @@ public abstract class ReflectiveSqlOperatorTable implements SqlOperatorTable
     {
         List<SqlOperator> list = new ArrayList<SqlOperator>();
 
-        Iterator<Map.Entry<String,SqlOperator>> it = operators.entryIterMulti();
+        Iterator<Map.Entry<String, SqlOperator>> it =
+            operators.entryIterMulti();
         while (it.hasNext()) {
             list.add(it.next().getValue());
         }

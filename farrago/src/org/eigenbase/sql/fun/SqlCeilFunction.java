@@ -23,31 +23,40 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Support for the CEIL/CEILING builtin function.
  *
  * @author jack
- * @since Apr 13, 2005
  * @version $Id$
+ * @since Apr 13, 2005
  */
-public class SqlCeilFunction extends SqlFunction
+public class SqlCeilFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlCeilFunction()
     {
-        super("CEIL", SqlKind.Function,
+        super("CEIL",
+            SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
-
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
-        SqlNode node = (SqlNode)call.operands[0];
+        SqlNode node = (SqlNode) call.operands[0];
         return scope.isMonotonic(node);
     }
 }
+
+// End SqlCeilFunction.java

@@ -20,40 +20,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
-import java.util.Set;
-import java.util.List;
-import java.util.logging.Logger;
+import java.io.*;
 
-import org.eigenbase.relopt.*;
+import java.util.*;
+import java.util.logging.*;
+
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
+import org.eigenbase.rex.*;
 import org.eigenbase.trace.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
  * Base class for every relational expression ({@link RelNode}).
  */
-public abstract class AbstractRelNode implements RelNode
+public abstract class AbstractRelNode
+    implements RelNode
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // TODO jvs 10-Oct-2003:  Make this thread safe.  Either synchronize, or
     // keep this per-VolcanoPlanner.
 
-    /** generator for {@link #id} values */
+    /**
+     * generator for {@link #id} values
+     */
     static int nextId = 0;
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Description, consists of id plus digest.
@@ -67,10 +67,10 @@ public abstract class AbstractRelNode implements RelNode
 
     /**
      * A short description of this relational expression's type, inputs, and
-     * other properties. The string uniquely identifies the node; another
-     * node is equivalent if and only if it has the same value. Computed by
-     * {@link #computeDigest}, assigned by {@link #onRegister}, returned by
-     * {@link #getDigest()}.
+     * other properties. The string uniquely identifies the node; another node
+     * is equivalent if and only if it has the same value. Computed by {@link
+     * #computeDigest}, assigned by {@link #onRegister}, returned by {@link
+     * #getDigest()}.
      *
      * @see #desc
      */
@@ -78,13 +78,14 @@ public abstract class AbstractRelNode implements RelNode
 
     private RelOptCluster cluster;
 
-    /** unique id of this object -- for debugging */
+    /**
+     * unique id of this object -- for debugging
+     */
     protected int id;
 
     /**
      * The variable by which to refer to rows from this relational expression,
-     * as correlating expressions; null if this expression is not correlated
-     * on.
+     * as correlating expressions; null if this expression is not correlated on.
      */
     private String correlVariable;
 
@@ -93,7 +94,7 @@ public abstract class AbstractRelNode implements RelNode
      */
     protected RelTraitSet traits;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>AbstractRelNode</code>.
@@ -112,12 +113,12 @@ public abstract class AbstractRelNode implements RelNode
         tracer.finest("new " + digest);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Clones this RelNode.  Traits of the RelNode must be explicitly cloned
-     * as the RelNode may have traits of which it has no knowledge.
-     * Example implementation:
+     * Clones this RelNode. Traits of the RelNode must be explicitly cloned as
+     * the RelNode may have traits of which it has no knowledge. Example
+     * implementation:
      *
      * <pre>
      *     public Object clone()
@@ -150,7 +151,7 @@ public abstract class AbstractRelNode implements RelNode
     public final CallingConvention getConvention()
     {
         return
-            (CallingConvention)traits.getTrait(
+            (CallingConvention) traits.getTrait(
                 CallingConventionTraitDef.instance);
     }
 
@@ -160,8 +161,8 @@ public abstract class AbstractRelNode implements RelNode
     }
 
     /**
-     * Returns a clone of this RelNode's traits.  Useful for
-     * implementing {@link #clone()}.
+     * Returns a clone of this RelNode's traits. Useful for implementing {@link
+     * #clone()}.
      *
      * @return a clone of this RelNode's traits.
      */
@@ -219,12 +220,10 @@ public abstract class AbstractRelNode implements RelNode
      * Registers any special rules specific to this kind of relational
      * expression.
      *
-     * <p>
-     * The planner calls this method this first time that it sees a relational
-     * expression of this class. The derived class should call {@link
-     * RelOptPlanner#addRule} for each rule, and then call {@link #register}
-     * on its base class.
-     * </p>
+     * <p>The planner calls this method this first time that it sees a
+     * relational expression of this class. The derived class should call {@link
+     * RelOptPlanner#addRule} for each rule, and then call {@link #register} on
+     * its base class.</p>
      */
     public static void register(RelOptPlanner planner)
     {
@@ -295,7 +294,7 @@ public abstract class AbstractRelNode implements RelNode
     {
         // for default case, nothing to do
     }
-    
+
     public void collectVariablesSet(Set<String> variableSet)
     {
         if (correlVariable != null) {
@@ -317,9 +316,9 @@ public abstract class AbstractRelNode implements RelNode
         double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
         return planner.makeCost(
-            rowCount,
-            rowCount,
-            0);
+                rowCount,
+                rowCount,
+                0);
     }
 
     public void explain(RelOptPlanWriter pw)
@@ -336,9 +335,11 @@ public abstract class AbstractRelNode implements RelNode
             if (e != input) {
                 // TODO: change 'equal' to 'eq', which is stronger.
                 assert RelOptUtil.equal(
-                    "rowtype of rel before registration", input.getRowType(),
-                    "rowtype of rel after registration", e.getRowType(),
-                    true);
+                        "rowtype of rel before registration",
+                        input.getRowType(),
+                        "rowtype of rel after registration",
+                        e.getRowType(),
+                        true);
                 replaceInput(i, e);
             }
         }
@@ -351,6 +352,7 @@ public abstract class AbstractRelNode implements RelNode
         String tempDigest = computeDigest();
         assert tempDigest != null : "post: return != null";
         String prefix = "rel#" + id + ":";
+
         // Substring uses the same underlying array of chars, so saves a bit
         // of memory.
         this.desc = prefix + tempDigest;
@@ -409,12 +411,12 @@ public abstract class AbstractRelNode implements RelNode
                 {
                     RelNode [] inputs = rel.getInputs();
                     RexNode [] childExps = rel.getChildExps();
-                    assert terms.length ==
-                        (inputs.length + childExps.length + values.length) :
-                        "terms.length=" + terms.length +
-                        " inputs.length=" + inputs.length +
-                        " childExps.length=" + childExps.length +
-                        " values.length=" + values.length;
+                    assert terms.length
+                        == (inputs.length + childExps.length + values.length) : "terms.length="
+                        + terms.length
+                        + " inputs.length=" + inputs.length
+                        + " childExps.length=" + childExps.length
+                        + " values.length=" + values.length;
                     write(getRelTypeName());
 
                     for (int i = 0; i < traits.size(); i++) {
@@ -452,6 +454,5 @@ public abstract class AbstractRelNode implements RelNode
         return sw.toString();
     }
 }
-
 
 // End AbstractRelNode.java

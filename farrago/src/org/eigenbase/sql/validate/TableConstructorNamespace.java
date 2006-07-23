@@ -21,9 +21,9 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Namespace for a table constructor <code>VALUES (expr, expr, ...)</code>.
@@ -32,10 +32,16 @@ import org.eigenbase.reltype.RelDataType;
  * @version $Id$
  * @since Mar 25, 2003
  */
-public class TableConstructorNamespace extends AbstractNamespace
+public class TableConstructorNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlNode values;
     private final SqlValidatorScope scope;
+
+    //~ Constructors -----------------------------------------------------------
 
     TableConstructorNamespace(
         SqlValidatorImpl validator,
@@ -46,6 +52,8 @@ public class TableConstructorNamespace extends AbstractNamespace
         this.values = values;
         this.scope = scope;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected RelDataType validateImpl()
     {

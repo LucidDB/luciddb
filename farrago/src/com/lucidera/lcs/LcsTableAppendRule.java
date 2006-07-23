@@ -20,24 +20,24 @@
  */
 package com.lucidera.lcs;
 
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
+
 
 /**
  * LcsTableAppendRule is a rule for converting an abstract {@link
  * TableModificationRel} into a corresponding {@link LcsTableAppendRel}.
- * 
+ *
  * @author Rushan Chen
  * @version $Id$
  */
-public class LcsTableAppendRule extends RelOptRule
+public class LcsTableAppendRule
+    extends RelOptRule
 {
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LcsTableAppendRule object.
@@ -49,7 +49,7 @@ public class LcsTableAppendRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -63,7 +63,7 @@ public class LcsTableAppendRule extends RelOptRule
         TableModificationRel tableModification =
             (TableModificationRel) call.rels[0];
 
-        // Target table has to be a column storage table, 
+        // Target table has to be a column storage table,
         // i.e. created using sys_column_store_data_server.
         if (!(tableModification.getTable() instanceof LcsTable)) {
             return;
@@ -77,21 +77,22 @@ public class LcsTableAppendRule extends RelOptRule
         if (!tableModification.isInsert()) {
             return;
         }
-        
+
         RelNode inputRel = tableModification.getChild();
 
         // Require input types to match expected types exactly.  This
         // is accomplished by the usage of CoerceInputsRule.
         if (!RelOptUtil.areRowTypesEqual(
-                    inputRel.getRowType(),
-                    tableModification.getExpectedInputRowType(0),
-                    false)) {
+                inputRel.getRowType(),
+                tableModification.getExpectedInputRowType(0),
+                false)) {
             return;
         }
-        
+
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                call.rels[0].getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 inputRel);
         if (fennelInput == null) {
             return;
@@ -106,11 +107,8 @@ public class LcsTableAppendRule extends RelOptRule
                 tableModification.getOperation(),
                 tableModification.getUpdateColumnList());
 
-        call.transformTo(clusterAppendRel);        
-        
+        call.transformTo(clusterAppendRel);
     }
-
 }
-
 
 //End LcsTableAppendRule

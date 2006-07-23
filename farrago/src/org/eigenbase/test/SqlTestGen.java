@@ -22,47 +22,55 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.util.Util;
+import java.io.*;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
+import java.lang.reflect.*;
+
+import java.nio.charset.*;
+
+import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Utility to generate a SQL script from validator test.
  *
  * @author jhyde
- * @since Nov 10, 2004
  * @version $Id$
- **/
+ * @since Nov 10, 2004
+ */
 public class SqlTestGen
 {
-    public static void main(String[] args) {
+
+    //~ Methods ----------------------------------------------------------------
+
+    public static void main(String [] args)
+    {
         new SqlTestGen().genValidatorTest();
     }
 
-    private void genValidatorTest() {
+    private void genValidatorTest()
+    {
         FileOutputStream fos = null;
         PrintWriter pw = null;
         try {
             File file = new File("validatorTest.sql");
             fos = new FileOutputStream(file);
             pw = new PrintWriter(fos);
-            Method[] methods = getJunitMethods(SqlValidatorSpooler.class);
+            Method [] methods = getJunitMethods(SqlValidatorSpooler.class);
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 final SqlValidatorSpooler test =
-                    new SqlValidatorSpooler(method.getName(), pw);
-                final Object result = method.invoke(test, new Object[0]);
+                    new SqlValidatorSpooler(
+                        method.getName(),
+                        pw);
+                final Object result = method.invoke(
+                        test,
+                        new Object[0]);
                 assert result == null;
             }
         } catch (IOException e) {
@@ -83,7 +91,7 @@ public class SqlTestGen
                     fos.close();
                 } catch (IOException e) {
                     throw Util.newInternal(e);
-               }
+                }
             }
         }
     }
@@ -91,28 +99,32 @@ public class SqlTestGen
     /**
      * Returns a list of all of the Junit methods in a given class.
      */
-    private static Method[] getJunitMethods(Class clazz) {
-        final Method[] methods = clazz.getMethods();
+    private static Method [] getJunitMethods(Class clazz)
+    {
+        final Method [] methods = clazz.getMethods();
         ArrayList list = new ArrayList();
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
-            if (method.getName().startsWith("test") &&
-                Modifier.isPublic(method.getModifiers()) &&
-                !Modifier.isStatic(method.getModifiers()) &&
-                method.getParameterTypes().length == 0 &&
-                method.getReturnType() == Void.TYPE) {
+            if (method.getName().startsWith("test")
+                && Modifier.isPublic(method.getModifiers())
+                && !Modifier.isStatic(method.getModifiers())
+                && (method.getParameterTypes().length == 0)
+                && (method.getReturnType() == Void.TYPE)) {
                 list.add(method);
             }
         }
-        return (Method[]) list.toArray(new Method[list.size()]);
+        return (Method []) list.toArray(new Method[list.size()]);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Subversive subclass, which spools restuls to a writer rather than
-     * running tests. It is not a valid JUnit test because it does not have
-     * a public constructor.
+     * Subversive subclass, which spools restuls to a writer rather than running
+     * tests. It is not a valid JUnit test because it does not have a public
+     * constructor.
      */
-    private static class SqlValidatorSpooler extends SqlValidatorTest
+    private static class SqlValidatorSpooler
+        extends SqlValidatorTest
     {
         private final PrintWriter pw;
 
@@ -122,61 +134,62 @@ public class SqlTestGen
             this.pw = pw;
         }
 
-        public SqlValidatorTestCase.Tester getTester() {
+        public SqlValidatorTestCase.Tester getTester()
+        {
             return new TesterImpl() {
-                public SqlValidator getValidator() {
-                    throw new UnsupportedOperationException();
-                }
-
-                public void assertExceptionIsThrown(String sql,
-                    String expectedMsgPattern)
-                {
-                    if (expectedMsgPattern == null) {
-                        // This SQL statement is supposed to succeed. Generate
-                        // it to the file, so we can see what output it
-                        // produces.
-                        pw.println("-- " + getName());
-                        pw.println(sql);
-                        pw.println(";");
-                    } else {
-                        // Do nothing. We know that this fails the validator
-                        // test, so we don't learn anything by having it fail
-                        // from SQL.
+                    public SqlValidator getValidator()
+                    {
+                        throw new UnsupportedOperationException();
                     }
-                }
 
-                public RelDataType getColumnType(String sql)
-                {
-                    return null;
-                }
+                    public void assertExceptionIsThrown(String sql,
+                        String expectedMsgPattern)
+                    {
+                        if (expectedMsgPattern == null) {
+                            // This SQL statement is supposed to succeed.
+                            // Generate it to the file, so we can see what
+                            // output it produces.
+                            pw.println("-- " + getName());
+                            pw.println(sql);
+                            pw.println(";");
+                        } else {
+                            // Do nothing. We know that this fails the validator
+                            // test, so we don't learn anything by having it
+                            // fail from SQL.
+                        }
+                    }
 
-                public void checkType(
-                    String sql,
-                    String expected)
-                {
-                    // We could generate the SQL -- or maybe describe -- but
-                    // ignore it for now.
-                }
+                    public RelDataType getColumnType(String sql)
+                    {
+                        return null;
+                    }
 
-                public void checkCollation(
-                    String sql,
-                    String expectedCollationName,
-                    SqlCollation.Coercibility expectedCoercibility)
-                {
-                    // We could generate the SQL -- or maybe describe -- but
-                    // ignore it for now.
-                }
+                    public void checkType(
+                        String sql,
+                        String expected)
+                    {
+                        // We could generate the SQL -- or maybe describe -- but
+                        // ignore it for now.
+                    }
 
-                public void checkCharset(
-                    String sql,
-                    Charset expectedCharset)
-                {
-                    // We could generate the SQL -- or maybe describe -- but
-                    // ignore it for now.
-                }
-            };
+                    public void checkCollation(
+                        String sql,
+                        String expectedCollationName,
+                        SqlCollation.Coercibility expectedCoercibility)
+                    {
+                        // We could generate the SQL -- or maybe describe -- but
+                        // ignore it for now.
+                    }
+
+                    public void checkCharset(
+                        String sql,
+                        Charset expectedCharset)
+                    {
+                        // We could generate the SQL -- or maybe describe -- but
+                        // ignore it for now.
+                    }
+                };
         }
-
     }
 }
 

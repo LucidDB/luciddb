@@ -32,19 +32,20 @@ import net.sf.farrago.session.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlDropStmt extends DdlStmt
+public class DdlDropStmt
+    extends DdlStmt
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private boolean restrict;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlDropStmt.
      *
      * @param droppedElement top-level element dropped by this stmt
-     *
      * @param restrict whether DROP RESTRICT is in effect
      */
     public DdlDropStmt(
@@ -55,7 +56,7 @@ public class DdlDropStmt extends DdlStmt
         this.restrict = restrict;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DdlStmt
     public boolean isDropRestricted()
@@ -79,6 +80,5 @@ public class DdlDropStmt extends DdlStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlDropStmt.java

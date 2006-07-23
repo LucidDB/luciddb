@@ -22,14 +22,14 @@
 */
 package org.eigenbase.sql.parser;
 
-import org.eigenbase.util14.EigenbaseParserException;
+import java.util.*;
 
-import java.util.Collection;
-import java.util.TreeSet;
+import org.eigenbase.util14.*;
+
 
 /**
- * SqlParseException defines a checked exception corresponding
- * to {@link SqlParser}.
+ * SqlParseException defines a checked exception corresponding to {@link
+ * SqlParser}.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -38,21 +38,27 @@ public class SqlParseException
     extends Exception
     implements EigenbaseParserException
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlParserPos pos;
-    private final int[][] expectedTokenSequences;
-    private final String[] tokenImages;
+    private final int [][] expectedTokenSequences;
+    private final String [] tokenImages;
+
     /**
      * The original exception thrown by the generated parser. Unfortunately,
-     * each generated parser throws exceptions of a different class. So, we
-     * keep the exception for forensic purposes, but don't print it publicly.
+     * each generated parser throws exceptions of a different class. So, we keep
+     * the exception for forensic purposes, but don't print it publicly.
      */
     private final Throwable parserException;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlParseException(
         String message,
         SqlParserPos pos,
-        int[][] expectedTokenSequences,
-        String[] tokenImages,
+        int [][] expectedTokenSequences,
+        String [] tokenImages,
         Throwable parserException)
     {
         super(message, parserException);
@@ -61,6 +67,8 @@ public class SqlParseException
         this.tokenImages = tokenImages;
         this.parserException = parserException;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlParserPos getPos()
     {
@@ -75,18 +83,18 @@ public class SqlParseException
     {
         final TreeSet set = new TreeSet();
         for (int i = 0; i < expectedTokenSequences.length; i++) {
-            int[] expectedTokenSequence = expectedTokenSequences[i];
+            int [] expectedTokenSequence = expectedTokenSequences[i];
             set.add(tokenImages[expectedTokenSequence[0]]);
         }
         return set;
     }
 
-    public String[] getTokenImages()
+    public String [] getTokenImages()
     {
         return tokenImages;
     }
 
-    public int[][] getExpectedTokenSequences()
+    public int [][] getExpectedTokenSequences()
     {
         return expectedTokenSequences;
     }

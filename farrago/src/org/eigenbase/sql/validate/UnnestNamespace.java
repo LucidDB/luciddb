@@ -21,11 +21,11 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.type.MultisetSqlType;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Namespace for UNNEST.
@@ -34,10 +34,16 @@ import org.eigenbase.reltype.RelDataType;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class UnnestNamespace extends AbstractNamespace
+class UnnestNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlCall unnest;
     private final SqlValidatorScope scope;
+
+    //~ Constructors -----------------------------------------------------------
 
     UnnestNamespace(
         SqlValidatorImpl validator,
@@ -51,6 +57,8 @@ class UnnestNamespace extends AbstractNamespace
         this.scope = scope;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected RelDataType validateImpl()
     {
         // Validate the call and its arguments, and infer the return type.
@@ -61,9 +69,10 @@ class UnnestNamespace extends AbstractNamespace
         if (type.isStruct()) {
             return type;
         }
-        return validator.getTypeFactory().createStructType(
-            new RelDataType[]{type},
-            new String[]{ validator.deriveAlias(unnest, 0) });
+        return
+            validator.getTypeFactory().createStructType(
+                new RelDataType[] { type },
+                new String[] { validator.deriveAlias(unnest, 0) });
     }
 
     /**
@@ -90,4 +99,3 @@ class UnnestNamespace extends AbstractNamespace
 }
 
 // End UnnestNamespace.java
-

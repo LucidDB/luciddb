@@ -21,27 +21,33 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.util.SqlBasicVisitor;
+import java.util.*;
 
-import java.util.List;
-import java.util.Stack;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
+
 
 /**
- * Visitor which throws an exception if any component of the expression is
- * not a group expression.
+ * Visitor which throws an exception if any component of the expression is not a
+ * group expression.
  *
  * @author jhyde
- * @since Oct 28, 2004
  * @version $Id$
+ * @since Oct 28, 2004
  */
-class AggChecker extends SqlBasicVisitor<Void>
+class AggChecker
+    extends SqlBasicVisitor<Void>
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Stack<SqlValidatorScope> scopes =
         new Stack<SqlValidatorScope>();
     private final List<SqlNode> groupExprs;
     private SqlValidatorImpl validator;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AggChecker.
@@ -55,6 +61,8 @@ class AggChecker extends SqlBasicVisitor<Void>
         this.groupExprs = groupExprs;
         this.scopes.push(scope);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     boolean isGroupExpr(SqlNode expr)
     {
@@ -71,15 +79,20 @@ class AggChecker extends SqlBasicVisitor<Void>
         if (isGroupExpr(id)) {
             return null;
         }
+
         // If it '*' or 'foo.*'?
         if (id.isStar()) {
             assert false : "star should have been expanded";
         }
+
         // Is it a call to a parentheses-free function?
-        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), id);
+        SqlCall call = SqlUtil.makeCall(
+                validator.getOperatorTable(),
+                id);
         if (call != null) {
             return call.accept(this);
         }
+
         // Didn't find the identifer in the group-by list as is, now find
         // it fully-qualified.
         // TODO: It would be better if we always compared fully-qualified
@@ -118,7 +131,10 @@ class AggChecker extends SqlBasicVisitor<Void>
         scopes.push(newScope);
 
         // Visit the operands (only expressions).
-        call.getOperator().acceptCall(this, call, true, ArgHandlerImpl.instance);
+        call.getOperator().acceptCall(this,
+            call,
+            true,
+            ArgHandlerImpl.instance);
 
         // Restore scope.
         scopes.pop();

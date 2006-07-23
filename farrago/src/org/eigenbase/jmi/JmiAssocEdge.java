@@ -21,37 +21,44 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.edge.*;
+import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import java.util.*;
+import org._3pq.jgrapht.edge.*;
+
 
 /**
- * JmiAssocEdge represents an association in a JMI model.  The source vertex is
+ * JmiAssocEdge represents an association in a JMI model. The source vertex is
  * the class for the source end and the target vertex is the class for the
  * target end, where
  *
- *<ul>
- *<li>if an end is composite, it is the source end
- *<li>else if an end has multiplicity > 1, it is the target end if the other
+ * <ul>
+ * <li>if an end is composite, it is the source end
+ * <li>else if an end has multiplicity > 1, it is the target end if the other
  * end has multiplicity <= 1
- *<li>else if an end is ordered, it is the target end
- *<li>otherwise, the first end is the source end and the second end is
- * the target end
- *</ul>
+ * <li>else if an end is ordered, it is the target end
+ * <li>otherwise, the first end is the source end and the second end is the
+ * target end
+ * </ul>
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiAssocEdge extends DirectedEdge
+public class JmiAssocEdge
+    extends DirectedEdge
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Association mofAssoc;
 
-    private final AssociationEnd mofAssocEnds[];
+    private final AssociationEnd [] mofAssocEnds;
 
     RefAssociation refAssoc;
+
+    //~ Constructors -----------------------------------------------------------
 
     JmiAssocEdge(
         Association mofAssoc,
@@ -65,6 +72,8 @@ public class JmiAssocEdge extends DirectedEdge
         this.mofAssoc = mofAssoc;
         this.mofAssocEnds = mofAssocEnds;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the MOF association represented by this edge
@@ -121,7 +130,8 @@ public class JmiAssocEdge extends DirectedEdge
     // implement Object
     public String toString()
     {
-        return mofAssocEnds[0].getType().getName() + ":"
+        return
+            mofAssocEnds[0].getType().getName() + ":"
             + mofAssocEnds[0].getName()
             + "_" + mofAssoc.getName() + "_"
             + mofAssocEnds[1].getType().getName() + ":"

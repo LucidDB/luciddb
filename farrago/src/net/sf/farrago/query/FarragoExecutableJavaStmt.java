@@ -23,8 +23,11 @@
 package net.sf.farrago.query;
 
 import java.io.*;
+
 import java.lang.reflect.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.runtime.*;
@@ -33,7 +36,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.runtime.TupleIter;
+import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
 
@@ -41,22 +44,20 @@ import org.eigenbase.util.*;
  * FarragoExecutableJavaStmt implements FarragoSessionExecutableStmt via a
  * compiled Java class.
  *
- *<p>
+ * <p>NOTE: be sure to read superclass warnings before modifying this class.
  *
- * NOTE:  be sure to read superclass warnings before modifying this class.
- *
- *<p>
- *
- * TODO:  another implementation, FarragoExecutableFennelStmt, which operates
+ * <p>TODO: another implementation, FarragoExecutableFennelStmt, which operates
  * off of a pure Fennel plan; for use when there is no Java needed in the
  * implementation
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
+class FarragoExecutableJavaStmt
+    extends FarragoExecutableStmtImpl
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final File packageDir;
 
@@ -70,8 +71,8 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     private final String xmiFennelPlan;
     private final Set referencedObjectIds;
     private final Map<String, RelDataType> resultSetTypeMap;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoExecutableJavaStmt(
         File packageDir,
@@ -99,7 +100,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         rowType = preparedRowType;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionExecutableStmt
     public RelDataType getRowType()
@@ -118,7 +119,7 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
     {
         try {
             runtimeContext.setStatementClassLoader(statementClassLoader);
-            
+
             if (xmiFennelPlan != null) {
                 runtimeContext.loadFennelPlan(xmiFennelPlan);
             }
@@ -126,18 +127,20 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
             // NOTE jvs 1-May-2004: This sequence is subtle.  We can't open all
             // Fennel tuple streams yet, since some may take Java streams as
             // input, and the Java streams are created by method.invoke below
-            // (which calls the generated execute method to obtain an
-            // iterator).  This means that the generated execute must NOT try
-            // to prefetch any data, since the Fennel streams aren't open yet.
-            // In particular, Java iterator implementations must not do
-            // prefetch in the constructor (always wait for hasNext/next).
+            // (which calls the generated execute method to obtain an iterator).
+            //  This means that the generated execute must NOT try to prefetch
+            // any data, since the Fennel streams aren't open yet. In
+            // particular, Java iterator implementations must not do prefetch in
+            // the constructor (always wait for hasNext/next).
             ResultSet resultSet;
             TupleIter iter =
                 (TupleIter) method.invoke(
                     null,
-                    new Object [] { runtimeContext });
+                    new Object[] { runtimeContext });
             resultSet =
-                new FarragoTupleIterResultSet(iter, rowClass, rowType,
+                new FarragoTupleIterResultSet(iter,
+                    rowClass,
+                    rowType,
                     runtimeContext);
 
             if (xmiFennelPlan != null) {
@@ -188,6 +191,5 @@ class FarragoExecutableJavaStmt extends FarragoExecutableStmtImpl
         return resultSetTypeMap;
     }
 }
-
 
 // End FarragoExecutableJavaStmt.java

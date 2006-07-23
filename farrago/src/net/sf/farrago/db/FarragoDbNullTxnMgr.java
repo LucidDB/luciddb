@@ -21,34 +21,42 @@
 */
 package net.sf.farrago.db;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.type.runtime.*;
-
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.runtime.*;
+
 import org.eigenbase.relopt.*;
+
 
 /**
  * FarragoDbNullTxnMgr is a do-nothing implementation of {@link
- * FarragoSessionTxnMgr}.  It is useful as a base class because
- * it has a default implementation for generating new
- * transaction ID's and notifying listeners.
+ * FarragoSessionTxnMgr}. It is useful as a base class because it has a default
+ * implementation for generating new transaction ID's and notifying listeners.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
+public class FarragoDbNullTxnMgr
+    implements FarragoSessionTxnMgr
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final AtomicLong nextId;
 
     private final List<FarragoSessionTxnListener> listeners;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoDbNullTxnMgr()
     {
         nextId = new AtomicLong(1);
         listeners = new ArrayList<FarragoSessionTxnListener>();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionTxnMgr
     public void addListener(
@@ -56,14 +64,14 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
     {
         listeners.add(listener);
     }
-    
+
     // implement FarragoSessionTxnMgr
     public void removeListener(
         FarragoSessionTxnListener listener)
     {
         listeners.remove(listener);
     }
-    
+
     // implement FarragoSessionTxnMgr
     public FarragoSessionTxnId beginTxn(FarragoSession session)
     {
@@ -84,10 +92,13 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
         // upgrade is a very common deadlock.  And sort by table name so that
         // all statements use the same ordering.
 
-        List<List<String>> tableNames = new ArrayList<List<String>>(
-            accessMap.getTablesAccessed());
+        List<List<String>> tableNames =
+            new ArrayList<List<String>>(
+                accessMap.getTablesAccessed());
 
-        Collections.sort(tableNames, new CharStringComparator());
+        Collections.sort(
+            tableNames,
+            new CharStringComparator());
 
         // TODO jvs 17-Mar-2006:  use a LockOrderComparator to do
         // the job more cleanly.
@@ -131,15 +142,13 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
     }
 
     /**
-     * Called by accessTables for each table accessed.  Default
-     * implementation is to do nothing; subclasses override this
-     * to take real actions such as calling a lock manager.
+     * Called by accessTables for each table accessed. Default implementation is
+     * to do nothing; subclasses override this to take real actions such as
+     * calling a lock manager.
      *
      * @param txnId ID of accessing transaction
-     *
-     * @param localTableName qualified name of table as it is known in the
-     * local catalog
-     *
+     * @param localTableName qualified name of table as it is known in the local
+     * catalog
      * @param accessType type of table access
      */
     protected void accessTable(
@@ -159,7 +168,10 @@ public class FarragoDbNullTxnMgr implements FarragoSessionTxnMgr
         }
     }
 
-    private static class LongTxnId implements FarragoSessionTxnId
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class LongTxnId
+        implements FarragoSessionTxnId
     {
         private final long id;
 

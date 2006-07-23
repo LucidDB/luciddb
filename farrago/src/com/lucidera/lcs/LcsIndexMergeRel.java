@@ -26,25 +26,28 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.relopt.*;
 
+
 /**
- * LcsIndexMergeRel is a relation for merging the results of an index scan. 
- * The input to this relation must be a single input and it must be an 
- * LcsIndexSearchRel. The input data consists of unordered rid segments. 
- * The result set produced by this relation will be ordered rid segments.
+ * LcsIndexMergeRel is a relation for merging the results of an index scan. The
+ * input to this relation must be a single input and it must be an
+ * LcsIndexSearchRel. The input data consists of unordered rid segments. The
+ * result set produced by this relation will be ordered rid segments.
  *
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexMergeRel extends FennelSingleRel
+class LcsIndexMergeRel
+    extends FennelSingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final LcsTable lcsTable;
     FennelRelParamId ridLimitParamId;
     FennelRelParamId consumerSridParamId;
     FennelRelParamId segmentLimitParamId;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LcsIndexMergeRel object.
@@ -58,10 +61,12 @@ class LcsIndexMergeRel extends FennelSingleRel
         FennelRelParamId segmentLimitParamId,
         FennelRelParamId ridLimitParamId)
     {
-        super(indexSearchRel.getCluster(), indexSearchRel);
+        super(
+            indexSearchRel.getCluster(),
+            indexSearchRel);
         this.lcsTable = lcsTable;
-        
-        // These two parameters are used when there's an AND 
+
+        // These two parameters are used when there's an AND
         // downstream(as consumer)
         this.consumerSridParamId = consumerSridParamId;
         this.segmentLimitParamId = segmentLimitParamId;
@@ -71,36 +76,38 @@ class LcsIndexMergeRel extends FennelSingleRel
         this.ridLimitParamId = ridLimitParamId;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
     {
-        return new LcsIndexMergeRel(
-            lcsTable,
-            (LcsIndexSearchRel) RelOptUtil.clone(getChild()),
-            consumerSridParamId,
-            segmentLimitParamId,
-            ridLimitParamId);
+        return
+            new LcsIndexMergeRel(
+                lcsTable,
+                (LcsIndexSearchRel) RelOptUtil.clone(getChild()),
+                consumerSridParamId,
+                segmentLimitParamId,
+                ridLimitParamId);
     }
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  the real thing(sorter costing + merge cost)
-        return planner.makeTinyCost();   
+        return planner.makeTinyCost();
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
+
         //
         // First obtain the child stream
         //
-        FemExecutionStreamDef search = 
+        FemExecutionStreamDef search =
             implementor.visitFennelChild((FennelRel) getChild());
-        
+
         //
         // Chop the tuples so they fit in memory when expanded
         //
@@ -108,12 +115,11 @@ class LcsIndexMergeRel extends FennelSingleRel
         chopper.setRidLimitParamId(
             implementor.translateParamId(ridLimitParamId).intValue());
         implementor.addDataFlowFromProducerToConsumer(search, chopper);
-        
+
         //
         // Sort the stream
         //
-        FemSortingStreamDef sorter = 
-            lcsTable.getIndexGuide().newBitmapSorter();
+        FemSortingStreamDef sorter = lcsTable.getIndexGuide().newBitmapSorter();
         implementor.addDataFlowFromProducerToConsumer(chopper, sorter);
 
         //
@@ -125,28 +131,31 @@ class LcsIndexMergeRel extends FennelSingleRel
             implementor.translateParamId(consumerSridParamId).intValue());
         merge.setSegmentLimitParamId(
             implementor.translateParamId(segmentLimitParamId).intValue());
-        
+
         merge.setRidLimitParamId(
             implementor.translateParamId(ridLimitParamId).intValue());
 
         implementor.addDataFlowFromProducerToConsumer(sorter, merge);
-        
+
         return merge;
     }
-    
+
     //  implement RelNode
     public void explain(RelOptPlanWriter pw)
-    {   
-        String[] names = new String[4];
-        
+    {
+        String [] names = new String[4];
+
         names[0] = "child#0";
         names[1] = "consumerSridParamId";
         names[2] = "segmentLimitParamId";
         names[3] = "ridLimitParamId";
         pw.explain(
-            this, names, new Object[] {
+            this,
+            names,
+            new Object[] {
                 print(consumerSridParamId), print(segmentLimitParamId),
-                print(ridLimitParamId) });
+            print(ridLimitParamId)
+            });
     }
 
     private Object print(FennelRelParamId paramId)

@@ -22,35 +22,33 @@
 */
 package net.sf.farrago.session;
 
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorException;
+
 
 /**
- * FarragoSessionParser represents an object capable of parsing Farrago
- * SQL statements.
+ * FarragoSessionParser represents an object capable of parsing Farrago SQL
+ * statements.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoSessionParser
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Parses an SQL expression.  If a DDL statement, implicitly
-     * performs uncommitted catalog updates.
+     * Parses an SQL expression. If a DDL statement, implicitly performs
+     * uncommitted catalog updates.
      *
      * @param stmtValidator the statement validator to use
-     *
-     * @param ddlValidator the validator to use for lookup during parsing
-     * if this turns out to be a DDL statement; may be null if DDL
-     * is not allowed
-     *
+     * @param ddlValidator the validator to use for lookup during parsing if
+     * this turns out to be a DDL statement; may be null if DDL is not allowed
      * @param sql the SQL text to be parsed
-     *
-     * @param expectStatement if true, expect a statement; if false,
-     * expect a row-expression
+     * @param expectStatement if true, expect a statement; if false, expect a
+     * row-expression
      *
      * @return for DDL, a FarragoSessionDdlStmt; for DML or query, top-level
      * SqlNode
@@ -73,8 +71,7 @@ public interface FarragoSessionParser
     public String getJdbcKeywords();
 
     /**
-     * @return validator to use for validating DDL statements as they are
-     * parsed
+     * @return validator to use for validating DDL statements as they are parsed
      */
     public FarragoSessionDdlValidator getDdlValidator();
 
@@ -84,8 +81,8 @@ public interface FarragoSessionParser
     public FarragoSessionStmtValidator getStmtValidator();
 
     /**
-     * Wraps a validation error with the current position information
-     * of the parser.
+     * Wraps a validation error with the current position information of the
+     * parser.
      *
      * @param ex exception to be wrapped
      *
@@ -98,13 +95,11 @@ public interface FarragoSessionParser
      * Gets a substring from the text currently being parsed.
      *
      * @param start start position (inclusive) of substring
-     *
      * @param end end position (exclusive) of substring
      *
      * @return substring
      */
     public String getSubstring(SqlParserPos start, SqlParserPos end);
 }
-
 
 // End FarragoSessionParser.java

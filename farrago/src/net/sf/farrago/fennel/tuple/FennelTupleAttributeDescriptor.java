@@ -20,66 +20,77 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
 
-import java.io.Serializable;
+import java.io.*;
+
 
 /**
- * FennelTupleAttributeDescriptor holds metadata describing a particular
- * entry in a tuple. These are contained in a FennelTupleDescriptor
- * object to describe the layout of a tuple.
+ * FennelTupleAttributeDescriptor holds metadata describing a particular entry
+ * in a tuple. These are contained in a FennelTupleDescriptor object to describe
+ * the layout of a tuple.
  *
  * @author Mike Bennett
  * @version $Id$
  */
-public class FennelTupleAttributeDescriptor implements Serializable
+public class FennelTupleAttributeDescriptor
+    implements Serializable
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = -4582426550989158154L;
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     *  the FennelStoredTypeDescriptor of this attribute.
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = -4582426550989158154L;
+
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * the FennelStoredTypeDescriptor of this attribute.
      */
     public FennelStoredTypeDescriptor typeDescriptor;
 
     /**
-     *  is this attribute nullable?
+     * is this attribute nullable?
      */
     public boolean isNullable;
 
     /**
-     *  the amount of storage, in bytes, taken by this attribute.
+     * the amount of storage, in bytes, taken by this attribute.
      */
-    public int     storageSize;
+    public int storageSize;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     *  Default constructor -- shouldn't be used in normal situations.
+     * Default constructor -- shouldn't be used in normal situations.
      */
     public FennelTupleAttributeDescriptor()
     {
         isNullable = false;
-        storageSize  = 0;
+        storageSize = 0;
     }
 
     /**
-     *  Normal constructor
+     * Normal constructor
      */
     public FennelTupleAttributeDescriptor(
         FennelStoredTypeDescriptor typeDescriptor,
         boolean isNullable,
-        int     storageSizeInit)
+        int storageSizeInit)
     {
         this.typeDescriptor = typeDescriptor;
-        this.isNullable     = isNullable;
+        this.isNullable = isNullable;
         if (storageSizeInit > 0) {
             int fixedSize = typeDescriptor.getFixedByteCount();
-            assert((fixedSize == 0) || (fixedSize == storageSizeInit));
+            assert ((fixedSize == 0) || (fixedSize == storageSizeInit));
             storageSize = storageSizeInit;
         } else {
             storageSize = typeDescriptor.getFixedByteCount();
         }
     }
-};
+}
+;
 
 // End FennelTupleAttributeDescriptor.java

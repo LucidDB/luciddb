@@ -20,31 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-
 /**
- * A <code>RexPattern</code> represents an expression with holes in it.
- * The {@link #match} method tests whether a given expression matches the
- * pattern.
+ * A <code>RexPattern</code> represents an expression with holes in it. The
+ * {@link #match} method tests whether a given expression matches the pattern.
  *
  * @author jhyde
- * @since May 3, 2002
  * @version $Id$
- **/
+ * @since May 3, 2002
+ */
 public interface RexPattern
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Calls <code>action</code> for every combination of tokens for which
-     * this pattern matches.
+     * Calls <code>action</code> for every combination of tokens for which this
+     * pattern matches.
      */
     void match(
         RexNode ptree,
         RexAction action);
 }
-
 
 // End RexPattern.java

@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
@@ -39,31 +40,31 @@ import org.eigenbase.util.*;
 
 
 /**
- * MedMdrNameDirectory implements the FarragoMedNameDirectory
- * interface by mapping the package structure of an MDR repository.
+ * MedMdrNameDirectory implements the FarragoMedNameDirectory interface by
+ * mapping the package structure of an MDR repository.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrNameDirectory extends MedAbstractNameDirectory
+class MedMdrNameDirectory
+    extends MedAbstractNameDirectory
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedMdrDataServer server;
     final RefPackage rootPackage;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Instantiates a MedMdrNameDirectory.
      *
-     * @param server MedMdrDataServer from which
-     * this directory was opened
-     *
+     * @param server MedMdrDataServer from which this directory was opened
      * @param rootPackage root package from which to map names in repository;
      * so, when a table name like x.y.z is looked up, rootPackage will be
-     * searched for subpackage x, which will be searched for subpackage y,
-     * which will be searched for class z
+     * searched for subpackage x, which will be searched for subpackage y, which
+     * will be searched for class z
      */
     MedMdrNameDirectory(
         MedMdrDataServer server,
@@ -73,7 +74,7 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         this.rootPackage = rootPackage;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     RefPackage lookupRefPackage(
         String [] names,
@@ -92,8 +93,8 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
     /**
      * Looks up a RefClass from its qualified name.
      *
-     * @param foreignName name of this class relative to this directory's
-     * root package
+     * @param foreignName name of this class relative to this directory's root
+     * package
      */
     RefClass lookupRefClass(String [] foreignName)
     {
@@ -139,10 +140,12 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         String [] localName)
         throws SQLException
     {
-        return lookupColumnSetAndImposeType(
-            typeFactory,
-            new String [] { foreignName },
-            localName, null);
+        return
+            lookupColumnSetAndImposeType(
+                typeFactory,
+                new String[] { foreignName },
+                localName,
+                null);
     }
 
     FarragoMedColumnSet lookupColumnSetAndImposeType(
@@ -161,8 +164,13 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
             rowType = computeRowType(typeFactory, refClass);
         }
 
-        return new MedMdrClassExtent(this, typeFactory, refClass, foreignName,
-            localName, rowType);
+        return
+            new MedMdrClassExtent(this,
+                typeFactory,
+                refClass,
+                foreignName,
+                localName,
+                rowType);
     }
 
     private RelDataType computeRowType(
@@ -190,10 +198,10 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         // mofId.  This means that if we want to reference the object again
         // later, we have to look it up via MDRepository.getByMofId.  This will
         // always be required in cases where the object has to leave and
-        // re-enter Java (e.g. through Fennel or over the network), but within
-        // a contiguous series of Java XO's, it would be better to keep an
-        // object reference instead.  So, we need to enhance Farrago's type
-        // system to include Serializable object types and use the MOFID for
+        // re-enter Java (e.g. through Fennel or over the network), but within a
+        // contiguous series of Java XO's, it would be better to keep an object
+        // reference instead.  So, we need to enhance Farrago's type system to
+        // include Serializable object types and use the MOFID for
         // serialization.  This would also allow us to return direct repository
         // references to embedded JDBC clients (and remote JDBC clients with
         // access to a repository shared with Farrago).
@@ -209,7 +217,9 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
         throws SQLException
     {
         RefPackage subPackage =
-            lookupRefPackage(new String[]{foreignName}, 1);
+            lookupRefPackage(
+                new String[] { foreignName },
+                1);
         if (subPackage == null) {
             return null;
         }
@@ -218,6 +228,5 @@ class MedMdrNameDirectory extends MedAbstractNameDirectory
 
     // TODO:  queryMetadata
 }
-
 
 // End MedMdrNameDirectory.java

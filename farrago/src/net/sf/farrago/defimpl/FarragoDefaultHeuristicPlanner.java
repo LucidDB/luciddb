@@ -21,24 +21,25 @@
 */
 package net.sf.farrago.defimpl;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.fem.config.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.rel.convert.*;
-
 import com.disruptivetech.farrago.rel.*;
 
 import java.util.*;
 
+import net.sf.farrago.fem.config.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.rules.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.relopt.hep.*;
+
+
 /**
- * FarragoDefaultHeuristicPlanner implements {@link FarragoSessionPlanner}
- * in terms of {@link HepPlanner} with a Farrago-specific rule program.
+ * FarragoDefaultHeuristicPlanner implements {@link FarragoSessionPlanner} in
+ * terms of {@link HepPlanner} with a Farrago-specific rule program.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -47,31 +48,15 @@ public class FarragoDefaultHeuristicPlanner
     extends HepPlanner
     implements FarragoSessionPlanner
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSessionPreparingStmt stmt;
     private final Collection<RelOptRule> medPluginRules;
     private boolean inPluginRegistration;
 
-    static FarragoDefaultHeuristicPlanner newInstance(
-        FarragoSessionPreparingStmt stmt)
-    {
-        Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
-        
-        final boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
-        final CalcVirtualMachine calcVM =
-            stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
-        
-        HepProgram program = createHepProgram(
-            fennelEnabled,
-            calcVM,
-            medPluginRules);
-        
-        FarragoDefaultHeuristicPlanner planner =
-            new FarragoDefaultHeuristicPlanner(
-                program, stmt, medPluginRules);
-        FarragoDefaultPlanner.addStandardRules(planner, fennelEnabled, calcVM);
-        return planner;
-    }
-        
+    //~ Constructors -----------------------------------------------------------
+
     private FarragoDefaultHeuristicPlanner(
         HepProgram program,
         FarragoSessionPreparingStmt stmt,
@@ -80,6 +65,32 @@ public class FarragoDefaultHeuristicPlanner
         super(program);
         this.stmt = stmt;
         this.medPluginRules = medPluginRules;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    static FarragoDefaultHeuristicPlanner newInstance(
+        FarragoSessionPreparingStmt stmt)
+    {
+        Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
+
+        final boolean fennelEnabled = stmt.getRepos().isFennelEnabled();
+        final CalcVirtualMachine calcVM =
+            stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
+
+        HepProgram program =
+            createHepProgram(
+                fennelEnabled,
+                calcVM,
+                medPluginRules);
+
+        FarragoDefaultHeuristicPlanner planner =
+            new FarragoDefaultHeuristicPlanner(
+                program,
+                stmt,
+                medPluginRules);
+        FarragoDefaultPlanner.addStandardRules(planner, fennelEnabled, calcVM);
+        return planner;
     }
 
     // implement FarragoSessionPlanner
@@ -99,14 +110,14 @@ public class FarragoDefaultHeuristicPlanner
     {
         inPluginRegistration = false;
     }
-        
+
     // implement RelOptPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(
-            rel.getCluster().getRexBuilder());
+                rel.getCluster().getRexBuilder());
     }
-        
+
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
@@ -115,7 +126,7 @@ public class FarragoDefaultHeuristicPlanner
         }
         return super.addRule(rule);
     }
-    
+
     private static HepProgram createHepProgram(
         boolean fennelEnabled,
         CalcVirtualMachine calcVM,
@@ -132,11 +143,11 @@ public class FarragoDefaultHeuristicPlanner
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
-        
+
         // Eliminate reducible constant expression.  TODO jvs 26-May-2006: do
         // this again later wherever more such expressions may be reintroduced.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
-        
+
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back
@@ -178,13 +189,13 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleCollection(medPluginRules);
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
-        // Use hash join where possible. Make sure this rule is called
-        // before any physical conversions have been done
+        // Use hash join where possible. Make sure this rule is called before
+        // any physical conversions have been done
         /*
         // TODO jvs 3-May-2006:  Once hash partitioning is available.
-        builder.addRuleInstance(new LhxJoinRule());
-        */
-        
+         builder.addRuleInstance(new LhxJoinRule());
+         */
+
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but
         // after other join strategies such as hash join have been attempted,
@@ -194,13 +205,13 @@ public class FarragoDefaultHeuristicPlanner
         // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
-        
+
         // Handle trivial renames now so that they don't get
         // implemented as calculators.
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelRenameRule());
         }
-        
+
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.  Calculator expressions containing
         // multisets and windowed aggs may yield new projections,
@@ -219,12 +230,13 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleClass(CoerceInputsRule.class);
         builder.addRuleInstance(new UnionToDistinctRule());
         builder.addRuleInstance(new UnionEliminatorRule());
+
         // Eliminate redundant SELECT DISTINCT.
         builder.addRuleInstance(new RemoveDistinctRule());
 
         // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule());
-        
+
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
         builder.addRuleInstance(new FennelDistinctSortRule());
@@ -252,9 +264,10 @@ public class FarragoDefaultHeuristicPlanner
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
-            assert(fennelEnabled);
+            assert (fennelEnabled);
             builder.addRuleInstance(FennelCalcRule.instance);
             builder.addRuleInstance(new FennelOneRowRule());
+
             // NOTE jvs 3-May-2006:  See corresponding REVIEW comment in
             // FarragoDefaultPlanner about why this goes here.
             builder.addRuleInstance(FennelUnionRule.instance);
@@ -275,19 +288,22 @@ public class FarragoDefaultHeuristicPlanner
             // First, attempt to choose calculators such that converters are
             // minimized
             builder.addConverters(false);
+
             // Split remaining expressions into Fennel part and Java part
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
+
             // Convert expressions, giving preference to Java
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(FennelCalcRule.instance);
+
             // Use Fennel for unions.
             builder.addRuleInstance(FennelUnionRule.instance);
         }
-        
+
         // Finally, add generic converters as necessary.
         builder.addConverters(true);
-        
+
         return builder.createProgram();
     }
 }

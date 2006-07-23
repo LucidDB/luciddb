@@ -20,40 +20,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
-import org.eigenbase.rex.RexProgram;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 
 /**
  * Rule to convert a {@link ProjectRel} to a {@link CalcRel}
  *
- * <p>The rule does not fire if the child is a {@link ProjectRel},
- * {@link FilterRel} or {@link CalcRel}. If it did, then the same
- * {@link CalcRel} would be formed via several transformation paths, which
- * is a waste of effort.</p>
- *
- * @see FilterToCalcRule
+ * <p>The rule does not fire if the child is a {@link ProjectRel}, {@link
+ * FilterRel} or {@link CalcRel}. If it did, then the same {@link CalcRel} would
+ * be formed via several transformation paths, which is a waste of effort.</p>
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
- **/
-public class ProjectToCalcRule extends RelOptRule
+ * @see FilterToCalcRule
+ * @since Mar 7, 2004
+ */
+public class ProjectToCalcRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final ProjectToCalcRule instance = new ProjectToCalcRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private ProjectToCalcRule()
     {
@@ -62,7 +56,7 @@ public class ProjectToCalcRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -72,15 +66,21 @@ public class ProjectToCalcRule extends RelOptRule
         final RexNode [] projectExprs = RexUtil.clone(project.exps);
         final RexProgram program =
             RexProgram.create(
-                child.getRowType(), projectExprs, null,
-                project.getRowType(), project.getCluster().getRexBuilder());
+                child.getRowType(),
+                projectExprs,
+                null,
+                project.getRowType(),
+                project.getCluster().getRexBuilder());
         final CalcRel calc =
             new CalcRel(
-                project.getCluster(), RelOptUtil.clone(project.traits), child,
-                rowType, program, RelCollation.emptyList);
+                project.getCluster(),
+                RelOptUtil.clone(project.traits),
+                child,
+                rowType,
+                program,
+                RelCollation.emptyList);
         call.transformTo(calc);
     }
 }
-
 
 // End ProjectToCalcRule.java

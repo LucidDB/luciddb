@@ -20,20 +20,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import org.eigenbase.util.*;
-import org.eigenbase.trace.EigenbaseLogger;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-import java.util.logging.Logger;
-import java.util.logging.Level;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.logging.*;
+
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
- * Adapter that exposes a 'push' producer as an {@link Iterator}.  Supports one
+ * Adapter that exposes a 'push' producer as an {@link Iterator}. Supports one
  * or more producers feeding into a single consumer. The consumer and the
  * producers must each run in its own thread. When there are several producers
  * the data is merged as it arrives: no sorting.
@@ -42,39 +40,52 @@ import java.util.concurrent.*;
  * SynchronousQueue}), but this can be customized by supplying an alternate
  * implementation (e.g. {@link ArrayBlockingQueue}) to the constructor. If you
  * call {@link #next}, your thread will wait until a producer thread calls
- * {@link #put} or {@link #done}. Nulls are allowed. If a producer has an
- * error, it can pass it to the consumer via {@link #done}.</p>
+ * {@link #put} or {@link #done}. Nulls are allowed. If a producer has an error,
+ * it can pass it to the consumer via {@link #done}.</p>
  *
  * @author jhyde
- * @since Oct 20, 2003
  * @version $Id$
+ * @since Oct 20, 2003
  */
-public class QueueIterator implements Iterator
+public class QueueIterator
+    implements Iterator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final WrappedNull WRAPPED_NULL = new WrappedNull();
+
+    //~ Instance fields --------------------------------------------------------
 
     // NOTE: numProducers is the only state variable requiring synchronization.
     // All others are accessed only from the consumer end, which does not
-    // support consumption from multiple threads.  (The queue itself
-    // provides its own synchronization.)
-    
+    // support consumption from multiple threads.  (The queue itself provides
+    // its own synchronization.)
+
     private int numProducers;
+
     // a wrapping class can provide its tracer, which is used here to trace
     // synchronization events
-    private final EigenbaseLogger tracer; 
+    private final EigenbaseLogger tracer;
 
-    /** next Iterator value (nulls are represented via #WRAPPED_NULL) */
+    /**
+     * next Iterator value (nulls are represented via #WRAPPED_NULL)
+     */
     protected Object next;
-    
-    /** false when Iterator is finished */
+
+    /**
+     * false when Iterator is finished
+     */
     protected boolean hasNext;
     protected Throwable throwable;
 
     protected BlockingQueue queue;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
-    /** default constructor (one producer, no tracer, SynchronousQueue) */
+    /**
+     * default constructor (one producer, no tracer, SynchronousQueue)
+     */
     public QueueIterator()
     {
         this(1, null);
@@ -92,28 +103,27 @@ public class QueueIterator implements Iterator
     /**
      * @param n number of producers
      * @param tracer trace to this Logger, or null.
-     * @param queue {@link BlockingQueue} implementation, or null
-     * for default
+     * @param queue {@link BlockingQueue} implementation, or null for default
      */
     public QueueIterator(int n, Logger tracer, BlockingQueue queue)
     {
         numProducers = n;
-        this.tracer = (tracer == null)? null : new EigenbaseLogger(tracer);
+        this.tracer = (tracer == null) ? null : new EigenbaseLogger(tracer);
 
         if (queue == null) {
             this.queue = new SynchronousQueue();
         } else {
             this.queue = queue;
         }
-        
+
         if (n == 0) {
-            hasNext = false;            // done now
+            hasNext = false; // done now
             return;
         }
         hasNext = true;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected void reset(int n)
     {
@@ -132,14 +142,14 @@ public class QueueIterator implements Iterator
         EndOfQueue eoq = null;
 
         // NOTE:  synchronized can't be around queue.put or we'll deadlock
-        synchronized(this) {
+        synchronized (this) {
             numProducers--;
-            if (numProducers == 0 || throwable != null) {
+            if ((numProducers == 0) || (throwable != null)) {
                 // shut down the iterator
                 eoq = new EndOfQueue(throwable);
             }
         }
-        
+
         if (eoq != null) {
             // put a dummy null to wake up the consumer, who will check
             // for
@@ -173,7 +183,7 @@ public class QueueIterator implements Iterator
      * available within the timeout.
      *
      * @param timeoutMillis Milliseconds to wait; less than or equal to zero
-     *   means don't wait
+     * means don't wait
      */
     public boolean hasNext(long timeoutMillis)
         throws TimeoutException
@@ -220,7 +230,7 @@ public class QueueIterator implements Iterator
      * available within the timeout.
      *
      * @param timeoutMillis Milliseconds to wait; less than or equal to zero
-     *   means don't wait
+     * means don't wait
      */
     public Object next(long timeoutMillis)
         throws TimeoutException
@@ -238,8 +248,8 @@ public class QueueIterator implements Iterator
      *
      * @param o object to put
      *
-     * @throws IllegalStateException if this method is called after
-     *   {@link #done}
+     * @throws IllegalStateException if this method is called after {@link
+     * #done}
      */
     public void put(Object o)
     {
@@ -258,18 +268,17 @@ public class QueueIterator implements Iterator
     }
 
     /**
-     * Producer calls <code>offer</code> to attempt to add another object
-     * (which may be null) with a timeout.
+     * Producer calls <code>offer</code> to attempt to add another object (which
+     * may be null) with a timeout.
      *
      * @param o object to offer
-     *
      * @param timeoutMillis Milliseconds to wait; less than or equal to zero
-     *   means don't wait
+     * means don't wait
      *
      * @return true if offer accepted
      *
-     * @throws IllegalStateException if this method is called after
-     *   {@link #done}
+     * @throws IllegalStateException if this method is called after {@link
+     * #done}
      */
     public boolean offer(Object o, long timeoutMillis)
     {
@@ -324,21 +333,22 @@ public class QueueIterator implements Iterator
 
     /**
      * Called (from the consumer thread context) just before the iterator
-     * returns false for hasNext().  Default implementation does nothing, but
+     * returns false for hasNext(). Default implementation does nothing, but
      * subclasses can use this for cleanup actions.
      */
     protected void onEndOfQueue()
     {
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Thrown by {@link QueueIterator#hasNext(long)} and {@link
      * QueueIterator#next(long)} to indicate that operation timed out before
      * rows were available.
      */
-    public static class TimeoutException extends Exception
+    public static class TimeoutException
+        extends Exception
     {
     }
 
@@ -348,7 +358,7 @@ public class QueueIterator implements Iterator
     private static class EndOfQueue
     {
         Throwable throwable;
-        
+
         EndOfQueue(Throwable throwable)
         {
             this.throwable = throwable;
@@ -361,9 +371,6 @@ public class QueueIterator implements Iterator
     private static class WrappedNull
     {
     }
-
-    private static final WrappedNull WRAPPED_NULL = new WrappedNull();
 }
-
 
 // End QueueIterator.java

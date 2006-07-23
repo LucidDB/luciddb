@@ -23,6 +23,7 @@
 package net.sf.farrago.plugin;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.resource.*;
@@ -30,7 +31,7 @@ import net.sf.farrago.resource.*;
 
 /**
  * FarragoAbstractPluginBase is an abstract base for classes used to build
- * implementations of {@link FarragoPlugin}.  Instances of this class are not
+ * implementations of {@link FarragoPlugin}. Instances of this class are not
  * necessarily direct implementations of the FarragoPlugin interface itself;
  * they may be sub-components of the plugin.
  *
@@ -39,7 +40,8 @@ import net.sf.farrago.resource.*;
  */
 public class FarragoAbstractPluginBase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * A zero-length array of DriverPropertyInfo.
@@ -47,24 +49,24 @@ public class FarragoAbstractPluginBase
     public static final DriverPropertyInfo [] EMPTY_DRIVER_PROPERTIES =
         new DriverPropertyInfo[0];
 
-    public static final String [] BOOLEAN_CHOICES_DEFAULT_FALSE = {
-        "FALSE",
-        "TRUE"
-    };
+    public static final String [] BOOLEAN_CHOICES_DEFAULT_FALSE =
+        {
+            "FALSE",
+            "TRUE"
+        };
 
-    public static final String [] BOOLEAN_CHOICES_DEFAULT_TRUE = {
-        "TRUE",
-        "FALSE"
-    };
+    public static final String [] BOOLEAN_CHOICES_DEFAULT_TRUE =
+        {
+            "TRUE",
+            "FALSE"
+        };
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Verifies that a property has been set, throwing an exception
-     * if has not.
+     * Verifies that a property has been set, throwing an exception if has not.
      *
      * @param props properties to check
-     *
      * @param propName name of required property
      *
      * @exception EigenbaseException if property is not set
@@ -77,14 +79,12 @@ public class FarragoAbstractPluginBase
             throw FarragoResource.instance().PluginPropRequired.ex(propName);
         }
     }
-    
+
     /**
      * Gets the value of a long integer property.
      *
      * @param props property set
-     *
      * @param propName name of property
-     *
      * @param defaultValue value to return if property is not set
      *
      * @return property value
@@ -113,9 +113,7 @@ public class FarragoAbstractPluginBase
      * Gets the value of an integer property.
      *
      * @param props property set
-     *
      * @param propName name of property
-     *
      * @param defaultValue value to return if property is not set
      *
      * @return property value
@@ -142,14 +140,15 @@ public class FarragoAbstractPluginBase
 
     /**
      * Gets the value of a boolean property, or a default value if the property
-     * does not exist. Returns <code>true</code> if the property exists, and
-     * its value is <code>1</code>, <code>t</code>, <code>true</code> or
-     * <code>yes</code>; the default value if it does not exist;
-     * <code>false</code> otherwise.
-
+     * does not exist. Returns <code>true</code> if the property exists, and its
+     * value is <code>1</code>, <code>t</code>, <code>true</code> or <code>
+     * yes</code>; the default value if it does not exist; <code>false</code>
+     * otherwise.
+     *
      * @param props property set
      * @param propName name of property
      * @param defaultValue value to return if property is not set
+     *
      * @return property value
      */
     public static boolean getBooleanProperty(
@@ -161,11 +160,11 @@ public class FarragoAbstractPluginBase
         if (s == null) {
             return defaultValue;
         }
-        return s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
+        return
+            s.equalsIgnoreCase("1") || s.equalsIgnoreCase("t")
             || s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes")
             || s.equalsIgnoreCase("on");
     }
 }
-
 
 // End FarragoAbstractPluginBase.java

@@ -22,38 +22,38 @@
 */
 package net.sf.farrago.type.runtime;
 
+import java.io.*;
+
+import java.nio.*;
+
 import net.sf.farrago.resource.*;
 
-import org.eigenbase.sql.fun.SqlTrimFunction;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.util14.ConversionUtil;
-
-import java.io.*;
-import java.nio.*;
-import java.text.DecimalFormat;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.util14.*;
 
 
 /**
- * BytePointer is instantiated during execution to refer to a contiguous
- * subset of a byte array.  It exists to avoid the need to instantiate a new
- * object for each variable-width value read.
+ * BytePointer is instantiated during execution to refer to a contiguous subset
+ * of a byte array. It exists to avoid the need to instantiate a new object for
+ * each variable-width value read.
  *
- * <p>
- * NOTE:  BytePointer is not declared to implement NullableValue, although it
- * actually provides the necessary method implementations.  Instead, the
+ * <p>NOTE: BytePointer is not declared to implement NullableValue, although it
+ * actually provides the necessary method implementations. Instead, the
  * NullableValue interface is declared by generated subclasses representing
- * nullable types.  This allows the presence of the NullableValue interface
- * to be used in runtime contexts where we need to determine nullability but
- * have lost explicit type information during code generation.
- * </p>
+ * nullable types. This allows the presence of the NullableValue interface to be
+ * used in runtime contexts where we need to determine nullability but have lost
+ * explicit type information during code generation.</p>
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class BytePointer extends ByteArrayInputStream
-    implements AssignableValue, CharSequence
+public class BytePointer
+    extends ByteArrayInputStream
+    implements AssignableValue,
+        CharSequence
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String ENFORCE_PRECISION_METHOD_NAME =
         "enforceBytePrecision";
@@ -68,27 +68,28 @@ public class BytePointer extends ByteArrayInputStream
     public static final String TRIM_METHOD_NAME = "trim";
     public static final String POSITION_METHOD_NAME = "position";
 
-    /** Read-only global for 0-length byte array */
+    /**
+     * Read-only global for 0-length byte array
+     */
     public static final byte [] emptyBytes = new byte[0];
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     // WARNING: The superclass field named count is totally misnamed; it should
     // be end.  Watch out for this.
 
     /**
-     * An allocate-on-demand array used when a new value must
-     * be created.
+     * An allocate-on-demand array used when a new value must be created.
      */
     private byte [] ownBytes;
-	/**
-	 * two temp variables to store the substring pointers
-	 *
-	 */
-	private int S1;
-	private int L1;
 
-    //~ Constructors ----------------------------------------------------------
+    /**
+     * two temp variables to store the substring pointers
+     */
+    private int S1;
+    private int L1;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new BytePointer object.
@@ -98,7 +99,7 @@ public class BytePointer extends ByteArrayInputStream
         super(emptyBytes);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement NullableValue
     public void setNull(boolean isNull)
@@ -182,9 +183,7 @@ public class BytePointer extends ByteArrayInputStream
      * Pads or truncates this value according to the given precision.
      *
      * @param precision desired precision
-     *
      * @param needPad true if short values should be padded
-     *
      * @param padByte byte to pad with
      */
     public void enforceBytePrecision(
@@ -216,18 +215,19 @@ public class BytePointer extends ByteArrayInputStream
      * Reduces the value to a substring of the current value.
      *
      * @param starting desired starting position
-     *
-     * @param length  the length.
-     *
-     * @param useLength to indicate whether length parameter should be used. 
-     *
+     * @param length the length.
+     * @param useLength to indicate whether length parameter should be used.
      */
     public void substring(
         int starting,
         int length,
         boolean useLength)
     {
-        calcSubstringPointers( starting, length, getByteCount(), useLength); 
+        calcSubstringPointers(
+            starting,
+            length,
+            getByteCount(),
+            useLength);
         pos += S1;
         count = pos + L1;
     }
@@ -235,19 +235,14 @@ public class BytePointer extends ByteArrayInputStream
     /**
      * Assigns this value to the result of inserting bp2's value into bp1's
      * value at a specified starting point, possibly deleting a prefix of the
-     * remainder of bp1 of a given length.  Implements the SQL string OVERLAY
+     * remainder of bp1 of a given length. Implements the SQL string OVERLAY
      * function.
      *
      * @param bp1 string1
-     *
      * @param bp2 string2
-     *
      * @param starting starting point
-     *
      * @param length length
-     *
      * @param useLength whether to use length parameter
-     *
      */
     public void overlay(
         BytePointer bp1,
@@ -259,17 +254,38 @@ public class BytePointer extends ByteArrayInputStream
         if (!useLength) {
             length = bp2.getByteCount();
         }
-        calcSubstringPointers( starting, length, bp1.getByteCount(), true); 
+        calcSubstringPointers(
+            starting,
+            length,
+            bp1.getByteCount(),
+            true);
         int totalLength = bp2.getByteCount() + bp1.getByteCount() - L1;
         allocateOwnBytes(totalLength);
-        if (L1 == 0 &&  starting > bp1.getByteCount()) {
-            System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
-            System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), bp2.getByteCount());
+        if ((L1 == 0) && (starting > bp1.getByteCount())) {
+            System.arraycopy(
+                bp1.buf,
+                bp1.pos,
+                ownBytes,
+                0,
+                bp1.getByteCount());
+            System.arraycopy(
+                bp2.buf,
+                bp2.pos,
+                ownBytes,
+                bp1.getByteCount(),
+                bp2.getByteCount());
         } else {
             System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, S1);
-            System.arraycopy(bp2.buf, bp2.pos, ownBytes, S1, bp2.getByteCount());
-            System.arraycopy(bp1.buf, bp1.pos + S1 + L1, 
-                ownBytes, S1 + bp2.getByteCount(), 
+            System.arraycopy(
+                bp2.buf,
+                bp2.pos,
+                ownBytes,
+                S1,
+                bp2.getByteCount());
+            System.arraycopy(bp1.buf,
+                bp1.pos + S1 + L1,
+                ownBytes,
+                S1 + bp2.getByteCount(),
                 bp1.getByteCount() - S1 - L1);
         }
         buf = ownBytes;
@@ -281,52 +297,57 @@ public class BytePointer extends ByteArrayInputStream
      * Assigns this pointer to the result of concatenating two input strings.
      *
      * @param bp1 string1
-     *
      * @param bp2 string2
-     *
      */
     public void concat(
         BytePointer bp1,
         BytePointer bp2)
     {
         // can not be null.
-        allocateOwnBytes(bp1.getByteCount()+bp2.getByteCount());
-        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
-        System.arraycopy(bp2.buf, bp2.pos, ownBytes, bp1.getByteCount(), 
-                        bp2.getByteCount());
+        allocateOwnBytes(bp1.getByteCount() + bp2.getByteCount());
+        System.arraycopy(
+            bp1.buf,
+            bp1.pos,
+            ownBytes,
+            0,
+            bp1.getByteCount());
+        System.arraycopy(
+            bp2.buf,
+            bp2.pos,
+            ownBytes,
+            bp1.getByteCount(),
+            bp2.getByteCount());
         buf = ownBytes;
         pos = 0;
-        count = bp1.getByteCount()+bp2.getByteCount();
+        count = bp1.getByteCount() + bp2.getByteCount();
     }
-    
-    public int getByteCount() 
+
+    public int getByteCount()
     {
         return available();
     }
 
-    /* 
-     * implement CharSequence
-     * the Default implementation.
-     * Only works for ISO-8859-1
-     * If Unicode, or any other variable length
-     * encoding, it needs to override these functions.
+    /*
+     * implement CharSequence the Default implementation. Only works for
+     * ISO-8859-1 If Unicode, or any other variable length encoding, it needs to
+     * override these functions.
      *
      */
 
-    public int length() 
+    public int length()
     {
         return available();
     }
 
-    public char charAt(int index) 
+    public char charAt(int index)
     {
-        return (char) buf[pos+index];
+        return (char) buf[pos + index];
     }
 
-    public CharSequence subSequence(int start, int end) 
+    public CharSequence subSequence(int start, int end)
     {
         BytePointer bp = new BytePointer();
-        if (start < 0 || end < 0 || end >= getByteCount()) {
+        if ((start < 0) || (end < 0) || (end >= getByteCount())) {
             throw new IndexOutOfBoundsException();
         }
         bp.setPointer(buf, pos + start, pos + end);
@@ -337,14 +358,13 @@ public class BytePointer extends ByteArrayInputStream
      * upper the case for each character of the string
      *
      * @param bp1 string1
-     *
      */
     public void upper(BytePointer bp1)
     {
         copyFrom(bp1);
         for (int i = 0; i < count; i++) {
             if (Character.isLowerCase((char) ownBytes[i])) {
-                ownBytes[i] = (byte)Character.toUpperCase((char) ownBytes[i]);
+                ownBytes[i] = (byte) Character.toUpperCase((char) ownBytes[i]);
             }
         }
     }
@@ -353,23 +373,21 @@ public class BytePointer extends ByteArrayInputStream
      * lower the case for each character of the string
      *
      * @param bp1 string1
-     *
      */
     public void lower(BytePointer bp1)
-    { 
+    {
         copyFrom(bp1);
         for (int i = 0; i < count; i++) {
             if (Character.isUpperCase((char) ownBytes[i])) {
-                ownBytes[i] = (byte)Character.toLowerCase((char) ownBytes[i]);
+                ownBytes[i] = (byte) Character.toLowerCase((char) ownBytes[i]);
             }
         }
     }
-                
+
     /**
      * initcap the string.
      *
      * @param bp1 string1
-     *
      */
     public void initcap(BytePointer bp1)
     {
@@ -381,13 +399,13 @@ public class BytePointer extends ByteArrayInputStream
             } else {
                 if (bWordBegin) {
                     if (Character.isLowerCase((char) ownBytes[i])) {
-                        ownBytes[i] = (byte)Character.toUpperCase(
-                            (char) ownBytes[i]);
+                        ownBytes[i] =
+                            (byte) Character.toUpperCase((char) ownBytes[i]);
                     }
-                } else{
+                } else {
                     if (Character.isUpperCase((char) ownBytes[i])) {
-                        ownBytes[i] = (byte)Character.toLowerCase(
-                            (char) ownBytes[i]);
+                        ownBytes[i] =
+                            (byte) Character.toLowerCase((char) ownBytes[i]);
                     }
                 }
                 bWordBegin = false;
@@ -408,10 +426,10 @@ public class BytePointer extends ByteArrayInputStream
         }
         copyFrom(bp2);
         trimChar = bp1.buf[bp1.pos];
-        if (trimOrdinal == SqlTrimFunction.Flag.Both.getOrdinal()){
+        if (trimOrdinal == SqlTrimFunction.Flag.Both.getOrdinal()) {
             leading = true;
             trailing = true;
-        } else if (trimOrdinal == SqlTrimFunction.Flag.Leading.getOrdinal()){
+        } else if (trimOrdinal == SqlTrimFunction.Flag.Leading.getOrdinal()) {
             leading = true;
         } else {
             assert trimOrdinal == SqlTrimFunction.Flag.Trailing.getOrdinal();
@@ -428,7 +446,7 @@ public class BytePointer extends ByteArrayInputStream
             }
         }
         if (trailing) {
-            for (i = cnt - 1; i >= 0 ; i--) {
+            for (i = cnt - 1; i >= 0; i--) {
                 if (buf[i] == trimChar) {
                     count--;
                 } else {
@@ -446,15 +464,15 @@ public class BytePointer extends ByteArrayInputStream
         int cnt1 = bp1.getByteCount();
         int cnt = getByteCount() - cnt1;
         for (int i = 0; i < cnt; i++) {
-            boolean stillMatch = true; 
+            boolean stillMatch = true;
             for (int j = 0; j < cnt1; j++) {
-                if (buf[pos+i+j] != bp1.buf[bp1.pos+j]) {
+                if (buf[pos + i + j] != bp1.buf[bp1.pos + j]) {
                     stillMatch = false;
                     break;
                 }
             }
             if (stillMatch) {
-                return i+1;
+                return i + 1;
             }
         }
         return 0;
@@ -463,7 +481,12 @@ public class BytePointer extends ByteArrayInputStream
     private void copyFrom(BytePointer bp1)
     {
         allocateOwnBytes(bp1.getByteCount());
-        System.arraycopy(bp1.buf, bp1.pos, ownBytes, 0, bp1.getByteCount());
+        System.arraycopy(
+            bp1.buf,
+            bp1.pos,
+            ownBytes,
+            0,
+            bp1.getByteCount());
         buf = ownBytes;
         pos = 0;
         count = bp1.getByteCount();
@@ -474,7 +497,7 @@ public class BytePointer extends ByteArrayInputStream
      */
 
     // we store the result in the member variables to avoid memory allocation.
-    
+
     private void calcSubstringPointers(
         int S,
         int L,
@@ -485,7 +508,8 @@ public class BytePointer extends ByteArrayInputStream
         if (useLength) {
             if (L < 0) {
                 // If E is less than S, then it means L is negative exception.
-                throw FarragoResource.instance().NegativeLengthForSubstring.ex();
+                throw FarragoResource.instance().NegativeLengthForSubstring
+                .ex();
             }
             e = S + L;
         } else {
@@ -495,11 +519,11 @@ public class BytePointer extends ByteArrayInputStream
             }
         }
 
-        // f) and i) in the standard. S > LC or E < 1 
-        if (S > LC || e < 1) {
+        // f) and i) in the standard. S > LC or E < 1
+        if ((S > LC) || (e < 1)) {
             S1 = L1 = 0;
         } else {
-            // f) and ii) in the standard. 
+            // f) and ii) in the standard.
             // calculate the E1 and L1
             S1 = S - 1;
             if (S1 < 0) {
@@ -534,11 +558,10 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Writes the contents of this pointer to a ByteBuffer
-     * at a given offset without modifying the current position.
+     * Writes the contents of this pointer to a ByteBuffer at a given offset
+     * without modifying the current position.
      *
      * @param byteBuffer target
-     *
      * @param offset starting byte offset within buffer
      */
     public final void writeToBufferAbsolute(
@@ -558,7 +581,7 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Gets the byte representation of a string.  Subclasses may override.
+     * Gets the byte representation of a string. Subclasses may override.
      *
      * @param string source
      *
@@ -570,8 +593,8 @@ public class BytePointer extends ByteArrayInputStream
     }
 
     /**
-     * Implementation for Comparable.compareTo() which assumes non-null and
-     * does byte-for-byte comparison.
+     * Implementation for Comparable.compareTo() which assumes non-null and does
+     * byte-for-byte comparison.
      *
      * @param other another BytePointer to be compared
      *
@@ -591,6 +614,7 @@ public class BytePointer extends ByteArrayInputStream
                 // we know i1 < count, so this must be greater than other
                 return 1;
             }
+
             // need to convert the signed byte to unsigned.
             int c = (int) (0xFF & buf[i1]) - (int) (0xFF & other.buf[i2]);
             if (c != 0) {
@@ -660,7 +684,9 @@ public class BytePointer extends ByteArrayInputStream
 
     public void cast(boolean b, int precision)
     {
-        String str = b? NullablePrimitive.TRUE_LITERAL: NullablePrimitive.FALSE_LITERAL;
+        String str =
+            b ? NullablePrimitive.TRUE_LITERAL
+            : NullablePrimitive.FALSE_LITERAL;
         if (precision < str.length()) {
             throw FarragoResource.instance().Overflow.ex();
         }
@@ -674,15 +700,18 @@ public class BytePointer extends ByteArrayInputStream
     {
         castDecimal(l, precision, 0);
     }
-    
+
     public void cast(EncodedSqlDecimal d, int precision)
     {
-        castDecimal(d.value, precision, d.getScale());
+        castDecimal(
+            d.value,
+            precision,
+            d.getScale());
     }
-    
+
     /**
      * Casts a decimal into a string.
-     * 
+     *
      * @param l long value of decimal
      * @param precision maximum length of string
      * @param scale scale of decimal
@@ -697,8 +726,7 @@ public class BytePointer extends ByteArrayInputStream
         int len = 0;
         long templ;
 
-        for (templ = l ;templ != 0; templ = templ/10) 
-        {
+        for (templ = l; templ != 0; templ = templ / 10) {
             len++;
         }
         if (scale > 0) {
@@ -718,24 +746,24 @@ public class BytePointer extends ByteArrayInputStream
             throw FarragoResource.instance().Overflow.ex();
         }
 
-        if (scale == 0 && l == 0) {
+        if ((scale == 0) && (l == 0)) {
             len = 1;
         }
         allocateOwnBytes(len);
-        if (scale == 0 && l == 0) {
+        if ((scale == 0) && (l == 0)) {
             ownBytes[0] = (byte) '0';
         } else {
             if (negative) {
                 ownBytes[0] = (byte) '-';
             }
             int i = 0;
-            for (templ=l; i < digits; i++, templ = templ/10) {
+            for (templ = l; i < digits; i++, templ = templ / 10) {
                 int currentDigit = (int) (templ % 10);
                 if (negative) {
                     currentDigit = -currentDigit;
                 }
                 ownBytes[len - 1 - i] = (byte) ('0' + (char) currentDigit);
-                if (scale > 0 && i == scale - 1) {
+                if ((scale > 0) && (i == (scale - 1))) {
                     i++;
                     ownBytes[len - 1 - i] = (byte) '.';
                 }
@@ -747,6 +775,5 @@ public class BytePointer extends ByteArrayInputStream
         count = len;
     }
 }
-
 
 // End BytePointer.java

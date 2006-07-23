@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 
 
 /**
@@ -32,26 +31,29 @@ import org.eigenbase.rel.RelNode;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Jun 18, 2003
  */
-public class FactoryConverterRule extends ConverterRule
+public class FactoryConverterRule
+    extends ConverterRule
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final ConverterFactory factory;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FactoryConverterRule(ConverterFactory factory)
     {
-        super(RelNode.class,
+        super(
+            RelNode.class,
             factory.getInConvention(),
-            factory.getConvention(), null);
+            factory.getConvention(),
+            null);
         this.factory = factory;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isGuaranteed()
     {
@@ -63,6 +65,5 @@ public class FactoryConverterRule extends ConverterRule
         return factory.convert(rel);
     }
 }
-
 
 // End FactoryConverterRule.java

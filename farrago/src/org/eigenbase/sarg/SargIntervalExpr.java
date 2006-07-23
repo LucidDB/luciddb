@@ -21,33 +21,39 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.rex.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+
+
 /**
- * SargIntervalExpr represents an expression which can be resolved to a
- * fixed {@link SargInterval}.
+ * SargIntervalExpr represents an expression which can be resolved to a fixed
+ * {@link SargInterval}.
  *
- *<p>
- *
- * Null values require special treatment in expressions.  Normally, for
- * intervals of any kind, nulls are not considered to be within the
- * domain of search values.  This behavior can be modified by setting the
- * {@link SqlNullSemantics} to a value other than the default.  This happens
- * implicitly when a point interval is created matching the null value.  When
- * null values are considered to be part of the domain, the ordering is defined
- * as for {@link SargInterval}.
+ * <p>Null values require special treatment in expressions. Normally, for
+ * intervals of any kind, nulls are not considered to be within the domain of
+ * search values. This behavior can be modified by setting the {@link
+ * SqlNullSemantics} to a value other than the default. This happens implicitly
+ * when a point interval is created matching the null value. When null values
+ * are considered to be part of the domain, the ordering is defined as for
+ * {@link SargInterval}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargIntervalExpr extends SargIntervalBase implements SargExpr
+public class SargIntervalExpr
+    extends SargIntervalBase
+    implements SargExpr
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private SqlNullSemantics nullSemantics;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * @see SargFactory.newIntervalExpr
      */
@@ -59,6 +65,8 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         super(factory, dataType);
         this.nullSemantics = nullSemantics;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return null semantics which apply for searches on this interval
@@ -122,7 +130,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
     {
         super.setEmpty();
     }
-    
+
     // implement SargExpr
     public String toString()
     {
@@ -134,7 +142,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
             return s + " " + nullSemantics;
         }
     }
-    
+
     // implement SargExpr
     public SargIntervalSequence evaluate()
     {
@@ -142,9 +150,8 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
 
         // If at least one of the bounds got flipped by overflow, the
         // result is empty.
-        if ((lowerBound.getBoundType() != SargBoundType.LOWER) 
-            || (upperBound.getBoundType() != SargBoundType.UPPER))
-        {
+        if ((lowerBound.getBoundType() != SargBoundType.LOWER)
+            || (upperBound.getBoundType() != SargBoundType.UPPER)) {
             // empty sequence
             return seq;
         }
@@ -152,26 +159,26 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         // Under the default null semantics, if one of the endpoints is
         // known to be null, the result is empty.
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
-            && (lowerBound.isNull() || upperBound.isNull()))
-        {
+            && (lowerBound.isNull() || upperBound.isNull())) {
             // empty sequence
             return seq;
         }
 
         // Copy the endpoints to the new interval.
-        SargInterval interval = new SargInterval(factory, getDataType());
+        SargInterval interval = new SargInterval(
+                factory,
+                getDataType());
         interval.copyFrom(this);
 
         // Then adjust for null semantics.
 
         // REVIEW jvs 17-Jan-2006:  For unconstrained intervals, we
         // include null values.  Why is this?
-        
+
         if ((nullSemantics == SqlNullSemantics.NULL_MATCHES_NOTHING)
             && getDataType().isNullable()
             && (lowerBound.isFinite() || upperBound.isFinite())
-            && (!lowerBound.isFinite() || lowerBound.isNull()))
-        {
+            && (!lowerBound.isFinite() || lowerBound.isNull())) {
             // The test above says that this is a constrained range
             // with no lower bound (or null for the lower bound).  Since nulls
             // aren't supposed to match anything, adjust the lower bound
@@ -181,8 +188,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
                 SargStrictness.OPEN);
         } else if (nullSemantics == SqlNullSemantics.NULL_MATCHES_ANYTHING) {
             if (!lowerBound.isFinite() || lowerBound.isNull()
-                || upperBound.isNull())
-            {
+                || upperBound.isNull()) {
                 // Since null is supposed to match anything, and it
                 // is included in the interval, expand the interval to
                 // match anything.
@@ -195,7 +201,7 @@ public class SargIntervalExpr extends SargIntervalBase implements SargExpr
         // explicitly.  See related comment in FennelRelUtil.convertSargExpr;
         // if that changes, we could filter out the empty interval here.
         seq.addInterval(interval);
-        
+
         return seq;
     }
 

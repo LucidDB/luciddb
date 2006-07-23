@@ -20,13 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util14;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
+import java.math.*;
+
+import java.text.*;
+
 
 /**
  * Utility functions for working with numbers
@@ -35,7 +34,10 @@ import java.text.DecimalFormat;
  * @version $Id$
  * @since Jan 9, 2006
  */
-public class NumberUtil {
+public class NumberUtil
+{
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final DecimalFormat floatFormatter;
     private static final DecimalFormat doubleFormatter;
@@ -45,12 +47,13 @@ public class NumberUtil {
         // Float: precision of 7 (6 digits after .)
         floatFormatter = new DecimalFormat();
         floatFormatter.applyPattern("0.######E0");
+
         // Double: precision of 16 (15 digits after .)
         doubleFormatter = new DecimalFormat();
         doubleFormatter.applyPattern("0.###############E0");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static final BigInteger getMaxUnscaled(int precision)
     {
@@ -90,10 +93,11 @@ public class NumberUtil {
     {
         if (number == null) {
             return null;
-        } if (number instanceof BigDecimal) {
+        }
+        if (number instanceof BigDecimal) {
             return (BigDecimal) number;
         } else if ((number instanceof Double)
-                || (number instanceof Float)) {
+            || (number instanceof Float)) {
             return BigDecimal.valueOf(((Number) number).doubleValue());
         } else if (number instanceof BigInteger) {
             return new BigDecimal((BigInteger) number);
@@ -104,7 +108,7 @@ public class NumberUtil {
 
     public static NumberFormat getApproxFormatter(boolean isFloat)
     {
-        return (isFloat)? floatFormatter: doubleFormatter;
+        return (isFloat) ? floatFormatter : doubleFormatter;
     }
 
     public static long round(double d)
@@ -115,29 +119,29 @@ public class NumberUtil {
             return (long) (d + 0.5);
         }
     }
-    
+
     public static Double add(Double a, Double b)
     {
-        if (a == null || b == null) {
+        if ((a == null) || (b == null)) {
             return null;
         }
-        return Double.valueOf(a.doubleValue()+b.doubleValue());
+        return Double.valueOf(a.doubleValue() + b.doubleValue());
     }
-    
+
     public static Double divide(Double a, Double b)
     {
-        if (a == null || b == null || b.doubleValue() == 0.0) {
+        if ((a == null) || (b == null) || (b.doubleValue() == 0.0)) {
             return null;
         }
-        return Double.valueOf(a.doubleValue()/b.doubleValue());
+        return Double.valueOf(a.doubleValue() / b.doubleValue());
     }
 
     public static Double multiply(Double a, Double b)
     {
-        if (a == null || b == null) {
+        if ((a == null) || (b == null)) {
             return null;
         }
-        return Double.valueOf(a.doubleValue()*b.doubleValue());
+        return Double.valueOf(a.doubleValue() * b.doubleValue());
     }
 }
 

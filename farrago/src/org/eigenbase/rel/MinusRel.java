@@ -20,27 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * <code>MinusRel</code> returns the rows of its first input minus any
- * matching rows from its other inputs.  If "all" is true, then multiset
- * subtraction is performed; otherwise, set subtraction is performed
- * (implying no duplicates in the results).
+ * <code>MinusRel</code> returns the rows of its first input minus any matching
+ * rows from its other inputs. If "all" is true, then multiset subtraction is
+ * performed; otherwise, set subtraction is performed (implying no duplicates in
+ * the results).
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 23 September, 2001
  */
-public final class MinusRel extends SetOpRel
+public final class MinusRel
+    extends SetOpRel
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public MinusRel(
         RelOptCluster cluster,
         RelNode [] inputs,
@@ -52,7 +53,9 @@ public final class MinusRel extends SetOpRel
             inputs,
             all);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelNode
     public double getRows()
     {
@@ -69,24 +72,24 @@ public final class MinusRel extends SetOpRel
 
     public MinusRel clone()
     {
-        MinusRel clone = new MinusRel(
-            getCluster(),
-            RelOptUtil.clone(inputs),
-            all);
+        MinusRel clone =
+            new MinusRel(
+                getCluster(),
+                RelOptUtil.clone(inputs),
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    public MinusRel clone(RelNode[] inputs, boolean all)
+    public MinusRel clone(RelNode [] inputs, boolean all)
     {
         MinusRel clone = new MinusRel(
-            getCluster(),
-            inputs,
-            all);
+                getCluster(),
+                inputs,
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End MinusRel.java

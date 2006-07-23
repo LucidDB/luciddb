@@ -21,30 +21,40 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.MultisetSqlType;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Multiset MEMBER OF. Checks to see if a element belongs to a multiset.<br>
  * Example:<br>
- * <code>'green' MEMBER OF MULTISET['red','almost green','blue']</code>
- * returns <code>false</code>.
+ * <code>'green' MEMBER OF MULTISET['red','almost green','blue']</code> returns
+ * <code>false</code>.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
+public class SqlMultisetMemberOfOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlMultisetMemberOfOperator()
     {
         //TODO check if precedence is correct
-        super("MEMBER OF", SqlKind.Other, 30, true,
+        super("MEMBER OF",
+            SqlKind.Other,
+            30,
+            true,
             SqlTypeStrategies.rtiNullableBoolean,
-            null, null);
+            null,
+            null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
@@ -52,25 +62,29 @@ public class SqlMultisetMemberOfOperator extends SqlBinaryOperator
     {
         if (!SqlTypeStrategies.otcMultiset.checkSingleOperandType(
                 callBinding,
-                callBinding.getCall().operands[1], 0, throwOnFailure))
-        {
+                callBinding.getCall().operands[1],
+                0,
+                throwOnFailure)) {
             return false;
         }
 
-        MultisetSqlType mt = (MultisetSqlType)
-            callBinding.getValidator().deriveType(
-                callBinding.getScope(), callBinding.getCall().operands[1]);
+        MultisetSqlType mt =
+            (MultisetSqlType) callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[1]);
 
-        RelDataType t0 = callBinding.getValidator().deriveType(
-            callBinding.getScope(),
-            callBinding.getCall().operands[0]);
+        RelDataType t0 =
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                callBinding.getCall().operands[0]);
         RelDataType t1 = mt.getComponentType();
 
         if (t0.getFamily() != t1.getFamily()) {
             if (throwOnFailure) {
                 throw callBinding.newValidationError(
                     EigenbaseResource.instance().TypeNotComparableNear.ex(
-                        t0.toString(), t1.toString()));
+                        t0.toString(),
+                        t1.toString()));
             }
             return false;
         }

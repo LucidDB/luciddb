@@ -27,7 +27,7 @@ import java.nio.*;
 
 /**
  * FennelTupleWriter defines an interface for marshalling tuples to be sent to
- * Fennel.  Implementations are responsible for marshalling specific tuple
+ * Fennel. Implementations are responsible for marshalling specific tuple
  * formats.
  *
  * @author John V. Sichi
@@ -35,12 +35,15 @@ import java.nio.*;
  */
 public abstract class FennelTupleWriter
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Matches fennel/tuple/TupleAccessor.cpp.
      */
-    private static long MAGIC_NUMBER = 0x9897ab509de7dcf5l;
-    
-    //~ Methods ---------------------------------------------------------------
+    private static long MAGIC_NUMBER = 0x9897ab509de7dcf5L;
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Marshals one tuple if it can fit; otherwise, throws either
@@ -48,8 +51,8 @@ public abstract class FennelTupleWriter
      * whether absolute or relative puts are used).
      *
      * @param sliceBuffer buffer to be filled with marshalled tuple data; on
-     *        entry, the buffer position is 0; on return, the buffer position
-     *        should be the unaligned end of the tuple
+     * entry, the buffer position is 0; on return, the buffer position should be
+     * the unaligned end of the tuple
      * @param object subclass-specific object to be marshalled
      *
      * @exception BufferOverflowException see above
@@ -65,11 +68,9 @@ public abstract class FennelTupleWriter
      * @param byteBuffer buffer to be filled with marshalled tuple data,
      * starting at current buffer position; on return, the buffer position
      * should be the unaligned end of the tuple
-     *
      * @param object subclass-specific object to be marshalled
      *
-     * @return whether the marshalled tuple fit in the available
-     * buffer space
+     * @return whether the marshalled tuple fit in the available buffer space
      */
     public boolean marshalTuple(
         ByteBuffer byteBuffer,
@@ -79,6 +80,7 @@ public abstract class FennelTupleWriter
             // REVIEW:  is slice allocation worth it?
             ByteBuffer sliceBuffer = byteBuffer.slice();
             sliceBuffer.order(byteBuffer.order());
+
             // In case TupleAccessor's DEBUG_TUPLE_ACCESS is enabled,
             // store the correct magic number at the beginning of the
             // marshalled tuple.  TODO:  don't do this unless needed.
@@ -107,6 +109,5 @@ public abstract class FennelTupleWriter
         return true;
     }
 }
-
 
 // End FennelTupleWriter.java

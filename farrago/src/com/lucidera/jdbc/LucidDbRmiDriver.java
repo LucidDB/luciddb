@@ -22,15 +22,20 @@ package com.lucidera.jdbc;
 
 import net.sf.farrago.jdbc.client.*;
 
+
 /**
- * LucidDbLocalDriver is a JDBC driver for the LucidDB server for use by
- * remote clients.  It is based on VJDBC.
+ * LucidDbLocalDriver is a JDBC driver for the LucidDB server for use by remote
+ * clients. It is based on VJDBC.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbRmiDriver extends FarragoVjdbcClientDriver
+public class LucidDbRmiDriver
+    extends FarragoVjdbcClientDriver
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
         new LucidDbRmiDriver().register();
     }

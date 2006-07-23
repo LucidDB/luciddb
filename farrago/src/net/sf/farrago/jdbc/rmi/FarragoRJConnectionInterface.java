@@ -22,31 +22,39 @@
 */
 package net.sf.farrago.jdbc.rmi;
 
-import org.objectweb.rmijdbc.RJConnectionInterface;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
-import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
+import org.objectweb.rmijdbc.*;
+
 
 /**
- * RMI server interface corresponding to
- * {@link net.sf.farrago.namespace.FarragoMedDataWrapper}.
+ * RMI server interface corresponding to {@link
+ * net.sf.farrago.namespace.FarragoMedDataWrapper}.
  *
  * @author Tim Leung
  * @version $Id$
  */
-public interface FarragoRJConnectionInterface extends RJConnectionInterface
+public interface FarragoRJConnectionInterface
+    extends RJConnectionInterface
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getFarragoSessionId
      */
-    long getFarragoSessionId() throws RemoteException, SQLException;
-
+    long getFarragoSessionId()
+        throws RemoteException, SQLException;
 
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
      */
-    String findMofId(String wrapperName) throws RemoteException, SQLException;
+    String findMofId(String wrapperName)
+        throws RemoteException, SQLException;
 
     /**
      * @see net.sf.farrago.jdbc.FarragoConnection#getWrapper
@@ -54,5 +62,8 @@ public interface FarragoRJConnectionInterface extends RJConnectionInterface
     FarragoRJMedDataWrapperInterface getWrapper(
         String mofId,
         String libraryName,
-        Properties options) throws RemoteException, SQLException;
+        Properties options)
+        throws RemoteException, SQLException;
 }
+
+// End FarragoRJConnectionInterface.java

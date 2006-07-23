@@ -20,35 +20,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
 
 /**
- * A FennelTupleDatum is a component of FennelTupleData; see the fennel tuple
- * <a href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
+ * A FennelTupleDatum is a component of FennelTupleData; see the fennel tuple <a
+ * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
  * design document</a> for more details.
  *
- * <p> 
- * This differs from the C++ version as we can't represent pointers
- * in java. Therefore all the primitive accessors have been provided
- * as methods of this object.
+ * <p>This differs from the C++ version as we can't represent pointers in java.
+ * Therefore all the primitive accessors have been provided as methods of this
+ * object.
  *
- * <p> 
- * Internally, this object attempts to bypass object creation during 
- * normal use. It does this by wrangling all numeric primitive types
- * into a 64-bit (long) value and all array data into a byte array.
- *
+ * <p>Internally, this object attempts to bypass object creation during normal
+ * use. It does this by wrangling all numeric primitive types into a 64-bit
+ * (long) value and all array data into a byte array.
  */
-// NOTE: things incomplete at this time: (11jan05) 
+// NOTE: things incomplete at this time: (11jan05)
 //  - numerics and byte arrays are tracked independently; we should
 //    be able to transmogrify one into the other as needed (that is:
 //     datum.setShort() allows datum.getBytes() to get a byte array
-//  - int64 unsigned is only being kept as unsigned; I think this 
+//  - int64 unsigned is only being kept as unsigned; I think this
 //    should be promoted to a BigInteger for this one value, or we
-//    drop into storing it as a byte array 
+//    drop into storing it as a byte array
 //
 public class FennelTupleDatum
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * length of this data in externallized form.
      */
@@ -60,36 +59,73 @@ public class FennelTupleDatum
     private int capacity;
 
     /**
-     * the numeric object kept by this tuple; this holds all
-     * the numeric primitive type.
+     * the numeric object kept by this tuple; this holds all the numeric
+     * primitive type.
      */
-    private long    numeric;
+    private long numeric;
 
     /**
-     *  indicates whether the numeric value has been set.
+     * indicates whether the numeric value has been set.
      */
     private boolean numericSet;
 
     /**
-     *  a byte array holding non-numeric information.
+     * a byte array holding non-numeric information.
      */
-    private byte[] rawBytes;
+    private byte [] rawBytes;
 
     /**
-     *  a byte array holding the initial byte array, of capacity size.
+     * a byte array holding the initial byte array, of capacity size.
      */
-    private byte[] initialBytes;
+    private byte [] initialBytes;
 
     /**
-     *  indicates whether the byte array has been set.
+     * indicates whether the byte array has been set.
      */
     private boolean rawBytesSet;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Constructs a raw datum; setCapacity must be called before use.
+     */
+    public FennelTupleDatum()
+    {
+        dataLen = 0;
+        capacity = 0;
+        rawBytesSet = false;
+        numeric = 0;
+        numericSet = false;
+    }
+
+    /**
+     * Constructs a datum with a defined capacity. This is the normal
+     * constructor.
+     */
+    public FennelTupleDatum(int capacity)
+    {
+        dataLen = 0;
+        setCapacity(capacity);
+        rawBytesSet = false;
+        numeric = 0;
+        numericSet = false;
+    }
+
+    /**
+     * copy constructor.
+     */
+    public FennelTupleDatum(FennelTupleDatum other)
+    {
+        copyFrom(other);
+    }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * sets the capacity of this data item.
      */
-    public void setCapacity(int capacity) 
-    { 
+    public void setCapacity(int capacity)
+    {
         if (this.capacity != capacity) {
             initialBytes = new byte[capacity];
             this.capacity = capacity;
@@ -101,16 +137,16 @@ public class FennelTupleDatum
     /**
      * gets the capacity of this data item.
      */
-    public int getCapacity() 
-    { 
+    public int getCapacity()
+    {
         return capacity;
     }
 
     /**
      * Indicates whether data is present in this datum.
      */
-    public boolean isPresent() 
-    { 
+    public boolean isPresent()
+    {
         return (rawBytesSet || numericSet);
     }
 
@@ -118,13 +154,14 @@ public class FennelTupleDatum
      * resets a datum for reuse.
      */
     public void reset()
-    { 
+    {
         if (rawBytesSet) {
             rawBytesSet = false;
             rawBytes = initialBytes;
         }
         numericSet = false;
         dataLen = 0;
+
         // should be unnecessary
         numeric = 0;
     }
@@ -132,46 +169,21 @@ public class FennelTupleDatum
     /**
      * gets the length, in bytes, of this datum.
      */
-    public int getLength() 
-    { 
-        return dataLen; 
+    public int getLength()
+    {
+        return dataLen;
     }
 
     /**
-     *  sets the length of this datum's byte array.
-     */ 
-    public void setLength(int len) 
-    { 
+     * sets the length of this datum's byte array.
+     */
+    public void setLength(int len)
+    {
         dataLen = len;
     }
 
     /**
-     *  Constructs a raw datum; setCapacity must be called before use.
-     */ 
-    public FennelTupleDatum()
-    {
-        dataLen = 0;
-        capacity = 0;
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
-    }
-
-    /**
-     * Constructs a datum with a defined capacity.
-     * This is the normal constructor.
-     */ 
-    public FennelTupleDatum(int capacity)
-    {
-        dataLen = 0;
-        setCapacity(capacity);
-        rawBytesSet = false;
-        numeric = 0;
-        numericSet = false;
-    }
-
-    /**
-     *  copy construction helper.
+     * copy construction helper.
      */
     public void copyFrom(FennelTupleDatum other)
     {
@@ -183,14 +195,6 @@ public class FennelTupleDatum
         numeric = other.numeric;
         numericSet = other.numericSet;
     }
-    
-    /**
-     *  copy constructor.
-     */
-    public FennelTupleDatum(FennelTupleDatum other)
-    {
-        copyFrom(other);
-    }
 
     /**
      * used by the attribute marshalling to set numeric values.
@@ -201,38 +205,55 @@ public class FennelTupleDatum
         numeric = n;
     }
 
-    /** 
+    /**
      * sets the numeric value of a signed integer.
      */
-    public void setInt(int n)              { setLong((long) n); }
+    public void setInt(int n)
+    {
+        setLong((long) n);
+    }
 
-    /** 
+    /**
      * sets the numeric value of an unsigned integer.
      */
-    public void setUnsignedInt(long val)   {
-        setLong((long) (val&0xffffffff)); }
-    
-    /** 
+    public void setUnsignedInt(long val)
+    {
+        setLong((long) (val & 0xffffffff));
+    }
+
+    /**
      * sets the numeric value of a signed short.
      */
-    public void setShort(short n)          { setLong((long) n); }
+    public void setShort(short n)
+    {
+        setLong((long) n);
+    }
 
-    /** 
+    /**
      * sets the numeric value of an unsigned short.
      */
-    public void setUnsignedShort(int val)  { setLong((long) (val&0xffff)); }
+    public void setUnsignedShort(int val)
+    {
+        setLong((long) (val & 0xffff));
+    }
 
-    /** 
+    /**
      * sets the numeric value of a signed byte.
      */
-    public void setByte(byte n)            { setLong((long) n); }
+    public void setByte(byte n)
+    {
+        setLong((long) n);
+    }
 
-    /** 
+    /**
      * sets the numeric value of an unsigned byte.
      */
-    public void setUnsignedByte(short val) { setLong((long) (val&0xff)); }
+    public void setUnsignedByte(short val)
+    {
+        setLong((long) (val & 0xff));
+    }
 
-    /** 
+    /**
      * sets the numeric value of an unsigned long.
      */
     // FIXME - bogus - we can't represent 64-bit unsigned!
@@ -241,27 +262,27 @@ public class FennelTupleDatum
         setLong(val);
     }
 
-    /** 
+    /**
      * sets the numeric value of a float.
      */
-    public void setFloat(float val) 
-    { 
-        setInt(Float.floatToIntBits(val)); 
+    public void setFloat(float val)
+    {
+        setInt(Float.floatToIntBits(val));
     }
 
-    /** 
+    /**
      * sets the numeric value of a double.
      */
-    public void setDouble(double val) 
-    { 
-        setLong(Double.doubleToLongBits(val)); 
+    public void setDouble(double val)
+    {
+        setLong(Double.doubleToLongBits(val));
     }
 
-    /** 
+    /**
      * sets a boolean value.
      */
-    public void setBoolean(boolean val) 
-    { 
+    public void setBoolean(boolean val)
+    {
         if (val) {
             setLong(1L);
         } else {
@@ -272,7 +293,7 @@ public class FennelTupleDatum
     /**
      * used by the marshalling routines to set a byte array.
      */
-    public byte[] setRawBytes()
+    public byte [] setRawBytes()
     {
         rawBytesSet = true;
         return rawBytes;
@@ -284,7 +305,7 @@ public class FennelTupleDatum
     public long getLong()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return numeric;
@@ -296,7 +317,7 @@ public class FennelTupleDatum
     public int getInt()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (int) numeric;
@@ -308,7 +329,7 @@ public class FennelTupleDatum
     public short getShort()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (short) numeric;
@@ -320,7 +341,7 @@ public class FennelTupleDatum
     public byte getByte()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (byte) numeric;
@@ -332,7 +353,7 @@ public class FennelTupleDatum
     public short getUnsignedByte()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (short) ((numeric << 56) >>> 56);
@@ -344,7 +365,7 @@ public class FennelTupleDatum
     public int getUnsignedShort()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (int) ((numeric << 48) >>> 48);
@@ -356,7 +377,7 @@ public class FennelTupleDatum
     public long getUnsignedInt()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (long) (numeric << 32) >>> 32;
@@ -368,9 +389,10 @@ public class FennelTupleDatum
     public long getUnsignedLong()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
+
         // FIXME
         return numeric;
     }
@@ -381,7 +403,7 @@ public class FennelTupleDatum
     public float getFloat()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return Float.intBitsToFloat((int) numeric);
@@ -393,7 +415,7 @@ public class FennelTupleDatum
     public double getDouble()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return Double.longBitsToDouble(numeric);
@@ -405,7 +427,7 @@ public class FennelTupleDatum
     public boolean getBoolean()
         throws NullPointerException
     {
-        if (! numericSet) {
+        if (!numericSet) {
             throw new NullPointerException("numeric not present");
         }
         return (numeric != 0);
@@ -414,10 +436,10 @@ public class FennelTupleDatum
     /**
      * gets a byte array.
      */
-    public byte[] getBytes()
+    public byte [] getBytes()
         throws NullPointerException
     {
-        if (! rawBytesSet) {
+        if (!rawBytesSet) {
             throw new NullPointerException("bytes not present");
         }
         return rawBytes;
@@ -426,7 +448,7 @@ public class FennelTupleDatum
     /**
      * set the byte array.
      */
-    public void setBytes(byte[] bytes)
+    public void setBytes(byte [] bytes)
     {
         rawBytes = bytes;
         setLength(rawBytes.length);
@@ -442,6 +464,7 @@ public class FennelTupleDatum
         setLength(rawBytes.length);
         rawBytesSet = true;
     }
-};
+}
+;
 
 // End FennelTupleDatum.java

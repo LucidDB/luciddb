@@ -21,17 +21,21 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.plugin.*;
-import java.util.jar.*;
-import java.net.*;
 import java.io.*;
+
+import java.net.*;
+
+import java.util.jar.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.plugin.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
+
 
 /**
  * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG LIBRARY
@@ -40,19 +44,27 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlExtendCatalogStmt extends DdlStmt
+public class DdlExtendCatalogStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlIdentifier jarName;
     private FarragoRepos repos;
     private FarragoSessionFactory sessionFactory;
     private FemJar femJar;
     private String jarUrlUnexpanded;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public DdlExtendCatalogStmt(SqlIdentifier jarName)
     {
         super(null);
         this.jarName = jarName;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -66,8 +78,10 @@ public class DdlExtendCatalogStmt extends DdlStmt
         repos = ddlValidator.getRepos();
         sessionFactory =
             ddlValidator.getStmtValidator().getSession().getSessionFactory();
-        femJar = ddlValidator.getStmtValidator().findSchemaObject(
-            jarName, FemJar.class);
+        femJar =
+            ddlValidator.getStmtValidator().findSchemaObject(
+                jarName,
+                FemJar.class);
         if (femJar.isModelExtension()) {
             throw FarragoResource.instance().CatalogModelAlreadyImported.ex(
                 repos.getLocalizedObjectName(femJar));
@@ -113,7 +127,8 @@ public class DdlExtendCatalogStmt extends DdlStmt
                 xmiResourceUrl);
         } catch (Exception ex) {
             throw FarragoResource.instance().CatalogModelImportFailed.ex(
-                repos.getLocalizedObjectName(femJar), ex);
+                repos.getLocalizedObjectName(femJar),
+                ex);
         } finally {
             Util.squelchStream(jarInputStream);
         }

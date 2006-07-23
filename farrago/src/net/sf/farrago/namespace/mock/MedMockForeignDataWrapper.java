@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,15 +33,17 @@ import net.sf.farrago.resource.*;
 
 
 /**
- * MedMockForeignDataWrapper provides a mock implementation of the
- * {@link FarragoMedDataWrapper} interface.
+ * MedMockForeignDataWrapper provides a mock implementation of the {@link
+ * FarragoMedDataWrapper} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
+public class MedMockForeignDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new data wrapper instance.
@@ -49,7 +52,7 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -64,17 +67,18 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
         // locale.
         return "Foreign data wrapper for mock tables";
     }
-    
+
     // implement FarragoMedDataWrapper
     public DriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps)
     {
-        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
-            FarragoResource.instance(),
-            "MedMock",
-            serverProps);
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedMock",
+                serverProps);
         infoMap.addPropInfo(
             MedMockDataServer.PROP_SCHEMA_NAME);
         infoMap.addPropInfo(
@@ -82,9 +86,9 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
         infoMap.addPropInfo(
             MedMockDataServer.PROP_EXECUTOR_IMPL,
             true,
-            new String [] {
+            new String[] {
                 MedMockDataServer.PROPVAL_JAVA,
-                MedMockDataServer.PROPVAL_FENNEL
+            MedMockDataServer.PROPVAL_FENNEL
             });
         return infoMap.toArray();
     }
@@ -105,8 +109,11 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
         Properties props)
         throws SQLException
     {
-        MedMockDataServer server = new MedMockDataServer(
-            this, serverMofId, props);
+        MedMockDataServer server =
+            new MedMockDataServer(
+                this,
+                serverMofId,
+                props);
         boolean success = false;
         try {
             server.initialize();
@@ -119,6 +126,5 @@ public class MedMockForeignDataWrapper extends MedAbstractDataWrapper
         }
     }
 }
-
 
 // End MedMockForeignDataWrapper.java

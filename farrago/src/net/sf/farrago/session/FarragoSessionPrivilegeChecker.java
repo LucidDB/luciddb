@@ -21,8 +21,9 @@
 */
 package net.sf.farrago.session;
 
-import net.sf.farrago.fem.security.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fem.security.*;
+
 
 /**
  * This interface specifies the privilege check service methods. The caller
@@ -34,22 +35,20 @@ import net.sf.farrago.cwm.core.*;
  */
 public interface FarragoSessionPrivilegeChecker
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Submits a request for access to a catalog object.  Actual checking of
-     * the request may be deferred until the next call to checkAccess.  It is
-     * legal to specify neither, one, or both of user and role; even when both
-     * are null, privileges granted to PUBLIC still apply.
-     * 
+     * Submits a request for access to a catalog object. Actual checking of the
+     * request may be deferred until the next call to checkAccess. It is legal
+     * to specify neither, one, or both of user and role; even when both are
+     * null, privileges granted to PUBLIC still apply.
+     *
      * @param obj object to be accessed
-     *
      * @param user the requesting user, or null for none
-     *
      * @param role the requesting role, or null for none
-     *
-     * @param action the action to be performed on obj
-     * (see {@link PrivilegedActionEnum} for base set)
+     * @param action the action to be performed on obj (see {@link
+     * PrivilegedActionEnum} for base set)
      */
     public void requestAccess(
         CwmModelElement obj,
@@ -58,11 +57,10 @@ public interface FarragoSessionPrivilegeChecker
         String action);
 
     /**
-     * Checks access for all requests that have been submitted,
-     * and clears the request list.
+     * Checks access for all requests that have been submitted, and clears the
+     * request list.
      */
-    public void checkAccess();   
-
+    public void checkAccess();
 }
 
 // End FarragoSessionPrivilegeChecker.java

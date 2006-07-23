@@ -22,12 +22,13 @@
 */
 package net.sf.farrago.fennel;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
- * FennelPseudoUuidGenerator handles JNI calls to Fennel that generate
- * universal unique identifiers (UUIDs).  Fennel generates these in a
- * way that abstracts away OS and hardware dependencies.
+ * FennelPseudoUuidGenerator handles JNI calls to Fennel that generate universal
+ * unique identifiers (UUIDs). Fennel generates these in a way that abstracts
+ * away OS and hardware dependencies.
  *
  * <p>Depends on Fennel's libfarrago.
  *
@@ -38,28 +39,39 @@ import org.eigenbase.util.Util;
  */
 public class FennelPseudoUuidGenerator
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final int UUID_LENGTH = 16;
 
     static {
         Util.loadLibrary("farrago");
     }
 
-    /** Inaccessible constructor. */
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Inaccessible constructor.
+     */
     private FennelPseudoUuidGenerator()
     {
     }
 
-    public static byte[] validUuid()
+    //~ Methods ----------------------------------------------------------------
+
+    public static byte [] validUuid()
     {
         return nativeGenerate();
     }
 
-    public static byte[] invalidUuid()
+    public static byte [] invalidUuid()
     {
         return nativeGenerateInvalid();
     }
 
-    private static native byte[] nativeGenerate();
+    private static native byte [] nativeGenerate();
 
-    private static native byte[] nativeGenerateInvalid();
+    private static native byte [] nativeGenerateInvalid();
 }
+
+// End FennelPseudoUuidGenerator.java

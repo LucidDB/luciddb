@@ -22,31 +22,31 @@
 */
 package net.sf.farrago.ddl;
 
-import org.eigenbase.util.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.*;
+import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.med.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import java.util.logging.*;
 
 /**
  * DdlHandler is an abstract base for classes which provide implementations for
- * the actions taken by {@link DdlValidator} on individual objects.  See {@link
+ * the actions taken by {@link DdlValidator} on individual objects. See {@link
  * FarragoSessionDdlHandler} for an explanation.
  *
  * @author John V. Sichi
@@ -54,18 +54,24 @@ import java.util.logging.*;
  */
 public abstract class DdlHandler
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     protected static final Logger tracer = FarragoTrace.getDdlValidatorTracer();
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final FarragoSessionDdlValidator validator;
 
     protected final FarragoRepos repos;
 
     /**
-     * An instance of FarragoResource for use in throwing validation
-     * errors.  The name is intentionally short to keep line length under
-     * control.
+     * An instance of FarragoResource for use in throwing validation errors. The
+     * name is intentionally short to keep line length under control.
      */
     protected final FarragoResource res;
+
+    //~ Constructors -----------------------------------------------------------
 
     public DdlHandler(FarragoSessionDdlValidator validator)
     {
@@ -73,6 +79,8 @@ public abstract class DdlHandler
         repos = validator.getRepos();
         res = FarragoResource.instance();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public FarragoSessionDdlValidator getValidator()
     {
@@ -136,8 +144,7 @@ public abstract class DdlHandler
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
         if (!attribute.getIsNullable().equals(
-                NullableTypeEnum.COLUMN_NO_NULLS))
-        {
+                NullableTypeEnum.COLUMN_NO_NULLS)) {
             if (attribute instanceof FemStoredColumn) {
                 // Store the original user declaration, since we might override
                 // isNullable with derived information (for example, columns in
@@ -147,7 +154,7 @@ public abstract class DdlHandler
                 // constraint or not.
                 FemStoredColumn col = (FemStoredColumn) attribute;
                 col.setDeclaredNullable(true);
-                
+
                 // Now, compute the derived nullability and overwrite
                 // isNullable with that.  Note that local data wrappers
                 // may also do more of this later; for example, FTRS
@@ -165,7 +172,9 @@ public abstract class DdlHandler
             }
         }
 
-        validateTypedElement(attribute, attribute.getOwner());
+        validateTypedElement(
+            attribute,
+            attribute.getOwner());
 
         String defaultExpression = attribute.getInitialValue().getBody();
         if (!defaultExpression.equalsIgnoreCase("NULL")) {
@@ -217,9 +226,10 @@ public abstract class DdlHandler
         FemSqltypedElement element,
         CwmNamespace cwmNamespace)
     {
-        final FemAbstractTypedElement abstractElement = element.getModelElement();
-        SqlDataTypeSpec dataType = (SqlDataTypeSpec)
-            validator.getSqlDefinition(abstractElement);
+        final FemAbstractTypedElement abstractElement =
+            element.getModelElement();
+        SqlDataTypeSpec dataType =
+            (SqlDataTypeSpec) validator.getSqlDefinition(abstractElement);
 
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
@@ -227,15 +237,16 @@ public abstract class DdlHandler
             try {
                 validator.getStmtValidator().validateDataType(dataType);
             } catch (SqlValidatorException ex) {
-                throw validator.newPositionalError(abstractElement,
-                    res.ValidatorDefinitionError.ex(ex.getMessage(),
+                throw validator.newPositionalError(
+                    abstractElement,
+                    res.ValidatorDefinitionError.ex(
+                        ex.getMessage(),
                         repos.getLocalizedObjectName(abstractElement)));
             }
         } else {
             // assume that we're revalidating a previously saved element
             // so we can skip type validation altogether
         }
-
 
         CwmSqldataType type = (CwmSqldataType) element.getType();
         SqlTypeName typeName = SqlTypeName.get(type.getName());
@@ -274,8 +285,7 @@ public abstract class DdlHandler
             typeFamily = SqlTypeFamily.getFamilyForSqlType(typeName);
         }
         if ((typeFamily == SqlTypeFamily.Character)
-            || (typeFamily == SqlTypeFamily.Binary))
-        {
+            || (typeFamily == SqlTypeFamily.Binary)) {
             // convert precision to length
             if (element.getPrecision() != null) {
                 element.setLength(element.getPrecision());
@@ -298,14 +308,13 @@ public abstract class DdlHandler
         if (type instanceof CwmSqlsimpleType) {
             CwmSqlsimpleType simpleType = (CwmSqlsimpleType) type;
         } else if (type instanceof FemSqlcollectionType) {
-            FemSqlcollectionType collectionType =
-                (FemSqlcollectionType) type;
-            FemSqltypeAttribute componentType = (FemSqltypeAttribute)
-                collectionType.getFeature().get(0);
+            FemSqlcollectionType collectionType = (FemSqlcollectionType) type;
+            FemSqltypeAttribute componentType =
+                (FemSqltypeAttribute) collectionType.getFeature().get(0);
             validateAttribute(componentType);
         } else if (type instanceof FemUserDefinedType) {
-            // nothing special to do for UDT's, which were
-            // already validated on creation
+            // nothing special to do for UDT's, which were already validated on
+            // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
             for (Iterator columnIter = rowType.getFeature().iterator();
@@ -335,13 +344,14 @@ public abstract class DdlHandler
     /**
      * Adds position information to an exception.
      *
-     * <p>This method is similar to
-     * {@link SqlValidator#newValidationError(SqlNode, SqlValidatorException)}
-     * and should be unified with it, if only we could figure out how.
+     * <p>This method is similar to {@link
+     * SqlValidator#newValidationError(SqlNode, SqlValidatorException)} and
+     * should be unified with it, if only we could figure out how.
      *
-     * @param element Element which had the error, and is therefore the locus
-     *     of the exception
+     * @param element Element which had the error, and is therefore the locus of
+     * the exception
      * @param e Exception raised
+     *
      * @return Exception with position information
      */
     private RuntimeException newContextException(
@@ -356,13 +366,13 @@ public abstract class DdlHandler
     }
 
     /**
-     * Initializes a {@link CwmColumn} definition based on a
-     * {@link RelDataTypeField}.
+     * Initializes a {@link CwmColumn} definition based on a {@link
+     * RelDataTypeField}.
      *
-     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)},
-     * also calls {@link CwmColumn#setPrecision(Integer)},
-     * {@link CwmColumn#setScale(Integer)} and
-     * {@link CwmColumn#setIsNullable(NullableType)}.
+     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)}, also
+     * calls {@link CwmColumn#setPrecision(Integer)}, {@link
+     * CwmColumn#setScale(Integer)} and {@link
+     * CwmColumn#setIsNullable(NullableType)}.
      *
      * <p>If the column has no name, the name is initialized from the field
      * name; otherwise, the existing name is left unmodified.
@@ -370,7 +380,8 @@ public abstract class DdlHandler
      * @param field input field
      * @param column on input, contains unintialized CwmColumn instance;
      * @param owner The object which is to own any anonymous datatypes created;
-     *     typically, the table which this column belongs to
+     * typically, the table which this column belongs to
+     *
      * @pre field != null && column != null && owner != null
      */
     public void convertFieldToCwmColumn(
@@ -378,22 +389,25 @@ public abstract class DdlHandler
         CwmColumn column,
         CwmNamespace owner)
     {
-        assert field != null && column != null && owner != null : "pre";
+        assert (field != null) && (column != null) && (owner != null) : "pre";
         if (column.getName() == null) {
             final String name = field.getName();
             assert name != null;
             column.setName(name);
         }
-        convertTypeToCwmColumn(field.getType(), column, owner);
+        convertTypeToCwmColumn(
+            field.getType(),
+            column,
+            owner);
     }
 
     /**
      * Populates a {@link CwmColumn} object with type information.
      *
-     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)},
-     * also calls {@link CwmColumn#setPrecision(Integer)},
-     * {@link CwmColumn#setScale(Integer)} and
-     * {@link CwmColumn#setIsNullable(NullableType)}.
+     * <p>As well as calling {@link CwmColumn#setType(CwmClassifier)}, also
+     * calls {@link CwmColumn#setPrecision(Integer)}, {@link
+     * CwmColumn#setScale(Integer)} and {@link
+     * CwmColumn#setIsNullable(NullableType)}.
      *
      * <p>If the type is structured or a multiset, the implementation is
      * recursive.
@@ -401,7 +415,7 @@ public abstract class DdlHandler
      * @param type Type to convert
      * @param column Column to populate with type information
      * @param owner The object which is to own any anonymous datatypes created;
-     *     typically, the table which this column belongs to
+     * typically, the table which this column belongs to
      */
     private void convertTypeToCwmColumn(
         RelDataType type,
@@ -411,17 +425,19 @@ public abstract class DdlHandler
         CwmSqldataType cwmType;
         final SqlTypeName typeName = type.getSqlTypeName();
         if (typeName == SqlTypeName.Row) {
-            Util.permAssert(type.isStruct(), "type.isStruct()");
+            Util.permAssert(
+                type.isStruct(),
+                "type.isStruct()");
             FemSqlrowType rowType = repos.newFemSqlrowType();
             rowType.setName("SYS$ROW_" + rowType.refMofId());
-            final RelDataTypeField[] fields = type.getFields();
+            final RelDataTypeField [] fields = type.getFields();
             for (int i = 0; i < fields.length; i++) {
                 RelDataTypeField subField = fields[i];
-                FemSqltypeAttribute subColumn =
-                    repos.newFemSqltypeAttribute();
+                FemSqltypeAttribute subColumn = repos.newFemSqltypeAttribute();
                 convertFieldToCwmColumn(subField, subColumn, owner);
                 rowType.getFeature().add(subColumn);
             }
+
             // Attach the anonymous type to the owner of the column, to ensure
             // that it is destroyed.
             owner.getOwnedElement().add(rowType);
@@ -435,13 +451,15 @@ public abstract class DdlHandler
             attr.setName("SYS$MULTISET_COMPONENT_" + attr.refMofId());
             convertTypeToCwmColumn(componentType, attr, owner);
             multisetType.getFeature().add(attr);
+
             // Attach the anonymous type to the owner of the column, to ensure
             // that it is destroyed.
             owner.getOwnedElement().add(multisetType);
             cwmType = multisetType;
         } else {
-            cwmType = validator.getStmtValidator().findSqldataType(
-                type.getSqlIdentifier());
+            cwmType =
+                validator.getStmtValidator().findSqldataType(
+                    type.getSqlIdentifier());
             Util.permAssert(cwmType != null, "cwmType != null");
             if (typeName != null) {
                 if (typeName.allowsPrec()) {
@@ -470,6 +488,7 @@ public abstract class DdlHandler
             return ex;
         }
         EigenbaseContextException contextExcn = (EigenbaseContextException) ex;
+
         // We have context information for the query, and
         // need to adjust the position to match the original
         // DDL statement.
@@ -487,8 +506,13 @@ public abstract class DdlHandler
         }
         endLine += (offsetPos.getLineNum() - 1);
 
-        return SqlUtil.newContextException(
-            line, col, endLine, endCol, ex.getCause());
+        return
+            SqlUtil.newContextException(
+                line,
+                col,
+                endLine,
+                endCol,
+                ex.getCause());
     }
 
     private void validateDefaultClause(
@@ -497,7 +521,7 @@ public abstract class DdlHandler
         String defaultExpression)
     {
         String sql = "VALUES(" + defaultExpression + ")";
-        
+
         // null param def factory okay because we won't use dynamic params
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
         stmtContext.prepare(sql, false);

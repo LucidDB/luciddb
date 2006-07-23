@@ -21,10 +21,11 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.*;
-
 import java.util.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
  * MockRelOptPlanner is a mock implementation of the {@link RelOptPlanner}
@@ -33,13 +34,19 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MockRelOptPlanner extends AbstractRelOptPlanner
+public class MockRelOptPlanner
+    extends AbstractRelOptPlanner
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private RelNode root;
 
     private RelOptRule rule;
 
     private RelNode transformationResult;
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptPlanner
     public void setRoot(RelNode rel)
@@ -56,8 +63,7 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
     // implement RelOptPlanner
     public boolean addRule(RelOptRule rule)
     {
-        assert(this.rule == null)
-            : "MockRelOptPlanner only supports a single rule";
+        assert (this.rule == null) : "MockRelOptPlanner only supports a single rule";
         this.rule = rule;
 
         return false;
@@ -85,17 +91,22 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
     }
 
     private boolean matchRecursive(
-        RelNode rel, RelNode parent, int ordinalInParent)
+        RelNode rel,
+        RelNode parent,
+        int ordinalInParent)
     {
         List<RelNode> bindings = new ArrayList<RelNode>();
-        if (match(rule.getOperand(), rel, bindings)) {
-            MockRuleCall call = new MockRuleCall(
-                this,
-                rule.getOperand(),
-                bindings.toArray(RelNode.emptyArray));
+        if (match(rule.getOperand(),
+                rel,
+                bindings)) {
+            MockRuleCall call =
+                new MockRuleCall(
+                    this,
+                    rule.getOperand(),
+                    bindings.toArray(RelNode.emptyArray));
             rule.onMatch(call);
         }
-        
+
         if (transformationResult != null) {
             if (parent == null) {
                 root = transformationResult;
@@ -133,11 +144,9 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
             return false;
         }
         for (int i = 0; i < n; ++i) {
-            if (!match(
-                    (RelOptRuleOperand) childOperands[i],
+            if (!match((RelOptRuleOperand) childOperands[i],
                     childRels[i],
-                    bindings))
-            {
+                    bindings)) {
                 return false;
             }
         }
@@ -164,7 +173,10 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
         return true;
     }
 
-    private class MockRuleCall extends RelOptRuleCall
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class MockRuleCall
+        extends RelOptRuleCall
     {
         MockRuleCall(
             RelOptPlanner planner,
@@ -173,7 +185,7 @@ public class MockRelOptPlanner extends AbstractRelOptPlanner
         {
             super(planner, operand, rels);
         }
-        
+
         // implement RelOptRuleCall
         public void transformTo(RelNode rel)
         {

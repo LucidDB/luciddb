@@ -20,21 +20,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
-
 
 /**
  * A set of classes for holding primitive objects.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 8 February, 2002
  */
 public class Holder
 {
-    //~ Inner Classes ---------------------------------------------------------
+
+    //~ Inner Classes ----------------------------------------------------------
 
     public static final class int_Holder
     {
@@ -60,6 +58,5 @@ public class Holder
         }
     }
 }
-
 
 // End Holder.java

@@ -24,16 +24,19 @@ package net.sf.farrago.query;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FennelAggRule is a rule for transforming {@link AggregateRel} to
- * {@link FennelAggRel}.
+ * FennelAggRule is a rule for transforming {@link AggregateRel} to {@link
+ * FennelAggRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelAggRule extends RelOptRule
+public class FennelAggRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelAggRule object.
@@ -45,7 +48,7 @@ public class FennelAggRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -75,17 +78,17 @@ public class FennelAggRule extends RelOptRule
                 return;
             }
         }
-        
+
         RelNode relInput = aggRel.getChild();
         RelNode fennelInput;
-        
+
         if (aggRel.getGroupCount() > 0) {
-            
             // add a FennelSortRel node beneath AggRel with sort keys
             // corresponding to the group by keys
-            RelNode sortInput = 
+            RelNode sortInput =
                 mergeTraitsAndConvert(
-                    aggRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                    aggRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
                     relInput);
             if (sortInput == null) {
                 return;
@@ -106,9 +109,10 @@ public class FennelAggRule extends RelOptRule
             fennelInput = fennelSortRel;
         } else {
             fennelInput =
-            mergeTraitsAndConvert(
-                aggRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
-                relInput);
+                mergeTraitsAndConvert(
+                    aggRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
+                    relInput);
             if (fennelInput == null) {
                 return;
             }

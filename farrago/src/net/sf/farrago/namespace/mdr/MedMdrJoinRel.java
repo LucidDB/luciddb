@@ -34,6 +34,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
+
 /**
  * MedMdrJoinRel is the relational expression corresponding to a join via
  * association to an MedMdrClassExtent on the right hand side.
@@ -41,14 +42,17 @@ import org.eigenbase.rex.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRel extends JoinRelBase implements JavaRel
+class MedMdrJoinRel
+    extends JoinRelBase
+    implements JavaRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private int leftOrdinal;
     private Reference rightReference;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMdrJoinRel(
         RelOptCluster cluster,
@@ -60,15 +64,22 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
         Reference rightReference)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.ITERATOR), left, right,
-            condition, joinType, Collections.EMPTY_SET);
-        assert ((joinType == JoinRelType.INNER) || (joinType == JoinRelType.LEFT));
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            left,
+            right,
+            condition,
+            joinType,
+            Collections.EMPTY_SET);
+        assert ((joinType == JoinRelType.INNER) || (
+                    joinType == JoinRelType.LEFT
+                                                   ));
 
         this.leftOrdinal = leftOrdinal;
         this.rightReference = rightReference;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     int getLeftOrdinal()
     {
@@ -82,14 +93,15 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
 
     public Object clone()
     {
-        MedMdrJoinRel clone = new MedMdrJoinRel(
-            getCluster(),
-            RelOptUtil.clone(left),
-            RelOptUtil.clone(right),
-            RexUtil.clone(condition),
-            joinType,
-            leftOrdinal,
-            rightReference);
+        MedMdrJoinRel clone =
+            new MedMdrJoinRel(
+                getCluster(),
+                RelOptUtil.clone(left),
+                RelOptUtil.clone(right),
+                RexUtil.clone(condition),
+                joinType,
+                leftOrdinal,
+                rightReference);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -99,8 +111,10 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
     {
         // TODO:  refine
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return planner.makeCost(rowCount, 0,
-            rowCount * getRowType().getFieldList().size());
+        return
+            planner.makeCost(rowCount,
+                0,
+                rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
@@ -113,9 +127,10 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
         } else {
             // one-to-many:  assume a fanout of five, capped by the
             // total number of rows on the right
-            return Math.min(
-                5 * RelMetadataQuery.getRowCount(left),
-                RelMetadataQuery.getRowCount(right));
+            return
+                Math.min(
+                    5 * RelMetadataQuery.getRowCount(left),
+                    RelMetadataQuery.getRowCount(right));
         }
     }
 
@@ -127,6 +142,5 @@ class MedMdrJoinRel extends JoinRelBase implements JavaRel
         return joinImplementor.implement(implementor);
     }
 }
-
 
 // End MedMdrJoinRel.java

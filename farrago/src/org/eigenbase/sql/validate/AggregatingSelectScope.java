@@ -23,12 +23,13 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 
+
 /**
- * Scope for resolving identifers within a SELECT statement which has a
- * GROUP BY clause.
+ * Scope for resolving identifers within a SELECT statement which has a GROUP BY
+ * clause.
  *
- * <p>The same set of identifiers are in scope, but it won't allow
- * access to identifiers or expressions which are not group-expressions.
+ * <p>The same set of identifiers are in scope, but it won't allow access to
+ * identifiers or expressions which are not group-expressions.
  *
  * @author jhyde
  * @version $Id$
@@ -38,8 +39,13 @@ public class AggregatingSelectScope
     extends DelegatingScope
     implements AggregatingScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlNodeList groupExprs;
     private final SqlSelect select;
+
+    //~ Constructors -----------------------------------------------------------
 
     AggregatingSelectScope(
         SqlValidatorScope selectScope,
@@ -60,6 +66,8 @@ public class AggregatingSelectScope
                     new SqlValidatorUtil.DeepCopier(selectScope));
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {
@@ -105,7 +113,10 @@ public class AggregatingSelectScope
 
         // Make sure expression is valid, throws if not.
         final AggChecker aggChecker =
-            new AggChecker(validator, this, groupExprs.getList());
+            new AggChecker(
+                validator,
+                this,
+                groupExprs.getList());
         if (deep) {
             expr.accept(aggChecker);
         }
@@ -119,8 +130,6 @@ public class AggregatingSelectScope
     {
         checkAggregateExpr(expr, true);
     }
-
 }
 
 // End AggregatingSelectScope.java
-

@@ -22,49 +22,50 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.*;
-import net.sf.farrago.test.regression.FarragoCalcSystemTest;
-import net.sf.farrago.jdbc.FarragoJdbcUtil;
-import net.sf.farrago.query.*;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.test.AbstractSqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.type.BasicSqlType;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeFactoryImpl;
-import org.eigenbase.test.SqlValidatorTestCase;
-import org.eigenbase.util.Util;
+import java.sql.*;
 
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
+import java.util.*;
+import java.util.regex.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.test.regression.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.test.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.test.*;
+import org.eigenbase.util.*;
 
 
 /**
- * FarragoSqlOperatorsSuite runs operator tests defined in
- * {@link SqlOperatorTests} against a Farrago database.
+ * FarragoSqlOperatorsSuite runs operator tests defined in {@link
+ * SqlOperatorTests} against a Farrago database.
  *
  * <p>The entry point is the {@link #suite} method.
  *
  * @author Wael Chatila
- * @since May 25, 2004
  * @version $Id$
+ * @since May 25, 2004
  */
 public class FarragoSqlOperatorsSuite
 {
 
-    //~ Instance fields -------------------------------------------------------
-    private static final SqlTypeFactoryImpl sqlTypeFactory = new SqlTypeFactoryImpl();
+    //~ Static fields/initializers ---------------------------------------------
 
-    //~ Constructors ----------------------------------------------------------
+    private static final SqlTypeFactoryImpl sqlTypeFactory =
+        new SqlTypeFactoryImpl();
 
-    private FarragoSqlOperatorsSuite() {}
+    //~ Constructors -----------------------------------------------------------
 
-    //~ Methods ---------------------------------------------------------------
+    private FarragoSqlOperatorsSuite()
+    {
+    }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Entry point for JUnit.
@@ -78,13 +79,14 @@ public class FarragoSqlOperatorsSuite
         return suite;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Implementation of {@link AbstractSqlTester}, leveraging connection setup
      * and result set comparison from the class {@link FarragoTestCase}.
      */
-    private static class FarragoSqlTester extends AbstractSqlTester
+    private static class FarragoSqlTester
+        extends AbstractSqlTester
     {
         /**
          * Helper.
@@ -96,7 +98,8 @@ public class FarragoSqlOperatorsSuite
          */
         private final FarragoCalcSystemTest.VirtualMachine vm;
 
-        FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm) throws Exception
+        FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm)
+            throws Exception
         {
             this.vm = vm;
             this.farragoTest = new MyFarragoTestCase();
@@ -142,7 +145,11 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.checkType(vm, getFor(), expression, type);
+                farragoTest.checkType(
+                    vm,
+                    getFor(),
+                    expression,
+                    type);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -162,7 +169,13 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.check(vm, getFor(), query, typeChecker, result, delta);
+                farragoTest.check(
+                    vm,
+                    getFor(),
+                    query,
+                    typeChecker,
+                    result,
+                    delta);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -193,7 +206,8 @@ public class FarragoSqlOperatorsSuite
 
         public FarragoVmOperatorTestBase(
             String testName,
-            FarragoCalcSystemTest.VirtualMachine vm) throws Exception
+            FarragoCalcSystemTest.VirtualMachine vm)
+            throws Exception
         {
             super(testName);
             tester = new FarragoSqlTester(vm);
@@ -212,7 +226,8 @@ public class FarragoSqlOperatorsSuite
     public static class FarragoJavaVmOperatorTest
         extends FarragoVmOperatorTestBase
     {
-        public FarragoJavaVmOperatorTest(String testName) throws Exception
+        public FarragoJavaVmOperatorTest(String testName)
+            throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Java);
         }
@@ -232,7 +247,8 @@ public class FarragoSqlOperatorsSuite
     public static class FarragoAutoVmOperatorTest
         extends FarragoVmOperatorTestBase
     {
-        public FarragoAutoVmOperatorTest(String testName) throws Exception
+        public FarragoAutoVmOperatorTest(String testName)
+            throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Auto);
         }
@@ -252,7 +268,8 @@ public class FarragoSqlOperatorsSuite
     public static class FarragoFennelVmOperatorTest
         extends FarragoVmOperatorTestBase
     {
-        public FarragoFennelVmOperatorTest(String testName) throws Exception
+        public FarragoFennelVmOperatorTest(String testName)
+            throws Exception
         {
             super(testName, FarragoCalcSystemTest.VirtualMachine.Fennel);
         }
@@ -269,13 +286,13 @@ public class FarragoSqlOperatorsSuite
      * Helper class. Extends {@link FarragoTestCase} for management of
      * connections and statements.
      *
-     * <p>Per that class, you must ensure that
-     * {@link #staticSetUp()}  and {@link #staticTearDown()} are called,
-     * and {@link #wrappedSuite(Class)} is a good way to do this.
+     * <p>Per that class, you must ensure that {@link #staticSetUp()} and {@link
+     * #staticTearDown()} are called, and {@link #wrappedSuite(Class)} is a good
+     * way to do this.
      */
-    private static class MyFarragoTestCase extends FarragoTestCase
+    private static class MyFarragoTestCase
+        extends FarragoTestCase
     {
-
         public MyFarragoTestCase()
             throws Exception
         {
@@ -291,16 +308,17 @@ public class FarragoSqlOperatorsSuite
             getSession().setOptRuleDescExclusionFilter(
                 FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
         }
-        
+
         /**
-         * Checks that a scalar expression fails at validate time or runtime
-         * on a given virtual machine.
+         * Checks that a scalar expression fails at validate time or runtime on
+         * a given virtual machine.
          */
         void checkFails(
             FarragoCalcSystemTest.VirtualMachine vm,
             String expression,
             String expectedError,
-            boolean runtime) throws SQLException
+            boolean runtime)
+            throws SQLException
         {
             stmt.execute(vm.getAlterSystemCommand());
             String query = buildQuery(expression);
@@ -338,7 +356,8 @@ public class FarragoSqlOperatorsSuite
             String query,
             SqlTester.TypeChecker typeChecker,
             Object result,
-            double delta) throws Exception
+            double delta)
+            throws Exception
         {
             assertNotNull("Test must call isFor() first", operator);
             if (!vm.canImplement(operator)) {
@@ -351,10 +370,11 @@ public class FarragoSqlOperatorsSuite
             } else if (delta != 0) {
                 Assert.assertTrue(result instanceof Number);
                 compareResultSetWithDelta(
-                    ((Number) result).doubleValue(), delta);
+                    ((Number) result).doubleValue(),
+                    delta);
             } else {
                 Set refSet = new HashSet();
-                refSet.add(result == null ? null : result.toString());
+                refSet.add((result == null) ? null : result.toString());
                 compareResultSet(refSet);
             }
 
@@ -380,24 +400,30 @@ public class FarragoSqlOperatorsSuite
             SqlTypeName actualSqlTypeName =
                 SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
             assertNotNull(actualSqlTypeName);
-            assertEquals(actualSqlTypeName.getName(), actualTypeName);
+            assertEquals(
+                actualSqlTypeName.getName(),
+                actualTypeName);
             BasicSqlType sqlType;
             final int actualNullable = md.isNullable(column);
             if (actualSqlTypeName.allowsScale()) {
-                sqlType = new BasicSqlType(
-                    actualSqlTypeName,
-                    md.getPrecision(column),
-                    md.getScale(column));
+                sqlType =
+                    new BasicSqlType(
+                        actualSqlTypeName,
+                        md.getPrecision(column),
+                        md.getScale(column));
             } else if (actualSqlTypeName.allowsPrecNoScale()) {
-                sqlType = new BasicSqlType(
-                    actualSqlTypeName,
-                    md.getPrecision(column));
+                sqlType =
+                    new BasicSqlType(
+                        actualSqlTypeName,
+                        md.getPrecision(column));
             } else {
                 sqlType = new BasicSqlType(actualSqlTypeName);
             }
             if (actualNullable == ResultSetMetaData.columnNullable) {
-                sqlType = (BasicSqlType)
-                    sqlTypeFactory.createTypeWithNullability(sqlType, true);
+                sqlType =
+                    (BasicSqlType) sqlTypeFactory.createTypeWithNullability(
+                        sqlType,
+                        true);
             }
             return sqlType;
         }
@@ -406,7 +432,8 @@ public class FarragoSqlOperatorsSuite
             FarragoCalcSystemTest.VirtualMachine vm,
             SqlOperator operator,
             String expression,
-            String type) throws SQLException
+            String type)
+            throws SQLException
         {
             assertNotNull("Test must call isFor() first", operator);
             if (!vm.canImplement(operator)) {

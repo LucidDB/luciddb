@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.sql.*;
@@ -30,8 +31,8 @@ import javax.sql.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
 
@@ -42,71 +43,73 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoMedDataServer extends FarragoAllocation
+public interface FarragoMedDataServer
+    extends FarragoAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    /** keyword for TYPE in server properties list */
-    public static final String PROP_SERVER_TYPE = "TYPE";
-
-    /** keyword for VERSION in server properties list */
-    public static final String PROP_SERVER_VERSION = "VERSION";
-
-    /** keyword for NAME in server properties list */
-    public static final String PROP_SERVER_NAME = "NAME";
-
-    //~ Methods ---------------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Sets a loopback DataSource which can be used to issue internal
-     * SQL queries against the containing DBMS.  This may be called
-     * multiple times on the same server instance with different
-     * data sources; the server should use only the last one provided.
+     * keyword for TYPE in server properties list
+     */
+    public static final String PROP_SERVER_TYPE = "TYPE";
+
+    /**
+     * keyword for VERSION in server properties list
+     */
+    public static final String PROP_SERVER_VERSION = "VERSION";
+
+    /**
+     * keyword for NAME in server properties list
+     */
+    public static final String PROP_SERVER_NAME = "NAME";
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Sets a loopback DataSource which can be used to issue internal SQL
+     * queries against the containing DBMS. This may be called multiple times on
+     * the same server instance with different data sources; the server should
+     * use only the last one provided.
      *
-     * @param loopbackDataSource a DataSource for
-     * establishing a loopback connection into Farrago, or null
-     * if loopback connections are not available in the current context
+     * @param loopbackDataSource a DataSource for establishing a loopback
+     * connection into Farrago, or null if loopback connections are not
+     * available in the current context
      */
     public void setLoopbackDataSource(DataSource loopbackDataSource);
-    
+
     /**
      * Gets a FarragoMedNameDirectory corresponding to this server.
      *
-     * @return directory, or null if this server does not have
-     * the required metadata capability
+     * @return directory, or null if this server does not have the required
+     * metadata capability
      *
-     * @exception SQLException if directory access is unsuccessful
-     * (but not if directory access is unsupported)
+     * @exception SQLException if directory access is unsuccessful (but not if
+     * directory access is unsupported)
      */
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException;
 
     /**
      * Creates an instance of a FarragoMedColumnSet corresponding to row data
-     * identified by properties rather than container name.  This supports
-     * the SQL/MED CREATE FOREIGN TABLE statement.  As much validation as
-     * possible should be performed, including accessing representative data.
+     * identified by properties rather than container name. This supports the
+     * SQL/MED CREATE FOREIGN TABLE statement. As much validation as possible
+     * should be performed, including accessing representative data.
      *
-     * @param localName the qualified name to assign to the column set
-     * within Farrago; this should NOT be used for finding the actual data,
-     * since it can be set arbitrarily by the caller; instead, it
-     * should be used to implement the RelOptTable.getQualifiedName() method,
-     * and can be useful for correlation during debugging
-     *
+     * @param localName the qualified name to assign to the column set within
+     * Farrago; this should NOT be used for finding the actual data, since it
+     * can be set arbitrarily by the caller; instead, it should be used to
+     * implement the RelOptTable.getQualifiedName() method, and can be useful
+     * for correlation during debugging
      * @param tableProps properties to use for data location and access
-     *
-     * @param typeFactory FarragoTypeFactory to use
-     * for defining types
-     *
-     * @param rowType type to impose on the rows of this column set
-     * (including column names and types), or null to infer row type;
-     * if this is non-null, it must be saved for use by the
-     * getRowType() returned from FarragoMedColumnSet
-     *
-     * @param columnPropMap map from column name to column-specific
-     * Properties; this is optional and may only be specified when
-     * rowType is also specified (the field names in rowType are
-     * used as the keys for columnPropMap)
+     * @param typeFactory FarragoTypeFactory to use for defining types
+     * @param rowType type to impose on the rows of this column set (including
+     * column names and types), or null to infer row type; if this is non-null,
+     * it must be saved for use by the getRowType() returned from
+     * FarragoMedColumnSet
+     * @param columnPropMap map from column name to column-specific Properties;
+     * this is optional and may only be specified when rowType is also specified
+     * (the field names in rowType are used as the keys for columnPropMap)
      *
      * @return new FarragoMedColumnSet
      *
@@ -121,11 +124,11 @@ public interface FarragoMedDataServer extends FarragoAllocation
         throws SQLException;
 
     /**
-     * Gets an object needed for runtime support.  Typically, this will be
-     * called from code generated by this server.  The meaning of this is
-     * entirely dependent on the server implementation.  If the returned
-     * object implements FarragoAllocation, its closeAllocation() method
-     * will be called automatically as soon as it is no longer needed.
+     * Gets an object needed for runtime support. Typically, this will be called
+     * from code generated by this server. The meaning of this is entirely
+     * dependent on the server implementation. If the returned object implements
+     * FarragoAllocation, its closeAllocation() method will be called
+     * automatically as soon as it is no longer needed.
      *
      * @param param parameter supplied at runtime
      *
@@ -139,22 +142,20 @@ public interface FarragoMedDataServer extends FarragoAllocation
      * This method may be called more than once, each time with a different
      * planner instance.
      *
-     * @param planner the planner in which the rules should
-     * be registered
+     * @param planner the planner in which the rules should be registered
      */
     public void registerRules(RelOptPlanner planner);
 
     /**
      * Gives this wrapper a chance to register one or more {@link
      * RelMetadataProvider}s in the chain which will be used to answer
-     * relational expression metadata queries during optimization.
-     * Wrappers which define their own relational expressions will
-     * generally need to supply corresponding metadata providers.
+     * relational expression metadata queries during optimization. Wrappers
+     * which define their own relational expressions will generally need to
+     * supply corresponding metadata providers.
      *
      * @param chain receives wrappers's custom providers, if any
      */
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain);
 }
-
 
 // End FarragoMedDataServer.java

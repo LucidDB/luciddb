@@ -20,24 +20,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
 /**
  * Holder for a list of constants describing which bugs which have not been
  * fixed.
  *
- * <p>You can use these constants to control the flow of your code. For
- * example, suppose that bug FNL-123 causes the "INSERT" statement to return
- * an incorrect row-count, and you want to disable unit tests.
- * You might use the constant in your code as follows:
+ * <p>You can use these constants to control the flow of your code. For example,
+ * suppose that bug FNL-123 causes the "INSERT" statement to return an incorrect
+ * row-count, and you want to disable unit tests. You might use the constant in
+ * your code as follows:
  *
- * <blockquote><pre>Statement stmt = connection.createStatement();
+ * <blockquote>
+ * <pre>Statement stmt = connection.createStatement();
  * int rowCount = stmt.execute(
  *     "INSERT INTO FemaleEmps SELECT * FROM Emps WHERE gender = 'F'");
  * if (Bug.Fnl123Fixed) {
  *    assertEquals(rowCount, 5);
- * }</pre></blockquote>
+ * }</pre>
+ * </blockquote>
  *
  * <p>The usage of the constant is a convenient way to identify the impact of
  * the bug. When someone fixes the bug, they will remove the constant and all
@@ -46,21 +47,23 @@ package org.eigenbase.util;
  * those branches.</p>
  *
  * @author jhyde
- * @since 2006/3/2
  * @version $Id$
+ * @since 2006/3/2
  */
 public abstract class Bug
 {
-    //~ Static fields/initializers --------------------------------------------
 
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">
-     * issue FRG-26</a> is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-26">issue
+     * FRG-26</a> is fixed.
      */
     public static final boolean Frg26Fixed = false;
 
-    /** Also filed as dtbug324 */
+    /**
+     * Also filed as dtbug324
+     */
     public static final boolean Frg65Fixed = false;
 
     /**
@@ -71,7 +74,7 @@ public abstract class Bug
 
     /**
      * Whether <a href="http://issues.eigenbase.org/browse/FNL-25">issue
-     * FNL-25</a> is fixed.  (also filed as dtbug 153)
+     * FNL-25</a> is fixed. (also filed as dtbug 153)
      */
     public static final boolean Fn25Fixed = false;
 
@@ -119,30 +122,29 @@ public abstract class Bug
     public static final boolean Dt563Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">
-     * issue FRG-73: miscellaneous bugs with nested comments</a>
-     * is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-73">issue FRG-73:
+     * miscellaneous bugs with nested comments</a> is fixed.
      */
     public static final boolean Frg73Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-78">
-     * issue FRG-78: collation clause should be on expression instead of identifier</a>
-     * is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-78">issue FRG-78:
+     * collation clause should be on expression instead of identifier</a> is
+     * fixed.
      */
     public static final boolean Frg78Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">
-     * issue FRG-103: validator allows duplicate target columns in insert</a>
-     * is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-103">issue
+     * FRG-103: validator allows duplicate target columns in insert</a> is
+     * fixed.
      */
     public static final boolean Frg103Fixed = false;
 
     /**
-     * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">
-     * issue FRG-140: validator does not accept column qualified by schema name</a>
-     * is fixed.
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-140">issue
+     * FRG-140: validator does not accept column qualified by schema name</a> is
+     * fixed.
      */
     public static final boolean Frg140Fixed = false;
 

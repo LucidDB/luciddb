@@ -22,27 +22,27 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+
 
 /**
  * Strategy to infer unknown types of the operands of an operator call.
  *
  * @author Wael Chatila
- * @since Sept 8, 2004
  * @version $Id$
- **/
+ * @since Sept 8, 2004
+ */
 public interface SqlOperandTypeInference
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Infers any unknown operand types.
      *
      * @param callBinding description of the call being analyzed
-     * @param returnType the type known or inferred for the
-     * result of the call
+     * @param returnType the type known or inferred for the result of the call
      * @param operandTypes receives the inferred types for all operands
      */
     public void inferOperandTypes(

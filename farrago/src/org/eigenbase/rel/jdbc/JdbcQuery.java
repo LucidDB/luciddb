@@ -20,25 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.jdbc;
 
-import javax.sql.DataSource;
+import javax.sql.*;
 
 import openjava.ptree.*;
 
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.ResultSetRel;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.relopt.*;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.JdbcDataSource;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -48,41 +45,47 @@ import org.eigenbase.util.Util;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 2 August, 2002
  */
-public class JdbcQuery extends AbstractRelNode implements ResultSetRel
+public class JdbcQuery
+    extends AbstractRelNode
+    implements ResultSetRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final DataSource dataSource;
 
-    /** The expression which yields the connection object. */
+    /**
+     * The expression which yields the connection object.
+     */
     protected RelOptConnection connection;
     SqlDialect dialect;
     SqlSelect sql;
 
-    /** For debug. Set on register. */
+    /**
+     * For debug. Set on register.
+     */
     protected String queryString;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>JdbcQuery</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     * @param connection a {@link RelOptConnection};
-     *       must also implement {@link DataSource}, because that's how we will
-     *       acquire the JDBC connection
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
+     * @param connection a {@link RelOptConnection}; must also implement {@link
+     * DataSource}, because that's how we will acquire the JDBC
+     * connection
      * @param sql SQL parse tree, may be null, otherwise must be a SELECT
-     *       statement
+     * statement
      * @param dataSource Provides a JDBC connection to run this query against.
-     *       If the query is implementing a JDBC table, then the connection's
-     *       schema will implement {@link net.sf.saffron.ext.JdbcSchema}, and
-     *       data source will typically be the same as calling
-     *       {@link net.sf.saffron.ext.JdbcSchema#getDataSource}. But non-JDBC
-     *       schemas are also acceptable.
+     * If the query is implementing a JDBC table, then the connection's schema
+     * will implement {@link net.sf.saffron.ext.JdbcSchema}, and data source
+     * will typically be the same as calling {@link
+     * net.sf.saffron.ext.JdbcSchema#getDataSource}. But non-JDBC schemas are
+     * also acceptable.
      *
      * @pre connection != null
      * @pre sql == null || sql.isA(SqlNode.Kind.Select)
@@ -96,16 +99,25 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         SqlSelect sql,
         DataSource dataSource)
     {
-        super(cluster, new RelTraitSet(CallingConvention.RESULT_SET));
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.RESULT_SET));
         Util.pre(connection != null, "connection != null");
         Util.pre(dataSource != null, "dataSource != null");
         this.rowType = rowType;
         this.connection = connection;
         this.dialect = dialect;
         if (sql == null) {
-            sql = SqlStdOperatorTable.selectOperator.createCall(null,
-                null, null, null, null, null, null, null,
-                SqlParserPos.ZERO);
+            sql =
+                SqlStdOperatorTable.selectOperator.createCall(null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    SqlParserPos.ZERO);
         } else {
             Util.pre(
                 sql.isA(SqlKind.Select),
@@ -115,7 +127,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
         this.dataSource = dataSource;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptConnection getConnection()
     {
@@ -132,8 +144,8 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
     {
         pw.explain(
             this,
-            new String [] { "foreignSql" },
-            new Object [] { getForeignSql() });
+            new String[] { "foreignSql" },
+            new Object[] { getForeignSql() });
     }
 
     public String getForeignSql()
@@ -146,9 +158,14 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
     public Object clone()
     {
-        JdbcQuery clone = new JdbcQuery(
-            getCluster(), rowType, connection, dialect,
-            (SqlSelect) sql.clone(), dataSource);
+        JdbcQuery clone =
+            new JdbcQuery(
+                getCluster(),
+                rowType,
+                connection,
+                dialect,
+                (SqlSelect) sql.clone(),
+                dataSource);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -190,7 +207,7 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
 
         /*
         planner.addRule(new TableAccessToQueryRule());
-        */
+         */
         planner.addRule(new AddFilterToQueryRule());
         planner.addRule(new AddProjectToQueryRule());
     }
@@ -238,12 +255,12 @@ public class JdbcQuery extends AbstractRelNode implements ResultSetRel
                     Literal.makeLiteral(url),
                     Literal.makeLiteral("SA"),
                     Literal.makeLiteral("")));
-        return new MethodCall(
-            new MethodCall(connectionExpr, "createStatement", null),
-            "executeQuery",
-            new ExpressionList(Literal.makeLiteral(queryString)));
+        return
+            new MethodCall(
+                new MethodCall(connectionExpr, "createStatement", null),
+                "executeQuery",
+                new ExpressionList(Literal.makeLiteral(queryString)));
     }
 }
-
 
 // End JdbcQuery.java

@@ -22,42 +22,51 @@
 */
 package org.eigenbase.sql.fun;
 
-import openjava.mop.OJClass;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import openjava.mop.*;
+
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Definition of the SQL <code>COUNT</code> aggregation function.
  *
- * <p><code>COUNT</code> is an aggregator which returns the number of rows
- * which have gone into it. With one argument (or more), it returns the
- * number of rows for which that argument (or all) is not
- * <code>null</code>.
+ * <p><code>COUNT</code> is an aggregator which returns the number of rows which
+ * have gone into it. With one argument (or more), it returns the number of rows
+ * for which that argument (or all) is not <code>null</code>.
  *
  * @author Julian Hyde
- * @since Oct 17, 2004
  * @version $Id$
+ * @since Oct 17, 2004
  */
-public class SqlCountAggFunction extends SqlAggFunction
+public class SqlCountAggFunction
+    extends SqlAggFunction
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final RelDataType type = null; // TODO:
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlCountAggFunction()
     {
         super(
-            "COUNT", SqlKind.Function, SqlTypeStrategies.rtiBigint,
-            null, SqlTypeStrategies.otcAny,
+            "COUNT",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiBigint,
+            null,
+            SqlTypeStrategies.otcAny,
             SqlFunctionCategory.Numeric);
     }
 
-    public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
+    //~ Methods ----------------------------------------------------------------
+
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
-        return new RelDataType[] {type};
+        return new RelDataType[] { type };
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
@@ -71,13 +80,15 @@ public class SqlCountAggFunction extends SqlAggFunction
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         // Check for COUNT(*) function.  If it is we don't
         // want to try and derive the "*"
         if (call.isCountStar()) {
             return validator.getTypeFactory().createSqlType(
-                SqlTypeName.Bigint);
+                    SqlTypeName.Bigint);
         }
         return super.deriveType(validator, scope, call);
     }

@@ -23,12 +23,11 @@
 package net.sf.farrago.defimpl;
 
 import com.disruptivetech.farrago.rel.*;
-
 import com.disruptivetech.farrago.volcano.*;
 
+import net.sf.farrago.fem.config.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.fem.config.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
@@ -37,6 +36,7 @@ import org.eigenbase.relopt.*;
 
 // TODO jvs 3-May-2006:  Rename this to FarragoDefaultVolcanoPlanner
 
+
 /**
  * FarragoDefaultPlanner extends {@link VolcanoPlanner} to request
  * Farrago-specific optimizations.
@@ -44,14 +44,16 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDefaultPlanner extends VolcanoPlanner
+public class FarragoDefaultPlanner
+    extends VolcanoPlanner
     implements FarragoSessionPlanner
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoPreparingStmt stmt;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoDefaultPlanner object.
@@ -78,7 +80,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         addRule(new AbstractConverter.ExpandConversionRule());
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Initializes Farrago-specific rules for this planner.
@@ -97,7 +99,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
      * @param planner Planner
      * @param fennelEnabled Whether fennel is enabled.
      * @param calcVM Flavor of calculator being used.
-     */ 
+     */
     public static void addStandardRules(
         FarragoSessionPlanner planner,
         boolean fennelEnabled,
@@ -108,15 +110,14 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(ExtractJoinFilterRule.instance);
         planner.addRule(new UnionToDistinctRule());
         planner.addRule(new UnionEliminatorRule());
+
         // for set operations, we coerce names to match so that
         // Java implementations can pass row objects through without
         // copying
-        planner.addRule(
-            new CoerceInputsRule(UnionRel.class, true));
-        planner.addRule(
-            new CoerceInputsRule(IntersectRel.class, true));
-        planner.addRule(
-            new CoerceInputsRule(MinusRel.class, true));
+        planner.addRule(new CoerceInputsRule(UnionRel.class, true));
+        planner.addRule(new CoerceInputsRule(IntersectRel.class, true));
+        planner.addRule(new CoerceInputsRule(MinusRel.class, true));
+
         // for DML, name coercion isn't helpful
         planner.addRule(
             new CoerceInputsRule(TableModificationRel.class, false));
@@ -131,17 +132,15 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
         planner.addRule(new ReduceDecimalsRule());
 
         // REVIEW jvs 26-May-2006:  reduce expressions for JoinRel also?
-        planner.addRule(
-            new FarragoReduceExpressionsRule(FilterRel.class));
-        planner.addRule(
-            new FarragoReduceExpressionsRule(ProjectRel.class));
-        
+        planner.addRule(new FarragoReduceExpressionsRule(FilterRel.class));
+        planner.addRule(new FarragoReduceExpressionsRule(ProjectRel.class));
+
         planner.addRule(ReduceAggregatesRule.instance);
-        
+
         planner.addRule(new PushFilterRule());
         planner.addRule(new PushProjectPastFilterRule());
         planner.addRule(new PushProjectPastJoinRule());
-        
+
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());
             planner.addRule(new FennelCollectRule());
@@ -163,24 +162,21 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
             planner.addRule(FennelCalcRule.instance);
 
             // REVIEW jvs 13-Nov-2005: I put FennelUnionRule here instead of in
-            // fennelEnabled block above because I want to be able to test
-            // both implementations, and currently the only way to control
-            // that is via the calc parameter.  Probably need a more
-            // general parameter controlling all rels in case of
-            // overlap, not just calc.
+            // fennelEnabled block above because I want to be able to test both
+            // implementations, and currently the only way to control that is
+            // via the calc parameter.  Probably need a more general parameter
+            // controlling all rels in case of overlap, not just calc.
             planner.addRule(FennelUnionRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)
-            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO))
-        {
+            || calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)) {
             // use Java code generation for calculating expressions
             planner.addRule(IterRules.IterCalcRule.instance);
         }
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_AUTO)
-            && fennelEnabled)
-        {
+            && fennelEnabled) {
             // add rule for pure calculator usage plus rule for
             // decomposing rels into mixed Java/Fennel impl
             planner.addRule(FennelCalcRule.instance);
@@ -201,7 +197,7 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
     {
         return stmt;
     }
-    
+
     // implement FarragoSessionPlanner
     public void beginMedPluginRegistration(String serverClassName)
     {
@@ -213,13 +209,12 @@ public class FarragoDefaultPlanner extends VolcanoPlanner
     {
         // don't care
     }
-    
+
     // override VolcanoPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(rel.getCluster().getRexBuilder());
     }
 }
-
 
 // End FarragoDefaultPlanner.java

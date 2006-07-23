@@ -23,7 +23,9 @@
 package net.sf.farrago.namespace.mock;
 
 import java.lang.reflect.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import javax.sql.*;
@@ -52,9 +54,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockDataServer extends MedAbstractDataServer
+class MedMockDataServer
+    extends MedAbstractDataServer
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_SCHEMA_NAME = "FOREIGN_SCHEMA_NAME";
     public static final String PROP_TABLE_NAME = "FOREIGN_TABLE_NAME";
@@ -65,9 +69,11 @@ class MedMockDataServer extends MedAbstractDataServer
     public static final String PROPVAL_JAVA = "JAVA";
     public static final String PROPVAL_FENNEL = "FENNEL";
 
+    //~ Instance fields --------------------------------------------------------
+
     private MedAbstractDataWrapper wrapper;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     MedMockDataServer(
         MedAbstractDataWrapper wrapper,
@@ -78,7 +84,7 @@ class MedMockDataServer extends MedAbstractDataServer
         this.wrapper = wrapper;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     void initialize()
         throws SQLException
@@ -92,9 +98,10 @@ class MedMockDataServer extends MedAbstractDataServer
         if (getForeignSchemaName() == null) {
             return null;
         }
-        return new MedMockNameDirectory(
-            this,
-            FarragoMedMetadataQuery.OTN_SCHEMA);
+        return
+            new MedMockNameDirectory(
+                this,
+                FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -106,11 +113,10 @@ class MedMockDataServer extends MedAbstractDataServer
         Map columnPropMap)
         throws SQLException
     {
-
         if (rowType == null) {
             rowType = createMockRowType(typeFactory);
         }
-        
+
         assert (rowType.getFieldList().size() == 1);
         RelDataType type = rowType.getFields()[0].getType();
         assert (!type.isNullable());
@@ -126,38 +132,45 @@ class MedMockDataServer extends MedAbstractDataServer
             // get the number of rows to produce.
             DataSource loopbackDataSource = getLoopbackDataSource();
             Connection connection = null;
-            if (loopbackDataSource != null) try {
-                connection = loopbackDataSource.getConnection();
-                Statement stmt = connection.createStatement();
-                ResultSet resultSet = stmt.executeQuery(rowCountSql);
-                if (resultSet.next()) {
-                    nRows = resultSet.getLong(1);
-                }
-            } finally {
-                // It's OK not to clean up stmt and resultSet;
-                // connection.close() will do that for us.
-                if (connection != null) {
-                    connection.close();
+            if (loopbackDataSource != null) {
+                try {
+                    connection = loopbackDataSource.getConnection();
+                    Statement stmt = connection.createStatement();
+                    ResultSet resultSet = stmt.executeQuery(rowCountSql);
+                    if (resultSet.next()) {
+                        nRows = resultSet.getLong(1);
+                    }
+                } finally {
+                    // It's OK not to clean up stmt and resultSet;
+                    // connection.close() will do that for us.
+                    if (connection != null) {
+                        connection.close();
+                    }
                 }
             }
         }
 
         if (nRows == -1) {
-            nRows = getLongProperty(
-                tableProps, PROP_ROW_COUNT,
-                getLongProperty(getProperties(), PROP_ROW_COUNT, 10));
+            nRows =
+                getLongProperty(
+                    tableProps,
+                    PROP_ROW_COUNT,
+                    getLongProperty(
+                        getProperties(),
+                        PROP_ROW_COUNT,
+                        10));
         }
-        
+
         String executorImpl =
             tableProps.getProperty(
                 PROP_EXECUTOR_IMPL,
                 getProperties().getProperty(
-                    PROP_EXECUTOR_IMPL, PROPVAL_JAVA));
+                    PROP_EXECUTOR_IMPL,
+                    PROPVAL_JAVA));
         assert (executorImpl.equals(PROPVAL_JAVA)
-            || executorImpl.equals(PROPVAL_FENNEL));
+                || executorImpl.equals(PROPVAL_FENNEL));
 
-        String udxSpecificName =
-            tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
+        String udxSpecificName = tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
 
         if (udxSpecificName != null) {
             assert (executorImpl.equals(PROPVAL_JAVA));
@@ -166,15 +179,19 @@ class MedMockDataServer extends MedAbstractDataServer
         checkNameMatch(
             getForeignSchemaName(),
             tableProps.getProperty(PROP_SCHEMA_NAME));
-        
+
         checkNameMatch(
             getForeignTableName(),
             tableProps.getProperty(PROP_TABLE_NAME));
-        
-        return new MedMockColumnSet(
-            this,
-            localName, rowType, nRows, executorImpl,
-            udxSpecificName);
+
+        return
+            new MedMockColumnSet(
+                this,
+                localName,
+                rowType,
+                nRows,
+                executorImpl,
+                udxSpecificName);
     }
 
     private void checkNameMatch(String expectedName, String actualName)
@@ -194,7 +211,7 @@ class MedMockDataServer extends MedAbstractDataServer
     {
         if (param instanceof Integer) {
             // Double the input.
-            return new Integer(2*((Integer) param).intValue());
+            return new Integer(2 * ((Integer) param).intValue());
         } else {
             return null;
         }
@@ -229,13 +246,10 @@ class MedMockDataServer extends MedAbstractDataServer
 
     RelDataType createMockRowType(FarragoTypeFactory typeFactory)
     {
-        return typeFactory.createStructType(
-            new RelDataType [] {
-                createMockColumnType(typeFactory), 
-            },
-            new String [] {
-                MedMockNameDirectory.COLUMN_NAME
-            });
+        return
+            typeFactory.createStructType(
+                new RelDataType[] { createMockColumnType(typeFactory), },
+                new String[] { MedMockNameDirectory.COLUMN_NAME });
     }
 
     RelDataType createMockColumnType(FarragoTypeFactory typeFactory)
@@ -243,6 +257,5 @@ class MedMockDataServer extends MedAbstractDataServer
         return typeFactory.createSqlType(SqlTypeName.Integer);
     }
 }
-
 
 // End MedMockDataServer.java

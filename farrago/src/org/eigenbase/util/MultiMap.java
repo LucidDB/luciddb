@@ -20,10 +20,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
-
-import org.eigenbase.relopt.RelTrait;
 
 import java.util.*;
 
@@ -36,22 +33,22 @@ import java.util.*;
 /**
  * Map which contains more than one value per key.
  *
- * <p>
- * You can either use a <code>MultiMap</code> as a regular map, or you can use
+ * <p>You can either use a <code>MultiMap</code> as a regular map, or you can use
  * the additional methods {@link #putMulti} and {@link #getMulti}. Values are
- * returned in the order in which they were added.
- * </p>
+ * returned in the order in which they were added.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @since May 18, 2003
  */
-public class MultiMap<K,V>
+public class MultiMap<K, V>
 {
-    private final Map<K,Object> map = new HashMap<K,Object>();
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
+
+    private final Map<K, Object> map = new HashMap<K, Object>();
+
+    //~ Methods ----------------------------------------------------------------
 
     private Object get(K key)
     {
@@ -122,7 +119,9 @@ public class MultiMap<K,V>
                     if (list.size() == 1) {
                         // now just one value left, so forget the list, and
                         // keep its only element
-                        put(key, list.get(0));
+                        put(
+                            key,
+                            list.get(0));
                     }
                     return true;
                 } else {
@@ -145,8 +144,8 @@ public class MultiMap<K,V>
     }
 
     /**
-     * Like entrySet().iterator(), but returns one Map.Entry per value
-     * rather than one per key.
+     * Like entrySet().iterator(), but returns one Map.Entry per value rather
+     * than one per key.
      */
     public EntryIter entryIterMulti()
     {
@@ -168,22 +167,24 @@ public class MultiMap<K,V>
         map.clear();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Holder class, ensures that user's values are never interpreted as
      * multiple values.
      */
-    private static class ValueList<V> extends ArrayList<V>
+    private static class ValueList<V>
+        extends ArrayList<V>
     {
     }
 
     /**
-     * Implementation for entryIterMulti().  Note that this assumes that
-     * empty ValueLists will never be encountered, and also preserves
-     * this property when remove() is called.
+     * Implementation for entryIterMulti(). Note that this assumes that empty
+     * ValueLists will never be encountered, and also preserves this property
+     * when remove() is called.
      */
-    private class EntryIter implements Iterator<Map.Entry<K,V>>
+    private class EntryIter
+        implements Iterator<Map.Entry<K, V>>
     {
         K key;
         Iterator<K> keyIter;
@@ -213,14 +214,14 @@ public class MultiMap<K,V>
             return keyIter.hasNext() || valueIter.hasNext();
         }
 
-        public Map.Entry<K,V> next()
+        public Map.Entry<K, V> next()
         {
             if (!valueIter.hasNext()) {
                 nextKey();
             }
             final K savedKey = key;
             final V value = valueIter.next();
-            return new Map.Entry<K,V>() {
+            return new Map.Entry<K, V>() {
                     public K getKey()
                     {
                         return savedKey;
@@ -261,6 +262,5 @@ public class MultiMap<K,V>
         }
     }
 }
-
 
 // End MultiMap.java

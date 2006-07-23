@@ -23,34 +23,35 @@
 package net.sf.farrago.type;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
+
+import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 
-import openjava.ptree.*;
-
-import java.util.List;
-
 
 /**
- * FarragoTypeFactory is a Farrago-specific refinement of the
- * RelDataTypeFactory interface.
+ * FarragoTypeFactory is a Farrago-specific refinement of the RelDataTypeFactory
+ * interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoTypeFactory extends OJTypeFactory
+public interface FarragoTypeFactory
+    extends OJTypeFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return associated FarragoRepos
@@ -79,8 +80,8 @@ public interface FarragoTypeFactory extends OJTypeFactory
         CwmSqldataType cwmType);
 
     /**
-     * Creates a type which represents a structured row based on a
-     * classifier definition from the catalog.
+     * Creates a type which represents a structured row based on a classifier
+     * definition from the catalog.
      *
      * @param classifier definition of classifier
      *
@@ -89,17 +90,15 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public RelDataType createStructTypeFromClassifier(CwmClassifier classifier);
 
     /**
-     * Creates a type which represents the row datatype of a JDBC
-     * ResultSet.  Optionally, unsupported types can be replaced
-     * with substitutes.  In the worst case, the substitute
-     * is VARCHAR(1024).  Less drastic examples are ignoring
-     * datetime fractional seconds precision or capping numeric
+     * Creates a type which represents the row datatype of a JDBC ResultSet.
+     * Optionally, unsupported types can be replaced with substitutes. In the
+     * worst case, the substitute is VARCHAR(1024). Less drastic examples are
+     * ignoring datetime fractional seconds precision or capping numeric
      * precision at our maximum.
      *
      * @param metaData metadata for JDBC ResultSet
-     *
-     * @param substitute if true, use substitutions; if false,
-     * throw exception for unsupported types or type attributes
+     * @param substitute if true, use substitutions; if false, throw exception
+     * for unsupported types or type attributes
      *
      * @return generated type
      */
@@ -109,15 +108,13 @@ public interface FarragoTypeFactory extends OJTypeFactory
 
     /**
      * Creates a type which represents column metadata returned by the {@link
-     * DatabaseMetaData#getColumns} call.  See {@link #createResultSetType} for
+     * DatabaseMetaData#getColumns} call. See {@link #createResultSetType} for
      * details on type substitutions.
      *
-     * @param getColumnsResultSet {@link ResultSet} positioned on
-     * a row returned from the getColumns call; result set position
-     * is unchanged by this method
-     *
-     * @param substitute if true, use substitutions; if false,
-     * throw exception for unsupported types or type attributes
+     * @param getColumnsResultSet {@link ResultSet} positioned on a row returned
+     * from the getColumns call; result set position is unchanged by this method
+     * @param substitute if true, use substitutions; if false, throw exception
+     * for unsupported types or type attributes
      *
      * @return generated type
      */
@@ -135,11 +132,9 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public RelDataType createMofType(StructuralFeature feature);
 
     /**
-     * Constructs an OpenJava expression to access a value of an
-     * atomic type.
+     * Constructs an OpenJava expression to access a value of an atomic type.
      *
      * @param type atomic type
-     *
      * @param expr expression representing site to be accessed
      *
      * @return expression for accessing value
@@ -154,15 +149,15 @@ public interface FarragoTypeFactory extends OJTypeFactory
      *
      * @param type value type
      *
-     * @return primitive Class, or null if a non-primitive Object is used
-     * at runtime to represent values of the given type
+     * @return primitive Class, or null if a non-primitive Object is used at
+     * runtime to represent values of the given type
      */
     public Class getClassForPrimitive(
         RelDataType type);
 
     /**
-     * Looks up the {@link java.lang.Class} specified by the JAVA
-     * parameter style for user-defined routines.
+     * Looks up the {@link java.lang.Class} specified by the JAVA parameter
+     * style for user-defined routines.
      *
      * @param type SQL type
      *
@@ -171,6 +166,5 @@ public interface FarragoTypeFactory extends OJTypeFactory
     public Class getClassForJavaParamStyle(
         RelDataType type);
 }
-
 
 // End FarragoTypeFactory.java

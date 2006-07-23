@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
 import org.eigenbase.rel.*;
@@ -31,20 +30,22 @@ import org.eigenbase.rex.*;
 
 
 /**
- * A collection of optimizer rules related to the  {@link
+ * A collection of optimizer rules related to the {@link
  * CallingConvention#ITERATOR iterator calling convention}.
  *
  * @version $Id$
  */
 public abstract class IterRules
 {
-    //~ Inner Classes ---------------------------------------------------------
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Rule to convert a {@link UnionRel} to {@link
-     * CallingConvention#ITERATOR iterator calling convention}.
+     * Rule to convert a {@link UnionRel} to {@link CallingConvention#ITERATOR
+     * iterator calling convention}.
      */
-    public static class UnionToIteratorRule extends ConverterRule
+    public static class UnionToIteratorRule
+        extends ConverterRule
     {
         public UnionToIteratorRule()
         {
@@ -53,12 +54,15 @@ public abstract class IterRules
 
         protected UnionToIteratorRule(String description)
         {
-            super(UnionRel.class, CallingConvention.NONE,
-                CallingConvention.ITERATOR, description);
+            super(UnionRel.class,
+                CallingConvention.NONE,
+                CallingConvention.ITERATOR,
+                description);
         }
 
         // factory method
-        protected RelNode newIterConcatenateRel(RelOptCluster cluster, RelNode[] inputs)
+        protected RelNode newIterConcatenateRel(RelOptCluster cluster,
+            RelNode [] inputs)
         {
             return new IterConcatenateRel(cluster, inputs);
         }
@@ -74,22 +78,23 @@ public abstract class IterRules
                 // Stubborn, because inputs don't appear as operands.
                 newInputs[i] =
                     mergeTraitsAndConvert(
-                        union.getTraits(), CallingConvention.ITERATOR,
+                        union.getTraits(),
+                        CallingConvention.ITERATOR,
                         union.getInput(i));
                 if (newInputs[i] == null) {
                     return null; // cannot convert this input
                 }
             }
             return newIterConcatenateRel(
-                union.getCluster(),
-                newInputs);
+                    union.getCluster(),
+                    newInputs);
         }
     }
 
     /**
-     * Refinement of {@link UnionToIteratorRule} which only applies to a
-     * {@link UnionRel} all of whose input rows are the same type as its output
-     * row. Luckily, a {@link CoerceInputsRule} will have made that happen.
+     * Refinement of {@link UnionToIteratorRule} which only applies to a {@link
+     * UnionRel} all of whose input rows are the same type as its output row.
+     * Luckily, a {@link CoerceInputsRule} will have made that happen.
      */
     public static class HomogeneousUnionToIteratorRule
         extends UnionToIteratorRule
@@ -114,12 +119,15 @@ public abstract class IterRules
         }
     }
 
-    public static class OneRowToIteratorRule extends ConverterRule
+    public static class OneRowToIteratorRule
+        extends ConverterRule
     {
         public OneRowToIteratorRule()
         {
-            super(OneRowRel.class, CallingConvention.NONE,
-                CallingConvention.ITERATOR, "OneRowToIteratorRule");
+            super(OneRowRel.class,
+                CallingConvention.NONE,
+                CallingConvention.ITERATOR,
+                "OneRowToIteratorRule");
         }
 
         public RelNode convert(RelNode rel)
@@ -132,14 +140,17 @@ public abstract class IterRules
     /**
      * Rule to convert a {@link CalcRel} to an {@link IterCalcRel}.
      */
-    public static class IterCalcRule extends ConverterRule
+    public static class IterCalcRule
+        extends ConverterRule
     {
         public static final IterCalcRule instance = new IterCalcRule();
 
         private IterCalcRule()
         {
-            super(CalcRel.class, CallingConvention.NONE,
-                CallingConvention.ITERATOR, "IterCalcRule");
+            super(CalcRel.class,
+                CallingConvention.NONE,
+                CallingConvention.ITERATOR,
+                "IterCalcRule");
         }
 
         public RelNode convert(RelNode rel)
@@ -147,12 +158,14 @@ public abstract class IterRules
             final CalcRel calc = (CalcRel) rel;
             final RelNode convertedChild =
                 mergeTraitsAndConvert(
-                    calc.getTraits(), CallingConvention.ITERATOR,
+                    calc.getTraits(),
+                    CallingConvention.ITERATOR,
                     calc.getChild());
             if (convertedChild == null) {
                 // We can't convert the child, so we can't convert rel.
                 return null;
             }
+
             // If there's a multiset, let FarragoMultisetSplitter work on it
             // first.
             if (RexMultisetUtil.containsMultiset(calc.getProgram())) {
@@ -164,19 +177,20 @@ public abstract class IterRules
             final JavaRelImplementor relImplementor =
                 rel.getCluster().getPlanner().getJavaRelImplementor(rel);
             if (!relImplementor.canTranslate(
-                convertedChild, calc.getProgram())) {
+                    convertedChild,
+                    calc.getProgram())) {
                 // Some of the expressions cannot be translated into Java
                 return null;
             }
 
-            return new IterCalcRel(
-                rel.getCluster(),
-                convertedChild,
-                calc.getProgram(),
-                ProjectRelBase.Flags.Boxed);
+            return
+                new IterCalcRel(
+                    rel.getCluster(),
+                    convertedChild,
+                    calc.getProgram(),
+                    ProjectRelBase.Flags.Boxed);
         }
     }
 }
-
 
 // End IterRules.java

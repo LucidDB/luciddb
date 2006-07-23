@@ -34,24 +34,27 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
 
 
 /**
- * FtrsIndexSearchRel refines FtrsIndexScanRel.  Instead of scanning an
- * entire index, it only searches for keys produced by its child.  In addition,
- * it is able to propagate non-key values from its child, implementing an index
- * join.  For a join, the output order is child first and index search results
- * second.
+ * FtrsIndexSearchRel refines FtrsIndexScanRel. Instead of scanning an entire
+ * index, it only searches for keys produced by its child. In addition, it is
+ * able to propagate non-key values from its child, implementing an index join.
+ * For a join, the output order is child first and index search results second.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexSearchRel extends FennelSingleRel
+class FtrsIndexSearchRel
+    extends FennelSingleRel
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Aggregation used since multiple inheritance is unavailable. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Aggregation used since multiple inheritance is unavailable.
+     */
     final FtrsIndexScanRel scanRel;
     final boolean isUniqueKey;
     final boolean isOuter;
@@ -59,7 +62,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
     final Integer [] inputJoinProj;
     final Integer [] inputDirectiveProj;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsIndexSearchRel object.
@@ -68,9 +71,9 @@ class FtrsIndexSearchRel extends FennelSingleRel
      * @param child input which produces keys
      * @param isUniqueKey whether keys are known to be unique
      * @param isOuter whether nulls should be made up for unmatched inputs
-     * @param inputKeyProj TODO:  doc
-     * @param inputJoinProj TODO:  doc
-     * @param inputDirectiveProj TODO:  doc
+     * @param inputKeyProj TODO: doc
+     * @param inputJoinProj TODO: doc
+     * @param inputDirectiveProj TODO: doc
      */
     public FtrsIndexSearchRel(
         FtrsIndexScanRel scanRel,
@@ -92,7 +95,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         this.inputDirectiveProj = inputDirectiveProj;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override Rel
     public RexNode [] getChildExps()
@@ -110,14 +113,15 @@ class FtrsIndexSearchRel extends FennelSingleRel
     // implement Cloneable
     public Object clone()
     {
-        FtrsIndexSearchRel clone = new FtrsIndexSearchRel(
-            scanRel,
-            RelOptUtil.clone(getChild()),
-            isUniqueKey,
-            isOuter,
-            inputKeyProj,
-            inputJoinProj,
-            inputDirectiveProj);
+        FtrsIndexSearchRel clone =
+            new FtrsIndexSearchRel(
+                scanRel,
+                RelOptUtil.clone(getChild()),
+                isUniqueKey,
+                isOuter,
+                inputKeyProj,
+                inputJoinProj,
+                inputDirectiveProj);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -127,8 +131,8 @@ class FtrsIndexSearchRel extends FennelSingleRel
     {
         // TODO:  refined costing
         return scanRel.computeCost(
-            planner,
-            RelMetadataQuery.getRowCount(this));
+                planner,
+                RelMetadataQuery.getRowCount(this));
     }
 
     // implement RelNode
@@ -168,8 +172,9 @@ class FtrsIndexSearchRel extends FennelSingleRel
                         true);
             }
 
-            return getCluster().getTypeFactory().createJoinType(
-                new RelDataType [] { leftType, rightType });
+            return
+                getCluster().getTypeFactory().createJoinType(
+                    new RelDataType[] { leftType, rightType });
         } else {
             assert (!isOuter);
             return scanRel.getRowType();
@@ -201,7 +206,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         } else {
             inputJoinProjObj = Arrays.asList(inputJoinProj);
         }
-        
+
         if (inputDirectiveProj == null) {
             inputDirectiveProjObj = Collections.EMPTY_LIST;
         } else {
@@ -209,17 +214,17 @@ class FtrsIndexSearchRel extends FennelSingleRel
         }
         pw.explain(
             this,
-            new String [] {
+            new String[] {
                 "child", "table", "projection", "index", "uniqueKey",
-                "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
-                "inputDirectiveProj"
+            "preserveOrder", "outer", "inputKeyProj", "inputJoinProj",
+            "inputDirectiveProj"
             },
-            new Object [] {
+            new Object[] {
                 Arrays.asList(scanRel.ftrsTable.getQualifiedName()), projection,
-                scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
-                Boolean.valueOf(scanRel.isOrderPreserving),
-                Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
-                inputDirectiveProjObj
+            scanRel.index.getName(), Boolean.valueOf(isUniqueKey),
+            Boolean.valueOf(scanRel.isOrderPreserving),
+            Boolean.valueOf(isOuter), inputKeyProjObj, inputJoinProjObj,
+            inputDirectiveProjObj
             });
     }
 
@@ -247,7 +252,7 @@ class FtrsIndexSearchRel extends FennelSingleRel
         }
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             searchStream);
 
         return searchStream;
@@ -262,6 +267,5 @@ class FtrsIndexSearchRel extends FennelSingleRel
     // TODO:  under some circumstances, FtrsIndexSearchRel could produce
     // sorted output, in which case we should implement getCollations()
 }
-
 
 // End FtrsIndexSearchRel.java

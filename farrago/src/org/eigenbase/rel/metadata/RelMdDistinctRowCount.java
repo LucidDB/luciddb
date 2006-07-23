@@ -1,4 +1,4 @@
- /*
+/*
 // $Id$
 // Package org.eigenbase is a class library of data management components.
 // Copyright (C) 2006-2006 The Eigenbase Project
@@ -21,25 +21,29 @@
 */
 package org.eigenbase.rel.metadata;
 
-import org.eigenbase.util14.*;
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
+import org.eigenbase.util14.*;
 
-import java.util.*;
 
 /**
- * RelMdDistinctRowCount supplies a default implementation of
- * {@link RelMetadataQuery#getDistinctRowCount} for the standard logical
- * algebra.
+ * RelMdDistinctRowCount supplies a default implementation of {@link
+ * RelMetadataQuery#getDistinctRowCount} for the standard logical algebra.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
+public class RelMdDistinctRowCount
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public RelMdDistinctRowCount()
     {
         // Tell superclass reflection about parameter types expected
@@ -53,53 +57,77 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
         args.add((Class) RexNode.class);
         mapParameterTypes("getDistinctRowCount", args);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public Double getDistinctRowCount(
-        UnionRelBase rel, BitSet groupKey, RexNode predicate)
+        UnionRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         Double rowCount = 0.0;
         for (RelNode input : rel.getInputs()) {
-            Double partialRowCount = RelMetadataQuery.getDistinctRowCount(
-                input, groupKey, predicate);
+            Double partialRowCount =
+                RelMetadataQuery.getDistinctRowCount(
+                    input,
+                    groupKey,
+                    predicate);
             if (partialRowCount == null) {
                 return null;
             }
-            rowCount += partialRowCount;                
+            rowCount += partialRowCount;
         }
         return rowCount;
     }
-    
+
     public Double getDistinctRowCount(
-        SortRel rel, BitSet groupKey, RexNode predicate)
+        SortRel rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
-        return RelMetadataQuery.getDistinctRowCount(
-            rel.getChild(), groupKey, predicate);
+        return
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(),
+                groupKey,
+                predicate);
     }
-    
+
     public Double getDistinctRowCount(
-        FilterRelBase rel, BitSet groupKey, RexNode predicate)
+        FilterRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         // REVIEW zfong 4/18/06 - In the Broadbase code, duplicates are not
         // removed from the two filter lists.  However, the code below is
         // doing so.
-        RexNode unionPreds = RelMdUtil.unionPreds(
-            rel.getCluster().getRexBuilder(), predicate, rel.getCondition());
-        
-        return RelMetadataQuery.getDistinctRowCount(
-            rel.getChild(), groupKey, unionPreds);
+        RexNode unionPreds =
+            RelMdUtil.unionPreds(
+                rel.getCluster().getRexBuilder(),
+                predicate,
+                rel.getCondition());
+
+        return
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(),
+                groupKey,
+                unionPreds);
     }
-    
+
     public Double getDistinctRowCount(
-        JoinRelBase rel, BitSet groupKey, RexNode predicate)
+        JoinRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
-        Double distRowCount; 
+        Double distRowCount;
         BitSet leftMask = new BitSet();
         BitSet rightMask = new BitSet();
-        
+
         RelMdUtil.setLeftRightBitmaps(
-            groupKey, leftMask, rightMask,
+            groupKey,
+            leftMask,
+            rightMask,
             rel.getLeft().getRowType().getFieldCount());
-           
+
         // determine which filters apply to the left vs right
         RexNode leftPred = null;
         RexNode rightPred = null;
@@ -109,127 +137,170 @@ public class RelMdDistinctRowCount extends ReflectiveRelMetadataProvider
             List<RexNode> joinFilters = new ArrayList<RexNode>();
             List<RexNode> predList = new ArrayList<RexNode>();
             RelOptUtil.decompCF(predicate, predList);
-        
+
             RelOptUtil.classifyFilters(
-                rel, predList, (rel.getJoinType() == JoinRelType.INNER), 
+                rel,
+                predList,
+                (rel.getJoinType() == JoinRelType.INNER),
                 !rel.getJoinType().generatesNullsOnLeft(),
                 !rel.getJoinType().generatesNullsOnRight(),
-                joinFilters, leftFilters, rightFilters);
-            
+                joinFilters,
+                leftFilters,
+                rightFilters);
+
             RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
             leftPred = RexUtil.andRexNodeList(rexBuilder, leftFilters);
             rightPred = RexUtil.andRexNodeList(rexBuilder, rightFilters);
         }
-              
-        distRowCount = NumberUtil.multiply(
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getLeft(), leftMask, leftPred),
-            RelMetadataQuery.getDistinctRowCount(
-                rel.getRight(), rightMask, rightPred));
-        
-        return RelMdUtil.numDistinctVals(
-            distRowCount, RelMetadataQuery.getRowCount(rel));           
+
+        distRowCount =
+            NumberUtil.multiply(
+                RelMetadataQuery.getDistinctRowCount(
+                    rel.getLeft(),
+                    leftMask,
+                    leftPred),
+                RelMetadataQuery.getDistinctRowCount(
+                    rel.getRight(),
+                    rightMask,
+                    rightPred));
+
+        return
+            RelMdUtil.numDistinctVals(
+                distRowCount,
+                RelMetadataQuery.getRowCount(rel));
     }
-    
+
     public Double getDistinctRowCount(
-        SemiJoinRel rel, BitSet groupKey, RexNode predicate)
+        SemiJoinRel rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         // create a RexNode representing the selectivity of the
-        // semijoin filter and pass it to getDistinctRowCount          
+        // semijoin filter and pass it to getDistinctRowCount
         RexNode newPred = RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
         if (predicate != null) {
             RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-            newPred = rexBuilder.makeCall(
-                SqlStdOperatorTable.andOperator, newPred, predicate);
+            newPred =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.andOperator,
+                    newPred,
+                    predicate);
         }
-        
-        return RelMetadataQuery.getDistinctRowCount(
-            rel.getLeft(), groupKey, newPred);
+
+        return
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getLeft(),
+                groupKey,
+                newPred);
     }
-    
+
     public Double getDistinctRowCount(
-        AggregateRelBase rel, BitSet groupKey, RexNode predicate)
+        AggregateRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         // determine which predicates can be applied on the child of the
         // aggregate
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getGroupCount(), predicate, pushable, notPushable);
+            rel.getGroupCount(),
+            predicate,
+            pushable,
+            notPushable);
         RexNode childPreds =
-            RexUtil.andRexNodeList(rel.getCluster().getRexBuilder(), pushable);
-        
+            RexUtil.andRexNodeList(
+                rel.getCluster().getRexBuilder(),
+                pushable);
+
         // set the bits as they correspond to the child input
         BitSet childKey = new BitSet();
         RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
-        
-        return RelMetadataQuery.getDistinctRowCount(
-            rel.getChild(), childKey, childPreds);
+
+        return
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(),
+                childKey,
+                childPreds);
     }
-    
+
     public Double getDistinctRowCount(
-        ValuesRelBase rel, BitSet groupKey, RexNode predicate)
+        ValuesRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         Double selectivity = RelMdUtil.guessSelectivity(predicate);
+
         // assume half the rows are duplicates
         Double nRows = rel.getRows() / 2;
         return RelMdUtil.numDistinctVals(nRows, nRows * selectivity);
     }
-    
+
     public Double getDistinctRowCount(
-        ProjectRelBase rel, BitSet groupKey, RexNode predicate)
+        ProjectRelBase rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         BitSet baseCols = new BitSet();
         BitSet projCols = new BitSet();
-        RexNode[] projExprs = rel.getChildExps();
+        RexNode [] projExprs = rel.getChildExps();
         RelMdUtil.splitCols(projExprs, groupKey, baseCols, projCols);
-        
+
         List<RexNode> notPushable = new ArrayList<RexNode>();
         List<RexNode> pushable = new ArrayList<RexNode>();
         RelOptUtil.splitFilters(
-            rel.getChild().getRowType().getFieldCount(), predicate, pushable,
+            rel.getChild().getRowType().getFieldCount(),
+            predicate,
+            pushable,
             notPushable);
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-        
+
         // get the distinct row count of the child input, passing in the
         // columns and filters that only reference the child
         RexNode childPred = RexUtil.andRexNodeList(rexBuilder, pushable);
-        Double distinctRowCount = RelMetadataQuery.getDistinctRowCount(
-            rel.getChild(), baseCols, childPred);
+        Double distinctRowCount =
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getChild(),
+                baseCols,
+                childPred);
         if (distinctRowCount == null) {
             return null;
         }
-        
+
         // multiply by the cardinality of the non-child projection expressions
         for (int bit = projCols.nextSetBit(0); bit >= 0;
-            bit = projCols.nextSetBit(bit + 1))
-        {
+            bit = projCols.nextSetBit(bit + 1)) {
             Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
             if (subRowCount == null) {
                 return null;
             }
             distinctRowCount *= subRowCount;
         }
-        
-        return RelMdUtil.numDistinctVals(
-            distinctRowCount, RelMetadataQuery.getRowCount(rel));
+
+        return
+            RelMdUtil.numDistinctVals(
+                distinctRowCount,
+                RelMetadataQuery.getRowCount(rel));
     }
-    
+
     // Catch-all rule when none of the others apply.
     public Double getDistinctRowCount(
-        RelNode rel, BitSet groupKey, RexNode predicate)
+        RelNode rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         // REVIEW zfong 4/19/06 - Broadbase code does not take into
         // consideration selectivity of predicates passed in.  Also, they
-        // assume the rows are unique even if the table is not 
+        // assume the rows are unique even if the table is not
         Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq != null && uniq) {
-            return NumberUtil.multiply(
-                RelMetadataQuery.getRowCount(rel),
-                RelMetadataQuery.getSelectivity(rel, predicate));
+        if ((uniq != null) && uniq) {
+            return
+                NumberUtil.multiply(
+                    RelMetadataQuery.getRowCount(rel),
+                    RelMetadataQuery.getSelectivity(rel, predicate));
         }
         return null;
-    }  
+    }
 }
 
 // End RelMdDistinctRowCount.java

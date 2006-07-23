@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import java.util.*;
@@ -30,17 +29,20 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+
 /**
  * TableModificationRel is like TableAccessRel, but represents a request to
- * modify a table rather than read from it.  It takes one child which produces
- * the modified rows.  (For INSERT, the new values; for DELETE, the old values;
+ * modify a table rather than read from it. It takes one child which produces
+ * the modified rows. (For INSERT, the new values; for DELETE, the old values;
  * for UPDATE, all old values plus updated new values.)
  *
  * @version $Id$
  */
-public final class TableModificationRel extends TableModificationRelBase
+public final class TableModificationRel
+    extends TableModificationRelBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public TableModificationRel(
         RelOptCluster cluster,
@@ -52,27 +54,33 @@ public final class TableModificationRel extends TableModificationRelBase
         boolean flattened)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.NONE), table,
-            connection, child, operation, updateColumnList, flattened);
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            table,
+            connection,
+            child,
+            operation,
+            updateColumnList,
+            flattened);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
     {
-        TableModificationRel clone = new TableModificationRel(
-            getCluster(),
-            table,
-            connection,
-            RelOptUtil.clone(getChild()),
-            getOperation(),
-            getUpdateColumnList(),
-            isFlattened());
+        TableModificationRel clone =
+            new TableModificationRel(
+                getCluster(),
+                table,
+                connection,
+                RelOptUtil.clone(getChild()),
+                getOperation(),
+                getUpdateColumnList(),
+                isFlattened());
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End TableModificationRel.java

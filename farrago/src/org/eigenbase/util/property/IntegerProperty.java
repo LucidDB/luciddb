@@ -11,45 +11,45 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.util.Properties;
+import java.util.*;
 
 
 /**
  * Definition and accessor for an integer property.
  *
  * @author jhyde
- * @since May 4, 2004
  * @version $Id$
- **/
-public class IntegerProperty extends Property
+ * @since May 4, 2004
+ */
+public class IntegerProperty
+    extends Property
 {
-    //~ Fields ----------------------------------------------------------------
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int minValue;
     private final int maxValue;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates an Integer property. Minimum and maximum values are set to 
-     * {@link Integer#MIN_VALUE} and {@link Integer#MAX_VALUE}.
+     * Creates an Integer property. Minimum and maximum values are set to {@link
+     * Integer#MIN_VALUE} and {@link Integer#MAX_VALUE}.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value.
      */
     public IntegerProperty(
@@ -58,19 +58,21 @@ public class IntegerProperty extends Property
         int defaultValue)
     {
         this(
-            properties, path, defaultValue, Integer.MIN_VALUE, 
+            properties,
+            path,
+            defaultValue,
+            Integer.MIN_VALUE,
             Integer.MAX_VALUE);
     }
 
     /**
-     * Creates an Integer property which has no default value.  Minimum and
-     * maximum values are set to {@link Integer#MIN_VALUE} and 
-     * {@link Integer#MAX_VALUE}.
+     * Creates an Integer property which has no default value. Minimum and
+     * maximum values are set to {@link Integer#MIN_VALUE} and {@link
+     * Integer#MAX_VALUE}.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      */
     public IntegerProperty(
         Properties properties,
@@ -80,19 +82,18 @@ public class IntegerProperty extends Property
     }
 
     /**
-     * Creates an Integer property with a default value and fixed minimum
-     * and maximum values.
-     * 
-     * @param properties Properties object which holds values for this
-     *    property.
+     * Creates an Integer property with a default value and fixed minimum and
+     * maximum values.
+     *
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value.
      * @param minValue the minimum value of this property (inclusive)
      * @param maxValue the maximum value of this property (inclusive)
-     * @throws IllegalArgumentException if <code>defaultValue</code> is not
-     *                                  in the range [<code>minValue</code>,
-     *                                                <code>maxValue</code>]. 
+     *
+     * @throws IllegalArgumentException if <code>defaultValue</code> is not in
+     * the range [<code>minValue</code>, <code>maxValue</code>].
      */
     public IntegerProperty(
         Properties properties,
@@ -101,30 +102,32 @@ public class IntegerProperty extends Property
         int minValue,
         int maxValue)
     {
-        super(properties, path, Integer.toString(defaultValue));
+        super(
+            properties,
+            path,
+            Integer.toString(defaultValue));
 
         if (minValue > maxValue) {
             int temp = minValue;
             minValue = maxValue;
             maxValue = temp;
         }
-        
-        if (defaultValue < minValue || defaultValue > maxValue) {
+
+        if ((defaultValue < minValue) || (defaultValue > maxValue)) {
             throw new IllegalArgumentException(
                 "invalid default value " + defaultValue);
         }
-        
+
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
-    
+
     /**
      * Creates an Integer property with fixed minimum and maximum values.
-     * 
-     * @param properties Properties object which holds values for this
-     *    property.
+     *
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param minValue the minimum value of this property (inclusive)
      * @param maxValue the maximum value of this property (inclusive)
      */
@@ -135,34 +138,28 @@ public class IntegerProperty extends Property
         int maxValue)
     {
         super(properties, path, null);
-        
+
         if (minValue > maxValue) {
             int temp = minValue;
             minValue = maxValue;
             maxValue = temp;
         }
-        
+
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the value of this integer property according to these rules.
-     * 
+     *
      * <ul>
-     * <li>
-     *   If the property has no value, returns the default value.
-     * </li>
-     * <li>
-     *   If there is no default value and
-     *   {@link #minValue} &lt;= 0 &lt;= {@link #maxValue}, returns 0.
-     * </li>
-     * <li>
-     *   If there is no default value and 0 is not in the min/max range, 
-     *   returns {@link #minValue}.
-     * </li>
+     * <li>If the property has no value, returns the default value.</li>
+     * <li>If there is no default value and {@link #minValue} &lt;= 0 &lt;=
+     * {@link #maxValue}, returns 0.</li>
+     * <li>If there is no default value and 0 is not in the min/max range,
+     * returns {@link #minValue}.</li>
      * </ul>
      */
     public int get()
@@ -171,41 +168,41 @@ public class IntegerProperty extends Property
         if (value == null) {
             return noValue();
         }
-        
+
         int v = Integer.parseInt(value);
-        
+
         // need to limit value in case setString() was called directly with
         // an out-of-range value
         return limit(v);
     }
 
     /**
-     * Retrieves the value of this integer property.
-     * If the property has no value, returns the default value.
-     * If there is no default value, returns the given default value.
-     * 
-     * In all cases, the returned value is limited to the min/max value
-     * range given during construction.
+     * Retrieves the value of this integer property. If the property has no
+     * value, returns the default value. If there is no default value, returns
+     * the given default value. In all cases, the returned value is limited to
+     * the min/max value range given during construction.
      */
     public int get(int defaultValue)
     {
-        final String value = getInternal(Integer.toString(defaultValue), false);
+        final String value = getInternal(
+                Integer.toString(defaultValue),
+                false);
         if (value == null) {
             return limit(defaultValue);
         }
-        
+
         int v = Integer.parseInt(value);
 
         return limit(v);
     }
 
     /**
-     * Sets the value of this integer property.  The value is limited to the
+     * Sets the value of this integer property. The value is limited to the
      * min/max range given during construction.
      *
-     * @return the previous value, or if not set: the default value.  If no
-     *         default value exists, 0 if that value is in the
-     *         range [minValue, maxValue], or minValue if 0 is not in the range
+     * @return the previous value, or if not set: the default value. If no
+     * default value exists, 0 if that value is in the range [minValue,
+     * maxValue], or minValue if 0 is not in the range
      */
     public int set(int value)
     {
@@ -216,9 +213,9 @@ public class IntegerProperty extends Property
                 return noValue();
             }
         }
-        
+
         int v = Integer.parseInt(prevValue);
-        
+
         return limit(v);
     }
 
@@ -226,20 +223,23 @@ public class IntegerProperty extends Property
      * Returns value limited to the range [minValue, maxValue].
      *
      * @param value the value to limit
+     *
      * @return value limited to the range [minValue, maxValue].
      */
     private int limit(int value)
     {
-        return Math.min(Math.max(value, minValue), maxValue); 
+        return Math.min(
+                Math.max(value, minValue),
+                maxValue);
     }
-    
+
     /**
-     * Returns 0 if that value is in the range [minValue, maxValue].
-     * Otherwise, returns minValue.
+     * Returns 0 if that value is in the range [minValue, maxValue]. Otherwise,
+     * returns minValue.
      */
     private int noValue()
     {
-        if (minValue <= 0 && maxValue >= 0) {
+        if ((minValue <= 0) && (maxValue >= 0)) {
             return 0;
         } else {
             return minValue;

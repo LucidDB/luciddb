@@ -26,6 +26,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.util.*;
@@ -42,9 +43,11 @@ import org.eigenbase.sql.type.*;
  * @author Xiaoyang Luo
  * @version $Id$
  */
-public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
+public class FarragoOJRexCaseImplementor
+    extends FarragoOJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -61,13 +64,17 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
         Variable varResult = null;
 
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
-        
-            OJClass retClass = OJUtil.typeToOJClass(
-                retType, translator.getFarragoTypeFactory());
+            OJClass retClass =
+                OJUtil.typeToOJClass(
+                    retType,
+                    translator.getFarragoTypeFactory());
             varResult = translator.getRelImplementor().newVariable();
             translator.addStatement(
-                new VariableDeclaration(TypeName.forOJClass(retClass), 
-                new VariableDeclarator( varResult.toString(), null)));
+                new VariableDeclaration(
+                    TypeName.forOJClass(retClass),
+                    new VariableDeclarator(
+                        varResult.toString(),
+                        null)));
         } else {
             varResult = translator.createScratchVariable(call.getType());
         }
@@ -79,13 +86,13 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
         IfStatement wholeStatement = null;
         IfStatement prevIfStatement = null;
 
-        for (i = 0; i < operands.length - 1; i = i + 2) {
+        for (i = 0; i < (operands.length - 1); i = i + 2) {
             boolean bHasElseAndLastOne = false;
-            Expression cond = operands[ i ];
-            Expression value = operands[ i + 1 ];
+            Expression cond = operands[i];
+            Expression value = operands[i + 1];
             boolean isCondNullable = call.operands[i].getType().isNullable();
             StatementList caseCondStmtList = translator.getCaseStmtList(i);
-            StatementList stmtList = translator.getCaseStmtList(i+1);
+            StatementList stmtList = translator.getCaseStmtList(i + 1);
             if (stmtList == null) {
                 stmtList = new StatementList();
             }
@@ -104,7 +111,7 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
                 stmtList,
                 call.toString(),
                 call.getType(),
-                call.operands[i+1].getType(),
+                call.operands[i + 1].getType(),
                 varResult,
                 value);
 
@@ -112,32 +119,39 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
                 // the result of comparison must be boolean.
                 // If it is nullable then we get the result
                 // from getBit.
-                Expression getBitCondition = new MethodCall(cond, 
-                    "getBit", new ExpressionList());
-                Expression notNullTest = new UnaryExpression(
-                            translator.createNullTest(
-                                call.operands[ i ], cond, null),
-                            UnaryExpression.NOT);
-                Expression condition = new BinaryExpression(
-                            notNullTest,
-                            BinaryExpression.LOGICAL_AND,
-                            getBitCondition);
+                Expression getBitCondition =
+                    new MethodCall(
+                        cond,
+                        "getBit",
+                        new ExpressionList());
+                Expression notNullTest =
+                    new UnaryExpression(
+                        translator.createNullTest(
+                            call.operands[i],
+                            cond,
+                            null),
+                        UnaryExpression.NOT);
+                Expression condition =
+                    new BinaryExpression(
+                        notNullTest,
+                        BinaryExpression.LOGICAL_AND,
+                        getBitCondition);
                 cond = condition;
             }
 
             if (bHasElseAndLastOne) {
-                StatementList elseStmtList = 
-                        translator.getCaseStmtList(operands.length - 1);
+                StatementList elseStmtList =
+                    translator.getCaseStmtList(operands.length - 1);
                 translator.convertCastOrAssignmentWithStmtList(
-                        elseStmtList,
-                        call.toString(),
-                        call.getType(),
-                        call.operands[operands.length - 1].getType(),
-                        varResult,
-                        operands[operands.length - 1]);
-                 ifStmt = new IfStatement( cond, stmtList, elseStmtList);
+                    elseStmtList,
+                    call.toString(),
+                    call.getType(),
+                    call.operands[operands.length - 1].getType(),
+                    varResult,
+                    operands[operands.length - 1]);
+                ifStmt = new IfStatement(cond, stmtList, elseStmtList);
             } else {
-                 ifStmt = new IfStatement( cond, stmtList);
+                ifStmt = new IfStatement(cond, stmtList);
             }
             if (wholeStatement == null) {
                 wholeStatement = ifStmt;
@@ -149,7 +163,7 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
                 prevIfStatement.setElseStatements(caseCondStmtList);
                 prevIfStatement = ifStmt;
             }
-        } 
+        }
         translator.addStatement(wholeStatement);
         return varResult;
     }
@@ -160,6 +174,5 @@ public class FarragoOJRexCaseImplementor extends FarragoOJRexImplementor
         return true;
     }
 }
-
 
 // End FarragoOJRexCaseImplementor.java

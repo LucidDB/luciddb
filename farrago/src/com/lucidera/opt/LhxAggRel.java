@@ -20,12 +20,13 @@
 */
 package com.lucidera.opt;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
-import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.query.*;
 
 /**
  * LhxAggRel represents hash aggregation.
@@ -33,17 +34,24 @@ import net.sf.farrago.query.*;
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxAggRel extends AggregateRelBase implements FennelRel
+public class LhxAggRel
+    extends AggregateRelBase
+    implements FennelRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * row count of the input
      */
     int numInputRows;
-    
+
     /**
      * cardinality of the group by key
      */
     int cndGroupByKey;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LhxAggRel(
         RelOptCluster cluster,
@@ -54,21 +62,27 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
         int cndGroupByKey)
     {
         super(
-            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
-            child, groupCount, aggCalls);
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            child,
+            groupCount,
+            aggCalls);
         this.numInputRows = numInputRows;
-        this.cndGroupByKey  = cndGroupByKey;
+        this.cndGroupByKey = cndGroupByKey;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        LhxAggRel clone = new LhxAggRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            groupCount,
-            aggCalls,
-            numInputRows,
-            cndGroupByKey);
+        LhxAggRel clone =
+            new LhxAggRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                groupCount,
+                aggCalls,
+                numInputRows,
+                cndGroupByKey);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -85,9 +99,12 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, getChild());
+        return implementor.visitChild(
+                this,
+                0,
+                getChild());
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
@@ -96,9 +113,10 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
         aggStream.setGroupingPrefixSize(groupCount);
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
-            assert(!call.isDistinct());
+            assert (!call.isDistinct());
+
             // allow 0 for COUNT(*)
-            assert(call.args.length <= 1);
+            assert (call.args.length <= 1);
             AggFunction func = lookupAggFunction(call);
             FemAggInvocation aggInvocation = repos.newFemAggInvocation();
             aggInvocation.setFunction(func);
@@ -110,22 +128,23 @@ public class LhxAggRel extends AggregateRelBase implements FennelRel
             }
             aggStream.getAggInvocation().add(aggInvocation);
         }
-        
+
         aggStream.setNumRows(numInputRows);
         aggStream.setCndGroupByKeys(cndGroupByKey);
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             aggStream);
-        
+
         return aggStream;
     }
 
     public static AggFunction lookupAggFunction(
         AggregateRel.Call call)
     {
-        return AggFunctionEnum.forName(
-            "AGG_FUNC_" + call.getAggregation().getName());
+        return
+            AggFunctionEnum.forName(
+                "AGG_FUNC_" + call.getAggregation().getName());
     }
 }
 

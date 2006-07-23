@@ -20,90 +20,38 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.io.File;
-import java.sql.*;
-import java.util.*;
+import java.io.*;
 
-import org.eigenbase.util.*;
+import java.sql.*;
+
+import java.util.*;
 
 import net.sf.farrago.namespace.impl.*;
 
+import org.eigenbase.util.*;
+
+
 /**
- * Decodes options used for a flat file data server. An instance 
- * of this class must be initialized with <code>decode()</code> 
- * before calling its other methods. The conventions for 
- * parameters are as follows:
+ * Decodes options used for a flat file data server. An instance of this class
+ * must be initialized with <code>decode()</code> before calling its other
+ * methods. The conventions for parameters are as follows:
  *
  * <ul>
- *   <li>Boolean and integer properties use the default behavior</li>
- *   <li>Delimiter characters are translated to canonical form</li>
- *   <li>Special characters are read as single characters</li>
- *   <li>Directories become empty string or end with the File.separator</li>
- *   <li>File name extensions become empty string or begin with a prefix</li>
+ * <li>Boolean and integer properties use the default behavior</li>
+ * <li>Delimiter characters are translated to canonical form</li>
+ * <li>Special characters are read as single characters</li>
+ * <li>Directories become empty string or end with the File.separator</li>
+ * <li>File name extensions become empty string or begin with a prefix</li>
  * </ul>
  *
  * @author John Pham
  * @version $Id$
  */
-class FlatFileParams extends MedAbstractBase
+class FlatFileParams
+    extends MedAbstractBase
 {
-    /**
-     * Enumeration for schema types used by the flat file reader.
-     */
-    public enum SchemaType
-    {
-        /**
-         * Schema name for a special type of query that returns a 
-         * one column result with space separated columns sizes
-         */
-        DESCRIBE ("DESCRIBE"),
-        /**
-         * Schema name for a special type of query that returns parsed 
-         * text columns (including headers) as they appear in a text file.
-         * Sample queries are limited to a specified number of rows
-         */
-        SAMPLE   ("SAMPLE"), 
-        /**
-         * Schema name for a typical query, in which columns are casted 
-         * to typed data
-         */
-        QUERY    ("BCP"), 
-        /**
-         * Schema name for a query in which columns are returned as text.
-         * Similar to sample, except headers are not returned, and there 
-         * is no limit on the amount of rows returned.
-         */
-        QUERY_TEXT("TEXT");
-        
-        //~ Static initialization/methods --------------------------------
 
-        private static Map<String, SchemaType> types;
-        static {
-            types = new HashMap<String, SchemaType>();
-            for (SchemaType type : SchemaType.values()) 
-            {
-                types.put(type.schemaName, type);
-            }
-        }
-
-        public static SchemaType getSchemaType(String schemaName) 
-        {
-            return types.get(schemaName);
-        }
-
-        //~ Instance fields/methods --------------------------------------
-
-        private String schemaName;
-        private SchemaType(String schemaName) {
-            this.schemaName = schemaName;
-        }
-        
-        public String getSchemaName() {
-            return schemaName;
-        }
-    }
-
-    //~ Static fields/initializers --------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_DIRECTORY = "DIRECTORY";
     public static final String PROP_FILE_EXTENSION = "FILE_EXTENSION";
@@ -131,9 +79,64 @@ class FlatFileParams extends MedAbstractBase
     protected static final boolean DEFAULT_WITH_HEADER = true;
     protected static final int DEFAULT_NUM_ROWS_SCAN = 5;
     protected static final boolean DEFAULT_WITH_LOGGING = true;
-    
-    
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * Enumeration for schema types used by the flat file reader.
+     */
+    public enum SchemaType {
+        /**
+         * Schema name for a special type of query that returns a
+         * one column result with space separated columns sizes
+         */
+        DESCRIBE("DESCRIBE"),
+        /**
+         * Schema name for a special type of query that returns parsed
+         * text columns (including headers) as they appear in a text file.
+         * Sample queries are limited to a specified number of rows
+         */
+        SAMPLE("SAMPLE"),
+        /**
+         * Schema name for a typical query, in which columns are casted
+         * to typed data
+         */
+        QUERY("BCP"),
+        /**
+         * Schema name for a query in which columns are returned as text.
+         * Similar to sample, except headers are not returned, and there
+         * is no limit on the amount of rows returned.
+         */
+        QUERY_TEXT("TEXT");
+
+        private static Map<String, SchemaType> types;
+
+        static {
+            types = new HashMap<String, SchemaType>();
+            for (SchemaType type : SchemaType.values()) {
+                types.put(type.schemaName, type);
+            }
+        }
+
+        public static SchemaType getSchemaType(String schemaName)
+        {
+            return types.get(schemaName);
+        }
+
+        private String schemaName;
+
+        private SchemaType(String schemaName)
+        {
+            this.schemaName = schemaName;
+        }
+
+        public String getSchemaName()
+        {
+            return schemaName;
+        }
+    }
+
+    //~ Instance fields --------------------------------------------------------
 
     private Properties props;
     private String directory, logDirectory, schemaName;
@@ -142,90 +145,110 @@ class FlatFileParams extends MedAbstractBase
     private char quoteChar, escapeChar;
     private boolean withHeader, withLogging;
     private int numRowsScan;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs an uninitialized FlatFileParams. The method 
-     * <code>decode()</code> must be called before the object is used.
-     * 
+     * Constructs an uninitialized FlatFileParams. The method <code>
+     * decode()</code> must be called before the object is used.
+     *
      * @param props foreign server parameters
      */
-    public FlatFileParams(Properties props) 
+    public FlatFileParams(Properties props)
     {
         this.props = props;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * The main entry point into paremter decoding. Throws an 
-     * exception when there are error parsing parameters.
-     * 
+     * The main entry point into paremter decoding. Throws an exception when
+     * there are error parsing parameters.
+     *
      * @throws SQLException
      */
     public void decode()
         throws SQLException
     {
         directory = decodeDirectory(
-            props.getProperty(PROP_DIRECTORY, null));
-        fileExtension = decodeExtension(props.getProperty(
-            PROP_FILE_EXTENSION,
-            DEFAULT_FILE_EXTENSION));
-        controlFileExtension = decodeExtension(props.getProperty(
-            PROP_CONTROL_FILE_EXTENSION, 
-            DEFAULT_CONTROL_FILE_EXTENSION));
-        fieldDelimiter = decodeDelimiter(props.getProperty(
-            PROP_FIELD_DELIMITER, 
-            DEFAULT_FIELD_DELIMITER));
-        lineDelimiter = decodeDelimiter(props.getProperty(
-            PROP_LINE_DELIMITER, 
-            DEFAULT_LINE_DELIMITER));
-        quoteChar = decodeSpecialChar(
-            props.getProperty(PROP_QUOTE_CHAR, DEFAULT_QUOTE_CHAR),
-            DEFAULT_QUOTE_CHAR);
-        escapeChar = decodeSpecialChar(
-            props.getProperty(PROP_ESCAPE_CHAR, DEFAULT_ESCAPE_CHAR),
-            DEFAULT_ESCAPE_CHAR);
-        withHeader = getBooleanProperty(
-            props, PROP_WITH_HEADER, DEFAULT_WITH_HEADER);
-        withLogging = getBooleanProperty(
-            props, PROP_WITH_LOGGING, DEFAULT_WITH_LOGGING);
-        numRowsScan = getIntProperty(
-            props, PROP_NUM_ROWS_SCAN, DEFAULT_NUM_ROWS_SCAN);
-        logDirectory = decodeDirectory(
-            props.getProperty(PROP_LOG_DIRECTORY, null));
+                props.getProperty(PROP_DIRECTORY, null));
+        fileExtension =
+            decodeExtension(
+                props.getProperty(
+                    PROP_FILE_EXTENSION,
+                    DEFAULT_FILE_EXTENSION));
+        controlFileExtension =
+            decodeExtension(
+                props.getProperty(
+                    PROP_CONTROL_FILE_EXTENSION,
+                    DEFAULT_CONTROL_FILE_EXTENSION));
+        fieldDelimiter =
+            decodeDelimiter(
+                props.getProperty(
+                    PROP_FIELD_DELIMITER,
+                    DEFAULT_FIELD_DELIMITER));
+        lineDelimiter =
+            decodeDelimiter(
+                props.getProperty(
+                    PROP_LINE_DELIMITER,
+                    DEFAULT_LINE_DELIMITER));
+        quoteChar =
+            decodeSpecialChar(
+                props.getProperty(PROP_QUOTE_CHAR, DEFAULT_QUOTE_CHAR),
+                DEFAULT_QUOTE_CHAR);
+        escapeChar =
+            decodeSpecialChar(
+                props.getProperty(PROP_ESCAPE_CHAR, DEFAULT_ESCAPE_CHAR),
+                DEFAULT_ESCAPE_CHAR);
+        withHeader =
+            getBooleanProperty(
+                props,
+                PROP_WITH_HEADER,
+                DEFAULT_WITH_HEADER);
+        withLogging =
+            getBooleanProperty(
+                props,
+                PROP_WITH_LOGGING,
+                DEFAULT_WITH_LOGGING);
+        numRowsScan =
+            getIntProperty(
+                props,
+                PROP_NUM_ROWS_SCAN,
+                DEFAULT_NUM_ROWS_SCAN);
+        logDirectory =
+            decodeDirectory(
+                props.getProperty(PROP_LOG_DIRECTORY, null));
     }
-    
+
     /**
-     * Decodes a delimiter string into a canonical delimiter character. 
-     * This method recognizes the escape sequences \t, \r, \n. 
-     * Combinations of the two line characters \r and \n are all 
-     * reduced to universal line character \n.
+     * Decodes a delimiter string into a canonical delimiter character. This
+     * method recognizes the escape sequences \t, \r, \n. Combinations of the
+     * two line characters \r and \n are all reduced to universal line character
+     * \n.
      *
-     * <p>
-     * 
-     * This function comes from legacy code and is based on odd 
-     * heuristics. 
-     * 
+     * <p>This function comes from legacy code and is based on odd heuristics.
+     *
      * <ul>
-     *   <li>An initial double quote denotes no delimiter.</li>
-     *   <li>A tab escape "\t" becomes a tab.</li>
-     *   <li>Otherwise preference is given to the line characters 
-     *         sequences "\r" and "\n". These escapes are recognized 
-     *         from the 0, 1, and 2 index positions.</li>
-     *   <li>The backslash character cannot escape any other 
-     *         character, and itself becomes a delimiter.</li>
-     *   <li>Any other character becomes a delimiter.</li>
+     * <li>An initial double quote denotes no delimiter.</li>
+     * <li>A tab escape "\t" becomes a tab.</li>
+     * <li>Otherwise preference is given to the line characters sequences "\r"
+     * and "\n". These escapes are recognized from the 0, 1, and 2 index
+     * positions.</li>
+     * <li>The backslash character cannot escape any other character, and itself
+     * becomes a delimiter.</li>
+     * <li>Any other character becomes a delimiter.</li>
      * </ul>
      *
      * <p>REVIEW: this behavior seems overly complex and awkward
-     * 
+     *
      * @param delim delimiter string
-     * 
+     *
      * @return canonical delimiter character represented by delimiter string
      */
     private char decodeDelimiter(String delim)
     {
-        if (delim == null || delim.length() == 0 || delim.charAt(0) == '"') {
+        if ((delim == null) || (delim.length() == 0)
+            || (delim.charAt(0) == '"')) {
             return 0;
         }
         if (delim.indexOf("\\t") == 0) {
@@ -233,19 +256,20 @@ class FlatFileParams extends MedAbstractBase
         }
         int a = delim.indexOf("\\r");
         int b = delim.indexOf("\\n");
-        if (a == 0 || a == 1 || a == 2 || b == 0 || b == 1 || b == 2) {
+        if ((a == 0) || (a == 1) || (a == 2) || (b == 0) || (b == 1)
+            || (b == 2)) {
             return '\n';
         }
         return delim.charAt(0);
     }
 
     /**
-     * Decodes a quote or escape character. While a null value is converted 
-     * to the default character, an empty value is interpreted as 0.
-     * 
+     * Decodes a quote or escape character. While a null value is converted to
+     * the default character, an empty value is interpreted as 0.
+     *
      * @param specialChar string containing special character, may be empty
      * @param defaultChar default string, must not be empty
-     * 
+     *
      * @return the first character of specialChar or defaultChar
      */
     private char decodeSpecialChar(String specialChar, String defaultChar)
@@ -261,18 +285,20 @@ class FlatFileParams extends MedAbstractBase
     }
 
     /**
-     * Decodes a directory name into a useful format. If the name is null, 
-     * returns an empty string. Otherwise, ensures the directory name ends 
-     * with File.separator.
-     * 
+     * Decodes a directory name into a useful format. If the name is null,
+     * returns an empty string. Otherwise, ensures the directory name ends with
+     * File.separator.
+     *
      * @param directory directory name, may be null
-     * 
+     *
      * @return empty string or directory name, ending with File.separator
      */
-    private String decodeDirectory(String directory) {
+    private String decodeDirectory(String directory)
+    {
         if (directory == null) {
             return "";
         }
+
         // REVIEW jvs 27-Apr-2006:  I put in the explicit slash check
         // to allow unit tests to specify a trailing slash; this
         // works on Windows, which is forgiving about slash direction,
@@ -287,15 +313,14 @@ class FlatFileParams extends MedAbstractBase
     private String decodeExtension(String extension)
     {
         Util.pre(extension != null, "extension != null");
-        if (extension.length() == 0
-            || extension.startsWith(FILE_EXTENSION_PREFIX)) 
-        {
+        if ((extension.length() == 0)
+            || extension.startsWith(FILE_EXTENSION_PREFIX)) {
             return extension;
         }
         return FILE_EXTENSION_PREFIX + extension;
     }
 
-    public String getDirectory() 
+    public String getDirectory()
     {
         return directory;
     }
@@ -304,13 +329,13 @@ class FlatFileParams extends MedAbstractBase
     {
         return fileExtension;
     }
-        
+
     public String getControlFileExtenstion()
     {
         return controlFileExtension;
     }
 
-    public char getFieldDelimiter() 
+    public char getFieldDelimiter()
     {
         return fieldDelimiter;
     }
@@ -320,7 +345,7 @@ class FlatFileParams extends MedAbstractBase
         return lineDelimiter;
     }
 
-    public char getQuoteChar() 
+    public char getQuoteChar()
     {
         return quoteChar;
     }
@@ -329,8 +354,8 @@ class FlatFileParams extends MedAbstractBase
     {
         return escapeChar;
     }
-    
-    public boolean getWithHeader() 
+
+    public boolean getWithHeader()
     {
         return withHeader;
     }
@@ -345,26 +370,26 @@ class FlatFileParams extends MedAbstractBase
         return withLogging;
     }
 
-    public String getLogDirectory() 
+    public String getLogDirectory()
     {
         return logDirectory;
     }
-    
+
     /**
-     * Lookup the type of a schema based upon it's schema name. 
-     * The queryDefault parameter allows the type to default to 
-     * QUERY when the schema name is unrecognized. This is 
-     * useful for foreign tables, which use a local schema name.
-     * 
+     * Lookup the type of a schema based upon it's schema name. The queryDefault
+     * parameter allows the type to default to QUERY when the schema name is
+     * unrecognized. This is useful for foreign tables, which use a local schema
+     * name.
+     *
      * @param schemaName name of schema to lookup
      * @param queryDefault whether to make a query the default type
      */
     public static SchemaType getSchemaType(
-        String schemaName, 
-        boolean queryDefault) 
+        String schemaName,
+        boolean queryDefault)
     {
         SchemaType type = SchemaType.getSchemaType(schemaName);
-        if (type == null && queryDefault) {
+        if ((type == null) && queryDefault) {
             type = SchemaType.QUERY;
         }
         return type;

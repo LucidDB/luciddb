@@ -23,6 +23,7 @@
 package net.sf.farrago.plugin;
 
 import java.net.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,37 +33,35 @@ import net.sf.farrago.util.*;
 
 /**
  * FarragoPluginCache is an abstract private cache for loading instances of
- * {@link FarragoPlugin} (and their component sub-objects).  It requires an
+ * {@link FarragoPlugin} (and their component sub-objects). It requires an
  * underlying shared {@link FarragoObjectCache}.
  *
- *<p>
- *
- * This class is only a partial implementation.  For an example of how to build
- * a full implementation, see {@link
+ * <p>This class is only a partial implementation. For an example of how to
+ * build a full implementation, see {@link
  * net.sf.farrago.namespace.util.FarragoDataWrapperCache}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoPluginCache extends FarragoCompoundAllocation
+public abstract class FarragoPluginCache
+    extends FarragoCompoundAllocation
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Map mapMofIdToPlugin;
     private final FarragoObjectCache sharedCache;
     private final FarragoRepos repos;
     private final FarragoPluginClassLoader classLoader;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an empty cache.
      *
      * @param owner FarragoAllocationOwner for this cache, to make sure
      * everything gets discarded eventually
-     *
      * @param sharedCache underlying shared cache
-     *
      * @param repos FarragoRepos for wrapper initialization
      */
     public FarragoPluginCache(
@@ -78,7 +77,7 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         mapMofIdToPlugin = new HashMap();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the underlying repos
@@ -111,8 +110,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
     /**
      * Adds a plugin object to this cache.
      *
-     * @param entry pinned entry from underlying shared cache;
-     * key must be plugin object's catalog MofId
+     * @param entry pinned entry from underlying shared cache; key must be
+     * plugin object's catalog MofId
      *
      * @return cached plugin object
      */
@@ -132,10 +131,8 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
      * Initializes a plugin instance.
      *
      * @param libraryName filename of jar containing plugin implementation
-     *
-     * @param jarAttributeName name of jar attribute to use to determine
-     * class name
-     *
+     * @param jarAttributeName name of jar attribute to use to determine class
+     * name
      * @param options options with which to initialize plugin
      *
      * @return initialized plugin
@@ -145,13 +142,15 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         String jarAttributeName,
         Properties options)
     {
-        Class pluginClass = classLoader.loadClassFromLibraryManifest(
-            libraryName, jarAttributeName);
+        Class pluginClass =
+            classLoader.loadClassFromLibraryManifest(
+                libraryName,
+                jarAttributeName);
 
         FarragoPlugin plugin;
         try {
             Object obj = classLoader.newPluginInstance(pluginClass);
-            assert(obj instanceof FarragoPlugin) : obj.getClass();
+            assert (obj instanceof FarragoPlugin) : obj.getClass();
             plugin = (FarragoPlugin) obj;
             plugin.initialize(repos, options);
             plugin.setLibraryName(libraryName);
@@ -163,6 +162,5 @@ public abstract class FarragoPluginCache extends FarragoCompoundAllocation
         return plugin;
     }
 }
-
 
 // End FarragoPluginCache.java

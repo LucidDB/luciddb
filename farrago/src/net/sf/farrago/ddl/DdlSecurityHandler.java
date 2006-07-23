@@ -9,21 +9,21 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.security.FemRole;
-import net.sf.farrago.fem.security.FemUser;
-import net.sf.farrago.session.FarragoSessionDdlValidator;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.session.*;
+
 
 /**
  * DdlSecurityHandler defines DDL handler methods for Fem Security objects of
@@ -32,14 +32,20 @@ import net.sf.farrago.session.FarragoSessionDdlValidator;
  * @author Tai Tran
  * @version $Id$
  */
-public class DdlSecurityHandler extends DdlHandler
+public class DdlSecurityHandler
+    extends DdlHandler
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public DdlSecurityHandler(FarragoSessionDdlValidator validator)
     {
         super(validator);
     }
 
-    // implement FarragoSessionDdlHandler 
+    //~ Methods ----------------------------------------------------------------
+
+    // implement FarragoSessionDdlHandler
     public void validateDefinition(FemUser femUser)
     {
         try {
@@ -69,8 +75,8 @@ public class DdlSecurityHandler extends DdlHandler
                 ex);
         }
     }
-    
-    // implement FarragoSessionDdlHandler 
+
+    // implement FarragoSessionDdlHandler
     public void validateModification(FemUser femUser)
     {
         // TODO: Implement the handler for Alter User...

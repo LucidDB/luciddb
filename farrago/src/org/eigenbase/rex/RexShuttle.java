@@ -20,45 +20,46 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import java.util.List;
+import java.util.*;
 
 
 /**
  * Passes over a row-expression, calling a handler method for each node,
  * appropriate to the type of the node.
  *
- * <p>Like {@link RexVisitor}, this is an instance of the
- * {@link org.eigenbase.util.Glossary#VisitorPattern Visitor Pattern}.
- * Use <code>RexShuttle</code> if you would like your methods to return a
- * value.</p>
+ * <p>Like {@link RexVisitor}, this is an instance of the {@link
+ * org.eigenbase.util.Glossary#VisitorPattern Visitor Pattern}. Use <code>
+ * RexShuttle</code> if you would like your methods to return a value.</p>
  *
  * @author jhyde
- * @since Nov 26, 2003
  * @version $Id$
- **/
-public class RexShuttle implements RexVisitor<RexNode>
+ * @since Nov 26, 2003
+ */
+public class RexShuttle
+    implements RexVisitor<RexNode>
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public RexNode visitOver(RexOver over)
     {
-        boolean[] update = {false};
-        RexNode[] clonedOperands = visitArray(over.operands, update);
+        boolean [] update = { false };
+        RexNode [] clonedOperands = visitArray(over.operands, update);
         RexWindow window = visitWindow(over.getWindow());
-        if (update[0] || window != over.getWindow()) {
+        if (update[0] || (window != over.getWindow())) {
             // REVIEW jvs 8-Mar-2005:  This doesn't take into account
             // the fact that a rewrite may have changed the result type.
             // To do that, we would need to take a RexBuilder and
             // watch out for special operators like CAST and NEW where
             // the type is embedded in the original call.
-            return new RexOver(
-                over.getType(),
-                over.getAggOperator(),
-                clonedOperands,
-                window);
+            return
+                new RexOver(
+                    over.getType(),
+                    over.getAggOperator(),
+                    clonedOperands,
+                    window);
         } else {
             return over;
         }
@@ -66,16 +67,18 @@ public class RexShuttle implements RexVisitor<RexNode>
 
     public RexWindow visitWindow(RexWindow window)
     {
-        boolean[] update = {false};
-        RexNode[] clonedOrderKeys = visitArray(window.orderKeys, update);
-        RexNode[] clonedPartitionKeys = visitArray(window.partitionKeys, update);
+        boolean [] update = { false };
+        RexNode [] clonedOrderKeys = visitArray(window.orderKeys, update);
+        RexNode [] clonedPartitionKeys =
+            visitArray(window.partitionKeys, update);
         if (update[0]) {
-            return new RexWindow(
-                clonedPartitionKeys,
-                clonedOrderKeys,
-                window.getLowerBound(),
-                window.getUpperBound(),
-                window.isRows());
+            return
+                new RexWindow(
+                    clonedPartitionKeys,
+                    clonedOrderKeys,
+                    window.getLowerBound(),
+                    window.getUpperBound(),
+                    window.isRows());
         } else {
             return window;
         }
@@ -83,26 +86,27 @@ public class RexShuttle implements RexVisitor<RexNode>
 
     public RexNode visitCall(final RexCall call)
     {
-        boolean[] update = {false};
-        RexNode[] clonedOperands = visitArray(call.operands, update);
+        boolean [] update = { false };
+        RexNode [] clonedOperands = visitArray(call.operands, update);
         if (update[0]) {
             // REVIEW jvs 8-Mar-2005:  This doesn't take into account
             // the fact that a rewrite may have changed the result type.
             // To do that, we would need to take a RexBuilder and
             // watch out for special operators like CAST and NEW where
             // the type is embedded in the original call.
-            return new RexCall(
-                call.getType(),
-                call.getOperator(),
-                clonedOperands);
+            return
+                new RexCall(
+                    call.getType(),
+                    call.getOperator(),
+                    clonedOperands);
         } else {
             return call;
         }
     }
 
-    protected RexNode[] visitArray(RexNode[] exprs, boolean[] update)
+    protected RexNode [] visitArray(RexNode [] exprs, boolean [] update)
     {
-        RexNode[] clonedOperands = new RexNode[exprs.length];
+        RexNode [] clonedOperands = new RexNode[exprs.length];
         for (int i = 0; i < exprs.length; i++) {
             RexNode operand = exprs[i];
             RexNode clonedOperand = operand.accept(this);
@@ -128,8 +132,8 @@ public class RexShuttle implements RexVisitor<RexNode>
             return fieldAccess;
         } else {
             return new RexFieldAccess(
-                after,
-                fieldAccess.getField());
+                    after,
+                    fieldAccess.getField());
         }
     }
 
@@ -183,9 +187,7 @@ public class RexShuttle implements RexVisitor<RexNode>
      */
     public final RexNode apply(RexNode expr)
     {
-        return expr == null ?
-            null :
-            expr.accept(this);
+        return (expr == null) ? null : expr.accept(this);
     }
 }
 

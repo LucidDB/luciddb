@@ -19,29 +19,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
+
 
 /**
  * A generic implementation of {@link SqlMoniker}.
  *
  * @author tleung
- * @since May 31, 2005
  * @version $Id$
- **/
-public class SqlMonikerImpl implements SqlMoniker
-{   
-    private final String[] names;
+ * @since May 31, 2005
+ */
+public class SqlMonikerImpl
+    implements SqlMoniker
+{
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final String [] names;
     private final SqlMonikerType type;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a moniker with an array of names.
      */
-    public SqlMonikerImpl(String[] names, SqlMonikerType type)
+    public SqlMonikerImpl(String [] names, SqlMonikerType type)
     {
         Util.pre(names != null, "names != null");
         Util.pre(type != null, "type != null");
@@ -57,15 +63,19 @@ public class SqlMonikerImpl implements SqlMoniker
      */
     public SqlMonikerImpl(String name, SqlMonikerType type)
     {
-        this(new String[] {name}, type);
+        this(
+            new String[] { name },
+            type);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlMonikerType getType()
     {
         return type;
     }
 
-    public String[] getFullyQualifiedNames()
+    public String [] getFullyQualifiedNames()
     {
         return names;
     }
@@ -75,7 +85,8 @@ public class SqlMonikerImpl implements SqlMoniker
         return new SqlIdentifier(names, SqlParserPos.ZERO);
     }
 
-    public String toString() {
+    public String toString()
+    {
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < names.length; i++) {
             if (i > 0) {

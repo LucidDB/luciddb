@@ -22,84 +22,51 @@
 package org.eigenbase.test;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.resource.*;
-import org.eigenbase.resgen.*;
 import org.eigenbase.util.*;
 
+
 /**
- * SqlValidatorFeatureTest verifies that features can be
- * independently enabled or disabled.
+ * SqlValidatorFeatureTest verifies that features can be independently enabled
+ * or disabled.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlValidatorFeatureTest extends SqlValidatorTestCase
+public class SqlValidatorFeatureTest
+    extends SqlValidatorTestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String FEATURE_DISABLED = "feature_disabled";
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private ResourceDefinition disabledFeature;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlValidatorFeatureTest(String name)
     {
         super(name);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Returns a tester. Derived classes should override this method to run
-     * the same set of tests in a different testing environment.
+     * Returns a tester. Derived classes should override this method to run the
+     * same set of tests in a different testing environment.
      */
     public Tester getTester()
     {
         return new FeatureTesterImpl();
-    }
-
-    private class FeatureTesterImpl extends TesterImpl
-    {
-        public SqlValidator getValidator()
-        {
-            final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
-            return new FeatureValidator(
-                SqlStdOperatorTable.instance(),
-                new MockCatalogReader(typeFactory),
-                typeFactory, getCompatible());
-        }
-    }
-
-    private class FeatureValidator extends SqlValidatorImpl
-    {
-        protected FeatureValidator(
-            SqlOperatorTable opTab,
-            SqlValidatorCatalogReader catalogReader,
-            RelDataTypeFactory typeFactory,
-            Compatible compatible)
-        {
-            super(opTab, catalogReader, typeFactory, compatible);
-        }
-
-        protected void validateFeature(
-            ResourceDefinition feature,
-            SqlParserPos context)
-        {
-            if (feature == disabledFeature) {
-                EigenbaseException ex = new EigenbaseException(
-                    FEATURE_DISABLED, null);
-                if (context == null) {
-                    throw ex;
-                }
-                throw new EigenbaseContextException(
-                    "location",
-                    ex,
-                    context.getLineNum(),
-                    context.getColumnNum(),
-                    context.getEndLineNum(),
-                    context.getEndColumnNum());
-            }
-        }
     }
 
     public void testDistinct()
@@ -137,6 +104,58 @@ public class SqlValidatorFeatureTest extends SqlValidatorTestCase
             checkFails(sql, FEATURE_DISABLED);
         } finally {
             disabledFeature = null;
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class FeatureTesterImpl
+        extends TesterImpl
+    {
+        public SqlValidator getValidator()
+        {
+            final RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
+            return
+                new FeatureValidator(
+                    SqlStdOperatorTable.instance(),
+                    new MockCatalogReader(typeFactory),
+                    typeFactory,
+                    getCompatible());
+        }
+    }
+
+    private class FeatureValidator
+        extends SqlValidatorImpl
+    {
+        protected FeatureValidator(
+            SqlOperatorTable opTab,
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory,
+            Compatible compatible)
+        {
+            super(opTab, catalogReader, typeFactory, compatible);
+        }
+
+        protected void validateFeature(
+            ResourceDefinition feature,
+            SqlParserPos context)
+        {
+            if (feature == disabledFeature) {
+                EigenbaseException ex =
+                    new EigenbaseException(
+                        FEATURE_DISABLED,
+                        null);
+                if (context == null) {
+                    throw ex;
+                }
+                throw new EigenbaseContextException(
+                    "location",
+                    ex,
+                    context.getLineNum(),
+                    context.getColumnNum(),
+                    context.getEndLineNum(),
+                    context.getEndColumnNum());
+            }
         }
     }
 }

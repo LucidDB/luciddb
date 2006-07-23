@@ -22,25 +22,32 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.validate.SqlValidator;
-
 import java.util.*;
 
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+
+
 /**
- * SqlProcedureCallOperator represents the CALL statement.  It
- * takes a single operand which is the real SqlCall.
+ * SqlProcedureCallOperator represents the CALL statement. It takes a single
+ * operand which is the real SqlCall.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlProcedureCallOperator extends SqlPrefixOperator
+public class SqlProcedureCallOperator
+    extends SqlPrefixOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlProcedureCallOperator()
     {
         super("CALL", SqlKind.ProcedureCall, 0, null, null, null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override SqlOperator
     public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
@@ -49,23 +56,25 @@ public class SqlProcedureCallOperator extends SqlPrefixOperator
         // TODO jvs 18-Jan-2005:  rewrite to SELECT * FROM TABLE f(x)
         // once we support function calls as tables
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
-        return opTab.selectOperator.createCall(
-            null,
-            new SqlNodeList(
-                Collections.singletonList(
-                    call.getOperands()[0]),
-                SqlParserPos.ZERO),
-            opTab.valuesOperator.createCall(
-                opTab.rowConstructor.createCall(
-                    SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO),
+        return
+            opTab.selectOperator.createCall(
+                null,
+                new SqlNodeList(
+                    Collections.singletonList(
+                        call.getOperands()[0]),
                     SqlParserPos.ZERO),
-                SqlParserPos.ZERO),
-            null,
-            null,
-            null,
-            null,
-            null,
-            SqlParserPos.ZERO);
+                opTab.valuesOperator.createCall(
+                    opTab.rowConstructor.createCall(
+                        SqlLiteral.createExactNumeric("0",
+                            SqlParserPos.ZERO),
+                        SqlParserPos.ZERO),
+                    SqlParserPos.ZERO),
+                null,
+                null,
+                null,
+                null,
+                null,
+                SqlParserPos.ZERO);
     }
 }
 

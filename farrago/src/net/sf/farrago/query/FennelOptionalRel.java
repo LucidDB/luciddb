@@ -29,15 +29,17 @@ import org.eigenbase.relopt.*;
 
 
 /**
- * FennelOptionalRel is a {@link FennelRel} which either takes zero inputs 
- * or takes a single FennelRel as input.
+ * FennelOptionalRel is a {@link FennelRel} which either takes zero inputs or
+ * takes a single FennelRel as input.
  *
  * @author John Pham
  * @version $Id$
  */
-public abstract class FennelOptionalRel extends FennelSingleRel
+public abstract class FennelOptionalRel
+    extends FennelSingleRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelOptionalRel object with an input rel.
@@ -63,6 +65,8 @@ public abstract class FennelOptionalRel extends FennelSingleRel
     {
         super(cluster, null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override SingleRel
     public RelNode [] getInputs()
@@ -99,6 +103,5 @@ public abstract class FennelOptionalRel extends FennelSingleRel
         return 1.0;
     }
 }
-
 
 // End FennelOptionalRel.java

@@ -20,13 +20,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj;
 
-import openjava.mop.OJClass;
+import openjava.mop.*;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -35,12 +33,13 @@ import org.eigenbase.reltype.RelDataTypeFactory;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Jun 1, 2003
  */
-public interface OJTypeFactory extends RelDataTypeFactory
+public interface OJTypeFactory
+    extends RelDataTypeFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     OJClass toOJClass(
         OJClass declarer,
@@ -48,6 +47,5 @@ public interface OJTypeFactory extends RelDataTypeFactory
 
     RelDataType toType(OJClass ojClass);
 }
-
 
 // End OJTypeFactory.java

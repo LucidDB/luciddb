@@ -21,8 +21,9 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Abstract base for chararacter and binary string literals.
@@ -30,8 +31,12 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * @author wael
  * @version $Id$
  */
-abstract class SqlAbstractStringLiteral extends SqlLiteral
+abstract class SqlAbstractStringLiteral
+    extends SqlLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlAbstractStringLiteral(
         Object value,
         SqlTypeName typeName,
@@ -40,11 +45,15 @@ abstract class SqlAbstractStringLiteral extends SqlLiteral
         super(value, typeName, pos);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Helper routine for {@link SqlUtil#concatenateLiterals}.
+     *
      * @param lits homogeneous StringLiteral[] args.
-     * @return StringLiteral with concatenated value.
-     * this == lits[0], used only for method dispatch.
+     *
+     * @return StringLiteral with concatenated value. this == lits[0], used only
+     * for method dispatch.
      */
     protected abstract SqlAbstractStringLiteral concat1(
         SqlLiteral [] lits);

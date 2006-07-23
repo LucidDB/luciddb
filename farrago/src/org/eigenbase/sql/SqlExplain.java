@@ -20,19 +20,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
 
 
 /**
- * A <code>SqlExplain</code> is a node of a parse tree which represents
- * an EXPLAIN PLAN statement.
+ * A <code>SqlExplain</code> is a node of a parse tree which represents an
+ * EXPLAIN PLAN statement.
  */
-public class SqlExplain extends SqlCall
+public class SqlExplain
+    extends SqlCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int EXPLICANDUM_OPERAND = 0;
@@ -41,7 +42,16 @@ public class SqlExplain extends SqlCall
     public static final int AS_XML_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Enums ------------------------------------------------------------------
+
+    /**
+     * The level of abstraction with which to display the plan.
+     */
+    public static enum Depth {
+        Type, Logical, Physical,
+    }
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlExplain(
         SqlSpecialOperator operator,
@@ -51,14 +61,17 @@ public class SqlExplain extends SqlCall
         SqlLiteral asXml,
         SqlParserPos pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], pos);
+        super(
+            operator,
+            new SqlNode[OPERAND_COUNT],
+            pos);
         operands[EXPLICANDUM_OPERAND] = explicandum;
         operands[DETAIL_LEVEL_OPERAND] = detailLevel;
         operands[DEPTH_OPERAND] = depth;
         operands[AS_XML_OPERAND] = asXml;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the underlying SQL statement to be explained
@@ -73,8 +86,9 @@ public class SqlExplain extends SqlCall
      */
     public SqlExplainLevel getDetailLevel()
     {
-        return (SqlExplainLevel)
-            SqlLiteral.enumValue(operands[DETAIL_LEVEL_OPERAND]);
+        return
+            (SqlExplainLevel) SqlLiteral.enumValue(
+                operands[DETAIL_LEVEL_OPERAND]);
     }
 
     /**
@@ -146,19 +160,10 @@ public class SqlExplain extends SqlCall
         writer.keyword("FOR");
         writer.newlineAndIndent();
         getExplicandum().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
-    }
-
-    /**
-     * The level of abstraction with which to display the plan.
-     */
-    public static enum Depth
-    {
-        Type,
-        Logical,
-        Physical,
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
     }
 }
-
 
 // End SqlExplain.java

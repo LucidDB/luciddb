@@ -21,27 +21,31 @@
 */
 package net.sf.farrago.runtime;
 
-import org.eigenbase.runtime.RestartableIterator;
+import java.util.*;
+import java.util.logging.*;
 
-import java.nio.ByteBuffer;
-import java.util.NoSuchElementException;
-import java.util.logging.Level;
+import org.eigenbase.runtime.*;
 
 
 /**
- * FennelPipeIterator implements the {@link RestartableIterator}
- * interface, receiving data from a producer as {@link ByteBuffer}
- * objects, and unmarshalling them to a consumer.  It does this by
- * extending {@link FennelPipeTupleIter} and adapting TupleIter semantics to
- * Iterator semantics.
+ * FennelPipeIterator implements the {@link RestartableIterator} interface,
+ * receiving data from a producer as {@link ByteBuffer} objects, and
+ * unmarshalling them to a consumer. It does this by extending {@link
+ * FennelPipeTupleIter} and adapting TupleIter semantics to Iterator semantics.
  *
  * @author Julian Hyde
  * @version $Id$
  */
-public class FennelPipeIterator extends FennelPipeTupleIter 
+public class FennelPipeIterator
+    extends FennelPipeTupleIter
     implements RestartableIterator
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private Object next = null; // current row
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * creates a new FennelPipeIterator object.
@@ -52,6 +56,8 @@ public class FennelPipeIterator extends FennelPipeTupleIter
     {
         super(tupleReader);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement Iterator
     public boolean hasNext()
@@ -69,7 +75,7 @@ public class FennelPipeIterator extends FennelPipeTupleIter
 
         // Old-style iterator convention doesn't handle anything but
         // END_OF_DATA
-        assert(!(fetched instanceof NoDataReason));
+        assert (!(fetched instanceof NoDataReason));
 
         next = fetched;
 
@@ -93,7 +99,7 @@ public class FennelPipeIterator extends FennelPipeTupleIter
             }
         }
     }
-            
+
     // implement Iterator
     public Object next()
     {

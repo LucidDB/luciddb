@@ -18,24 +18,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.rel;
 
-import com.disruptivetech.farrago.calc.RexToCalcTranslator;
-import net.sf.farrago.FarragoMetadataFactory;
+import com.disruptivetech.farrago.calc.*;
+
+import java.math.*;
+
+import java.util.*;
+
+import net.sf.farrago.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
+
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.util.Util;
-
-import java.math.BigDecimal;
-import java.util.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -43,29 +45,36 @@ import java.util.*;
  * aggregates inside of Fennel.
  *
  * <p>A window rel can handle several window aggregate functions, over several
- * partitions, with pre- and post-expressions, and an optional post-filter.
- * Each of the partitions is defined by a partition key (zero or more columns)
- * and a range (logical or physical). The partitions expect the data to be
- * sorted correctly on input to the relational expression.
+ * partitions, with pre- and post-expressions, and an optional post-filter. Each
+ * of the partitions is defined by a partition key (zero or more columns) and a
+ * range (logical or physical). The partitions expect the data to be sorted
+ * correctly on input to the relational expression.
  *
- * <p>Rules:<ul>
+ * <p>Rules:
+ *
+ * <ul>
  * <li>{@link FennelWindowRule} creates this from a {@link CalcRel}</li>
  * <li>{@link WindowedAggSplitterRule} decomposes a {@link CalcRel} which
- *     contains windowed aggregates into a {@link FennelWindowRel} and zero or
- *     more {@link CalcRel}s which do not contain windowed aggregates</li>
- * </ul></p>
+ * contains windowed aggregates into a {@link FennelWindowRel} and zero or more
+ * {@link CalcRel}s which do not contain windowed aggregates</li>
+ * </ul>
+ * </p>
  *
  * @author jhyde
  * @version $Id$
  * @since Dec 6, 2004
  */
-public class FennelWindowRel extends FennelSingleRel
+public class FennelWindowRel
+    extends FennelSingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Program which is applied on an incoming row event.
      *
-     * <p>It provides the necessary expressions for the windows to work on.
-     * The program always outputs the input fields first, then any necessary
+     * <p>It provides the necessary expressions for the windows to work on. The
+     * program always outputs the input fields first, then any necessary
      * expressions.
      *
      * <p>For example, for the query
@@ -74,52 +83,52 @@ public class FennelWindowRel extends FennelSingleRel
      * sum(amount * price) over last3<br/>
      * from Bids<br/>
      * window last3 as (order by orderid rows 3 preceding),<br/>
-     *   lastHour (order by orderdate range interval '1' hour preceding),<br/>
+     * lastHour (order by orderdate range interval '1' hour preceding),<br/>
      * </code></blockquote>
      *
      * the program will output the expressions
      *
-     * <blockquote><code>{orderid, ticker, amount, price,
-     * amount * price}</code></blockquote>
+     * <blockquote><code>{orderid, ticker, amount, price, amount *
+     * price}</code></blockquote>
      */
     private final RexProgram inputProgram;
 
     /**
      * Program which is applied on an 'row output' event.
      *
-     * <p>Its input is the columns of the current input row,
-     * and all accumulators of all windows of all partitions.
-     * Its output is the output row.
+     * <p>Its input is the columns of the current input row, and all
+     * accumulators of all windows of all partitions. Its output is the output
+     * row.
      *
      * <p>For example, consider the query
      *
      * <blockquote><code>select ticker,<br/>
      * sum(amount * price) over last3,<br/>
-     * 2 * sum(amount  + 1) over lastHour,<br/>
+     * 2 * sum(amount + 1) over lastHour,<br/>
      * from Bids<br/>
      * window last3 as (order by orderid rows 3 preceding),<br/>
-     *   lastHour (order by orderdate range interval '1' hour preceding),<br/>
+     * lastHour (order by orderdate range interval '1' hour preceding),<br/>
      * </code></blockquote>
      *
      * The program has inputs
      *
-     * <blockquote><code>{orderid, ticker, amount, price,
-     * sum(amount * price) over last3,
-     * sum(amount + 1) over lastHour}</code></blockquote>
+     * <blockquote><code>{orderid, ticker, amount, price, sum(amount * price)
+     * over last3, sum(amount + 1) over lastHour}</code></blockquote>
      *
      * and outputs
      *
      * <blockquote><code>{$1, $4, 2 * $5}</code></blockquote>
      */
     private final RexProgram outputProgram;
-    private final Window[] windows;
+    private final Window [] windows;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a window relational expression.
      *
-     * <p>Each {@link Window} has a set of {@link Partition} objects,
-     * and each {@link Partition} object has a set of {@link RexOver}
-     * objects.
+     * <p>Each {@link Window} has a set of {@link Partition} objects, and each
+     * {@link Partition} object has a set of {@link RexOver} objects.
      *
      * @param cluster
      * @param child
@@ -135,35 +144,44 @@ public class FennelWindowRel extends FennelSingleRel
         RelNode child,
         RelDataType rowType,
         RexProgram inputProgram,
-        Window[] windows,
+        Window [] windows,
         RexProgram outputProgram)
     {
         super(
-            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             child);
         assert rowType != null : "precondition: rowType != null";
         assert outputProgram != null : "precondition: outputExprs != null";
         assert inputProgram != null : "precondition: inputProgram != null";
         assert inputProgram.projectsIdentity(true);
-        assert inputProgram.getCondition() == null :
-            "precondition: inputProgram.getCondition() == null";
+        assert inputProgram.getCondition() == null : "precondition: inputProgram.getCondition() == null";
         assert windows != null : "precondition: windows != null";
         assert windows.length > 0 : "precondition : windows.length > 0";
         assert child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
         assert !RexOver.containsOver(inputProgram);
         assert !RexOver.containsOver(outputProgram);
-        assert RelOptUtil.getFieldTypeList(outputProgram.getInputRowType()).
-            equals(outputProgramInputTypes(child.getRowType(), windows));
+        assert RelOptUtil.getFieldTypeList(outputProgram.getInputRowType())
+            .equals(outputProgramInputTypes(
+                    child.getRowType(),
+                    windows));
         assert RelOptUtil.eq(
-            "type1", outputProgram.getOutputRowType(), "type2", rowType, true);
+                "type1",
+                outputProgram.getOutputRowType(),
+                "type2",
+                rowType,
+                true);
         this.rowType = rowType;
         this.outputProgram = outputProgram;
         this.inputProgram = inputProgram;
         this.windows = windows;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     private static List<RelDataType> outputProgramInputTypes(
-        RelDataType rowType, Window[] windows)
+        RelDataType rowType,
+        Window [] windows)
     {
         List<RelDataType> typeList =
             new ArrayList<RelDataType>(RelOptUtil.getFieldTypeList(rowType));
@@ -180,9 +198,14 @@ public class FennelWindowRel extends FennelSingleRel
     // override Object (public, does not throw CloneNotSupportedException)
     public Object clone()
     {
-        FennelWindowRel clone = new FennelWindowRel(
-            getCluster(), getChild(), rowType, inputProgram, windows,
-            outputProgram);
+        FennelWindowRel clone =
+            new FennelWindowRel(
+                getCluster(),
+                getChild(),
+                rowType,
+                inputProgram,
+                windows,
+                outputProgram);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -195,11 +218,14 @@ public class FennelWindowRel extends FennelSingleRel
         if (!outputProgram.isValid(fail)) {
             return false;
         }
+
         // In the window specifications, an aggregate call such as
         // 'SUM(RexInputRef #10)' refers to expression #10 of inputProgram.
         // (Not its projections.)
         final RexChecker checker =
-            new RexChecker(inputProgram.getOutputRowType(), fail);
+            new RexChecker(
+                inputProgram.getOutputRowType(),
+                fail);
         int count = 0;
         for (Window window : windows) {
             for (Partition partition : window.partitionList) {
@@ -284,14 +310,18 @@ public class FennelWindowRel extends FennelSingleRel
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()),
             windowStreamDef);
-        
+
         windowStreamDef.setFilter(outputProgram.getCondition() != null);
 
         // Generate output program.
         RexToCalcTranslator translator =
-            new RexToCalcTranslator(getCluster().getRexBuilder(), this);
-        String program = translator.generateProgram(
-            outputProgram.getInputRowType(), outputProgram);
+            new RexToCalcTranslator(
+                getCluster().getRexBuilder(),
+                this);
+        String program =
+            translator.generateProgram(
+                outputProgram.getInputRowType(),
+                outputProgram);
         windowStreamDef.setOutputProgram(program);
 
         // Setup sort list.
@@ -299,11 +329,12 @@ public class FennelWindowRel extends FennelSingleRel
         List<Integer> sortFieldList = new ArrayList<Integer>();
         if (!collationList.isEmpty()) {
             final RelCollation collation = collationList.get(0);
-            for (RelFieldCollation fieldCollation : collation.getFieldCollations()) {
+            for (RelFieldCollation fieldCollation
+                : collation.getFieldCollations()) {
                 sortFieldList.add(fieldCollation.getFieldIndex());
             }
         }
-        Integer[] sortFields =
+        Integer [] sortFields =
             sortFieldList.toArray(new Integer[sortFieldList.size()]);
         windowStreamDef.setInputOrderKeyList(
             FennelRelUtil.createTupleProjection(repos, sortFields));
@@ -323,7 +354,7 @@ public class FennelWindowRel extends FennelSingleRel
             // 10 preceding and 2 preceding: (8, -2)
             // 3 preceding and 2 following: (5, 2)
             // 2 following and 6 following: (4, 6)
-            long[] offsetAndRange =
+            long [] offsetAndRange =
                 getOffsetAndRange(window.lowerBound, window.upperBound);
             windowDef.setOffset((int) offsetAndRange[0]);
             windowDef.setRange(offsetAndRange[1] + "");
@@ -336,8 +367,10 @@ public class FennelWindowRel extends FennelSingleRel
                 final FemWindowPartitionDef windowPartitionDef =
                     repos.newFemWindowPartitionDef();
                 windowDef.getPartition().add(windowPartitionDef);
-                translator = new RexToCalcTranslator(
-                    getCluster().getRexBuilder(), this);
+                translator =
+                    new RexToCalcTranslator(
+                        getCluster().getRexBuilder(),
+                        this);
 
                 // Create a program for the window partition to init, add, drop
                 // rows. Does not include the expression to form the output
@@ -345,21 +378,22 @@ public class FennelWindowRel extends FennelSingleRel
                 RexProgram combinedProgram =
                     makeProgram(inputProgram, partition.overList);
 
-                String[] programs = new String[3];
+                String [] programs = new String[3];
                 translator.getAggProgram(combinedProgram, programs);
                 windowPartitionDef.setInitializeProgram(programs[0]);
                 windowPartitionDef.setAddProgram(programs[1]);
                 windowPartitionDef.setDropProgram(programs[2]);
 
-                RexNode[] dups =
+                RexNode [] dups =
                     removeDuplicates(translator, partition.overList);
-                final FemTupleDescriptor bucketDesc = FennelRelUtil.
-                        createTupleDescriptorFromRexNode(repos, dups);
+                final FemTupleDescriptor bucketDesc =
+                    FennelRelUtil.createTupleDescriptorFromRexNode(repos, dups);
                 windowPartitionDef.setBucketDesc(bucketDesc);
 
                 windowPartitionDef.setPartitionKeyList(
                     FennelRelUtil.createTupleProjection(
-                        repos, partition.partitionKeys));
+                        repos,
+                        partition.partitionKeys));
             }
         }
 
@@ -372,46 +406,51 @@ public class FennelWindowRel extends FennelSingleRel
      *
      * @param bottomProgram Calculates the inputs to the program
      * @param overList Aggregate expressions
+     *
      * @return Combined program
      *
+     * @see RexProgramBuilder#mergePrograms(RexProgram, RexProgram, RexBuilder)
      * @pre bottomPogram.getCondition() == null
      * @post return.getProjectList().size() == overList.size()
-     * @see RexProgramBuilder#mergePrograms(RexProgram, RexProgram, RexBuilder) 
      */
     private RexProgram makeProgram(
         RexProgram bottomProgram,
         List<RexWinAggCall> overList)
     {
-        assert bottomProgram.getCondition() == null :
-            "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.getCondition() == null : "pre: bottomPogram.getCondition() == null";
         assert bottomProgram.isValid(true);
 
         final RexBuilder rexBuilder = getCluster().getRexBuilder();
         final RexProgramBuilder topProgramBuilder =
-            new RexProgramBuilder(bottomProgram.getOutputRowType(), rexBuilder);
+            new RexProgramBuilder(
+                bottomProgram.getOutputRowType(),
+                rexBuilder);
         for (int i = 0; i < overList.size(); i++) {
             RexCall over = overList.get(i);
-            topProgramBuilder.addProject(over, RexInputRef.createName(i));
+            topProgramBuilder.addProject(
+                over,
+                RexInputRef.createName(i));
         }
         final RexProgram topProgram = topProgramBuilder.getProgram();
 
         // Merge the programs.
         final RexProgram mergedProgram =
             RexProgramBuilder.mergePrograms(
-                topProgram, bottomProgram, rexBuilder);
+                topProgram,
+                bottomProgram,
+                rexBuilder);
 
-        assert mergedProgram.getProjectList().size() == overList.size() :
-            "post: return.getProjectList().size() == overList.size()";
+        assert mergedProgram.getProjectList().size() == overList.size() : "post: return.getProjectList().size() == overList.size()";
         return mergedProgram;
     }
 
     // TODO: add a duplicate-elimination feature to RexProgram, use that, and
     //   obsolete this method
-    private RexNode[] removeDuplicates(
+    private RexNode [] removeDuplicates(
         RexToCalcTranslator translator,
         List<RexWinAggCall> outputExps)
     {
-        Map<Object,RexWinAggCall> dups = new HashMap<Object, RexWinAggCall>();
+        Map<Object, RexWinAggCall> dups = new HashMap<Object, RexWinAggCall>();
         for (RexWinAggCall node : outputExps) {
             // This should be aggregate input.
             Object key = translator.getKey(node);
@@ -420,7 +459,7 @@ public class FennelWindowRel extends FennelSingleRel
             }
             dups.put(key, node);
         }
-        RexNode[] nodes = new RexNode[dups.size()];
+        RexNode [] nodes = new RexNode[dups.size()];
         int count = 0;
         for (RexWinAggCall node : outputExps) {
             Object key = translator.getKey(node);
@@ -433,38 +472,42 @@ public class FennelWindowRel extends FennelSingleRel
         return nodes;
     }
 
-    public static long[] getOffsetAndRange(
+    public static long [] getOffsetAndRange(
         final SqlNode lowerBound,
         final SqlNode upperBound)
     {
-        long[] upper = getRangeOffset(upperBound, "PRECEDING");
-        long[] lower = getRangeOffset(lowerBound, "FOLLOWING");
+        long [] upper = getRangeOffset(upperBound, "PRECEDING");
+        long [] lower = getRangeOffset(lowerBound, "FOLLOWING");
         long offset = upper[1] * upper[0];
-        if (offset == 0 && lower[1] == -1) {
+        if ((offset == 0) && (lower[1] == -1)) {
             lower[1] = -lower[1];
             offset = lower[1] * lower[0];
         }
-        final long range = (lower[1] * lower[0] + upper[1] * upper[0]);
-        return new long[] {offset, range};
+        final long range = ((lower[1] * lower[0]) + (upper[1] * upper[0]));
+        return new long[] { offset, range };
     }
 
-    private static long[] getRangeOffset(SqlNode node, String strCheck)
+    private static long [] getRangeOffset(SqlNode node, String strCheck)
     {
-        long[] out = new long[2];
+        long [] out = new long[2];
         long val = 0;
         long sign = 1;
         if (node != null) {
             if (node instanceof SqlCall) {
-                sign = ((SqlCall) node).getOperator().getName().
-                        equals(strCheck) ? -1 : 1;
-                SqlNode[] operands = ((SqlCall) node).getOperands();
-                assert operands.length == 1 && operands[0] != null;
+                sign =
+                    ((SqlCall) node).getOperator().getName().equals(strCheck)
+                    ? -1
+                    : 1;
+                SqlNode [] operands = ((SqlCall) node).getOperands();
+                assert (operands.length == 1) && (operands[0] != null);
                 SqlLiteral operand = (SqlLiteral) operands[0];
                 Object obj = operand.getValue();
                 if (obj instanceof BigDecimal) {
                     val = ((BigDecimal) obj).intValue();
                 } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
-                    val = SqlParserUtil.intervalToMillis((SqlIntervalLiteral.IntervalValue) obj);
+                    val =
+                        SqlParserUtil.intervalToMillis(
+                            (SqlIntervalLiteral.IntervalValue) obj);
                 }
             }
         }
@@ -473,44 +516,45 @@ public class FennelWindowRel extends FennelSingleRel
         return out;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * A Window is a range of input rows, defined by an upper and lower bound.
      * It also contains a list of {@link Partition} objects.
      *
-     * <p>A window is either logical or physical.
-     * A physical window is measured in terms of row count.
-     * A logical window is measured in terms of rows within a certain
-     * distance from the current sort key.
+     * <p>A window is either logical or physical. A physical window is measured
+     * in terms of row count. A logical window is measured in terms of rows
+     * within a certain distance from the current sort key.
      *
-     * <p>For example:<ul>
+     * <p>For example:
      *
-     * <li><code>ROWS BETWEEN 10 PRECEDING and 5 FOLLOWING</code> is
-     *     a physical window with an upper and lower bound;
-     *
+     * <ul>
+     * <li><code>ROWS BETWEEN 10 PRECEDING and 5 FOLLOWING</code> is a physical
+     * window with an upper and lower bound;
      * <li><code>RANGE BETWEEN INTERVAL '1' HOUR PRECEDING AND UNBOUNDED
-     *     FOLLOWING</code> is a logical window with only a lower bound;
-     *
-     * <li><code>RANGE INTERVAL '10' MINUTES PRECEDING</code>
-     *     (which is equivalent to <code>RANGE BETWEEN INTERVAL '10' MINUTES
-     *     PRECEDING AND CURRENT ROW</code>) is a logical window with an upper
-     *     and lower bound.
-     *
+     * FOLLOWING</code> is a logical window with only a lower bound;
+     * <li><code>RANGE INTERVAL '10' MINUTES PRECEDING</code> (which is
+     * equivalent to <code>RANGE BETWEEN INTERVAL '10' MINUTES PRECEDING AND
+     * CURRENT ROW</code>) is a logical window with an upper and lower bound.
      * </ul>
      */
-    static class Window {
-        /** The partitions which make up this window. */
+    static class Window
+    {
+        /**
+         * The partitions which make up this window.
+         */
         final List<Partition> partitionList = new ArrayList<Partition>();
         final boolean physical;
         final SqlNode lowerBound;
         final SqlNode upperBound;
-        public final Integer[] orderKeys;
+        public final Integer [] orderKeys;
         private String digest;
 
         Window(
             boolean physical,
             SqlNode lowerBound,
             SqlNode upperBound,
-            Integer[] ordinals)
+            Integer [] ordinals)
         {
             assert ordinals != null : "precondition: ordinals != null";
             this.physical = physical;
@@ -568,12 +612,14 @@ public class FennelWindowRel extends FennelSingleRel
             buf.append(")");
         }
 
-        public boolean equals(Object obj) {
-            return obj instanceof Window &&
-                this.digest.equals(((Window) obj).digest);
+        public boolean equals(Object obj)
+        {
+            return
+                (obj instanceof Window)
+                && this.digest.equals(((Window) obj).digest);
         }
 
-        public Partition lookupOrCreatePartition(Integer[] partitionKeys)
+        public Partition lookupOrCreatePartition(Integer [] partitionKeys)
         {
             for (Partition partition : partitionList) {
                 if (Util.equal(partition.partitionKeys, partitionKeys)) {
@@ -597,13 +643,14 @@ public class FennelWindowRel extends FennelSingleRel
          * {@link SqlAggFunction}.
          */
         final List<RexWinAggCall> overList = new ArrayList<RexWinAggCall>();
-        /**
-         * The ordinals of the input columns which uniquely identify rows
-         * in this partition. May be empty. Must not be null.
-         */
-        final Integer[] partitionKeys;
 
-        Partition(Integer[] partitionKeys)
+        /**
+         * The ordinals of the input columns which uniquely identify rows in
+         * this partition. May be empty. Must not be null.
+         */
+        final Integer [] partitionKeys;
+
+        Partition(Integer [] partitionKeys)
         {
             assert partitionKeys != null;
             this.partitionKeys = partitionKeys;
@@ -646,12 +693,12 @@ public class FennelWindowRel extends FennelSingleRel
         public RexWinAggCall addOver(
             RelDataType type,
             SqlAggFunction operator,
-            RexNode[] operands,
+            RexNode [] operands,
             RexProgramBuilder programBuilder)
         {
             // Convert operands to inputRefs -- they will refer to the output
             // fields of a lower program.
-            RexNode[] clonedOperands = operands.clone();
+            RexNode [] clonedOperands = operands.clone();
             for (int i = 0; i < operands.length; i++) {
                 RexLocalRef operand = (RexLocalRef) operands[i];
                 List<RexLocalRef> projectList = programBuilder.getProjectList();
@@ -660,11 +707,16 @@ public class FennelWindowRel extends FennelSingleRel
                     index = projectList.size();
                     programBuilder.addProject(operand, null);
                 }
-                clonedOperands[i] = new RexInputRef(index, operand.getType());
+                clonedOperands[i] = new RexInputRef(
+                        index,
+                        operand.getType());
             }
             final RexWinAggCall aggCall =
                 new RexWinAggCall(
-                    operator, type, clonedOperands, overList.size());
+                    operator,
+                    type,
+                    clonedOperands,
+                    overList.size());
             overList.add(aggCall);
             return aggCall;
         }
@@ -676,10 +728,10 @@ public class FennelWindowRel extends FennelSingleRel
      * <p>Belongs to a {@link Partition}.
      *
      * <p>It's a bastard son of a {@link RexCall}; similar enough that it gets
-     * visited by a {@link RexVisitor}, but it also has some extra data
-     * members.
+     * visited by a {@link RexVisitor}, but it also has some extra data members.
      */
-    public static class RexWinAggCall extends RexCall
+    public static class RexWinAggCall
+        extends RexCall
     {
         /**
          * Ordinal of this aggregate within its partition.
@@ -688,14 +740,13 @@ public class FennelWindowRel extends FennelSingleRel
 
         RexWinAggCall(SqlAggFunction aggFun,
             RelDataType type,
-            RexNode[] operands,
+            RexNode [] operands,
             int ordinal)
         {
             super(type, aggFun, operands);
             this.ordinal = ordinal;
         }
     }
-
 }
 
 // End FennelWindowRel.java

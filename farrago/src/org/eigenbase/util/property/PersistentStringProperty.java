@@ -11,58 +11,61 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.util.Properties;
-import java.util.logging.Logger;
-import java.io.IOException;
+import java.io.*;
+
+import java.util.*;
+import java.util.logging.*;
+
 
 /**
- * Definition and accessor for a string property that is capable of
- * storing itself in a <code>.properties</code> file.
+ * Definition and accessor for a string property that is capable of storing
+ * itself in a <code>.properties</code> file.
  *
  * @author Stephan Zuercher
- * @since December 3, 2004
  * @version $Id$
+ * @since December 3, 2004
  */
-public class PersistentStringProperty extends StringProperty
+public class PersistentStringProperty
+    extends StringProperty
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
     // NOTE jvs 2-Oct-2005:  have to avoid dragging in dependencies.
     /*
     private static final Logger tracer = EigenbaseTrace.getPropertyTracer();
-    */
+     */
     private static final Logger tracer =
         Logger.getLogger(Property.class.getName());
 
-    //~ Fields ----------------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private StringProperty propertyFileLocation;
     private PersistentPropertyStorage storage;
     private boolean storageInitialized;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a persistent string property.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      * @param propertyFileLocation Location of the property file where this
-     *                             property's value should be persisted.
+     * property's value should be persisted.
      */
     public PersistentStringProperty(
         Properties properties,
@@ -80,14 +83,14 @@ public class PersistentStringProperty extends StringProperty
         this.storageInitialized = false;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Sets the value of this property.<p/>
+     * Sets the value of this property.
      *
-     * This method is synchronized to
-     * prevent multiple threads from attempting to initialize the property
-     * storage ({@link #storage}) simultaneously.
+     * <p/>This method is synchronized to prevent multiple threads from
+     * attempting to initialize the property storage ({@link #storage})
+     * simultaneously.
      *
      * @return The previous value, or the default value if not set.
      */
@@ -99,7 +102,8 @@ public class PersistentStringProperty extends StringProperty
             storageInitialized = true;
 
             if (propertyFileLocation.get() == null) {
-                tracer.warning("Cannot store property '" + getPath()
+                tracer.warning(
+                    "Cannot store property '" + getPath()
                     + "' because storage location is not set");
                 return prevValue;
             }

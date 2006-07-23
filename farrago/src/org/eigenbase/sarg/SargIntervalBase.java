@@ -22,23 +22,29 @@
 package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+
 
 /**
- * SargIntervalBase is a common base for {@link SargInterval} and
- * {@link SargIntervalExpr}.
+ * SargIntervalBase is a common base for {@link SargInterval} and {@link
+ * SargIntervalExpr}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class SargIntervalBase
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final SargFactory factory;
-    
+
     protected final SargMutableEndpoint lowerBound;
-    
+
     protected final SargMutableEndpoint upperBound;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * @see SargFactory.newIntervalExpr
@@ -53,6 +59,8 @@ public abstract class SargIntervalBase
         unsetLower();
         unsetUpper();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return an immutable reference to the endpoint representing this
@@ -77,7 +85,8 @@ public abstract class SargIntervalBase
      */
     public boolean isPoint()
     {
-        return lowerBound.isClosed() && upperBound.isClosed()
+        return
+            lowerBound.isClosed() && upperBound.isClosed()
             && lowerBound.isTouching(upperBound);
     }
 
@@ -86,13 +95,13 @@ public abstract class SargIntervalBase
      */
     public boolean isEmpty()
     {
-        return !lowerBound.isClosed() && !upperBound.isClosed()
+        return
+            !lowerBound.isClosed() && !upperBound.isClosed()
             && lowerBound.isNull() && upperBound.isNull();
     }
-    
+
     /**
-     * @return whether this represents a (non-empty, non-point)
-     * range interval
+     * @return whether this represents a (non-empty, non-point) range interval
      */
     public boolean isRange()
     {
@@ -114,13 +123,11 @@ public abstract class SargIntervalBase
     {
         return factory;
     }
-    
+
     /**
-     * Sets this interval to represent a single point (possibly the null
-     * value).
+     * Sets this interval to represent a single point (possibly the null value).
      *
-     * @param coordinate coordinate of point to set, or null
-     * for the null value
+     * @param coordinate coordinate of point to set, or null for the null value
      */
     void setPoint(RexNode coordinate)
     {
@@ -131,8 +138,7 @@ public abstract class SargIntervalBase
     /**
      * Sets this interval to represent a single point matching the null value.
      *
-     * @param coordinate coordinate of point to set, or null
-     * for the null value
+     * @param coordinate coordinate of point to set, or null for the null value
      */
     void setNull()
     {
@@ -143,7 +149,6 @@ public abstract class SargIntervalBase
      * Sets the lower bound for this interval.
      *
      * @param coordinate coordinate of point to set
-     *
      * @param boundary strictness
      */
     void setLower(RexNode coordinate, SargStrictness strictness)
@@ -158,7 +163,6 @@ public abstract class SargIntervalBase
      * Sets the upper bound for this interval.
      *
      * @param coordinate coordinate of point to set
-     *
      * @param strictness boundary strictness
      */
     void setUpper(RexNode coordinate, SargStrictness strictness)
@@ -200,8 +204,12 @@ public abstract class SargIntervalBase
      */
     void setEmpty()
     {
-        setLower(factory.newNullLiteral(), SargStrictness.OPEN);
-        setUpper(factory.newNullLiteral(), SargStrictness.OPEN);
+        setLower(
+            factory.newNullLiteral(),
+            SargStrictness.OPEN);
+        setUpper(
+            factory.newNullLiteral(),
+            SargStrictness.OPEN);
     }
 
     // implement SargExpr
@@ -209,7 +217,7 @@ public abstract class SargIntervalBase
     {
         return lowerBound.getDataType();
     }
-    
+
     // implement SargExpr
     public String toString()
     {
@@ -230,7 +238,7 @@ public abstract class SargIntervalBase
                 printBound(sb, upperBound);
             }
         }
-        
+
         if (upperBound.isClosed()) {
             sb.append("]");
         } else {

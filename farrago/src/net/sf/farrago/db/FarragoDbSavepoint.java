@@ -35,9 +35,11 @@ import net.sf.farrago.session.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoDbSavepoint implements FarragoSessionSavepoint
+class FarragoDbSavepoint
+    implements FarragoSessionSavepoint
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Session which created this savepoint.
@@ -59,7 +61,7 @@ class FarragoDbSavepoint implements FarragoSessionSavepoint
      */
     private FennelSvptHandle fennelSvptHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoDbSavepoint(
         int id,
@@ -73,7 +75,7 @@ class FarragoDbSavepoint implements FarragoSessionSavepoint
         this.session = session;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionSavepoint
     public int getId()
@@ -108,6 +110,5 @@ class FarragoDbSavepoint implements FarragoSessionSavepoint
         return fennelSvptHandle;
     }
 }
-
 
 // End FarragoDbSavepoint.java

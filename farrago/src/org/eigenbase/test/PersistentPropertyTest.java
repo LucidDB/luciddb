@@ -20,33 +20,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.test;
 
-import org.eigenbase.util.property.StringProperty;
-import org.eigenbase.util.property.PersistentStringProperty;
+import java.io.*;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.Properties;
+import java.util.*;
+
+import org.eigenbase.util.property.*;
+
 
 /**
  * PersistentPropertyTest tests persistent properties using temporary files.
  *
  * @author Stephan Zuercher
- * @since December 3, 2004
  * @version $Id$
+ * @since December 3, 2004
  */
 public class PersistentPropertyTest
     extends EigenbaseTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public PersistentPropertyTest(String name)
         throws Exception
     {
         super(name);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void testPersistentStringProperty()
         throws Exception
@@ -63,8 +65,7 @@ public class PersistentPropertyTest
         final String EXISTING_NEW_VALUE = "new value for existing prop";
         final String EXISTING_DEFAULT_VALUE = "existing default value";
 
-        File tempPropFile =
-            File.createTempFile("eigenbaseTest", ".properties");
+        File tempPropFile = File.createTempFile("eigenbaseTest", ".properties");
         BufferedWriter writer =
             new BufferedWriter(new FileWriter(tempPropFile));
         writer.write("# Test config file");
@@ -78,48 +79,62 @@ public class PersistentPropertyTest
         writer.newLine();
         writer.flush();
         writer.close();
-        
+
         Properties props = new Properties();
         props.load(new FileInputStream(tempPropFile));
 
         StringProperty propertyFileLocation =
-            new StringProperty(props,
-                               "test.eigenbase.properties",
-                               tempPropFile.getAbsolutePath());
+            new StringProperty(
+                props,
+                "test.eigenbase.properties",
+                tempPropFile.getAbsolutePath());
 
         PersistentStringProperty persistentProperty =
             new PersistentStringProperty(props,
-                                         PROP_NAME,
-                                         DEFAULT_VALUE,
-                                         propertyFileLocation);
+                PROP_NAME,
+                DEFAULT_VALUE,
+                propertyFileLocation);
 
         PersistentStringProperty persistentExistingProperty =
             new PersistentStringProperty(props,
-                                         EXISTING_PROP_NAME2,
-                                         EXISTING_DEFAULT_VALUE,
-                                         propertyFileLocation);
+                EXISTING_PROP_NAME2,
+                EXISTING_DEFAULT_VALUE,
+                propertyFileLocation);
 
-        assertEquals(DEFAULT_VALUE, persistentProperty.get());
+        assertEquals(
+            DEFAULT_VALUE,
+            persistentProperty.get());
         assertNull(props.getProperty(PROP_NAME));
         assertEquals(
-            EXISTING_PROP_VALUE1, props.getProperty(EXISTING_PROP_NAME1));
-        assertEquals(EXISTING_PROP_VALUE2, persistentExistingProperty.get());
+            EXISTING_PROP_VALUE1,
+            props.getProperty(EXISTING_PROP_NAME1));
         assertEquals(
-            EXISTING_PROP_VALUE2, props.getProperty(EXISTING_PROP_NAME2));
+            EXISTING_PROP_VALUE2,
+            persistentExistingProperty.get());
         assertEquals(
-            EXISTING_PROP_VALUE3, props.getProperty(EXISTING_PROP_NAME3));
+            EXISTING_PROP_VALUE2,
+            props.getProperty(EXISTING_PROP_NAME2));
+        assertEquals(
+            EXISTING_PROP_VALUE3,
+            props.getProperty(EXISTING_PROP_NAME3));
 
         persistentProperty.set(NEW_VALUE);
 
-        assertEquals(NEW_VALUE, persistentProperty.get());
-        assertEquals(NEW_VALUE, props.getProperty(PROP_NAME));
+        assertEquals(
+            NEW_VALUE,
+            persistentProperty.get());
+        assertEquals(
+            NEW_VALUE,
+            props.getProperty(PROP_NAME));
 
         persistentExistingProperty.set(EXISTING_NEW_VALUE);
 
-        assertEquals(EXISTING_NEW_VALUE, persistentExistingProperty.get());
         assertEquals(
-            EXISTING_NEW_VALUE, props.getProperty(EXISTING_PROP_NAME2));
-
+            EXISTING_NEW_VALUE,
+            persistentExistingProperty.get());
+        assertEquals(
+            EXISTING_NEW_VALUE,
+            props.getProperty(EXISTING_PROP_NAME2));
 
         // reset properties, location and persistent property (reloads
         // properties stored in file)
@@ -127,29 +142,41 @@ public class PersistentPropertyTest
         props.load(new FileInputStream(tempPropFile));
 
         propertyFileLocation =
-            new StringProperty(props,
-                               "test.eigenbase.properties",
-                               tempPropFile.getAbsolutePath());
+            new StringProperty(
+                props,
+                "test.eigenbase.properties",
+                tempPropFile.getAbsolutePath());
 
         persistentProperty =
             new PersistentStringProperty(props,
-                                         PROP_NAME,
-                                         DEFAULT_VALUE,
-                                         propertyFileLocation);
-
-        assertEquals(NEW_VALUE, persistentProperty.get());
-        assertEquals(NEW_VALUE, props.getProperty(PROP_NAME));
-
-        assertEquals(EXISTING_NEW_VALUE, persistentExistingProperty.get());
-        assertEquals(
-            EXISTING_NEW_VALUE, props.getProperty(EXISTING_PROP_NAME2));
+                PROP_NAME,
+                DEFAULT_VALUE,
+                propertyFileLocation);
 
         assertEquals(
-            EXISTING_PROP_VALUE1, props.getProperty(EXISTING_PROP_NAME1));
+            NEW_VALUE,
+            persistentProperty.get());
         assertEquals(
-            EXISTING_PROP_VALUE3, props.getProperty(EXISTING_PROP_NAME3));
+            NEW_VALUE,
+            props.getProperty(PROP_NAME));
+
+        assertEquals(
+            EXISTING_NEW_VALUE,
+            persistentExistingProperty.get());
+        assertEquals(
+            EXISTING_NEW_VALUE,
+            props.getProperty(EXISTING_PROP_NAME2));
+
+        assertEquals(
+            EXISTING_PROP_VALUE1,
+            props.getProperty(EXISTING_PROP_NAME1));
+        assertEquals(
+            EXISTING_PROP_VALUE3,
+            props.getProperty(EXISTING_PROP_NAME3));
 
         // delete file if test succeeded
         tempPropFile.delete();
     }
 }
+
+// End PersistentPropertyTest.java

@@ -23,6 +23,7 @@
 package net.sf.farrago.plugin;
 
 import java.sql.*;
+
 import java.util.*;
 
 
@@ -35,12 +36,13 @@ import java.util.*;
  */
 public class FarragoPluginInfoList
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private Properties defaultProps;
     private List propertyInfoList;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an empty info set.
@@ -53,16 +55,14 @@ public class FarragoPluginInfoList
         propertyInfoList = new ArrayList();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Adds optional property information.
      *
      * @param propertyName name of the property
-     *
-     * @param defaultValue String representation of default value
-     * to use if property name not present in defaultProps
-     *
+     * @param defaultValue String representation of default value to use if
+     * property name not present in defaultProps
      * @param description localized description
      *
      * @return created info (the choices attribute can be set after return)
@@ -86,10 +86,8 @@ public class FarragoPluginInfoList
      * Adds required property information.
      *
      * @param propertyName name of the property
-     *
-     * @param defaultValue String representation of default value
-     * to use if property name not present in defaultProps
-     *
+     * @param defaultValue String representation of default value to use if
+     * property name not present in defaultProps
      * @param description localized description
      *
      * @return created info (the choices attribute can be set after return)
@@ -106,16 +104,17 @@ public class FarragoPluginInfoList
     }
 
     /**
-     * Converts the list built up with addXXXPropertyInfo to an array
-     * suitable for return from a getXXXPropertyInfo call.
+     * Converts the list built up with addXXXPropertyInfo to an array suitable
+     * for return from a getXXXPropertyInfo call.
      *
      * @return the converted array
      */
     public DriverPropertyInfo [] toArray()
     {
-        return (DriverPropertyInfo []) propertyInfoList.toArray(FarragoAbstractPluginBase.EMPTY_DRIVER_PROPERTIES);
+        return
+            (DriverPropertyInfo []) propertyInfoList.toArray(
+                FarragoAbstractPluginBase.EMPTY_DRIVER_PROPERTIES);
     }
 }
-
 
 // End FarragoPluginInfoList.java

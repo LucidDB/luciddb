@@ -20,37 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.type;
 
-import org.eigenbase.util.EnumeratedValues;
+import java.io.*;
 
 import java.sql.*;
-import java.io.ObjectStreamException;
+
+import org.eigenbase.util.*;
+
 
 /**
  * Enumeration of the type names which can be used to construct a SQL type.
  * Rationale for this class's existence (instead of just using the standard
  * java.sql.Type ordinals):
  *
- *<ul>
- *
- *<li>java.sql.Type does not include all SQL2003 datatypes
- *
- *<li>SqlTypeName provides a type-safe enumeration
- *
- *<li>SqlTypeName provides a place to hang extra information such
- * as whether the type carries precision and scale
- *
- *</ul>
+ * <ul>
+ * <li>java.sql.Type does not include all SQL2003 datatypes
+ * <li>SqlTypeName provides a type-safe enumeration
+ * <li>SqlTypeName provides a place to hang extra information such as whether
+ * the type carries precision and scale
+ * </ul>
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
- **/
-public class SqlTypeName extends EnumeratedValues.SerializableValue
+ * @since Nov 24, 2003
+ */
+public class SqlTypeName
+    extends EnumeratedValues.SerializableValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final SqlTypeName [] EMPTY_ARRAY = new SqlTypeName[0];
 
@@ -63,7 +62,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     public static final int MIN_JDBC_TYPE = Types.BIT;
     public static final int MAX_JDBC_TYPE = Types.REF;
 
-    public static final int MAX_DATETIME_PRECISION = 3;    
+    public static final int MAX_DATETIME_PRECISION = 3;
     public static final int MAX_NUMERIC_PRECISION = 19;
     public static final int MAX_NUMERIC_SCALE = 19;
 
@@ -85,7 +84,8 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         new SqlTypeName("BIGINT", Bigint_ordinal, PrecNoScaleNo);
     public static final int Decimal_ordinal = 5;
     public static final SqlTypeName Decimal =
-        new SqlTypeName("DECIMAL", Decimal_ordinal,
+        new SqlTypeName("DECIMAL",
+            Decimal_ordinal,
             PrecNoScaleNo | PrecYesScaleNo | PrecYesScaleYes);
     public static final int Float_ordinal = 6;
     public static final SqlTypeName Float =
@@ -104,28 +104,37 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         new SqlTypeName("TIME", Time_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Timestamp_ordinal = 11;
     public static final SqlTypeName Timestamp =
-        new SqlTypeName("TIMESTAMP", Timestamp_ordinal,
+        new SqlTypeName("TIMESTAMP",
+            Timestamp_ordinal,
             PrecNoScaleNo | PrecYesScaleNo);
     public static final int IntervalYearMonth_ordinal = 12;
     public static final SqlTypeName IntervalYearMonth =
-        new SqlTypeName("IntervalYearMonth", IntervalYearMonth_ordinal,
+        new SqlTypeName("IntervalYearMonth",
+            IntervalYearMonth_ordinal,
             PrecNoScaleNo);
     public static final int IntervalDayTime_ordinal = 13;
     public static final SqlTypeName IntervalDayTime =
-        new SqlTypeName("IntervalDayTime", IntervalDayTime_ordinal,
+        new SqlTypeName("IntervalDayTime",
+            IntervalDayTime_ordinal,
             PrecNoScaleNo);
     public static final int Char_ordinal = 14;
     public static final SqlTypeName Char =
         new SqlTypeName("CHAR", Char_ordinal, PrecNoScaleNo | PrecYesScaleNo);
     public static final int Varchar_ordinal = 15;
     public static final SqlTypeName Varchar =
-        new SqlTypeName("VARCHAR", Varchar_ordinal, PrecNoScaleNo | PrecYesScaleNo);
+        new SqlTypeName("VARCHAR",
+            Varchar_ordinal,
+            PrecNoScaleNo | PrecYesScaleNo);
     public static final int Binary_ordinal = 16;
     public static final SqlTypeName Binary =
-        new SqlTypeName("BINARY", Binary_ordinal, PrecNoScaleNo | PrecYesScaleNo);
+        new SqlTypeName("BINARY",
+            Binary_ordinal,
+            PrecNoScaleNo | PrecYesScaleNo);
     public static final int Varbinary_ordinal = 17;
     public static final SqlTypeName Varbinary =
-        new SqlTypeName("VARBINARY", Varbinary_ordinal, PrecNoScaleNo | PrecYesScaleNo);
+        new SqlTypeName("VARBINARY",
+            Varbinary_ordinal,
+            PrecNoScaleNo | PrecYesScaleNo);
     public static final int Null_ordinal = 18;
     public static final SqlTypeName Null =
         new SqlTypeName("NULL", Null_ordinal, PrecNoScaleNo);
@@ -155,7 +164,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
      * Array of all allowable {@link SqlTypeName} values.
      */
     public static final SqlTypeName [] allTypes =
-        new SqlTypeName [] {
+        new SqlTypeName[] {
             Boolean, Integer, Varchar, Date, Time, Timestamp, Null, Decimal,
             Any, Char, Binary, Varbinary, Tinyint, Smallint, Bigint, Real,
             Double, Symbol, IntervalYearMonth, IntervalDayTime,
@@ -163,66 +172,71 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         };
 
     // categorizations used by SqlTypeFamily definitions
-    
+
     public static final SqlTypeName [] booleanTypes = {
-        Boolean
-    };
+            Boolean
+        };
 
     public static final SqlTypeName [] binaryTypes = {
-        Binary, Varbinary
-    };
+            Binary, Varbinary
+        };
 
-    public static final SqlTypeName [] intTypes = {
-        Tinyint, Smallint, Integer, Bigint
-    };
+    public static final SqlTypeName [] intTypes =
+        {
+            Tinyint, Smallint, Integer, Bigint
+        };
 
-    public static final SqlTypeName[] exactTypes =
-        combine(intTypes, new SqlTypeName[]{ Decimal } );
+    public static final SqlTypeName [] exactTypes =
+        combine(
+            intTypes,
+            new SqlTypeName[] { Decimal });
 
-    public static final SqlTypeName[] approxTypes = {
-        Float, Real, Double
-    };
+    public static final SqlTypeName [] approxTypes = {
+            Float, Real, Double
+        };
 
     public static final SqlTypeName [] numericTypes =
         combine(exactTypes, approxTypes);
 
     public static final SqlTypeName [] fractionalTypes =
-        combine(approxTypes,  new SqlTypeName[] { Decimal } );
+        combine(
+            approxTypes,
+            new SqlTypeName[] { Decimal });
 
     public static final SqlTypeName [] charTypes = {
-        Char, Varchar
-    };
+            Char, Varchar
+        };
 
     public static final SqlTypeName [] stringTypes =
         combine(charTypes, binaryTypes);
 
-    public static final SqlTypeName [] datetimeTypes = {
-        Date, Time, Timestamp
-    };
+    public static final SqlTypeName [] datetimeTypes =
+        {
+            Date, Time, Timestamp
+        };
 
-    public static final SqlTypeName [] timeIntervalTypes = {
-        IntervalDayTime, IntervalYearMonth
-    };
+    public static final SqlTypeName [] timeIntervalTypes =
+        {
+            IntervalDayTime, IntervalYearMonth
+        };
 
     public static final SqlTypeName [] multisetTypes = {
-        Multiset
-    };
-    
+            Multiset
+        };
+
     public static final SqlTypeName [] cursorTypes = {
-        Cursor
-    };
-    
+            Cursor
+        };
+
     /**
      * Enumeration of all allowable {@link SqlTypeName} values.
      */
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(allTypes);
 
-    static
-    {
+    static {
         // This squanders some memory since MAX_JDBC_TYPE == 2006!
-        jdbcTypeToName =
-            new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
+        jdbcTypeToName = new SqlTypeName[(1 + MAX_JDBC_TYPE) - MIN_JDBC_TYPE];
 
         setNameForJdbcType(Types.TINYINT, Tinyint);
         setNameForJdbcType(Types.SMALLINT, Smallint);
@@ -256,15 +270,14 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         setNameForJdbcType(Types.STRUCT, Structured);
     }
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Bitwise-or of flags indicating allowable precision/scale combinations.
      */
     private final int signatures;
-    
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private SqlTypeName(
         String name,
@@ -275,7 +288,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         this.signatures = signatures;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Looks up a type name from its ordinal.
@@ -298,8 +311,9 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * Returns true if {@param name} is defined in {@link SqlTypeName#enumeration}
-     * Otherwise it returns false.
+     * Returns true if <code>name</code> is defined in {@link
+     * SqlTypeName#enumeration}; otherwise, it returns false.
+     *
      * @param name
      */
     public static boolean containsName(String name)
@@ -329,27 +343,24 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * Returns whether this type can be specified with a given combination
-     * of precision and scale.
+     * Returns whether this type can be specified with a given combination of
+     * precision and scale. For example,
      *
-     * For example,<ul>
-     *
-     * <li><code>Varchar.allowsPrecScale(true, false)</code>
-     *     returns <code>true</code>, because the VARCHAR type allows a
-     *     precision parameter, as in <code>VARCHAR(10)</code>.</li>
-     *
-     * <li><code>Varchar.allowsPrecScale(true, true)</code>
-     *     returns <code>true</code>, because the VARCHAR type does not allow a
-     *     precision and a scale parameter, as in
-     *     <code>VARCHAR(10, 4)</code>.</li>
-     *
+     * <ul>
+     * <li><code>Varchar.allowsPrecScale(true, false)</code> returns <code>
+     * true</code>, because the VARCHAR type allows a precision parameter, as in
+     * <code>VARCHAR(10)</code>.</li>
+     * <li><code>Varchar.allowsPrecScale(true, true)</code> returns <code>
+     * true</code>, because the VARCHAR type does not allow a precision and a
+     * scale parameter, as in <code>VARCHAR(10, 4)</code>.</li>
      * <li><code>allowsPrecScale(false, true)</code> returns <code>false</code>
-     *     for every type.</li>
+     * for every type.</li>
      * </ul>
      *
      * @param precision Whether the precision/length field is part of the type
-     *     specification
-     * @param scale  Whether the scale field is part of the type specification
+     * specification
+     * @param scale Whether the scale field is part of the type specification
+     *
      * @return Whether this combination of precision/scale is valid
      */
     public boolean allowsPrecScale(
@@ -363,8 +374,8 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * Returns true if not of a "pure" standard sql type.
-     * "Inpure" types are {@link #Any}, {@link #Null} and {@link #Symbol}
+     * Returns true if not of a "pure" standard sql type. "Inpure" types are
+     * {@link #Any}, {@link #Null} and {@link #Symbol}
      */
     public boolean isSpecial()
     {
@@ -379,8 +390,8 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * @return the ordinal from {@link java.sql.Types} corresponding
-     * to this SqlTypeName
+     * @return the ordinal from {@link java.sql.Types} corresponding to this
+     * SqlTypeName
      */
     public int getJdbcOrdinal()
     {
@@ -433,19 +444,18 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         }
     }
 
-    private static SqlTypeName[] combine(SqlTypeName[] array0,
-        SqlTypeName[] array1)
+    private static SqlTypeName [] combine(SqlTypeName [] array0,
+        SqlTypeName [] array1)
     {
-        SqlTypeName[] ret = new SqlTypeName[array0.length+array1.length];
-        System.arraycopy(array0,0,ret,0,array0.length);
-        System.arraycopy(array1,0,ret,array0.length,array1.length);
+        SqlTypeName [] ret = new SqlTypeName[array0.length + array1.length];
+        System.arraycopy(array0, 0, ret, 0, array0.length);
+        System.arraycopy(array1, 0, ret, array0.length, array1.length);
         return ret;
     }
 
     /**
-     * @return default precision for this type if supported, otherwise
-     * -1 if precision is either unsupported or must be
-     * specified explicitly
+     * @return default precision for this type if supported, otherwise -1 if
+     * precision is either unsupported or must be specified explicitly
      */
     public int getDefaultPrecision()
     {
@@ -458,6 +468,7 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
         case Time_ordinal:
             return 0;
         case Timestamp_ordinal:
+
             // TODO jvs 26-July-2004:  should be 6 for microseconds,
             // but we can't support that yet
             return 0;
@@ -469,8 +480,8 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * @return default scale for this type if supported, otherwise
-     * -1 if scale is either unsupported or must be specified explicitly
+     * @return default scale for this type if supported, otherwise -1 if scale
+     * is either unsupported or must be specified explicitly
      */
     public int getDefaultScale()
     {
@@ -512,18 +523,19 @@ public class SqlTypeName extends EnumeratedValues.SerializableValue
     }
 
     /**
-     * Retrieves a matching SqlTypeName instance based on the
-     * <code>_ordinal</code> deserialized by
-     * {@link EnumeratedValues.SerializableValue#readObject}.
+     * Retrieves a matching SqlTypeName instance based on the <code>
+     * _ordinal</code> deserialized by {@link
+     * EnumeratedValues.SerializableValue#readObject}. Current instance is the
+     * candidate object deserialized from the ObjectInputStream. It is
+     * incomplete, cannot be used as-is, and this method must return a valid
+     * replacement.
      *
-     * Current instance is the candidate object deserialized from the
-     * ObjectInputStream. It is incomplete, cannot be used as-is, and
-     * this method must return a valid replacement.
-     * 
      * @return replacement instance that matches <code>_ordinal</code>
+     *
      * @throws java.io.ObjectStreamException
      */
-    protected Object readResolve() throws ObjectStreamException
+    protected Object readResolve()
+        throws ObjectStreamException
     {
         return SqlTypeName.get(_ordinal);
     }

@@ -11,39 +11,39 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.util.Properties;
+import java.util.*;
 
 
 /**
  * Definition and accessor for a string property.
  *
  * @author jhyde
- * @since May 4, 2004
  * @version $Id$
- **/
-public class StringProperty extends Property
+ * @since May 4, 2004
+ */
+public class StringProperty
+    extends Property
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a string property.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      */
     public StringProperty(
@@ -54,7 +54,7 @@ public class StringProperty extends Property
         super(properties, path, defaultValue);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the value of this property. Returns the property's default
@@ -66,9 +66,9 @@ public class StringProperty extends Property
     }
 
     /**
-     * Retrieves the value of this property, optionally failing if there is
-     * no value. Returns the property's default value if the property set has
-     * no value for this property.
+     * Retrieves the value of this property, optionally failing if there is no
+     * value. Returns the property's default value if the property set has no
+     * value for this property.
      */
     public String get(boolean required)
     {

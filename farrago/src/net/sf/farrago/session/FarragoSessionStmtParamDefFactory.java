@@ -22,25 +22,33 @@
 */
 package net.sf.farrago.session;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+
 
 /**
- * FarragoSessionStmtParamDefFactory represents a factory that creates
- * {@link FarragoSessionStmtParamDef} instances.
- * 
+ * FarragoSessionStmtParamDefFactory represents a factory that creates {@link
+ * FarragoSessionStmtParamDef} instances.
+ *
  * @author Stephan Zuercher
  * @version $Id$
  */
 public interface FarragoSessionStmtParamDefFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Constructs a new {@link FarragoSessionStmtParamDef} for a parameter
-     * with the given name and type.
-     * 
+     * Constructs a new {@link FarragoSessionStmtParamDef} for a parameter with
+     * the given name and type.
+     *
      * @param paramName parameter's name
      * @param paramType parameter's type
+     *
      * @return a new FarragoSessionStmtParamDef
      */
     FarragoSessionStmtParamDef newParamDef(
-        String paramName, RelDataType paramType);
+        String paramName,
+        RelDataType paramType);
 }
+
+// End FarragoSessionStmtParamDefFactory.java

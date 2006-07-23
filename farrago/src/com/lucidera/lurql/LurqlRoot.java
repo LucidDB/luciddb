@@ -21,25 +21,33 @@
 package com.lucidera.lurql;
 
 import java.io.*;
+
 import java.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * LurqlRoot represents the parsed form of a simple root in the FROM clause
- * of a LURQL query.
+ * LurqlRoot represents the parsed form of a simple root in the FROM clause of a
+ * LURQL query.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlRoot extends LurqlPathBranch
+public class LurqlRoot
+    extends LurqlPathBranch
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String className;
 
     private final List filterList;
 
+    //~ Constructors -----------------------------------------------------------
+
     public LurqlRoot(
-        String aliasName, 
+        String aliasName,
         String className,
         List filterList,
         LurqlPathSpec pathSpec)
@@ -48,6 +56,8 @@ public class LurqlRoot extends LurqlPathBranch
         this.className = className;
         this.filterList = Collections.unmodifiableList(filterList);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getClassName()
     {

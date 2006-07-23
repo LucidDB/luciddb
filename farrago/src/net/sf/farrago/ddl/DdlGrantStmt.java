@@ -21,54 +21,56 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.security.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
-import java.util.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import net.sf.farrago.resource.*;
 
 
-    
 /**
  * DdlGrantStmt represents a DDL GRANT statement.
- * 
  *
  * @author Quoc Tai Tran
  * @version $Id$
  */
-public abstract class DdlGrantStmt extends DdlStmt
+public abstract class DdlGrantStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
 
     protected boolean grantOption;
     protected boolean currentRoleOption;
     protected boolean currentUserOption;
     protected List granteeList;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlGrantStmt.
-     *
      */
     public DdlGrantStmt()
     {
         super(null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
-    }    
+    }
 
     public void setGranteeList(List granteeList)
     {
@@ -90,11 +92,10 @@ public abstract class DdlGrantStmt extends DdlStmt
         this.currentUserOption = currentUserOption;
     }
 
-    
     public FemAuthId determineGrantor(FarragoSessionDdlValidator ddlValidator)
     {
         FemAuthId grantorAuthId;
-        
+
         if (currentRoleOption == true) {
             // TODO: retrieve the current role from the session and set that to
             // be the grantor
@@ -105,15 +106,18 @@ public abstract class DdlGrantStmt extends DdlStmt
             // (b) the GRANTED BY clause is missing,
             // then we use current session user as the grantor.
 
-            String grantorName = ddlValidator.getInvokingSession().
-                getSessionVariables().currentUserName;
-            grantorAuthId = FarragoCatalogUtil.getAuthIdByName(
-                ddlValidator.getRepos(), grantorName);
+            String grantorName =
+                ddlValidator.getInvokingSession().getSessionVariables()
+                .currentUserName;
+            grantorAuthId =
+                FarragoCatalogUtil.getAuthIdByName(
+                    ddlValidator.getRepos(),
+                    grantorName);
         }
-        assert(grantorAuthId != null);
-        
+        assert (grantorAuthId != null);
+
         return grantorAuthId;
-    }   
+    }
 }
 
 // End DdlGrantStmt.java

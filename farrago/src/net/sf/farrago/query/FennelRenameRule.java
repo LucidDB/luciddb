@@ -23,13 +23,11 @@
 package net.sf.farrago.query;
 
 import java.util.*;
-import java.util.List;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 
@@ -40,9 +38,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRenameRule extends RelOptRule
+public class FennelRenameRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRule object.
@@ -54,7 +54,7 @@ public class FennelRenameRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -106,8 +106,10 @@ public class FennelRenameRule extends RelOptRule
         }
 
         RelNode fennelInput =
-            mergeTraitsAndConvert(project.getTraits(),
-                FennelRel.FENNEL_EXEC_CONVENTION, inputRel);
+            mergeTraitsAndConvert(
+                project.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                inputRel);
         if (fennelInput == null) {
             return;
         }
@@ -123,6 +125,5 @@ public class FennelRenameRule extends RelOptRule
         call.transformTo(rename);
     }
 }
-
 
 // End FennelRenameRule.java

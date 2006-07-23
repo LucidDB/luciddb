@@ -22,13 +22,15 @@
 */
 package net.sf.farrago.fennel;
 
-import java.util.Arrays;
-import java.io.Serializable;
+import java.io.*;
+
+import java.util.*;
+
 
 /**
- * FennelPseudoUuid represents universal unique identifiers (UUIDs).  UUIDs
- * are generated via Fennel (via {@link FennelPseudoUuidGenerator}) in a way
- * that abstracts away OS and hardware dependencies.
+ * FennelPseudoUuid represents universal unique identifiers (UUIDs). UUIDs are
+ * generated via Fennel (via {@link FennelPseudoUuidGenerator}) in a way that
+ * abstracts away OS and hardware dependencies.
  *
  * <p>Depends on Fennel's libfarrago.
  *
@@ -37,31 +39,35 @@ import java.io.Serializable;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FennelPseudoUuid implements Serializable
+public class FennelPseudoUuid
+    implements Serializable
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int UUID_LENGTH = 16;
 
     /**
-     * SerialVersionUID created with JDK 1.5 serialver tool.
-     * Prevents incompatible class conflict when serialized
-     * from JDK 1.5-built server to JDK 1.4-built client.
+     * SerialVersionUID created with JDK 1.5 serialver tool. Prevents
+     * incompatible class conflict when serialized from JDK 1.5-built server to
+     * JDK 1.4-built client.
      */
     private static final long serialVersionUID = -2855644871776413634L;
 
-    //~ Instance fields -------------------------------------------------------
-    private final byte[] uuid;
+    //~ Instance fields --------------------------------------------------------
 
-    //~ Constructors ----------------------------------------------------------
+    private final byte [] uuid;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a FennelPseudoUuid with the given bytes.  Use
-     * {@link FennelPseudoUuidGenerator#validUuid()} or
-     * {@link FennelPseudoUuidGenerator#invalidUuid()} to create a UUID.
+     * Creates a FennelPseudoUuid with the given bytes. Use {@link
+     * FennelPseudoUuidGenerator#validUuid()} or {@link
+     * FennelPseudoUuidGenerator#invalidUuid()} to create a UUID.
      */
-    public FennelPseudoUuid(byte[] bytes)
+    public FennelPseudoUuid(byte [] bytes)
     {
-        this.uuid = (byte[])bytes.clone();
+        this.uuid = (byte []) bytes.clone();
         validate();
     }
 
@@ -71,15 +77,15 @@ public class FennelPseudoUuid implements Serializable
         validate();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return a copy of the byte array that backs this FennelPseudoUuid.
      */
-    public byte[] getBytes()
+    public byte [] getBytes()
     {
-        byte[] copy = new byte[UUID_LENGTH];
-        for(int i = 0; i < UUID_LENGTH; i++) {
+        byte [] copy = new byte[UUID_LENGTH];
+        for (int i = 0; i < UUID_LENGTH; i++) {
             copy[i] = uuid[i];
         }
         return copy;
@@ -89,12 +95,13 @@ public class FennelPseudoUuid implements Serializable
      * Returns the byte value at a particular position within the UUID
      * represented by this instance.
      *
-     * @param index must be greater than or equal to 0 and less than
-     *        {@link #UUID_LENGTH}.
+     * @param index must be greater than or equal to 0 and less than {@link
+     * #UUID_LENGTH}.
+     *
      * @return the byte value at a particular possition
-     * @throws ArrayIndexOutOfBoundsException
-     *         if index is less than 0 or greater than or equal to
-     *         {@link #UUID_LENGTH}.
+     *
+     * @throws ArrayIndexOutOfBoundsException if index is less than 0 or greater
+     * than or equal to {@link #UUID_LENGTH}.
      */
     public byte getByte(int index)
     {
@@ -102,43 +109,49 @@ public class FennelPseudoUuid implements Serializable
     }
 
     /**
-     * Parses the given string and returns the UUID it represents.  See
-     * {@link #toString()} for details on the format of the UUID string.
+     * Parses the given string and returns the UUID it represents. See {@link
+     * #toString()} for details on the format of the UUID string.
      *
-     * @return a byte-array representing the UUID's contents, suitable for
-     *         use by {@link #FennelPseudoUuid(byte[])}
+     * @return a byte-array representing the UUID's contents, suitable for use
+     * by {@link #FennelPseudoUuid(byte[])}
+     *
      * @throws IllegalArgumentException if the String is not in the correct
-     *                                  format.
+     * format.
      */
-    private byte[] parse(String uuid)
+    private byte [] parse(String uuid)
     {
         if (uuid.length() != 36) {
             throw new IllegalArgumentException("invalid uuid format");
         }
 
-        byte[] bytes = new byte[UUID_LENGTH];
+        byte [] bytes = new byte[UUID_LENGTH];
 
         try {
             // one 4 byte int
-            for(int i = 0; i < 4; i++) {
-                int b = Integer.parseInt(uuid.substring(i * 2, i * 2 + 2), 16);
+            for (int i = 0; i < 4; i++) {
+                int b =
+                    Integer.parseInt(
+                        uuid.substring(i * 2, (i * 2) + 2),
+                        16);
 
-                bytes[i] = (byte)b;
+                bytes[i] = (byte) b;
             }
             if (uuid.charAt(8) != '-') {
                 throw new IllegalArgumentException("invalid uuid format");
             }
 
             // three 2 byte ints
-            for(int i = 0; i < 3; i++) {
-                int start = 9 + i * 5;
+            for (int i = 0; i < 3; i++) {
+                int start = 9 + (i * 5);
 
-                for(int j = 0; j < 2; j++) {
+                for (int j = 0; j < 2; j++) {
                     int b =
                         Integer.parseInt(
                             uuid.substring(
-                                start + j * 2, start + j *  2 + 2), 16);
-                    bytes[4 + i * 2 + j] = (byte)b;
+                                start + (j * 2),
+                                start + (j * 2) + 2),
+                            16);
+                    bytes[4 + (i * 2) + j] = (byte) b;
                 }
 
                 if (uuid.charAt(start + 4) != '-') {
@@ -147,13 +160,15 @@ public class FennelPseudoUuid implements Serializable
             }
 
             // one 6-byte int
-            for(int i = 0; i < 6; i++) {
-                int b = Integer.parseInt(
-                    uuid.substring(24 + i * 2, 24 + i * 2 + 2), 16);
+            for (int i = 0; i < 6; i++) {
+                int b =
+                    Integer.parseInt(
+                        uuid.substring(24 + (i * 2), 24 + (i * 2) + 2),
+                        16);
 
-                bytes[10 + i] = (byte)b;
+                bytes[10 + i] = (byte) b;
             }
-        } catch(NumberFormatException e) {
+        } catch (NumberFormatException e) {
             IllegalArgumentException iae =
                 new IllegalArgumentException("invalid uuid format");
             iae.initCause(e);
@@ -163,7 +178,6 @@ public class FennelPseudoUuid implements Serializable
         return bytes;
     }
 
-
     /**
      * @return UUID in xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx format
      */
@@ -171,12 +185,12 @@ public class FennelPseudoUuid implements Serializable
     {
         StringBuffer buffer = new StringBuffer(36);
 
-        for(int i = 0; i < uuid.length; i++) {
-            if (i == 4 || i == 6 || i == 8 || i == 10) {
+        for (int i = 0; i < uuid.length; i++) {
+            if ((i == 4) || (i == 6) || (i == 8) || (i == 10)) {
                 buffer.append('-');
             }
 
-            String digits = Integer.toHexString((int)uuid[i] & 0xFF);
+            String digits = Integer.toHexString((int) uuid[i] & 0xFF);
             if (digits.length() == 1) {
                 buffer.append('0');
             }
@@ -190,12 +204,14 @@ public class FennelPseudoUuid implements Serializable
      * Compares two UUID objects for equality by value.
      *
      * @param obj another FennelPseudoUuid object
+     *
      * @return true if the UUIDs are the same, false otherwise
+     *
      * @throws ClassCastException if <code>obj</code> is not a FennelPseudoUuid
      */
     public boolean equals(Object obj)
     {
-        FennelPseudoUuid other = (FennelPseudoUuid)obj;
+        FennelPseudoUuid other = (FennelPseudoUuid) obj;
 
         return Arrays.equals(this.uuid, other.uuid);
     }
@@ -208,15 +224,17 @@ public class FennelPseudoUuid implements Serializable
         // instance if they're based on time, MAC address, etc.), that may not
         // be the case.
         return
-            ((int)(uuid[0] ^ uuid[4] ^ uuid[8] ^ uuid[12]) & 0xFF) << 24 |
-            ((int)(uuid[1] ^ uuid[5] ^ uuid[9] ^ uuid[13]) & 0xFF) << 16 |
-            ((int)(uuid[2] ^ uuid[6] ^ uuid[10] ^ uuid[14]) & 0xFF) << 8 |
-            ((int)(uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) & 0xFF);
+            (((int) (uuid[0] ^ uuid[4] ^ uuid[8] ^ uuid[12]) & 0xFF) << 24)
+            | (((int) (uuid[1] ^ uuid[5] ^ uuid[9] ^ uuid[13]) & 0xFF) << 16)
+            | (((int) (uuid[2] ^ uuid[6] ^ uuid[10] ^ uuid[14]) & 0xFF) << 8)
+            | ((int) (uuid[3] ^ uuid[7] ^ uuid[11] ^ uuid[15]) & 0xFF);
     }
 
     private void validate()
     {
-        assert(uuid != null);
-        assert(uuid.length == UUID_LENGTH);
+        assert (uuid != null);
+        assert (uuid.length == UUID_LENGTH);
     }
 }
+
+// End FennelPseudoUuid.java

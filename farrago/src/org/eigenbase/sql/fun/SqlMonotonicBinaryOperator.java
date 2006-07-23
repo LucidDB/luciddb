@@ -21,28 +21,32 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * Base class for binary operators such as addition, subtraction, and
- * multiplication which are monotonic for the patterns <code>m op c</code>
- * and <code>c op m</code> where m is any monotonic expression and c
- * is a constant.
+ * multiplication which are monotonic for the patterns <code>m op c</code> and
+ * <code>c op m</code> where m is any monotonic expression and c is a constant.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlMonotonicBinaryOperator extends SqlBinaryOperator
+public class SqlMonotonicBinaryOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlMonotonicBinaryOperator(
         String name,
         SqlKind kind,
@@ -53,24 +57,30 @@ public class SqlMonotonicBinaryOperator extends SqlBinaryOperator
         SqlOperandTypeChecker operandTypeChecker)
     {
         super(
-            name, kind, prec, isLeftAssoc, returnTypeInference,
+            name,
+            kind,
+            prec,
+            isLeftAssoc,
+            returnTypeInference,
             operandTypeInference,
             operandTypeChecker);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
         SqlValidator val = scope.getValidator();
-        
+
         // First check for (m op c)
         if (val.isConstant(call.operands[1])) {
-            SqlNode node = (SqlNode)call.operands[0];
+            SqlNode node = (SqlNode) call.operands[0];
             return scope.isMonotonic(node);
         }
-        
+
         // Check the converse (c op m)
         if (val.isConstant(call.operands[0])) {
-            SqlNode node = (SqlNode)call.operands[1];
+            SqlNode node = (SqlNode) call.operands[1];
             return scope.isMonotonic(node);
         }
 

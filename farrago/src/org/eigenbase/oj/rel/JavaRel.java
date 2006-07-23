@@ -20,44 +20,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
-import openjava.ptree.ParseTree;
+import openjava.ptree.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.rel.*;
 
 
 /**
  * A relational expression of one of the the Java-based calling conventions.
  *
- * <p>Objects which implement this interface must:<ul>
+ * <p>Objects which implement this interface must:
  *
+ * <ul>
  * <li>extend {@link org.eigenbase.rel.AbstractRelNode}, and</li>
+ * <li>return one of the following calling-conventions from their {@link
+ * #getConvention} method: {@link CallingConvention#ARRAY ARRAY}, {@link
+ * CallingConvention#ITERABLE ITERABLE}, {@link CallingConvention#ITERATOR
+ * ITERATOR}, {@link CallingConvention#COLLECTION COLLECTION}, {@link
+ * CallingConvention#MAP MAP}, {@link CallingConvention#VECTOR VECTOR}, {@link
+ * CallingConvention#HASHTABLE HASHTABLE}, {@link CallingConvention#JAVA JAVA}
+ * .</li>
+ * </ul>
  *
- * <li>return one of the following calling-conventions from their
- * {@link #getConvention} method:
- * {@link CallingConvention#ARRAY ARRAY},
- * {@link CallingConvention#ITERABLE ITERABLE},
- * {@link CallingConvention#ITERATOR ITERATOR},
- * {@link CallingConvention#COLLECTION COLLECTION},
- * {@link CallingConvention#MAP MAP},
- * {@link CallingConvention#VECTOR VECTOR},
- * {@link CallingConvention#HASHTABLE HASHTABLE},
- * {@link CallingConvention#JAVA JAVA}.</li></ul>
- *
- * <p>For {@link CallingConvention#JAVA JAVA calling-convention}, see
- * the sub-interface {@link JavaLoopRel}, and the auxilliary interface
- * {@link JavaSelfRel}.
+ * <p>For {@link CallingConvention#JAVA JAVA calling-convention}, see the
+ * sub-interface {@link JavaLoopRel}, and the auxilliary interface {@link
+ * JavaSelfRel}.
  *
  * @author jhyde
- * @since Nov 22, 2003
  * @version $Id$
- **/
-public interface JavaRel extends RelNode
+ * @since Nov 22, 2003
+ */
+public interface JavaRel
+    extends RelNode
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Creates a plan for this expression according to a calling convention.
@@ -66,6 +64,5 @@ public interface JavaRel extends RelNode
      */
     ParseTree implement(JavaRelImplementor implementor);
 }
-
 
 // End JavaRel.java

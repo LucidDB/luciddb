@@ -22,27 +22,30 @@
 */
 package net.sf.farrago.parser;
 
+import java.io.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.session.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.session.*;
-
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
-
-import java.io.*;
 
 /**
- * Abstract base for parsers generated from CommonDdlParser.jj.
- * Most of the methods on this class correspond to specific methods
- * generated on subclasses.
+ * Abstract base for parsers generated from CommonDdlParser.jj. Most of the
+ * methods on this class correspond to specific methods generated on subclasses.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
+public abstract class FarragoAbstractParserImpl
+    extends SqlAbstractParserImpl
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Public parser interface.
      */
@@ -52,6 +55,8 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      * Whether a DROP RESTRICT statement is being processed
      */
     protected boolean dropRestrict;
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return repository accessed by this parser
@@ -69,12 +74,14 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
     /**
      * @return result of parsing an SQL expression
      */
-    public abstract SqlNode SqlExpressionEof() throws Exception;
+    public abstract SqlNode SqlExpressionEof()
+        throws Exception;
 
     /**
      * @return result of parsing a complete statement
      */
-    public abstract Object FarragoSqlStmtEof() throws Exception;
+    public abstract Object FarragoSqlStmtEof()
+        throws Exception;
 
     /**
      * Tests whether the current input is a non-reserved keyword.
@@ -83,7 +90,8 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      *
      * @throws Exception if not a non-reserved keyword
      */
-    public abstract String NonReservedKeyWord() throws Exception;
+    public abstract String NonReservedKeyWord()
+        throws Exception;
 
     /**
      * Tests whether the current input is a reserved function name.
@@ -92,7 +100,8 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      *
      * @throws Exception if not a reserved function name
      */
-    public abstract SqlIdentifier ReservedFunctionName() throws Exception;
+    public abstract SqlIdentifier ReservedFunctionName()
+        throws Exception;
 
     /**
      * Tests whether the current input is a context variable name.
@@ -101,22 +110,21 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      *
      * @throws Exception if not a context variable name
      */
-    public abstract SqlIdentifier ContextVariable() throws Exception;
+    public abstract SqlIdentifier ContextVariable()
+        throws Exception;
 
     /**
-     * Converts the SQL representation of a default value into
-     * its catalog representation.
+     * Converts the SQL representation of a default value into its catalog
+     * representation.
      *
      * @param attribute attribute for which default value is being defined
-     *
      * @param defaultClause SQL representation
      */
     protected void setDefaultExpression(
         FemAbstractAttribute attribute,
         SqlNode defaultClause)
     {
-        CwmExpression defaultExpression =
-            getRepos().newCwmExpression();
+        CwmExpression defaultExpression = getRepos().newCwmExpression();
         defaultExpression.setBody(defaultClause.toSqlString(null));
         defaultExpression.setLanguage("SQL");
         attribute.setInitialValue(defaultExpression);
@@ -129,6 +137,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      * Returns whether a keyword is a non-reserved word.
      *
      * @param keyword Keyword
+     *
      * @return Whether the keyword is a non-reserved word.
      */
     public final boolean isNonReserved(String keyword)
@@ -146,6 +155,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      * Returns whether a keyword is the name of a reserved function.
      *
      * @param keyword Keyword
+     *
      * @return Whether the keyword is the name of a reserved function.
      */
     public boolean isReservedFunctionName(String keyword)
@@ -163,6 +173,7 @@ public abstract class FarragoAbstractParserImpl extends SqlAbstractParserImpl
      * Returns whether a keyword is the name of a context variable.
      *
      * @param keyword Keyword
+     *
      * @return Whether the keyword is the name of a context variable.
      */
     public boolean isContextVariable(String keyword)

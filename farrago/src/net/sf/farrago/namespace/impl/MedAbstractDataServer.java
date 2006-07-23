@@ -23,33 +23,36 @@
 package net.sf.farrago.namespace.impl;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.sql.*;
 
 import net.sf.farrago.namespace.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 
 
 /**
- * MedAbstractDataServer is an abstract base class for
- * implementations of the {@link FarragoMedDataServer} interface.
+ * MedAbstractDataServer is an abstract base class for implementations of the
+ * {@link FarragoMedDataServer} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractDataServer extends MedAbstractBase
+public abstract class MedAbstractDataServer
+    extends MedAbstractBase
     implements FarragoMedDataServer
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private String serverMofId;
     private Properties props;
     private DataSource loopbackDataSource;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected MedAbstractDataServer(
         String serverMofId,
@@ -59,7 +62,7 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
         this.props = props;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the MofId of the catalog definition for this server
@@ -90,21 +93,21 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
     {
         this.loopbackDataSource = loopbackDataSource;
     }
-    
+
     // implement FarragoMedDataServer
     public FarragoMedNameDirectory getNameDirectory()
         throws SQLException
     {
         return null;
     }
-    
+
     // implement FarragoMedDataServer
     public Object getRuntimeSupport(Object param)
         throws SQLException
     {
         return null;
     }
-    
+
     // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {
@@ -114,12 +117,11 @@ public abstract class MedAbstractDataServer extends MedAbstractBase
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
     }
-    
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
     }
 }
-
 
 // End MedAbstractDataServer.java

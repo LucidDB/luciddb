@@ -20,22 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConventionTraitDef;
-import org.eigenbase.relopt.RelTraitDef;
-import org.eigenbase.relopt.RelTrait;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
 
 // REVIEW jvs 23-April-2004:  This should really be an interface
@@ -46,20 +36,20 @@ import org.eigenbase.util.Util;
  * Converts a relational expression from one {@link CallingConvention calling
  * convention} to another.
  *
- * <p>
- * Sometimes this conversion is expensive; for example, to convert a
+ * <p>Sometimes this conversion is expensive; for example, to convert a
  * non-distinct to a distinct object stream, we have to clone every object in
- * the input.
- * </p>
+ * the input.</p>
  */
-public abstract class ConverterRel extends SingleRel
+public abstract class ConverterRel
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RelTraitSet inTraits;
     protected final RelTraitDef traitDef;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * @param cluster planner's cluster
@@ -78,7 +68,7 @@ public abstract class ConverterRel extends SingleRel
         this.traitDef = traitDef;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -91,8 +81,10 @@ public abstract class ConverterRel extends SingleRel
 
     protected Error cannotImplement()
     {
-        return Util.newInternal(getClass() + " cannot convert from "
-            + inTraits + " traits");
+        return
+            Util.newInternal(
+                getClass() + " cannot convert from "
+                + inTraits + " traits");
     }
 
     public boolean isDistinct()
@@ -103,7 +95,7 @@ public abstract class ConverterRel extends SingleRel
     protected CallingConvention getInputConvention()
     {
         return
-            (CallingConvention)inTraits.getTrait(
+            (CallingConvention) inTraits.getTrait(
                 CallingConventionTraitDef.instance);
     }
 
@@ -119,25 +111,27 @@ public abstract class ConverterRel extends SingleRel
 
     /**
      * Returns a new trait set based on <code>traits</code>, with a different
-     * trait for a given type of trait.  Clones <code>traits</code>, and then
+     * trait for a given type of trait. Clones <code>traits</code>, and then
      * replaces the existing trait matching <code>trait.getTraitDef()</code>
      * with <code>trait</code>.
      *
      * @param traits the set of traits to convert
      * @param trait the converted trait
+     *
      * @return a new RelTraitSet
      */
     protected static RelTraitSet convertTraits(
-        RelTraitSet traits, RelTrait trait)
+        RelTraitSet traits,
+        RelTrait trait)
     {
         RelTraitSet converted = RelOptUtil.clone(traits);
 
-        converted.setTrait(trait.getTraitDef(), trait);
+        converted.setTrait(
+            trait.getTraitDef(),
+            trait);
 
         return converted;
     }
-
 }
-
 
 // End ConverterRel.java

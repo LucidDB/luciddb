@@ -21,23 +21,18 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.relopt.RelOptSchema;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptSchemaWithSampling;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.util.SqlShuttle;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.util.Util;
+import java.nio.charset.*;
 
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.*;
+
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Utility methods related to validation.
@@ -48,16 +43,18 @@ import java.util.Collection;
  */
 public class SqlValidatorUtil
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Converts a {@link SqlValidatorScope} into a
-     * {@link RelOptTable}. This is only possible if
-     * the scope represents an identifier, such as "sales.emp". Otherwise,
-     * returns null.
+     * Converts a {@link SqlValidatorScope} into a {@link RelOptTable}. This is
+     * only possible if the scope represents an identifier, such as "sales.emp".
+     * Otherwise, returns null.
      *
      * @param namespace Namespace
      * @param schema Schema
      * @param datasetName Name of sample dataset to substitute, or null to use
-     *   the regular table
+     * the regular table
      */
     public static RelOptTable getRelOptTable(
         SqlValidatorNamespace namespace,
@@ -68,10 +65,11 @@ public class SqlValidatorUtil
             IdentifierNamespace identifierNamespace =
                 (IdentifierNamespace) namespace;
             final String [] names = identifierNamespace.getId().names;
-            if (datasetName != null &&
-                schema instanceof RelOptSchemaWithSampling) {
-                return ((RelOptSchemaWithSampling) schema).
-                    getTableForMember(names, datasetName);
+            if ((datasetName != null)
+                && (schema instanceof RelOptSchemaWithSampling)) {
+                return
+                    ((RelOptSchemaWithSampling) schema).getTableForMember(names,
+                        datasetName);
             } else {
                 // Schema does not support substitution. Ignore the dataset,
                 // if any.
@@ -87,6 +85,7 @@ public class SqlValidatorUtil
      *
      * @param rowType Row type
      * @param columnName Field name
+     *
      * @return Field's type, or null if not found
      */
     static RelDataType lookupFieldType(
@@ -108,6 +107,7 @@ public class SqlValidatorUtil
      *
      * @param rowType Row type
      * @param columnName Field name
+     *
      * @return Ordinal of field, or -1 if not found
      */
     static int lookupField(
@@ -137,10 +137,11 @@ public class SqlValidatorUtil
                 if (false) {
                     // todo: enable this checking when we have a charset to
                     //   collation mapping
-                    throw new Error(type.toString() +
-                        " was found to have charset '" + strCharset.name() +
-                        "' and a mismatched collation charset '" +
-                        colCharset.name() + "'");
+                    throw new Error(
+                        type.toString()
+                        + " was found to have charset '" + strCharset.name()
+                        + "' and a mismatched collation charset '"
+                        + colCharset.name() + "'");
                 }
             }
         }
@@ -162,13 +163,13 @@ public class SqlValidatorUtil
      * Derives an alias for a node. If it cannot derive an alias, returns null.
      *
      * <p>This method doesn't try very hard. It doesn't invent mangled aliases,
-     * and doesn't even recognize an AS clause.
-     * (See {@link #getAlias(SqlNode, int)} for that.)
-     * It just takes the last part of an identifier.
+     * and doesn't even recognize an AS clause. (See {@link #getAlias(SqlNode,
+     * int)} for that.) It just takes the last part of an identifier.
      */
-    public static String getAlias(SqlNode node) {
+    public static String getAlias(SqlNode node)
+    {
         if (node instanceof SqlIdentifier) {
-            String[] names = ((SqlIdentifier) node).names;
+            String [] names = ((SqlIdentifier) node).names;
             return names[names.length - 1];
         } else {
             return null;
@@ -179,28 +180,32 @@ public class SqlValidatorUtil
      * Derives an alias for a node, and invents a mangled identifier if it
      * cannot.
      *
-     * <p>Examples:<ul>
+     * <p>Examples:
+     *
+     * <ul>
      * <li>Alias: "1 + 2 as foo" yields "foo"
      * <li>Identifier: "foo.bar.baz" yields "baz"
      * <li>Anything else yields "expr$<i>ordinal</i>"
      * </ul>
      *
-     * @return An alias, if one can be derived;
-     *   or a synthetic alias "expr$<i>ordinal</i>" if ordinal >= 0;
-     *   otherwise null
+     * @return An alias, if one can be derived; or a synthetic alias
+     * "expr$<i>ordinal</i>" if ordinal >= 0; otherwise null
      */
     public static String getAlias(SqlNode node, int ordinal)
     {
         switch (node.getKind().getOrdinal()) {
         case SqlKind.AsORDINAL:
+
             // E.g. "1 + 2 as foo" --> "foo"
             return ((SqlCall) node).getOperands()[1].toString();
 
         case SqlKind.OverORDINAL:
+
             // E.g. "bids over w" --> "bids"
             return getAlias(((SqlCall) node).getOperands()[0], ordinal);
 
         case SqlKind.IdentifierORDINAL:
+
             // E.g. "foo.bar" --> "bar"
             final String [] names = ((SqlIdentifier) node).names;
             return names[names.length - 1];
@@ -215,11 +220,12 @@ public class SqlValidatorUtil
     }
 
     /**
-     * Makes a name distinct from other names which have already been used,
-     * adds it to the list, and returns it.
+     * Makes a name distinct from other names which have already been used, adds
+     * it to the list, and returns it.
      *
      * @param name Suggested name, may not be unique
      * @param nameList Collection of names already used
+     *
      * @return Unique name
      */
     public static String uniquify(String name, Collection<String> nameList)
@@ -241,10 +247,70 @@ public class SqlValidatorUtil
     }
 
     /**
-     * Walks over an expression, copying every node, and fully-qualifying
-     * every identifier.
+     * Factory method for {@link SqlValidator}.
      */
-    public static class DeepCopier extends SqlScopedShuttle
+    public static SqlValidatorWithHints newValidator(
+        SqlOperatorTable opTab,
+        SqlValidatorCatalogReader catalogReader,
+        RelDataTypeFactory typeFactory)
+    {
+        return
+            new SqlValidatorImpl(
+                opTab,
+                catalogReader,
+                typeFactory,
+                SqlValidator.Compatible.Default);
+    }
+
+    /**
+     * Makes sure that the names in a list are unique.
+     */
+    public static void uniquify(List<String> nameList)
+    {
+        List<String> usedList = new ArrayList<String>();
+        for (int i = 0; i < nameList.size(); i++) {
+            String name = nameList.get(i);
+            String uniqueName = uniquify(name, usedList);
+            if (!uniqueName.equals(name)) {
+                nameList.set(i, uniqueName);
+            }
+        }
+    }
+
+    /**
+     * Resolves a multi-part identifier such as "SCHEMA.EMP.EMPNO" to a
+     * namespace. The returned namespace may represent a schema, table, column,
+     * etc.
+     *
+     * @pre names.size() > 0
+     * @post return != null
+     */
+    public static SqlValidatorNamespace lookup(
+        SqlValidatorScope scope,
+        List<String> names)
+    {
+        Util.pre(names.size() > 0, "names.size() > 0");
+        SqlValidatorNamespace namespace = null;
+        for (int i = 0; i < names.size(); i++) {
+            String name = names.get(i);
+            if (i == 0) {
+                namespace = scope.resolve(name, null, null);
+            } else {
+                namespace = namespace.lookupChild(name, null, null);
+            }
+        }
+        Util.permAssert(namespace != null, "post: namespace != null");
+        return namespace;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Walks over an expression, copying every node, and fully-qualifying every
+     * identifier.
+     */
+    public static class DeepCopier
+        extends SqlScopedShuttle
     {
         DeepCopier(SqlValidatorScope scope)
         {
@@ -294,62 +360,6 @@ public class SqlValidatorUtil
         {
             return (SqlNode) intervalQualifier.clone();
         }
-    }
-
-    /**
-     * Factory method for {@link SqlValidator}.
-     */
-    public static SqlValidatorWithHints newValidator(
-        SqlOperatorTable opTab,
-        SqlValidatorCatalogReader catalogReader,
-        RelDataTypeFactory typeFactory)
-    {
-        return new SqlValidatorImpl(
-            opTab,
-            catalogReader,
-            typeFactory,
-            SqlValidator.Compatible.Default);
-    }
-
-    /**
-     * Makes sure that the names in a list are unique.
-     */
-    public static void uniquify(List<String> nameList)
-    {
-        List<String> usedList = new ArrayList<String>();
-        for (int i = 0; i < nameList.size(); i++) {
-            String name = nameList.get(i);
-            String uniqueName = uniquify(name, usedList);
-            if (!uniqueName.equals(name)) {
-                nameList.set(i, uniqueName);
-            }
-        }
-    }
-
-    /**
-     * Resolves a multi-part identifier such as "SCHEMA.EMP.EMPNO" to a
-     * namespace. The returned namespace may represent a schema, table, column,
-     * etc.
-     *
-     * @pre names.size() > 0
-     * @post return != null
-     */
-    public static SqlValidatorNamespace lookup(
-        SqlValidatorScope scope,
-        List<String> names)
-    {
-        Util.pre(names.size() > 0, "names.size() > 0");
-        SqlValidatorNamespace namespace = null;
-        for (int i = 0; i < names.size(); i++) {
-            String name = names.get(i);
-            if (i == 0) {
-                namespace = scope.resolve(name, null, null);
-            } else {
-                namespace = namespace.lookupChild(name, null, null);
-            }
-        }
-        Util.permAssert(namespace != null, "post: namespace != null");
-        return namespace;
     }
 }
 

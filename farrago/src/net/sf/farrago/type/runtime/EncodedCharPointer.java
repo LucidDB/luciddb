@@ -34,9 +34,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class EncodedCharPointer extends BytePointer
+public abstract class EncodedCharPointer
+    extends BytePointer
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // TODO:  preallocate a CharsetDecoder
     public String toString()
@@ -46,10 +48,10 @@ public abstract class EncodedCharPointer extends BytePointer
         }
         try {
             return new String(
-                buf,
-                pos,
-                count - pos,
-                getCharsetName());
+                    buf,
+                    pos,
+                    count - pos,
+                    getCharsetName());
         } catch (UnsupportedEncodingException ex) {
             throw Util.newInternal(ex);
         }
@@ -76,7 +78,10 @@ public abstract class EncodedCharPointer extends BytePointer
         return toString();
     }
 
-    public static class EncodedCharPointerWithCharset extends EncodedCharPointer
+    //~ Inner Classes ----------------------------------------------------------
+
+    public static class EncodedCharPointerWithCharset
+        extends EncodedCharPointer
     {
         protected final String charSet;
 
@@ -85,11 +90,11 @@ public abstract class EncodedCharPointer extends BytePointer
             this.charSet = charSet;
         }
 
-        protected String getCharsetName() {
+        protected String getCharsetName()
+        {
             return charSet;
         }
-    }    
+    }
 }
-
 
 // End EncodedCharPointer.java

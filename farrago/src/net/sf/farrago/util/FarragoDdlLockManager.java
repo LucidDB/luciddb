@@ -22,33 +22,42 @@
 */
 package net.sf.farrago.util;
 
-import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 
-public class FarragoDdlLockManager {
+
+public class FarragoDdlLockManager
+{
+
+    //~ Instance fields --------------------------------------------------------
 
     private ConcurrentHashMap objectsInUse = new ConcurrentHashMap();
-    
-    public void addObjectsInUse(Object context, Set mofIds) {
+
+    //~ Methods ----------------------------------------------------------------
+
+    public void addObjectsInUse(Object context, Set mofIds)
+    {
         if (mofIds != null) {
             objectsInUse.put(context, mofIds);
         }
     }
 
-    public void removeObjectsInUse(Object context) {
+    public void removeObjectsInUse(Object context)
+    {
         objectsInUse.remove(context);
     }
-    
-    public boolean isObjectInUse(String mofId) {
+
+    public boolean isObjectInUse(String mofId)
+    {
         Iterator i = objectsInUse.values().iterator();
         while (i.hasNext()) {
-            Set s = (Set)i.next();
+            Set s = (Set) i.next();
             if (s.contains(mofId)) {
                 return true;
             }
         }
         return false;
     }
-
 }
+
+// End FarragoDdlLockManager.java

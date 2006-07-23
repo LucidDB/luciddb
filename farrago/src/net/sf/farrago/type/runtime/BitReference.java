@@ -22,17 +22,17 @@
 */
 package net.sf.farrago.type.runtime;
 
-
 /**
- * BitReference represents a bit which can be accessed by marshalling
- * and unmarshalling.  Could be a null indicator, could be a real bit value.
+ * BitReference represents a bit which can be accessed by marshalling and
+ * unmarshalling. Could be a null indicator, could be a real bit value.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface BitReference
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Sets the bit value referenced by this.
@@ -46,6 +46,5 @@ public interface BitReference
      */
     public boolean getBit();
 }
-
 
 // End BitReference.java

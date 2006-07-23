@@ -19,28 +19,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.*;
+
 
 /**
- * Defines the keywords which can occur immediately after the "SELECT"
- * keyword.
+ * Defines the keywords which can occur immediately after the "SELECT" keyword.
  */
-public class SqlSelectKeyword extends EnumeratedValues.BasicValue
+public class SqlSelectKeyword
+    extends EnumeratedValues.BasicValue
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final int Distinct_ordinal = 0;
+    public static final SqlSelectKeyword Distinct =
+        new SqlSelectKeyword("Distinct", Distinct_ordinal);
+    public static final int All_ordinal = 1;
+    public static final SqlSelectKeyword All =
+        new SqlSelectKeyword("All", All_ordinal);
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(new SqlSelectKeyword[] { Distinct, All });
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlSelectKeyword(String name, int ordinal)
     {
         super(name, ordinal, null);
     }
-
-    public static final int Distinct_ordinal = 0;
-    public static final SqlSelectKeyword Distinct = new SqlSelectKeyword("Distinct", Distinct_ordinal);
-    public static final int All_ordinal = 1;
-    public static final SqlSelectKeyword All = new SqlSelectKeyword("All", All_ordinal);
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new SqlSelectKeyword[] {Distinct, All});
 }
 
 // End SqlSelectKeyword.java

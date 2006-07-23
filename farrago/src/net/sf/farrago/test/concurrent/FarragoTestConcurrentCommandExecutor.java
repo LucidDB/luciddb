@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.PrintStream;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.util.Iterator;
+import java.io.*;
+
+import java.sql.*;
+
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
+
 
 /**
  * FarragoTestConcurrentCommandExecutor is a thread that executes a sequence of
@@ -36,17 +37,25 @@ import net.sf.farrago.catalog.*;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoTestConcurrentCommandExecutor extends Thread
+public class FarragoTestConcurrentCommandExecutor
+    extends Thread
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** The id for this thread. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * The id for this thread.
+     */
     private Integer threadId;
 
-    /** JDBC URL to connect with. */
+    /**
+     * JDBC URL to connect with.
+     */
     private String jdbcURL;
 
-    /** Command sequence for this thread. */
+    /**
+     * Command sequence for this thread.
+     */
     private Iterator commands;
 
     /**
@@ -54,40 +63,51 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
      */
     private Sync synchronizer;
 
-    /** JDBC connection for commands. */
+    /**
+     * JDBC connection for commands.
+     */
     private Connection connection;
 
-    /** Current JDBC Statement.  May be null. */
+    /**
+     * Current JDBC Statement. May be null.
+     */
     private Statement statement;
 
-    /** First exception thrown by the thread. */
+    /**
+     * First exception thrown by the thread.
+     */
     private Throwable error;
 
-    /** Location of {@link #error}. */
+    /**
+     * Location of {@link #error}.
+     */
     private String when;
 
-    /** Debugging print stream.  May be null. */
+    /**
+     * Debugging print stream. May be null.
+     */
     private final PrintStream debugPrintStream;
 
-    /** Command throwing error **/
+    /**
+     * Command throwing error *
+     */
     private FarragoTestConcurrentCommand errorCommand;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a FarragoTestConcurrentCommandExecutor with the given thread
      * ID, JDBC URL, commands and synchronization object.
      *
-     * @param threadId the thread ID (see
-     *                 {@link FarragoTestConcurrentCommandGenerator})
+     * @param threadId the thread ID (see {@link
+     * FarragoTestConcurrentCommandGenerator})
      * @param threadName the thread's name
      * @param jdbcURL the JDBC URL to connect to
-     * @param commands the sequence of commands to execute -- null
-     *                 elements indicate no-ops
+     * @param commands the sequence of commands to execute -- null elements
+     * indicate no-ops
      * @param synchronizer synchronization object (may not be null);
-     * @param debugPrintStream if non-null a PrintStream to use for
-     *                         debugging output (may help debugging
-     *                         thread synchronization issues)
+     * @param debugPrintStream if non-null a PrintStream to use for debugging
+     * output (may help debugging thread synchronization issues)
      */
     FarragoTestConcurrentCommandExecutor(
         int threadId,
@@ -106,7 +126,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         this.setName("Command Executor " + threadName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Executes the configured commands.
@@ -114,8 +134,11 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     public void run()
     {
         try {
-            connection = DriverManager.getConnection(
-                jdbcURL, FarragoCatalogInit.SA_USER_NAME, null);
+            connection =
+                DriverManager.getConnection(
+                    jdbcURL,
+                    FarragoCatalogInit.SA_USER_NAME,
+                    null);
             if (connection.getMetaData().supportsTransactions()) {
                 connection.setAutoCommit(false);
             }
@@ -128,10 +151,13 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         int stepNumber = 0;
 
         while (commands.hasNext()) {
-            FarragoTestConcurrentCommand command = 
+            FarragoTestConcurrentCommand command =
                 (FarragoTestConcurrentCommand) commands.next();
 
-            if (!(command instanceof FarragoTestConcurrentCommandGenerator.AutoSynchronizationCommand)) {
+            if (!(
+                    command
+                    instanceof FarragoTestConcurrentCommandGenerator.AutoSynchronizationCommand
+                 )) {
                 stepNumber++;
             }
 
@@ -145,11 +171,15 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
 
             // synchronization commands are always executed, lest we deadlock
             boolean isSync =
-                command instanceof FarragoTestConcurrentCommandGenerator.SynchronizationCommand;
+                command
+                instanceof FarragoTestConcurrentCommandGenerator.SynchronizationCommand;
 
             if (isSync
-                    || ((connection != null) && (command != null)
-                    && (error == null))) {
+                || (
+                    (connection != null)
+                    && (command != null)
+                    && (error == null)
+                   )) {
                 try {
                     command.execute(this);
                 } catch (Throwable t) {
@@ -181,9 +211,10 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         this.error = error;
         this.when = when;
         this.errorCommand = command;
-        
+
         if (debugPrintStream != null) {
-            debugPrintStream.println(Thread.currentThread().getName() + ": "
+            debugPrintStream.println(
+                Thread.currentThread().getName() + ": "
                 + when);
             error.printStackTrace(debugPrintStream);
         }
@@ -198,7 +229,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Obtains the thread's current JDBC statement.  May return null.
+     * Obtains the thread's current JDBC statement. May return null.
      */
     public Statement getStatement()
     {
@@ -206,8 +237,8 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Sets the thread's current JDBC statement.  To clear the JDBC
-     * statement use {@link #clearStatement()}.
+     * Sets the thread's current JDBC statement. To clear the JDBC statement use
+     * {@link #clearStatement()}.
      */
     public void setStatement(Statement stmt)
     {
@@ -218,8 +249,8 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Clears the thread's current JDBC statement.  To set the JDBC
-     * statement use {@link #setStatement(Statement)}.
+     * Clears the thread's current JDBC statement. To set the JDBC statement use
+     * {@link #setStatement(Statement)}.
      */
     public void clearStatement()
     {
@@ -227,8 +258,8 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Retrieves the object used to synchronize threads at a point in
-     * the list of commands.
+     * Retrieves the object used to synchronize threads at a point in the list
+     * of commands.
      */
     public Sync getSynchronizer()
     {
@@ -236,10 +267,10 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Checks whether an exception occurred during execution.  If this
-     * method returns null, the thread's commands all succeeded.  If
-     * this method returns non-null, see {@link #getFailureLocation()}
-     * for details on which command caused the failure.
+     * Checks whether an exception occurred during execution. If this method
+     * returns null, the thread's commands all succeeded. If this method returns
+     * non-null, see {@link #getFailureLocation()} for details on which command
+     * caused the failure.
      */
     public Throwable getFailureCause()
     {
@@ -247,8 +278,8 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
     }
 
     /**
-     * Returns location (e.g., command number) for exception returned
-     * by {@link #getFailureCause()}.
+     * Returns location (e.g., command number) for exception returned by {@link
+     * #getFailureCause()}.
      */
     public String getFailureLocation()
     {
@@ -265,7 +296,7 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         return threadId;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Synchronization object that allows multiple
@@ -301,3 +332,5 @@ public class FarragoTestConcurrentCommandExecutor extends Thread
         }
     }
 }
+
+// End FarragoTestConcurrentCommandExecutor.java

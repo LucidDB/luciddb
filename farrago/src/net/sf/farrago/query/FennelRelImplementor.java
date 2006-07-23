@@ -21,46 +21,45 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fennel.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelImplementor;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
 
 /**
  * Callback used to hold state while converting a tree of {@link FennelRel}
  * objects into a plan consisting of {@link FemExecutionStreamDef} objects.
  *
- * @see FarragoRelImplementor
- *
  * @author jhyde
- * @since May 24, 2004
  * @version $Id$
- **/
-public interface FennelRelImplementor extends RelImplementor
+ * @see FarragoRelImplementor
+ * @since May 24, 2004
+ */
+public interface FennelRelImplementor
+    extends RelImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Converts a relational expression into a plan by calling its
-     * {@link FennelRel#toStreamDef} method.
+     * Converts a relational expression into a plan by calling its {@link
+     * FennelRel#toStreamDef} method.
      */
     public FemExecutionStreamDef visitFennelChild(FennelRel rel);
 
     /**
-     * Registers a new stream definition.  Normally, it is not necessary
-     * to call this method explicitly; it happens automatically as part
-     * of {@link #visitFennelChild}.  However, this is not true for non-tree
-     * stream graphs.  For streams with multiple parents, this method must be
-     * called for streams not returned from {@link #visitFennelChild}.
+     * Registers a new stream definition. Normally, it is not necessary to call
+     * this method explicitly; it happens automatically as part of {@link
+     * #visitFennelChild}. However, this is not true for non-tree stream graphs.
+     * For streams with multiple parents, this method must be called for streams
+     * not returned from {@link #visitFennelChild}.
      *
      * @param streamDef new stream definition
-     *
      * @param rel RelNode which stream implements
-     *
      * @param rowType row type for stream, or null to use rel's row type
      */
     public void registerRelStreamDef(
@@ -69,19 +68,16 @@ public interface FennelRelImplementor extends RelImplementor
         RelDataType rowType);
 
     /**
-     * Adds a new dataflow edge between two existing stream definitions.
-     * In cases where a stream has multiple inputs or outputs, order
-     * may be significant, in which case it is the caller's responsibility
-     * to add the flows in the desired order.
+     * Adds a new dataflow edge between two existing stream definitions. In
+     * cases where a stream has multiple inputs or outputs, order may be
+     * significant, in which case it is the caller's responsibility to add the
+     * flows in the desired order.
      *
-     *<p>
-     *
-     * NOTE jvs 14-Nov-2005:  I gave this method a long name so that
-     * it wouldn't be necessary to guess the direction when reading
-     * code that uses it.
+     * <p>NOTE jvs 14-Nov-2005: I gave this method a long name so that it
+     * wouldn't be necessary to guess the direction when reading code that uses
+     * it.
      *
      * @param producer the upstream node of the dataflow
-     *
      * @param consumer the downstream node of the dataflow
      */
     public void addDataFlowFromProducerToConsumer(
@@ -92,21 +88,20 @@ public interface FennelRelImplementor extends RelImplementor
      * Returns the repository.
      */
     public FarragoRepos getRepos();
-    
+
     /**
-     * Reserves a Fennel dynamic parameter.  The reserving rel can use {@link
+     * Reserves a Fennel dynamic parameter. The reserving rel can use {@link
      * #translateParamId(FennelRelParamId)} later as part of its toStreamDef
-     * implementation to convert this into a final {@link
-     * FennelDynamicParamId}, which can then be referenced from stream
-     * definitions.
+     * implementation to convert this into a final {@link FennelDynamicParamId},
+     * which can then be referenced from stream definitions.
      *
      * @return parameter reservation ID
      */
     public FennelRelParamId allocateRelParamId();
 
     /**
-     * Translates a {@link FennelRelParamId} into a {@link
-     * FennelDynamicParamId} based on the current scope.
+     * Translates a {@link FennelRelParamId} into a {@link FennelDynamicParamId}
+     * based on the current scope.
      *
      * @param relParamId reserved ID to be translated
      *
@@ -115,6 +110,5 @@ public interface FennelRelImplementor extends RelImplementor
     public FennelDynamicParamId translateParamId(
         FennelRelParamId relParamId);
 }
-
 
 // End FennelRelImplementor.java

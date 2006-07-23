@@ -20,11 +20,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Local variable.
@@ -38,15 +38,19 @@ import org.eigenbase.util.Util;
  * <p>Variables are immutable.
  *
  * @author jhyde
- * @since Oct 25, 2005
  * @version $Id$
+ * @since Oct 25, 2005
  */
-public class RexLocalRef extends RexSlot
+public class RexLocalRef
+    extends RexSlot
 {
-    // array of common names, to reduce memory allocations
-    private static final String[] names = makeArray(32, "$t");
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
+
+    // array of common names, to reduce memory allocations
+    private static final String [] names = makeArray(32, "$t");
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a local variable.
@@ -61,11 +65,14 @@ public class RexLocalRef extends RexSlot
         int index,
         RelDataType type)
     {
-        super(createName(index), index, type);
+        super(
+            createName(index),
+            index,
+            type);
     }
 
-    //~ Methods ---------------------------------------------------------------
-    
+    //~ Methods ----------------------------------------------------------------
+
     public Object clone()
     {
         // Since refs are immutable and identity is based on value,
@@ -77,15 +84,16 @@ public class RexLocalRef extends RexSlot
     {
         if (obj instanceof RexLocalRef) {
             RexLocalRef that = (RexLocalRef) obj;
-            return this.type == that.type &&
-                this.index == that.index;
+            return (this.type == that.type) && (this.index == that.index);
         }
         return false;
     }
 
     public int hashCode()
     {
-        return Util.hash(type.hashCode(), index);
+        return Util.hash(
+                type.hashCode(),
+                index);
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -95,9 +103,7 @@ public class RexLocalRef extends RexSlot
 
     private static String createName(int index)
     {
-        return index < names.length ?
-            names[index] :
-            "$t" + index;
+        return (index < names.length) ? names[index] : ("$t" + index);
     }
 }
 

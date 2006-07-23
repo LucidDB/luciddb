@@ -22,36 +22,39 @@
 */
 package net.sf.farrago.jdbc.engine;
 
-import net.sf.farrago.session.FarragoSessionStmtParamDef;
-import net.sf.farrago.jdbc.param.FarragoJdbcParamDef;
+import java.util.*;
 
-import org.eigenbase.reltype.RelDataType;
+import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.session.*;
 
-import java.util.Calendar;
+import org.eigenbase.reltype.*;
+
 
 /**
- * Enforces constraints on parameters.
+ * Enforces constraints on parameters. The constraints are:
  *
- * The constraints are:<ol>
- *
+ * <ol>
  * <li>Ensures that null values cannot be inserted into not-null columns.
- *
  * <li>Ensures that value is the right type.
- *
- * <li>Ensures that the value is within range. For example, you can't
- *    insert a 10001 into a DECIMAL(5) column.
- *
+ * <li>Ensures that the value is within range. For example, you can't insert a
+ * 10001 into a DECIMAL(5) column.
  * </ol>
  *
  * <p>TODO: Actually enfore these constraints.
- * 
+ *
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
+class FarragoJdbcEngineParamDef
+    implements FarragoSessionStmtParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final FarragoJdbcParamDef param;
     final RelDataType type;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcEngineParamDef(FarragoJdbcParamDef param, RelDataType type)
     {
@@ -59,18 +62,20 @@ class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
         this.type = type;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionStmtParamDef
     public String getParamName()
     {
         return param.getParamName();
     }
-    
+
     // implement FarragoSessionStmtParamDef
     public RelDataType getParamType()
     {
         return type;
     }
-    
+
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
     {
@@ -83,3 +88,5 @@ class FarragoJdbcEngineParamDef implements FarragoSessionStmtParamDef
         return param.scrubValue(x, cal);
     }
 }
+
+// End FarragoJdbcEngineParamDef.java

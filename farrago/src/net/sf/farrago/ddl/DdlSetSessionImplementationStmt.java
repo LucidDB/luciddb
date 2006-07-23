@@ -21,13 +21,14 @@
 */
 package net.sf.farrago.ddl;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.catalog.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.*;
+
 
 /**
  * DdlSetSessionImplementationStmt represents an ALTER SESSION {SET|ADD}
@@ -36,11 +37,17 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlSetSessionImplementationStmt extends DdlStmt
+public class DdlSetSessionImplementationStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlIdentifier jarName;
     private final boolean add;
     private FemJar femJar;
+
+    //~ Constructors -----------------------------------------------------------
 
     public DdlSetSessionImplementationStmt(
         SqlIdentifier jarName,
@@ -50,7 +57,9 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
         this.jarName = jarName;
         this.add = add;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
@@ -63,8 +72,10 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
         if (jarName == null) {
             return;
         }
-        femJar = ddlValidator.getStmtValidator().findSchemaObject(
-            jarName, FemJar.class);
+        femJar =
+            ddlValidator.getStmtValidator().findSchemaObject(
+                jarName,
+                FemJar.class);
     }
 
     public FarragoSessionPersonality newPersonality(
@@ -81,12 +92,13 @@ public class DdlSetSessionImplementationStmt extends DdlStmt
                 FarragoPluginClassLoader.PLUGIN_FACTORY_CLASS_ATTRIBUTE);
         try {
             FarragoSessionPersonalityFactory factory =
-                (FarragoSessionPersonalityFactory)
-                session.getPluginClassLoader().newPluginInstance(
+                (FarragoSessionPersonalityFactory) session
+                .getPluginClassLoader().newPluginInstance(
                     factoryClass);
-            return factory.newSessionPersonality(
-                session,
-                add ? session.getPersonality() : defaultPersonality);
+            return
+                factory.newSessionPersonality(
+                    session,
+                    add ? session.getPersonality() : defaultPersonality);
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(url, ex);
         }

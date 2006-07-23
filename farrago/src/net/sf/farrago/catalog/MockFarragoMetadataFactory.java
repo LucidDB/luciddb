@@ -21,9 +21,8 @@
 */
 package net.sf.farrago.catalog;
 
-import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.FarragoMetadataFactoryImpl;
-import net.sf.farrago.FarragoPackage;
+import net.sf.farrago.*;
+
 
 /**
  * Mock implementation of {@link FarragoMetadataFactory}.
@@ -31,9 +30,15 @@ import net.sf.farrago.FarragoPackage;
  * @author Julian Hyde
  * @version $Id$
  */
-public class MockFarragoMetadataFactory extends FarragoMetadataFactoryImpl
+public class MockFarragoMetadataFactory
+    extends FarragoMetadataFactoryImpl
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final MockMetadataFactory helper = new FarragoHelper();
+
+    //~ Constructors -----------------------------------------------------------
 
     public MockFarragoMetadataFactory()
     {
@@ -41,7 +46,10 @@ public class MockFarragoMetadataFactory extends FarragoMetadataFactoryImpl
         this.setRootPackage((FarragoPackage) helper.getRootPackage());
     }
 
-    private static class FarragoHelper extends MockMetadataFactory
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class FarragoHelper
+        extends MockMetadataFactory
     {
         protected RefPackageImpl newRootPackage()
         {

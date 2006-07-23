@@ -23,6 +23,7 @@
 package net.sf.farrago.db;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -33,22 +34,24 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.session.*;
 
 
 /**
- * FarragoDbSessionIndexMap implements {@link FarragoSessionIndexMap},
- * resolving indexes for both permanent and temporary tables.
+ * FarragoDbSessionIndexMap implements {@link FarragoSessionIndexMap}, resolving
+ * indexes for both permanent and temporary tables.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
+class FarragoDbSessionIndexMap
+    extends FarragoCompoundAllocation
     implements FarragoSessionIndexMap
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoDatabase database;
 
@@ -67,22 +70,19 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
      */
     private FarragoRepos repos;
 
-
     /**
      * Cache for local data wrappers used to manage indexes.
      */
     private FarragoDataWrapperCache privateDataWrapperCache;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoDbSessionIndexMap.
      *
      * @param owner FarragoAllocationOwner which will own this map; on
      * closeAllocation, any temporary indexes will be deleted automatically
-     *
      * @param database FarragoDatabase context
-     *
      * @param repos the repos for this session
      */
     public FarragoDbSessionIndexMap(
@@ -95,17 +95,18 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         tempIndexRootMap = new HashMap();
         indexIdMap = new HashMap();
         owner.addAllocation(this);
-        
-        privateDataWrapperCache = new FarragoDataWrapperCache(
-            this,
-            database.getDataWrapperCache(),
-            database.getPluginClassLoader(),
-            repos,
-            database.getFennelDbHandle(),
-            null);
+
+        privateDataWrapperCache =
+            new FarragoDataWrapperCache(
+                this,
+                database.getDataWrapperCache(),
+                database.getPluginClassLoader(),
+                repos,
+                database.getFennelDbHandle(),
+                null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionIndexMap
     public long getIndexRoot(FemLocalIndex index)
@@ -175,8 +176,8 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     }
 
     /**
-     * Commit hook:  truncates any indexes for tables defined with
-     * ON COMMIT DELETE ROWS.
+     * Commit hook: truncates any indexes for tables defined with ON COMMIT
+     * DELETE ROWS.
      */
     public void onCommit()
     {
@@ -199,7 +200,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         FemLocalIndex index)
     {
         FarragoMedLocalDataServer server =
-            getIndexDataServer(wrapperCache,index);
+            getIndexDataServer(wrapperCache, index);
         long indexRoot;
         try {
             indexRoot = server.createIndex(index);
@@ -228,7 +229,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         }
 
         FarragoMedLocalDataServer server =
-            getIndexDataServer(wrapperCache,index);
+            getIndexDataServer(wrapperCache, index);
         try {
             server.dropIndex(
                 index,
@@ -253,7 +254,7 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
         boolean estimate)
     {
         FarragoMedLocalDataServer server =
-            getIndexDataServer(wrapperCache,index);
+            getIndexDataServer(wrapperCache, index);
         try {
             server.computeIndexStats(
                 index,
@@ -273,13 +274,14 @@ class FarragoDbSessionIndexMap extends FarragoCompoundAllocation
     }
 
     private FarragoMedLocalDataServer getIndexDataServer(
-        FarragoDataWrapperCache wrapperCache,FemLocalIndex index)
+        FarragoDataWrapperCache wrapperCache,
+        FemLocalIndex index)
     {
         FemLocalTable localTable = (FemLocalTable) index.getSpannedClass();
-        return (FarragoMedLocalDataServer)
-            wrapperCache.loadServerFromCatalog(localTable.getServer());
+        return
+            (FarragoMedLocalDataServer) wrapperCache.loadServerFromCatalog(
+                localTable.getServer());
     }
 }
-
 
 // End FarragoDbSessionIndexMap.java

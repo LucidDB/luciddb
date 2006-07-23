@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 
@@ -30,26 +30,27 @@ import org.eigenbase.relopt.*;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Jun 14, 2003
  */
-class VolcanoRuleMatch extends VolcanoRuleCall
+class VolcanoRuleMatch
+    extends VolcanoRuleCall
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final RelSet targetSet;
     RelSubset targetSubset;
     private final String digest;
     private VolcanoPlanner volcanoPlanner;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>VolcanoRuleMatch</code>.
      *
      * @param operand0 Primary operand
-     * @param rels List of targets; copied by the constructor, so the client
-     *        can modify it later
+     * @param rels List of targets; copied by the constructor, so the client can
+     * modify it later
      *
      * @pre rels[i] != null
      */
@@ -71,7 +72,7 @@ class VolcanoRuleMatch extends VolcanoRuleCall
         digest = computeDigest();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public String toString()
     {
@@ -127,6 +128,5 @@ class VolcanoRuleMatch extends VolcanoRuleCall
         return null;
     }
 }
-
 
 // End VolcanoRuleMatch.java

@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -37,8 +38,8 @@ import net.sf.farrago.util.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.rel.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
@@ -48,7 +49,7 @@ import org.eigenbase.sql2rel.*;
 
 /**
  * FarragoRexToOJTranslatorTest contains unit tests for the translation code in
- * {@link net.sf.farrago.ojrex}.  Each test case takes a single SQL row
+ * {@link net.sf.farrago.ojrex}. Each test case takes a single SQL row
  * expression string as input, performs code generation, and then diffs the
  * generated Java code snippet against an expected .ref file under directory
  * farrago/testlog/FarragoRexToOJTranslatorTest.
@@ -56,9 +57,11 @@ import org.eigenbase.sql2rel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
+public class FarragoRexToOJTranslatorTest
+    extends FarragoSqlToRelTestBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoRexToOJTranslatorTest object.
@@ -73,7 +76,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -91,13 +94,11 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     /**
      * Tests translation of a single row expression.
      *
-     * @param rowExpression the text of the row expression to test
-     * (this is used as the single select item in a constructed
-     * EXPLAIN PLAN statement)
-     *
-     * @param tableExpression the table to use in the FROM clause
-     * (don't use anything fancy here like a nested query because the
-     * optimizer used for this test has its hands tied)
+     * @param rowExpression the text of the row expression to test (this is used
+     * as the single select item in a constructed EXPLAIN PLAN statement)
+     * @param tableExpression the table to use in the FROM clause (don't use
+     * anything fancy here like a nested query because the optimizer used for
+     * this test has its hands tied)
      */
     private void checkTranslation(
         String rowExpression,
@@ -110,7 +111,7 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
 
         checkQuery(explainQuery);
     }
-        
+
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode topRel)
@@ -121,14 +122,14 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
 
         // grab the RexNode corresponding to our select item
         final RexProgram program = calcRel.getProgram();
-        final RexLocalRef ref =
-            program.getProjectList().get(0);
+        final RexLocalRef ref = program.getProjectList().get(0);
         RexNode rexNode = program.getExprList().get(ref.getIndex());
 
         // create objects needed for codegen
         SqlToRelConverter sqlToRelConverter = stmt.getSqlToRelConverter();
         FarragoRelImplementor relImplementor =
-            new FarragoRelImplementor(stmt,
+            new FarragoRelImplementor(
+                stmt,
                 sqlToRelConverter.getRexBuilder());
 
         // perform the codegen
@@ -136,7 +137,9 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
         MemberDeclarationList memberList = new MemberDeclarationList();
         final RexToOJTranslator translator =
             relImplementor.newStmtTranslator(
-                calcRel, stmtList, memberList);
+                calcRel,
+                stmtList,
+                memberList);
         Expression translatedExp;
         try {
             translator.pushProgram(program);
@@ -165,16 +168,17 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     {
         // TODO jvs 9-Apr-2006:  Eliminate the init parameter
         // to newPlanner and construct a HepPlanner here.
-        
+
         // NOTE jvs 22-June-2004:  We use a very stripped-down planner
         // so that the optimizer doesn't decide to rewrite our
         // carefully constructed expressions.  This also guarantees
         // that the Java calculator is used without having to
         // mess with system parameters.
         FarragoSessionPlanner planner =
-            stmt.getSession().getPersonality().newPlanner(stmt,false);
+            stmt.getSession().getPersonality().newPlanner(stmt, false);
         planner.addRule(IterRules.IterCalcRule.instance);
         FennelToIteratorConverter.register(planner);
+
         // Constant reduction hides what we're trying to test for.
         planner.setRuleDescExclusionFilter(
             FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
@@ -182,12 +186,11 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     }
 
     /**
-     * Tests translation of a single row expression, using the
-     * SALES.EMPS table for context.
+     * Tests translation of a single row expression, using the SALES.EMPS table
+     * for context.
      *
-     * @param rowExpression the text of the row expression to test
-     * (this is used as the single select item in a constructed
-     * EXPLAIN PLAN statement)
+     * @param rowExpression the text of the row expression to test (this is used
+     * as the single select item in a constructed EXPLAIN PLAN statement)
      */
     private void checkTranslation(String rowExpression)
         throws Exception
@@ -384,12 +387,9 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     // FIXME
 
     /*
-    public void testDynamicParam()
-        throws Exception
-    {
-        checkTranslation("empno + ?");
-    }
-    */
+    public void testDynamicParam() throws Exception { checkTranslation("empno +
+     ?"); }
+     */
     public void testUser()
         throws Exception
     {
@@ -453,23 +453,16 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     // FIXME
 
     /*
-    public void testCastNullToPrimitive()
-        throws Exception
-    {
-        // FIXME:  should take cast(null as int)
-        checkTranslation("cast(null as integer)");
-    }
-    */
+    public void testCastNullToPrimitive() throws Exception { // FIXME:  should
+     take cast(null as int) checkTranslation("cast(null as integer)"); }
+     */
 
     // FIXME
 
     /*
-    public void testCastNullToVarchar()
-        throws Exception
-    {
-        checkTranslation("cast(null as varchar(10))");
-    }
-    */
+    public void testCastNullToVarchar() throws Exception {
+     checkTranslation("cast(null as varchar(10))"); }
+     */
     public void testCastToVarcharImplicitTruncate()
         throws Exception
     {
@@ -486,35 +479,23 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     // TODO (depends on dtbug 79)
 
     /*
-    public void testCastToCharImplicitPad()
-        throws Exception
-    {
-        checkTranslation(
-            "cast('boo' as char(10))");
-    }
-    */
+    public void testCastToCharImplicitPad() throws Exception { checkTranslation(
+     "cast('boo' as char(10))"); }
+     */
 
     // TODO (depends on dtbug 79)
 
     /*
-    public void testCastToCharExact()
-        throws Exception
-    {
-        checkTranslation(
-            "cast('0123456789' as char(10))");
-    }
-    */
+    public void testCastToCharExact() throws Exception { checkTranslation(
+     "cast('0123456789' as char(10))"); }
+     */
 
     // TODO (depends on dtbug 79)
 
     /*
-    public void testCastToBinaryImplicitPad()
-        throws Exception
-    {
-        checkTranslation(
-            "cast(x'58797A' as binary(10))");
-    }
-    */
+    public void testCastToBinaryImplicitPad() throws Exception {
+     checkTranslation(     "cast(x'58797A' as binary(10))"); }
+     */
     public void testCastToVarbinaryImplicitTruncate()
         throws Exception
     {
@@ -531,7 +512,8 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     public void testCaseNotNullableCondWithElse()
         throws Exception
     {
-        checkTranslation("case manager when true then 'Yes' when false then 'No' else 'Other' end");
+        checkTranslation(
+            "case manager when true then 'Yes' when false then 'No' else 'Other' end");
     }
 
     public void testCaseNotNullableCondWithoutElse()
@@ -543,8 +525,10 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     public void testCaseNullableCondWithElse()
         throws Exception
     {
-        checkTranslation("case age when 50 then 'fifty' when 25 then 'twenty-five' end");
+        checkTranslation(
+            "case age when 50 then 'fifty' when 25 then 'twenty-five' end");
     }
+
     public void testCaseNullableCondWithoutElse()
         throws Exception
     {
@@ -560,14 +544,17 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     public void testCaseNotNullableCondWithoutElsePrimitive()
         throws Exception
     {
-        checkTranslation("case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end");
+        checkTranslation(
+            "case name when 'Fred' then 1 when 'Eric' then 2  when 'Wilma' then 3 when 'John' then 4 end");
     }
 
     public void testCaseNullableCondWithElsePrimitive()
         throws Exception
     {
-        checkTranslation("case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end");
+        checkTranslation(
+            "case deptno when 10 then 1 when 20 then 2 when 40 then 3 else 4 end");
     }
+
     public void testCaseNullableCondWithoutElsePrimitive()
         throws Exception
     {
@@ -777,8 +764,6 @@ public class FarragoRexToOJTranslatorTest extends FarragoSqlToRelTestBase
     {
         checkTranslation("City similar to Name escape 'n'");
     }
-
-
 }
 
 // End FarragoRexToOJTranslatorTest.java

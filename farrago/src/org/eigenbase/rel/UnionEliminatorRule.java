@@ -22,24 +22,23 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 
 
 /**
- * <code>UnionEliminatorRule</code> checks to see if its possible to
- * optimize a Union call by eliminating the Union operator altogether
- * in the case the call consists of only one input.
+ * <code>UnionEliminatorRule</code> checks to see if its possible to optimize a
+ * Union call by eliminating the Union operator altogether in the case the call
+ * consists of only one input.
  *
  * @author Wael Chatila
- * @since Feb 4, 2005
  * @version $Id$
+ * @since Feb 4, 2005
  */
-public class UnionEliminatorRule extends RelOptRule
+public class UnionEliminatorRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public UnionEliminatorRule()
     {
@@ -48,7 +47,7 @@ public class UnionEliminatorRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -63,7 +62,7 @@ public class UnionEliminatorRule extends RelOptRule
         // REVIEW jvs 14-Mar-2006:  why don't we need to register
         // the equivalence here like we do in RemoveDistinctRule?
         // And is the clone actually required here?
-        
+
         RelNode child = union.getInputs()[0];
         call.transformTo(RelOptUtil.clone(child));
     }

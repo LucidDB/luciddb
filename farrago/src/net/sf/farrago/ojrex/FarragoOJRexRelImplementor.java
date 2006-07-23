@@ -22,18 +22,21 @@
 package net.sf.farrago.ojrex;
 
 /**
- * FarragoOJRexRelImplementor defines services provided by
- * {@link net.sf.farrago.query.FarragoRelImplementor} to
- * classes in package {@link net.sf.farrago.ojrex}.
+ * FarragoOJRexRelImplementor defines services provided by {@link
+ * net.sf.farrago.query.FarragoRelImplementor} to classes in package {@link
+ * net.sf.farrago.ojrex}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoOJRexRelImplementor
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * @return MOFID of the foreign server associated with the
-     * expression being implemented
+     * @return MOFID of the foreign server associated with the expression being
+     * implemented
      */
     public String getServerMofId();
 }

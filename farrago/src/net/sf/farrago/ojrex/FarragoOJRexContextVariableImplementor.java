@@ -22,13 +22,10 @@
 */
 package net.sf.farrago.ojrex;
 
-import org.eigenbase.oj.rex.OJRexImplementor;
-import org.eigenbase.oj.rex.RexToOJTranslator;
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.reltype.RelDataType;
 import openjava.ptree.*;
-import net.sf.farrago.type.runtime.AssignableValue;
+
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -40,28 +37,37 @@ import net.sf.farrago.type.runtime.AssignableValue;
  * @author Julian Hyde
  * @version $Id$
  */
-public class FarragoOJRexContextVariableImplementor implements OJRexImplementor
+public class FarragoOJRexContextVariableImplementor
+    implements OJRexImplementor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String name;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexContextVariableImplementor(String name)
     {
         this.name = name;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Expression implement(
         RexToOJTranslator translator,
         RexCall call,
-        Expression[] operands)
+        Expression [] operands)
     {
         FarragoRexToOJTranslator farragoTranslator =
             (FarragoRexToOJTranslator) translator;
-        return farragoTranslator.convertVariable(
-            call.getType(),
-            "getContextVariable_" + name,
-            new ExpressionList());
+        return
+            farragoTranslator.convertVariable(
+                call.getType(),
+                "getContextVariable_" + name,
+                new ExpressionList());
     }
-    
+
     public boolean canImplement(RexCall call)
     {
         return true;

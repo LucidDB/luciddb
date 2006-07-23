@@ -21,45 +21,53 @@
 */
 package org.eigenbase.rel.metadata;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 
-import java.util.*;
 
 /**
- * RelMdUniqueKeys supplies a default implementation of
- * {@link RelMetadataQuery#getUniqueKeys} for the standard logical algebra.
+ * RelMdUniqueKeys supplies a default implementation of {@link
+ * RelMetadataQuery#getUniqueKeys} for the standard logical algebra.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
+public class RelMdUniqueKeys
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public Set<BitSet> getUniqueKeys(FilterRelBase rel)
     {
         return RelMetadataQuery.getUniqueKeys(rel.getChild());
     }
-    
+
     public Set<BitSet> getUniqueKeys(SortRel rel)
     {
         return RelMetadataQuery.getUniqueKeys(rel.getChild());
     }
-    
+
     public Set<BitSet> getUniqueKeys(ProjectRelBase rel)
     {
         return RelMetadataQuery.getUniqueKeys(rel.getChild());
     }
-    
+
     public Set<BitSet> getUniqueKeys(JoinRelBase rel)
     {
         // TODO - need to account for outer joins
-        
+
         // locate the columns that participate in equijoins
         BitSet leftJoinCols = new BitSet();
         BitSet rightJoinCols = new BitSet();
         RelMdUtil.findEquiJoinCols(
-            rel, rel.getCondition(), leftJoinCols, rightJoinCols);
-        
+            rel,
+            rel.getCondition(),
+            leftJoinCols,
+            rightJoinCols);
+
         // determine if either or both the LHS and RHS are unique on the
         // equijoin columns
         RelNode left = rel.getLeft();
@@ -70,16 +78,17 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         // add bits from left and/or right depending on which sides are
         // unique
         Set<BitSet> retSet = new HashSet<BitSet>();
-        if (rightUnique != null && rightUnique) {
+        if ((rightUnique != null) && rightUnique) {
             Set<BitSet> leftSet = RelMetadataQuery.getUniqueKeys(left);
             if (leftSet == null) {
                 return null;
             }
             retSet.addAll(leftSet);
         }
+
         // bits on the right need to be adjusted to reflect addition of left
         // input
-        if (leftUnique != null && leftUnique) {
+        if ((leftUnique != null) && leftUnique) {
             int nFieldsOnLeft = left.getRowType().getFieldCount();
             Set<BitSet> rightSet = RelMetadataQuery.getUniqueKeys(right);
             if (rightSet == null) {
@@ -90,32 +99,31 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
                 BitSet colMask = (BitSet) it.next();
                 BitSet tmpMask = new BitSet();
                 for (int bit = colMask.nextSetBit(0); bit >= 0;
-                    bit = colMask.nextSetBit(bit + 1))
-                {
+                    bit = colMask.nextSetBit(bit + 1)) {
                     tmpMask.set(bit + nFieldsOnLeft);
                 }
                 retSet.add(tmpMask);
             }
         }
-        
-        if (leftUnique == null && rightUnique == null) {
+
+        if ((leftUnique == null) && (rightUnique == null)) {
             return null;
         }
 
         return retSet;
     }
-    
+
     public Set<BitSet> getUniqueKeys(SemiJoinRel rel)
     {
         // only return the unique keys from the LHS since a semijoin only
         // returns the LHS
         return RelMetadataQuery.getUniqueKeys(rel.getLeft());
     }
-    
+
     public Set<BitSet> getUniqueKeys(AggregateRelBase rel)
     {
         Set<BitSet> retSet = new HashSet<BitSet>();
-        
+
         // group by keys form a unique key
         if (rel.getGroupCount() > 0) {
             BitSet groupKey = new BitSet();
@@ -126,7 +134,7 @@ public class RelMdUniqueKeys extends ReflectiveRelMetadataProvider
         }
         return retSet;
     }
-    
+
     // Catch-all rule when none of the others apply.
     public Set<BitSet> getUniqueKeys(RelNode rel)
     {

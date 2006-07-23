@@ -22,43 +22,42 @@
 */
 package net.sf.farrago.runtime;
 
-import net.sf.farrago.fennel.FennelStreamGraph;
-import net.sf.farrago.fennel.FennelStreamHandle;
+import java.nio.*;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import net.sf.farrago.fennel.*;
 
 
 /**
- * FennelTupleIter implements the {@link org.eigenbase.runtime.TupleIter} 
+ * FennelTupleIter implements the {@link org.eigenbase.runtime.TupleIter}
  * interfaces by reading tuples from a Fennel ExecStream.
  *
- * <p>FennelTupleIter only deals with raw byte buffers; it delegates to a
- * {@link FennelTupleReader} object the responsibility to unmarshal individual
- * fields.
- * 
+ * <p>FennelTupleIter only deals with raw byte buffers; it delegates to a {@link
+ * FennelTupleReader} object the responsibility to unmarshal individual fields.
+ *
  * <p>FennelTupleIter's implementation of {@link #populateBuffer()} blocks.
  *
  * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
  */
-public class FennelTupleIter extends FennelAbstractTupleIter
+public class FennelTupleIter
+    extends FennelAbstractTupleIter
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FennelStreamGraph streamGraph;
     private final FennelStreamHandle streamHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelTupleIter object.
      *
      * @param tupleReader FennelTupleReader to use to interpret Fennel data
      * @param streamGraph underlying FennelStreamGraph
-     * @param streamHandle handle to underlying Fennel ExecStream that
-     *                    this TupleIter reads from
-     * @param bufferSize number of bytes in buffer used for fetching from
-     *     Fennel
+     * @param streamHandle handle to underlying Fennel ExecStream that this
+     * TupleIter reads from
+     * @param bufferSize number of bytes in buffer used for fetching from Fennel
      */
     public FennelTupleIter(
         FennelTupleReader tupleReader,
@@ -80,7 +79,7 @@ public class FennelTupleIter extends FennelAbstractTupleIter
         byteBuffer.limit(0);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override FennelAbstractTupleIter
     public void restart()
@@ -100,9 +99,9 @@ public class FennelTupleIter extends FennelAbstractTupleIter
 
     /**
      * Blocking implementation of {@link FennelTupleIter#populateBuffer()}.
-     * 
-     * @return number of bytes read into {@link FennelTupleIter#byteBuffer}
-     *         or 0 for end of stream.
+     *
+     * @return number of bytes read into {@link FennelTupleIter#byteBuffer} or 0
+     * for end of stream.
      */
     protected int populateBuffer()
     {
@@ -110,6 +109,5 @@ public class FennelTupleIter extends FennelAbstractTupleIter
         return streamGraph.fetch(streamHandle, bufferAsArray);
     }
 }
-
 
 // End FennelTupleIter.java

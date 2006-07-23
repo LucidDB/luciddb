@@ -20,19 +20,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj;
 
-import java.util.HashMap;
+import java.util.*;
 
-import openjava.mop.CannotExecuteException;
-import openjava.mop.OJClass;
+import openjava.mop.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -41,21 +39,22 @@ import org.eigenbase.sql.type.*;
  *
  * @author jhyde
  * @version $Id$
- *
  * @see openjava.mop.OJClass
  * @see RelDataTypeFactory
  * @since May 30, 2003
  */
-public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
+public class OJTypeFactoryImpl
+    extends SqlTypeFactoryImpl
     implements OJTypeFactory
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final HashMap mapOJClassToType = new HashMap();
 
     private final OJClassMap ojClassMap;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an <code>OJTypeFactoryImpl</code>.
@@ -70,7 +69,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
         this.ojClassMap = ojClassMap;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override RelDataTypeFactoryImpl
     public RelDataType createJavaType(Class clazz)
@@ -86,7 +85,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
         OJClass ojClass = OJUtil.typeToOJClass(elementType, this);
         return new OJScalarType(OJClass.arrayOf(ojClass));
     }
-    
+
     protected OJClass createOJClassForRecordType(
         OJClass declarer,
         RelDataType recordType)
@@ -104,7 +103,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
             fieldClasses[i] = OJUtil.typeToOJClass(declarer, fieldType, this);
         }
         return ojClassMap.createProject(declarer, fieldClasses,
-            fieldNames);
+                fieldNames);
     }
 
     public OJClass toOJClass(
@@ -166,27 +165,23 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
         return type;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Type based upon an {@link OJClass}.
      *
-     * <p>
-     * Use this class only if the class is a 'pure' OJClass:
+     * <p>Use this class only if the class is a 'pure' OJClass:
      *
      * <ul>
-     * <li>
-     * If the {@link OJClass} is based upon a Java class, call
-     * {@link #createJavaType} instead.
-     * </li>
-     * <li>
-     * If the {@link OJClass} is synthetic, call {@link #createStructType} or
-     * {@link #createJoinType} instead.
-     * </li>
+     * <li>If the {@link OJClass} is based upon a Java class, call {@link
+     * #createJavaType} instead.</li>
+     * <li>If the {@link OJClass} is synthetic, call {@link #createStructType}
+     * or {@link #createJoinType} instead.</li>
      * </ul>
      * </p>
      */
-    private class OJScalarType extends RelDataTypeImpl
+    private class OJScalarType
+        extends RelDataTypeImpl
     {
         private final OJClass ojClass;
 
@@ -207,7 +202,7 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
 
             // REVIEW jvs 23-Sept-2004:  find out who commented this out and
             // why
-            
+
             //assert(!OJSyntheticClass.isProjectClass(ojClass));
             this.ojClass = ojClass;
             computeDigest();
@@ -230,6 +225,5 @@ public class OJTypeFactoryImpl extends SqlTypeFactoryImpl
         }
     }
 }
-
 
 // End OJTypeFactoryImpl.java

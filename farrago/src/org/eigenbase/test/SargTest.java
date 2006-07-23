@@ -21,62 +21,60 @@
 */
 package org.eigenbase.test;
 
-import junit.framework.TestCase;
-
-import org.eigenbase.sarg.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.fun.*;
-
 import java.math.*;
+
 import java.util.*;
+
+import junit.framework.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sarg.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * SargTest tests the {@link org.eigenbase.sarg} class library.
  *
- *<p>
- *
- * NOTE jvs 17-Jan-2006:  This class lives in org.eigenbase.test rather
- * than org.eigenbase.sarg by design:  we want to make sure we're only
- * testing via the public interface.
+ * <p>NOTE jvs 17-Jan-2006: This class lives in org.eigenbase.test rather than
+ * org.eigenbase.sarg by design: we want to make sure we're only testing via the
+ * public interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargTest extends TestCase
+public class SargTest
+    extends TestCase
 {
+
+    //~ Enums ------------------------------------------------------------------
+
     enum Zodiac {
-        AQUARIUS,
-        ARIES,
-        CANCER,
-        CAPRICORN,
-        GEMINI,
-        LEO,
-        LIBRA,
-        PISCES,
-        SAGITTARIUS,
-        SCORPIO,
-        TAURUS,
-        VIRGO
-    };
-    
+        AQUARIUS, ARIES, CANCER, CAPRICORN, GEMINI, LEO, LIBRA, PISCES,
+        SAGITTARIUS, SCORPIO, TAURUS, VIRGO
+    }
+
+    //~ Instance fields --------------------------------------------------------
+
     private SargFactory sargFactory;
-    
+
     private RexBuilder rexBuilder;
-    
+
     private RelDataType intType;
-    
+
     private RelDataType stringType;
-    
+
     private RexNode intLiteral7;
-    
+
     private RexNode intLiteral8point5;
-    
+
     private RexNode intLiteral490;
-    
+
     private SargIntervalExpr [] exprs;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Initializes a new SargTest.
      *
@@ -88,70 +86,91 @@ public class SargTest extends TestCase
         super(testCaseName);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement TestCase
     public void setUp()
     {
         // create some reusable fixtures
-        
+
         RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl();
         intType = typeFactory.createSqlType(SqlTypeName.Integer);
         intType = typeFactory.createTypeWithNullability(intType, true);
         stringType = typeFactory.createSqlType(SqlTypeName.Varchar, 20);
         stringType = typeFactory.createTypeWithNullability(stringType, true);
-        
+
         rexBuilder = new RexBuilder(typeFactory);
         intLiteral7 = rexBuilder.makeExactLiteral(
-            new BigDecimal(7), intType);
-        intLiteral490 = rexBuilder.makeExactLiteral(
-            new BigDecimal(490), intType);
-        intLiteral8point5 = rexBuilder.makeExactLiteral(
-            new BigDecimal("8.5"), intType);
+                new BigDecimal(7),
+                intType);
+        intLiteral490 =
+            rexBuilder.makeExactLiteral(
+                new BigDecimal(490),
+                intType);
+        intLiteral8point5 =
+            rexBuilder.makeExactLiteral(
+                new BigDecimal("8.5"),
+                intType);
 
         sargFactory = new SargFactory(rexBuilder);
     }
-    
+
     public void testDefaultEndpoint()
     {
         SargMutableEndpoint ep = sargFactory.newEndpoint(intType);
-        assertEquals("-infinity", ep.toString());
+        assertEquals(
+            "-infinity",
+            ep.toString());
     }
-    
+
     public void testInfiniteEndpoint()
     {
         SargMutableEndpoint ep = sargFactory.newEndpoint(intType);
         ep.setInfinity(1);
-        assertEquals("+infinity", ep.toString());
+        assertEquals(
+            "+infinity",
+            ep.toString());
         ep.setInfinity(-1);
-        assertEquals("-infinity", ep.toString());
+        assertEquals(
+            "-infinity",
+            ep.toString());
     }
 
     public void testFiniteEndpoint()
     {
         SargMutableEndpoint ep = sargFactory.newEndpoint(intType);
-        
+
         ep.setFinite(
             SargBoundType.LOWER,
             SargStrictness.OPEN,
             intLiteral7);
-        assertEquals("> 7", ep.toString());
-        
+        assertEquals(
+            "> 7",
+            ep.toString());
+
         ep.setFinite(
             SargBoundType.LOWER,
             SargStrictness.CLOSED,
             intLiteral7);
-        assertEquals(">= 7", ep.toString());
-        
+        assertEquals(
+            ">= 7",
+            ep.toString());
+
         ep.setFinite(
             SargBoundType.UPPER,
             SargStrictness.OPEN,
             intLiteral7);
-        assertEquals("< 7", ep.toString());
-        
+        assertEquals(
+            "< 7",
+            ep.toString());
+
         ep.setFinite(
             SargBoundType.UPPER,
             SargStrictness.CLOSED,
             intLiteral7);
-        assertEquals("<= 7", ep.toString());
+        assertEquals(
+            "<= 7",
+            ep.toString());
 
         // after rounding, "> 8.5" is equivalent to ">= 9" over the domain
         // of integers
@@ -159,25 +178,33 @@ public class SargTest extends TestCase
             SargBoundType.LOWER,
             SargStrictness.OPEN,
             intLiteral8point5);
-        assertEquals(">= 9", ep.toString());
-        
+        assertEquals(
+            ">= 9",
+            ep.toString());
+
         ep.setFinite(
             SargBoundType.LOWER,
             SargStrictness.CLOSED,
             intLiteral8point5);
-        assertEquals(">= 9", ep.toString());
+        assertEquals(
+            ">= 9",
+            ep.toString());
 
         ep.setFinite(
             SargBoundType.UPPER,
             SargStrictness.OPEN,
             intLiteral8point5);
-        assertEquals("< 9", ep.toString());
-        
+        assertEquals(
+            "< 9",
+            ep.toString());
+
         ep.setFinite(
             SargBoundType.UPPER,
             SargStrictness.CLOSED,
             intLiteral8point5);
-        assertEquals("< 9", ep.toString());
+        assertEquals(
+            "< 9",
+            ep.toString());
     }
 
     public void testNullEndpoint()
@@ -188,7 +215,9 @@ public class SargTest extends TestCase
             SargBoundType.LOWER,
             SargStrictness.OPEN,
             sargFactory.newNullLiteral());
-        assertEquals("> null", ep.toString());
+        assertEquals(
+            "> null",
+            ep.toString());
     }
 
     public void testTouchingEndpoint()
@@ -199,7 +228,7 @@ public class SargTest extends TestCase
         // "-infinity" does not touch "-infinity" (seems like something you
         // could argue for hours late at night in a college dorm)
         assertFalse(ep1.isTouching(ep2));
-        
+
         // "< 7" does not touch "> 7"
         ep1.setFinite(
             SargBoundType.UPPER,
@@ -226,7 +255,9 @@ public class SargTest extends TestCase
             SargStrictness.CLOSED,
             intLiteral7);
         assertTrue(ep1.isTouching(ep2));
-        assertEquals(0, ep1.compareTo(ep2));
+        assertEquals(
+            0,
+            ep1.compareTo(ep2));
 
         // "<= 7" does not touch ">= 490"
         ep2.setFinite(
@@ -240,7 +271,9 @@ public class SargTest extends TestCase
     public void testDefaultIntervalExpr()
     {
         SargIntervalExpr interval = sargFactory.newIntervalExpr(intType);
-        assertEquals("(-infinity, +infinity)", interval.toString());
+        assertEquals(
+            "(-infinity, +infinity)",
+            interval.toString());
     }
 
     public void testPointExpr()
@@ -250,8 +283,12 @@ public class SargTest extends TestCase
         assertTrue(interval.isPoint());
         assertFalse(interval.isUnconstrained());
         assertFalse(interval.isEmpty());
-        assertEquals("[7]", interval.toString());
-        assertEquals("[7]", interval.evaluate().toString());
+        assertEquals(
+            "[7]",
+            interval.toString());
+        assertEquals(
+            "[7]",
+            interval.evaluate().toString());
     }
 
     public void testRangeIntervalExpr()
@@ -261,29 +298,49 @@ public class SargTest extends TestCase
         interval.setLower(intLiteral7, SargStrictness.CLOSED);
         interval.setUpper(intLiteral490, SargStrictness.CLOSED);
         assertRange(interval);
-        assertEquals("[7, 490]", interval.toString());
-        assertEquals("[7, 490]", interval.evaluate().toString());
+        assertEquals(
+            "[7, 490]",
+            interval.toString());
+        assertEquals(
+            "[7, 490]",
+            interval.evaluate().toString());
 
         interval.unsetLower();
         assertRange(interval);
-        assertEquals("(-infinity, 490]", interval.toString());
-        assertEquals("(null, 490]", interval.evaluate().toString());
-        
+        assertEquals(
+            "(-infinity, 490]",
+            interval.toString());
+        assertEquals(
+            "(null, 490]",
+            interval.evaluate().toString());
+
         interval.setLower(intLiteral7, SargStrictness.CLOSED);
         interval.unsetUpper();
         assertRange(interval);
-        assertEquals("[7, +infinity)", interval.toString());
-        assertEquals("[7, +infinity)", interval.evaluate().toString());
+        assertEquals(
+            "[7, +infinity)",
+            interval.toString());
+        assertEquals(
+            "[7, +infinity)",
+            interval.evaluate().toString());
 
         interval.setUpper(intLiteral490, SargStrictness.OPEN);
         assertRange(interval);
-        assertEquals("[7, 490)", interval.toString());
-        assertEquals("[7, 490)", interval.evaluate().toString());
+        assertEquals(
+            "[7, 490)",
+            interval.toString());
+        assertEquals(
+            "[7, 490)",
+            interval.evaluate().toString());
 
         interval.setLower(intLiteral7, SargStrictness.OPEN);
         assertRange(interval);
-        assertEquals("(7, 490)", interval.toString());
-        assertEquals("(7, 490)", interval.evaluate().toString());
+        assertEquals(
+            "(7, 490)",
+            interval.toString());
+        assertEquals(
+            "(7, 490)",
+            interval.evaluate().toString());
     }
 
     private void assertRange(SargIntervalExpr interval)
@@ -300,8 +357,12 @@ public class SargTest extends TestCase
         assertTrue(interval.isPoint());
         assertFalse(interval.isUnconstrained());
         assertFalse(interval.isEmpty());
-        assertEquals("[null] NULL_MATCHES_NULL", interval.toString());
-        assertEquals("[null]", interval.evaluate().toString());
+        assertEquals(
+            "[null] NULL_MATCHES_NULL",
+            interval.toString());
+        assertEquals(
+            "[null]",
+            interval.evaluate().toString());
     }
 
     public void testEmptyExpr()
@@ -310,8 +371,12 @@ public class SargTest extends TestCase
         interval.setEmpty();
         assertTrue(interval.isEmpty());
         assertFalse(interval.isUnconstrained());
-        assertEquals("()", interval.toString());
-        assertEquals("()", interval.evaluate().toString());
+        assertEquals(
+            "()",
+            interval.toString());
+        assertEquals(
+            "()",
+            interval.evaluate().toString());
     }
 
     public void testUnconstrainedExpr()
@@ -322,8 +387,12 @@ public class SargTest extends TestCase
         interval.setUnconstrained();
         assertTrue(interval.isUnconstrained());
         assertFalse(interval.isEmpty());
-        assertEquals("(-infinity, +infinity)", interval.toString());
-        assertEquals("(-infinity, +infinity)", interval.evaluate().toString());
+        assertEquals(
+            "(-infinity, +infinity)",
+            interval.toString());
+        assertEquals(
+            "(-infinity, +infinity)",
+            interval.evaluate().toString());
     }
 
     public void testSetExpr()
@@ -334,8 +403,10 @@ public class SargTest extends TestCase
         interval1.setLower(intLiteral7, SargStrictness.OPEN);
         interval2.setUpper(intLiteral490, SargStrictness.OPEN);
 
-        SargSetExpr intersectExpr = sargFactory.newSetExpr(
-            intType, SargSetOperator.INTERSECTION);
+        SargSetExpr intersectExpr =
+            sargFactory.newSetExpr(
+                intType,
+                SargSetOperator.INTERSECTION);
         intersectExpr.addChild(interval1);
         intersectExpr.addChild(interval2);
         assertEquals(
@@ -344,9 +415,11 @@ public class SargTest extends TestCase
         assertEquals(
             "(7, 490)",
             intersectExpr.evaluate().toString());
-        
-        SargSetExpr unionExpr = sargFactory.newSetExpr(
-            intType, SargSetOperator.UNION);
+
+        SargSetExpr unionExpr =
+            sargFactory.newSetExpr(
+                intType,
+                SargSetOperator.UNION);
         unionExpr.addChild(interval1);
         unionExpr.addChild(interval2);
         assertEquals(
@@ -360,8 +433,10 @@ public class SargTest extends TestCase
         // http://issues.eigenbase.org/browse/LDB-60) for why the
         // expected result is what it is.
 
-        SargSetExpr complementExpr = sargFactory.newSetExpr(
-            intType, SargSetOperator.COMPLEMENT);
+        SargSetExpr complementExpr =
+            sargFactory.newSetExpr(
+                intType,
+                SargSetOperator.COMPLEMENT);
         complementExpr.addChild(interval1);
         assertEquals(
             "COMPLEMENT( (7, +infinity) )",
@@ -377,86 +452,119 @@ public class SargTest extends TestCase
         for (int i = 0; i < 11; ++i) {
             exprs[i] = sargFactory.newIntervalExpr(stringType);
         }
-        
+
         exprs[0].setPoint(createCoordinate(Zodiac.AQUARIUS));
-        
+
         exprs[1].setPoint(createCoordinate(Zodiac.LEO));
-        
+
         exprs[2].setUpper(
-            createCoordinate(Zodiac.CAPRICORN), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.CAPRICORN),
+            SargStrictness.CLOSED);
+
         exprs[3].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.OPEN);
-        
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.OPEN);
+
         exprs[4].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
+
         exprs[5].setNull();
-        
+
         exprs[6].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
         exprs[6].setUpper(
-            createCoordinate(Zodiac.PISCES), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.PISCES),
+            SargStrictness.CLOSED);
+
         exprs[7].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
         exprs[7].setUpper(
-            createCoordinate(Zodiac.SCORPIO), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.SCORPIO),
+            SargStrictness.CLOSED);
+
         exprs[8].setLower(
-            createCoordinate(Zodiac.ARIES), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.ARIES),
+            SargStrictness.CLOSED);
         exprs[8].setUpper(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
+
         exprs[9].setLower(
-            createCoordinate(Zodiac.ARIES), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.ARIES),
+            SargStrictness.CLOSED);
         exprs[9].setUpper(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.OPEN);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.OPEN);
 
         exprs[10].setEmpty();
 
         checkUnion(
-            0, 2, 5,
+            0,
+            2,
+            5,
             "[null, _ISO-8859-1'CAPRICORN']");
-        
+
         checkUnion(
-            2, 5, 0,
+            2,
+            5,
+            0,
             "[null, _ISO-8859-1'CAPRICORN']");
-        
+
         checkUnion(
-            5, 6, 7,
+            5,
+            6,
+            7,
             "UNION( [null] [_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO'] )");
-        
+
         checkUnion(
-            8, 4, 5,
+            8,
+            4,
+            5,
             "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
 
         checkUnion(
-            9, 4, 5,
+            9,
+            4,
+            5,
             "UNION( [null] [_ISO-8859-1'ARIES', +infinity) )");
-        
+
         checkUnion(
-            7, 8, 9,
+            7,
+            8,
+            9,
             "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
-        
+
         checkUnion(
-            6, 7, 10,
+            6,
+            7,
+            10,
             "[_ISO-8859-1'GEMINI', _ISO-8859-1'SCORPIO']");
-        
+
         checkUnion(
-            5, 6, 0,
+            5,
+            6,
+            0,
             "UNION( [null] [_ISO-8859-1'AQUARIUS'] [_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES'] )");
-        
+
         checkUnion(
-            10, 9, 5,
+            10,
+            9,
+            5,
             "UNION( [null] [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') )");
-        
+
         checkUnion(
-            9, 8, 7,
+            9,
+            8,
+            7,
             "[_ISO-8859-1'ARIES', _ISO-8859-1'SCORPIO']");
-        
+
         checkUnion(
-            3, 9, 1,
+            3,
+            9,
+            1,
             "UNION( [_ISO-8859-1'ARIES', _ISO-8859-1'GEMINI') (_ISO-8859-1'GEMINI', +infinity) )");
     }
 
@@ -466,78 +574,105 @@ public class SargTest extends TestCase
         for (int i = 0; i < 11; ++i) {
             exprs[i] = sargFactory.newIntervalExpr(stringType);
         }
-        
+
         exprs[0].setUnconstrained();
-        
+
         exprs[1].setPoint(createCoordinate(Zodiac.LEO));
-        
+
         exprs[2].setUpper(
-            createCoordinate(Zodiac.CAPRICORN), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.CAPRICORN),
+            SargStrictness.CLOSED);
+
         exprs[3].setLower(
-            createCoordinate(Zodiac.CANCER), SargStrictness.OPEN);
-        
+            createCoordinate(Zodiac.CANCER),
+            SargStrictness.OPEN);
+
         exprs[4].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
+
         exprs[5].setNull();
-        
+
         exprs[6].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
         exprs[6].setUpper(
-            createCoordinate(Zodiac.PISCES), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.PISCES),
+            SargStrictness.CLOSED);
+
         exprs[7].setLower(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
         exprs[7].setUpper(
-            createCoordinate(Zodiac.SCORPIO), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.SCORPIO),
+            SargStrictness.CLOSED);
+
         exprs[8].setLower(
-            createCoordinate(Zodiac.ARIES), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.ARIES),
+            SargStrictness.CLOSED);
         exprs[8].setUpper(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.CLOSED);
-        
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.CLOSED);
+
         exprs[9].setLower(
-            createCoordinate(Zodiac.ARIES), SargStrictness.CLOSED);
+            createCoordinate(Zodiac.ARIES),
+            SargStrictness.CLOSED);
         exprs[9].setUpper(
-            createCoordinate(Zodiac.GEMINI), SargStrictness.OPEN);
+            createCoordinate(Zodiac.GEMINI),
+            SargStrictness.OPEN);
 
         exprs[10].setEmpty();
 
         checkIntersection(
-            2, 3, 0,
+            2,
+            3,
+            0,
             "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
 
         checkIntersection(
-            0, 3, 2,
+            0,
+            3,
+            2,
             "(_ISO-8859-1'CANCER', _ISO-8859-1'CAPRICORN']");
 
         checkIntersection(
-            6, 7, 0,
+            6,
+            7,
+            0,
             "[_ISO-8859-1'GEMINI', _ISO-8859-1'PISCES']");
 
         checkIntersection(
-            6, 7, 8,
+            6,
+            7,
+            8,
             "[_ISO-8859-1'GEMINI']");
 
         checkIntersection(
-            8, 7, 6,
+            8,
+            7,
+            6,
             "[_ISO-8859-1'GEMINI']");
 
         checkIntersection(
-            9, 7, 6,
+            9,
+            7,
+            6,
             "()");
     }
-    
+
     private void checkUnion(
-        int i1, int i2, int i3,
+        int i1,
+        int i2,
+        int i3,
         String expected)
     {
         checkSetOp(SargSetOperator.UNION, i1, i2, i3, expected);
     }
 
     private void checkIntersection(
-        int i1, int i2, int i3,
+        int i1,
+        int i2,
+        int i3,
         String expected)
     {
         checkSetOp(SargSetOperator.INTERSECTION, i1, i2, i3, expected);
@@ -545,15 +680,20 @@ public class SargTest extends TestCase
 
     private void checkSetOp(
         SargSetOperator setOp,
-        int i1, int i2, int i3,
+        int i1,
+        int i2,
+        int i3,
         String expected)
     {
         SargSetExpr setExpr = sargFactory.newSetExpr(
-            stringType, setOp);
+                stringType,
+                setOp);
         setExpr.addChild(exprs[i1]);
         setExpr.addChild(exprs[i2]);
         setExpr.addChild(exprs[i3]);
-        assertEquals(expected, setExpr.evaluate().toString());
+        assertEquals(
+            expected,
+            setExpr.evaluate().toString());
     }
 
     private RexNode createCoordinate(Zodiac z)
@@ -566,70 +706,83 @@ public class SargTest extends TestCase
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
         RexNode pred1, pred2, pred3;
         SargBinding binding;
-        
+
         RexNode inputRef8 = rexBuilder.makeInputRef(intType, 8);
         RexNode inputRef9 = rexBuilder.makeInputRef(intType, 8);
-        
+
         // test variable before literal
-        pred1 = rexBuilder.makeCall(
-            SqlStdOperatorTable.lessThanOperator,
-            inputRef8,
-            intLiteral7);
+        pred1 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.lessThanOperator,
+                inputRef8,
+                intLiteral7);
         binding = rexAnalyzer.analyze(pred1);
         assertNotNull(binding);
-        assertEquals("(-infinity, 7)", binding.getExpr().toString());
+        assertEquals(
+            "(-infinity, 7)",
+            binding.getExpr().toString());
 
         // test literal before variable
-        pred2 = rexBuilder.makeCall(
-            SqlStdOperatorTable.greaterThanOrEqualOperator,
-            intLiteral490,
-            inputRef9);
+        pred2 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.greaterThanOrEqualOperator,
+                intLiteral490,
+                inputRef9);
         binding = rexAnalyzer.analyze(pred2);
         assertNotNull(binding);
-        assertEquals("(-infinity, 490]", binding.getExpr().toString());
+        assertEquals(
+            "(-infinity, 490]",
+            binding.getExpr().toString());
 
         // test AND
-        pred3 = rexBuilder.makeCall(
-            SqlStdOperatorTable.andOperator,
-            pred1,
-            pred2);
+        pred3 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                pred1,
+                pred2);
         binding = rexAnalyzer.analyze(pred3);
         assertNotNull(binding);
-        assertEquals("INTERSECTION( (-infinity, 7) (-infinity, 490] )",
+        assertEquals(
+            "INTERSECTION( (-infinity, 7) (-infinity, 490] )",
             binding.getExpr().toString());
-        
+
         // test OR
-        pred3 = rexBuilder.makeCall(
-            SqlStdOperatorTable.orOperator,
-            pred1,
-            pred2);
+        pred3 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.orOperator,
+                pred1,
+                pred2);
         binding = rexAnalyzer.analyze(pred3);
         assertNotNull(binding);
-        assertEquals("UNION( (-infinity, 7) (-infinity, 490] )",
+        assertEquals(
+            "UNION( (-infinity, 7) (-infinity, 490] )",
             binding.getExpr().toString());
-        
+
         // test NOT
         pred3 = rexBuilder.makeCall(
-            SqlStdOperatorTable.notOperator,
-            pred1);
+                SqlStdOperatorTable.notOperator,
+                pred1);
         binding = rexAnalyzer.analyze(pred3);
         assertNotNull(binding);
-        assertEquals("COMPLEMENT( (-infinity, 7) )",
+        assertEquals(
+            "COMPLEMENT( (-infinity, 7) )",
             binding.getExpr().toString());
-        
+
         // This one should fail:  two variables
-        pred1 = rexBuilder.makeCall(
-            SqlStdOperatorTable.lessThanOperator,
-            inputRef8,
-            inputRef9);
+        pred1 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.lessThanOperator,
+                inputRef8,
+                inputRef9);
         binding = rexAnalyzer.analyze(pred1);
         assertNull(binding);
-        
+
         // This one should fail:  two literals
-        pred1 = rexBuilder.makeCall(
-            SqlStdOperatorTable.lessThanOperator,
-            intLiteral7,
-            intLiteral490);
+        pred1 =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.lessThanOperator,
+                intLiteral7,
+                intLiteral490);
         binding = rexAnalyzer.analyze(pred1);
         assertNull(binding);
     }

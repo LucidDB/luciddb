@@ -34,20 +34,22 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelRenameRel is the Fennel implementation of a rename-only
- * relational Project operator (which is a no-op).  It can work with
- * any Fennel calling convention.
+ * FennelRenameRel is the Fennel implementation of a rename-only relational
+ * Project operator (which is a no-op). It can work with any Fennel calling
+ * convention.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRenameRel extends FennelSingleRel
+public class FennelRenameRel
+    extends FennelSingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private String [] fieldNames;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelRenameRel object.
@@ -67,7 +69,7 @@ public class FennelRenameRel extends FennelSingleRel
         this.fieldNames = fieldNames;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public boolean isDistinct()
@@ -78,11 +80,12 @@ public class FennelRenameRel extends FennelSingleRel
     // implement Cloneable
     public Object clone()
     {
-        return new FennelRenameRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            fieldNames,
-            cloneTraits());
+        return
+            new FennelRenameRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                fieldNames,
+                cloneTraits());
     }
 
     // implement RelNode
@@ -95,23 +98,24 @@ public class FennelRenameRel extends FennelSingleRel
     public RelDataType deriveRowType()
     {
         final RelDataTypeField [] fields = getChild().getRowType().getFields();
-        return getCluster().getTypeFactory().createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    return fields.length;
-                }
+        return
+            getCluster().getTypeFactory().createStructType(
+                new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return fields.length;
+                    }
 
-                public String getFieldName(int index)
-                {
-                    return fieldNames[index];
-                }
+                    public String getFieldName(int index)
+                    {
+                        return fieldNames[index];
+                    }
 
-                public RelDataType getFieldType(int index)
-                {
-                    return fields[index].getType();
-                }
-            });
+                    public RelDataType getFieldType(int index)
+                    {
+                        return fields[index].getType();
+                    }
+                });
     }
 
     // override Rel
@@ -119,8 +123,8 @@ public class FennelRenameRel extends FennelSingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "fieldNames" },
-            new Object [] { Arrays.asList(fieldNames) });
+            new String[] { "child", "fieldNames" },
+            new Object[] { Arrays.asList(fieldNames) });
     }
 
     // implement FennelRel
@@ -131,6 +135,5 @@ public class FennelRenameRel extends FennelSingleRel
         return implementor.visitFennelChild((FennelRel) getChild());
     }
 }
-
 
 // End FennelRenameRel.java

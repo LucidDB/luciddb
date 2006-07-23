@@ -20,54 +20,58 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
-import openjava.mop.OJClass;
+import openjava.mop.*;
+
 import openjava.ptree.*;
 
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptCost;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.relopt.*;
 
 
 /**
  * <code>IterConcatenateRel</code> concatenates several iterators. It is an
  * iterator implementation of {@link UnionRel}.
  */
-public class IterConcatenateRel extends UnionRelBase implements JavaRel
+public class IterConcatenateRel
+    extends UnionRelBase
+    implements JavaRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public IterConcatenateRel(
         RelOptCluster cluster,
         RelNode [] inputs)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.ITERATOR), inputs,
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            inputs,
             true /*all*/);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public IterConcatenateRel clone()
     {
         // REVIEW jvs 13-Nov-2005:  shouldn't we be cloning the inputs too?
-        IterConcatenateRel clone = new IterConcatenateRel(getCluster(), inputs);
+        IterConcatenateRel clone = new IterConcatenateRel(
+                getCluster(),
+                inputs);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    public IterConcatenateRel clone(RelNode[] inputs, boolean all)
+    public IterConcatenateRel clone(RelNode [] inputs, boolean all)
     {
         assert all;
-        IterConcatenateRel clone =
-            new IterConcatenateRel(getCluster(), inputs);
+        IterConcatenateRel clone = new IterConcatenateRel(
+                getCluster(),
+                inputs);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -75,6 +79,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = RelMetadataQuery.getRowCount(this);
+
         // favor a Nexus over a CompoundIterator, due to hassles of
         // java/c++/java data transfer
         double dCpu = 1000;
@@ -85,7 +90,7 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
     protected OJClass getCompoundIteratorClass()
     {
         return OJClass.forClass(
-            org.eigenbase.runtime.CompoundTupleIter.class);
+                org.eigenbase.runtime.CompoundTupleIter.class);
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -105,15 +110,15 @@ public class IterConcatenateRel extends UnionRelBase implements JavaRel
                 implementor.visitJavaChild(this, i, (JavaRel) inputs[i]);
             exps.add(exp);
         }
-        return new AllocationExpression(
-            getCompoundIteratorClass(),
-            new ExpressionList(
-                new ArrayAllocationExpression(
-                    OJUtil.clazzTupleIter,
-                    new ExpressionList(null),
-                    new ArrayInitializer(exps))));
+        return
+            new AllocationExpression(
+                getCompoundIteratorClass(),
+                new ExpressionList(
+                    new ArrayAllocationExpression(
+                        OJUtil.clazzTupleIter,
+                        new ExpressionList(null),
+                        new ArrayInitializer(exps))));
     }
 }
-
 
 // End IterConcatenateRel.java

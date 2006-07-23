@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
@@ -29,29 +28,31 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * <code>OneRowRel</code> always returns one row, one column (containing
- * the value 0).
+ * <code>OneRowRel</code> always returns one row, one column (containing the
+ * value 0).
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 23 September, 2001
  */
-public final class OneRowRel extends OneRowRelBase
+public final class OneRowRel
+    extends OneRowRelBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>OneRowRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      */
     public OneRowRel(RelOptCluster cluster)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE));
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE));
     }
 }
-
 
 // End OneRowRel.java

@@ -22,11 +22,14 @@
 */
 package net.sf.farrago.util;
 
-import net.sf.farrago.trace.*;
+import java.io.*;
+
+import java.nio.channels.*;
 
 import java.util.logging.*;
-import java.io.*;
-import java.nio.channels.*;
+
+import net.sf.farrago.trace.*;
+
 
 /**
  * FarragoFileLockAllocation takes care of unlocking a file when it is closed.
@@ -34,39 +37,41 @@ import java.nio.channels.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoFileLockAllocation implements FarragoAllocation
+public class FarragoFileLockAllocation
+    implements FarragoAllocation
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
-     * Location to lock.  We lock a bogus byte way beyond any real data to make
+     * Location to lock. We lock a bogus byte way beyond any real data to make
      * sure the lock doesn't interfere with I/O on operating systems with
-     * non-advisory lock semantics such as Windows.  Don't use Long.MAX_VALUE
+     * non-advisory lock semantics such as Windows. Don't use Long.MAX_VALUE
      * because that breaks on any OS without large file support.
      */
     private static final int LOCK_OFFSET = 0x7FFFFFFD;
-    
+
     private static final Logger tracer =
         FarragoTrace.getFileLockAllocationTracer();
-    
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private File file;
     private RandomAccessFile randomAccessFile;
     private FileChannel channel;
     private FileLock lock;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoFileLockAllocation by locking a file.
      *
      * @param owner the FarragoAllocationOwner which will be made responsible
      * for the lock as a result of this call
-     *
-     * @param file the file to be locked for the lifetime of this allocation;
-     * if it does not exist, it will be created (but not deleted) automatically
-     *
-     * @param tryLock if true and lock cannot be obtained throw an
-     * exception; if false, wait for the lock instead
+     * @param file the file to be locked for the lifetime of this allocation; if
+     * it does not exist, it will be created (but not deleted) automatically
+     * @param tryLock if true and lock cannot be obtained throw an exception; if
+     * false, wait for the lock instead
      *
      * @exception IOException if lock attempt failed
      */
@@ -101,7 +106,7 @@ public class FarragoFileLockAllocation implements FarragoAllocation
         owner.addAllocation(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoAllocation
     public void closeAllocation()
@@ -137,12 +142,10 @@ public class FarragoFileLockAllocation implements FarragoAllocation
     }
 
     /**
-     * Command-line entry point for bench testing.  Attempts to lock the file
+     * Command-line entry point for bench testing. Attempts to lock the file
      * named by the one and only argument and hold the lock for 20 seconds.
      *
-     *<p>
-     *
-     * TODO jvs 24-Aug-2005:  Figure out a way to test this automatically.
+     * <p>TODO jvs 24-Aug-2005: Figure out a way to test this automatically.
      * Requires starting two concurrent processes.
      *
      * @param args args[0] = name of file to lock
@@ -164,6 +167,5 @@ public class FarragoFileLockAllocation implements FarragoAllocation
         }
     }
 }
-
 
 // End FarragoFileLockAllocation.java

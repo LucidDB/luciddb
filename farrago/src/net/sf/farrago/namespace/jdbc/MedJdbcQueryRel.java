@@ -27,9 +27,10 @@ import java.sql.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
@@ -44,13 +45,15 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcQueryRel extends JdbcQuery
+class MedJdbcQueryRel
+    extends JdbcQuery
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private MedJdbcColumnSet columnSet;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedJdbcQueryRel(
         MedJdbcColumnSet columnSet,
@@ -60,12 +63,17 @@ class MedJdbcQueryRel extends JdbcQuery
         SqlDialect dialect,
         SqlSelect sql)
     {
-        super(cluster, rowType, connection, dialect, sql,
+        super(
+            cluster,
+            rowType,
+            connection,
+            dialect,
+            sql,
             new JdbcDataSource(""));
         this.columnSet = columnSet;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override JdbcQuery
     public ParseTree implement(JavaRelImplementor implementor)
@@ -85,12 +93,12 @@ class MedJdbcQueryRel extends JdbcQuery
                         Literal.makeLiteral(
                             columnSet.directory.server.getServerMofId()),
                         Literal.makeLiteral(sql))));
-        return new MethodCall(
-            allocExpression,
-            "getResultSet",
-            new ExpressionList());
+        return
+            new MethodCall(
+                allocExpression,
+                "getResultSet",
+                new ExpressionList());
     }
 }
-
 
 // End MedJdbcQueryRel.java

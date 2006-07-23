@@ -29,8 +29,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -45,31 +45,38 @@ import org.eigenbase.util.*;
 
 
 /**
- * FtrsIndexScanRel is the relational expression corresponding to a scan via
- * a particular index over the contents of a table stored in FTRS format.
+ * FtrsIndexScanRel is the relational expression corresponding to a scan via a
+ * particular index over the contents of a table stored in FTRS format.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
+class FtrsIndexScanRel
+    extends TableAccessRelBase
+    implements FennelRel
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Index to use for access. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Index to use for access.
+     */
     final FemLocalIndex index;
 
-    /** Refinement for super.table. */
+    /**
+     * Refinement for super.table.
+     */
     final FtrsTable ftrsTable;
 
     /**
      * Array of 0-based flattened column ordinals to project; if null, project
-     * all columns.  Note that these ordinals are relative to the table, not
-     * the index.
+     * all columns. Note that these ordinals are relative to the table, not the
+     * index.
      */
     final Integer [] projectedColumns;
     final boolean isOrderPreserving;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsIndexScanRel object.
@@ -92,17 +99,19 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
         boolean isOrderPreserving)
     {
         super(
-            cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), ftrsTable,
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            ftrsTable,
             connection);
         this.ftrsTable = ftrsTable;
         this.index = index;
         this.projectedColumns = projectedColumns;
         this.isOrderPreserving = isOrderPreserving;
-        assert ftrsTable.getPreparingStmt() ==
-            FennelRelUtil.getPreparingStmt(this);
+        assert ftrsTable.getPreparingStmt()
+            == FennelRelUtil.getPreparingStmt(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Gets the column referenced by a FieldAccess relative to this scan.
@@ -117,7 +126,9 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
         if (projectedColumns != null) {
             columnOrdinal = projectedColumns[columnOrdinal].intValue();
         }
-        return (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(columnOrdinal);
+        return
+            (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
+                columnOrdinal);
     }
 
     // implement RelNode
@@ -125,7 +136,11 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
     {
         FtrsIndexScanRel clone =
             new FtrsIndexScanRel(
-                getCluster(), ftrsTable, index, connection, projectedColumns,
+                getCluster(),
+                ftrsTable,
+                index,
+                connection,
+                projectedColumns,
                 isOrderPreserving);
         clone.inheritTraitsFrom(this);
         return clone;
@@ -134,9 +149,10 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
-        RelOptCost cost = computeCost(
-            planner,
-            RelMetadataQuery.getRowCount(this));
+        RelOptCost cost =
+            computeCost(
+                planner,
+                RelMetadataQuery.getRowCount(this));
 
         // NOTE jvs 24-Jan-2006:  This is just here to fudge the optimizer
         // into using index scans where possible.
@@ -154,25 +170,26 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
             return flattenedRowType;
         } else {
             final RelDataTypeField [] fields = flattenedRowType.getFields();
-            return getCluster().getTypeFactory().createStructType(
-                new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return projectedColumns.length;
-                    }
+            return
+                getCluster().getTypeFactory().createStructType(
+                    new RelDataTypeFactory.FieldInfo() {
+                        public int getFieldCount()
+                        {
+                            return projectedColumns.length;
+                        }
 
-                    public String getFieldName(int index)
-                    {
-                        final int i = projectedColumns[index].intValue();
-                        return fields[i].getName();
-                    }
+                        public String getFieldName(int index)
+                        {
+                            final int i = projectedColumns[index].intValue();
+                            return fields[i].getName();
+                        }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        final int i = projectedColumns[index].intValue();
-                        return fields[i].getType();
-                    }
-                });
+                        public RelDataType getFieldType(int index)
+                        {
+                            final int i = projectedColumns[index].intValue();
+                            return fields[i].getType();
+                        }
+                    });
         }
     }
 
@@ -187,10 +204,10 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
         }
         pw.explain(
             this,
-            new String [] { "table", "projection", "index", "preserveOrder" },
-            new Object [] {
+            new String[] { "table", "projection", "index", "preserveOrder" },
+            new Object[] {
                 Arrays.asList(ftrsTable.getQualifiedName()), projection,
-                index.getName(), Boolean.valueOf(isOrderPreserving)
+            index.getName(), Boolean.valueOf(isOrderPreserving)
             });
     }
 
@@ -291,7 +308,8 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
         if (projectedColumns != null) {
             return projectedColumns;
         }
-        int n = ftrsTable.getIndexGuide().getFlattenedRowType().getFieldList()
+        int n =
+            ftrsTable.getIndexGuide().getFlattenedRowType().getFieldList()
             .size();
         return FennelRelUtil.newIotaProjection(n);
     }
@@ -320,9 +338,10 @@ class FtrsIndexScanRel extends TableAccessRelBase implements FennelRel
             }
             collationList.add(collation);
         }
-        return (RelFieldCollation []) collationList.toArray(RelFieldCollation.emptyCollationArray);
+        return
+            (RelFieldCollation []) collationList.toArray(
+                RelFieldCollation.emptyCollationArray);
     }
 }
-
 
 // End FtrsIndexScanRel.java

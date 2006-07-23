@@ -20,41 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.UndeclaredThrowableException;
+import java.lang.reflect.*;
 
 
 /**
  * A class derived from <code>BarfingInvocationHandler</code> handles a method
- * call by looking for a method in itself with identical parameters. If no
- * such method is found, it throws {@link UnsupportedOperationException}.
+ * call by looking for a method in itself with identical parameters. If no such
+ * method is found, it throws {@link UnsupportedOperationException}.
  *
- * <p>
- * It is useful when you are prototyping code. You can rapidly create a
- * prototype class which implements the important methods in an interface,
- * then implement other methods as they are called.
- * </p>
+ * <p>It is useful when you are prototyping code. You can rapidly create a
+ * prototype class which implements the important methods in an interface, then
+ * implement other methods as they are called.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @see DelegatingInvocationHandler
  * @since Dec 23, 2002
  */
-public class BarfingInvocationHandler implements InvocationHandler
+public class BarfingInvocationHandler
+    implements InvocationHandler
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     protected BarfingInvocationHandler()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object invoke(
         Object proxy,
@@ -87,8 +82,8 @@ public class BarfingInvocationHandler implements InvocationHandler
     }
 
     /**
-     * Called when this class (or its derived class) does not have the
-     * required method from the interface.
+     * Called when this class (or its derived class) does not have the required
+     * method from the interface.
      */
     protected UnsupportedOperationException noMethod(Method method)
     {
@@ -107,6 +102,5 @@ public class BarfingInvocationHandler implements InvocationHandler
         return new UnsupportedOperationException(signature);
     }
 }
-
 
 // End BarfingInvocationHandler.java

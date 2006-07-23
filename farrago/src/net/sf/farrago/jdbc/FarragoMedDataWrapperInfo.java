@@ -22,9 +22,10 @@
 */
 package net.sf.farrago.jdbc;
 
-import java.sql.DriverPropertyInfo;
-import java.util.Locale;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
 
 /**
  * Description of a SQL/MED data wrapper.
@@ -34,15 +35,17 @@ import java.util.Properties;
  */
 public interface FarragoMedDataWrapperInfo
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Obtains information about the properties applicable to plugin
      * initialization.
      *
      * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
+     * @param wrapperProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
      *
      * @return 0 or more property info descriptors
      */
@@ -55,14 +58,12 @@ public interface FarragoMedDataWrapperInfo
      * initialization (the props parameter to the newServer method).
      *
      * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
+     * @param wrapperProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
+     * @param serverProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
      *
      * @return 0 or more property info descriptors
      */
@@ -76,18 +77,15 @@ public interface FarragoMedDataWrapperInfo
      * initialization (the tableProps parameter to the newColumnSet method).
      *
      * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
-     *
+     * @param wrapperProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
+     * @param serverProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
      * @param tableProps proposed list of property name/value pairs which will
-     * be sent to the tableProps parameter of
-     * {@link net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
+     * be sent to the tableProps parameter of {@link
+     * net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
      *
      * @return 0 or more property info descriptors
      */
@@ -99,27 +97,22 @@ public interface FarragoMedDataWrapperInfo
 
     /**
      * Obtains information about the properties applicable to individual column
-     * initialization (the columnPropMap parameter to the
-     * {@link net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
-     * method).
+     * initialization (the columnPropMap parameter to the {@link
+     * net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet} method).
      *
      * @param locale Locale for formatting property info
-     *
-     * @param wrapperProps proposed list of property name/value
-     * pairs which will be sent to
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
-     *
-     * @param serverProps proposed list of property name/value
-     * pairs which will be sent to FarragoMedDataWrapper.newServer()
-     * {@link net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
-     *
-     * @param tableProps proposed list of property name/value
-     * pairs which will be sent as the tableProps parameter of
-     * {@link net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
-     *
+     * @param wrapperProps proposed list of property name/value pairs which will
+     * be sent to {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#initialize}
+     * @param serverProps proposed list of property name/value pairs which will
+     * be sent to FarragoMedDataWrapper.newServer() {@link
+     * net.sf.farrago.namespace.FarragoMedDataWrapper#newServer}
+     * @param tableProps proposed list of property name/value pairs which will
+     * be sent as the tableProps parameter of {@link
+     * net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
      * @param columnProps proposed list of property name/value pairs which will
-     * be sent as an entry in the columnPropMap parameter of
-     * {@link net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
+     * be sent as an entry in the columnPropMap parameter of {@link
+     * net.sf.farrago.namespace.FarragoMedDataServer#newColumnSet}
      *
      * @return 0 or more property info descriptors
      */
@@ -131,8 +124,8 @@ public interface FarragoMedDataWrapperInfo
         Properties columnProps);
 
     /**
-     * Determines whether this data wrapper accesses foreign data, or
-     * manages local data.
+     * Determines whether this data wrapper accesses foreign data, or manages
+     * local data.
      *
      * @return true for foreign data; false for local data
      */

@@ -25,30 +25,34 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * ObjectSqlType represents an SQL structured user-defined type.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ObjectSqlType extends AbstractSqlType
+public class ObjectSqlType
+    extends AbstractSqlType
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlIdentifier sqlIdentifier;
 
     private final RelDataTypeComparability comparability;
-    
+
     private RelDataTypeFamily family;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Constructs an object type.
-     * This should only be called from a factory method.
+     * Constructs an object type. This should only be called from a factory
+     * method.
      *
      * @param typeName SqlTypeName for this type (either Distinct or Structured)
-     *
      * @param sqlIdentifier identifier for this type
-     *
      * @param nullable whether type accepts nulls
-     *
      * @param fields object attribute definitions
      */
     public ObjectSqlType(
@@ -64,23 +68,25 @@ public class ObjectSqlType extends AbstractSqlType
         computeDigest();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void setFamily(RelDataTypeFamily family)
     {
         this.family = family;
     }
-    
+
     // implement RelDataType
     public RelDataTypeComparability getComparability()
     {
         return comparability;
     }
-    
+
     // override AbstractSqlType
     public SqlIdentifier getSqlIdentifier()
     {
         return sqlIdentifier;
     }
-    
+
     // override AbstractSqlType
     public RelDataTypeFamily getFamily()
     {

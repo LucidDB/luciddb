@@ -33,11 +33,12 @@ import java.io.*;
  */
 public abstract class FarragoUtil
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Calculates the memory used by a string's data (not including the String
-     * object itself).  This represents the actual memory used by the Java
+     * object itself). This represents the actual memory used by the Java
      * Unicode representation, not an encoding.
      *
      * @return number of bytes used
@@ -51,7 +52,6 @@ public abstract class FarragoUtil
      * Copies everything from a Reader into a Writer.
      *
      * @param reader source
-     *
      * @param writer destination
      *
      * @return number of chars copied
@@ -99,7 +99,6 @@ public abstract class FarragoUtil
         }
         return result;
     }
-
 }
 
 // End FarragoUtil.java

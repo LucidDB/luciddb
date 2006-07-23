@@ -22,8 +22,9 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Abstract base class for SQL implementations of {@link RelDataType}.
@@ -32,11 +33,17 @@ import org.eigenbase.reltype.*;
  * @version $Id$
  */
 public abstract class AbstractSqlType
-    extends RelDataTypeImpl implements Cloneable
+    extends RelDataTypeImpl
+    implements Cloneable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final SqlTypeName typeName;
     protected boolean isNullable;
-        
+
+    //~ Constructors -----------------------------------------------------------
+
     protected AbstractSqlType(
         SqlTypeName typeName,
         boolean isNullable,
@@ -51,6 +58,8 @@ public abstract class AbstractSqlType
         }
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelDataType
     public SqlTypeName getSqlTypeName()
     {
@@ -62,7 +71,7 @@ public abstract class AbstractSqlType
     {
         return isNullable;
     }
-        
+
     // implement RelDataType
     public RelDataTypeFamily getFamily()
     {
@@ -72,7 +81,7 @@ public abstract class AbstractSqlType
     // implement RelDataType
     public RelDataTypePrecedenceList getPrecedenceList()
     {
-        RelDataTypePrecedenceList list = 
+        RelDataTypePrecedenceList list =
             SqlTypeExplicitPrecedenceList.getListForType(this);
         if (list != null) {
             return list;

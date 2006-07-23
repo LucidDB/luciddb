@@ -21,34 +21,43 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-import org.eigenbase.rex.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
+
+
 /**
- * SargSetExpr represents the application of a {@link SargSetOp set operator}
- * to zero or more child {@link SargExpr sarg expressions}.
+ * SargSetExpr represents the application of a {@link SargSetOp set operator} to
+ * zero or more child {@link SargExpr sarg expressions}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargSetExpr implements SargExpr
+public class SargSetExpr
+    implements SargExpr
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SargFactory factory;
 
     private final RelDataType dataType;
-    
+
     private final SargSetOperator setOp;
-    
+
     private final List<SargExpr> children;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * @see SargFactory.newSetExpr
      */
     SargSetExpr(
-        SargFactory factory, RelDataType dataType, SargSetOperator setOp)
+        SargFactory factory,
+        RelDataType dataType,
+        SargSetOperator setOp)
     {
         this.factory = factory;
         this.dataType = dataType;
@@ -56,9 +65,11 @@ public class SargSetExpr implements SargExpr
         children = new ArrayList<SargExpr>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * @return a read-only list of this expression's children
-     * (the returned children themselves are modifiable)
+     * @return a read-only list of this expression's children (the returned
+     * children themselves are modifiable)
      */
     public List<SargExpr> getChildren()
     {
@@ -72,9 +83,9 @@ public class SargSetExpr implements SargExpr
      */
     public void addChild(SargExpr child)
     {
-        assert(child.getDataType() == dataType);
+        assert (child.getDataType() == dataType);
         if (setOp == SargSetOperator.COMPLEMENT) {
-            assert(children.isEmpty());
+            assert (children.isEmpty());
         }
         children.add(child);
     }
@@ -84,7 +95,7 @@ public class SargSetExpr implements SargExpr
     {
         return factory;
     }
-    
+
     // implement SargExpr
     public RelDataType getDataType()
     {
@@ -104,11 +115,11 @@ public class SargSetExpr implements SargExpr
         sb.append(" )");
         return sb.toString();
     }
-    
+
     // implement SargExpr
     public SargIntervalSequence evaluate()
     {
-        switch(setOp) {
+        switch (setOp) {
         case UNION:
             return evaluateUnion();
         case INTERSECTION:
@@ -131,7 +142,7 @@ public class SargSetExpr implements SargExpr
     private SargIntervalSequence evaluateUnion()
     {
         SargIntervalSequence seq = new SargIntervalSequence();
-        
+
         // Evaluate all children and toss the results into one big sorted set.
         SortedSet<SargInterval> intervals =
             new TreeSet<SargInterval>(new IntervalComparator());
@@ -139,31 +150,26 @@ public class SargSetExpr implements SargExpr
             intervals.addAll(child.evaluate().getList());
         }
 
-	// Now, overlapping ranges are consecutive in the set.  Merge them by
-	// increasing the upper bound of the first; discard the others.  In the
-	// example, [4, 6] and [5, 7) are combined to form [4, 7).  (7, 8] is
-	// not merged with the new range because neither range contains the
-	// value 7.
-	//
-	// Input:
-	//          1  2  3  4  5  6  7  8  9
-	// 1 [1, 3] [-----]
-	// 2 [4, 6]          [-----]
-	// 3 [5, 7)             [-----)
-	// 4 (7, 8]                   (--]
-	// 
-	// Output:
-	// 1 [1, 3] [-----]
-	// 2 [4, 7)          [--------)
-	// 3 (7, 8]                   (--]
+        // Now, overlapping ranges are consecutive in the set.  Merge them by
+        // increasing the upper bound of the first; discard the others.  In the
+        // example, [4, 6] and [5, 7) are combined to form [4, 7).  (7, 8] is
+        // not merged with the new range because neither range contains the
+        // value 7.
+        //
+        // Input:          1  2  3  4  5  6  7  8  9 1 [1, 3] [-----] 2 [4, 6]
+        // [-----] 3 [5, 7)             [-----) 4 (7, 8] (--]
+        //
+        // Output: 1 [1, 3] [-----] 2 [4, 7)          [--------) 3 (7, 8] (--]
         SargInterval accumulator = null;
         for (SargInterval interval : intervals) {
             // Empty intervals should have been previously filtered out.
-            assert(!interval.isEmpty());
-            
+            assert (!interval.isEmpty());
+
             if (accumulator == null) {
                 // The very first interval:  start accumulating.
-                accumulator = new SargInterval(factory, getDataType());
+                accumulator = new SargInterval(
+                        factory,
+                        getDataType());
                 accumulator.copyFrom(interval);
                 seq.addInterval(accumulator);
                 continue;
@@ -176,14 +182,14 @@ public class SargSetExpr implements SargExpr
             }
 
             // Test for overlap.
-            int c = interval.getLowerBound().compareTo(
-                accumulator.getUpperBound());
+            int c =
+                interval.getLowerBound().compareTo(
+                    accumulator.getUpperBound());
 
             // If no overlap, test for touching instead.
             if (c > 0) {
                 if (interval.getLowerBound().isTouching(
-                        accumulator.getUpperBound()))
-                {
+                        accumulator.getUpperBound())) {
                     // Force test below to pass.
                     c = -1;
                 }
@@ -194,7 +200,9 @@ public class SargSetExpr implements SargExpr
                 accumulator.upperBound.copyFrom(interval.getUpperBound());
             } else {
                 // Disjoint:  start accumulating a new interval
-                accumulator = new SargInterval(factory, getDataType());
+                accumulator = new SargInterval(
+                        factory,
+                        getDataType());
                 accumulator.copyFrom(interval);
                 seq.addInterval(accumulator);
             }
@@ -206,7 +214,7 @@ public class SargSetExpr implements SargExpr
     private SargIntervalSequence evaluateIntersection()
     {
         SargIntervalSequence seq = null;
-        
+
         if (children.isEmpty()) {
             // Counterintuitive but true: intersection of no sets is the
             // universal set (kinda like 2^0=1).  One way to prove this to
@@ -216,7 +224,9 @@ public class SargSetExpr implements SargExpr
             // complements of no sets, which is the intersection of no sets.
             // QED.
             seq = new SargIntervalSequence();
-            seq.addInterval(new SargInterval(factory, getDataType()));
+            seq.addInterval(new SargInterval(
+                    factory,
+                    getDataType()));
             return seq;
         }
 
@@ -253,7 +263,7 @@ public class SargSetExpr implements SargExpr
             targetSeq.list.clear();
             return;
         }
-        
+
         // Start working on first source and target intervals
         SargInterval target = targetIter.next();
         SargInterval source = sourceIter.next();
@@ -284,7 +294,7 @@ public class SargSetExpr implements SargExpr
             }
 
             // Overlap case:  perform intersection of the two intervals.
-            
+
             if (source.getLowerBound().compareTo(target.getLowerBound()) > 0) {
                 // Source starts after target starts, so trim the target.
                 target.setLower(
@@ -298,7 +308,8 @@ public class SargSetExpr implements SargExpr
                 // into two parts.  The first part will be kept for sure; the
                 // second part will be compared against further source ranges.
                 SargInterval newTarget = new SargInterval(
-                    factory, dataType);
+                        factory,
+                        dataType);
                 newTarget.setLower(
                     source.getUpperBound().getCoordinate(),
                     source.getUpperBound().getStrictnessComplement());
@@ -318,7 +329,7 @@ public class SargSetExpr implements SargExpr
                 // be called after add() without an intervening
                 // call to next/previous().
                 target = targetIter.previous();
-                
+
                 // Advance source.
                 if (!sourceIter.hasNext()) {
                     break;
@@ -337,7 +348,7 @@ public class SargSetExpr implements SargExpr
                 source = sourceIter.next();
             } else {
                 // Source ends after target ends, so advance target.
-                assert(c > 0);
+                assert (c > 0);
                 if (!targetIter.hasNext()) {
                     return;
                 }
@@ -358,14 +369,14 @@ public class SargSetExpr implements SargExpr
 
     private SargIntervalSequence evaluateComplement()
     {
-        assert(children.size() == 1);
+        assert (children.size() == 1);
         SargExpr child = children.get(0);
         if (child instanceof SargIntervalExpr) {
             return evaluateIntervalComplement((SargIntervalExpr) child);
         }
 
         SargSetExpr setChild = (SargSetExpr) child;
-            
+
         // Complement is its own inverse
         if (setChild.setOp == SargSetOperator.COMPLEMENT) {
             return setChild.children.get(0).evaluate();
@@ -379,8 +390,11 @@ public class SargSetExpr implements SargExpr
             : SargSetOperator.UNION;
         SargSetExpr dual = new SargSetExpr(factory, dataType, dualOp);
         for (SargExpr grandChild : setChild.children) {
-            SargSetExpr comp = new SargSetExpr(
-                factory, dataType, SargSetOperator.COMPLEMENT);
+            SargSetExpr comp =
+                new SargSetExpr(
+                    factory,
+                    dataType,
+                    SargSetOperator.COMPLEMENT);
             comp.addChild(grandChild);
             dual.addChild(comp);
         }
@@ -396,11 +410,13 @@ public class SargSetExpr implements SargExpr
 
         // Complement of empty set is unconstrained set.
         if (originalSeq.getList().isEmpty()) {
-            seq.addInterval(new SargInterval(factory, getDataType()));
+            seq.addInterval(new SargInterval(
+                    factory,
+                    getDataType()));
             return seq;
         }
 
-        assert(originalSeq.getList().size() == 1);
+        assert (originalSeq.getList().size() == 1);
         SargInterval originalInterval = originalSeq.getList().get(0);
 
         // Complement of universal set is empty set.
@@ -414,15 +430,16 @@ public class SargSetExpr implements SargExpr
         // semantics.  We've lost the original null semantics
         // flag by now.  Is there ever a case where other null
         // semantics are required here?
-            
-        SargInterval interval = new SargInterval(factory, getDataType());
+
+        SargInterval interval = new SargInterval(
+                factory,
+                getDataType());
         interval.setLower(
             factory.newNullLiteral(),
             SargStrictness.OPEN);
 
         if (originalInterval.getUpperBound().isFinite()
-            && originalInterval.getLowerBound().isFinite())
-        {
+            && originalInterval.getLowerBound().isFinite()) {
             // Complement of a fully bounded range is the union of two
             // disjoint half-bounded ranges.
             interval.setUpper(
@@ -434,7 +451,9 @@ public class SargSetExpr implements SargExpr
                 // Don't bother adding an empty interval.
             }
 
-            interval = new SargInterval(factory, getDataType());
+            interval = new SargInterval(
+                    factory,
+                    getDataType());
             interval.setLower(
                 originalInterval.getUpperBound().getCoordinate(),
                 originalInterval.getUpperBound().getStrictnessComplement());
@@ -452,7 +471,7 @@ public class SargSetExpr implements SargExpr
             }
         } else {
             // Mirror image of previous case.
-            assert(originalInterval.getUpperBound().isFinite());
+            assert (originalInterval.getUpperBound().isFinite());
             interval.setLower(
                 originalInterval.getUpperBound().getCoordinate(),
                 originalInterval.getUpperBound().getStrictnessComplement());
@@ -462,9 +481,11 @@ public class SargSetExpr implements SargExpr
         return seq;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Comparator used in evaluateUnion.  Intervals collate based on
-     * {lowerBound, upperBound}.
+     * Comparator used in evaluateUnion. Intervals collate based on {lowerBound,
+     * upperBound}.
      */
     private static class IntervalComparator
         implements Comparator<SargInterval>

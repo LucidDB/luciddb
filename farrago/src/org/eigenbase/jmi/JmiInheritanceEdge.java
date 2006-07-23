@@ -21,25 +21,32 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.edge.*;
-
 import javax.jmi.model.*;
 
+import org._3pq.jgrapht.edge.*;
+
+
 /**
- * JmiInheritanceEdge represents an inheritance relationship in a JMI model.
- * The source vertex is the superclass and the target vertex is the
- * subclass.
+ * JmiInheritanceEdge represents an inheritance relationship in a JMI model. The
+ * source vertex is the superclass and the target vertex is the subclass.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiInheritanceEdge extends DirectedEdge<JmiClassVertex>
+public class JmiInheritanceEdge
+    extends DirectedEdge<JmiClassVertex>
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     JmiInheritanceEdge(
-        JmiClassVertex superClass, JmiClassVertex subClass)
+        JmiClassVertex superClass,
+        JmiClassVertex subClass)
     {
         super(superClass, subClass);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the vertex representing the superclass
@@ -48,7 +55,7 @@ public class JmiInheritanceEdge extends DirectedEdge<JmiClassVertex>
     {
         return (JmiClassVertex) getSource();
     }
-    
+
     /**
      * @return the vertex representing the subclass
      */

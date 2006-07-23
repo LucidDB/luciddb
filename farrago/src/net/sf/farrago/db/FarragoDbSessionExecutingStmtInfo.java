@@ -22,16 +22,14 @@
 */
 package net.sf.farrago.db;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
-import net.sf.farrago.session.FarragoSessionStmtContext;
+import net.sf.farrago.session.*;
 
 
 /**
- * Implements the {@link FarragoSessionExecutingStmtInfo} interface
- * in the context of a {@link FarragoDbStmtContext}.
+ * Implements the {@link FarragoSessionExecutingStmtInfo} interface in the
+ * context of a {@link FarragoDbStmtContext}.
  *
  * @author Jason Ouellette
  * @version $Id$
@@ -39,7 +37,8 @@ import net.sf.farrago.session.FarragoSessionStmtContext;
 public class FarragoDbSessionExecutingStmtInfo
     implements FarragoSessionExecutingStmtInfo
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private long id;
     private FarragoSessionStmtContext stmt;
@@ -49,7 +48,7 @@ public class FarragoDbSessionExecutingStmtInfo
     private List<Object> parameters;
     private List<String> objectsInUse;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoDbSessionExecutingStmtInfo(
         FarragoSessionStmtContext stmt,
@@ -67,7 +66,7 @@ public class FarragoDbSessionExecutingStmtInfo
         this.objectsInUse = Collections.unmodifiableList(objectsInUse);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionExecutingStmtInfo
     public FarragoSessionStmtContext getStmtContext()
@@ -110,3 +109,5 @@ public class FarragoDbSessionExecutingStmtInfo
         return objectsInUse;
     }
 }
+
+// End FarragoDbSessionExecutingStmtInfo.java

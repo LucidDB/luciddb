@@ -19,40 +19,49 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * An operator describing a window function specification.
  *
- * <p>Operands are as follows:<ul>
+ * <p>Operands are as follows:
+ *
+ * <ul>
  * <li>0: name of window function ({@link org.eigenbase.sql.SqlCall})</li>
- *
- * <li>1: window name ({@link org.eigenbase.sql.SqlLiteral})
- * or window in-line specification ({@link SqlWindowOperator})</li>
- *
- * </ul></p>
+ * <li>1: window name ({@link org.eigenbase.sql.SqlLiteral}) or window in-line
+ * specification ({@link SqlWindowOperator})</li>
+ * </ul>
+ * </p>
  *
  * @author klo
- * @since Nov 4, 2004
  * @version $Id$
- **/
-public class SqlOverOperator extends SqlBinaryOperator
+ * @since Nov 4, 2004
+ */
+public class SqlOverOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlOverOperator()
     {
-        super("OVER", SqlKind.Over, 20, true,
-            SqlTypeStrategies.rtiFirstArgType, null,
+        super("OVER",
+            SqlKind.Over,
+            20,
+            true,
+            SqlTypeStrategies.rtiFirstArgType,
+            null,
             SqlTypeStrategies.otcAnyX2);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void validateCall(
         SqlCall call,
@@ -61,18 +70,21 @@ public class SqlOverOperator extends SqlBinaryOperator
         SqlValidatorScope operandScope)
     {
         assert call.getOperator() == this;
-        final SqlNode[] operands = call.getOperands();
+        final SqlNode [] operands = call.getOperands();
         assert operands.length == 2;
         SqlCall aggCall = (SqlCall) operands[0];
         if (!aggCall.getOperator().isAggregator()) {
-            throw validator.newValidationError(aggCall,
+            throw validator.newValidationError(
+                aggCall,
                 EigenbaseResource.instance().OverNonAggregate.ex());
         }
         validator.validateWindow(operands[1], scope, aggCall);
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         // Do not try to derive the types of the operands. We will do that
         // later, top down.
@@ -84,20 +96,22 @@ public class SqlOverOperator extends SqlBinaryOperator
      *
      * @param visitor Visitor.
      */
-    public <R> void acceptCall(
-        SqlVisitor<R> visitor, SqlCall call, boolean onlyExpressions,
+    public <R> void acceptCall(SqlVisitor<R> visitor,
+        SqlCall call,
+        boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
     {
         if (onlyExpressions) {
             for (int i = 0; i < call.operands.length; i++) {
                 SqlNode operand = call.operands[i];
+
                 // if the second parm is an Identifier then it's supposed to
                 // be a name from a window clause and isn't part of the
                 // group by check
                 if (operand == null) {
                     continue;
                 }
-                if (i == 1 && operand instanceof SqlIdentifier) {
+                if ((i == 1) && (operand instanceof SqlIdentifier)) {
                     continue;
                 }
                 argHandler.visitChild(visitor, call, i, operand);

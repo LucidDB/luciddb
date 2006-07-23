@@ -22,51 +22,42 @@
 */
 package net.sf.farrago.db;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.Calendar;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.logging.*;
 
-import org.eigenbase.relopt.TableAccessMap;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.resgen.ResourceDefinition;
-import org.eigenbase.resource.EigenbaseResource;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
 
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionExecutableStmt;
-import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
-import net.sf.farrago.session.FarragoSessionStmtContext;
-import net.sf.farrago.session.FarragoSessionStmtParamDef;
-import net.sf.farrago.session.FarragoSessionStmtParamDefFactory;
-import net.sf.farrago.session.FarragoSessionTxnId;
-import net.sf.farrago.session.FarragoSessionTxnMgr;
-import net.sf.farrago.trace.FarragoTrace;
-import net.sf.farrago.util.FarragoDdlLockManager;
-import net.sf.farrago.resource.FarragoResource;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
+
 
 /**
- * FarragoDbStmtContextBase provides a partial implementation of
- * {@link FarragoSessionStmtContext} in terms of {@link FarragoDbSession}.
- * 
+ * FarragoDbStmtContextBase provides a partial implementation of {@link
+ * FarragoSessionStmtContext} in terms of {@link FarragoDbSession}.
+ *
  * <p>The basic funtionality provided here may be extended to implement
  * statements in a way specific to extension projects.
- * 
- * <p>See individual methods for assistance in determining when they may
- * be called.
- * 
+ *
+ * <p>See individual methods for assistance in determining when they may be
+ * called.
+ *
  * @author Stephan Zuercher
  */
-public abstract class FarragoDbStmtContextBase 
+public abstract class FarragoDbStmtContextBase
     implements FarragoSessionStmtContext
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer =
         FarragoTrace.getDatabaseStatementContextTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     protected FarragoDbSession session;
     protected final FarragoSessionStmtParamDefFactory paramDefFactory;
@@ -82,10 +73,10 @@ public abstract class FarragoDbStmtContextBase
     protected Object [] dynamicParamValues;
 
     /**
-     * Indicates if dynamic parameter is set
-     * Used to validate that all dynamic parameters have been set
+     * Indicates if dynamic parameter is set Used to validate that all dynamic
+     * parameters have been set
      */
-    protected boolean[] dynamicParamValuesSet;
+    protected boolean [] dynamicParamValuesSet;
 
     protected boolean daemon;
 
@@ -95,7 +86,7 @@ public abstract class FarragoDbStmtContextBase
 
     private FarragoSessionExecutingStmtInfo info = null;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoDbStmtContextBase object.
@@ -113,13 +104,14 @@ public abstract class FarragoDbStmtContextBase
         this.paramDefFactory = paramDefFactory;
         this.ddlLockManager = ddlLockManager;
     }
-    
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionStmtContext
     public void closeAllocation()
     {
         unprepare();
-    
+
         // purge self from session's list
         session.forgetAllocation(this);
     }
@@ -151,7 +143,7 @@ public abstract class FarragoDbStmtContextBase
 
         ddlLockManager.removeObjectsInUse(this);
     }
-    
+
     // implement FarragoSessionStmtContext
     public void setDynamicParam(int parameterIndex, Object x)
     {
@@ -186,20 +178,21 @@ public abstract class FarragoDbStmtContextBase
 
     /**
      * Starts an auto commit transaction.
-     * 
-     * <p>Call near the beginning of 
-     * {@link FarragoSessionStmtContext#execute()}.
-     * 
+     *
+     * <p>Call near the beginning of {@link
+     * FarragoSessionStmtContext#execute()}.
+     *
      * @param readOnly true if statement is read only (e.g. not DML)
      */
     protected void startAutocommitTxn(boolean readOnly)
     {
         if (session.isTxnInProgress()) {
-            ResourceDefinition stmtFeature = EigenbaseResource.instance()
+            ResourceDefinition stmtFeature =
+                EigenbaseResource.instance()
                 .SQLConformance_MultipleActiveAutocommitStatements;
             if (!session.getPersonality().supportsFeature(stmtFeature)) {
                 throw EigenbaseResource.instance()
-                    .SQLConformance_MultipleActiveAutocommitStatements.ex();
+                .SQLConformance_MultipleActiveAutocommitStatements.ex();
             }
         } else {
             if (readOnly) {
@@ -209,17 +202,15 @@ public abstract class FarragoDbStmtContextBase
     }
 
     /**
-     * Initializes the {@link #dynamicParamDefs} and 
-     * {@link #dynamicParamValues} arrays based on the dynamic param row
-     * type,
-     * 
-     * <p>Call after statement preparation, when the dynamic param row
-     * type is known, but before 
-     * {@link FarragoSessionStmtContext#setDynamicParam(int, Object)} or
-     * {@link FarragoSessionStmtContext#clearParameters()}.
-     * 
-     * @param dynamicParamRowType dynamic param row type (e.g.,
-     *            {@link FarragoSessionExecutableStmt#getDynamicParamRowType()}
+     * Initializes the {@link #dynamicParamDefs} and {@link #dynamicParamValues}
+     * arrays based on the dynamic param row type,
+     *
+     * <p>Call after statement preparation, when the dynamic param row type is
+     * known, but before {@link FarragoSessionStmtContext#setDynamicParam(int,
+     * Object)} or {@link FarragoSessionStmtContext#clearParameters()}.
+     *
+     * @param dynamicParamRowType dynamic param row type (e.g., {@link
+     * FarragoSessionExecutableStmt#getDynamicParamRowType()}
      */
     protected void initDynamicParams(final RelDataType dynamicParamRowType)
     {
@@ -236,7 +227,7 @@ public abstract class FarragoDbStmtContextBase
             final RelDataTypeField field = fields[i];
             dynamicParamDefs[i] =
                 paramDefFactory.newParamDef(
-                    field.getName(), 
+                    field.getName(),
                     field.getType());
         }
     }
@@ -250,40 +241,37 @@ public abstract class FarragoDbStmtContextBase
             for (int i = 0; i < dynamicParamValuesSet.length; i++) {
                 if (!dynamicParamValuesSet[i]) {
                     throw FarragoResource.instance().ParameterNotSet.ex(
-                        Integer.toString(i+1));
+                        Integer.toString(i + 1));
                 }
             }
         }
     }
 
     /**
-     * Acquires locks (or whatever transaction manager wants) on all
-     * tables accessed by this statement.
-     * 
-     * <p>Call during {@link FarragoSessionStmtContext#execute()} to lock
-     * tables used by your {@link FarragoSessionExecutableStmt}.
+     * Acquires locks (or whatever transaction manager wants) on all tables
+     * accessed by this statement.
+     *
+     * <p>Call during {@link FarragoSessionStmtContext#execute()} to lock tables
+     * used by your {@link FarragoSessionExecutableStmt}.
      *
      * @param executableStmt executable statement
      */
     protected void accessTables(FarragoSessionExecutableStmt executableStmt)
     {
         TableAccessMap accessMap = executableStmt.getTableAccessMap();
-        FarragoSessionTxnMgr txnMgr = 
-            session.getDatabase().getTxnMgr();
+        FarragoSessionTxnMgr txnMgr = session.getDatabase().getTxnMgr();
         FarragoSessionTxnId txnId = session.getTxnId(true);
         txnMgr.accessTables(
             txnId,
             accessMap);
     }
-    
+
     /**
      * See FarragoDbSession.
-     * 
-     * <p>Call from 
-     * {@link FarragoSessionStmtContext#prepare(RelNode, SqlKind, boolean, 
-     *                                            FarragoSessionPreparingStmt)}
-     * after preparation is complete.
-     * 
+     *
+     * <p>Call from {@link FarragoSessionStmtContext#prepare(RelNode, SqlKind,
+     * boolean, FarragoSessionPreparingStmt)} after preparation is complete.
+     *
      * @param newExecutableStmt
      */
     protected void lockObjectsInUse(
@@ -293,30 +281,31 @@ public abstract class FarragoDbStmtContextBase
         // beginning of each execution that all objects still exist
         // (to make sure that a DROP didn't sneak in somehow)
         ddlLockManager.addObjectsInUse(
-            this, newExecutableStmt.getReferencedObjectIds());
+            this,
+            newExecutableStmt.getReferencedObjectIds());
     }
 
     /**
      * Initializes the session's {@link FarragoSessionExecutingStmtInfo}.
-     * 
-     * <p>Call before
-     * {@link FarragoSessionExecutableStmt#execute(
-     *                                          FarragoSessionRuntimeContext)}.
-     * 
+     *
+     * <p>Call before {@link FarragoSessionExecutableStmt#execute(
+     * FarragoSessionRuntimeContext)}.
+     *
      * @param executableStmt executable statement
      */
     protected void initExecutingStmtInfo(
         FarragoSessionExecutableStmt executableStmt)
     {
         Set<String> objectsInUse = executableStmt.getReferencedObjectIds();
-        info = new FarragoDbSessionExecutingStmtInfo(
-            this,
-            session.getDatabase(),
-            sql,
-            Arrays.asList(dynamicParamValues),
-            Arrays.asList(
-                objectsInUse.toArray(new String[objectsInUse.size()])));
-        FarragoDbSessionInfo sessionInfo = 
+        info =
+            new FarragoDbSessionExecutingStmtInfo(
+                this,
+                session.getDatabase(),
+                sql,
+                Arrays.asList(dynamicParamValues),
+                Arrays.asList(
+                    objectsInUse.toArray(new String[objectsInUse.size()])));
+        FarragoDbSessionInfo sessionInfo =
             (FarragoDbSessionInfo) session.getSessionInfo();
         sessionInfo.addExecutingStmtInfo(info);
     }
@@ -324,9 +313,9 @@ public abstract class FarragoDbStmtContextBase
     /**
      * Clears session's {@link FarragoSessionExecutingStmtInfo}.
      *
-     * <p>Call on {@link FarragoSessionStmtContext#cancel()},
-     * {@link FarragoSessionStmtContext#closeResultSet()}, or
-     * whenever the statement is known to have stopped executing.
+     * <p>Call on {@link FarragoSessionStmtContext#cancel()}, {@link
+     * FarragoSessionStmtContext#closeResultSet()}, or whenever the statement is
+     * known to have stopped executing.
      */
     protected void clearExecutingStmtInfo()
     {
@@ -337,10 +326,10 @@ public abstract class FarragoDbStmtContextBase
         getSessionInfo().removeExecutingStmtInfo(key);
         info = null;
     }
-    
+
     /**
      * Traces execution.
-     * 
+     *
      * <p>Optionally, call from {@link FarragoSessionStmtContext#execute()}.
      */
     protected void traceExecute()
@@ -355,10 +344,12 @@ public abstract class FarragoDbStmtContextBase
         for (int i = 0; i < dynamicParamValues.length; ++i) {
             tracer.finer("?" + (i + 1) + " = [" + dynamicParamValues[i] + "]");
         }
-    }    
+    }
 
-    private FarragoDbSessionInfo getSessionInfo() 
+    private FarragoDbSessionInfo getSessionInfo()
     {
-        return (FarragoDbSessionInfo)session.getSessionInfo();
+        return (FarragoDbSessionInfo) session.getSessionInfo();
     }
 }
+
+// End FarragoDbStmtContextBase.java

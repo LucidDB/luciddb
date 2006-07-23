@@ -21,19 +21,24 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
- * <code>UnionRelBase</code> is an abstract base class for implementations
- * of {@link UnionRel}.
+ * <code>UnionRelBase</code> is an abstract base class for implementations of
+ * {@link UnionRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class UnionRelBase extends SetOpRel
+public abstract class UnionRelBase
+    extends SetOpRel
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected UnionRelBase(
         RelOptCluster cluster,
         RelTraitSet traits,
@@ -42,7 +47,9 @@ public abstract class UnionRelBase extends SetOpRel
     {
         super(cluster, traits, inputs, all);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelNode
     public double getRows()
     {

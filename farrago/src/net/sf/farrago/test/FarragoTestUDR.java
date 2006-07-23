@@ -10,35 +10,40 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.runtime.*;
+import java.math.*;
 
 import java.sql.*;
-import java.math.*;
+
 import java.util.*;
+
+import net.sf.farrago.runtime.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * FarragoTestUDR contains definitions for user-defined routines used
- * by tests.
+ * FarragoTestUDR contains definitions for user-defined routines used by tests.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoTestUDR
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public static String noargs()
     {
         return "get your kicks on route 66";
@@ -53,7 +58,7 @@ public abstract class FarragoTestUDR
     {
         return Integer.toHexString(i);
     }
-    
+
     public static String toHexString(Integer i)
     {
         if (i == null) {
@@ -94,12 +99,13 @@ public abstract class FarragoTestUDR
     public static int accessSql()
     {
         try {
-            Connection conn = DriverManager.getConnection(
-                "jdbc:default:connection");
+            Connection conn =
+                DriverManager.getConnection(
+                    "jdbc:default:connection");
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("values 777");
             rs.next();
-            
+
             // NOTE jvs 19-Jan-2005:  no need for cleanup; default connection
             // is cleaned up automatically.
             return rs.getInt(1);
@@ -116,11 +122,12 @@ public abstract class FarragoTestUDR
         return new String(keyBytes);
     }
 
-    public static int throwSQLException() throws SQLException
+    public static int throwSQLException()
+        throws SQLException
     {
         throw new SQLException("nothing but a failure");
     }
-    
+
     public static int throwNPE()
     {
         throw new NullPointerException();
@@ -140,11 +147,11 @@ public abstract class FarragoTestUDR
     {
         Object obj = FarragoUdrRuntime.getContext();
         if (obj == null) {
-            ClosableAllocation trigger = new ClosableAllocation() 
-                {
+            ClosableAllocation trigger =
+                new ClosableAllocation() {
                     public void closeAllocation()
                     {
-                        System.setProperty("feeble","minded");
+                        System.setProperty("feeble", "minded");
                     }
                 };
             FarragoUdrRuntime.setContext(trigger);
@@ -168,8 +175,8 @@ public abstract class FarragoTestUDR
         throws SQLException
     {
         // Test ParameterMetaData
-        assert(resultInserter.getParameterMetaData().getParameterCount() == 1);
-        
+        assert (resultInserter.getParameterMetaData().getParameterCount() == 1);
+
         // Also test ResultSetMetaData
         int n = inputSet.getMetaData().getColumnCount();
         StringBuilder sb = new StringBuilder();
@@ -181,7 +188,9 @@ public abstract class FarragoTestUDR
                     sb.append(delimiter);
                 }
             }
-            resultInserter.setString(1, sb.toString());
+            resultInserter.setString(
+                1,
+                sb.toString());
             resultInserter.executeUpdate();
         }
     }
@@ -191,9 +200,12 @@ public abstract class FarragoTestUDR
     {
         // Let the data server decide how to transform n (as a matter of fact,
         // it will double it).
-        Integer nBoxed = (Integer)
-            FarragoUdrRuntime.getDataServerRuntimeSupport(new Integer(n));
-        ramp(nBoxed.intValue(), resultInserter);
+        Integer nBoxed =
+            (Integer) FarragoUdrRuntime.getDataServerRuntimeSupport(
+                new Integer(n));
+        ramp(
+            nBoxed.intValue(),
+            resultInserter);
     }
 }
 

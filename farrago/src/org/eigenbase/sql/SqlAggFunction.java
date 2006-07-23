@@ -19,14 +19,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import openjava.mop.OJClass;
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.sql.type.SqlOperandTypeChecker;
-import org.eigenbase.sql.type.SqlOperandTypeInference;
-import org.eigenbase.sql.type.SqlReturnTypeInference;
+import openjava.mop.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -36,8 +34,13 @@ import org.eigenbase.sql.type.SqlReturnTypeInference;
  * @author jhyde
  * @version $Id$
  */
-public abstract class SqlAggFunction extends SqlFunction implements Aggregation
+public abstract class SqlAggFunction
+    extends SqlFunction
+    implements Aggregation
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlAggFunction(
         String name,
         SqlKind kind,
@@ -47,10 +50,15 @@ public abstract class SqlAggFunction extends SqlFunction implements Aggregation
         SqlFunctionCategory funcType)
     {
         super(
-            name, kind, returnTypeInference,
-            operandTypeInference, operandTypeChecker,
+            name,
+            kind,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker,
             funcType);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public OJClass [] getStartParameterTypes()
     {

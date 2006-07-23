@@ -24,31 +24,34 @@ package org.eigenbase.util;
 
 import java.util.*;
 
+
 /**
  * CompoundClosableAllocation represents a collection of ClosableAllocations
- * which share a common lifecycle.  It guarantees that allocations are closed
- * in the reverse order in which they were added.
+ * which share a common lifecycle. It guarantees that allocations are closed in
+ * the reverse order in which they were added.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class CompoundClosableAllocation implements ClosableAllocationOwner
+public class CompoundClosableAllocation
+    implements ClosableAllocationOwner
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * List of owned ClosableAllocation objects.
      */
     protected List<ClosableAllocation> allocations;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public CompoundClosableAllocation()
     {
         allocations = new LinkedList<ClosableAllocation>();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement ClosableAllocationOwner
     public void addAllocation(ClosableAllocation allocation)
@@ -60,7 +63,7 @@ public class CompoundClosableAllocation implements ClosableAllocationOwner
     public void closeAllocation()
     {
         // traverse in reverse order
-        ListIterator<ClosableAllocation> iter = 
+        ListIterator<ClosableAllocation> iter =
             allocations.listIterator(allocations.size());
         while (iter.hasPrevious()) {
             ClosableAllocation allocation = iter.previous();
@@ -86,6 +89,5 @@ public class CompoundClosableAllocation implements ClosableAllocationOwner
         return allocations.remove(allocation);
     }
 }
-
 
 // End CompoundClosableAllocation.java

@@ -32,9 +32,11 @@ import net.sf.farrago.session.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlTruncateStmt extends DdlStmt
+public class DdlTruncateStmt
+    extends DdlStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlTruncateStmt.
@@ -46,7 +48,7 @@ public class DdlTruncateStmt extends DdlStmt
         super(truncatedElement);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
@@ -64,6 +66,5 @@ public class DdlTruncateStmt extends DdlStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlTruncateStmt.java

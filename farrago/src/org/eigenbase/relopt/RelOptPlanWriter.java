@@ -20,34 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.util.Util;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
  * Callback for an expression to dump itself to.
  */
-public class RelOptPlanWriter extends java.io.PrintWriter
+public class RelOptPlanWriter
+    extends java.io.PrintWriter
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private boolean withIdPrefix = true;
 
-    /** Recursion detection. */
+    /**
+     * Recursion detection.
+     */
     Set<RelNode> active = new HashSet<RelNode>();
     private final SqlExplainLevel detailLevel;
     int level;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public RelOptPlanWriter(java.io.PrintWriter pw)
     {
@@ -63,13 +65,13 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         this.detailLevel = detailLevel;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setIdPrefix(boolean b)
     {
         withIdPrefix = b;
     }
-    
+
     /**
      * @pre rel != null
      * @pre terms.length == rel.getChildExps().length + values.length
@@ -82,10 +84,11 @@ public class RelOptPlanWriter extends java.io.PrintWriter
     {
         RelNode [] inputs = rel.getInputs();
         RexNode [] children = rel.getChildExps();
-        assert terms.length == (inputs.length + children.length
-            + values.length) : "terms.length=" + terms.length
-        + " inputs.length=" + inputs.length + " children.length="
-        + children.length + " values.length=" + values.length;
+        assert terms.length
+            == (inputs.length + children.length
+                + values.length) : "terms.length=" + terms.length
+            + " inputs.length=" + inputs.length + " children.length="
+            + children.length + " values.length=" + values.length;
         String s;
         if (withIdPrefix) {
             s = rel.getId() + ":";
@@ -102,13 +105,15 @@ public class RelOptPlanWriter extends java.io.PrintWriter
             int j = 0;
             for (int i = 0; i < children.length; i++) {
                 RexNode child = children[i];
-                print(((j == 0) ? "(" : ", ")
+                print(
+                    ((j == 0) ? "(" : ", ")
                     + terms[inputs.length + j++] + "=["
                     + child.toString() + "]");
             }
             for (int i = 0; i < values.length; i++) {
                 Object value = values[i];
-                print(((j == 0) ? "(" : ", ")
+                print(
+                    ((j == 0) ? "(" : ", ")
                     + terms[inputs.length + j++] + "=["
                     + value.toString() + "]");
             }
@@ -138,7 +143,8 @@ public class RelOptPlanWriter extends java.io.PrintWriter
     }
 
     /**
-     * Special form used by {@link com.disruptivetech.farrago.volcano.RelSubset}.
+     * Special form used by {@link
+     * com.disruptivetech.farrago.volcano.RelSubset}.
      */
     public void explainSubset(
         String s,
@@ -208,6 +214,5 @@ public class RelOptPlanWriter extends java.io.PrintWriter
         }
     }
 }
-
 
 // End RelOptPlanWriter.java

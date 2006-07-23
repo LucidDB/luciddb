@@ -20,18 +20,18 @@
 */
 package com.disruptivetech.farrago.calc;
 
-
 /**
  * A class that holds {@link CalcProgramBuilder.ExtInstrDef} and its
  * sub-classes.
  *
  * @author Wael Chatila
- * @since Jun 18, 2004
  * @version $Id$
+ * @since Jun 18, 2004
  */
 public class ExtInstructionDefTable
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final CalcProgramBuilder.ExtInstrDef abs =
         new CalcProgramBuilder.ExtInstrDef("ABS", 2);

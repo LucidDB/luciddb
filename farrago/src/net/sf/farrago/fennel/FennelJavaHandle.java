@@ -22,9 +22,10 @@
 */
 package net.sf.farrago.fennel;
 
-import net.sf.farrago.util.*;
-import net.sf.farrago.trace.*;
 import java.util.logging.*;
+
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
 
 
 /**
@@ -34,24 +35,27 @@ import java.util.logging.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelJavaHandle implements FarragoAllocation
+public class FennelJavaHandle
+    implements FarragoAllocation
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Logger tracer =
         FarragoTrace.getFennelJavaHandleTracer();
 
-
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private long objectHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FennelJavaHandle(long objectHandle)
     {
         this.objectHandle = objectHandle;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoAllocation
     public void closeAllocation()
@@ -72,6 +76,5 @@ public class FennelJavaHandle implements FarragoAllocation
         return objectHandle;
     }
 }
-
 
 // End FennelJavaHandle.java

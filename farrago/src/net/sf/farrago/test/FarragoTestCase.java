@@ -23,95 +23,93 @@
 package net.sf.farrago.test;
 
 import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
 import junit.extensions.*;
+
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.db.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.session.*;
 
 import org.eigenbase.test.*;
-import org.eigenbase.util.SaffronProperties;
+import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 
 import sqlline.SqlLine;
 
 
 /**
- * FarragoTestCase is a common base for Farrago JUnit tests.  Subclasses must
- * implement the suite() method in order to get a database connection
- * correctly initialized.  See FarragoQueryTest for an example.
+ * FarragoTestCase is a common base for Farrago JUnit tests. Subclasses must
+ * implement the suite() method in order to get a database connection correctly
+ * initialized. See FarragoQueryTest for an example.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoTestCase extends ResultSetTestCase
+public abstract class FarragoTestCase
+    extends ResultSetTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    /** Logger to use for test tracing. */
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * Logger to use for test tracing.
+     */
     protected static final Logger tracer = FarragoTrace.getTestTracer();
 
-    /** JDBC connection to Farrago database. */
+    /**
+     * JDBC connection to Farrago database.
+     */
     protected static Connection connection;
 
-    /** Repos for test object definitions. */
+    /**
+     * Repos for test object definitions.
+     */
     protected static FarragoRepos repos;
 
     /**
-     * Flag used to allow individual test methods to be called from
-     * IntelliJ.
+     * Flag used to allow individual test methods to be called from IntelliJ.
      */
     private static boolean individualTest;
 
     /**
      * Saved copy of Farrago configuration parameters.
      */
-    private static SortedMap<String,Object> savedFarragoConfig;
+    private static SortedMap<String, Object> savedFarragoConfig;
 
     /**
      * Saved copy of Fennel configuration parameters.
      */
-    private static SortedMap<String,Object> savedFennelConfig;
+    private static SortedMap<String, Object> savedFennelConfig;
 
     private static Thread shutdownHook;
 
     /**
      * Connection counter for distinguishing connections during debug.
+     *
      * @see #newConnection
      */
     private static int connCounter = 0;
 
-    //~ Instance fields -------------------------------------------------------
-
-    /** PreparedStatement for processing queries. */
-    protected PreparedStatement preparedStmt;
-
-    /** Statement for processing queries. */
-    protected Statement stmt;
-
-    /** An owner for any heavyweight allocations. */
-    protected FarragoCompoundAllocation allocOwner;
-
-    static 
-    {
+    static {
         // If required system properties aren't set yet, attempt to set them
         // based on environment variables.  This allows tests to work with less
         // fuss in IDE's such as Eclipse which make it difficult to set
         // properties globally.
-        StringProperty homeDir =
-            FarragoProperties.instance().homeDir;
+        StringProperty homeDir = FarragoProperties.instance().homeDir;
         StringProperty traceConfigFile =
             FarragoProperties.instance().traceConfigFile;
         if (homeDir.get() == null) {
@@ -130,7 +128,24 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         }
     }
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * PreparedStatement for processing queries.
+     */
+    protected PreparedStatement preparedStmt;
+
+    /**
+     * Statement for processing queries.
+     */
+    protected Statement stmt;
+
+    /**
+     * An owner for any heavyweight allocations.
+     */
+    protected FarragoCompoundAllocation allocOwner;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoTestCase object.
@@ -145,7 +160,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DiffTestCase
     protected File getTestlogRoot()
@@ -155,8 +170,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     }
 
     /**
-     * Implementation for { @link DiffTestCase#getTestlogRoot } which
-     * uses 'testlog' directory under Farrago home.
+     * Implementation for { @link DiffTestCase#getTestlogRoot } which uses
+     * 'testlog' directory under Farrago home.
      *
      * @return the root under which testlogs should be written
      */
@@ -165,7 +180,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         String homeDir = FarragoProperties.instance().homeDir.get(true);
         return new File(homeDir, "testlog");
     }
-    
+
     /**
      * One-time setup routine.
      *
@@ -230,7 +245,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      */
     protected static FarragoSession getSession()
     {
-        assert(connection != null);
+        assert (connection != null);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         return farragoConnection.getSession();
@@ -251,12 +266,13 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         throws Exception
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+
         // create sessionName with connection counter to help
         // distinguish connections during debugging
         String sessionName = ";sessionName=FarragoTestCase:" + ++connCounter;
         Connection newConnection =
             DriverManager.getConnection(
-                driver.getUrlPrefix() +sessionName,
+                driver.getUrlPrefix() + sessionName,
                 FarragoCatalogInit.SA_USER_NAME,
                 null);
         if (newConnection.getMetaData().supportsTransactions()) {
@@ -265,7 +281,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         return newConnection;
     }
 
-    public static void forceShutdown() throws Exception
+    public static void forceShutdown()
+        throws Exception
     {
         repos = null;
         rollbackIfSupported();
@@ -280,25 +297,13 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         // Hint:
         /*
         grep -n -F "`echo pinReference && echo disconnectSession`" \
-        FarragoTrace.log | more
-        */
+         FarragoTrace.log | more
+         */
         if (FarragoDbSingleton.isReferenced()) {
             String msg = "Leaked test sessions detected, aborting!";
             System.err.println(msg);
             tracer.severe(msg);
             Runtime.getRuntime().halt(1);
-        }
-    }
-
-    private static class ShutdownThread extends Thread
-    {
-        public void run()
-        {
-            try {
-                forceShutdown();
-            } catch (Exception ex) {
-                // TODO:  trace
-            }
         }
     }
 
@@ -309,7 +314,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     {
         saveParameters(repos);
     }
-    
+
     /**
      * Restores system parameters to state saved by saveParameters().
      */
@@ -317,7 +322,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     {
         restoreParameters(repos);
     }
-    
+
     protected static void saveParameters(FarragoRepos repos)
     {
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
@@ -353,7 +358,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      * @param clazz the subclass being wrapped
      *
      * @return a JUnit test suite which will take care of initialization of
-     *         per-testcase members
+     * per-testcase members
      */
     public static Test wrappedSuite(Class<? extends TestCase> clazz)
     {
@@ -364,14 +369,14 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     /**
      * Generic implementation of suite() to be called by subclasses.
      *
-     * <p>If the {@link SaffronProperties#testEverything} property is false,
-     * and the {@link SaffronProperties#testName} property is set, then returns
-     * a suite containing only the tests whose names match.
+     * <p>If the {@link SaffronProperties#testEverything} property is false, and
+     * the {@link SaffronProperties#testName} property is set, then returns a
+     * suite containing only the tests whose names match.
      *
      * @param suite the suite being wrapped
      *
      * @return a JUnit test suite which will take care of initialization of
-     *         per-testcase members
+     * per-testcase members
      */
     public static Test wrappedSuite(TestSuite suite)
     {
@@ -407,14 +412,15 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         throws Exception
     {
         allocOwner = new FarragoCompoundAllocation();
-        
+
         if (connection == null) {
             assert (!individualTest) : "You forgot to implement suite()";
             individualTest = true;
             staticSetUp();
         }
 
-        tracer.info("Entering test case "
+        tracer.info(
+            "Entering test case "
             + getClass().getName() + "." + getName());
         super.setUp();
         stmt = connection.createStatement();
@@ -456,7 +462,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             allocOwner.closeAllocation();
             allocOwner = null;
         } finally {
-            tracer.info("Leaving test case "
+            tracer.info(
+                "Leaving test case "
                 + getClass().getName() + "." + getName());
             if (tracer.isLoggable(Level.FINE)) {
                 Runtime rt = Runtime.getRuntime();
@@ -470,8 +477,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     }
 
     /**
-     * Retrieves a new instance of the FarragoJdbcEngineDriver
-     * configured for this test.
+     * Retrieves a new instance of the FarragoJdbcEngineDriver configured for
+     * this test.
      *
      * @return an instance of FarragoJdbcEngineDriver (or a subclass)
      *
@@ -498,7 +505,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             new File(sqlFile.substring(0, sqlFile.length() - 4));
         String driverName = driver.getClass().getName();
         String [] args =
-            new String [] {
+            new String[] {
                 "-u", driver.getUrlPrefix(), "-d",
                 driverName, "-n",
                 FarragoCatalogInit.SA_USER_NAME,
@@ -520,8 +527,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         SequenceInputStream sequenceStream =
             new SequenceInputStream(inputStream, quitStream);
         try {
-            OutputStream outputStream =
-                openTestLogOutputStream(sqlFileSansExt);
+            OutputStream outputStream = openTestLogOutputStream(sqlFileSansExt);
             PrintStream printStream = new PrintStream(outputStream);
             System.setOut(printStream);
             System.setErr(printStream);
@@ -545,21 +551,33 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         return true;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ShutdownThread
+        extends Thread
+    {
+        public void run()
+        {
+            try {
+                forceShutdown();
+            } catch (Exception ex) {
+                // TODO:  trace
+            }
+        }
+    }
 
     /**
-     * CleanupFactory is a factory for Cleanup objects.  Test cases
-     * overriding FarragoTestCase can provide custom test cleanup by
-     * overriding CleanupFactory.  This is normally done only for
-     * extension projects that have additional repository objects that
-     * require special cleanup.  Most individual test cases can simply
-     * use the setUp/tearDown facility built into JUnit. The alternate
-     * CleanupFactory should override <code>newCleanup(String)</code>
-     * to return an extension of Cleanup that provides custom cleanup.
-     * The extension project test case should provide static helper
-     * methods to wrap the Test objects returned by FarragoTestCase's
-     * static <code>wrappedSuite</code> methods with code that sets
-     * and resets the CleanupFactory.  In other words:
+     * CleanupFactory is a factory for Cleanup objects. Test cases overriding
+     * FarragoTestCase can provide custom test cleanup by overriding
+     * CleanupFactory. This is normally done only for extension projects that
+     * have additional repository objects that require special cleanup. Most
+     * individual test cases can simply use the setUp/tearDown facility built
+     * into JUnit. The alternate CleanupFactory should override <code>
+     * newCleanup(String)</code> to return an extension of Cleanup that provides
+     * custom cleanup. The extension project test case should provide static
+     * helper methods to wrap the Test objects returned by FarragoTestCase's
+     * static <code>wrappedSuite</code> methods with code that sets and resets
+     * the CleanupFactory. In other words:
      *
      * <pre>
      * public abstract class ExtensionTestCase extends FarragoTestCase
@@ -573,15 +591,15 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      *     public static Test wrappedExtensionSuite(TestSuite suite)
      *     {
      *         Test farragoSuite = FarragoTestCase.wrappedSuite(suite);
-     *       
-     *         TestSetup wrapper = 
+     *
+     *         TestSetup wrapper =
      *             new TestSetup(farragoSuite) {
      *                 protected void setUp() throws Exception
      *                 {
      *                     CleanupFactory.setFactory(
      *                         new ExtensionCleanupFactory());
      *                 }
-     *       
+     *
      *                 protected void tearDown() throws Exception
      *                 {
      *                     CleanupFactory.resetFactory();
@@ -594,8 +612,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
      */
     public static class CleanupFactory
     {
-        private static final CleanupFactory defaultFactory = 
-        	new CleanupFactory();
+        private static final CleanupFactory defaultFactory =
+            new CleanupFactory();
 
         private static CleanupFactory factory = defaultFactory;
 
@@ -613,8 +631,9 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         {
             return factory;
         }
-        
-        public Cleanup newCleanup(String name) throws Exception
+
+        public Cleanup newCleanup(String name)
+            throws Exception
         {
             return new Cleanup(name);
         }
@@ -623,7 +642,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
     /**
      * Helper for staticSetUp.
      */
-    public static class Cleanup extends FarragoTestCase
+    public static class Cleanup
+        extends FarragoTestCase
     {
         public Cleanup(String name)
             throws Exception
@@ -635,7 +655,7 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         {
             return repos;
         }
-        
+
         protected Statement getStmt()
         {
             return stmt;
@@ -657,27 +677,29 @@ public abstract class FarragoTestCase extends ResultSetTestCase
                 saveParameters(getRepos());
             }
         }
-    
+
         public void restoreCleanupParameters()
         {
             if (getRepos() != null) {
                 restoreParameters(getRepos());
             }
         }
-        
+
         /**
          * Decides whether schema should be preserved as a global fixture.
          * Extension project test case can override this method to bless
-         * additional schemas or use attributes other than the name to make
-         * the determination.
+         * additional schemas or use attributes other than the name to make the
+         * determination.
          *
          * @param schema schema to check
+         *
          * @return true iff schema should be preserved as fixture
          */
         protected boolean isBlessedSchema(CwmSchema schema)
         {
             String name = schema.getName();
-            return name.equals("SALES")
+            return
+                name.equals("SALES")
                 || name.equals("SQLJ")
                 || name.equals("INFORMATION_SCHEMA")
                 || name.startsWith("SYS_");
@@ -686,10 +708,11 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         /**
          * Decides whether server should be preserved as a global fixture.
          * Extension project test case can override this method to bless
-         * additional servers or use attributes other than the name to make
-         * the determination.
+         * additional servers or use attributes other than the name to make the
+         * determination.
          *
          * @param server server to check
+         *
          * @return true iff schema should be preserved as fixture
          */
         protected boolean isBlessedServer(FemDataServer server)
@@ -734,8 +757,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             throws Exception
         {
             List<String> list = new ArrayList<String>();
-            for (FemDataWrapper wrapper :
-                getRepos().allOfClass(FemDataWrapper.class)) {
+            for (FemDataWrapper wrapper
+                : getRepos().allOfClass(FemDataWrapper.class)) {
                 if (isBlessedWrapper(wrapper)) {
                     continue;
                 }
@@ -760,8 +783,8 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             throws Exception
         {
             List<String> list = new ArrayList<String>();
-            for (FemDataServer server :
-                getRepos().allOfClass(FemDataServer.class)) {
+            for (FemDataServer server
+                : getRepos().allOfClass(FemDataServer.class)) {
                 if (isBlessedServer(server)) {
                     continue;
                 }
@@ -770,27 +793,27 @@ public abstract class FarragoTestCase extends ResultSetTestCase
             for (String name : list) {
                 getStmt().execute(
                     "drop server \"" + name
-                        + "\" cascade");
+                    + "\" cascade");
             }
         }
-        
+
         private void dropAuthIds()
             throws Exception
         {
             List<String> list = new ArrayList<String>();
             for (FemAuthId authId : getRepos().allOfType(FemAuthId.class)) {
                 if (authId.getName().equals(
-                    FarragoCatalogInit.SYSTEM_USER_NAME)
+                        FarragoCatalogInit.SYSTEM_USER_NAME)
                     || authId.getName().equals(
-                    FarragoCatalogInit.PUBLIC_ROLE_NAME)
+                        FarragoCatalogInit.PUBLIC_ROLE_NAME)
                     || authId.getName().equals(
-                    FarragoCatalogInit.SA_USER_NAME)) {
+                        FarragoCatalogInit.SA_USER_NAME)) {
                     continue;
                 }
                 list.add(
                     ((authId instanceof FemRole) ? "ROLE" : "USER")
-                        + " "
-                        + authId.getName());
+                    + " "
+                    + authId.getName());
             }
             for (String name : list) {
                 getStmt().execute("drop " + name);
@@ -798,6 +821,5 @@ public abstract class FarragoTestCase extends ResultSetTestCase
         }
     }
 }
-
 
 // End FarragoTestCase.java

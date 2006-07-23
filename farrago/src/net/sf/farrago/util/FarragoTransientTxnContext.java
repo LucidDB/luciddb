@@ -22,17 +22,17 @@
 */
 package net.sf.farrago.util;
 
-
 /**
- * FarragoTransientTxnContext represents a transaction context for
- * manipulating transient metadata.  TODO:  explain!
+ * FarragoTransientTxnContext represents a transaction context for manipulating
+ * transient metadata. TODO: explain!
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoTransientTxnContext
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Begins a transaction against transient metadata.
@@ -44,6 +44,5 @@ public interface FarragoTransientTxnContext
      */
     public void endTransientTxn();
 }
-
 
 // End FarragoTransientTxnContext.java

@@ -20,19 +20,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.stmt;
 
 import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import org.eigenbase.reltype.RelDataType;
 
 
 /**
@@ -42,16 +43,18 @@ import org.eigenbase.reltype.RelDataType;
  * @author John V. Sichi
  * @version $Id$
  */
-public class PreparedExplanation implements PreparedResult
+public class PreparedExplanation
+    implements PreparedResult
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final RelDataType rowType;
     private final RelNode rel;
     private final boolean asXml;
     private final SqlExplainLevel detailLevel;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public PreparedExplanation(
         RelDataType rowType,
@@ -59,14 +62,13 @@ public class PreparedExplanation implements PreparedResult
         boolean asXml,
         SqlExplainLevel detailLevel)
     {
-
         this.rowType = rowType;
         this.rel = rel;
         this.asXml = asXml;
         this.detailLevel = detailLevel;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public String getCode()
     {
@@ -129,11 +131,11 @@ public class PreparedExplanation implements PreparedResult
                     throw new UnsupportedOperationException();
                 }
             };
-        return new IteratorResultSet(
-            iter,
-            new IteratorResultSet.SingletonColumnGetter());
+        return
+            new IteratorResultSet(
+                iter,
+                new IteratorResultSet.SingletonColumnGetter());
     }
 }
-
 
 // End PreparedExplanation.java

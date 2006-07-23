@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,10 +23,13 @@
 package net.sf.farrago.query;
 
 import java.util.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.reltype.*;
-import net.sf.farrago.fem.sql2003.*;
+
 import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.fem.sql2003.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
 
 /**
  * FarragoRoutineInvocation represents an invocation of a
@@ -37,14 +40,19 @@ import net.sf.farrago.cwm.behavioral.*;
  */
 public class FarragoRoutineInvocation
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoUserDefinedRoutine routine;
     private final RexNode [] argExprs;
     private final RexNode [] argCastExprs;
-    private final Map<String, RexNode> paramNameToArgMap = 
+    private final Map<String, RexNode> paramNameToArgMap =
         new HashMap<String, RexNode>();
     private final Map<String, RelDataType> paramNameToTypeMap =
         new HashMap<String, RelDataType>();
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoRoutineInvocation(
         FarragoUserDefinedRoutine routine,
         RexNode [] argExprs)
@@ -63,15 +71,22 @@ public class FarragoRoutineInvocation
             }
             paramNames.add(param.getName());
             RexBuilder rexBuilder =
-                routine.getPreparingStmt().
-                getSqlToRelConverter().getRexBuilder();
+                routine.getPreparingStmt().getSqlToRelConverter()
+                .getRexBuilder();
             RexNode argCast = rexBuilder.makeCast(
-                paramTypes[i], argExprs[i]);
-            paramNameToArgMap.put(param.getName(), argCast);
-            paramNameToTypeMap.put(param.getName(), paramTypes[i]);
+                    paramTypes[i],
+                    argExprs[i]);
+            paramNameToArgMap.put(
+                param.getName(),
+                argCast);
+            paramNameToTypeMap.put(
+                param.getName(),
+                paramTypes[i]);
             argCastExprs[i] = argCast;
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RexNode [] getArgCastExprs()
     {

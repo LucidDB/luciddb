@@ -33,7 +33,8 @@ import net.sf.farrago.cwm.core.*;
  */
 public interface FarragoSessionDdlStmt
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the top-level CwmModelElement affected by this stmt, or null if
@@ -68,6 +69,5 @@ public interface FarragoSessionDdlStmt
      */
     public boolean requiresCommit();
 }
-
 
 // End FarragoSessionDdlStmt.java

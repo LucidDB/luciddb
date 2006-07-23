@@ -20,40 +20,41 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.reltype;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.nio.charset.Charset;
+import java.lang.reflect.*;
+
+import java.nio.charset.*;
+
 import java.util.*;
 
-import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
  * Abstract base for implementations of {@link RelDataTypeFactory}.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since May 31, 2003
  */
-public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
+public abstract class RelDataTypeFactoryImpl
+    implements RelDataTypeFactory
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private HashMap map = new HashMap();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected RelDataTypeFactoryImpl()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeFactory
     public RelDataType createJavaType(Class clazz)
@@ -65,10 +66,11 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     public RelDataType createJoinType(RelDataType [] types)
     {
         final RelDataType [] flattenedTypes = getTypeArray(types);
-        return canonize(
-            new RelCrossType(
-                flattenedTypes, 
-                getFieldArray(flattenedTypes)));
+        return
+            canonize(
+                new RelCrossType(
+                    flattenedTypes,
+                    getFieldArray(flattenedTypes)));
     }
 
     // implement RelDataTypeFactory
@@ -84,15 +86,17 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createStructType(
-        List<RelDataType> typeList,
+    public RelDataType createStructType(List<RelDataType> typeList,
         List<String> fieldNameList)
     {
         final RelDataTypeField [] fields =
             new RelDataTypeField[typeList.size()];
         for (int i = 0; i < fields.length; i++) {
-            fields[i] = new RelDataTypeFieldImpl(
-                fieldNameList.get(i), i, typeList.get(i));
+            fields[i] =
+                new RelDataTypeFieldImpl(
+                    fieldNameList.get(i),
+                    i,
+                    typeList.get(i));
         }
         return canonize(new RelRecordType(fields));
     }
@@ -129,7 +133,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         RelDataType type0 = types[0];
         int nFields = type0.getFieldList().size();
-        
+
         // precheck that all types are structs with same number of fields
         for (int i = 0; i < types.length; ++i) {
             if (!types[i].isStruct()) {
@@ -139,7 +143,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 return null;
             }
         }
-        
+
         // recursively compute column-wise least restrictive
         RelDataType [] inputTypes = new RelDataType[types.length];
         RelDataType [] outputTypes = new RelDataType[nFields];
@@ -164,14 +168,16 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
             if (SqlTypeUtil.inCharFamily(javaType)) {
-                return new JavaType(
-                    javaType.clazz,
-                    nullable,
-                    javaType.charset, javaType.collation);
+                return
+                    new JavaType(
+                        javaType.clazz,
+                        nullable,
+                        javaType.charset,
+                        javaType.collation);
             } else {
                 return new JavaType(
-                    javaType.clazz,
-                    nullable);
+                        javaType.clazz,
+                        nullable);
             }
         } else {
             // REVIEW: RelCrossType if it stays around; otherwise get rid of
@@ -183,7 +189,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     // recursively copy a record type
     private RelDataType copyRecordType(
         final RelRecordType type,
-        final boolean ignoreNullable, 
+        final boolean ignoreNullable,
         final boolean nullable)
     {
         // REVIEW: angel 18-Aug-2005 dtbug336
@@ -192,29 +198,30 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         // For flattening and outer joins, it is desirable to change
         // the nullability of the individual fields.
 
-        return createStructType(
-            new FieldInfo() {
-                public int getFieldCount()
-                {
-                    return type.getFieldList().size();
-                }
-
-                public String getFieldName(int index)
-                {
-                    return type.getFields()[index].getName();
-                }
-
-                public RelDataType getFieldType(int index)
-                {
-                    RelDataType fieldType = type.getFields()[index].getType();
-
-                    if (ignoreNullable) {
-                        return copyType(fieldType);
-                    } else {
-                        return createTypeWithNullability(fieldType, nullable);
+        return createStructType(new FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return type.getFieldList().size();
                     }
-                }
-            });
+
+                    public String getFieldName(int index)
+                    {
+                        return type.getFields()[index].getName();
+                    }
+
+                    public RelDataType getFieldType(int index)
+                    {
+                        RelDataType fieldType =
+                            type.getFields()[index].getType();
+
+                        if (ignoreNullable) {
+                            return copyType(fieldType);
+                        } else {
+                            return
+                                createTypeWithNullability(fieldType, nullable);
+                        }
+                    }
+                });
     }
 
     // implement RelDataTypeFactory
@@ -223,10 +230,12 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         if (type instanceof RelRecordType) {
             return copyRecordType((RelRecordType) type, true, false);
         } else {
-            return createTypeWithNullability(type, type.isNullable());
+            return createTypeWithNullability(
+                    type,
+                    type.isNullable());
         }
     }
-    
+
     // implement RelDataTypeFactory
     public RelDataType createTypeWithNullability(
         final RelDataType type,
@@ -241,8 +250,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
                 // Do a deep copy, setting all fields of the record type
                 // to be nullable regardless of initial nullability
                 newType = copyRecordType((RelRecordType) type, false, true);
-            }
-            else {
+            } else {
                 // Keep same type as before, ignore nullable parameter
                 // RelRecordType currently always returns a nullability of false
                 newType = copyRecordType((RelRecordType) type, true, false);
@@ -278,8 +286,9 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             RelDataType type = types[i];
             addFields(type, fieldList);
         }
-        return (RelDataTypeField []) fieldList.toArray(
-            new RelDataTypeField[fieldList.size()]);
+        return
+            (RelDataTypeField []) fieldList.toArray(
+                new RelDataTypeField[fieldList.size()]);
     }
 
     /**
@@ -289,8 +298,8 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
     {
         ArrayList typeList = new ArrayList();
         getTypeArray(types, typeList);
-        return (RelDataType []) typeList.toArray(
-            new RelDataType[typeList.size()]);
+        return
+            (RelDataType []) typeList.toArray(new RelDataType[typeList.size()]);
     }
 
     private static void getTypeArray(
@@ -353,8 +362,9 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
             return null;
         }
 
-        return (RelDataTypeField []) list.toArray(
-            new RelDataTypeField[list.size()]);
+        return
+            (RelDataTypeField []) list.toArray(
+                new RelDataTypeField[list.size()]);
     }
 
     // implement RelDataTypeFactory
@@ -369,14 +379,15 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
         throw Util.newInternal("array of non-Java type unsupported");
     }
-    
-    //~ Inner Classes ---------------------------------------------------------
+
+    //~ Inner Classes ----------------------------------------------------------
 
     // TODO jvs 13-Dec-2004:  move to OJTypeFactoryImpl?
     /**
      * Type which is based upon a Java class.
      */
-    protected class JavaType extends RelDataTypeImpl
+    protected class JavaType
+        extends RelDataTypeImpl
     {
         private final Class clazz;
         private boolean isNullable;
@@ -390,15 +401,15 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
 
             isNullable =
                 clazz.equals(Integer.class)
-                    || clazz.equals(Long.class)
-                    || clazz.equals(Short.class)
-                    || clazz.equals(Integer.class)
-                    || clazz.equals(Byte.class)
-                    || clazz.equals(Double.class)
-                    || clazz.equals(Float.class)
-                    || clazz.equals(Boolean.class)
-                    || clazz.equals(byte [].class)
-                    || clazz.equals(String.class);
+                || clazz.equals(Long.class)
+                || clazz.equals(Short.class)
+                || clazz.equals(Integer.class)
+                || clazz.equals(Byte.class)
+                || clazz.equals(Double.class)
+                || clazz.equals(Float.class)
+                || clazz.equals(Boolean.class)
+                || clazz.equals(byte [].class)
+                || clazz.equals(String.class);
             computeDigest();
         }
 
@@ -418,7 +429,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             this(clazz);
             Util.pre(
-                SqlTypeUtil.inCharFamily(this), 
+                SqlTypeUtil.inCharFamily(this),
                 "Need to be a chartype");
             this.isNullable = nullable;
             this.charset = charset;
@@ -434,7 +445,7 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         {
             return isNullable;
         }
-        
+
         protected void generateTypeString(StringBuffer sb, boolean withDetail)
         {
             sb.append("JavaType(");
@@ -470,6 +481,5 @@ public abstract class RelDataTypeFactoryImpl implements RelDataTypeFactory
         }
     }
 }
-
 
 // End RelDataTypeFactoryImpl.java

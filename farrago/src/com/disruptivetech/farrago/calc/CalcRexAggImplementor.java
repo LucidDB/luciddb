@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -29,21 +29,20 @@ import org.eigenbase.rex.RexCall;
  * <p>Implementors are held in a {@link CalcRexImplementorTable}.
  *
  * @author jhyde
- * @since June 2nd, 2004
  * @version $Id$
+ * @since June 2nd, 2004
  */
 public interface CalcRexAggImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Generates instructions to initialize an accumulator for a call to this
-     * aggregate function, and returns the register which holds the
-     * accumulator.
+     * aggregate function, and returns the register which holds the accumulator.
      *
-     * <p>For example, for <code>SUM(x)</code>, this method generates
-     * <code>O s8; V 0; T; MOVE O0, C0;</code> and returns the <code>O0</code>
-     * register.
+     * <p>For example, for <code>SUM(x)</code>, this method generates <code>O
+     * s8; V 0; T; MOVE O0, C0;</code> and returns the <code>O0</code> register.
      *
      * @param call The call to the aggregate function to be implemented
      * @param accumulatorRegister The accumulator register to be populated
@@ -57,8 +56,8 @@ public interface CalcRexAggImplementor
     /**
      * Generates instructions to add a new value to an aggregation.
      *
-     * <p>For example, for <code>SUM(x)</code>, this method generates
-     * <code>I s8; O s8; T; ADD O0, I0;</code>.
+     * <p>For example, for <code>SUM(x)</code>, this method generates <code>I
+     * s8; O s8; T; ADD O0, I0;</code>.
      *
      * @param call The call to the aggregate function to be implemented
      * @param accumulatorRegister The accumulator register
@@ -73,8 +72,8 @@ public interface CalcRexAggImplementor
      * Generates instructions to implement this call, and returns the register
      * which holds the result.
      *
-     * <p>For example, for <code>SUM(x)</code>, this method generates
-     * <code>I s8; O s8; T; SUB O0, I0;</code>
+     * <p>For example, for <code>SUM(x)</code>, this method generates <code>I
+     * s8; O s8; T; SUB O0, I0;</code>
      *
      * @param call The call to the aggregate function to be implemented.
      * @param accumulatorRegister The accumulator register

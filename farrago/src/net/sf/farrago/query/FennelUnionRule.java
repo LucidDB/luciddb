@@ -25,20 +25,27 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * Rule to convert a {@link UnionRel} to {@link
- * FennelRel#FENNEL_EXEC_CONVENTION Fennel calling convention}.
+ * Rule to convert a {@link UnionRel} to {@link FennelRel#FENNEL_EXEC_CONVENTION
+ * Fennel calling convention}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelUnionRule extends ConverterRule
+public class FennelUnionRule
+    extends ConverterRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * The singleton instance.
      */
     public static final FennelUnionRule instance = new FennelUnionRule();
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FennelUnionRule()
     {
         super(
@@ -47,6 +54,8 @@ public class FennelUnionRule extends ConverterRule
             FennelRel.FENNEL_EXEC_CONVENTION,
             "FennelUnionRule");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode convert(RelNode rel)
     {
@@ -67,7 +76,7 @@ public class FennelUnionRule extends ConverterRule
         for (int i = 0; i < newInputs.length; i++) {
             newInputs[i] =
                 mergeTraitsAndConvert(
-                    unionRel.getTraits(), 
+                    unionRel.getTraits(),
                     FennelRel.FENNEL_EXEC_CONVENTION,
                     unionRel.getInput(i));
             if (newInputs[i] == null) {
@@ -75,8 +84,8 @@ public class FennelUnionRule extends ConverterRule
             }
         }
         return new FennelMergeRel(
-            unionRel.getCluster(),
-            newInputs);
+                unionRel.getCluster(),
+                newInputs);
     }
 }
 

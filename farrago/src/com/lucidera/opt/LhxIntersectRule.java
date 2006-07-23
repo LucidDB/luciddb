@@ -20,26 +20,27 @@
 */
 package com.lucidera.opt;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * LhxIntersectRule is a rule for transforming {@link IntersectRel} to
- * {@link LhxJoinRel}.
+ * LhxIntersectRule is a rule for transforming {@link IntersectRel} to {@link
+ * LhxJoinRel}.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxIntersectRule extends RelOptRule
+public class LhxIntersectRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new LhxIntersectRule object.
@@ -51,7 +52,7 @@ public class LhxIntersectRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -63,49 +64,51 @@ public class LhxIntersectRule extends RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         IntersectRel intersectRel = (IntersectRel) call.rels[0];
-        
+
         // TODO: intersect all
         assert (intersectRel.isDistinct());
-        
+
         RelNode leftRel = intersectRel.getInputs()[0];
         List<String> newJoinOutputNames =
-        	RelOptUtil.getFieldNameList(leftRel.getRowType());
-        
+            RelOptUtil.getFieldNameList(leftRel.getRowType());
+
         // make up the condition
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
-    
-        for (int i = 0; i < leftRel.getRowType().getFieldCount(); i ++) {
+
+        for (int i = 0; i < leftRel.getRowType().getFieldCount(); i++) {
             leftKeys.add(i);
             rightKeys.add(i);
         }
-        
+
         for (int inputNo = 1; inputNo < intersectRel.getInputs().length;
-             inputNo ++) {        
+            inputNo++) {
             // perform pair-wise intersect
             RelNode rightRel = intersectRel.getInputs()[inputNo];
-            
+
             // TODO: casting
             assert (leftRel.getRowType() == rightRel.getRowType());
-                
+
             RelNode fennelLeft =
                 mergeTraitsAndConvert(
-                    intersectRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                    intersectRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
                     leftRel);
-        
+
             if (fennelLeft == null) {
                 return;
             }
 
             RelNode fennelRight =
                 mergeTraitsAndConvert(
-                    intersectRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                    intersectRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
                     rightRel);
-        
+
             if (fennelRight == null) {
                 return;
             }
-            
+
             Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
             if (numBuildRows == null) {
                 numBuildRows = 10000.0;
@@ -114,20 +117,22 @@ public class LhxIntersectRule extends RelOptRule
             // Derive cardinality of build side(RHS) join keys.
             Double cndBuildKey;
             BitSet joinKeyMap = new BitSet();
-            
-            for (int i = 0; i < rightKeys.size(); i ++) {
+
+            for (int i = 0; i < rightKeys.size(); i++) {
                 joinKeyMap.set(rightKeys.get(i));
             }
-            
-            cndBuildKey = RelMetadataQuery.getPopulationSize(
-                fennelRight, joinKeyMap);
-            
+
+            cndBuildKey =
+                RelMetadataQuery.getPopulationSize(
+                    fennelRight,
+                    joinKeyMap);
+
             if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
                 cndBuildKey = numBuildRows;
             }
-            
+
             boolean isSetop = true;
-            
+
             leftRel =
                 new LhxJoinRel(
                     intersectRel.getCluster(),
@@ -137,13 +142,12 @@ public class LhxIntersectRule extends RelOptRule
                     isSetop,
                     leftKeys,
                     rightKeys,
-                    newJoinOutputNames,                    
+                    newJoinOutputNames,
                     numBuildRows.intValue(),
                     cndBuildKey.intValue());
-            
         }
         call.transformTo(leftRel);
-    }    
+    }
 }
 
 // End LhxIntersectRule.java

@@ -20,6 +20,8 @@
 */
 package com.lucidera.lcs;
 
+import java.util.*;
+
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
@@ -27,59 +29,68 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
-import java.util.*;
 
 /**
- * A rule for converting an LcsRowScanRel(LcsIndexSearchRel) to 
- * an LcsIndexOnlyScanRel. The conversion can be applied if an 
- * index scan can satisfy the columns of a row scan.
+ * A rule for converting an LcsRowScanRel(LcsIndexSearchRel) to an
+ * LcsIndexOnlyScanRel. The conversion can be applied if an index scan can
+ * satisfy the columns of a row scan.
  *
  * @author John Pham
  * @version $Id$
  */
-public class LcsIndexOnlyAccessRule extends RelOptRule
+public class LcsIndexOnlyAccessRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * The singletons
      */
     public static final LcsIndexOnlyAccessRule instanceSearch =
         new LcsIndexOnlyAccessRule(
-        new RelOptRuleOperand(
-            LcsRowScanRel.class, 
-            new RelOptRuleOperand[] {
-                new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-            }), "with index search child");
+            new RelOptRuleOperand(
+                LcsRowScanRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(LcsIndexSearchRel.class, null)
+                }),
+            "with index search child");
 
     public static final LcsIndexOnlyAccessRule instanceMerge =
         new LcsIndexOnlyAccessRule(
-        new RelOptRuleOperand(
-            LcsRowScanRel.class, 
-            new RelOptRuleOperand[] {
-                new RelOptRuleOperand(LcsIndexMergeRel.class, 
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-                })}), "with merge child");
-    
-    //~ Constructors ----------------------------------------------------------
-    
+            new RelOptRuleOperand(
+                LcsRowScanRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        LcsIndexMergeRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(LcsIndexSearchRel.class,
+                                null)
+                        })
+                }),
+            "with merge child");
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new LcsIndexOnlyAccessRule object.
      */
     public LcsIndexOnlyAccessRule(
-        RelOptRuleOperand operand, String id)
+        RelOptRuleOperand operand,
+        String id)
     {
         super(operand);
         description = "LcsIndexOnlyRule: " + id;
     }
-    
-    //~ Methods ---------------------------------------------------------------
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRule
     public CallingConvention getOutConvention()
     {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
-    
+
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
@@ -97,20 +108,20 @@ public class LcsIndexOnlyAccessRule extends RelOptRule
             return;
         }
 
-        // The original index was chosen because it could handle a filter 
+        // The original index was chosen because it could handle a filter
         // and hence should be an index search (not a full scan)
-        assert(origIndexSearch.getChild() != null);
+        assert (origIndexSearch.getChild() != null);
 
-        // Search for a thin index only scan. The new scan must be 
-        // compatible with the original scan's input, and it must 
+        // Search for a thin index only scan. The new scan must be
+        // compatible with the original scan's input, and it must
         // cover the projections of the row scan.
-        
-        // If performing a single keyset search, then the index keys must 
+
+        // If performing a single keyset search, then the index keys must
         // match exactly and we can only consider the original index.
         // Otherwise, consider widening the index for better column coverage.
         // The search keys (which must also be the prefix keys) cannot change
-        // TODO: we might be able to expand a single keyset search if we 
-        // allow input key projections with them and remember to update null 
+        // TODO: we might be able to expand a single keyset search if we
+        // allow input key projections with them and remember to update null
         // input key projections
         LcsIndexGuide indexGuide = rowScan.lcsTable.getIndexGuide();
         FemLocalIndex origIndex = origIndexSearch.index;
@@ -118,26 +129,27 @@ public class LcsIndexOnlyAccessRule extends RelOptRule
         if (origIndexSearch.isInputSingleKeyset()) {
             candidates = Collections.singletonList(origIndex);
         } else {
-            assert(origIndexSearch.inputKeyProj != null);
+            assert (origIndexSearch.inputKeyProj != null);
             candidates = indexGuide.getUnclusteredIndexes();
         }
         int nInputKeys = origIndexSearch.getInputKeyCount();
-        assert(nInputKeys > 0);
+        assert (nInputKeys > 0);
 
         FemLocalIndex bestIndex = null;
-        Integer[] bestProj = null;
+        Integer [] bestProj = null;
         for (FemLocalIndex index : candidates) {
             // only look for thinner indexes
-            if (bestIndex != null 
-                && bestIndex.getIndexedFeature().size() 
-                    <= index.getIndexedFeature().size())
-            {
+            if ((bestIndex != null)
+                && (
+                    bestIndex.getIndexedFeature().size()
+                    <= index.getIndexedFeature().size()
+                   )) {
                 continue;
             }
-            if (! samePrefix(origIndex, index, nInputKeys)) {
+            if (!samePrefix(origIndex, index, nInputKeys)) {
                 continue;
             }
-            Integer[] proj = 
+            Integer [] proj =
                 indexGuide.findIndexOnlyProjection(rowScan, index);
             if (proj != null) {
                 bestIndex = index;
@@ -147,37 +159,39 @@ public class LcsIndexOnlyAccessRule extends RelOptRule
         if (bestIndex == null) {
             return;
         }
-        
-        LcsIndexOnlyScanRel indexOnlyScan = new LcsIndexOnlyScanRel(
-            rowScan.getCluster(), 
-            origIndexSearch.getChild(), 
-            origIndexSearch,
-            bestIndex,
-            bestProj);
-        
-        RelNode normalizer = new LcsNormalizerRel(
-            rowScan.getCluster(), indexOnlyScan);
+
+        LcsIndexOnlyScanRel indexOnlyScan =
+            new LcsIndexOnlyScanRel(
+                rowScan.getCluster(),
+                origIndexSearch.getChild(),
+                origIndexSearch,
+                bestIndex,
+                bestProj);
+
+        RelNode normalizer =
+            new LcsNormalizerRel(
+                rowScan.getCluster(),
+                indexOnlyScan);
         call.transformTo(normalizer);
     }
 
     /**
-     * Determines whether two indexes have the same prefix, up to a 
-     * specified number of keys
+     * Determines whether two indexes have the same prefix, up to a specified
+     * number of keys
      */
-    private boolean samePrefix(FemLocalIndex a, FemLocalIndex b, int nKeys) 
+    private boolean samePrefix(FemLocalIndex a, FemLocalIndex b, int nKeys)
     {
         if (a == b) {
             return true;
         }
         List aCols = a.getIndexedFeature();
         List bCols = b.getIndexedFeature();
-        if (aCols.size() < nKeys || bCols.size() < nKeys) {
+        if ((aCols.size() < nKeys) || (bCols.size() < nKeys)) {
             return false;
         }
         for (int i = 0; i < nKeys; i++) {
-            if (((CwmIndexedFeature)aCols.get(i)).getFeature()
-                != ((CwmIndexedFeature)bCols.get(i)).getFeature())
-            {
+            if (((CwmIndexedFeature) aCols.get(i)).getFeature()
+                != ((CwmIndexedFeature) bCols.get(i)).getFeature()) {
                 return false;
             }
         }

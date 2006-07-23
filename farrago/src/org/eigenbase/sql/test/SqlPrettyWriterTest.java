@@ -22,16 +22,15 @@
 */
 package org.eigenbase.sql.test;
 
-import junit.framework.AssertionFailedError;
-import junit.framework.TestCase;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParseException;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
-import org.eigenbase.test.DiffRepository;
+import java.io.*;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import junit.framework.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.pretty.*;
+import org.eigenbase.test.*;
+
 
 /**
  * Unit test for {@link SqlPrettyWriter}.
@@ -39,17 +38,26 @@ import java.io.StringWriter;
  * <p>You must provide the system property "source.dir".
  *
  * @author Julian Hyde
- * @since 2005/8/24
  * @version $Id$
+ * @since 2005/8/24
  */
-public class SqlPrettyWriterTest extends TestCase
+public class SqlPrettyWriterTest
+    extends TestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String NL = System.getProperty("line.separator");
 
-    public SqlPrettyWriterTest(String testCaseName) throws Exception
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlPrettyWriterTest(String testCaseName)
+        throws Exception
     {
         super(testCaseName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // ~ Helper methods -------------------------------------------------------
 
@@ -57,10 +65,9 @@ public class SqlPrettyWriterTest extends TestCase
     {
         return DiffRepository.lookup(SqlPrettyWriterTest.class);
     }
-    
+
     /**
-     * Parses a SQL query.
-     * To use a different parser, override this method.
+     * Parses a SQL query. To use a different parser, override this method.
      */
     protected SqlNode parseQuery(String sql)
     {
@@ -68,15 +75,18 @@ public class SqlPrettyWriterTest extends TestCase
         try {
             node = new SqlParser(sql).parseQuery();
         } catch (SqlParseException e) {
-            String message = "Received error while parsing SQL '" + sql +
-                    "'; error is:" + NL + e.toString();
+            String message =
+                "Received error while parsing SQL '" + sql
+                + "'; error is:" + NL + e.toString();
             throw new AssertionFailedError(message);
         }
         return node;
     }
 
     protected void assertPrintsTo(
-        boolean newlines, final String sql, String expected)
+        boolean newlines,
+        final String sql,
+        String expected)
     {
         final SqlNode node = parseQuery(sql);
         final SqlPrettyWriter prettyWriter =
@@ -96,10 +106,11 @@ public class SqlPrettyWriterTest extends TestCase
     }
 
     protected void assertExprPrintsTo(
-        boolean newlines, final String sql, String expected)
+        boolean newlines,
+        final String sql,
+        String expected)
     {
-        final SqlCall valuesCall =
-            (SqlCall) parseQuery("VALUES (" + sql + ")");
+        final SqlCall valuesCall = (SqlCall) parseQuery("VALUES (" + sql + ")");
         final SqlCall rowCall = (SqlCall) valuesCall.getOperands()[0];
         final SqlNode node = rowCall.getOperands()[0];
         final SqlPrettyWriter prettyWriter =
@@ -123,23 +134,25 @@ public class SqlPrettyWriterTest extends TestCase
     protected void checkSimple(
         SqlPrettyWriter prettyWriter,
         String expectedDesc,
-        String expected) throws Exception
+        String expected)
+        throws Exception
     {
-        final SqlNode node = parseQuery(
-            "select x as a, b," +
-            " 'mixed-Case string'," +
-            " unquotedCamelCaseId," +
-            " \"quoted id\" " +
-            "from" +
-            " (select *" +
-            " from t" +
-            " where x = y and a > 5" +
-            " group by z, zz" +
-            " window w as (partition by c)," +
-            "  w1 as (partition by c,d order by a, b" +
-            "   range between interval '2:2' hour to minute preceding" +
-            "    and interval '1' day following)) " +
-            "order by gg");
+        final SqlNode node =
+            parseQuery(
+                "select x as a, b,"
+                + " 'mixed-Case string',"
+                + " unquotedCamelCaseId,"
+                + " \"quoted id\" "
+                + "from"
+                + " (select *"
+                + " from t"
+                + " where x = y and a > 5"
+                + " group by z, zz"
+                + " window w as (partition by c),"
+                + "  w1 as (partition by c,d order by a, b"
+                + "   range between interval '2:2' hour to minute preceding"
+                + "    and interval '1' day following)) "
+                + "order by gg");
 
         // Describe settings
         final StringWriter sw = new StringWriter();
@@ -153,15 +166,17 @@ public class SqlPrettyWriterTest extends TestCase
         String actual = prettyWriter.format(node);
         getDiffRepos().assertEquals("formatted", expected, actual);
     }
-    
-    public void testDefault() throws Exception
+
+    public void testDefault()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testIndent8() throws Exception
+    public void testIndent8()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -169,7 +184,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testClausesNotOnNewLine() throws Exception
+    public void testClausesNotOnNewLine()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -177,7 +193,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testSelectListItemsOnSeparateLines() throws Exception
+    public void testSelectListItemsOnSeparateLines()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -185,7 +202,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testKeywordsLowerCase() throws Exception
+    public void testKeywordsLowerCase()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -193,7 +211,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testParenthesizeAllExprs() throws Exception
+    public void testParenthesizeAllExprs()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -201,7 +220,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testOnlyQuoteIdentifiersWhichNeedIt() throws Exception
+    public void testOnlyQuoteIdentifiersWhichNeedIt()
+        throws Exception
     {
         final SqlPrettyWriter prettyWriter =
             new SqlPrettyWriter(SqlUtil.dummyDialect);
@@ -209,7 +229,8 @@ public class SqlPrettyWriterTest extends TestCase
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
 
-    public void testDamiansSubqueryStyle() throws Exception
+    public void testDamiansSubqueryStyle()
+        throws Exception
     {
         // Note that ( is at the indent, SELECT is on the same line, and ) is
         // below it.
@@ -218,8 +239,6 @@ public class SqlPrettyWriterTest extends TestCase
         prettyWriter.setSubqueryStyle(SqlWriter.SubqueryStyle.Black);
         checkSimple(prettyWriter, "${desc}", "${formatted}");
     }
-
-
 
     // test disabled because default SQL parser cannot parse DDL
     public void _testExplain()
@@ -233,17 +252,17 @@ public class SqlPrettyWriterTest extends TestCase
         // so, but that's beyond the control of the pretty-printer.
         assertExprPrintsTo(true,
             "case 1 when 2 + 3 then 4 when case a when b then c else d end then 6 else 7 end",
-            "CASE" + NL +
-            "WHEN 1 = 2 + 3" + NL +
-            "THEN 4" + NL +
-            "WHEN 1 = CASE" + NL +
-            "        WHEN `A` = `B`" + NL + // todo: indent should be 4 not 8
-            "        THEN `C`" + NL +
-            "        ELSE `D`" + NL +
-            "        END" + NL +
-            "THEN 6" + NL +
-            "ELSE 7" + NL +
-            "END");
+            "CASE" + NL
+            + "WHEN 1 = 2 + 3" + NL
+            + "THEN 4" + NL
+            + "WHEN 1 = CASE" + NL
+            + "        WHEN `A` = `B`" + NL // todo: indent should be 4 not 8
+            + "        THEN `C`" + NL
+            + "        ELSE `D`" + NL
+            + "        END" + NL
+            + "THEN 6" + NL
+            + "ELSE 7" + NL
+            + "END");
     }
 
     public void testCase2()
@@ -257,7 +276,8 @@ public class SqlPrettyWriterTest extends TestCase
     {
         assertExprPrintsTo(true,
             "x not between symmetric y and z",
-            "`X` NOT BETWEEN SYMMETRIC `Y` AND `Z`"); // todo: remove leading space
+            "`X` NOT BETWEEN SYMMETRIC `Y` AND `Z`"); // todo: remove leading
+                                                      // space
     }
 
     public void testCast()
@@ -270,8 +290,8 @@ public class SqlPrettyWriterTest extends TestCase
     public void testLiteralChain()
     {
         assertExprPrintsTo(true,
-            "'x' /* comment */ 'y'" + NL +
-            "  'z' ",
+            "'x' /* comment */ 'y'" + NL
+            + "  'z' ",
             "'x'" + NL + "'y'" + NL + "'z'");
     }
 
@@ -286,12 +306,12 @@ public class SqlPrettyWriterTest extends TestCase
     {
         assertPrintsTo(
             true,
-            "select * from t " +
-            "union select * from (" +
-            "  select * from u " +
-            "  union select * from v) " +
-            "union select * from w " +
-            "order by a, b",
+            "select * from t "
+            + "union select * from ("
+            + "  select * from u "
+            + "  union select * from v) "
+            + "union select * from w "
+            + "order by a, b",
 
             // todo: SELECT should not be indended from UNION, like this:
             // UNION

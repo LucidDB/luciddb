@@ -22,27 +22,30 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.util.*;
-
 import java.util.*;
 
+import org.eigenbase.util.*;
+
+
 /**
- * Class to hold rules to determine if a type is assignable from another
- * type.
+ * Class to hold rules to determine if a type is assignable from another type.
  *
- *<p>
- *
- * REVIEW 7/05/04 Wael: We should split this up in
- * Cast rules, symmetric and asymmetric assignable rules
+ * <p>REVIEW 7/05/04 Wael: We should split this up in Cast rules, symmetric and
+ * asymmetric assignable rules
  *
  * @author Wael Chatila
  * @version $Id$
  */
 public class SqlTypeAssignmentRules
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static SqlTypeAssignmentRules instance = null;
     private static HashMap rules = null;
     private static HashMap coerceRules = null;
+
+    //~ Constructors -----------------------------------------------------------
 
     private SqlTypeAssignmentRules()
     {
@@ -198,16 +201,36 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Char);
         rule.add(SqlTypeName.Varchar);
 
-        coerceRules.put(SqlTypeName.Tinyint, rule.clone());
-        coerceRules.put(SqlTypeName.Smallint, rule.clone());
-        coerceRules.put(SqlTypeName.Integer, rule.clone());
-        coerceRules.put(SqlTypeName.Bigint, rule.clone());
-        coerceRules.put(SqlTypeName.Float, rule.clone());
-        coerceRules.put(SqlTypeName.Real, rule.clone());
-        coerceRules.put(SqlTypeName.Decimal, rule.clone());
-        coerceRules.put(SqlTypeName.Double, rule.clone());
-        coerceRules.put(SqlTypeName.Char, rule.clone());
-        coerceRules.put(SqlTypeName.Varchar, rule.clone());
+        coerceRules.put(
+            SqlTypeName.Tinyint,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Smallint,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Integer,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Bigint,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Float,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Real,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Decimal,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Double,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Char,
+            rule.clone());
+        coerceRules.put(
+            SqlTypeName.Varchar,
+            rule.clone());
 
         // Bigint is castable from intervals
         rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
@@ -226,7 +249,8 @@ public class SqlTypeAssignmentRules
         rule.add(SqlTypeName.Integer);
         rule.add(SqlTypeName.Varchar);
 
-        // varchar is castable from Boolean, Date, time, timestamp, numbers and intervals
+        // varchar is castable from Boolean, Date, time, timestamp, numbers and
+        // intervals
         rule = (HashSet) coerceRules.get(SqlTypeName.Varchar);
         rule.add(SqlTypeName.Boolean);
         rule.add(SqlTypeName.Date);
@@ -282,13 +306,16 @@ public class SqlTypeAssignmentRules
         // Bigint is assignable from...
         rule = new HashSet();
         rule = (HashSet) coerceRules.get(SqlTypeName.Bigint);
-        // xluo 24-Sept-2005 datetime added, there is a specific 
+
+        // xluo 24-Sept-2005 datetime added, there is a specific
         // test case for that. I assume it should.
         rule.add(SqlTypeName.Date);
         rule.add(SqlTypeName.Time);
         rule.add(SqlTypeName.Timestamp);
         coerceRules.put(SqlTypeName.Bigint, rule);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public synchronized static SqlTypeAssignmentRules instance()
     {

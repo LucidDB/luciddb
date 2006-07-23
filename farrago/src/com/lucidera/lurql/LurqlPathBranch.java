@@ -24,6 +24,7 @@ import java.io.*;
 
 import org.eigenbase.util.*;
 
+
 /**
  * LurqlPathBranch represents a parsed path branch (either FROM, FOLLOW, or
  * RECURSIVELY) in a LURQL query.
@@ -31,17 +32,25 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class LurqlPathBranch extends LurqlQueryNode
+public abstract class LurqlPathBranch
+    extends LurqlQueryNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String aliasName;
-    
+
     private final LurqlPathSpec thenSpec;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected LurqlPathBranch(String aliasName, LurqlPathSpec thenSpec)
     {
         this.aliasName = aliasName;
         this.thenSpec = thenSpec;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getAliasName()
     {

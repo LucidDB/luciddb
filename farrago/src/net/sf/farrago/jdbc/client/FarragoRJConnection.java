@@ -22,17 +22,17 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import net.sf.farrago.jdbc.FarragoConnection;
-import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
-import net.sf.farrago.jdbc.rmi.FarragoRJConnectionInterface;
-import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
-import org.objectweb.rmijdbc.RJConnection;
-import org.objectweb.rmijdbc.RJConnectionInterface;
-import org.objectweb.rmijdbc.RJDriverInterface;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
-import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.rmi.*;
+
+import org.objectweb.rmijdbc.*;
+
 
 /**
  * JDBC connection to Farrago across an RMI transport.
@@ -42,11 +42,20 @@ import java.util.Properties;
  * @author Tim Leung
  * @version $Id$
  */
-public class FarragoRJConnection extends RJConnection
-    implements java.io.Serializable, FarragoConnection
+public class FarragoRJConnection
+    extends RJConnection
+    implements java.io.Serializable,
+        FarragoConnection
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
     private static final long serialVersionUID = -3256212096290593733L;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected FarragoRJConnection(RJConnectionInterface rmiconn)
     {
@@ -56,16 +65,21 @@ public class FarragoRJConnection extends RJConnection
     public FarragoRJConnection(
         RJDriverInterface drv,
         String url,
-        Properties info) throws Exception
+        Properties info)
+        throws Exception
     {
-        super(drv,url,info);
+        super(drv, url, info);
     }
 
-    private FarragoRJConnectionInterface getFarragoRmiCon() {
+    //~ Methods ----------------------------------------------------------------
+
+    private FarragoRJConnectionInterface getFarragoRmiCon()
+    {
         return (FarragoRJConnectionInterface) rmiConnection_;
     }
 
-    public long getFarragoSessionId() throws SQLException
+    public long getFarragoSessionId()
+        throws SQLException
     {
         try {
             return getFarragoRmiCon().getFarragoSessionId();
@@ -99,3 +113,5 @@ public class FarragoRJConnection extends RJConnection
         }
     }
 }
+
+// End FarragoRJConnection.java

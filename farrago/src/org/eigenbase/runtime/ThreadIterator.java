@@ -20,19 +20,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.util.Iterator;
+import java.util.*;
 import java.util.concurrent.*;
 
-import org.eigenbase.util.Util;
 
 /**
- * <code>ThreadIterator</code> converts 'push' code to 'pull'.  You implement
- * {@link #doWork} to call {@link #put} with each row, and this class invokes
- * it in a separate thread. Then the results come out via the familiar {@link
+ * <code>ThreadIterator</code> converts 'push' code to 'pull'. You implement
+ * {@link #doWork} to call {@link #put} with each row, and this class invokes it
+ * in a separate thread. Then the results come out via the familiar {@link
  * Iterator} interface. For example,
+ *
  * <blockquote>
  * <pre>class ArrayIterator extends ThreadIterator {
  *   Object[] a;
@@ -47,7 +46,9 @@ import org.eigenbase.util.Util;
  *   }
  * }</pre>
  * </blockquote>
+ *
  * Or, more typically, using an anonymous class:
+ *
  * <blockquote>
  * <pre>Iterator i = new ThreadIterator() {
  *   int limit;
@@ -66,13 +67,18 @@ import org.eigenbase.util.Util;
  * }</pre>
  * </blockquote>
  */
-public abstract class ThreadIterator extends QueueIterator implements Iterator,
-    Runnable,
-    Iterable
+public abstract class ThreadIterator
+    extends QueueIterator
+    implements Iterator,
+        Runnable,
+        Iterable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private Thread thread;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public ThreadIterator()
     {
@@ -83,7 +89,7 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
         super(1, null, queue);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Iterable
     public Iterator iterator()
@@ -114,8 +120,9 @@ public abstract class ThreadIterator extends QueueIterator implements Iterator,
 
     protected ThreadIterator start()
     {
-        assert(thread == null);
+        assert (thread == null);
         thread = new Thread(this);
+
         // Make the thread a daemon so that we don't have to worry
         // about cleaning it up.  This is important since we can't
         // be guaranteed that onClose will get called (someone

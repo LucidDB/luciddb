@@ -21,22 +21,27 @@
 */
 package org.eigenbase.rel.metadata;
 
-import org.eigenbase.util14.*;
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util14.*;
 
-import java.util.*;
 
 /**
- * RelMdPopulationSize supplies a default implementation of
- * {@link RelMetadataQuery#getPopulationSize} for the standard logical algebra.
+ * RelMdPopulationSize supplies a default implementation of {@link
+ * RelMetadataQuery#getPopulationSize} for the standard logical algebra.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
+public class RelMdPopulationSize
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public RelMdPopulationSize()
     {
         // Tell superclass reflection about parameter types expected
@@ -49,17 +54,23 @@ public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
             "getPopulationSize",
             Collections.singletonList((Class) BitSet.class));
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public Double getPopulationSize(FilterRelBase rel, BitSet groupKey)
     {
-        return RelMetadataQuery.getPopulationSize(rel.getChild(), groupKey);
+        return RelMetadataQuery.getPopulationSize(
+                rel.getChild(),
+                groupKey);
     }
-    
+
     public Double getPopulationSize(SortRel rel, BitSet groupKey)
     {
-        return RelMetadataQuery.getPopulationSize(rel.getChild(), groupKey);
+        return RelMetadataQuery.getPopulationSize(
+                rel.getChild(),
+                groupKey);
     }
-    
+
     public Double getPopulationSize(UnionRelBase rel, BitSet groupKey)
     {
         Double population = 0.0;
@@ -72,90 +83,105 @@ public class RelMdPopulationSize extends ReflectiveRelMetadataProvider
         }
         return population;
     }
-    
+
     public Double getPopulationSize(JoinRelBase rel, BitSet groupKey)
     {
         BitSet leftMask = new BitSet();
         BitSet rightMask = new BitSet();
-        
+
         // separate the mask into masks for the left and right
         RelMdUtil.setLeftRightBitmaps(
-            groupKey, leftMask, rightMask,
-            rel.getLeft().getRowType().getFieldCount());   
-        
-       Double population = NumberUtil.multiply(
-            RelMetadataQuery.getPopulationSize(rel.getLeft(), leftMask),
-            RelMetadataQuery.getPopulationSize(rel.getRight(), rightMask));
-       
-       return RelMdUtil.numDistinctVals(
-           population, RelMetadataQuery.getRowCount(rel));
+            groupKey,
+            leftMask,
+            rightMask,
+            rel.getLeft().getRowType().getFieldCount());
+
+        Double population =
+            NumberUtil.multiply(
+                RelMetadataQuery.getPopulationSize(
+                    rel.getLeft(),
+                    leftMask),
+                RelMetadataQuery.getPopulationSize(
+                    rel.getRight(),
+                    rightMask));
+
+        return
+            RelMdUtil.numDistinctVals(
+                population,
+                RelMetadataQuery.getRowCount(rel));
     }
-    
+
     public Double getPopulationSize(SemiJoinRel rel, BitSet groupKey)
     {
-        return RelMetadataQuery.getPopulationSize(rel.getLeft(), groupKey);
+        return RelMetadataQuery.getPopulationSize(
+                rel.getLeft(),
+                groupKey);
     }
-    
+
     public Double getPopulationSize(AggregateRelBase rel, BitSet groupKey)
     {
         BitSet childKey = new BitSet();
         RelMdUtil.setAggChildKeys(groupKey, rel, childKey);
-        return RelMetadataQuery.getPopulationSize(rel.getChild(), childKey);
+        return RelMetadataQuery.getPopulationSize(
+                rel.getChild(),
+                childKey);
     }
-    
+
     public Double getPopulationSize(ValuesRelBase rel, BitSet groupKey)
     {
         // assume half the rows are duplicates
         return rel.getRows() / 2;
     }
-    
+
     public Double getPopulationSize(ProjectRelBase rel, BitSet groupKey)
     {
-    	BitSet baseCols = new BitSet();
-    	BitSet projCols = new BitSet();
-    	RexNode[] projExprs = rel.getChildExps();
-    	RelMdUtil.splitCols(projExprs, groupKey, baseCols, projCols);
-    	
-    	Double population = RelMetadataQuery.getPopulationSize(
-    	    rel.getChild(), baseCols);
-    	if (population == null) {
-    	    return null;
-    	}
-    	
-    	for (int bit = projCols.nextSetBit(0); bit >= 0;
-    	    bit = projCols.nextSetBit(bit + 1))
-    	{
-    	    Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
-    	    if (subRowCount == null) {
-    	        return null;
-    	    }
-    	    population *= subRowCount;
-    	}
+        BitSet baseCols = new BitSet();
+        BitSet projCols = new BitSet();
+        RexNode [] projExprs = rel.getChildExps();
+        RelMdUtil.splitCols(projExprs, groupKey, baseCols, projCols);
 
-    	// REVIEW zfong 6/22/06 - Broadbase did not have the call to 
-    	// numDistinctVals.  This is needed; otherwise, population can be
-    	// larger than the number of rows in the RelNode.
-        return RelMdUtil.numDistinctVals(
-            population, RelMetadataQuery.getRowCount(rel));
+        Double population =
+            RelMetadataQuery.getPopulationSize(
+                rel.getChild(),
+                baseCols);
+        if (population == null) {
+            return null;
+        }
+
+        for (int bit = projCols.nextSetBit(0); bit >= 0;
+            bit = projCols.nextSetBit(bit + 1)) {
+            Double subRowCount = RelMdUtil.cardOfProjExpr(rel, projExprs[bit]);
+            if (subRowCount == null) {
+                return null;
+            }
+            population *= subRowCount;
+        }
+
+        // REVIEW zfong 6/22/06 - Broadbase did not have the call to
+        // numDistinctVals.  This is needed; otherwise, population can be
+        // larger than the number of rows in the RelNode.
+        return
+            RelMdUtil.numDistinctVals(
+                population,
+                RelMetadataQuery.getRowCount(rel));
     }
-    
+
     // Catch-all rule when none of the others apply.
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // if the keys are unique, return the row count; otherwise, we have
         // no further information on which to return any legitimate value
-        
+
         // REVIEW zfong 4/11/06 - Broadbase code returns the product of each
         // unique key, which would result in the population being larger
         // than the total rows in the relnode
         Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq != null && uniq == true) {
+        if ((uniq != null) && (uniq == true)) {
             return RelMetadataQuery.getRowCount(rel);
         }
-        
+
         return null;
     }
-    
 }
 
 // End RelMdPopulationSize.java

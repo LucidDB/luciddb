@@ -23,29 +23,33 @@ package net.sf.farrago.namespace;
 
 import java.util.*;
 
+
 /**
- * FarragoMedMetadataFilter represents a filter on a
- * {@link FarragoMedMetadataQuery}.  A filter may be expressed as either
- * an explicit name roster or a name pattern.
+ * FarragoMedMetadataFilter represents a filter on a {@link
+ * FarragoMedMetadataQuery}. A filter may be expressed as either an explicit
+ * name roster or a name pattern.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoMedMetadataFilter
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * @return true if objects matching filter are to be excluded
-     * from query results; false if only objects matching filter are to
-     * be included in the results
+     * @return true if objects matching filter are to be excluded from query
+     * results; false if only objects matching filter are to be included in the
+     * results
      */
     public boolean isExclusion();
-    
+
     /**
-     * @return Set<String> representing filter membership, or null
-     * for a pattern filter
+     * @return Set<String> representing filter membership, or null for a pattern
+     * filter
      */
     public Set getRoster();
-    
+
     /**
      * @return LIKE pattern, or null for a roster filter
      */

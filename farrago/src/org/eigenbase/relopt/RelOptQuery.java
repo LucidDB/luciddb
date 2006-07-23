@@ -20,19 +20,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
-
 
 import java.util.*;
 
-import openjava.mop.Environment;
+import openjava.mop.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexFieldAccess;
-import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -41,46 +37,48 @@ import org.eigenbase.sql2rel.SqlToRelConverter;
  */
 public class RelOptQuery
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * Prefix to the name of correlating variables.
      */
     public static final String correlPrefix = "$cor";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * Maps a from-list expression to the name of the correlating variable
-     * which references it. This is for forward-references, caused when from
-     * items have correlating variables. We will later resolve to a {@link
-     * RelNode}.
+     * Maps a from-list expression to the name of the correlating variable which
+     * references it. This is for forward-references, caused when from items
+     * have correlating variables. We will later resolve to a {@link RelNode}.
      */
     private final Map<DeferredLookup, String> mapDeferredToCorrel =
         new HashMap<DeferredLookup, String>();
 
     /**
-     * Maps name of correlating variable (e.g. "$cor3") to the {@link
-     * RelNode} which implements it.
+     * Maps name of correlating variable (e.g. "$cor3") to the {@link RelNode}
+     * which implements it.
      */
     final HashMap mapCorrelToRel = new HashMap();
     private final RelOptPlanner planner;
     private int nextCorrel = 0;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public RelOptQuery(RelOptPlanner planner)
     {
         this.planner = planner;
     }
 
-    //~ Methods ---------------------------------------------------------------
-    public static int getCorrelOrdinal(String correlName) {
-        assert(correlName.startsWith(correlPrefix));
+    //~ Methods ----------------------------------------------------------------
+
+    public static int getCorrelOrdinal(String correlName)
+    {
+        assert (correlName.startsWith(correlPrefix));
         return Integer.parseInt(correlName.substring(correlPrefix.length()));
     }
 
-    public Map<DeferredLookup,String> getMapDeferredToCorrel()
+    public Map<DeferredLookup, String> getMapDeferredToCorrel()
     {
         return mapDeferredToCorrel;
     }
@@ -94,8 +92,8 @@ public class RelOptQuery
     }
 
     /**
-     * Constructs a new name for a correlating variable.  It is unique within
-     * the whole query.
+     * Constructs a new name for a correlating variable. It is unique within the
+     * whole query.
      */
     public String createCorrel()
     {
@@ -104,11 +102,11 @@ public class RelOptQuery
     }
 
     /**
-     * Creates a name for a correlating variable for which no {@link
-     * RelNode} has been created yet.
+     * Creates a name for a correlating variable for which no {@link RelNode}
+     * has been created yet.
      *
      * @param deferredLookup contains the information required to resolve the
-     *        variable later
+     * variable later
      */
     public String createCorrelUnresolved(DeferredLookup deferredLookup)
     {
@@ -119,8 +117,7 @@ public class RelOptQuery
     }
 
     /**
-     * Returns the relational expression which populates a correlating
-     * variable.
+     * Returns the relational expression which populates a correlating variable.
      */
     public RelNode lookupCorrel(String name)
     {
@@ -137,15 +134,16 @@ public class RelOptQuery
         mapCorrelToRel.put(name, rel);
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     /**
-     * Contains the information necessary to repeat a call to
-     * {@link SqlToRelConverter.Blackboard#lookup}.
+     * Contains the information necessary to repeat a call to {@link
+     * SqlToRelConverter.Blackboard#lookup}.
      */
     public interface DeferredLookup
     {
         RexFieldAccess getFieldAccess(String name);
     }
 }
-
 
 // End RelOptQuery.java

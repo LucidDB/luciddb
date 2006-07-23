@@ -20,31 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
 import java.sql.*;
+
 import java.util.*;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
  * A <code>IteratorResultSet</code> is an adapter which converts a {@link
  * java.util.Iterator} into a {@link java.sql.ResultSet}.
  *
- * <p>
- * See also its converse adapter, {@link ResultSetIterator}
- * </p>
+ * <p>See also its converse adapter, {@link ResultSetIterator}</p>
  */
-public class IteratorResultSet extends AbstractIterResultSet
+public class IteratorResultSet
+    extends AbstractIterResultSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Iterator iterator;
     private TimeoutQueueIterator timeoutIter;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a result set based upon an iterator. The column-getter accesses
@@ -57,23 +57,23 @@ public class IteratorResultSet extends AbstractIterResultSet
         ColumnGetter columnGetter)
     {
         super(columnGetter);
-        
+
         Util.pre(iterator != null, "iterator != null");
         this.iterator = iterator;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Sets the timeout that this IteratorResultSet will wait for a row from
-     * the underlying iterator.
+     * Sets the timeout that this IteratorResultSet will wait for a row from the
+     * underlying iterator.
      *
      * @param timeoutMillis Timeout in milliseconds. Must be greater than zero.
      */
     public void setTimeout(long timeoutMillis)
     {
         super.setTimeout(timeoutMillis);
-        
+
         assert timeoutIter == null;
 
         // we create a new semaphore for each executeQuery call
@@ -135,6 +135,5 @@ public class IteratorResultSet extends AbstractIterResultSet
         }
     }
 }
-
 
 // End IteratorResultSet.java

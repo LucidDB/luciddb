@@ -21,30 +21,34 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.med.*;
+import java.sql.*;
 
+import java.util.*;
+
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.*;
+import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.util.*;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 
-import java.util.*;
-import java.sql.*;
 
 /**
- * DdlImportForeignSchemaStmt represents a DDL IMPORT FOREIGN SCHEMA
- * statement.
+ * DdlImportForeignSchemaStmt represents a DDL IMPORT FOREIGN SCHEMA statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlImportForeignSchemaStmt extends DdlStmt
+public class DdlImportForeignSchemaStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FemLocalSchema localSchema;
     private final FemDataServer femServer;
     private final SqlIdentifier foreignSchemaName;
@@ -52,21 +56,18 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
     private final List roster;
     private final String pattern;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new import statement.  It is illegal for both roster and
-     * pattern to be specified (both may be null).
+     * Creates a new import statement. It is illegal for both roster and pattern
+     * to be specified (both may be null).
      *
      * @param localSchema target local schema
-     *
      * @param femServer source foreign server
-     *
      * @param foreignSchemaName name of source foreign schema
-     *
      * @param exclude whether to exclude roster/pattern
-     *
-     * @param roster if non-null, a list of table names (as SqlIdentifiers)
-     * to include or exclude
-     *
+     * @param roster if non-null, a list of table names (as SqlIdentifiers) to
+     * include or exclude
      * @param pattern if non-null, a table name pattern to include or exclude
      */
     public DdlImportForeignSchemaStmt(
@@ -87,12 +88,14 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
         this.pattern = pattern;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
     }
-    
+
     // implement FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
@@ -100,7 +103,7 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             throw FarragoResource.instance().ValidatorImportMustBeForeign.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(femServer));
         }
-        FarragoMedDataServer medServer = 
+        FarragoMedDataServer medServer =
             ddlValidator.getDataWrapperCache().loadServerFromCatalog(femServer);
         try {
             FarragoMedNameDirectory catalogDir = medServer.getNameDirectory();
@@ -108,7 +111,7 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
                 throw FarragoResource.instance().ValidatorImportUnsupported.ex(
                     ddlValidator.getRepos().getLocalizedObjectName(femServer));
             }
-            assert(foreignSchemaName.isSimple());
+            assert (foreignSchemaName.isSimple());
             FarragoMedNameDirectory schemaDir =
                 catalogDir.lookupSubdirectory(foreignSchemaName.getSimple());
             if (schemaDir == null) {
@@ -143,8 +146,10 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
 
             // Create a sink to receive query results
             ImportSink sink = new ImportSink(
-                ddlValidator, query, schemaDir);
-            
+                    ddlValidator,
+                    query,
+                    schemaDir);
+
             if (!schemaDir.queryMetadata(query, sink)) {
                 throw FarragoResource.instance().ValidatorImportUnsupported.ex(
                     ddlValidator.getRepos().getLocalizedObjectName(femServer));
@@ -162,7 +167,6 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
 
             // TODO:  error handling for duplicate table/column names
             sink.dropStragglers();
-
         } catch (SQLException ex) {
             throw FarragoResource.instance().ValidatorImportFailed.ex(
                 ddlValidator.getRepos().getLocalizedObjectName(
@@ -187,31 +191,36 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
     }
 
     // TODO:  passive abort checking
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * ImportSink implements {@link FarragoMedMetadataSink} by creating 
-     * catalog descriptors for imported foreign tables and columns.
+     * ImportSink implements {@link FarragoMedMetadataSink} by creating catalog
+     * descriptors for imported foreign tables and columns.
      */
-    private class ImportSink extends MedAbstractMetadataSink
+    private class ImportSink
+        extends MedAbstractMetadataSink
     {
         private final FarragoSessionDdlValidator ddlValidator;
-        
+
         private final Map tableMap;
 
         private DdlMedHandler medHandler;
 
         private FarragoMedNameDirectory directory;
-        
+
         ImportSink(
             FarragoSessionDdlValidator ddlValidator,
             FarragoMedMetadataQuery query,
             FarragoMedNameDirectory directory)
         {
-            super(query, ddlValidator.getTypeFactory());
+            super(
+                query,
+                ddlValidator.getTypeFactory());
 
             this.ddlValidator = ddlValidator;
             this.directory = directory;
-            
+
             tableMap = new HashMap();
             medHandler = new DdlMedHandler(ddlValidator);
         }
@@ -226,12 +235,12 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             if (!shouldInclude(name, typeName, false)) {
                 return false;
             }
-            
+
             FemBaseColumnSet table = createTable(name);
             setStorageOptions(table, properties);
             return true;
         }
-        
+
         // implement FarragoMedMetadataSink
         public boolean writeColumnDescriptor(
             String tableName,
@@ -243,11 +252,15 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
             Map properties)
         {
             if (!shouldInclude(
-                tableName, FarragoMedMetadataQuery.OTN_TABLE, true)) {
+                    tableName,
+                    FarragoMedMetadataQuery.OTN_TABLE,
+                    true)) {
                 return false;
             }
             if (!shouldInclude(
-                columnName, FarragoMedMetadataQuery.OTN_COLUMN, false)) {
+                    columnName,
+                    FarragoMedMetadataQuery.OTN_COLUMN,
+                    false)) {
                 return false;
             }
 
@@ -260,14 +273,17 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
                 ddlValidator.getRepos().newFemStoredColumn();
             column.setName(columnName);
             column.setOrdinal(ordinal);
-            RelDataTypeField field = new RelDataTypeFieldImpl(
-                columnName, ordinal, type);
+            RelDataTypeField field =
+                new RelDataTypeFieldImpl(
+                    columnName,
+                    ordinal,
+                    type);
             medHandler.convertFieldToCwmColumn(field, column, table);
 
             setStorageOptions(column, properties);
-            
+
             // TODO:  real excn
-            assert(ordinal == table.getFeature().size());
+            assert (ordinal == table.getFeature().size());
             table.getFeature().add(column);
 
             // TODO:  set column remarks, default value
@@ -294,8 +310,10 @@ public class DdlImportForeignSchemaStmt extends DdlStmt
 
         private FemBaseColumnSet createTable(String tableName)
         {
-            FemBaseColumnSet table = directory.newImportedColumnSet(
-                ddlValidator.getRepos(), tableName);
+            FemBaseColumnSet table =
+                directory.newImportedColumnSet(
+                    ddlValidator.getRepos(),
+                    tableName);
             table.setName(tableName);
             table.setServer(femServer);
             localSchema.getOwnedElement().add(table);

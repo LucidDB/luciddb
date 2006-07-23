@@ -21,8 +21,10 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.io.File;
-import java.text.SimpleDateFormat;
+import java.io.*;
+
+import java.text.*;
+
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
@@ -44,22 +46,26 @@ import org.eigenbase.util.*;
  * @author John Pham
  * @version $Id$
  */
-class FlatFileColumnSet extends MedAbstractColumnSet
+class FlatFileColumnSet
+    extends MedAbstractColumnSet
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String PROP_FILENAME = "FILENAME";
     public static final String PROP_LOG_FILENAME = "LOG_FILENAME";
-    
+
     private static final String TIMESTAMP_PREFIX = "_";
     private static final String TIMESTAMP_FORMAT = "yyyyMMddHHmmss";
-    
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     FlatFileParams params;
     String filePath;
     String logFilePath;
     FlatFileParams.SchemaType schemaType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FlatFileColumnSet(
         String [] localName,
@@ -71,17 +77,19 @@ class FlatFileColumnSet extends MedAbstractColumnSet
         super(localName, null, rowType, null, null);
 
         this.params = params;
-        filePath = makeFilePath(
-            localName,
-            tableProps.getProperty(PROP_FILENAME, null));
-        logFilePath = makeLogFilePath(
-            tableProps.getProperty(PROP_LOG_FILENAME, null));
+        filePath =
+            makeFilePath(
+                localName,
+                tableProps.getProperty(PROP_FILENAME, null));
+        logFilePath =
+            makeLogFilePath(
+                tableProps.getProperty(PROP_LOG_FILENAME, null));
         this.schemaType = schemaType;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
-    public FlatFileParams getParams() 
+    public FlatFileParams getParams()
     {
         return params;
     }
@@ -90,22 +98,22 @@ class FlatFileColumnSet extends MedAbstractColumnSet
     {
         return filePath;
     }
-        
+
     public String getLogFilePath()
     {
         return logFilePath;
     }
-    
+
     // implement RelOptTable
     public RelNode toRel(
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        FlatFileFennelRel fennelRel = 
+        FlatFileFennelRel fennelRel =
             new FlatFileFennelRel(
-                this, 
-                cluster, 
-                connection, 
+                this,
+                cluster,
+                connection,
                 schemaType);
 
         // return the rel directly unless java data conversions are required
@@ -115,78 +123,79 @@ class FlatFileColumnSet extends MedAbstractColumnSet
 
         // otherwise update the rel to return text only
         // and allow the Java calc to perform the data conversions
-        FlatFileProgramWriter pw = 
-            new FlatFileProgramWriter(fennelRel);
+        FlatFileProgramWriter pw = new FlatFileProgramWriter(fennelRel);
         RexProgram program = pw.getProgram(fennelRel.getRowType());
         fennelRel.setTextOnly(program.getInputRowType());
 
-        RelNode iterRel = new FennelToIteratorConverter(
-            fennelRel.getCluster(),
-            fennelRel);
+        RelNode iterRel =
+            new FennelToIteratorConverter(
+                fennelRel.getCluster(),
+                fennelRel);
 
-        IterCalcRel calcRel = new IterCalcRel(
-            iterRel.getCluster(),
-            iterRel,
-            program, 
-            ProjectRelBase.Flags.Boxed);
+        IterCalcRel calcRel =
+            new IterCalcRel(
+                iterRel.getCluster(),
+                iterRel,
+                program,
+                ProjectRelBase.Flags.Boxed);
         calcRel.setLoggerType("farrago.flatfile");
         return calcRel;
     }
 
     /**
-     * Constructs the full path to the file for a table, based 
-     * upon the server directory, filename option (if specified),
-     * and the server data file extension. If the filename is not 
-     * specified, the local table name is used instead.
-     * 
+     * Constructs the full path to the file for a table, based upon the server
+     * directory, filename option (if specified), and the server data file
+     * extension. If the filename is not specified, the local table name is used
+     * instead.
+     *
      * @param localName name of the table within the catalog
      * @param filename name of the file, specified in parameters
+     *
      * @return full path to the data file for the table
      */
-    private String makeFilePath(String[] localName, String filename)
+    private String makeFilePath(String [] localName, String filename)
     {
         String name = filename;
         if (name == null) {
-            name = localName[localName.length-1];
+            name = localName[localName.length - 1];
         }
         String extension = params.getFileExtenstion();
         return (params.getDirectory() + name + extension);
     }
-    
+
     /**
-     * Constructs the full path to the log file for a table.
-     * The path is constructed from the server's log directory option,
-     * and the table's log filename option. If the log directory is not 
-     * specified, then the current directory is used. If the log filename 
-     * is not specified, then the log filename will be based upon the 
-     * table's filename.
-     * 
-     * <p>
-     * 
-     * Log files names are appended with a timestamp and have a .ERR 
+     * Constructs the full path to the log file for a table. The path is
+     * constructed from the server's log directory option, and the table's log
+     * filename option. If the log directory is not specified, then the current
+     * directory is used. If the log filename is not specified, then the log
+     * filename will be based upon the table's filename.
+     *
+     * <p>Log files names are appended with a timestamp and have a .ERR
      * extension rather than the data file extension.
      */
-    private String makeLogFilePath(String logFilename) 
+    private String makeLogFilePath(String logFilename)
     {
         String name = logFilename;
         if (name == null) {
             // NOTE: file path must be set before calling this function
             Util.pre(filePath != null, "filePath != null");
-            File file = new File(filePath);                // DIR/FILE.EXT
-            String root = file.getName();                  // FILE.EXT
+            File file = new File(filePath); // DIR/FILE.EXT
+            String root = file.getName(); // FILE.EXT
             int dot = root.lastIndexOf(FlatFileParams.FILE_EXTENSION_PREFIX);
             if (dot > 0) {
-                root = root.substring(0, dot);             // FILE
+                root = root.substring(0, dot); // FILE
             }
             SimpleDateFormat formatter = new SimpleDateFormat(TIMESTAMP_FORMAT);
             String timeStamp = formatter.format(new java.util.Date());
-            name = (root + TIMESTAMP_PREFIX + timeStamp 
-                + FlatFileParams.FILE_EXTENSION_PREFIX 
-                + FlatFileParams.LOG_FILE_EXTENSION);
+            name =
+                (
+                    root + TIMESTAMP_PREFIX + timeStamp
+                    + FlatFileParams.FILE_EXTENSION_PREFIX
+                    + FlatFileParams.LOG_FILE_EXTENSION
+                );
         }
         return params.getLogDirectory() + name;
     }
 }
-
 
 // End FlatFileColumnSet.java

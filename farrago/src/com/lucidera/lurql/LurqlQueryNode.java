@@ -20,25 +20,30 @@
 */
 package com.lucidera.lurql;
 
-import org.eigenbase.util.*;
-
 import java.io.*;
+
 import java.util.*;
 
+import org.eigenbase.util.*;
+
+
 /**
- * LurqlQueryNode is an abstract base class representing a node
- * in a LURQL parse tree.
+ * LurqlQueryNode is an abstract base class representing a node in a LURQL parse
+ * tree.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class LurqlQueryNode
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Converts this node to text.
      *
-     * @param pw the PrintWriter on which to unparse; must have
-     * an underlying {@link StackWriter} to interpret indentation
+     * @param pw the PrintWriter on which to unparse; must have an underlying
+     * {@link StackWriter} to interpret indentation
      */
     public abstract void unparse(PrintWriter pw);
 

@@ -21,30 +21,34 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.Map;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
- * A scope which contains nothing besides a few parameters.
- * Like {@link EmptyScope} (which is its base class), it has no parent
- * scope.
- *
- * @see ParameterNamespace
+ * A scope which contains nothing besides a few parameters. Like {@link
+ * EmptyScope} (which is its base class), it has no parent scope.
  *
  * @author jhyde
  * @version $Id$
+ * @see ParameterNamespace
  * @since Mar 25, 2003
  */
-class ParameterScope extends EmptyScope
+class ParameterScope
+    extends EmptyScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
-     * Map from the simple names of the parameters to types of the
-     * parameters ({@link RelDataType}).
+     * Map from the simple names of the parameters to types of the parameters
+     * ({@link RelDataType}).
      */
     private final Map<String, RelDataType> nameToTypeMap;
+
+    //~ Constructors -----------------------------------------------------------
 
     ParameterScope(
         SqlValidatorImpl validator,
@@ -53,6 +57,8 @@ class ParameterScope extends EmptyScope
         super(validator);
         this.nameToTypeMap = nameToTypeMap;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlIdentifier fullyQualify(SqlIdentifier identifier)
     {
@@ -66,8 +72,8 @@ class ParameterScope extends EmptyScope
 
     public SqlValidatorNamespace resolve(
         String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut)
     {
         final RelDataType type = nameToTypeMap.get(name);
         return new ParameterNamespace(validator, type);

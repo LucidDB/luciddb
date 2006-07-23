@@ -21,11 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 
-import org.eigenbase.reltype.*;
 
 /**
  * SqlCursorConstructor defines the non-standard CURSOR(&lt;query&gt;)
@@ -34,22 +34,29 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlCursorConstructor extends SqlSpecialOperator
+public class SqlCursorConstructor
+    extends SqlSpecialOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlCursorConstructor()
     {
-        super("CURSOR", SqlKind.CursorConstructor, MaxPrec, false,
+        super("CURSOR",
+            SqlKind.CursorConstructor,
+            MaxPrec,
+            false,
             SqlTypeStrategies.rtiCursor,
             null,
             SqlTypeStrategies.otcAny);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         SqlSelect subSelect = (SqlSelect) call.operands[0];
         validator.declareCursor(subSelect);
@@ -60,10 +67,10 @@ public class SqlCursorConstructor extends SqlSpecialOperator
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
-        int rightPrec) {
-
+        int rightPrec)
+    {
         writer.keyword("CURSOR");
         final SqlWriter.Frame frame = writer.startList("(", ")");
         assert operands.length == 1;

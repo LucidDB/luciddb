@@ -22,29 +22,40 @@
 */
 package net.sf.farrago.jdbc;
 
-import java.sql.DriverPropertyInfo;
-import org.objectweb.rmijdbc.RJDriverPropertyInfo;
+import java.sql.*;
+
+import org.objectweb.rmijdbc.*;
+
 
 /**
  * Serializable DriverPropertyInfo passed through RMI.
  *
- * <p>This class extends RmiJdbc's RJDriverPropertyInfo
- * which implements {@link java.io.Serializable} interface
- * to pass the DriverPropertyInfo class from server to client via RMI.
+ * <p>This class extends RmiJdbc's RJDriverPropertyInfo which implements {@link
+ * java.io.Serializable} interface to pass the DriverPropertyInfo class from
+ * server to client via RMI.
  *
  * @author Tim Leung
  * @version $Id$
- **/
-public class FarragoRJDriverPropertyInfo extends RJDriverPropertyInfo
+ */
+public class FarragoRJDriverPropertyInfo
+    extends RJDriverPropertyInfo
     implements java.io.Serializable
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
     private static final long serialVersionUID = -5324961535239009568L;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoRJDriverPropertyInfo(DriverPropertyInfo dpi)
     {
         super(dpi);
     }
-};
+}
+;
 
 // End FarragoRJDriverPropertyInfo.java
