@@ -23,7 +23,6 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.util.*;
-import java.util.List;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
@@ -41,20 +40,22 @@ import org.eigenbase.util.*;
 
 
 /**
- * MedMdrClassExtent represents the relational mapping of a
- * class's extent (stored by MDR) into a queryable set of rows.
+ * MedMdrClassExtent represents the relational mapping of a class's extent
+ * (stored by MDR) into a queryable set of rows.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrClassExtent extends MedAbstractColumnSet
+class MedMdrClassExtent
+    extends MedAbstractColumnSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedMdrNameDirectory directory;
     final RefClass refClass;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMdrClassExtent(
         MedMdrNameDirectory directory,
@@ -69,7 +70,7 @@ class MedMdrClassExtent extends MedAbstractColumnSet
         this.refClass = refClass;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public double getRowCount()
@@ -87,6 +88,5 @@ class MedMdrClassExtent extends MedAbstractColumnSet
         return new MedMdrClassExtentRel(cluster, this, connection);
     }
 }
-
 
 // End MedMdrClassExtent.java

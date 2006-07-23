@@ -23,6 +23,7 @@
 package net.sf.farrago.catalog;
 
 import java.io.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -30,7 +31,7 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.fem.config.*;
-import net.sf.farrago.fem.fennel.FennelPackage;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
@@ -38,7 +39,6 @@ import net.sf.farrago.util.*;
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
 
-import java.util.logging.Logger;
 
 /**
  * Implementation of {@link FarragoRepos} using a MDR repository.
@@ -46,32 +46,44 @@ import java.util.logging.Logger;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoMdrReposImpl extends FarragoReposImpl
+public class FarragoMdrReposImpl
+    extends FarragoReposImpl
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getReposTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Root package in transient repository. */
+    /**
+     * Root package in transient repository.
+     */
     private final FarragoPackage transientFarragoPackage;
 
-    /** Fennel package in repository. */
+    /**
+     * Fennel package in repository.
+     */
     private final FennelPackage fennelPackage;
 
-    /** The loader for the underlying MDR repository. */
+    /**
+     * The loader for the underlying MDR repository.
+     */
     private FarragoModelLoader modelLoader;
 
-    /** The underlying MDR repository. */
+    /**
+     * The underlying MDR repository.
+     */
     private final MDRepository mdrRepository;
 
-    /** MofId for current instance of FemFarragoConfig. */
+    /**
+     * MofId for current instance of FemFarragoConfig.
+     */
     private final String currentConfigMofId;
 
     private String memStorageId;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Opens a Farrago repository.
@@ -93,8 +105,9 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         MdrUtil.integrateTracing(FarragoTrace.getMdrTracer());
 
         if (!userRepos) {
-            File lockFile = new File(
-                modelLoader.getSystemReposFile().toString() + ".lck");
+            File lockFile =
+                new File(
+                    modelLoader.getSystemReposFile().toString() + ".lck");
             try {
                 new FarragoFileLockAllocation(allocations, lockFile, true);
             } catch (IOException ex) {
@@ -155,7 +168,7 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
         tracer.info("Catalog successfully loaded");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoRepos
     public MDRepository getMdrRepos()
@@ -247,8 +260,6 @@ public class FarragoMdrReposImpl extends FarragoReposImpl
     {
         return modelLoader;
     }
-    
 }
-
 
 // End FarragoReposImpl.java

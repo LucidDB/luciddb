@@ -22,14 +22,13 @@
 */
 package net.sf.farrago.namespace;
 
-import net.sf.farrago.fem.med.*;
-
 import java.sql.*;
+
 import java.util.*;
 
-import net.sf.farrago.FarragoMetadataFactory;
-import net.sf.farrago.type.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.type.*;
 
 
 /**
@@ -41,21 +40,19 @@ import net.sf.farrago.catalog.*;
  */
 public interface FarragoMedNameDirectory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Looks up a FarragoMedColumnSet by name.  This method supports Farrago's
-     * capability to reference a foreign table directly without having to
-     * create local metadata about it.
+     * Looks up a FarragoMedColumnSet by name. This method supports Farrago's
+     * capability to reference a foreign table directly without having to create
+     * local metadata about it.
      *
-     * @param typeFactory FarragoTypeFactory to use
-     * for defining types
-     *
-     * @param foreignName simple name of foreign ColumnSet to lookup
-     * as a direct child of this directory
-     *
-     * @param localName compound identifier by which
-     * FarragoMedColumnSet will be referenced locally
+     * @param typeFactory FarragoTypeFactory to use for defining types
+     * @param foreignName simple name of foreign ColumnSet to lookup as a direct
+     * child of this directory
+     * @param localName compound identifier by which FarragoMedColumnSet will be
+     * referenced locally
      *
      * @return FarragoMedColumnSet, or null if none found
      *
@@ -80,24 +77,21 @@ public interface FarragoMedNameDirectory
         throws SQLException;
 
     /**
-     * Executes a query against the metadata contained by this directory.  This
+     * Executes a query against the metadata contained by this directory. This
      * method supports the SQL/MED IMPORT FOREIGN SCHEMA statement, and general
      * metadata browsing.
      *
-     *<p>
-     *
-     * NOTE: the supplied sink may be used to implement passive aborts by
+     * <p>NOTE: the supplied sink may be used to implement passive aborts by
      * throwing an unchecked exception when an abort request is detected.
      *
      * @param query the query to execute
-     *
      * @param sink target which receives the query results
      *
-     * @return true if the query executed successfully; false if the
-     * requested query type was not supported
+     * @return true if the query executed successfully; false if the requested
+     * query type was not supported
      *
-     * @exception SQLException if metadata access is unsuccessful
-     * (but not if query is unsupported)
+     * @exception SQLException if metadata access is unsuccessful (but not if
+     * query is unsupported)
      */
     public boolean queryMetadata(
         FarragoMedMetadataQuery query,
@@ -105,11 +99,10 @@ public interface FarragoMedNameDirectory
         throws SQLException;
 
     /**
-     * Creates a new instance of FemBaseColumnSet in the catalog to represent
-     * an imported table.
+     * Creates a new instance of FemBaseColumnSet in the catalog to represent an
+     * imported table.
      *
      * @param repos repository storing catalog
-     *
      * @param tableName name of imported table
      *
      * @return new object in catalog
@@ -118,6 +111,5 @@ public interface FarragoMedNameDirectory
         FarragoRepos repos,
         String tableName);
 }
-
 
 // End FarragoMedNameDirectory.java

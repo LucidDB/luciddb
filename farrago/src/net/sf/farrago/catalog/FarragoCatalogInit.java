@@ -22,6 +22,7 @@
 package net.sf.farrago.catalog;
 
 import java.sql.*;
+
 import java.util.*;
 import java.util.logging.*;
 
@@ -29,28 +30,32 @@ import net.sf.farrago.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.sql.type.*;
+
 import org.netbeans.api.mdr.events.*;
-import org.eigenbase.sql.type.SqlTypeName;
+
 
 /**
- * FarragoCatalogInit contains one-time persistent initialization procedures
- * for the Farrago catalog.
+ * FarragoCatalogInit contains one-time persistent initialization procedures for
+ * the Farrago catalog.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoCatalogInit implements MDRPreChangeListener
+public class FarragoCatalogInit
+    implements MDRPreChangeListener
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = FarragoTrace.getReposTracer();
-    
+
     /**
      * Reserved name for the system boot catalog.
      */
@@ -72,18 +77,35 @@ public class FarragoCatalogInit implements MDRPreChangeListener
     public static final String SYSTEM_USER_NAME = "_SYSTEM";
 
     /**
-     * Reserved name for the system admin authorization user.  Note
-     * that this is intentionally lower-case to match the SQL Server
-     * convention.
+     * Reserved name for the system admin authorization user. Note that this is
+     * intentionally lower-case to match the SQL Server convention.
      */
     public static final String SA_USER_NAME = "sa";
+
+    //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
 
     private final Set objs;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
+    private FarragoCatalogInit(FarragoRepos repos)
+    {
+        this.repos = repos;
+        objs = new HashSet();
+
+        // listen to MDR events during initialization so that we can
+        // consistently fill in generic information on all objects
+        repos.getMdrRepos().addListener(
+            this,
+            AttributeEvent.EVENTMASK_ATTRIBUTE);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Creates objects owned by the system.  This is only done once during
+     * Creates objects owned by the system. This is only done once during
      * database creation.
      *
      * @param repos the repository in which to initialize the catalog
@@ -107,16 +129,6 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         tracer.info("Creation of system-owned catalog objects committed");
     }
 
-    private FarragoCatalogInit(FarragoRepos repos)
-    {
-        this.repos = repos;
-        objs = new HashSet();
-        // listen to MDR events during initialization so that we can
-        // consistently fill in generic information on all objects
-        repos.getMdrRepos().addListener(
-            this, AttributeEvent.EVENTMASK_ATTRIBUTE);
-    }
-    
     // implement MDRChangeListener
     public void change(MDRChangeEvent event)
     {
@@ -128,7 +140,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
     {
         // don't care
     }
-    
+
     // implement MDRPreChangeListener
     public void plannedChange(MDRChangeEvent event)
     {
@@ -147,8 +159,8 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         while (iter.hasNext()) {
             Object obj = iter.next();
             if (obj instanceof CwmModelElement) {
-                CwmModelElement modelElement =
-                    (CwmModelElement) obj;
+                CwmModelElement modelElement = (CwmModelElement) obj;
+
                 // Set visibility so that DdlValidator doesn't try
                 // to revalidate this object.
                 modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
@@ -162,7 +174,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
             }
         }
     }
-    
+
     private void initCatalog()
     {
         createSystemCatalogs();
@@ -185,7 +197,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
 
     private void createSystemAuth()
     {
-        // Create the System Internal User 
+        // Create the System Internal User
         FemUser systemUser = repos.newFemUser();
         systemUser.setName(SYSTEM_USER_NAME);
 
@@ -207,7 +219,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         typeAlias.setName(aliasName);
         typeAlias.setType(type);
     }
-    
+
     private void createSystemTypes()
     {
         CwmSqlsimpleType simpleType;
@@ -302,10 +314,9 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         // TODO jvs 26-July-2004: Support fractional precision for TIME and
         // TIMESTAMP.  Currently, most of the support is there for up to
         // milliseconds, but JDBC getString conversion is missing (see comments
-        // in SqlDateTimeWithoutTZ).  SQL99 says default precision for
-        // TIMESTAMP is microseconds, so some more work is required to
-        // support that.  Default precision for TIME is seconds,
-        // which is already the case.
+        // in SqlDateTimeWithoutTZ).  SQL99 says default precision for TIMESTAMP
+        // is microseconds, so some more work is required to support that.
+        // Default precision for TIME is seconds, which is already the case.
         simpleType = repos.newCwmSqlsimpleType();
         simpleType.setName("TIME");
         simpleType.setTypeNumber(Types.TIME);
@@ -339,6 +350,7 @@ public class FarragoCatalogInit implements MDRPreChangeListener
         FemSqlcollectionType collectType;
         collectType = repos.newFemSqlmultisetType();
         collectType.setName("MULTISET");
+
         // a multiset has the same type# as an array for now
         collectType.setTypeNumber(Types.ARRAY);
     }

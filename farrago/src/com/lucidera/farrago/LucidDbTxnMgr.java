@@ -20,40 +20,48 @@
 */
 package com.lucidera.farrago;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.catalog.*;
-
-import org.eigenbase.util.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.relopt.*;
-
 import java.util.*;
 import java.util.logging.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import org.apache.commons.transaction.locking.*;
 import org.apache.commons.transaction.util.*;
 
+import org.eigenbase.relopt.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
+
+
 /**
- * LucidDbTxnMgr implements the {@link FarragoSessionTxnMgr} interface
- * with locking semantics customized for LucidDB.
+ * LucidDbTxnMgr implements the {@link FarragoSessionTxnMgr} interface with
+ * locking semantics customized for LucidDB.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class LucidDbTxnMgr extends FarragoDbNullTxnMgr
+class LucidDbTxnMgr
+    extends FarragoDbNullTxnMgr
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final LockManager2 lockMgr;
 
     private final String dbWriteLock;
 
+    //~ Constructors -----------------------------------------------------------
+
     LucidDbTxnMgr()
     {
         // TODO jvs 15-Mar-2006:  start a new LucidDbTrace.java file?
-        LoggerFacade loggerFacade = new Jdk14Logger(
-            Logger.getLogger(LucidDbTxnMgr.class.getName()));
+        LoggerFacade loggerFacade =
+            new Jdk14Logger(
+                Logger.getLogger(LucidDbTxnMgr.class.getName()));
         lockMgr = new GenericLockManager(2, loggerFacade);
 
         // This represents a lock which can be acquired on the entire database.
@@ -63,7 +71,9 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
         // two LucidDB instances running in the same JVM.
         dbWriteLock = new String(FarragoCatalogInit.LOCALDB_CATALOG_NAME);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionTxnMgr
     public FarragoSessionTxnId beginTxn(FarragoSession session)
     {
@@ -83,7 +93,7 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
                 (String []) localTableName.toArray(Util.emptyStringArray),
                 SqlParserPos.ZERO);
         String renderedTableName = sqlId.toString();
-        
+
         if (accessType == TableAccessMap.Mode.READ_ACCESS) {
             // S-lock only the table; readers don't care about
             // the database lock
@@ -92,6 +102,7 @@ class LucidDbTxnMgr extends FarragoDbNullTxnMgr
             // X-lock the database to exclude other writers but
             // not readers
             acquireLock(txnId, dbWriteLock, dbWriteLock, 2);
+
             // X-lock the table to exclude readers
             acquireLock(txnId, localTableName, renderedTableName, 2);
         }

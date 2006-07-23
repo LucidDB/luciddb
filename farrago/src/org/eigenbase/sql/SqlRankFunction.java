@@ -19,18 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.Util;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import openjava.mop.OJClass;
 
 
 /**
@@ -39,18 +31,28 @@ import openjava.mop.OJClass;
  * @author jack
  * @version $Id$
  * @since Jun 3, 2005
- */public class SqlRankFunction extends SqlAggFunction
+ */
+public class SqlRankFunction
+    extends SqlAggFunction
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType type = null;
 
-    public SqlRankFunction( String name)
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlRankFunction(String name)
     {
-        super( name, SqlKind.Function,
+        super(name,
+            SqlKind.Function,
             SqlTypeStrategies.rtiInteger,
             null,
             SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.Numeric);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlOperandCountRange getOperandCountRange()
     {
@@ -62,16 +64,15 @@ import openjava.mop.OJClass;
         return type;
     }
 
-    public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
-        return new RelDataType [] { type };
+        return new RelDataType[] { type };
     }
-    
+
     public boolean isAggregator()
     {
         return true;
     }
-
 }
 
 // End SqlAggFunction.java

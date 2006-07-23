@@ -21,50 +21,53 @@
 package com.lucidera.lurql;
 
 import java.io.*;
+
 import java.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * LurqlFilter represents a filter condition in a LURQL query.  Currently
- * the only filters supported are of the form
+ * LurqlFilter represents a filter condition in a LURQL query. Currently the
+ * only filters supported are of the form
  *
- *<ul>
- *
- *<li><code>ATTRIBUTE = 'VALUE'</code>
- *
- *<li><code>ATTRIBUTE = ?scalar-param</code>
- *
- *<li><code>ATTRIBUTE IN ('VALUE1', 'VALUE2', ...)</code>
- *
- *<li><code>ATTRIBUTE IN ?set-param</code>
- *
- *<li><code>ATTRIBUTE IN [SQL-QUERY]</code>
- *
- *<li><code>EXISTS (path-spec)</code>
- *
- *</ul>
+ * <ul>
+ * <li><code>ATTRIBUTE = 'VALUE'</code>
+ * <li><code>ATTRIBUTE = ?scalar-param</code>
+ * <li><code>ATTRIBUTE IN ('VALUE1', 'VALUE2', ...)</code>
+ * <li><code>ATTRIBUTE IN ?set-param</code>
+ * <li><code>ATTRIBUTE IN [SQL-QUERY]</code>
+ * <li><code>EXISTS (path-spec)</code>
+ * </ul>
  *
  * TODO jvs 6-July-2006: refactor into LurqlExistsFilter, LurqlComparisonFilter
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlFilter extends LurqlQueryNode
+public class LurqlFilter
+    extends LurqlQueryNode
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final LurqlFilter [] EMPTY_ARRAY = new LurqlFilter[0];
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String attributeName;
 
     private final Set values;
 
     private final String sqlQuery;
-    
+
     private final LurqlDynamicParam setParam;
 
     private final LurqlExists exists;
 
     private boolean hasDynamicParams;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlFilter(String attributeName, Set values)
     {
@@ -111,6 +114,8 @@ public class LurqlFilter extends LurqlQueryNode
         this.exists = exists;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public LurqlExists getExists()
     {
         return exists;
@@ -125,7 +130,7 @@ public class LurqlFilter extends LurqlQueryNode
     {
         return sqlQuery;
     }
-    
+
     public Set getValues()
     {
         return values;
@@ -145,7 +150,7 @@ public class LurqlFilter extends LurqlQueryNode
     {
         return setParam;
     }
-    
+
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {
@@ -153,7 +158,7 @@ public class LurqlFilter extends LurqlQueryNode
             exists.unparse(pw);
             return;
         }
-        
+
         StackWriter.printSqlIdentifier(pw, attributeName);
         if (sqlQuery == null) {
             if (values == null) {
@@ -164,7 +169,9 @@ public class LurqlFilter extends LurqlQueryNode
             Iterator iter = values.iterator();
             if (values.size() == 1) {
                 pw.print(" = ");
-                unparseValue(pw, iter.next());
+                unparseValue(
+                    pw,
+                    iter.next());
             } else {
                 pw.print(" in (");
                 while (iter.hasNext()) {

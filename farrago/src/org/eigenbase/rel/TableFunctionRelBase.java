@@ -21,10 +21,11 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+
 
 /**
  * <code>TableFunctionRelBase</code> is an abstract base class for
@@ -33,26 +34,27 @@ import org.eigenbase.sql.type.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class TableFunctionRelBase extends AbstractRelNode
+public abstract class TableFunctionRelBase
+    extends AbstractRelNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RexNode rexCall;
 
     private final RelDataType rowType;
-    
+
     protected final RelNode [] inputs;
-    
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a <code>TableFunctionRelBase</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     *
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param rexCall function invocation expression
-     *
      * @param rowType row type produced by function
-     *
      * @param inputs 0 or more relational inputs
      */
     protected TableFunctionRelBase(
@@ -67,8 +69,8 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
         this.rowType = rowType;
         this.inputs = inputs;
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode [] getInputs()
     {
@@ -84,8 +86,7 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
 
     public RexNode [] getChildExps()
     {
-        return new RexNode [] 
-            {
+        return new RexNode[] {
                 rexCall
             };
     }
@@ -105,7 +106,7 @@ public abstract class TableFunctionRelBase extends AbstractRelNode
             terms[i] = "input#" + i;
         }
         terms[inputs.length] = "invocation";
-        
+
         pw.explain(this, terms);
     }
 

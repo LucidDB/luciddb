@@ -20,46 +20,58 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.jdbc.engine;
 
-import java.sql.ParameterMetaData;
-import java.util.List;
+import java.sql.*;
 
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import net.sf.farrago.jdbc.param.FarragoParamFieldMetaData;
+import java.util.*;
+
+import net.sf.farrago.jdbc.param.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * Factory class for creating the per-column metadata passed to the
- * client driver for its ParameterMetaData implementation.
+ * Factory class for creating the per-column metadata passed to the client
+ * driver for its ParameterMetaData implementation.
  *
  * @author Angel Chang
- * @since March 3, 2006
  * @version $Id$
+ * @since March 3, 2006
  */
 public class FarragoParamFieldMetaDataFactory
 {
-    /** private constructor to prevent instantiation. */
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * private constructor to prevent instantiation.
+     */
     private FarragoParamFieldMetaDataFactory()
     {
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public static FarragoParamFieldMetaData newParamFieldMetaData(
-        RelDataType type, int mode)
+        RelDataType type,
+        int mode)
     {
         FarragoParamFieldMetaData fieldMeta = new FarragoParamFieldMetaData();
 
-        fieldMeta.nullable = type.isNullable()?
-            ParameterMetaData.parameterNullable : ParameterMetaData.parameterNoNulls;
+        fieldMeta.nullable =
+            type.isNullable() ? ParameterMetaData.parameterNullable
+            : ParameterMetaData.parameterNoNulls;
         fieldMeta.type = type.getSqlTypeName().getJdbcOrdinal();
         fieldMeta.typeName = type.getSqlTypeName().getName();
+
         // TODO: Get class name;
         fieldMeta.className = "";
         fieldMeta.precision = type.getPrecision();
-        fieldMeta.scale = type.getSqlTypeName().allowsScale()? type.getScale(): 0;
+        fieldMeta.scale =
+            type.getSqlTypeName().allowsScale() ? type.getScale() : 0;
+
         // TODO: treat all numerics as signed
         fieldMeta.signed = SqlTypeUtil.isNumeric(type);
         fieldMeta.mode = mode;
@@ -70,20 +82,23 @@ public class FarragoParamFieldMetaDataFactory
 
     /**
      * Determines the parameter column meta data from the rowType
+     *
      * @param rowType
+     *
      * @return
      */
-    public static FarragoParamFieldMetaData[] newParamMetaData(
-        RelDataType rowType, int mode)
+    public static FarragoParamFieldMetaData [] newParamMetaData(
+        RelDataType rowType,
+        int mode)
     {
-        FarragoParamFieldMetaData[] metaData;
+        FarragoParamFieldMetaData [] metaData;
 
         List fieldTypes = rowType.getFieldList();
         int colCnt = fieldTypes.size();
         metaData = new FarragoParamFieldMetaData[colCnt];
 
-        for (int i=0; i < colCnt; ++i) {
-            RelDataTypeField f = (RelDataTypeField)fieldTypes.get(i);
+        for (int i = 0; i < colCnt; ++i) {
+            RelDataTypeField f = (RelDataTypeField) fieldTypes.get(i);
             RelDataType relType = f.getType();
 
             FarragoParamFieldMetaData meta =
@@ -92,8 +107,7 @@ public class FarragoParamFieldMetaDataFactory
         }
         return metaData;
     }
-
-
-};
+}
+;
 
 // End FarragoParamFieldMetaDataFactory.java

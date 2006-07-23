@@ -20,56 +20,55 @@
 */
 package com.disruptivetech.farrago.test;
 
-import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
+import com.disruptivetech.farrago.calc.*;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Properties;
+
+import java.util.*;
 import java.util.regex.*;
 
-import junit.extensions.TestSetup;
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.extensions.*;
 
-import net.sf.farrago.defimpl.*;
+import junit.framework.*;
+
 import net.sf.farrago.db.*;
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
-import net.sf.farrago.ojrex.FarragoOJRexImplementor;
-import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
-import net.sf.farrago.ojrex.FarragoRexToOJTranslator;
-import net.sf.farrago.session.*;
+import net.sf.farrago.defimpl.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.ojrex.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.util.FarragoProperties;
+import net.sf.farrago.session.*;
+import net.sf.farrago.test.*;
+import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rex.OJRexImplementor;
-import org.eigenbase.oj.rex.OJRexImplementorTable;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexCall;
+import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+
 
 /**
- * FarragoAutoCalcRuleTest tests FarragoAutoCalcRule.  This class
- * duplicates some of FarragoTestCase's set up mechanism.  It does so
- * in order to register JPLUS(a Java-only duplicate of the SQL plus
- * operator) and CPLUS (a Fennel Calc-only analog) as SqlOperators.
- * Tests within the class use JPLUS and CPLUS in SQL statements to
- * guarantee expressions that can only be implemented by dividing
- * execution between the Java and Fennel calculators.
+ * FarragoAutoCalcRuleTest tests FarragoAutoCalcRule. This class duplicates some
+ * of FarragoTestCase's set up mechanism. It does so in order to register
+ * JPLUS(a Java-only duplicate of the SQL plus operator) and CPLUS (a Fennel
+ * Calc-only analog) as SqlOperators. Tests within the class use JPLUS and CPLUS
+ * in SQL statements to guarantee expressions that can only be implemented by
+ * dividing execution between the Java and Fennel calculators.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class FarragoAutoCalcRuleTest extends FarragoTestCase
+public class FarragoAutoCalcRuleTest
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoAutoCalcRuleTest object.
@@ -82,7 +81,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -152,21 +151,21 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         runSqlLineTest("testcases/autoCalcRule.sql");
     }
 
-
     public void testSimple()
         throws SQLException
     {
-        PreparedStatement stmt = connection.prepareStatement(
-            "select cplus(1, 1) from (values (true))");
+        PreparedStatement stmt =
+            connection.prepareStatement(
+                "select cplus(1, 1) from (values (true))");
         stmt.close();
     }
-
 
     public void testDynamicParameterInConditional()
         throws SQLException
     {
-        PreparedStatement stmt = connection.prepareStatement(
-            "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like cast(? as varchar(128))");
+        PreparedStatement stmt =
+            connection.prepareStatement(
+                "select name, cplus(1, jplus(2, cplus(3, 4))) from sales.emps where name like cast(? as varchar(128))");
         try {
             stmt.setString(1, "F%");
 
@@ -188,12 +187,12 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         }
     }
 
-
     public void testDynamicParameterInCall()
         throws SQLException
     {
-        PreparedStatement stmt = connection.prepareStatement(
-            "values cplus(1, jplus(100, cplus(50, cast(? as int))))");
+        PreparedStatement stmt =
+            connection.prepareStatement(
+                "values cplus(1, jplus(100, cplus(50, cast(? as int))))");
         try {
             stmt.setInt(1, 13);
 
@@ -212,13 +211,13 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         }
     }
 
-
     public static void registerTestJavaOps(
         FarragoOJRexImplementorTable implementorTable,
         final SqlStdOperatorTable opTab)
     {
         SqlFunction jplusFunc =
-            new SqlFunction("JPLUS", SqlKind.Function,
+            new SqlFunction("JPLUS",
+                SqlKind.Function,
                 SqlTypeStrategies.rtiLeastRestrictive,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
@@ -230,18 +229,21 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             implementorTable.get(SqlStdOperatorTable.plusOperator));
 
         SqlFunction jrowFunc =
-            new SqlFunction("JROW", SqlKind.Function, null,
+            new SqlFunction("JROW",
+                SqlKind.Function,
+                null,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
-                SqlFunctionCategory.Numeric)
-            {
+                SqlFunctionCategory.Numeric) {
                 public RelDataType inferReturnType(
                     SqlOperatorBinding opBinding)
                 {
                     assert (opBinding.getOperandCount() == 2);
-                    String [] names = new String [] { "first", "second" };
-                    return opBinding.getTypeFactory().createStructType(
-                        opBinding.collectOperandTypes(), names);
+                    String [] names = new String[] { "first", "second" };
+                    return
+                        opBinding.getTypeFactory().createStructType(
+                            opBinding.collectOperandTypes(),
+                            names);
                 }
             };
         opTab.register(jrowFunc);
@@ -290,7 +292,8 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     {
         SqlFunction cppFunc =
             new SqlFunction(
-                "CPLUS", SqlKind.Function,
+                "CPLUS",
+                SqlKind.Function,
                 SqlTypeStrategies.rtiLeastRestrictive,
                 SqlTypeStrategies.otiFirstKnown,
                 SqlTypeStrategies.otcNumericX2,
@@ -302,11 +305,11 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             implementor.get(SqlStdOperatorTable.plusOperator));
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * TestDbSessionFactory extends FarragoDefaultSessionFactory and
-     * returns a custom TestDbSession instance.
+     * TestDbSessionFactory extends FarragoDefaultSessionFactory and returns a
+     * custom TestDbSession instance.
      */
     private static class TestDbSessionFactory
         extends FarragoDbSessionFactory
@@ -315,7 +318,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         private final CalcRexImplementorTable calcRexImplementor;
 
         TestDbSessionFactory(
-            OJRexImplementorTable ojRexImplementor, 
+            OJRexImplementorTable ojRexImplementor,
             CalcRexImplementorTable calcRexImplementor)
         {
             this.ojRexImplementor = ojRexImplementor;
@@ -327,6 +330,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             Properties info)
         {
             FarragoSession session = new FarragoDbSession(url, info, this);
+
             // Constant reduction hides what we're trying to test for.
             session.setOptRuleDescExclusionFilter(
                 FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
@@ -337,10 +341,10 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             FarragoSession session,
             FarragoSessionPersonality defaultPersonality)
         {
-            return new TestDbSessionPersonality(
-                (FarragoDbSession) session,
-                ojRexImplementor,
-                calcRexImplementor);
+            return
+                new TestDbSessionPersonality((FarragoDbSession) session,
+                    ojRexImplementor,
+                    calcRexImplementor);
         }
     }
 
@@ -354,10 +358,10 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     {
         private OJRexImplementorTable ojRexImplementor;
         private CalcRexImplementorTable calcRexImplementor;
-        
+
         public TestDbSessionPersonality(
             FarragoDbSession session,
-            OJRexImplementorTable ojRexImplementor, 
+            OJRexImplementorTable ojRexImplementor,
             CalcRexImplementorTable calcRexImplementorTable)
         {
             super(session);
@@ -376,7 +380,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
             }
             return planner;
         }
-        
+
         public SqlOperatorTable getSqlOperatorTable(
             FarragoSessionPreparingStmt preparingStmt)
         {
@@ -388,7 +392,7 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
         {
             return ojRexImplementor;
         }
-        
+
         public <C> C newComponentImpl(Class<C> componentInterface)
         {
             if (componentInterface == CalcRexImplementorTable.class) {
@@ -400,18 +404,16 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
     }
 
     /**
-     * TestJdbcEngineDriver extends FarragoJdbcEngineDriver and
-     * provides our custom TestDbSessionFactory in place of Farrago's
-     * normal implementation.
+     * TestJdbcEngineDriver extends FarragoJdbcEngineDriver and provides our
+     * custom TestDbSessionFactory in place of Farrago's normal implementation.
      */
-    public static class TestJdbcEngineDriver extends FarragoJdbcEngineDriver
+    public static class TestJdbcEngineDriver
+        extends FarragoJdbcEngineDriver
     {
-        //~ Static fields/initializers ----------------------------------------
-
         static SqlStdOperatorTable opTab;
         static FarragoOJRexImplementorTable testOjRexImplementor;
         static CalcRexImplementorTableImpl testCalcRexImplementor;
-        
+
         static {
             opTab = new SqlStdOperatorTable();
             opTab.init();
@@ -432,8 +434,10 @@ public class FarragoAutoCalcRuleTest extends FarragoTestCase
 
         public FarragoSessionFactory newSessionFactory()
         {
-            return new TestDbSessionFactory(
-                testOjRexImplementor, testCalcRexImplementor);
+            return
+                new TestDbSessionFactory(
+                    testOjRexImplementor,
+                    testCalcRexImplementor);
         }
 
         public String getBaseUrl()

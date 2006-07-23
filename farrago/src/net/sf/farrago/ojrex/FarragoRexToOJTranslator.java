@@ -27,6 +27,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -44,26 +45,28 @@ import org.eigenbase.util.*;
  * FarragoRexToOJTranslator refines {@link RexToOJTranslator} with
  * Farrago-specifics.
  *
- *<p>
- *
- * NOTE jvs 22-June-2004: If you're scratching your head trying to understand
+ * <p>NOTE jvs 22-June-2004: If you're scratching your head trying to understand
  * the code generation methods in this package, it might help to look at
- * examples of the generated code.  One way to do this is by turning on {@link
+ * examples of the generated code. One way to do this is by turning on {@link
  * net.sf.farrago.trace.FarragoTrace#getDynamicTracer} and then examining the
- * code for generated classes after running queries.  See also the .ref files
+ * code for generated classes after running queries. See also the .ref files
  * under farrago/testlog/FarragoRexToOJTranslatorTest; these correspond to the
- * test cases in {@link net.sf.farrago.test.FarragoRexToOJTranslatorTest}.  You
+ * test cases in {@link net.sf.farrago.test.FarragoRexToOJTranslatorTest}. You
  * can also add new test cases to that class, run the test, and examine the
  * output.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRexToOJTranslator extends RexToOJTranslator
+public class FarragoRexToOJTranslator
+    extends RexToOJTranslator
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static String TO_STRING_METHOD_NAME = "toString";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final FarragoRepos repos;
     private StatementList stmtList;
@@ -71,7 +74,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     private final FarragoOJRexCastImplementor castImplementor;
     private final OJClass ojNullablePrimitive;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a translator based on a {@link OJRexImplementorTable}.
@@ -79,7 +82,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      * @param repos repository
      * @param relImplementor implementation context
      * @param contextRel relational expression which is the context for the
-     *    row-expressions which are to be translated
+     * row-expressions which are to be translated
      * @param implementorTable table of implementations for SQL operators
      * @param stmtList statement list for side-effects of translation
      * @param memberList member list for class-level state required by
@@ -101,8 +104,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
         // keep a reference to the implementor for CAST, which
         // is needed for implementing assignments also
-        castImplementor = (FarragoOJRexCastImplementor)
-            getImplementorTable().get(
+        castImplementor =
+            (FarragoOJRexCastImplementor) getImplementorTable().get(
                 SqlStdOperatorTable.castFunc);
 
         ojNullablePrimitive = OJClass.forClass(NullablePrimitive.class);
@@ -111,7 +114,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
+
     //
 
     public RexToOJTranslator push(StatementList stmtList)
@@ -121,9 +125,15 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         //  pointer to this translator, or at least some of its state.
         //  Otherwise common expressions will be translated and evaluated
         //  more than once.
-        return new FarragoRexToOJTranslator(
-            repos, getRelImplementor(), getContextRel(), getImplementorTable(),
-            stmtList, memberList, getProgram());
+        return
+            new FarragoRexToOJTranslator(
+                repos,
+                getRelImplementor(),
+                getContextRel(),
+                getImplementorTable(),
+                stmtList,
+                memberList,
+                getProgram());
     }
 
     public void addMember(MemberDeclaration member)
@@ -139,13 +149,14 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     // implement RexVisitor
     public Expression visitDynamicParam(RexDynamicParam dynamicParam)
     {
-        return setTranslation(
-            convertVariable(
-                dynamicParam.getType(),
-                "getDynamicParamValue",
-                new ExpressionList(
-                    Literal.makeLiteral(
-                        dynamicParam.getIndex()))));
+        return
+            setTranslation(
+                convertVariable(
+                    dynamicParam.getType(),
+                    "getDynamicParamValue",
+                    new ExpressionList(
+                        Literal.makeLiteral(
+                            dynamicParam.getIndex()))));
     }
 
     public Expression convertVariable(
@@ -153,16 +164,17 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         String accessorName,
         ExpressionList accessorArgList)
     {
-        return castImplementor.convertCastToAssignableValue(
-            this,
-            null,
-            type,
-            null,
-            null,
-            new MethodCall(
-                getRelImplementor().getConnectionVariable(),
-                accessorName,
-                accessorArgList));
+        return
+            castImplementor.convertCastToAssignableValue(
+                this,
+                null,
+                type,
+                null,
+                null,
+                new MethodCall(
+                    getRelImplementor().getConnectionVariable(),
+                    accessorName,
+                    accessorArgList));
     }
 
     public Expression convertVariableWithCast(
@@ -171,20 +183,21 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         String accessorName,
         ExpressionList accessorArgList)
     {
-        return castImplementor.convertCastToAssignableValue(
-            this,
-            null,
-            type,
-            null,
-            null,
-            new MethodCall(
-                new CastExpression(
-                    OJUtil.typeNameForClass(accessorClassCast), 
-                    getRelImplementor().getConnectionVariable()),
-                accessorName,
-                accessorArgList));        
+        return
+            castImplementor.convertCastToAssignableValue(
+                this,
+                null,
+                type,
+                null,
+                null,
+                new MethodCall(
+                    new CastExpression(
+                        OJUtil.typeNameForClass(accessorClassCast),
+                        getRelImplementor().getConnectionVariable()),
+                    accessorName,
+                    accessorArgList));
     }
-    
+
     // override RexToOJTranslator
     public Expression visitLiteral(RexLiteral literal)
     {
@@ -199,7 +212,9 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
         // Create a constant member.
         Variable variable = getRelImplementor().newVariable();
-        final TypeName typeName = OJUtil.toTypeName(type, getTypeFactory());
+        final TypeName typeName = OJUtil.toTypeName(
+                type,
+                getTypeFactory());
         memberList.add(
             new FieldDeclaration(
                 new ModifierList(ModifierList.STATIC | ModifierList.FINAL),
@@ -223,8 +238,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             variable,
             getTranslation());
         assert !statementList.isEmpty();
-        memberList.add(
-            new MemberInitializer(statementList, true));
+        memberList.add(new MemberInitializer(statementList, true));
         return setTranslation(variable);
     }
 
@@ -252,6 +266,7 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
      *
      * @param ojClass Type of the variable
      * @param exp Expression to initialize it
+     *
      * @return Variable
      */
     public Variable createScratchVariableWithExpression(
@@ -271,7 +286,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     public Variable createScratchVariable(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(
-            type, getFarragoTypeFactory());
+                type,
+                getFarragoTypeFactory());
         if (SqlTypeUtil.isJavaPrimitive(type) && (!type.isNullable())) {
             return createPrimitiveScratchVariable(ojClass);
         }
@@ -280,8 +296,9 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
 
     /**
      * Creates a primitive scratch variable without initialization.
+     *
      * @param ojClass
-     * 
+     *
      * @return
      */
     public Variable createPrimitiveScratchVariable(
@@ -296,46 +313,49 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     /**
      * Generates a variable with a unique name
      */
-    public Variable newVariable() 
+    public Variable newVariable()
     {
         return getRelImplementor().newVariable();
     }
 
     /**
-     * Generates a declaration for a field in a class. This should be 
-     * followed by {@link #addMember}.
-     * 
+     * Generates a declaration for a field in a class. This should be followed
+     * by {@link #addMember}.
+     *
      * @param modifiers bitmap of modifiers such as private, or static
      * @param ojClass type of the member
      * @param var uniquely named variable
      * @param init the initial value of the member, may be null
      */
     public FieldDeclaration newMember(
-        int modifiers, 
-        OJClass ojClass, 
-        Variable var, 
+        int modifiers,
+        OJClass ojClass,
+        Variable var,
         VariableInitializer init)
     {
-        return new FieldDeclaration(
-            new ModifierList(modifiers),
-            TypeName.forOJClass(ojClass),
-            var.toString(),
-            init);
+        return
+            new FieldDeclaration(
+                new ModifierList(modifiers),
+                TypeName.forOJClass(ojClass),
+                var.toString(),
+                init);
     }
 
     /**
      * Retrieves the OpenJava type corresponding to a Sql type
-     * 
+     *
      * @param type the Sql type
      */
     public OJClass typeToOJClass(RelDataType type)
     {
-        return OJUtil.typeToOJClass(type, getFarragoTypeFactory());
+        return OJUtil.typeToOJClass(
+                type,
+                getFarragoTypeFactory());
     }
 
     /**
      * Generates a local variable declaration
-     * 
+     *
      * @param ojClass type of the variable
      * @param var the uniquely named variable
      * @param init the initial value of the variable, may be null
@@ -345,59 +365,64 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Variable var,
         Expression init)
     {
-        return new VariableDeclaration(
-            TypeName.forOJClass(ojClass),
-            new VariableDeclarator(var.toString(), init));
+        return
+            new VariableDeclaration(
+                TypeName.forOJClass(ojClass),
+                new VariableDeclarator(
+                    var.toString(),
+                    init));
     }
 
     /**
-     * Generates a boolean expression describing whether an input 
-     * expression is null
-     * 
+     * Generates a boolean expression describing whether an input expression is
+     * null
+     *
      * @param exp the input expression
      */
     public Expression isNull(Expression exp)
     {
-        return new BinaryExpression(
-            exp,
-            BinaryExpression.EQUAL,
-            Literal.constantNull());
+        return
+            new BinaryExpression(
+                exp,
+                BinaryExpression.EQUAL,
+                Literal.constantNull());
     }
 
     /**
      * Generates the string expression <code>exp.toString()</code>
-     * 
+     *
      * @param exp expression to be converted into a string
      */
     public Expression toString(
         Expression exp)
     {
         return new MethodCall(
-            exp,
-            TO_STRING_METHOD_NAME,
-            new ExpressionList());
+                exp,
+                TO_STRING_METHOD_NAME,
+                new ExpressionList());
     }
 
     /**
      * Generates a simple assignment statement
-     * 
+     *
      * @param lhs the expression on left side of the assignment
      * @param rhs the expression on the right side of the assignment
      */
     public Statement assign(
-        Expression lhs, Expression rhs)
+        Expression lhs,
+        Expression rhs)
     {
-        return new ExpressionStatement(
-            new AssignmentExpression(
-                lhs,
-                AssignmentExpression.EQUALS, 
-                rhs));
+        return
+            new ExpressionStatement(
+                new AssignmentExpression(
+                    lhs,
+                    AssignmentExpression.EQUALS,
+                    rhs));
     }
 
     /**
-     * Generates a statement to initializes a variable if 
-     * the variable is null
-     * 
+     * Generates a statement to initializes a variable if the variable is null
+     *
      * @param var the variable to be initialed
      * @param init the initial value for the variable
      */
@@ -405,20 +430,22 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Variable var,
         Expression init)
     {
-        return new IfStatement(
-            isNull(var),
-            new StatementList(assign(var, init)));
+        return
+            new IfStatement(
+                isNull(var),
+                new StatementList(assign(var, init)));
     }
 
     public Statement createSetNullStatement(
         Expression varResult,
         boolean isNull)
     {
-        return new ExpressionStatement(
-            new MethodCall(
-                varResult,
-                NullableValue.NULL_IND_MUTATOR_NAME,
-                new ExpressionList(Literal.makeLiteral(isNull))));
+        return
+            new ExpressionStatement(
+                new MethodCall(
+                    varResult,
+                    NullableValue.NULL_IND_MUTATOR_NAME,
+                    new ExpressionList(Literal.makeLiteral(isNull))));
     }
 
     public Expression createNullTest(
@@ -439,7 +466,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
             } else {
                 nullTest =
                     new BinaryExpression(nullTest,
-                        BinaryExpression.LOGICAL_OR, newNullTest);
+                        BinaryExpression.LOGICAL_OR,
+                        newNullTest);
             }
         }
         return nullTest;
@@ -448,7 +476,8 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
     public boolean isNullablePrimitive(RelDataType type)
     {
         OJClass ojClass = OJUtil.typeToOJClass(
-            type, getFarragoTypeFactory());
+                type,
+                getFarragoTypeFactory());
         return ojNullablePrimitive.isAssignableFrom(ojClass);
     }
 
@@ -479,10 +508,15 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Expression lhsExp,
         Expression rhsExp)
     {
-        return castImplementor.convertCastOrAssignment(
-            this, stmtList, targetName,
-            lhsType, rhsType,
-            lhsExp, rhsExp);
+        return
+            castImplementor.convertCastOrAssignment(
+                this,
+                stmtList,
+                targetName,
+                lhsType,
+                rhsType,
+                lhsExp,
+                rhsExp);
     }
 
     public Expression convertCastOrAssignment(
@@ -492,10 +526,15 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         Expression lhsExp,
         Expression rhsExp)
     {
-        return castImplementor.convertCastOrAssignment(
-            this, null, targetName,
-            lhsType, rhsType,
-            lhsExp, rhsExp);
+        return
+            castImplementor.convertCastOrAssignment(
+                this,
+                null,
+                targetName,
+                lhsType,
+                rhsType,
+                lhsExp,
+                rhsExp);
     }
 
     public FarragoTypeFactory getFarragoTypeFactory()
@@ -535,29 +574,30 @@ public class FarragoRexToOJTranslator extends RexToOJTranslator
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
             lhsExp = varResult;
         } else {
-            lhsExp = new FieldAccess(varResult, 
-                        NullablePrimitive.VALUE_FIELD_NAME);
+            lhsExp =
+                new FieldAccess(varResult,
+                    NullablePrimitive.VALUE_FIELD_NAME);
         }
         if (!SqlTypeUtil.isJavaPrimitive(retType) || retType.isNullable()) {
             stmtList.add(createSetNullStatement(varResult, false));
         }
         Expression result = funcResult;
         if (needCast) {
-            OJClass lhsClass = 
+            OJClass lhsClass =
                 OJClass.forClass(
                     getFarragoTypeFactory().getClassForPrimitive(
                         retType));
-            
+
             result = new CastExpression(lhsClass, funcResult);
         }
-        Statement stmt = new ExpressionStatement(
-                            new AssignmentExpression(
-                                lhsExp,
-                                AssignmentExpression.EQUALS, 
-                                result));
+        Statement stmt =
+            new ExpressionStatement(
+                new AssignmentExpression(
+                    lhsExp,
+                    AssignmentExpression.EQUALS,
+                    result));
         stmtList.add(stmt);
     }
 }
-
 
 // End FarragoRexToOJTranslator.java

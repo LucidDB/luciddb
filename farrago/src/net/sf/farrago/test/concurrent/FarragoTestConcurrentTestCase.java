@@ -21,29 +21,27 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.io.*;
 
-import net.sf.farrago.test.FarragoTestCase;
+import java.util.*;
+
+import net.sf.farrago.test.*;
+
 
 /**
  * FarragoTestConcurrentTestCase provides a basic harness for executing
  * multi-threaded test cases.
  *
- * <p>Obtain a {@link FarragoTestConcurrentCommandGenerator} via the
- * method {@link #newCommandGenerator()} and use it to configure one
- * or more threads to execute one or more commands.  Once configured,
- * pass the FarragoTestCommandGenerator to the
- * {@link #executeTest(FarragoTestConcurrentCommandGenerator, boolean)}
- * method to run the test.
+ * <p>Obtain a {@link FarragoTestConcurrentCommandGenerator} via the method
+ * {@link #newCommandGenerator()} and use it to configure one or more threads to
+ * execute one or more commands. Once configured, pass the
+ * FarragoTestCommandGenerator to the {@link
+ * #executeTest(FarragoTestConcurrentCommandGenerator, boolean)} method to run
+ * the test. <b>Note:</b> To properly configure a test based on this class, you
+ * must provide a <code>suite()</code> method that wraps the tests in your class
+ * with the necessary initialization from {@link FarragoTestCase}. The normal
+ * implementation is:
  *
- * <b>Note:</b> To properly configure a test based on this class, you
- * must provide a <code>suite()</code> method that wraps the tests in
- * your class with the necessary initialization from {@link FarragoTestCase}.
- * The normal implementation is:
  * <pre>
  *   ...
  *   import junit.framework.Test;
@@ -64,14 +62,16 @@ import net.sf.farrago.test.FarragoTestCase;
  * @author Stephan Zuercher
  * @version $Id$
  */
-public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
+public abstract class FarragoTestConcurrentTestCase
+    extends FarragoTestCase
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private boolean debug = false;
     private PrintStream printStream = System.out;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected FarragoTestConcurrentTestCase(String testName)
         throws Exception
@@ -79,7 +79,7 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Instantiates a new FarragoTestConcurrentCommandGenerator.
@@ -93,41 +93,40 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
      * Instantiates a new FarragoTestConcurrentScriptedCommandGenerator with the
      * given file.
      */
-    protected 
-    FarragoTestConcurrentScriptedCommandGenerator newScriptedCommandGenerator(
-        String filename) throws IOException
+    protected FarragoTestConcurrentScriptedCommandGenerator
+    newScriptedCommandGenerator(
+        String filename)
+        throws IOException
     {
         return new FarragoTestConcurrentScriptedCommandGenerator(filename);
     }
 
     /**
      * Creates {@link FarragoTestConcurrentCommandExecutor} objects for the
-     * threads defined in the given
-     * {@link FarragoTestConcurrentCommandGenerator} and then starts
-     * the command executors.
+     * threads defined in the given {@link
+     * FarragoTestConcurrentCommandGenerator} and then starts the command
+     * executors. <b>Note: If <code>synchronizeClockTicks</code> is <code>
+     * true</code>, the command lists configured for each thread are normalized
+     * so that each thread has the same set of execution orders (or clock
+     * ticks). When a thread is missing a clock tick that other threads contain,
+     * a no-op command is added for the clock tick. Prior to execution, a
+     * synchronization object is created. All
+     * FarragoTestConcurrentCommandExecutors for the test wait at a
+     * synchronization point until all threads have reached the point before
+     * continuing on to execute the clock tick's command. If <code>
+     * synchronizeClockTicks</code> is <code>false</code>, no synchronization
+     * occurs and all threads execute their commands, in order, as fast as they
+     * can.
      *
-     * <b>Note: If <code>synchronizeClockTicks</code> is
-     * <code>true</code>, the command lists configured for each thread
-     * are normalized so that each thread has the same set of
-     * execution orders (or clock ticks).  When a thread is missing a
-     * clock tick that other threads contain, a no-op command is added
-     * for the clock tick.  Prior to execution, a synchronization
-     * object is created.  All FarragoTestConcurrentCommandExecutors
-     * for the test wait at a synchronization point until all threads
-     * have reached the point before continuing on to execute the
-     * clock tick's command. If <code>synchronizeClockTicks</code> is
-     * <code>false</code>, no synchronization occurs and all threads
-     * execute their commands, in order, as fast as they can.
-     *
-     * <p>Each FarragoTestConcurrentCommandExecutor's first error is
-     * reported on System.err.  If any
-     * FarragoTestConcurrentCommandExecutor has an error, the test
-     * fails.
+     * <p>Each FarragoTestConcurrentCommandExecutor's first error is reported on
+     * System.err. If any FarragoTestConcurrentCommandExecutor has an error, the
+     * test fails.
      *
      * @param commandGenerator the configuration for this test
      * @param synchronizeClockTicks flag for thread synchronization (see above)
-     * @throws Exception if {@link FarragoTestCase#newJdbcEngineDriver}
-     *                   fails or if a thread operation is interrupted
+     *
+     * @throws Exception if {@link FarragoTestCase#newJdbcEngineDriver} fails or
+     * if a thread operation is interrupted
      */
     protected void executeTest(
         FarragoTestConcurrentCommandGenerator commandGenerator,
@@ -157,9 +156,10 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
             Iterator commands = commandGenerator.getCommandIterator(threadId);
 
             if (debug) {
-                printStream.println("Thread ID: " + threadId + " ("
-                                    + commandGenerator.getThreadName(threadId)
-                                    + ")");
+                printStream.println(
+                    "Thread ID: " + threadId + " ("
+                    + commandGenerator.getThreadName(threadId)
+                    + ")");
                 commandGenerator.printCommands(printStream, threadId);
             }
 
@@ -187,7 +187,7 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
         if (commandGenerator.requiresCustomErrorHandling()) {
             for (int i = 0, n = threads.length; i < n; i++) {
                 FarragoTestConcurrentCommandExecutor executor = threads[i];
-                
+
                 if (executor.getFailureCause() != null) {
                     commandGenerator.customErrorHandler(executor);
                 }
@@ -197,21 +197,22 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
             boolean needHeader = true;
             for (int i = 0, n = threads.length; i < n; i++) {
                 Throwable failureCause = threads[i].getFailureCause();
-                
+
                 if (failureCause != null) {
                     if (needHeader) {
                         System.err.println("Testcase: " + getName());
                         needHeader = false;
                     }
-                    
-                    System.err.println(threads[i].getName() + " failed "
-                                       + threads[i].getFailureLocation());
+
+                    System.err.println(
+                        threads[i].getName() + " failed "
+                        + threads[i].getFailureLocation());
                     failureCause.printStackTrace(System.err);
                     System.err.println();
                     failure = true;
                 }
             }
-            
+
             if (failure) {
                 System.err.println("-----\n");
                 fail();
@@ -232,3 +233,5 @@ public abstract class FarragoTestConcurrentTestCase extends FarragoTestCase
         printStream = alternatePrintStream;
     }
 }
+
+// End FarragoTestConcurrentTestCase.java

@@ -21,21 +21,20 @@
 */
 package net.sf.farrago.test.regression;
 
+import com.disruptivetech.farrago.calc.*;
+
 import java.util.*;
 
-import junit.framework.Test;
-import junit.framework.TestSuite;
+import junit.framework.*;
 
-import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.ojrex.FarragoOJRexImplementorTable;
+import net.sf.farrago.ojrex.*;
+import net.sf.farrago.test.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.Util;
-import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
+import org.eigenbase.util.*;
 
 
 /**
@@ -43,12 +42,14 @@ import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
  * calculator (java / fennel).
  *
  * @author Wael Chatila
- * @since April 19, 2004
  * @version $Id$
+ * @since April 19, 2004
  */
-public class FarragoCalcSystemTest extends FarragoTestCase
+public class FarragoCalcSystemTest
+    extends FarragoTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final SqlStdOperatorTable opTab =
         SqlStdOperatorTable.instance();
@@ -57,12 +58,12 @@ public class FarragoCalcSystemTest extends FarragoTestCase
     private static CalcRexImplementorTable fennelTab =
         CalcRexImplementorTableImpl.std();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     String sqlToExecute;
     VirtualMachine vm;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoCalcSystemTest(
         VirtualMachine vm,
@@ -75,7 +76,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         this.sqlToExecute = sql;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Test suite()
         throws Exception
@@ -84,15 +85,12 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 
         Set<SqlOperator> exclude = new HashSet<SqlOperator>();
 
-        // do not test operators added to exclude list.
-        // Functions to be excluded are typically those that return not null if
-        // input is null or
-        // otherwise has some special syntax or irregularites to them,
-        // making it harder to test them automatically.
-        // --- NOTE ---
-        // Do not add a function to this exclude list unless you first add a
-        // null test for it elsewhere.
-        // ------------
+        // do not test operators added to exclude list. Functions to be excluded
+        // are typically those that return not null if input is null or
+        // otherwise has some special syntax or irregularites to them, making it
+        // harder to test them automatically. --- NOTE --- Do not add a function
+        // to this exclude list unless you first add a null test for it
+        // elsewhere. ------------
         exclude.add(SqlStdOperatorTable.asOperator);
         exclude.add(SqlStdOperatorTable.isTrueOperator);
         exclude.add(SqlStdOperatorTable.isFalseOperator);
@@ -159,8 +157,7 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         // test for it elsewhere.
         // ------------
         // iterating over all operators
-        for (SqlOperator op : SqlStdOperatorTable.instance().getOperatorList())
-        {
+        for (SqlOperator op : SqlStdOperatorTable.instance().getOperatorList()) {
             if (exclude.contains(op)) {
                 continue;
             }
@@ -184,25 +181,24 @@ public class FarragoCalcSystemTest extends FarragoTestCase
             return;
         }
 
-        List<Integer> argCountList =
-            op.getOperandCountRange().getAllowedList();
+        List<Integer> argCountList = op.getOperandCountRange().getAllowedList();
         assert (argCountList.size() > 0);
 
         // iterating over possible call signatures
         for (int n : argCountList) {
             SqlNode [] operands = new SqlNode[n];
-            SqlOperandTypeChecker allowedTypes =
-                op.getOperandTypeChecker();
+            SqlOperandTypeChecker allowedTypes = op.getOperandTypeChecker();
             SqlTypeFamily [] families = findRules(allowedTypes);
 
             if (null == allowedTypes) {
-                throw Util.needToImplement("Need to add to exclude list"
+                throw Util.needToImplement(
+                    "Need to add to exclude list"
                     + " and manually add test");
             }
 
             for (int i = 0; i < n; i++) {
-                SqlTypeName typeName = (SqlTypeName)
-                    families[i].getTypeNames().iterator().next();
+                SqlTypeName typeName =
+                    (SqlTypeName) families[i].getTypeNames().iterator().next();
                 if (typeName.equals(SqlTypeName.Any)) {
                     typeName = SqlTypeName.Boolean;
                 }
@@ -255,10 +251,9 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         } else if (otc instanceof FamilyOperandTypeChecker) {
             return ((FamilyOperandTypeChecker) otc).getFamilies();
         } else {
-            Integer nOperands = (Integer)
-                otc.getOperandCountRange().getAllowedList().get(0);
-            SqlTypeFamily [] families =
-                new SqlTypeFamily[nOperands.intValue()];
+            Integer nOperands =
+                (Integer) otc.getOperandCountRange().getAllowedList().get(0);
+            SqlTypeFamily [] families = new SqlTypeFamily[nOperands.intValue()];
             Arrays.fill(families, SqlTypeFamily.Boolean);
             return families;
         }
@@ -281,12 +276,18 @@ public class FarragoCalcSystemTest extends FarragoTestCase
         compareResultSet(refSet);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Defines a virtual machine (FENNEL, JAVA, AUTO) and the operators it can
      * implement.
      */
     public static class VirtualMachine
     {
+        public static final VirtualMachine Fennel =
+            new VirtualMachine("FENNEL");
+        public static final VirtualMachine Java = new VirtualMachine("JAVA");
+        public static final VirtualMachine Auto = new VirtualMachine("AUTO");
         private final String name;
 
         private VirtualMachine(String name)
@@ -301,26 +302,23 @@ public class FarragoCalcSystemTest extends FarragoTestCase
 
         public String getAlterSystemCommand()
         {
-            return "alter system set \"calcVirtualMachine\" = '" +
-                "CALCVM_" + name + "'";
+            return
+                "alter system set \"calcVirtualMachine\" = '"
+                + "CALCVM_" + name + "'";
         }
 
         public boolean canImplement(SqlOperator op)
         {
-            if ((this == Java || this == Auto) &&
-                javaTab.get(op) != null) {
-                    return true;
+            if (((this == Java) || (this == Auto))
+                && (javaTab.get(op) != null)) {
+                return true;
             }
-            if ((this == Fennel || this == Auto) &&
-                fennelTab.get(op) != null) {
+            if (((this == Fennel) || (this == Auto))
+                && (fennelTab.get(op) != null)) {
                 return true;
             }
             return false;
         }
-
-        public static final VirtualMachine Fennel = new VirtualMachine("FENNEL");
-        public static final VirtualMachine Java = new VirtualMachine("JAVA");
-        public static final VirtualMachine Auto = new VirtualMachine("AUTO");
     }
 }
 

@@ -20,27 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 
 
 /**
  * A class derived from <code>DelegatingInvocationHandler</code> handles a
- * method call by looking for a method in itself with identical parameters.
- * If no such method is found, it forwards the call to a fallback object,
- * which must implement all of the interfaces which this proxy implements.
+ * method call by looking for a method in itself with identical parameters. If
+ * no such method is found, it forwards the call to a fallback object, which
+ * must implement all of the interfaces which this proxy implements.
  *
- * <p>
- * It is useful in creating a wrapper class around an interface which may
- * change over time.
- * </p>
+ * <p>It is useful in creating a wrapper class around an interface which may
+ * change over time.</p>
  *
- * <p>
- * Example:
+ * <p>Example:
+ *
  * <blockquote>
  * <pre>import java.sql.Connection;
  * Connection connection = ...;
@@ -61,12 +56,13 @@ import java.lang.reflect.Method;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 21 March, 2002
  */
-public abstract class DelegatingInvocationHandler implements InvocationHandler
+public abstract class DelegatingInvocationHandler
+    implements InvocationHandler
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public Object invoke(
         Object proxy,
@@ -93,8 +89,8 @@ public abstract class DelegatingInvocationHandler implements InvocationHandler
             } else {
                 // Invoke the method on the proxy.
                 return method.invoke(
-                    getTarget(),
-                    args);
+                        getTarget(),
+                        args);
             }
         } catch (InvocationTargetException e) {
             throw e.getTargetException();
@@ -103,11 +99,10 @@ public abstract class DelegatingInvocationHandler implements InvocationHandler
 
     /**
      * Returns the object to forward method calls to, should the derived class
-     * not implement the method. Generally, this object will be a member of
-     * the derived class, supplied as a parameter to its constructor.
+     * not implement the method. Generally, this object will be a member of the
+     * derived class, supplied as a parameter to its constructor.
      */
     protected abstract Object getTarget();
 }
-
 
 // End DelegatingInvocationHandler.java

@@ -23,6 +23,7 @@
 package net.sf.farrago.catalog;
 
 import java.io.*;
+
 import java.util.*;
 
 import org.netbeans.mdr.persistence.*;
@@ -31,24 +32,26 @@ import org.netbeans.mdr.util.*;
 
 
 /**
- * FarragoTransientStorage provides storage for transient MDR objects.
- * Adapted from org.netbeans.mdr.persistence.memoryimpl.
+ * FarragoTransientStorage provides storage for transient MDR objects. Adapted
+ * from org.netbeans.mdr.persistence.memoryimpl.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoTransientStorage extends StorageImpl
+class FarragoTransientStorage
+    extends StorageImpl
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 6-May-2004: Another hack.  This is what actually implements the
     // desired transient effect: when true, commits are converted into
-    // rollbacks.  This isn't set until after all storage initialization
-    // is completed, so system-defined data stays around permanently.  Need
-    // to make this work properly for the system/user catalog split.
+    // rollbacks.  This isn't set until after all storage initialization is
+    // completed, so system-defined data stays around permanently.  Need to make
+    // this work properly for the system/user catalog split.
     static boolean ignoreCommit;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     // NOTE jvs 6-May-2004:  I had to extend StorageImpl to avoid having to
     // copy the entire index classes.  Watch out for the fact that
@@ -58,7 +61,7 @@ class FarragoTransientStorage extends StorageImpl
     private Set newIndexes = new HashSet();
     private HashMap removedIndexes = new HashMap();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoTransientStorage()
     {
@@ -66,7 +69,7 @@ class FarragoTransientStorage extends StorageImpl
         ignoreCommit = false;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Storage
     public synchronized void create(
@@ -286,7 +289,7 @@ class FarragoTransientStorage extends StorageImpl
         return (Index) maps.get(name);
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     private static interface TxnIndex
     {
@@ -297,9 +300,11 @@ class FarragoTransientStorage extends StorageImpl
             throws StorageException;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    private static class PVIndex extends PrimaryIndexImpl implements TxnIndex
+    private static class PVIndex
+        extends PrimaryIndexImpl
+        implements TxnIndex
     {
         PVIndex(StorageImpl storage)
         {
@@ -319,7 +324,8 @@ class FarragoTransientStorage extends StorageImpl
         }
     }
 
-    private static class SVIndex extends SinglevaluedIndexImpl
+    private static class SVIndex
+        extends SinglevaluedIndexImpl
         implements TxnIndex
     {
         SVIndex(
@@ -344,7 +350,8 @@ class FarragoTransientStorage extends StorageImpl
         }
     }
 
-    private static class MVIndex extends MultivaluedOrderedIndexImpl
+    private static class MVIndex
+        extends MultivaluedOrderedIndexImpl
         implements TxnIndex
     {
         public MVIndex(
@@ -370,3 +377,5 @@ class FarragoTransientStorage extends StorageImpl
         }
     }
 }
+
+// End FarragoTransientStorage.java

@@ -21,14 +21,14 @@
 */
 package net.sf.farrago.type.runtime;
 
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.TimeZone;
+import java.text.*;
 
-import net.sf.farrago.resource.FarragoResource;
+import java.util.*;
+
+import net.sf.farrago.resource.*;
 
 import org.eigenbase.resource.*;
-import org.eigenbase.sql.parser.SqlParserUtil;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -37,16 +37,18 @@ import org.eigenbase.sql.parser.SqlParserUtil;
  * <p>This is a bit ugly, due to the unfortunate nature of sql 99 time without
  * Timezone.
  *
- * <p>The localtime is always the same hours/minutes in the current timezone,
- * so GMT has to be offset accordingly.
+ * <p>The localtime is always the same hours/minutes in the current timezone, so
+ * GMT has to be offset accordingly.
  *
  * @author lee
- * @since May 5, 2004
  * @version $Id$
- **/
-public abstract class SqlDateTimeWithoutTZ implements AssignableValue
+ * @since May 5, 2004
+ */
+public abstract class SqlDateTimeWithoutTZ
+    implements AssignableValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // ~ Static fields --------------------------------------------------------
     // Use same format as supported by parser (should be ISO format)
@@ -56,11 +58,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         SqlParserUtil.TimestampFormatStr;
     private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
 
-    /** The default timezone for this Java VM. */
+    /**
+     * The default timezone for this Java VM.
+     */
     private static final TimeZone defaultZone =
         Calendar.getInstance().getTimeZone();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Calendar, which holds this object's time value. Its timezone is GMT,
@@ -74,15 +78,17 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     public long value = 0;
     public int timeZoneOffset = 0; // timezone offset in Millis.
 
-    /** Whether this value is null. */
+    /**
+     * Whether this value is null.
+     */
     public boolean isNull;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a runtime object with timezone offset set from localtime.
      *
-     * <p>FIXME    - we need the session tz, not the server tz.
+     * <p>FIXME - we need the session tz, not the server tz.
      */
     public SqlDateTimeWithoutTZ()
     {
@@ -90,7 +96,7 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         cal.setTimeZone(gmtZone);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return long.class
@@ -102,9 +108,11 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     /**
      * Returns the Date/Time format to use
-      * @return String representing the default Date/Time format to use
+     *
+     * @return String representing the default Date/Time format to use
      */
     protected abstract String getFormat();
+
     protected abstract void parse(String date, String format, TimeZone tz);
 
     public abstract Object getData(long millisecond);
@@ -117,8 +125,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
 
     /**
      * Per the {@link NullableValue} contract, returns either null or the
-     * embedded value object. The value object is a {@link java.sql.Time
-     * JDBC Time/Date/Timestamp} in local time.
+     * embedded value object. The value object is a {@link java.sql.Time JDBC
+     * Time/Date/Timestamp} in local time.
      */
     public Object getNullableData()
     {
@@ -156,7 +164,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             value = ((Long) date).longValue();
             return;
         } else if (date instanceof java.util.Date) {
-            value = ((java.util.Date) date).getTime(); // + timeZoneOffset; // set tzOffset?
+            value = ((java.util.Date) date).getTime(); // + timeZoneOffset; //
+                                                       // set tzOffset?
             return;
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ sqlDate = (SqlDateTimeWithoutTZ) date;
@@ -235,12 +244,13 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         return toString(getFormat());
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * SQL date value.
      */
-    public static class SqlDate extends SqlDateTimeWithoutTZ
+    public static class SqlDate
+        extends SqlDateTimeWithoutTZ
     {
         public String getFormat()
         {
@@ -255,7 +265,11 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
             if (format == null) {
                 format = getFormat();
             }
-            Calendar cal = SqlParserUtil.parseDateFormat(date.trim(), format, tz);
+            Calendar cal =
+                SqlParserUtil.parseDateFormat(
+                    date.trim(),
+                    format,
+                    tz);
             if (cal != null) {
                 java.util.Date parsedDate = cal.getTime();
                 assignFrom(parsedDate);
@@ -264,16 +278,16 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                     EigenbaseResource.instance().BadFormat.str(format);
 
                 throw FarragoResource.instance().AssignFromFailed.ex(date,
-                    "DATE", reason);
+                    "DATE",
+                    reason);
             }
-
         }
 
         /**
          * Use java.sql objects for JDBC's benefit.
          *
-         * @return an Object representation of this value's data, or null if this
-         *         value is null
+         * @return an Object representation of this value's data, or null if
+         * this value is null
          */
         public Object getData(long millisecond)
         {
@@ -284,7 +298,8 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     /**
      * SQL time value.
      */
-    public static class SqlTime extends SqlDateTimeWithoutTZ
+    public static class SqlTime
+        extends SqlDateTimeWithoutTZ
     {
         protected String getFormat()
         {
@@ -300,7 +315,10 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 format = getFormat();
             }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date.trim(), format, tz);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(
+                    date.trim(),
+                    format,
+                    tz);
             if (pt != null) {
                 java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
@@ -309,21 +327,22 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                     EigenbaseResource.instance().BadFormat.str(format);
 
                 throw FarragoResource.instance().AssignFromFailed.ex(date,
-                    "TIME", reason);
+                    "TIME",
+                    reason);
             }
         }
 
         /**
          * Use java.sql objects for JDBC's benefit.
          *
-         * @return an Object representation of this value's data, or null if this
-         *         value is null
+         * @return an Object representation of this value's data, or null if
+         * this value is null
          */
         public Object getData(long millisecond)
         {
             /* int hour = cal.get(Calendar.HOUR_OF_DAY);
-            int min = cal.get(Calendar.MINUTE);
-            int sec = cal.get(Calendar.SECOND); */
+            int min = cal.get(Calendar.MINUTE);int sec =
+             cal.get(Calendar.SECOND); */
             return new java.sql.Time(millisecond);
         }
     }
@@ -331,9 +350,9 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
     /**
      * SQL timestamp value.
      */
-    public static class SqlTimestamp extends SqlDateTimeWithoutTZ
+    public static class SqlTimestamp
+        extends SqlDateTimeWithoutTZ
     {
-
         protected String getFormat()
         {
             return TimestampFormatStr;
@@ -348,7 +367,10 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                 format = getFormat();
             }
             SqlParserUtil.PrecisionTime pt =
-                SqlParserUtil.parsePrecisionDateTimeLiteral(date.trim(), format, tz);
+                SqlParserUtil.parsePrecisionDateTimeLiteral(
+                    date.trim(),
+                    format,
+                    tz);
             if (pt != null) {
                 java.util.Date parsedDate = pt.getCalendar().getTime();
                 assignFrom(parsedDate);
@@ -357,15 +379,16 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
                     EigenbaseResource.instance().BadFormat.str(format);
 
                 throw FarragoResource.instance().AssignFromFailed.ex(date,
-                    "TIMESTAMP", reason);
+                    "TIMESTAMP",
+                    reason);
             }
         }
 
         /**
          * Use java.sql objects for JDBC's benefit.
          *
-         * @return an Object representation of this value's data, or null if this
-         *         value is null
+         * @return an Object representation of this value's data, or null if
+         * this value is null
          */
         public Object getData(long millisecond)
         {
@@ -373,6 +396,5 @@ public abstract class SqlDateTimeWithoutTZ implements AssignableValue
         }
     }
 }
-
 
 // End SqlDateTimeWithoutTZ.java

@@ -24,6 +24,7 @@ package org.eigenbase.stat;
 import org.eigenbase.rel.*;
 import org.eigenbase.sarg.*;
 
+
 /**
  * This class encapsulates statistics for a RelNode
  *
@@ -32,28 +33,30 @@ import org.eigenbase.sarg.*;
  */
 public interface RelStatSource
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the number of rows in a relation, as determined by statistics
-     * 
+     *
      * @return a row count, or null if one could not be determined
      */
     Double getRowCount();
-    
+
     /**
-     * Returns statistics pertaining to a column specified by the 0-based 
-     * ordinal and the sargable predicates associated with that column.  
-     * The second argument can be null if there are no sargable predicates 
-     * on the column.
+     * Returns statistics pertaining to a column specified by the 0-based
+     * ordinal and the sargable predicates associated with that column. The
+     * second argument can be null if there are no sargable predicates on the
+     * column.
      *
      * @param ordinal zero based column ordinal
      * @param predicate associated predicates(s), evaluated as intervals
-     * 
-     * @return filtered column statistics, or null if they could not be 
-     * obtained
+     *
+     * @return filtered column statistics, or null if they could not be obtained
      */
     RelStatColumnStatistics getColumnStatistics(
-        int ordinal, SargIntervalSequence predicate);
+        int ordinal,
+        SargIntervalSequence predicate);
 }
 
 // End RelStatSource.java
- 

@@ -20,10 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.test;
 
 import java.io.*;
+
 import java.util.regex.*;
 
 import junit.framework.*;
@@ -38,20 +38,30 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DiffTestCase extends TestCase
+public abstract class DiffTestCase
+    extends TestCase
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Name of current .log file. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Name of current .log file.
+     */
     private File logFile;
 
-    /** Name of current .ref file. */
+    /**
+     * Name of current .ref file.
+     */
     private File refFile;
 
-    /** OutputStream for current test log. */
+    /**
+     * OutputStream for current test log.
+     */
     private OutputStream logOutputStream;
 
-    /** Diff masks defined so far */
+    /**
+     * Diff masks defined so far
+     */
     // private List diffMasks;
     private String diffMasks;
     Matcher compiledDiffMatcher;
@@ -60,10 +70,12 @@ public abstract class DiffTestCase extends TestCase
 
     int gcInterval;
 
-    /** Whether to give verbose message if diff fails. */
+    /**
+     * Whether to give verbose message if diff fails.
+     */
     private boolean verbose;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Initializes a new DiffTestCase.
@@ -87,13 +99,14 @@ public abstract class DiffTestCase extends TestCase
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     protected void setUp()
         throws Exception
     {
         super.setUp();
+
         // diffMasks.clear();
         diffMasks = "";
         ignorePatterns = "";
@@ -117,16 +130,16 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Initializes a diff-based test.  Any existing .log and .dif files
-     * corresponding to this test case are deleted, and a new, empty .log
-     * file is created.  The default log file location is a subdirectory
-     * under the result getTestlogRoot(), where the subdirectory
-     * name is based on the unqualified name of the test class.
-     * The generated log file name will be testMethodName.log,
-     * and the expected reference file will be testMethodName.ref.
+     * Initializes a diff-based test. Any existing .log and .dif files
+     * corresponding to this test case are deleted, and a new, empty .log file
+     * is created. The default log file location is a subdirectory under the
+     * result getTestlogRoot(), where the subdirectory name is based on the
+     * unqualified name of the test class. The generated log file name will be
+     * testMethodName.log, and the expected reference file will be
+     * testMethodName.ref.
      *
-     * @return Writer for log file, which caller should use as a destination
-     *         for test output to be diffed
+     * @return Writer for log file, which caller should use as a destination for
+     * test output to be diffed
      */
     protected Writer openTestLog()
         throws Exception
@@ -136,7 +149,8 @@ public abstract class DiffTestCase extends TestCase
                 getTestlogRoot(),
                 ReflectUtil.getUnqualifiedClassName(getClass()));
         testClassDir.mkdirs();
-        File testLogFile = new File(testClassDir,
+        File testLogFile = new File(
+                testClassDir,
                 getName());
         return new OutputStreamWriter(openTestLogOutputStream(testLogFile));
     }
@@ -148,8 +162,8 @@ public abstract class DiffTestCase extends TestCase
         throws Exception;
 
     /**
-     * Initializes a diff-based test, overriding the default
-     * log file naming scheme altogether.
+     * Initializes a diff-based test, overriding the default log file naming
+     * scheme altogether.
      *
      * @param testFileSansExt full path to log filename, without .log/.ref
      * extension
@@ -169,16 +183,14 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Finishes a diff-based test.  Output that was written to the Writer
+     * Finishes a diff-based test. Output that was written to the Writer
      * returned by openTestLog is diffed against a .ref file, and if any
-     * differences are detected, the test case fails.  Note that the diff
-     * used is just a boolean test, and does not create any .dif ouput.
+     * differences are detected, the test case fails. Note that the diff used is
+     * just a boolean test, and does not create any .dif ouput.
      *
-     * <p>
-     * NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
+     * <p>NOTE: if you wrap the Writer returned by openTestLog() (e.g. with a
      * PrintWriter), be sure to flush the wrapping Writer before calling this
-     * method.
-     * </p>
+     * method.</p>
      */
     protected void diffTestLog()
         throws IOException
@@ -199,7 +211,7 @@ public abstract class DiffTestCase extends TestCase
             if (compiledIgnoreMatcher != null) {
                 if (gcInterval != 0) {
                     n++;
-                    if ( n == gcInterval) {
+                    if (n == gcInterval) {
                         n = 0;
                         System.gc();
                     }
@@ -212,27 +224,33 @@ public abstract class DiffTestCase extends TestCase
             for (;;) {
                 String logLine = logLineReader.readLine();
                 String refLine = refLineReader.readLine();
-                while (logLine != null && matchIgnorePatterns(logLine)) {
+                while ((logLine != null) && matchIgnorePatterns(logLine)) {
                     // System.out.println("logMatch Line:" + logLine);
                     logLine = logLineReader.readLine();
                 }
-                while (refLine != null && matchIgnorePatterns(refLine)) {
+                while ((refLine != null) && matchIgnorePatterns(refLine)) {
                     // System.out.println("refMatch Line:" + logLine);
                     refLine = refLineReader.readLine();
                 }
                 if ((logLine == null) || (refLine == null)) {
                     if (logLine != null) {
-                        diffFail(logFile, logLineReader.getLineNumber());
+                        diffFail(
+                            logFile,
+                            logLineReader.getLineNumber());
                     }
                     if (refLine != null) {
-                        diffFail(logFile, refLineReader.getLineNumber());
+                        diffFail(
+                            logFile,
+                            refLineReader.getLineNumber());
                     }
                     break;
                 }
                 logLine = applyDiffMask(logLine);
                 refLine = applyDiffMask(refLine);
                 if (!logLine.equals(refLine)) {
-                    diffFail(logFile, logLineReader.getLineNumber());
+                    diffFail(
+                        logFile,
+                        logLineReader.getLineNumber());
                 }
             }
         } finally {
@@ -251,7 +269,7 @@ public abstract class DiffTestCase extends TestCase
     /**
      * set the number of lines for garbage collection.
      *
-     * @param n an integer, the number of line for garbage collection, 0 means 
+     * @param n an integer, the number of line for garbage collection, 0 means
      * no garbage collection.
      */
     protected void setGC(int n)
@@ -260,9 +278,9 @@ public abstract class DiffTestCase extends TestCase
     }
 
     /**
-     * Adds a diff mask.  Strings matching the given regular expression
-     * will be masked before diffing.  This can be used to suppress
-     * spurious diffs on a case-by-case basis.
+     * Adds a diff mask. Strings matching the given regular expression will be
+     * masked before diffing. This can be used to suppress spurious diffs on a
+     * case-by-case basis.
      *
      * @param mask a regular expression, as per String.replaceAll
      */
@@ -293,6 +311,7 @@ public abstract class DiffTestCase extends TestCase
     {
         if (compiledDiffMatcher != null) {
             compiledDiffMatcher.reset(s);
+
             // we assume most of lines do not match
             // so compiled matches will be faster than replaceAll.
             if (compiledDiffMatcher.find()) {
@@ -301,6 +320,7 @@ public abstract class DiffTestCase extends TestCase
         }
         return s;
     }
+
     private boolean matchIgnorePatterns(String s)
     {
         if (compiledIgnoreMatcher != null) {
@@ -327,11 +347,11 @@ public abstract class DiffTestCase extends TestCase
 
     /**
      * Returns the contents of a file as a string.
-     */ 
+     */
     private static String fileContents(File file)
     {
         try {
-            char[] buf = new char[2048];
+            char [] buf = new char[2048];
             final FileReader reader = new FileReader(file);
             int readCount;
             final StringWriter writer = new StringWriter();
@@ -352,6 +372,5 @@ public abstract class DiffTestCase extends TestCase
         this.verbose = verbose;
     }
 }
-
 
 // End DiffTestCase.java

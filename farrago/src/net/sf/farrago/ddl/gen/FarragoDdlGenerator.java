@@ -22,35 +22,16 @@
 */
 package net.sf.farrago.ddl.gen;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
-import net.sf.farrago.cwm.behavioral.CwmParameter;
-import net.sf.farrago.cwm.behavioral.ParameterDirectionKindEnum;
-import net.sf.farrago.cwm.core.CwmExpression;
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.cwm.relational.CwmColumn;
-import net.sf.farrago.cwm.relational.CwmSchema;
-import net.sf.farrago.cwm.relational.CwmSqldataType;
-import net.sf.farrago.cwm.relational.CwmTable;
-import net.sf.farrago.cwm.relational.CwmView;
-import net.sf.farrago.cwm.relational.enumerations.NullableTypeEnum;
-import net.sf.farrago.cwm.relational.enumerations.ProcedureTypeEnum;
-import net.sf.farrago.fem.med.FemDataServer;
-import net.sf.farrago.fem.med.FemDataWrapper;
-import net.sf.farrago.fem.med.FemElementWithStorageOptions;
-import net.sf.farrago.fem.med.FemForeignTable;
-import net.sf.farrago.fem.med.FemLocalTable;
-import net.sf.farrago.fem.med.FemStorageOption;
-import net.sf.farrago.fem.med.FemStoredColumn;
-import net.sf.farrago.fem.sql2003.FemAnnotatedElement;
-import net.sf.farrago.fem.sql2003.FemLocalView;
-import net.sf.farrago.fem.sql2003.FemRoutine;
-import net.sf.farrago.fem.sql2003.RoutineDataAccessEnum;
+import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
 
-import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.*;
 
 
 /**
@@ -59,15 +40,17 @@ import org.eigenbase.sql.type.SqlTypeName;
  * @author Jason Ouellette
  * @version $Id$
  */
-public class FarragoDdlGenerator extends DdlGenerator
+public class FarragoDdlGenerator
+    extends DdlGenerator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoDdlGenerator()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected void createHeader(
         StringBuilder sb,
@@ -220,18 +203,21 @@ public class FarragoDdlGenerator extends DdlGenerator
                 CwmParameter p = (CwmParameter) pi.next();
                 if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
                     sb.append("  IN ");
-                } else if (p.getKind().equals(ParameterDirectionKindEnum.PDK_INOUT)) {
+                } else if (p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_INOUT)) {
                     sb.append("  INOUT ");
-                } else if (p.getKind().equals(ParameterDirectionKindEnum.PDK_OUT)) {
+                } else if (p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_OUT)) {
                     sb.append("  OUT ");
                 }
+
                 //REVIEW: procedures don't have RETURNS, right?
                 sb.append(quote(p.getName()));
                 sb.append(" ");
                 CwmSqldataType type = (CwmSqldataType) p.getType();
                 SqlTypeName stn = getSqlTypeName(type);
                 sb.append(type.getName());
-    
+
                 //REVIEW: how to get type length, precision?
                 if (pi.hasNext()) {
                     sb.append(", ");
@@ -246,6 +232,7 @@ public class FarragoDdlGenerator extends DdlGenerator
             boolean first = true;
             while (pi.hasNext()) {
                 CwmParameter p = (CwmParameter) pi.next();
+
                 //REVIEW: functions can't have INOUT or OUT parameters, right?
                 if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
                     if (!first) {
@@ -259,9 +246,10 @@ public class FarragoDdlGenerator extends DdlGenerator
                     CwmSqldataType type = (CwmSqldataType) p.getType();
                     SqlTypeName stn = getSqlTypeName(type);
                     sb.append(type.getName());
-                } else if (p.getKind().equals(ParameterDirectionKindEnum.PDK_RETURN)) {
+                } else if (p.getKind().equals(
+                        ParameterDirectionKindEnum.PDK_RETURN)) {
                     returns.add(p);
-                }        
+                }
             }
             sb.append(NL);
             sb.append(" )");
@@ -290,17 +278,17 @@ public class FarragoDdlGenerator extends DdlGenerator
         sb.append(routine.getLanguage());
         sb.append(NL);
 
-        if (routine.getDataAccess()
-                .equals(RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)) {
+        if (routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_MODIFIES_SQL_DATA)) {
             sb.append(" MODIFIES SQL DATA");
-        } else if (routine.getDataAccess()
-                .equals(RoutineDataAccessEnum.RDA_CONTAINS_SQL)) {
+        } else if (routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_CONTAINS_SQL)) {
             sb.append(" CONTAINS SQL");
-        } else if (routine.getDataAccess()
-                .equals(RoutineDataAccessEnum.RDA_NO_SQL)) {
+        } else if (routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_NO_SQL)) {
             sb.append(" NO SQL");
-        } else if (routine.getDataAccess()
-                .equals(RoutineDataAccessEnum.RDA_READS_SQL_DATA)) {
+        } else if (routine.getDataAccess().equals(
+                RoutineDataAccessEnum.RDA_READS_SQL_DATA)) {
             sb.append(" READS SQL DATA");
         }
         sb.append(NL);
@@ -435,8 +423,10 @@ public class FarragoDdlGenerator extends DdlGenerator
                         String val = e.getBody();
                         if ((val != null) && !val.equals(VALUE_NULL)) {
                             sb.append(" DEFAULT ");
+
                             // we expect the setter of body to be responsible
-                            // for forming a valid SQL expression given the datatype
+                            // for forming a valid SQL expression given the
+                            // datatype
                             sb.append(val);
                         }
                     }
@@ -444,7 +434,7 @@ public class FarragoDdlGenerator extends DdlGenerator
 
                 if (!skipNullable) {
                     if (NullableTypeEnum.COLUMN_NO_NULLS.toString().equals(
-                                col.getIsNullable().toString())) {
+                            col.getIsNullable().toString())) {
                         sb.append(" NOT NULL");
                     }
                 }
@@ -453,7 +443,8 @@ public class FarragoDdlGenerator extends DdlGenerator
                 if (col instanceof FemElementWithStorageOptions) {
                     addOptions(
                         sb,
-                        ((FemElementWithStorageOptions) col).getStorageOptions(),
+                        ((FemElementWithStorageOptions) col)
+                        .getStorageOptions(),
                         2);
                 }
 
@@ -553,9 +544,13 @@ public class FarragoDdlGenerator extends DdlGenerator
         if (e != null) {
             StringBuffer sb = new StringBuffer();
             sb.append("DROP " + elementType + " ");
-            // we're already in the current schema (SET SCHEMA) so don't fully qualify name
+
+            // we're already in the current schema (SET SCHEMA) so don't fully
+            // qualify name
             sb.append(quote(e.getName()));
             stmt.addStmt(sb.toString());
         }
     }
 }
+
+// End FarragoDdlGenerator.java

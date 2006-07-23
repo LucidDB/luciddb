@@ -20,31 +20,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.io.Serializable;
+import java.io.*;
+
+import java.util.*;
+
 
 /**
- * FennelTupleDescriptor provides the metadata describing a tuple. This
- * is used in conjunction with FennelTupleAccessor objects to marshall
- * and unmarshall data into FennelTupleData objects from external formats.
+ * FennelTupleDescriptor provides the metadata describing a tuple. This is used
+ * in conjunction with FennelTupleAccessor objects to marshall and unmarshall
+ * data into FennelTupleData objects from external formats.
  *
  * @author Mike Bennett
  * @version $Id$
  */
-public class FennelTupleDescriptor implements Serializable
+public class FennelTupleDescriptor
+    implements Serializable
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = -7075506007273800588L;
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * a collection of the FennelTupleAttributeDescriptor objects
-     * we're keeping.
-     */ 
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
+    private static final long serialVersionUID = -7075506007273800588L;
+
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * a collection of the FennelTupleAttributeDescriptor objects we're keeping.
+     */
     private final List attrs = new ArrayList();
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * default constructor
@@ -53,9 +62,11 @@ public class FennelTupleDescriptor implements Serializable
     {
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the number of attributes we are holding.
-     */ 
+     */
     public int getAttrCount()
     {
         return attrs.size();
@@ -98,8 +109,8 @@ public class FennelTupleDescriptor implements Serializable
     /**
      * Compares two tuples.
      *
-     * @return zero if they match, -1 if the first is less than the
-     * second otherwise 1
+     * @return zero if they match, -1 if the first is less than the second
+     * otherwise 1
      */
     public int compareTuples(FennelTupleData tuple1, FennelTupleData tuple2)
     {
@@ -114,12 +125,12 @@ public class FennelTupleDescriptor implements Serializable
         for (i = 0; i < n; ++i) {
             FennelTupleDatum datum1 = tuple1.getDatum(i);
             FennelTupleDatum datum2 = tuple2.getDatum(i);
-            if (! datum1.isPresent()) {
-                if (! datum2.isPresent()) {
+            if (!datum1.isPresent()) {
+                if (!datum2.isPresent()) {
                     continue;
                 }
                 return -1;
-            } else if (! datum2.isPresent()) {
+            } else if (!datum2.isPresent()) {
                 return 1;
             }
             int c = getAttr(i).typeDescriptor.compareValues(datum1, datum2);
@@ -132,6 +143,7 @@ public class FennelTupleDescriptor implements Serializable
         }
         return 0;
     }
-};
+}
+;
 
 // End FennelTupleDescriptor.java

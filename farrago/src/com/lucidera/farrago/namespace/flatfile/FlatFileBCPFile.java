@@ -21,14 +21,16 @@
 package com.lucidera.farrago.namespace.flatfile;
 
 import java.io.*;
-import java.util.regex.Pattern;
 
-import net.sf.farrago.resource.FarragoResource;
+import java.util.regex.*;
+
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+
 
 /**
  * FlatFileBCPFile provides a way to read/write from/to control (bcp) files
@@ -38,25 +40,41 @@ import org.eigenbase.util.*;
  */
 class FlatFileBCPFile
 {
-    FileWriter ctrlWriter;
-    RelDataType[] types;
-    FarragoTypeFactory typeFactory;
-    File ctrlFile;
-    String fileName;
 
-    String[] colDataType;
-    String[] colDataLength;
-    String[] colNames;
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final String NEWLINE = "\n";
     private static final String QUOTE = "\"";
     private static final String TAB = "\t";
 
-    private static final Pattern IntegerPattern =
-        Pattern.compile("^[0-9]+$");
+    private static final Pattern IntegerPattern = Pattern.compile("^[0-9]+$");
     private static final Pattern DoublePattern =
         Pattern.compile("^[0-9]*(\\.)[0-9]+$");
     private static final String EmptyLinePattern = "^\\s*$";
+
+    //~ Enums ------------------------------------------------------------------
+
+    public enum BcpType {
+        SQLCHAR, SQLNCHAR, SQLVARCHAR, SQLNVARCHAR, SQLBINARY, SQLVARBINARY,
+        SQLDATE, SQLTIME, SQLDATETIME, SQLDATETIM4, SQLTIMESTAMP, SQLDECIMAL,
+        SQLNUMERIC, SQLMONEY, SQLMONEY4, SQLTINYINT, SQLSMALLINT, SQLINT,
+        SQLBIGINT, SQLREAL, SQLFLT4, SQLFLT8, SQLBIT, SQLVARIANT, SQLUDT,
+        SQLUNIQUEID
+    }
+
+    //~ Instance fields --------------------------------------------------------
+
+    FileWriter ctrlWriter;
+    RelDataType [] types;
+    FarragoTypeFactory typeFactory;
+    File ctrlFile;
+    String fileName;
+
+    String [] colDataType;
+    String [] colDataLength;
+    String [] colNames;
+
+    //~ Constructors -----------------------------------------------------------
 
     FlatFileBCPFile(String filePath, FarragoTypeFactory typeFactory)
     {
@@ -67,6 +85,8 @@ class FlatFileBCPFile
         this.colDataLength = null;
         this.colNames = null;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Checks if this file exists
@@ -83,7 +103,7 @@ class FlatFileBCPFile
     {
         try {
             this.ctrlWriter = new FileWriter(this.ctrlFile, false);
-            ctrlWriter.write("6.0"+NEWLINE);
+            ctrlWriter.write("6.0" + NEWLINE);
         } catch (IOException ie) {
             try {
                 this.ctrlWriter.close();
@@ -105,7 +125,7 @@ class FlatFileBCPFile
     /**
      * Writes the main body of the control file, given a table row
      */
-    public boolean write(String[] row, FlatFileParams params)
+    public boolean write(String [] row, FlatFileParams params)
     {
         try {
             this.ctrlWriter = new FileWriter(this.ctrlFile, true);
@@ -113,7 +133,7 @@ class FlatFileBCPFile
                 expandRowsAndWrite(row, params);
             } else {
                 for (String col : row) {
-                    ctrlWriter.write(col+NEWLINE);
+                    ctrlWriter.write(col + NEWLINE);
                 }
             }
         } catch (IOException ie) {
@@ -135,10 +155,10 @@ class FlatFileBCPFile
     }
 
     /**
-     * Updates, if necessary, the control file's host file data types
-     * and lengths, given a table row of information
+     * Updates, if necessary, the control file's host file data types and
+     * lengths, given a table row of information
      */
-    public void update(String[] row, boolean isHeader)
+    public void update(String [] row, boolean isHeader)
     {
         if (isHeader) {
             this.colNames = new String[row.length];
@@ -156,7 +176,7 @@ class FlatFileBCPFile
             int numCol = 0;
             for (String col : row) {
                 String newType = getType(col);
-                String newLength= getTypeLength(col);
+                String newLength = getTypeLength(col);
 
                 if (changeType(this.colDataType[numCol], newType)) {
                     this.colDataType[numCol] = newType;
@@ -180,8 +200,8 @@ class FlatFileBCPFile
         if (origType.equals("SQLINT")) {
             return true;
         }
-        if ((origType.equals("SQLBIGINT")) &&
-            (!newType.equals("SQLINT"))) {
+        if ((origType.equals("SQLBIGINT"))
+            && (!newType.equals("SQLINT"))) {
             return true;
         }
         if (origType.equals("SQLVARCHAR")) {
@@ -202,26 +222,28 @@ class FlatFileBCPFile
             return true;
         }
         if ((Integer.valueOf(origVal).compareTo(
-                 Integer.valueOf(newVal))) < 0) {
+                    Integer.valueOf(newVal))) < 0) {
             return true;
         }
         return false;
     }
 
-    private boolean expandRowsAndWrite(String[] row, FlatFileParams params)
+    private boolean expandRowsAndWrite(String [] row, FlatFileParams params)
     {
         if (this.colDataType == null) {
-            String txtFile = this.fileName.substring(
-                0,(this.fileName.length()-4));
+            String txtFile =
+                this.fileName.substring(
+                    0,
+                    (this.fileName.length() - 4));
             try {
                 this.ctrlWriter.close();
                 this.ctrlFile.delete();
             } catch (IOException ie) {
             }
             throw FarragoResource.instance().CannotDeriveColumnTypes.ex(
-                txtFile+params.getFileExtenstion());
+                txtFile + params.getFileExtenstion());
         }
-        for (int i=0; i<row.length; i++) {
+        for (int i = 0; i < row.length; i++) {
             if (this.colDataType[i] == null) {
                 // TODO: return warning that column values were all null
                 // setting column to type SQLVARCHAR/256
@@ -230,28 +252,35 @@ class FlatFileBCPFile
             }
             if (this.colDataType[i].equals("SQLVARCHAR")) {
                 int varcharPrec =
-                    ((((Integer.valueOf(
-                            this.colDataLength[i])+128)/256)+1)*256);
+                    (
+                        (
+                            (
+                                (Integer.valueOf(
+                                        this.colDataLength[i]) + 128) / 256
+                            ) + 1
+                        ) * 256
+                    );
                 this.colDataLength[i] = Integer.toString(varcharPrec);
             }
-            int colNo = i+1;
-            row[i] = colNo + TAB + this.colDataType[i] + TAB + "0" + TAB +
-                this.colDataLength[i] + TAB + QUOTE;
+            int colNo = i + 1;
+            row[i] =
+                colNo + TAB + this.colDataType[i] + TAB + "0" + TAB
+                + this.colDataLength[i] + TAB + QUOTE;
 
-            if (i == row.length-1) {
+            if (i == (row.length - 1)) {
                 row[i] = row[i].concat(escape(params.getLineDelimiter()));
             } else {
                 row[i] = row[i].concat(escape(params.getFieldDelimiter()));
             }
             row[i] = row[i].concat(QUOTE + TAB + colNo + TAB);
 
-            if (this.colNames == null || this.colNames[i] == null) {
+            if ((this.colNames == null) || (this.colNames[i] == null)) {
                 row[i] = row[i].concat("COLUMN" + colNo);
             } else {
                 row[i] = row[i].concat(this.colNames[i]);
             }
             try {
-                this.ctrlWriter.write(row[i]+NEWLINE);
+                this.ctrlWriter.write(row[i] + NEWLINE);
             } catch (IOException ie) {
                 try {
                     this.ctrlWriter.close();
@@ -266,8 +295,8 @@ class FlatFileBCPFile
     }
 
     /**
-     * Assumes from {@link FlatFileParams} that the only escaped
-     * delimiter strings are \n and \t
+     * Assumes from {@link FlatFileParams} that the only escaped delimiter
+     * strings are \n and \t
      */
     private String escape(char in)
     {
@@ -277,8 +306,7 @@ class FlatFileBCPFile
     }
 
     /**
-     * Guess type of String to be one of
-     * VARCHAR, FLOAT, BIGINT, INTEGER
+     * Guess type of String to be one of VARCHAR, FLOAT, BIGINT, INTEGER
      */
     private String getType(String in)
     {
@@ -329,11 +357,12 @@ class FlatFileBCPFile
         }
 
         try {
-            while(true) {
+            while (true) {
                 String line = reader.readLine();
                 if (line == null) {
                     break;
                 }
+
                 // convention is 1-indexed line numbers
                 int lineNumber = reader.getLineNumber();
 
@@ -357,11 +386,11 @@ class FlatFileBCPFile
                 }
 
                 if (index >= columnCount) {
-                    throw FarragoResource.instance().
-                        InvalidControlFileTooManyCols.ex(fileName);
+                    throw FarragoResource.instance()
+                    .InvalidControlFileTooManyCols.ex(fileName);
                 }
 
-                String[] bcpLine = line.split("\\s+");
+                String [] bcpLine = line.split("\\s+");
                 if (bcpLine.length < 7) {
                     throw newParseError(lineNumber);
                 }
@@ -377,23 +406,24 @@ class FlatFileBCPFile
                 }
                 String colId = bcpLine[6];
 
-                SqlTypeName typeName =
-                    convertBCPSqlToSqlType(datatype);
+                SqlTypeName typeName = convertBCPSqlToSqlType(datatype);
 
                 if (typeName.allowsPrec()) {
                     int typeLen = Integer.parseInt(typeLength);
                     if (typeName.allowsScale()) {
-                        typeLen = Math.min(
-                            typeLen,
-                            SqlTypeName.MAX_NUMERIC_PRECISION);
+                        typeLen =
+                            Math.min(
+                                typeLen,
+                                SqlTypeName.MAX_NUMERIC_PRECISION);
                         int typeScale = 0;
                         if (bcpLine.length > 8) {
                             try {
                                 typeScale = Integer.parseInt(bcpLine[8]);
                                 typeScale = Math.max(0, typeScale);
-                                typeScale = Math.min(
-                                    typeScale, 
-                                    SqlTypeName.MAX_NUMERIC_SCALE);
+                                typeScale =
+                                    Math.min(
+                                        typeScale,
+                                        SqlTypeName.MAX_NUMERIC_SCALE);
                             } catch (NumberFormatException ex) {
                                 typeScale = 0;
                             }
@@ -405,8 +435,8 @@ class FlatFileBCPFile
                                     typeScale),
                                 true);
                     } else {
-                        if ((typeName.equals(SqlTypeName.Timestamp)) ||
-                            (typeName.equals(SqlTypeName.Time))) {
+                        if ((typeName.equals(SqlTypeName.Timestamp))
+                            || (typeName.equals(SqlTypeName.Time))) {
                             typeLen = typeName.getDefaultPrecision();
                         }
                         types[index] =
@@ -430,10 +460,9 @@ class FlatFileBCPFile
                     this.fileName);
             }
             if (index < columnCount) {
-                throw FarragoResource.instance().
-                    InvalidControlFileTooFewCols.ex(this.fileName);
+                throw FarragoResource.instance().InvalidControlFileTooFewCols
+                .ex(this.fileName);
             }
-
         } catch (IOException ie) {
             throw FarragoResource.instance().FileNotFound.ex(
                 this.fileName);
@@ -450,22 +479,12 @@ class FlatFileBCPFile
 
     private EigenbaseException newParseError(int line)
     {
-        return FarragoResource.instance().
-            InvalidControlFileOnRow.ex(fileName,
+        return
+            FarragoResource.instance().InvalidControlFileOnRow.ex(
+                fileName,
                 Integer.toString(line));
     }
 
-    public enum BcpType 
-    { 
-        SQLCHAR, SQLNCHAR, SQLVARCHAR, SQLNVARCHAR,
-        SQLBINARY, SQLVARBINARY, SQLDATE, SQLTIME, 
-        SQLDATETIME, SQLDATETIM4, SQLTIMESTAMP,
-        SQLDECIMAL, SQLNUMERIC, SQLMONEY, SQLMONEY4,
-        SQLTINYINT, SQLSMALLINT, SQLINT, SQLBIGINT,
-        SQLREAL, SQLFLT4, SQLFLT8,
-        SQLBIT, SQLVARIANT, SQLUDT, SQLUNIQUEID
-    }
-        
     /**
      * Converts a BCP SQL type to one of {@link SqlTypeName}
      */
@@ -505,7 +524,7 @@ class FlatFileBCPFile
         case SQLINT:
             return SqlTypeName.Integer;
         case SQLBIGINT:
-                return SqlTypeName.Bigint;
+            return SqlTypeName.Bigint;
         case SQLSMALLINT:
             return SqlTypeName.Smallint;
         case SQLTINYINT:

@@ -20,67 +20,65 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import org.eigenbase.util14.ConversionUtil;
+import java.math.*;
 
-import java.math.BigInteger;
+import org.eigenbase.util14.*;
 
 
 /**
  * String of bits.
  *
  * <p>A bit string logically consists of a set of '0' and '1' values, of a
- * specified length. The length is preserved even if this means that the
- * bit string has leading '0's.
+ * specified length. The length is preserved even if this means that the bit
+ * string has leading '0's.
  *
- * <p>You can create a bit string
- * from a string of 0s and 1s ({@link #BitString(String,int)}
- * or {@link #createFromBitString}), or
- * from a string of hex digits ({@link #createFromHexString}).
- * You can convert it
- * to a byte array ({@link #getAsByteArray}),
- * to a bit string ({@link #toBitString}), or
- * to a hex string ({@link #toHexString}).
- * A utility method {@link #toByteArrayFromBitString} converts a bit string
- * directly to a byte array.
+ * <p>You can create a bit string from a string of 0s and 1s ({@link
+ * #BitString(String,int)} or {@link #createFromBitString}), or from a string of
+ * hex digits ({@link #createFromHexString}). You can convert it to a byte array
+ * ({@link #getAsByteArray}), to a bit string ({@link #toBitString}), or to a
+ * hex string ({@link #toHexString}). A utility method {@link
+ * #toByteArrayFromBitString} converts a bit string directly to a byte array.
  *
  * <p>This class is immutable: once created, none of the methods modify the
  * value.
  *
- * @testcase {@link UtilTest#testBitString}
  * @author Wael Chatila
- * @since May 28, 2004
  * @version $Id$
- **/
+ * @since May 28, 2004
+ * @testcase
+ */
 public class BitString
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private String bits;
     private int bitCount;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected BitString(
         String bits,
         int bitCount)
     {
         assert bits.replaceAll("1", "").replaceAll("0", "").length() == 0 : "bit string '"
-        + bits + "' contains digits other than {0, 1}";
+            + bits + "' contains digits other than {0, 1}";
         this.bits = bits;
         this.bitCount = bitCount;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Creates a BitString representation out of a Hex String.
-     * Initial zeros are be preserved.
-     * Hex String is defined in the SQL standard to be a string with odd number of
-     * hex digits.  An even number of hex digits is in the standard a Binary String.
+     * Creates a BitString representation out of a Hex String. Initial zeros are
+     * be preserved. Hex String is defined in the SQL standard to be a string
+     * with odd number of hex digits. An even number of hex digits is in the
+     * standard a Binary String.
+     *
      * @param s a string, in hex notation
+     *
      * @throws NumberFormatException if <code>s</code> is invalid.
      */
     public static BitString createFromHexString(String s)
@@ -91,9 +89,11 @@ public class BitString
     }
 
     /**
-     * Creates a BitString representation out of a Bit String.
-     * Initial zeros are be preserved.
+     * Creates a BitString representation out of a Bit String. Initial zeros are
+     * be preserved.
+     *
      * @param s a string of 0s and 1s.
+     *
      * @throws NumberFormatException if <code>s</code> is invalid.
      */
     public static BitString createFromBitString(String s)
@@ -180,13 +180,18 @@ public class BitString
         // that ret is already initialized to 0s, and just copy into the
         // RHS of it.
         int bytesToCopy = Math.min(byteCount, srcBytes.length);
-        System.arraycopy(srcBytes, srcBytes.length - bytesToCopy, dest,
-            dest.length - bytesToCopy, bytesToCopy);
+        System.arraycopy(srcBytes,
+            srcBytes.length - bytesToCopy,
+            dest,
+            dest.length - bytesToCopy,
+            bytesToCopy);
         return dest;
     }
 
-    /** Concatenates some BitStrings.
-     *  Concatenates all at once, not pairwise, to avoid string copies.
+    /**
+     * Concatenates some BitStrings. Concatenates all at once, not pairwise, to
+     * avoid string copies.
+     *
      * @param args BitString[]
      */
     static public BitString concat(BitString [] args)
@@ -203,10 +208,9 @@ public class BitString
             sb.append(args[i].bits);
         }
         return new BitString(
-            sb.toString(),
-            length);
+                sb.toString(),
+                length);
     }
 }
-
 
 // End BitString.java

@@ -23,12 +23,14 @@
 package org.eigenbase.jmi;
 
 import java.io.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import org.eigenbase.util.*;
+
 import org.netbeans.api.xmi.*;
 import org.netbeans.lib.jmi.util.*;
 
@@ -41,20 +43,21 @@ import org.netbeans.lib.jmi.util.*;
  */
 public abstract class JmiObjUtil
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Gets a SortedMap (from String to Object) containing the attribute values
-     * for a RefObject.  Multi-valued attributes are not included.
+     * for a RefObject. Multi-valued attributes are not included.
      *
      * @param src RefObject to query
      *
      * @return map with attribute names as ordering keys
      */
-    public static SortedMap<String,Object> getAttributeValues(RefObject src)
+    public static SortedMap<String, Object> getAttributeValues(RefObject src)
     {
         RefClass refClass = src.refClass();
-        SortedMap<String,Object> map = new TreeMap<String, Object>();
+        SortedMap<String, Object> map = new TreeMap<String, Object>();
         for (Attribute attr : getFeatures(refClass, Attribute.class, false)) {
             map.put(
                 attr.getName(),
@@ -67,7 +70,6 @@ public abstract class JmiObjUtil
      * Sets values for attributes of a RefObject.
      *
      * @param dst object to modify
-     *
      * @param map see return of getAttributeValues
      */
     public static void setAttributeValues(
@@ -109,8 +111,9 @@ public abstract class JmiObjUtil
                     // Trying to copy this directly would lead
                     // to a CompositionViolationException.  Instead,
                     // clone it and reference the clone instead.
-                    RefObject clone = srcValObj.refClass().refCreateInstance(
-                        Collections.EMPTY_LIST);
+                    RefObject clone =
+                        srcValObj.refClass().refCreateInstance(
+                            Collections.EMPTY_LIST);
                     copyAttributes(clone, srcValObj);
                     srcVal = clone;
 
@@ -132,25 +135,23 @@ public abstract class JmiObjUtil
         }
     }
 
-    private static boolean compositeEquals(RefObject obj1, RefObject obj2) {
-    	SortedMap map1 = getAttributeValues(obj1);
-    	SortedMap map2 = getAttributeValues(obj2);
-    	
-    	return map1.equals(map2);
+    private static boolean compositeEquals(RefObject obj1, RefObject obj2)
+    {
+        SortedMap map1 = getAttributeValues(obj1);
+        SortedMap map2 = getAttributeValues(obj2);
+
+        return map1.equals(map2);
     }
-    
-    
+
     /**
      * Gets a List of instance-level StructuralFeatures for a RefClass.
      *
      * @param refClass class of interest
-     *
-     * @param filterClass only objects which are instances of this Class will
-     * be returned; so, for example, pass Attribute.class if you want only
+     * @param filterClass only objects which are instances of this Class will be
+     * returned; so, for example, pass Attribute.class if you want only
      * attributes, or StructuralFeature.class if you want everything
-     *
-     * @param includeMultiValued if true, multi-valued attributes will
-     * be included; otherwise, they will be filtered out
+     * @param includeMultiValued if true, multi-valued attributes will be
+     * included; otherwise, they will be filtered out
      *
      * @return attribute list
      */
@@ -171,8 +172,7 @@ public abstract class JmiObjUtil
         return list;
     }
 
-    private static <T extends StructuralFeature> void addFeatures(
-        List<T> list,
+    private static <T extends StructuralFeature> void addFeatures(List<T> list,
         MofClass mofClass,
         Class<T> filterClass,
         boolean includeMultiValued)
@@ -242,10 +242,11 @@ public abstract class JmiObjUtil
     {
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
         try {
-            return xmiReader.read(
-                new ByteArrayInputStream(string.getBytes()),
-                null,
-                extent);
+            return
+                xmiReader.read(
+                    new ByteArrayInputStream(string.getBytes()),
+                    null,
+                    extent);
         } catch (Exception ex) {
             throw Util.newInternal(ex);
         }
@@ -255,7 +256,7 @@ public abstract class JmiObjUtil
      * Clones a RefObject.
      *
      * @param refObject RefObject to clone; must have neither associations nor
-     *        composite types
+     * composite types
      *
      * @return cloned instance
      */
@@ -279,8 +280,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-            refClass.getClass(),
-            "$Impl");
+                refClass.getClass(),
+                "$Impl");
     }
 
     /**
@@ -294,8 +295,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-            refAssoc.getClass(),
-            "$Impl");
+                refAssoc.getClass(),
+                "$Impl");
     }
 
     /**
@@ -310,8 +311,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-            refClass.getClass(),
-            "Class$Impl");
+                refClass.getClass(),
+                "Class$Impl");
     }
 
     /**
@@ -325,8 +326,8 @@ public abstract class JmiObjUtil
         throws ClassNotFoundException
     {
         return getJavaInterfaceForProxy(
-            refPackage.getClass(),
-            "$Impl");
+                refPackage.getClass(),
+                "$Impl");
     }
 
     private static Class getJavaInterfaceForProxy(
@@ -340,12 +341,15 @@ public abstract class JmiObjUtil
         assert (className.endsWith(classSuffix));
         className =
             className.substring(0, className.length() - classSuffix.length());
-        return Class.forName(className, true, proxyClass.getClassLoader());
+        return Class.forName(
+                className,
+                true,
+                proxyClass.getClassLoader());
     }
 
     /**
-     * Gets the 64-bit object ID for a JMI object.  This is taken from the last
-     * 8 bytes of the MofId.  REVIEW: need to make sure this is locally unique
+     * Gets the 64-bit object ID for a JMI object. This is taken from the last 8
+     * bytes of the MofId. REVIEW: need to make sure this is locally unique
      * within a repository.
      *
      * @param refObject JMI object
@@ -358,17 +362,15 @@ public abstract class JmiObjUtil
         int colonPos = mofId.indexOf(':');
         assert (colonPos > -1);
         return Long.parseLong(
-            mofId.substring(colonPos + 1),
-            16);
+                mofId.substring(colonPos + 1),
+                16);
     }
 
     /**
      * Looks up a subpackage by name.
      *
      * @param rootPackage starting package from which to descend
-     *
      * @param names array of package names representing path
-     *
      * @param prefix number of elements of names to use
      *
      * @return subpackage or null if not found
@@ -453,42 +455,43 @@ public abstract class JmiObjUtil
     }
 
     /**
-     * Finds the Java class generated for a particular RefClass,
-     * or {@link RefObject}.class if not found.
+     * Finds the Java class generated for a particular RefClass, or {@link
+     * RefObject}.class if not found.
      *
      * @param refClass the reflective JMI class representation
      *
-     * @return the generated Java class, or RefObject.class if
-     * no Java class has been generated
+     * @return the generated Java class, or RefObject.class if no Java class has
+     * been generated
      */
     public static Class<? extends RefObject> getClassForRefClass(
         RefClass refClass)
     {
-        return getClassForRefClass(
-            ClassLoader.getSystemClassLoader(), refClass, false);
+        return
+            getClassForRefClass(
+                ClassLoader.getSystemClassLoader(),
+                refClass,
+                false);
     }
 
     /**
      * Finds the Java class generated for a particular RefClass.
      *
      * @param classLoader Class loader. Must not be null: if in doubt, use
-     *   {@link ClassLoader#getSystemClassLoader()}
-     *
+     * {@link ClassLoader#getSystemClassLoader()}
      * @param refClass the reflective JMI class representation
+     * @param nullIfNotFound If true, return null if not found; if false, return
+     * {@link RefObject}.class if not found
      *
-     * @param nullIfNotFound If true, return null if not found; if false,
-     *   return {@link RefObject}.class if not found
-     *
-     * @return the generated Java class, or RefObject.class if
-     * no Java class has been generated
+     * @return the generated Java class, or RefObject.class if no Java class has
+     * been generated
      */
     public static Class<? extends RefObject> getClassForRefClass(
         ClassLoader classLoader,
         RefClass refClass,
         boolean nullIfNotFound)
     {
-        assert classLoader != null :
-            "require classLoader: use ClassLoader.getSystemClassLoader()";
+        assert classLoader != null : "require classLoader: use ClassLoader.getSystemClassLoader()";
+
         // Look up the Java interface generated for the class being queried.
         TagProvider tagProvider = new TagProvider();
         String className =
@@ -497,13 +500,17 @@ public abstract class JmiObjUtil
                 TagProvider.INSTANCE);
         assert (className.endsWith("Impl"));
         className = className.substring(0, className.length() - 4);
+
         // hack for MDR MOF implementation
-        className = className.replaceFirst(
-            "org\\.netbeans\\.jmiimpl\\.mof",
-            "javax.jmi");
+        className =
+            className.replaceFirst(
+                "org\\.netbeans\\.jmiimpl\\.mof",
+                "javax.jmi");
         try {
-            return (Class<? extends RefObject>)
-                Class.forName(className, true, classLoader);
+            return
+                (Class<? extends RefObject>) Class.forName(className,
+                    true,
+                    classLoader);
         } catch (ClassNotFoundException ex) {
             // This is possible when we're querying an external repository
             // for which we don't know the class mappings.  Do everything
@@ -513,9 +520,8 @@ public abstract class JmiObjUtil
     }
 
     /**
-     * Gets an object's container.  If the object is a ModelElement,
-     * its container will be too; otherwise, its container will be
-     * a RefPackage.
+     * Gets an object's container. If the object is a ModelElement, its
+     * container will be too; otherwise, its container will be a RefPackage.
      *
      * @param refObject object for which to find the container
      *
@@ -531,10 +537,9 @@ public abstract class JmiObjUtil
     }
 
     /**
-     * Asserts that constraints are satisfied.  I tried using
-     * refVerifyConstraints to achieve this, but it didn't work in MDR.
-     * For now, this just checks that mandatory features have
-     * non-null values.
+     * Asserts that constraints are satisfied. I tried using
+     * refVerifyConstraints to achieve this, but it didn't work in MDR. For now,
+     * this just checks that mandatory features have non-null values.
      *
      * @param obj the object to be verified
      */
@@ -546,8 +551,8 @@ public abstract class JmiObjUtil
         // so it is easy to invoke it ONLY if assertions are enabled.
 
         RefClass refClass = obj.refClass();
-        for (StructuralFeature feature :
-            getFeatures(refClass, StructuralFeature.class, false)) {
+        for (StructuralFeature feature
+            : getFeatures(refClass, StructuralFeature.class, false)) {
             if (feature.getMultiplicity().getLower() != 0) {
                 if (obj.refGetValue(feature) == null) {
                     String featureClassName = getMetaObjectName(refClass);
@@ -559,8 +564,7 @@ public abstract class JmiObjUtil
                         // Otherwise, just dump it
                         objectName = obj.toString();
                     }
-                    assert (false)
-                        : "Missing value for mandatory feature "
+                    assert (false) : "Missing value for mandatory feature "
                         + featureClassName + "." + feature.getName()
                         + " in object " + objectName;
                 }
@@ -580,6 +584,5 @@ public abstract class JmiObjUtil
         return (value == null) || value.equals("");
     }
 }
-
 
 // End JmiUtil.java

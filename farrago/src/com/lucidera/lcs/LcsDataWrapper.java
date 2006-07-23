@@ -21,6 +21,7 @@
 package com.lucidera.lcs;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -30,15 +31,17 @@ import net.sf.farrago.resource.*;
 
 
 /**
- * LcsDataWrapper implements the {@link FarragoMedDataWrapper}
- * interface for LucidDB column-store data.
+ * LcsDataWrapper implements the {@link FarragoMedDataWrapper} interface for
+ * LucidDB column-store data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LcsDataWrapper extends MedAbstractDataWrapper
+public class LcsDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new data wrapper instance.
@@ -47,7 +50,7 @@ public class LcsDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -70,9 +73,9 @@ public class LcsDataWrapper extends MedAbstractDataWrapper
         throws SQLException
     {
         return new LcsDataServer(
-            serverMofId,
-            props,
-            getRepos());
+                serverMofId,
+                props,
+                getRepos());
     }
 
     // implement FarragoMedDataWrapper
@@ -81,6 +84,5 @@ public class LcsDataWrapper extends MedAbstractDataWrapper
         return false;
     }
 }
-
 
 // End LcsDataWrapper.java

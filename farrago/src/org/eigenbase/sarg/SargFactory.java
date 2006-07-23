@@ -25,6 +25,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * SargFactory creates new instances of various sarg-related objects.
  *
@@ -33,16 +34,21 @@ import org.eigenbase.sql.*;
  */
 public class SargFactory
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RexBuilder rexBuilder;
 
     private final RexNode rexNull;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new SargFactory.
      *
      * @param rexBuilder factory for instances of {@link RexNode}, needed
-     * internally in the sarg representation, and also for recomposing
-     * sargs into equivalent rex trees
+     * internally in the sarg representation, and also for recomposing sargs
+     * into equivalent rex trees
      */
     public SargFactory(RexBuilder rexBuilder)
     {
@@ -50,9 +56,11 @@ public class SargFactory
         rexNull = rexBuilder.constantNull();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Creates a new endpoint.  Initially, the endpoint represents
-     * a lower bound of negative infinity.
+     * Creates a new endpoint. Initially, the endpoint represents a lower bound
+     * of negative infinity.
      *
      * @param dataType datatype for domain
      *
@@ -73,29 +81,31 @@ public class SargFactory
     public SargIntervalExpr newIntervalExpr(RelDataType dataType)
     {
         return newIntervalExpr(
-            dataType, SqlNullSemantics.NULL_MATCHES_NOTHING);
+                dataType,
+                SqlNullSemantics.NULL_MATCHES_NOTHING);
     }
-    
+
     /**
      * Creates a new unbounded interval expression with non-default null
      * semantics.
      *
      * @param dataType datatype for domain
-     *
      * @param nullSemantics null semantics governing searches on this interval
      */
     public SargIntervalExpr newIntervalExpr(
-        RelDataType dataType, SqlNullSemantics nullSemantics)
+        RelDataType dataType,
+        SqlNullSemantics nullSemantics)
     {
         return new SargIntervalExpr(
-            this, dataType, nullSemantics);
+                this,
+                dataType,
+                nullSemantics);
     }
 
     /**
      * Creates a new set expression, initially with no children.
      *
      * @param dataType datatype for domain
-     *
      * @param setOp set operator
      */
     public SargSetExpr newSetExpr(RelDataType dataType, SargSetOperator setOp)
@@ -112,8 +122,8 @@ public class SargFactory
     }
 
     /**
-     * @return the null literal, which can be used to represent a range
-     * matching the null value
+     * @return the null literal, which can be used to represent a range matching
+     * the null value
      */
     public RexNode newNullLiteral()
     {

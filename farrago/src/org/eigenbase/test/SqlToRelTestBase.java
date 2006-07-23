@@ -22,8 +22,12 @@
 */
 package org.eigenbase.test;
 
+import java.util.*;
+
 import junit.framework.*;
+
 import openjava.mop.*;
+
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -33,240 +37,47 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql2rel.SqlToRelConverter;
+import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Collections;
 
 /**
- * SqlToRelTestBase is an abstract base for tests which involve conversion
- * from SQL to relational algebra.
+ * SqlToRelTestBase is an abstract base for tests which involve conversion from
+ * SQL to relational algebra.
  *
- *<p>
- *
- * SQL statements to be translated can use the schema defined in {@link
- * MockCatalogReader}; note that this is slightly different from Farrago's
- * SALES schema.  If you get a parser or validator error from your test SQL,
- * look down in the stack until you see "Caused by", which will usually tell
- * you the real error.
+ * <p>SQL statements to be translated can use the schema defined in {@link
+ * MockCatalogReader}; note that this is slightly different from Farrago's SALES
+ * schema. If you get a parser or validator error from your test SQL, look down
+ * in the stack until you see "Caused by", which will usually tell you the real
+ * error.
  *
  * @author jhyde
  * @version $Id$
  */
-public class SqlToRelTestBase extends TestCase
+public class SqlToRelTestBase
+    extends TestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     protected static final String NL = System.getProperty("line.separator");
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final Tester tester = createTester();
+
+    //~ Methods ----------------------------------------------------------------
 
     protected Tester createTester()
     {
         return new TesterImpl();
     }
 
-    /**
-     * Mock implementation of {@link RelOptSchema}.
-     */
-    protected static class MockRelOptSchema
-        implements RelOptSchemaWithSampling
-    {
-        private final SqlValidatorCatalogReader catalogReader;
-        private final RelDataTypeFactory typeFactory;
-
-        public MockRelOptSchema(
-            SqlValidatorCatalogReader catalogReader,
-            RelDataTypeFactory typeFactory)
-        {
-            this.catalogReader = catalogReader;
-            this.typeFactory = typeFactory;
-        }
-
-        public RelOptTable getTableForMember(String[] names)
-        {
-            final SqlValidatorTable table = catalogReader.getTable(names);
-            final RelDataType rowType = table.getRowType();
-            final List<RelCollation> collationList =
-                new ArrayList<RelCollation>();
-            // Deduce which fields the table is sorted on.
-            int i = -1;
-            for (RelDataTypeField field : rowType.getFields()) {
-                ++i;
-                if (table.isMonotonic(field.getName())) {
-                    collationList.add(
-                        new RelCollationImpl(
-                            Collections.singletonList(
-                                new RelFieldCollation(
-                                    i,
-                                    RelFieldCollation.Direction.Ascending))));
-                }
-            }
-            return createColumnSet(names, rowType, collationList);
-        }
-
-        public RelOptTable getTableForMember(
-            String[] names, final String datasetName)
-        {
-            final RelOptTable table = getTableForMember(names);
-
-            // If they're asking for a sample, just for test purposes,
-            // assume there's a table called "<table>:<sample>".
-            RelOptTable datasetTable =
-                new DelegatingRelOptTable(table) {
-                    public String[] getQualifiedName()
-                    {
-                        final String[] qualifiedName =
-                            super.getQualifiedName().clone();
-                        qualifiedName[qualifiedName.length - 1] +=
-                            ":" + datasetName;
-                        return qualifiedName;
-                    }
-                };
-            return datasetTable;
-        }
-
-        protected MockColumnSet createColumnSet(
-            String[] names,
-            final RelDataType rowType,
-            final List<RelCollation> collationList)
-        {
-            return new MockColumnSet(names, rowType, collationList);
-        }
-
-        public RelDataTypeFactory getTypeFactory()
-        {
-            return typeFactory;
-        }
-
-        public void registerRules(RelOptPlanner planner)
-            throws Exception
-        {
-        }
-
-        protected class MockColumnSet implements RelOptTable
-        {
-            private final String[] names;
-            private final RelDataType rowType;
-            private final List<RelCollation> collationList;
-
-            protected MockColumnSet(
-                String[] names,
-                RelDataType rowType,
-                final List<RelCollation> collationList)
-            {
-                this.names = names;
-                this.rowType = rowType;
-                this.collationList = collationList;
-            }
-
-            public String[] getQualifiedName() 
-            {
-                return names;
-            }
-
-            public double getRowCount()
-            {
-                // use something other than 0 to give costing tests
-                // some room, and make emps bigger than depts for
-                // join asymmetry
-                if (names[names.length - 1].equals("EMP")) {
-                    return 1000;
-                } else {
-                    return 100;
-                }
-            }
-
-            public RelDataType getRowType()
-            {
-                return rowType;
-            }
-
-            public RelOptSchema getRelOptSchema()
-            {
-                return MockRelOptSchema.this;
-            }
-
-            public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
-            {
-                return new TableAccessRel(cluster, this, connection);
-            }
-
-            public List<RelCollation> getCollationList()
-            {
-                return collationList;
-            }
-        }
-    }
-
-    private static class DelegatingRelOptTable implements RelOptTable
-    {
-        private final RelOptTable parent;
-
-        public DelegatingRelOptTable(RelOptTable parent)
-        {
-            this.parent = parent;
-        }
-
-        public String[] getQualifiedName()
-        {
-            return parent.getQualifiedName();
-        }
-
-        public double getRowCount()
-        {
-            return parent.getRowCount();
-        }
-
-        public RelDataType getRowType()
-        {
-            return parent.getRowType();
-        }
-
-        public RelOptSchema getRelOptSchema()
-        {
-            return parent.getRelOptSchema();
-        }
-
-        public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
-        {
-            return new TableAccessRel(cluster, this, connection);
-        }
-
-        public List<RelCollation> getCollationList()
-        {
-            return parent.getCollationList();
-        }
-    }
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
-     * Mock implementation of {@link RelOptConnection}, contains a
-     * {@link MockRelOptSchema}.
-     */
-    private static class MockRelOptConnection implements RelOptConnection
-    {
-        private final RelOptSchema relOptSchema;
-
-        public MockRelOptConnection(RelOptSchema relOptSchema)
-        {
-            this.relOptSchema = relOptSchema;
-        }
-
-        public RelOptSchema getRelOptSchema()
-        {
-            return relOptSchema;
-        }
-
-        public Object contentsAsArray(
-            String qualifier,
-            String tableName)
-        {
-            return null;
-        }
-    }
-
-    /**
-     * Helper class which contains default implementations of methods used
-     * for running sql-to-rel conversion tests.
+     * Helper class which contains default implementations of methods used for
+     * running sql-to-rel conversion tests.
      */
     public static interface Tester
     {
@@ -274,6 +85,7 @@ public class SqlToRelTestBase extends TestCase
          * Converts a SQL string to a {@link RelNode} tree.
          *
          * @param sql SQL statement
+         *
          * @return Relational expression, never null
          *
          * @pre sql != null
@@ -281,7 +93,8 @@ public class SqlToRelTestBase extends TestCase
          */
         RelNode convertSqlToRel(String sql);
 
-        SqlNode parseQuery(String sql) throws Exception;
+        SqlNode parseQuery(String sql)
+            throws Exception;
 
         /**
          * Factory method to create a {@link SqlValidator}.
@@ -313,12 +126,221 @@ public class SqlToRelTestBase extends TestCase
         SqlValidator.Compatible getCompatible();
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Default implementation of {@link Tester}, using mock classes
-     * {@link MockRelOptSchema}, {@link MockRelOptConnection} and
-     * {@link MockRelOptPlanner}.
+     * Mock implementation of {@link RelOptSchema}.
      */
-    public static class TesterImpl implements Tester
+    protected static class MockRelOptSchema
+        implements RelOptSchemaWithSampling
+    {
+        private final SqlValidatorCatalogReader catalogReader;
+        private final RelDataTypeFactory typeFactory;
+
+        public MockRelOptSchema(
+            SqlValidatorCatalogReader catalogReader,
+            RelDataTypeFactory typeFactory)
+        {
+            this.catalogReader = catalogReader;
+            this.typeFactory = typeFactory;
+        }
+
+        public RelOptTable getTableForMember(String [] names)
+        {
+            final SqlValidatorTable table = catalogReader.getTable(names);
+            final RelDataType rowType = table.getRowType();
+            final List<RelCollation> collationList =
+                new ArrayList<RelCollation>();
+
+            // Deduce which fields the table is sorted on.
+            int i = -1;
+            for (RelDataTypeField field : rowType.getFields()) {
+                ++i;
+                if (table.isMonotonic(field.getName())) {
+                    collationList.add(
+                        new RelCollationImpl(
+                            Collections.singletonList(
+                                new RelFieldCollation(
+                                    i,
+                                    RelFieldCollation.Direction.Ascending))));
+                }
+            }
+            return createColumnSet(names, rowType, collationList);
+        }
+
+        public RelOptTable getTableForMember(
+            String [] names,
+            final String datasetName)
+        {
+            final RelOptTable table = getTableForMember(names);
+
+            // If they're asking for a sample, just for test purposes,
+            // assume there's a table called "<table>:<sample>".
+            RelOptTable datasetTable =
+                new DelegatingRelOptTable(table) {
+                    public String [] getQualifiedName()
+                    {
+                        final String [] qualifiedName =
+                            super.getQualifiedName().clone();
+                        qualifiedName[qualifiedName.length - 1] +=
+                            ":" + datasetName;
+                        return qualifiedName;
+                    }
+                };
+            return datasetTable;
+        }
+
+        protected MockColumnSet createColumnSet(
+            String [] names,
+            final RelDataType rowType,
+            final List<RelCollation> collationList)
+        {
+            return new MockColumnSet(names, rowType, collationList);
+        }
+
+        public RelDataTypeFactory getTypeFactory()
+        {
+            return typeFactory;
+        }
+
+        public void registerRules(RelOptPlanner planner)
+            throws Exception
+        {
+        }
+
+        protected class MockColumnSet
+            implements RelOptTable
+        {
+            private final String [] names;
+            private final RelDataType rowType;
+            private final List<RelCollation> collationList;
+
+            protected MockColumnSet(
+                String [] names,
+                RelDataType rowType,
+                final List<RelCollation> collationList)
+            {
+                this.names = names;
+                this.rowType = rowType;
+                this.collationList = collationList;
+            }
+
+            public String [] getQualifiedName()
+            {
+                return names;
+            }
+
+            public double getRowCount()
+            {
+                // use something other than 0 to give costing tests
+                // some room, and make emps bigger than depts for
+                // join asymmetry
+                if (names[names.length - 1].equals("EMP")) {
+                    return 1000;
+                } else {
+                    return 100;
+                }
+            }
+
+            public RelDataType getRowType()
+            {
+                return rowType;
+            }
+
+            public RelOptSchema getRelOptSchema()
+            {
+                return MockRelOptSchema.this;
+            }
+
+            public RelNode toRel(RelOptCluster cluster,
+                RelOptConnection connection)
+            {
+                return new TableAccessRel(cluster, this, connection);
+            }
+
+            public List<RelCollation> getCollationList()
+            {
+                return collationList;
+            }
+        }
+    }
+
+    private static class DelegatingRelOptTable
+        implements RelOptTable
+    {
+        private final RelOptTable parent;
+
+        public DelegatingRelOptTable(RelOptTable parent)
+        {
+            this.parent = parent;
+        }
+
+        public String [] getQualifiedName()
+        {
+            return parent.getQualifiedName();
+        }
+
+        public double getRowCount()
+        {
+            return parent.getRowCount();
+        }
+
+        public RelDataType getRowType()
+        {
+            return parent.getRowType();
+        }
+
+        public RelOptSchema getRelOptSchema()
+        {
+            return parent.getRelOptSchema();
+        }
+
+        public RelNode toRel(RelOptCluster cluster,
+            RelOptConnection connection)
+        {
+            return new TableAccessRel(cluster, this, connection);
+        }
+
+        public List<RelCollation> getCollationList()
+        {
+            return parent.getCollationList();
+        }
+    }
+
+    /**
+     * Mock implementation of {@link RelOptConnection}, contains a {@link
+     * MockRelOptSchema}.
+     */
+    private static class MockRelOptConnection
+        implements RelOptConnection
+    {
+        private final RelOptSchema relOptSchema;
+
+        public MockRelOptConnection(RelOptSchema relOptSchema)
+        {
+            this.relOptSchema = relOptSchema;
+        }
+
+        public RelOptSchema getRelOptSchema()
+        {
+            return relOptSchema;
+        }
+
+        public Object contentsAsArray(
+            String qualifier,
+            String tableName)
+        {
+            return null;
+        }
+    }
+
+    /**
+     * Default implementation of {@link Tester}, using mock classes {@link
+     * MockRelOptSchema}, {@link MockRelOptConnection} and {@link
+     * MockRelOptPlanner}.
+     */
+    public static class TesterImpl
+        implements Tester
     {
         private RelOptPlanner planner;
         private SqlOperatorTable opTab;
@@ -341,14 +363,18 @@ public class SqlToRelTestBase extends TestCase
                 createCatalogReader(typeFactory);
             final SqlValidator validator =
                 createValidator(
-                    catalogReader, typeFactory);
+                    catalogReader,
+                    typeFactory);
             final RelOptSchema relOptSchema =
                 createRelOptSchema(catalogReader, typeFactory);
             final RelOptConnection relOptConnection =
                 new MockRelOptConnection(relOptSchema);
             final SqlToRelConverter converter =
                 createSqlToRelConverter(
-                    validator, relOptSchema, relOptConnection, typeFactory);
+                    validator,
+                    relOptSchema,
+                    relOptConnection,
+                    typeFactory);
             final RelNode rel;
             if (Bug.Dt471Fixed) {
                 final SqlNode validatedQuery = validator.validate(sqlQuery);
@@ -397,7 +423,9 @@ public class SqlToRelTestBase extends TestCase
             return planner;
         }
 
-        public SqlNode parseQuery(String sql) throws Exception {
+        public SqlNode parseQuery(String sql)
+            throws Exception
+        {
             SqlParser parser = new SqlParser(sql);
             SqlNode sqlNode = parser.parseQuery();
             return sqlNode;
@@ -406,18 +434,18 @@ public class SqlToRelTestBase extends TestCase
         public SqlValidator.Compatible getCompatible()
         {
             return SqlValidator.Compatible.Default;
-
         }
 
         public SqlValidator createValidator(
             SqlValidatorCatalogReader catalogReader,
             RelDataTypeFactory typeFactory)
         {
-            return new FarragoTestValidator(
-                getOperatorTable(),
-                new MockCatalogReader(typeFactory),
-                typeFactory,
-                getCompatible());
+            return
+                new FarragoTestValidator(
+                    getOperatorTable(),
+                    new MockCatalogReader(typeFactory),
+                    typeFactory,
+                    getCompatible());
         }
 
         public final SqlOperatorTable getOperatorTable()
@@ -448,7 +476,8 @@ public class SqlToRelTestBase extends TestCase
         }
     }
 
-    private static class FarragoTestValidator extends SqlValidatorImpl
+    private static class FarragoTestValidator
+        extends SqlValidatorImpl
     {
         private final Compatible compatible;
 

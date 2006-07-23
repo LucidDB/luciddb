@@ -20,50 +20,55 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.util.Graph;
-import org.eigenbase.util.MultiMap;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.Iterator;
-import java.util.WeakHashMap;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.util.*;
+
 
 /**
  * CallingConventionTraitDef is a {@link RelTraitDef} that defines the
- * calling-convention trait.  A new set of conversion information is created
- * for each planner that registers at least one {@link ConverterRule}
- * instance.
+ * calling-convention trait. A new set of conversion information is created for
+ * each planner that registers at least one {@link ConverterRule} instance.
  *
- * <p>Conversion data is held in a {@link WeakHashMap} so that the JVM's
- * garbage collector may reclaim the conversion data after the planner itself
- * has been garbage collected.  The conversion information consists of a
- * graph of conversions (from one calling convention to another) and a map
- * of graph arcs to {@link ConverterRule}s.
+ * <p>Conversion data is held in a {@link WeakHashMap} so that the JVM's garbage
+ * collector may reclaim the conversion data after the planner itself has been
+ * garbage collected. The conversion information consists of a graph of
+ * conversions (from one calling convention to another) and a map of graph arcs
+ * to {@link ConverterRule}s.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public class CallingConventionTraitDef extends RelTraitDef
+public class CallingConventionTraitDef
+    extends RelTraitDef
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final CallingConventionTraitDef instance =
         new CallingConventionTraitDef();
 
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * Weak-key map of RelOptPlanner to ConversionData.  The idea is that
-     * when the planner goes away, so does the map entry.
+     * Weak-key map of RelOptPlanner to ConversionData. The idea is that when
+     * the planner goes away, so does the map entry.
      */
-    private final WeakHashMap<RelOptPlanner,ConversionData> plannerConversionMap = new WeakHashMap<RelOptPlanner, ConversionData>();
+    private final WeakHashMap<RelOptPlanner, ConversionData> plannerConversionMap =
+        new WeakHashMap<RelOptPlanner, ConversionData>();
 
+    //~ Constructors -----------------------------------------------------------
 
     private CallingConventionTraitDef()
     {
         super();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelTraitDef
     public Class getTraitClass()
@@ -79,37 +84,44 @@ public class CallingConventionTraitDef extends RelTraitDef
 
     // override RelTraitDef
     public void registerConverterRule(
-        RelOptPlanner planner, ConverterRule converterRule)
+        RelOptPlanner planner,
+        ConverterRule converterRule)
     {
         if (converterRule.isGuaranteed()) {
             ConversionData conversionData = getConversionData(planner);
 
             final Graph conversionGraph = conversionData.conversionGraph;
-            final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
+            final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
             final Graph.Arc arc =
                 conversionGraph.createArc(
-                    (CallingConvention)converterRule.getInTraits().getTrait(this),
-                    (CallingConvention)converterRule.getOutTraits().getTrait(this));
+                    (CallingConvention) converterRule.getInTraits().getTrait(
+                        this),
+                    (CallingConvention) converterRule.getOutTraits().getTrait(
+                        this));
 
             mapArcToConverterRule.putMulti(arc, converterRule);
         }
     }
 
     public void deregisterConverterRule(
-        RelOptPlanner planner, ConverterRule converterRule)
+        RelOptPlanner planner,
+        ConverterRule converterRule)
     {
         if (converterRule.isGuaranteed()) {
             ConversionData conversionData = getConversionData(planner);
 
             final Graph conversionGraph = conversionData.conversionGraph;
-            final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
+            final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
                 conversionData.mapArcToConverterRule;
 
-            final Graph.Arc arc = conversionGraph.deleteArc(
-                (CallingConvention)converterRule.getInTraits().getTrait(this),
-                (CallingConvention)converterRule.getOutTraits().getTrait(this));
+            final Graph.Arc arc =
+                conversionGraph.deleteArc(
+                    (CallingConvention) converterRule.getInTraits().getTrait(
+                        this),
+                    (CallingConvention) converterRule.getOutTraits().getTrait(
+                        this));
             assert arc != null;
 
             mapArcToConverterRule.removeMulti(arc, converterRule);
@@ -118,16 +130,18 @@ public class CallingConventionTraitDef extends RelTraitDef
 
     // implement RelTraitDef
     public RelNode convert(
-        RelOptPlanner planner, RelNode rel, RelTrait toTrait,
+        RelOptPlanner planner,
+        RelNode rel,
+        RelTrait toTrait,
         boolean allowInfiniteCostConverters)
     {
         final ConversionData conversionData = getConversionData(planner);
         final Graph conversionGraph = conversionData.conversionGraph;
-        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
+        final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
             conversionData.mapArcToConverterRule;
 
         final CallingConvention fromConvention = rel.getConvention();
-        final CallingConvention toConvention = (CallingConvention)toTrait;
+        final CallingConvention toConvention = (CallingConvention) toTrait;
 
         Iterator conversionPaths =
             conversionGraph.getPaths(fromConvention, toConvention);
@@ -140,13 +154,17 @@ loop:
             RelNode converted = rel;
             for (int i = 0; i < arcs.length; i++) {
                 if (planner.getCost(converted).isInfinite()
-                        && !allowInfiniteCostConverters) {
+                    && !allowInfiniteCostConverters) {
                     continue loop;
                 }
-                converted = changeConvention(
-                    converted, arcs[i], mapArcToConverterRule);
+                converted =
+                    changeConvention(
+                        converted,
+                        arcs[i],
+                        mapArcToConverterRule);
                 if (converted == null) {
-                    throw Util.newInternal("Converter from " + arcs[i].from
+                    throw Util.newInternal(
+                        "Converter from " + arcs[i].from
                         + " to " + arcs[i].to
                         + " guaranteed that it could convert any relexp");
                 }
@@ -157,7 +175,6 @@ loop:
         return null;
     }
 
-
     /**
      * Tries to convert a relational expression to the target convention of an
      * arc.
@@ -165,7 +182,7 @@ loop:
     private RelNode changeConvention(
         RelNode rel,
         Graph.Arc arc,
-        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule)
+        final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule)
     {
         assert (arc.from == rel.getConvention());
 
@@ -173,9 +190,8 @@ loop:
         // conventions.
         for (Iterator<ConverterRule> converterRuleIter =
                 mapArcToConverterRule.getMulti(arc).iterator();
-                converterRuleIter.hasNext();) {
-            ConverterRule converterRule =
-                converterRuleIter.next();
+            converterRuleIter.hasNext();) {
+            ConverterRule converterRule = converterRuleIter.next();
             assert (converterRule.getInTraits().getTrait(this) == arc.from);
             assert (converterRule.getOutTraits().getTrait(this) == arc.to);
             RelNode converted = converterRule.convert(rel);
@@ -186,21 +202,22 @@ loop:
         return null;
     }
 
-
     // implement RelTraitDef
     public boolean canConvert(
-        RelOptPlanner planner, RelTrait fromTrait, RelTrait toTrait)
+        RelOptPlanner planner,
+        RelTrait fromTrait,
+        RelTrait toTrait)
     {
         ConversionData conversionData = getConversionData(planner);
 
-        CallingConvention fromConvention = (CallingConvention)fromTrait;
-        CallingConvention toConvention = (CallingConvention)toTrait;
+        CallingConvention fromConvention = (CallingConvention) fromTrait;
+        CallingConvention toConvention = (CallingConvention) toTrait;
 
         return
             conversionData.conversionGraph.getShortestPath(
-                fromConvention, toConvention) != null;
+                fromConvention,
+                toConvention) != null;
     }
-
 
     private ConversionData getConversionData(RelOptPlanner planner)
     {
@@ -214,6 +231,7 @@ loop:
         return conversionData;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
 
     private static final class ConversionData
     {
@@ -221,10 +239,10 @@ loop:
 
         /**
          * For a given source/target convention, there may be several possible
-         * conversion rules. Maps {@link Graph.Arc} to a collection of
-         * {@link ConverterRule} objects.
+         * conversion rules. Maps {@link Graph.Arc} to a collection of {@link
+         * ConverterRule} objects.
          */
-        final MultiMap<Graph.Arc,ConverterRule> mapArcToConverterRule =
+        final MultiMap<Graph.Arc, ConverterRule> mapArcToConverterRule =
             new MultiMap<Graph.Arc, ConverterRule>();
     }
 }

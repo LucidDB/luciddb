@@ -21,26 +21,29 @@
 */
 package net.sf.farrago.session;
 
+import java.util.*;
+
 import org.eigenbase.relopt.*;
 
-import java.util.*;
 
 /**
  * FarragoSessionTxnMgr defines the interface for transaction management across
- * sessions.  It is under development and currently only addresses table
- * access, so it is likely to change drastically.  In particular, it will be
- * refined to allow different data wrappers to use different transaction
- * managers; once that happens, most extensions will probably use a common
- * implementation which knows how to coordinate two-phase commits across
- * wrapper-level managers.  Until then, transaction management is up to each
- * extension.  Another major change required is coordination with Fennel's
- * notion of transactions.
+ * sessions. It is under development and currently only addresses table access,
+ * so it is likely to change drastically. In particular, it will be refined to
+ * allow different data wrappers to use different transaction managers; once
+ * that happens, most extensions will probably use a common implementation which
+ * knows how to coordinate two-phase commits across wrapper-level managers.
+ * Until then, transaction management is up to each extension. Another major
+ * change required is coordination with Fennel's notion of transactions.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoSessionTxnMgr
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Adds a listener for transaction events.
      *
@@ -48,7 +51,7 @@ public interface FarragoSessionTxnMgr
      */
     public void addListener(
         FarragoSessionTxnListener listener);
-    
+
     /**
      * Removes a listener for transaction events.
      *
@@ -56,7 +59,7 @@ public interface FarragoSessionTxnMgr
      */
     public void removeListener(
         FarragoSessionTxnListener listener);
-    
+
     /**
      * Begins a new transaction.
      *
@@ -72,7 +75,6 @@ public interface FarragoSessionTxnMgr
      * accessed.
      *
      * @param txnId ID of accessing transaction
-     *
      * @param tableAccessMap information about planned table accesses
      */
     public void accessTables(
@@ -83,7 +85,6 @@ public interface FarragoSessionTxnMgr
      * Notifies transaction manager that a transaction is ending.
      *
      * @param txnId ID of ending transaction
-     *
      * @param end how transaction is ending
      */
     public void endTxn(

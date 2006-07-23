@@ -20,38 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
  * Row expression.
  *
- * <p>Every row-expression has a type. (Compare with
- * {@link org.eigenbase.sql.SqlNode}, which is created before validation, and
- * therefore types may not be available.)</p>
+ * <p>Every row-expression has a type. (Compare with {@link
+ * org.eigenbase.sql.SqlNode}, which is created before validation, and therefore
+ * types may not be available.)</p>
  *
- * <p>Some common row-expressions are:
- * {@link RexLiteral} (constant value),
- * {@link RexVariable} (variable),
- * {@link RexCall} (call to operator with operands). Expressions are generally
- * created using a {@link RexBuilder} factory.</p>
+ * <p>Some common row-expressions are: {@link RexLiteral} (constant value),
+ * {@link RexVariable} (variable), {@link RexCall} (call to operator with
+ * operands). Expressions are generally created using a {@link RexBuilder}
+ * factory.</p>
  *
  * @author jhyde
- * @since Nov 22, 2003
  * @version $Id$
- **/
+ * @since Nov 22, 2003
+ */
 public abstract class RexNode
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final RexNode [] EMPTY_ARRAY = new RexNode[0];
-    
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected String digest;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public abstract RelDataType getType();
 
@@ -75,6 +76,7 @@ public abstract class RexNode
      * Returns the kind of node this is.
      *
      * @return A {@link RexKind} value, never null
+     *
      * @post return != null
      */
     public RexKind getKind()
@@ -88,15 +90,13 @@ public abstract class RexNode
     }
 
     /**
-     * Accepts a visitor, dispatching to the right overloaded
-     * {@link RexVisitor#visitInputRef visitXxx} method.
+     * Accepts a visitor, dispatching to the right overloaded {@link
+     * RexVisitor#visitInputRef visitXxx} method.
      *
      * <p>Also see {@link RexProgram#apply(RexVisitor, RexNode[], RexNode)},
      * which applies a visitor to several expressions simultaneously.
      */
     public abstract <R> R accept(RexVisitor<R> visitor);
-
 }
-
 
 // End RexNode.java

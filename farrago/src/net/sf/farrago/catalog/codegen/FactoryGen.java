@@ -23,13 +23,14 @@
 package net.sf.farrago.catalog.codegen;
 
 import java.io.*;
+
 import java.util.*;
 
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
-import net.sf.farrago.FarragoPackage;
-import net.sf.farrago.catalog.FarragoModelLoader;
+import net.sf.farrago.*;
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
@@ -39,17 +40,18 @@ import org.netbeans.lib.jmi.util.*;
 
 
 /**
- * FactoryGen generates a factory class for a JMI model.  It's purely a
+ * FactoryGen generates a factory class for a JMI model. It's purely a
  * convenience; JMI already provides factory methods, but their invocation
- * requires a long ugly expression involving lots of redundancy.  For
- * an example of the generated output, see FarragoMetadataFactory.
+ * requires a long ugly expression involving lots of redundancy. For an example
+ * of the generated output, see FarragoMetadataFactory.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FactoryGen
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Main generator entry point invoked by build.xml (target
@@ -63,7 +65,7 @@ public class FactoryGen
      * <li>args[4] = target class name
      * <li>args[5] = source package Java metaclass name
      * <li>args[6] = source extent name
-     *        </ul>
+     * </ul>
      */
     public static void main(String [] args)
         throws ClassNotFoundException, IOException
@@ -88,8 +90,9 @@ public class FactoryGen
             pw.print(targetPackageName);
             pw.println(";");
             pw.println();
-            pwClass.println("public class " +  targetClassName +
-                " implements " +  targetInterfaceName);
+            pwClass.println(
+                "public class " + targetClassName
+                + " implements " + targetInterfaceName);
             pwInterface.println("public interface " + targetInterfaceName);
             pw.println("{");
             pwClass.print("    private ");
@@ -114,11 +117,13 @@ public class FactoryGen
             modelLoader = new FarragoModelLoader();
             FarragoPackage farragoPackage =
                 modelLoader.loadModel(sourceExtentName, false);
-            Class sourcePackageInterface = Class.forName(
-                sourcePackageJavaMetaclassName);
-            RefPackage rootPackage = findPackage(
-                farragoPackage, 
-                sourcePackageInterface);
+            Class sourcePackageInterface =
+                Class.forName(
+                    sourcePackageJavaMetaclassName);
+            RefPackage rootPackage =
+                findPackage(
+                    farragoPackage,
+                    sourcePackageInterface);
             generatePackage(pw, rootPackage, "rootPackage");
 
             pw.println("}");
@@ -210,23 +215,28 @@ public class FactoryGen
             // created for imports.
             Package javaPackage = refPackage.getClass().getPackage();
             Package childJavaPackage = refSubPackage.getClass().getPackage();
-            if (!childJavaPackage.getName().equals(javaPackage.getName() + "."
-                        + subPackageName.toLowerCase())) {
+            if (!childJavaPackage.getName().equals(
+                    javaPackage.getName() + "."
+                    + subPackageName.toLowerCase())) {
                 continue;
             }
 
             subPackageName = tagProvider.getSubstName(mofSubPackage);
 
-            generatePackage(pw, refSubPackage,
+            generatePackage(pw,
+                refSubPackage,
                 packageAccessor + ".get" + subPackageName + "()");
         }
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Writer which takes two underlying writers, and automatically writes
      * method bodies to one, and method prototypes to the other.
      */
-    private static class ForkWriter extends PrintWriter
+    private static class ForkWriter
+        extends PrintWriter
     {
         private boolean inMethod;
         private final PrintWriter pwInterface;
@@ -269,6 +279,5 @@ public class FactoryGen
         }
     }
 }
-
 
 // End FactoryGen.java

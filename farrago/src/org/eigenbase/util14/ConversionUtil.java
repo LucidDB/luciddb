@@ -20,31 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util14;
 
-import org.eigenbase.resource.EigenbaseResource;
+import java.text.*;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
+import org.eigenbase.resource.*;
+
 
 /**
  * Utility functions for converting from one type to another
-*
+ *
  * @author angel
  * @version $Id$
  * @since Jan 22, 2006
  */
-public class ConversionUtil {
+public class ConversionUtil
+{
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Converts a byte array into a bit string or a hex string.
      *
-     * <p>For example,
-     * <code>toStringFromByteArray(new byte[] {0xAB, 0xCD}, 16)</code> returns
-     * <code>ABCD</code>.
+     * <p>For example, <code>toStringFromByteArray(new byte[] {0xAB, 0xCD},
+     * 16)</code> returns <code>ABCD</code>.
      */
     public static String toStringFromByteArray(
         byte [] value,
@@ -59,32 +58,34 @@ public class ConversionUtil {
         StringBuffer ret = new StringBuffer();
         for (int i = 0; i < value.length; i++) {
             ret.append(
-                Integer.toString(trick | (0x0ff & value[i]), radix).substring(1));
+                Integer.toString(trick | (0x0ff & value[i]), radix).substring(
+                    1));
         }
 
         return ret.toString().toUpperCase();
     }
 
     /**
-     * Converts a string into a byte array. The inverse of 
-     * {@link #toStringFromByteArray(byte[], int)}.
+     * Converts a string into a byte array. The inverse of {@link
+     * #toStringFromByteArray(byte[], int)}.
      */
     public static byte [] toByteArrayFromString(
         String value,
         int radix)
     {
-        assert (16 == radix) 
-            : "Specified string to byte array conversion not supported yet";
-        assert (value.length() % 2 == 0)
-            : "Hex binary string must contain even number of characters";
+        assert (16 == radix) : "Specified string to byte array conversion not supported yet";
+        assert ((value.length() % 2) == 0) : "Hex binary string must contain even number of characters";
 
         byte [] ret = new byte[value.length() / 2];
         for (int i = 0; i < ret.length; i++) {
-            int digit1 = Character.digit(value.charAt(i*2), radix);
-            int digit2 = Character.digit(value.charAt(i*2 + 1), radix);
-            assert(digit1 != -1 && digit2 != -1)
-                : "String could not be converted to byte array";
-            ret[i] = (byte) (digit1 * radix + digit2);
+            int digit1 = Character.digit(
+                    value.charAt(i * 2),
+                    radix);
+            int digit2 = Character.digit(
+                    value.charAt((i * 2) + 1),
+                    radix);
+            assert ((digit1 != -1) && (digit2 != -1)) : "String could not be converted to byte array";
+            ret[i] = (byte) ((digit1 * radix) + digit2);
         }
         return ret;
     }
@@ -118,7 +119,6 @@ public class ConversionUtil {
             throw EigenbaseResource.instance().InvalidBoolean.ex(str);
         }
     }
-
 }
 
 // End ConversionUtil.java

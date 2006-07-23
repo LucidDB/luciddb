@@ -20,54 +20,59 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 
+
 /**
- * <code>UnionRel</code> returns the union of the rows of its inputs,
- * optionally eliminating duplicates.
+ * <code>UnionRel</code> returns the union of the rows of its inputs, optionally
+ * eliminating duplicates.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 23 September, 2001
  */
-public final class UnionRel extends UnionRelBase
+public final class UnionRel
+    extends UnionRelBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public UnionRel(
         RelOptCluster cluster,
         RelNode [] inputs,
         boolean all)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE), inputs, all);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            inputs,
+            all);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public UnionRel clone()
     {
-        UnionRel clone = new UnionRel(
-            getCluster(),
-            RelOptUtil.clone(inputs),
-            all);
+        UnionRel clone =
+            new UnionRel(
+                getCluster(),
+                RelOptUtil.clone(inputs),
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
-    public UnionRel clone(RelNode[] inputs, boolean all)
+    public UnionRel clone(RelNode [] inputs, boolean all)
     {
         UnionRel clone = new UnionRel(
-            getCluster(),
-            inputs,
-            all);
+                getCluster(),
+                inputs,
+                all);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End UnionRel.java

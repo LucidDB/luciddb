@@ -20,29 +20,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
 /**
  * Extension to {@link RelOptSchema} with support for sample datasets.
  *
- * @see RelOptConnection
- * @see RelOptSchema
- *
  * @author jhyde
  * @version $Id$
+ * @see RelOptConnection
+ * @see RelOptSchema
  */
-public interface RelOptSchemaWithSampling extends RelOptSchema
+public interface RelOptSchemaWithSampling
+    extends RelOptSchema
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves a {@link RelOptTable} based upon a member access, using a
      * sample dataset if it exists.
      */
     RelOptTable getTableForMember(String [] names, String datasetName);
-
 }
-
 
 // End RelOptSchemaWithSampling.java

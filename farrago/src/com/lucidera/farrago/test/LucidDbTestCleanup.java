@@ -20,29 +20,37 @@
 */
 package com.lucidera.farrago.test;
 
-import net.sf.farrago.test.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.jdbc.engine.*;
-
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.med.*;
-
 import java.sql.*;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.test.*;
+
+
 /**
- * LucidDbCleanup takes care of cleaning up the catalog at the
- * start of each LucidDB test suite.
+ * LucidDbCleanup takes care of cleaning up the catalog at the start of each
+ * LucidDB test suite.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
+public class LucidDbTestCleanup
+    extends FarragoTestCase.Cleanup
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static Thread shutdownHook;
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoRepos ldbRepos;
 
     private final Statement ldbStmt;
-        
-    private static Thread shutdownHook;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LucidDbTestCleanup(Connection ldbConn)
         throws Exception
@@ -53,11 +61,13 @@ public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
             ((FarragoJdbcEngineConnection) ldbConn).getSession().getRepos();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected FarragoRepos getRepos()
     {
         return ldbRepos;
     }
-        
+
     protected Statement getStmt()
     {
         return ldbStmt;
@@ -66,7 +76,8 @@ public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
     protected boolean isBlessedSchema(CwmSchema schema)
     {
         String name = schema.getName();
-        return name.equals("SQLJ")
+        return
+            name.equals("SQLJ")
             || name.equals("APPLIB")
             || name.equals("INFORMATION_SCHEMA")
             || name.equals("SYSTEM")
@@ -77,21 +88,22 @@ public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
     protected boolean isBlessedWrapper(FemDataWrapper wrapper)
     {
         String name = wrapper.getName();
-        return name.equals("ORACLE")
+        return
+            name.equals("ORACLE")
             || name.equals("SQL SERVER")
             || name.equals("FLAT FILE")
             || name.equals("SALESFORCE")
             || name.equals("NETSUITE")
             || super.isBlessedWrapper(wrapper);
     }
-    
+
     public static void saveTestParameters()
         throws Exception
     {
         LucidDbTestCleanup cleanup = newCleanup();
         cleanup.saveCleanupParameters();
     }
-    
+
     public static void cleanTest()
         throws Exception
     {
@@ -109,12 +121,16 @@ public class LucidDbTestCleanup extends FarragoTestCase.Cleanup
     private static LucidDbTestCleanup newCleanup()
         throws Exception
     {
-        Connection conn = DriverManager.getConnection(
-            "jdbc:default:connection");
+        Connection conn =
+            DriverManager.getConnection(
+                "jdbc:default:connection");
         return new LucidDbTestCleanup(conn);
     }
-    
-    private static class ShutdownThread extends Thread
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ShutdownThread
+        extends Thread
     {
         public void run()
         {

@@ -21,24 +21,27 @@
 */
 package net.sf.farrago.session;
 
-import org.eigenbase.relopt.*;
-
 import java.util.*;
 
+import org.eigenbase.relopt.*;
+
+
 /**
- * FarragoSessionTxnListener defines an interface for
- * listening to events on a {@link FarragoSessionTxnMgr}.
+ * FarragoSessionTxnListener defines an interface for listening to events on a
+ * {@link FarragoSessionTxnMgr}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoSessionTxnListener
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Notifies listener of a call to FarragoSessionTxnMgr.beginTxn.
      *
      * @param session session initiating transaction
-     *
      * @param txnId new transaction ID
      */
     public void transactionBegun(
@@ -50,10 +53,8 @@ public interface FarragoSessionTxnListener
      * FarragoSessionTxnMgr.accessTable.
      *
      * @param txnId ID of transaction in which access is occurring
-     *
-     * @param localTableName qualified name of table as it is known in the
-     * local catalog
-     *
+     * @param localTableName qualified name of table as it is known in the local
+     * catalog
      * @param accessType type of table access
      */
     public void tableAccessed(
@@ -65,7 +66,6 @@ public interface FarragoSessionTxnListener
      * Notifies listener of a call to FarragoSessionTxnMgr.endTxn.
      *
      * @param txnId ID of ending transaction
-     *
      * @param end how transaction is ending
      */
     public void transactionEnded(

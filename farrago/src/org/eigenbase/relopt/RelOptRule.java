@@ -20,27 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
+import java.util.*;
+
+import org.eigenbase.rel.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * A <code>RelOptRule</code> transforms an expression into another. It has a
  * list of {@link RelOptRuleOperand}s, which determine whether the rule can be
  * applied to a particular section of the tree.
  *
- * <p>
- * The optimizer figures out which rules are applicable, then calls {@link
- * #onMatch} on each of them.
- * </p>
+ * <p>The optimizer figures out which rules are applicable, then calls {@link
+ * #onMatch} on each of them.</p>
  */
 public abstract class RelOptRule
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Description of rule, must be unique within planner. Default is the name
@@ -49,21 +48,25 @@ public abstract class RelOptRule
      */
     protected String description;
 
-    /** Root of operand tree. */
+    /**
+     * Root of operand tree.
+     */
     private final RelOptRuleOperand operand;
 
-    /** Flattened list of operands. */
+    /**
+     * Flattened list of operands.
+     */
     public RelOptRuleOperand [] operands;
 
     private RelTraitSet traits;
 
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a rule.
      *
      * @param operand root operand, must not be null
+     *
      * @pre operand != null
      */
     public RelOptRule(RelOptRuleOperand operand)
@@ -85,7 +88,7 @@ public abstract class RelOptRule
         operands = operandsOfRule.toArray(RelOptRuleOperand.noOperands);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptRuleOperand getOperand()
     {
@@ -96,7 +99,7 @@ public abstract class RelOptRule
     {
         return operands;
     }
-    
+
     public int hashCode()
     {
         // Conventionally, hashCode() and equals() should use the same
@@ -117,35 +120,34 @@ public abstract class RelOptRule
     /**
      * Returns whether this rule is equal to another rule.
      *
-     * <p>The base implementation checks that the rules have the same class
-     * and that the operands are equal; derived classes can override.
+     * <p>The base implementation checks that the rules have the same class and
+     * that the operands are equal; derived classes can override.
      */
     protected boolean equals(RelOptRule that)
     {
         // Include operands and class in the equality criteria just in case
         // they have chosen a poor description.
-        return this.description.equals(that.description)
+        return
+            this.description.equals(that.description)
             && (this.getClass() == that.getClass())
             && this.operand.equals(that.operand);
     }
 
     /**
-     * Receives notification about a rule match. At the time that
-     * this method is called, {@link RelOptRuleCall#rels call.rels} holds
-     * the set of relational expressions which match the operands to the
-     * rule; <code>call.rels[0]</code> is the root expression.
+     * Receives notification about a rule match. At the time that this method is
+     * called, {@link RelOptRuleCall#rels call.rels} holds the set of relational
+     * expressions which match the operands to the rule; <code>
+     * call.rels[0]</code> is the root expression.
      *
-     * <p>
-     * Typically a rule would check that the nodes are valid matches, creates
-     * a new expression, then calls back {@link RelOptRuleCall#transformTo}
-     * to register the expression.
-     * </p>
+     * <p>Typically a rule would check that the nodes are valid matches, creates
+     * a new expression, then calls back {@link RelOptRuleCall#transformTo} to
+     * register the expression.</p>
      */
     public abstract void onMatch(RelOptRuleCall call);
 
     /**
-     * Returns the calling convention of the result of firing this rule, null
-     * if not known.
+     * Returns the calling convention of the result of firing this rule, null if
+     * not known.
      */
     public CallingConvention getOutConvention()
     {
@@ -153,7 +155,7 @@ public abstract class RelOptRule
     }
 
     /**
-     * Returns the set of traits of the result of firing this rule.  An empty
+     * Returns the set of traits of the result of firing this rule. An empty
      * RelTraitSet is returned if the results are not known.
      */
     public RelTraitSet getOutTraits()
@@ -169,9 +171,9 @@ public abstract class RelOptRule
 
         // Changing the CallingConvention RelTrait via RelTraitSet.setTrait
         // is not supported!
-        assert(getOutConvention() == traits.getTrait(0));
+        assert (getOutConvention() == traits.getTrait(0));
 
-        return traits;       
+        return traits;
     }
 
     public String toString()
@@ -179,16 +181,16 @@ public abstract class RelOptRule
         return description;
     }
 
-
     /**
      * Converts a relation expression to a give set of traits, if it does not
-     * already have those traits.  If the conversion is not possible, returns
+     * already have those traits. If the conversion is not possible, returns
      * null.
      *
      * @param rel Relexp to convert
      * @param toTraits desired traits
+     *
      * @return a relational expression with the desired traits, or null if no
-     *         conversion is possible
+     * conversion is possible
      *
      * @post return == null || return.getTraits().matches(toTraits)
      */
@@ -199,9 +201,9 @@ public abstract class RelOptRule
         if (rel.getTraits().size() < toTraits.size()) {
             new RelTraitPropagationVisitor(planner, toTraits).go(rel);
         }
-        
+
         RelTraitSet outTraits = RelOptUtil.clone(rel.getTraits());
-        for(int i = 0; i < toTraits.size(); i++) {
+        for (int i = 0; i < toTraits.size(); i++) {
             RelTrait toTrait = toTraits.getTrait(i);
             if (toTrait != null) {
                 outTraits.setTrait(i, toTrait);
@@ -217,19 +219,22 @@ public abstract class RelOptRule
 
     /**
      * Creates a new RelTraitSet based on the given traits and converts the
-     * relational expression to that trait set.  Clones <code>baseTraits</code>
-     * and merges <code>newTraits</code> with the cloned set, then converts
-     * rel to that set.  Normally, during a rule call, baseTraits are the
-     * traits of the rel's parent and newTraits are the traits that the rule
-     * wishes to guarantee.
+     * relational expression to that trait set. Clones <code>baseTraits</code>
+     * and merges <code>newTraits</code> with the cloned set, then converts rel
+     * to that set. Normally, during a rule call, baseTraits are the traits of
+     * the rel's parent and newTraits are the traits that the rule wishes to
+     * guarantee.
      *
      * @param baseTraits base traits for converted rel
      * @param newTraits altered traits
      * @param rel the rel to convert
+     *
      * @return converted rel or null if conversion could not be made
      */
     public static RelNode mergeTraitsAndConvert(
-        RelTraitSet baseTraits, RelTraitSet newTraits, RelNode rel)
+        RelTraitSet baseTraits,
+        RelTraitSet newTraits,
+        RelNode rel)
     {
         RelTraitSet traits = RelOptUtil.mergeTraits(baseTraits, newTraits);
 
@@ -238,23 +243,28 @@ public abstract class RelOptRule
 
     /**
      * Creates a new RelTraitSet based on the given traits and converts the
-     * relational expression to that trait set.  Clones <code>baseTraits</code>
-     * and merges <code>newTrait</code> with the cloned set, then converts
-     * rel to that set.  Normally, during a rule call, baseTraits are the
-     * traits of the rel's parent and newTrait is the trait that the rule
-     * wishes to guarantee.
+     * relational expression to that trait set. Clones <code>baseTraits</code>
+     * and merges <code>newTrait</code> with the cloned set, then converts rel
+     * to that set. Normally, during a rule call, baseTraits are the traits of
+     * the rel's parent and newTrait is the trait that the rule wishes to
+     * guarantee.
      *
      * @param baseTraits base traits for converted rel
      * @param newTrait altered trait
      * @param rel the rel to convert
+     *
      * @return converted rel or null if conversion could not be made
      */
     public static RelNode mergeTraitsAndConvert(
-        RelTraitSet baseTraits, RelTrait newTrait, RelNode rel)
+        RelTraitSet baseTraits,
+        RelTrait newTrait,
+        RelNode rel)
     {
         RelTraitSet traits = RelOptUtil.clone(baseTraits);
 
-        traits.setTrait(newTrait.getTraitDef(), newTrait);
+        traits.setTrait(
+            newTrait.getTraitDef(),
+            newTrait);
 
         return convert(rel, traits);
     }
@@ -264,6 +274,7 @@ public abstract class RelOptRule
      * the segment after the last '.' or '$'.
      *
      * @param className Name of the rule's class
+     *
      * @return Last segment of the class
      */
     private static String guessDescription(String className)
@@ -274,17 +285,14 @@ public abstract class RelOptRule
                 className.lastIndexOf('.'),
                 className.lastIndexOf('$'));
         if (punc >= 0) {
-            // Examples:
-            //  * "com.foo.Bar" yields "Bar"
-            //  * "com.foo.Bar$Baz" yields "Baz";
-            //  * "com.foo.Bar$1" yields "1" (which as an integer is an invalid
-            //     name, and writer of the rule is encouraged to give it an
-            //     explicit name)
+            // Examples:  * "com.foo.Bar" yields "Bar"  * "com.foo.Bar$Baz"
+            // yields "Baz";  * "com.foo.Bar$1" yields "1" (which as an integer
+            // is an invalid     name, and writer of the rule is encouraged to
+            // give it an     explicit name)
             description = className.substring(punc + 1);
         }
         return description;
     }
 }
-
 
 // End RelOptRule.java

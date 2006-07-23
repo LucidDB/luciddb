@@ -22,9 +22,9 @@
 */
 package net.sf.farrago.parser;
 
-import net.sf.farrago.parser.impl.FarragoParserImpl;
+import java.io.*;
 
-import java.io.Reader;
+import net.sf.farrago.parser.impl.*;
 
 
 /**
@@ -34,12 +34,11 @@ import java.io.Reader;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParser extends FarragoAbstractParser
+public class FarragoParser
+    extends FarragoAbstractParser
 {
-    //~ Static fields/initializers --------------------------------------------
 
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new parser.
@@ -48,7 +47,7 @@ public class FarragoParser extends FarragoAbstractParser
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoAbstractParser
     protected FarragoAbstractParserImpl newParserImpl(Reader reader)
@@ -56,6 +55,5 @@ public class FarragoParser extends FarragoAbstractParser
         return new FarragoParserImpl(reader);
     }
 }
-
 
 // End FarragoParser.java

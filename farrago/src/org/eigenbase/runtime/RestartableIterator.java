@@ -24,23 +24,26 @@ package org.eigenbase.runtime;
 
 import java.util.*;
 
+
 /**
- * RestartableIterator extends the Iterator interface with a method
- * for restarting to the beginning of the collection.
+ * RestartableIterator extends the Iterator interface with a method for
+ * restarting to the beginning of the collection.
  *
- *<p>
- *
- * TODO jvs 21-Mar-2006: This interface is no longer used except by Saffron,
+ * <p>TODO jvs 21-Mar-2006: This interface is no longer used except by Saffron,
  * so we should move it to Saffron.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface RestartableIterator extends Iterator
+public interface RestartableIterator
+    extends Iterator
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Restarts this iterator, so that a subsequent call to next() returns
-     * the first element in the collection being iterated.
+     * Restarts this iterator, so that a subsequent call to next() returns the
+     * first element in the collection being iterated.
      */
     public void restart();
 }

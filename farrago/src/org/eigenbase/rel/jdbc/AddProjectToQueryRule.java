@@ -20,44 +20,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.jdbc;
 
-import org.eigenbase.rel.ProjectRel;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.pretty.*;
 
 
 /**
  * A <code>AddProjectToQueryRule</code> grafts a {@link ProjectRel} onto a
- * {@link JdbcQuery}. This rule does not apply if the query already has a
- * select list (other than the default, null, which means '&#42;'). todo:
- * Write a rule to fuse two {@link ProjectRel}s together.
+ * {@link JdbcQuery}. This rule does not apply if the query already has a select
+ * list (other than the default, null, which means '&#42;'). todo: Write a rule
+ * to fuse two {@link ProjectRel}s together.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Aug 7, 2002
  */
-class AddProjectToQueryRule extends RelOptRule
+class AddProjectToQueryRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     AddProjectToQueryRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(JdbcQuery.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -80,12 +79,12 @@ class AddProjectToQueryRule extends RelOptRule
             RexNode exp = project.getProjectExps()[i];
             list.add(
                 project.getCluster().getRexToSqlTranslator().translate(
-                    writer, exp));
+                    writer,
+                    exp));
         }
         query.sql.getOperands()[SqlSelect.SELECT_OPERAND] = list;
         call.transformTo(query);
     }
 }
-
 
 // End AddProjectToQueryRule.java

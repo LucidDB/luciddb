@@ -22,20 +22,25 @@
 */
 package org.eigenbase.util;
 
-import java.util.ArrayList;
+import java.util.*;
+
 
 /**
- * Extension to {@link ArrayList} to help build an array of
- * <code>int</code> values.
+ * Extension to {@link ArrayList} to help build an array of <code>int</code>
+ * values.
  *
  * @author jhyde
  * @version $Id$
  */
-public class IntList extends ArrayList<Integer>
+public class IntList
+    extends ArrayList<Integer>
 {
-    public int[] toIntArray()
+
+    //~ Methods ----------------------------------------------------------------
+
+    public int [] toIntArray()
     {
-        final int[] ints = new int[size()];
+        final int [] ints = new int[size()];
         for (int i = 0; i < ints.length; i++) {
             ints[i] = ((Integer) get(i)).intValue();
         }

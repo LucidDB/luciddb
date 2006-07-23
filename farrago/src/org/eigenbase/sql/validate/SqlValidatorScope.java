@@ -21,20 +21,20 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Name-resolution scope. Represents any position in a parse tree than an
  * expression can be, or anything in the parse tree which has columns.
  *
- * <p>When validating an expression, say "foo"."bar", you first use the
- * {@link #resolve} method of the scope where the expression is defined
- * to locate "foo". If successful, this returns a {@link
- * SqlValidatorNamespace namespace} describing the type of the
- * resulting object.
+ * <p>When validating an expression, say "foo"."bar", you first use the {@link
+ * #resolve} method of the scope where the expression is defined to locate
+ * "foo". If successful, this returns a {@link SqlValidatorNamespace namespace}
+ * describing the type of the resulting object.
  *
  * @author jhyde
  * @version $Id$
@@ -42,6 +42,9 @@ import java.util.List;
  */
 public interface SqlValidatorScope
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the validator which created this scope.
      */
@@ -59,26 +62,26 @@ public interface SqlValidatorScope
      *
      * @param name Name of node to find
      * @param ancestorOut If not null, writes the ancestor scope here
-     * @param offsetOut If not null, writes the offset within the ancestor
-     *   here
+     * @param offsetOut If not null, writes the offset within the ancestor here
      */
     SqlValidatorNamespace resolve(
         String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut);
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut);
 
     /**
-     * Finds the table alias which is implicitly qualifying an
-     * unqualified column name. Throws an error if there is not exactly
-     * one table.
+     * Finds the table alias which is implicitly qualifying an unqualified
+     * column name. Throws an error if there is not exactly one table.
      *
-     * <p>This method is only implemented in scopes (such as
-     * {@link org.eigenbase.sql.validate.SelectScope}) which can be the context for name-resolution.
-     * In scopes such as {@link org.eigenbase.sql.validate.IdentifierNamespace}, it throws
-     * {@link UnsupportedOperationException}.</p>
+     * <p>This method is only implemented in scopes (such as {@link
+     * org.eigenbase.sql.validate.SelectScope}) which can be the context for
+     * name-resolution. In scopes such as {@link
+     * org.eigenbase.sql.validate.IdentifierNamespace}, it throws {@link
+     * UnsupportedOperationException}.</p>
      *
      * @param columnName
      * @param ctx Validation context, to appear in any error thrown
+     *
      * @return Table alias
      */
     String findQualifyingTableName(String columnName, SqlNode ctx);
@@ -86,8 +89,8 @@ public interface SqlValidatorScope
     /**
      * Collects the {@link SqlMoniker}s of all possible columns in this scope.
      *
-     * @param parentObjName if not null, used to resolve a namespace
-     * from which to query the column names
+     * @param parentObjName if not null, used to resolve a namespace from which
+     * to query the column names
      * @param result an array list of strings to add the result to
      */
     void findAllColumnNames(String parentObjName, List<SqlMoniker> result);
@@ -100,9 +103,9 @@ public interface SqlValidatorScope
     void findAllTableNames(List<SqlMoniker> result);
 
     /**
-     * Converts an identifier into a fully-qualified identifier. For
-     * example, the "empno" in "select empno from emp natural join dept"
-     * becomes "emp.empno".
+     * Converts an identifier into a fully-qualified identifier. For example,
+     * the "empno" in "select empno from emp natural join dept" becomes
+     * "emp.empno".
      */
     SqlIdentifier fullyQualify(SqlIdentifier identifier);
 
@@ -114,15 +117,15 @@ public interface SqlValidatorScope
     SqlWindow lookupWindow(String name);
 
     /**
-     * Returns whether an expression is monotonic in this scope.
-     * For example, if the scope has previously been sorted by columns
-     * X, Y, then X is monotonic in this scope, but Y is not.
+     * Returns whether an expression is monotonic in this scope. For example, if
+     * the scope has previously been sorted by columns X, Y, then X is monotonic
+     * in this scope, but Y is not.
      */
     boolean isMonotonic(SqlNode expr);
 
     /**
-     * Returns the expressions by which the rows in this scope are sorted.
-     * If the rows are unsorted, returns null.
+     * Returns the expressions by which the rows in this scope are sorted. If
+     * the rows are unsorted, returns null.
      */
     SqlNodeList getOrderList();
 
@@ -130,12 +133,12 @@ public interface SqlValidatorScope
      * Resolves a single identifier to a column, and returns the datatype of
      * that column.
      *
-     * <p>If it cannot find the column, returns null.
-     * If the column is ambiguous, throws an error with context
-     * <code>ctx</code>.
+     * <p>If it cannot find the column, returns null. If the column is
+     * ambiguous, throws an error with context <code>ctx</code>.
      *
      * @param name Name of column
      * @param ctx Context for exception
+     *
      * @return Type of column, if found and unambiguous; null if not found
      */
     RelDataType resolveColumn(String name, SqlNode ctx);
@@ -146,6 +149,7 @@ public interface SqlValidatorScope
      * and this is an aggregating scope, it will be a a different scope.
      *
      * @param call Call
+     *
      * @return Scope within which to validate arguments to call.
      */
     SqlValidatorScope getOperandScope(SqlCall call);
@@ -154,4 +158,3 @@ public interface SqlValidatorScope
 }
 
 // End SqlValidatorScope.java
-

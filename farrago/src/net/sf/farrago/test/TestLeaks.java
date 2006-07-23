@@ -31,9 +31,11 @@ import net.sf.farrago.fennel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class TestLeaks extends FarragoTestCase
+public class TestLeaks
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     private TestLeaks()
         throws Exception
@@ -41,7 +43,7 @@ public class TestLeaks extends FarragoTestCase
         super("TestLeaks");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Main entry point.
@@ -84,7 +86,8 @@ public class TestLeaks extends FarragoTestCase
 
             Runtime rt = Runtime.getRuntime();
             rt.gc();
-            System.err.println("used = "
+            System.err.println(
+                "used = "
                 + (rt.totalMemory() - rt.freeMemory()));
             if (i == 1) {
                 nFennelHandles = FennelStorage.getHandleCount();
@@ -116,6 +119,5 @@ public class TestLeaks extends FarragoTestCase
         }
     }
 }
-
 
 // End TestLeaks.java

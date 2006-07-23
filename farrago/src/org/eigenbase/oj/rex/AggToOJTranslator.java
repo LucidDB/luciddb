@@ -20,11 +20,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
-
-import org.eigenbase.rel.AggregateRel;
-
 
 /**
  * Converts aggregate expressions in logical format ({@link AggregateRel.Call})
@@ -36,3 +32,5 @@ import org.eigenbase.rel.AggregateRel;
 public class AggToOJTranslator
 {
 }
+
+// End AggToOJTranslator.java

@@ -21,24 +21,30 @@
 */
 package org.eigenbase.rel.metadata;
 
-import org.eigenbase.relopt.*;
-
 import java.util.*;
 
+import org.eigenbase.relopt.*;
+
+
 /**
- * RelColumnOrigin is a data structure describing one of the origins
- * of an output column produced by a relational expression.
+ * RelColumnOrigin is a data structure describing one of the origins of an
+ * output column produced by a relational expression.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class RelColumnOrigin
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelOptTable originTable;
 
     private final int iOriginColumn;
 
     private final boolean isDerived;
+
+    //~ Constructors -----------------------------------------------------------
 
     public RelColumnOrigin(
         RelOptTable originTable,
@@ -50,6 +56,8 @@ public class RelColumnOrigin
         this.isDerived = isDerived;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return table of origin
      */
@@ -59,10 +67,10 @@ public class RelColumnOrigin
     }
 
     /**
-     * @return 0-based index of column in origin table;
-     * whether this ordinal is flattened or unflattened depends on whether UDT
-     * flattening has already been performed on the relational expression
-     * which produced this description
+     * @return 0-based index of column in origin table; whether this ordinal is
+     * flattened or unflattened depends on whether UDT flattening has already
+     * been performed on the relational expression which produced this
+     * description
      */
     public int getOriginColumnOrdinal()
     {
@@ -70,12 +78,12 @@ public class RelColumnOrigin
     }
 
     /**
-     * Consider the query <code>select a+b as c, d as e from t</code>.  The
-     * output column c has two origins (a and b), both of them derived.
-     * The output column d as one origin (c), which is not derived.
+     * Consider the query <code>select a+b as c, d as e from t</code>. The
+     * output column c has two origins (a and b), both of them derived. The
+     * output column d as one origin (c), which is not derived.
      *
-     * @return false if value taken directly from column in origin table;
-     * true otherwise
+     * @return false if value taken directly from column in origin table; true
+     * otherwise
      */
     public boolean isDerived()
     {
@@ -89,9 +97,10 @@ public class RelColumnOrigin
             return false;
         }
         RelColumnOrigin other = (RelColumnOrigin) obj;
-        return Arrays.equals(
-            originTable.getQualifiedName(),
-            other.originTable.getQualifiedName())
+        return
+            Arrays.equals(
+                originTable.getQualifiedName(),
+                other.originTable.getQualifiedName())
             && (iOriginColumn == other.iOriginColumn)
             && (isDerived == other.isDerived);
     }
@@ -99,7 +108,8 @@ public class RelColumnOrigin
     // override Object
     public int hashCode()
     {
-        return Arrays.hashCode(originTable.getQualifiedName())
+        return
+            Arrays.hashCode(originTable.getQualifiedName())
             + iOriginColumn + (isDerived ? 313 : 0);
     }
 }

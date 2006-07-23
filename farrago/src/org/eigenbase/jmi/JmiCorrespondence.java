@@ -25,6 +25,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
+
 /**
  * JmiCorrespondence keeps track of the correspondence between a "before"
  * version of a set of objects and an "after" version of the same set.
@@ -34,10 +35,15 @@ import javax.jmi.reflect.*;
  */
 public class JmiCorrespondence
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Map<RefObject, RefObject> beforeToAfterMap;
     private final Map<RefObject, RefObject> afterToBeforeMap;
     private final Set<RefObject> additionSet;
     private final Set<RefObject> deletionSet;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new correspondence (initially empty).
@@ -52,29 +58,30 @@ public class JmiCorrespondence
         deletionSet = new LinkedHashSet<RefObject>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a mapping between a "before" version of an object and its
-     * corresponding "after" version.  One or the other side may be
-     * null (but not both); this indicates that the object only exists
-     * in one set or the other.
+     * corresponding "after" version. One or the other side may be null (but not
+     * both); this indicates that the object only exists in one set or the
+     * other.
      *
      * @param beforeVersion "before" version to map
-     *
      * @param afterVersion corresponding "after" version
      */
     public void addMapping(RefObject beforeVersion, RefObject afterVersion)
     {
-        assert(beforeVersion != afterVersion);
-        assert(!beforeToAfterMap.containsKey(beforeVersion));
+        assert (beforeVersion != afterVersion);
+        assert (!beforeToAfterMap.containsKey(beforeVersion));
         if (afterVersion != null) {
-            assert(!beforeToAfterMap.containsKey(afterVersion));
+            assert (!beforeToAfterMap.containsKey(afterVersion));
             afterToBeforeMap.put(afterVersion, beforeVersion);
         } else {
             deletionSet.add(beforeVersion);
         }
-        assert(!afterToBeforeMap.containsKey(beforeVersion));
+        assert (!afterToBeforeMap.containsKey(beforeVersion));
         if (beforeVersion != null) {
-            assert(!afterToBeforeMap.containsKey(beforeVersion));
+            assert (!afterToBeforeMap.containsKey(beforeVersion));
             beforeToAfterMap.put(beforeVersion, afterVersion);
         } else {
             additionSet.add(afterVersion);
@@ -86,8 +93,8 @@ public class JmiCorrespondence
      *
      * @param obj object to look up (can be either version)
      *
-     * @return corresponding version (before for after or vice versa), or
-     * null if no mapping exists
+     * @return corresponding version (before for after or vice versa), or null
+     * if no mapping exists
      */
     public RefObject getMapping(RefObject obj)
     {
@@ -134,8 +141,8 @@ public class JmiCorrespondence
     }
 
     /**
-     * Adds a collection of "before" objects.  Objects already having
-     * mappings will be ignored.  Others will be considered deletions.
+     * Adds a collection of "before" objects. Objects already having mappings
+     * will be ignored. Others will be considered deletions.
      *
      * @param objs objects to add to "before" set
      */

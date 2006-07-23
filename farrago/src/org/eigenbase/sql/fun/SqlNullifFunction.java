@@ -22,9 +22,10 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * The <code>NULLIF</code> function.
@@ -32,13 +33,23 @@ import org.eigenbase.util.Util;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlNullifFunction extends SqlFunction
+public class SqlNullifFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlNullifFunction()
     {
-        super("NULLIF", SqlKind.Function, null, null, null,
+        super("NULLIF",
+            SqlKind.Function,
+            null,
+            null,
+            null,
             SqlFunctionCategory.System);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override SqlOperator
     public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
@@ -46,7 +57,10 @@ public class SqlNullifFunction extends SqlFunction
         SqlNode [] operands = call.getOperands();
         SqlParserPos pos = call.getParserPosition();
 
-        checkOperandCount(validator, getOperandTypeChecker(), call);
+        checkOperandCount(
+            validator,
+            getOperandTypeChecker(),
+            call);
         if (2 != operands.length) {
             throw Util.newInternal("Invalid arg count: " + call);
         }
@@ -55,9 +69,13 @@ public class SqlNullifFunction extends SqlFunction
         SqlNodeList thenList = new SqlNodeList(pos);
         whenList.add(operands[1]);
         thenList.add(SqlLiteral.createNull(SqlParserPos.ZERO));
-        return SqlStdOperatorTable.caseOperator.createCall(
-            operands[0], whenList,
-            thenList, operands[0], pos);
+        return
+            SqlStdOperatorTable.caseOperator.createCall(
+                operands[0],
+                whenList,
+                thenList,
+                operands[0],
+                pos);
     }
 
     public SqlOperandCountRange getOperandCountRange()

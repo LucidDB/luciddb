@@ -20,9 +20,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.reltype;
-
 
 /**
  * RelDataTypeField represents the definition of a field in a structured {@link
@@ -30,12 +28,12 @@ package org.eigenbase.reltype;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since May 29, 2003
  */
 public interface RelDataTypeField
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Gets the name of this field, which is unique within its containing type.
@@ -58,6 +56,5 @@ public interface RelDataTypeField
      */
     public RelDataType getType();
 }
-
 
 // End RelDataTypeField.java

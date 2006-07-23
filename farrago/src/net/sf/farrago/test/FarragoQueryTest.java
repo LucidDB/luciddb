@@ -22,33 +22,37 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.fem.security.*;
-
 import java.sql.*;
+
 import java.util.*;
 
 import junit.framework.*;
 
-import org.eigenbase.relopt.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.test.*;
 
+
 /**
- * FarragoQueryTest tests miscellaneous aspects of Farrago query
- * processing which are impossible to test via SQL scripts.
+ * FarragoQueryTest tests miscellaneous aspects of Farrago query processing
+ * which are impossible to test via SQL scripts.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoQueryTest extends FarragoTestCase
+public class FarragoQueryTest
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoQueryTest object.
@@ -63,7 +67,7 @@ public class FarragoQueryTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -161,8 +165,8 @@ public class FarragoQueryTest extends FarragoTestCase
     }
 
     /**
-     * Verifies non-standard behavior preventing more than one
-     * statement active at a time in autocommit mode.
+     * Verifies non-standard behavior preventing more than one statement active
+     * at a time in autocommit mode.
      */
     public void testAutocommitCursorLimit()
         throws Exception
@@ -170,8 +174,7 @@ public class FarragoQueryTest extends FarragoTestCase
         // TODO jvs 20-Mar-2006:  move this test to FarragoJdbcTest
         // after that gets refactored.
 
-        String sql =
-            "select name from sales.depts";
+        String sql = "select name from sales.depts";
         Statement stmt2 = null;
         connection.setAutoCommit(true);
         try {
@@ -186,7 +189,7 @@ public class FarragoQueryTest extends FarragoTestCase
             // verify expected error message
             Assert.assertTrue(
                 "Expected message about cursor still open but got '"
-                + ex.getMessage() +"'",
+                + ex.getMessage() + "'",
                 ex.getMessage().indexOf("cursor is still open") > -1);
             ex.getMessage();
         } finally {
@@ -204,8 +207,7 @@ public class FarragoQueryTest extends FarragoTestCase
     public void testNoAutocommitCursorLimit()
         throws Exception
     {
-        String sql =
-            "select name from sales.depts";
+        String sql = "select name from sales.depts";
         Statement stmt2 = null;
         try {
             // First, open a cursor.
@@ -221,32 +223,37 @@ public class FarragoQueryTest extends FarragoTestCase
             }
         }
     }
-    
+
     private void checkLurqlTableSchema(
-        String lurql, String tableName, String schemaName)
+        String lurql,
+        String tableName,
+        String schemaName)
         throws Exception
     {
         Map argMap = new HashMap();
         argMap.put("tableName", tableName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        FarragoSession session =
-            farragoConnection.getSession();
+        FarragoSession session = farragoConnection.getSession();
         Collection result = session.executeLurqlQuery(
-            lurql, argMap);
-        assertEquals(1, result.size());
+                lurql,
+                argMap);
+        assertEquals(
+            1,
+            result.size());
         Object obj = result.iterator().next();
         assertTrue(obj instanceof CwmSchema);
-        assertEquals(schemaName, ((CwmSchema) obj).getName());
+        assertEquals(
+            schemaName,
+            ((CwmSchema) obj).getName());
     }
 
     /**
      * Tests execution of a LURQL query to check role cycle. If role_2 has been
-     * granted to role_1,  then role_1 can't be granted to role_2.
-     * This query expanded all the roles inherited by a specified input role,
-     * the test then scans through the inherited roles to ensure that a second
-     * specified role (to be granted to the first specified role) does not
-     * exist.
+     * granted to role_1, then role_1 can't be granted to role_2. This query
+     * expanded all the roles inherited by a specified input role, the test then
+     * scans through the inherited roles to ensure that a second specified role
+     * (to be granted to the first specified role) does not exist.
      */
     public void testCheckSecurityRoleCyleLurqlQuery()
         throws Exception
@@ -254,11 +261,11 @@ public class FarragoQueryTest extends FarragoTestCase
         // CREATE ROLE ROLE_1, ROLE_2
         // GRANT ROLE_2 TO ROLE_1
         // Simulate GRANT ROLE ROLE_1 TO ROLE_2. This should fail.
-            
+
         stmt.execute("CREATE ROLE ROLE_1");
         stmt.execute("CREATE ROLE ROLE_2");
         stmt.execute("GRANT ROLE ROLE_2 TO ROLE_1");
-            
+
         // NOTE: now we want to simulate GRANT ROLE ROLE_1 TO ROLE_2.
         // So the grantee is ROLE_2, and the granted role is ROLE_1.
         // For the cycle check, we need to look for paths in the
@@ -266,24 +273,25 @@ public class FarragoQueryTest extends FarragoTestCase
         // call below.
         String lurql =
             FarragoInternalQuery.instance().TestSecurityRoleCycleCheck.str();
-        assertTrue(checkLurqlSecurityRoleCycle(lurql,  "ROLE_1",  "ROLE_2"));
+        assertTrue(checkLurqlSecurityRoleCycle(lurql, "ROLE_1", "ROLE_2"));
     }
-    
+
     private boolean checkLurqlSecurityRoleCycle(
-        String lurql, String granteeName, String grantedRoleName)
+        String lurql,
+        String granteeName,
+        String grantedRoleName)
         throws Exception
     {
         Map argMap = new HashMap();
         argMap.put("granteeName", granteeName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
-        FarragoSession session =
-            farragoConnection.getSession();
+        FarragoSession session = farragoConnection.getSession();
         Collection result = session.executeLurqlQuery(
-            lurql, argMap);
+                lurql,
+                argMap);
         Iterator iter = result.iterator();
-        while(iter.hasNext())
-        {
+        while (iter.hasNext()) {
             FemRole role = (FemRole) iter.next();
             if (role.getName().equals(grantedRoleName)) {
                 return true;
@@ -291,20 +299,21 @@ public class FarragoQueryTest extends FarragoTestCase
         }
         return false;
     }
-    
-    public void testAbandonedResultSet() throws Exception
+
+    public void testAbandonedResultSet()
+        throws Exception
     {
         // Start a query that returns N rows where N > 1.  Get the first
         // row and walk away.  This is similar to a query timeout.
-        
+
         String sql = "select deptno, name from sales.depts";
         preparedStmt = connection.prepareStatement(sql);
-        
+
         // won't trigger this, but it causes a different type of result set
         preparedStmt.setQueryTimeout(60);
-        
+
         resultSet = preparedStmt.executeQuery();
-        
+
         try {
             if (!resultSet.next()) {
                 fail("Query has no rows!");
@@ -326,7 +335,7 @@ public class FarragoQueryTest extends FarragoTestCase
         stmt.executeUpdate(
             "alter session implementation add jar"
             + " sys_boot.sys_boot.volcano_plugin");
-        
+
         String sql =
             "select deptno, max(name) from sales.depts"
             + " where name like '%E%G' group by deptno";
@@ -339,17 +348,21 @@ public class FarragoQueryTest extends FarragoTestCase
                 new FarragoTypeFactoryImpl(session.getRepos()),
                 null,
                 true);
-        
+
         Set<RelColumnOrigin> rcoSet = analyzedSql.columnOrigins.get(0);
-        assertEquals(1, rcoSet.size());
+        assertEquals(
+            1,
+            rcoSet.size());
         RelMetadataTest.checkColumnOrigin(
             rcoSet.iterator().next(),
             "DEPTS",
             "DEPTNO",
             false);
-        
+
         rcoSet = analyzedSql.columnOrigins.get(1);
-        assertEquals(1, rcoSet.size());
+        assertEquals(
+            1,
+            rcoSet.size());
         RelMetadataTest.checkColumnOrigin(
             rcoSet.iterator().next(),
             "DEPTS",
@@ -361,7 +374,7 @@ public class FarragoQueryTest extends FarragoTestCase
         // LIKE predicate. The single GROUP BY column gives a further 10%
         // selectivity. 100 * 25% * 10% = 2.5.
         assertEquals(2.5, analyzedSql.rowCount);
-        
+
         stmt.executeUpdate(
             "alter session implementation set default");
     }
@@ -380,8 +393,7 @@ public class FarragoQueryTest extends FarragoTestCase
         TxnListener listener = new TxnListener();
         txnMgr.addListener(listener);
         try {
-            String sql =
-                "select * from sales.depts";
+            String sql = "select * from sales.depts";
             resultSet = stmt.executeQuery(sql);
             resultSet.close();
             connection.commit();
@@ -389,20 +401,31 @@ public class FarragoQueryTest extends FarragoTestCase
             txnMgr.removeListener(listener);
         }
 
-        List<String> expectedName = Arrays.asList(
-            new String [] {
-                "LOCALDB",
+        List<String> expectedName =
+            Arrays.asList(new String[] {
+                    "LOCALDB",
                 "SALES",
                 "DEPTS"
-            });
+                });
 
-        assertEquals("begin", listener.events.get(0));
-        assertEquals(expectedName, listener.events.get(1));
-        assertEquals(TableAccessMap.Mode.READ_ACCESS, listener.events.get(2));
-        assertEquals(FarragoSessionTxnEnd.COMMIT, listener.events.get(3));
+        assertEquals(
+            "begin",
+            listener.events.get(0));
+        assertEquals(
+            expectedName,
+            listener.events.get(1));
+        assertEquals(
+            TableAccessMap.Mode.READ_ACCESS,
+            listener.events.get(2));
+        assertEquals(
+            FarragoSessionTxnEnd.COMMIT,
+            listener.events.get(3));
     }
 
-    private static class TxnListener implements FarragoSessionTxnListener
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class TxnListener
+        implements FarragoSessionTxnListener
     {
         List<Object> events;
 
@@ -410,7 +433,7 @@ public class FarragoQueryTest extends FarragoTestCase
         {
             events = new ArrayList<Object>();
         }
-        
+
         public void transactionBegun(
             FarragoSession session,
             FarragoSessionTxnId txnId)

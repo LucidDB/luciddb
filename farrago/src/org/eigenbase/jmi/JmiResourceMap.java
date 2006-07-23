@@ -21,39 +21,42 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.traverse.*;
-
 import java.util.*;
 
 import javax.jmi.reflect.*;
+
+import org._3pq.jgrapht.traverse.*;
+
 
 // TODO jvs 6-Sep-2005:  use this in FarragoReposImpl for class name
 // localization
 
 /**
- * JmiResourceMap allows resources to be associated with JMI classes,
- * including support for inheritance from superclasses.
+ * JmiResourceMap allows resources to be associated with JMI classes, including
+ * support for inheritance from superclasses.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JmiResourceMap
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final JmiModelView modelView;
-    
+
     private final Map<JmiClassVertex, String> map;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Loads a new map from a resource bundle.  A resource
-     * in the bundle having a key "[prefix][ClassName][suffix]"
-     * will be mapped to the class corresponding to ClassName.
+     * Loads a new map from a resource bundle. A resource in the bundle having a
+     * key "[prefix][ClassName][suffix]" will be mapped to the class
+     * corresponding to ClassName.
      *
      * @param modelView JMI model whose classes are to be mapped
-     *
      * @param bundle source of mappings
-     *
      * @param prefix resource key prefix, or null for none
-     *
      * @param suffix resource key suffix, or null for none
      */
     public JmiResourceMap(
@@ -85,9 +88,10 @@ public class JmiResourceMap
                     continue;
                 }
             }
-            String className = key.substring(
-                prefixLength,
-                key.length() - suffixLength);
+            String className =
+                key.substring(
+                    prefixLength,
+                    key.length() - suffixLength);
             String value = bundle.getString(key);
             JmiClassVertex classVertex =
                 modelView.getModelGraph().getVertexForClassName(className);
@@ -101,8 +105,9 @@ public class JmiResourceMap
         // subclass mappings except for the ones that are set already.  There
         // are more efficient means, but...
         List topoList = new ArrayList();
-        Iterator topoIter = new TopologicalOrderIterator(
-            modelView.getModelGraph().getInheritanceGraph());
+        Iterator topoIter =
+            new TopologicalOrderIterator(
+                modelView.getModelGraph().getInheritanceGraph());
         while (topoIter.hasNext()) {
             topoList.add(topoIter.next());
         }
@@ -125,6 +130,8 @@ public class JmiResourceMap
             }
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Looks up the resource associated with a class.

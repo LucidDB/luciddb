@@ -20,27 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.test;
 
-import org.eigenbase.runtime.TupleIter;
-
 import java.util.*;
-import java.util.regex.Pattern;
+import java.util.regex.*;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import junit.framework.*;
+
+import org.eigenbase.runtime.*;
 
 
-public abstract class EigenbaseTestCase extends TestCase
+public abstract class EigenbaseTestCase
+    extends TestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static final String nl = System.getProperty("line.separator");
     protected static final String [] emptyStringArray = new String[0];
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected EigenbaseTestCase(String s)
         throws Exception
@@ -48,13 +47,13 @@ public abstract class EigenbaseTestCase extends TestCase
         super(s);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected static void assertEqualsDeep(
         Object o,
         Object o2)
     {
-        if (o instanceof Object [] && o2 instanceof Object []) {
+        if ((o instanceof Object []) && (o2 instanceof Object [])) {
             Object [] a = (Object []) o;
             Object [] a2 = (Object []) o2;
             assertEquals(a.length, a2.length);
@@ -64,7 +63,7 @@ public abstract class EigenbaseTestCase extends TestCase
             return;
         }
         if ((o != null) && (o2 != null) && o.getClass().isArray()
-                && (o.getClass() == o2.getClass())) {
+            && (o.getClass() == o2.getClass())) {
             boolean eq;
             if (o instanceof boolean []) {
                 eq = Arrays.equals((boolean []) o, (boolean []) o2);
@@ -104,12 +103,14 @@ public abstract class EigenbaseTestCase extends TestCase
         String pattern)
     {
         if (throwable == null) {
-            fail("expected exception containing pattern <" + pattern
+            fail(
+                "expected exception containing pattern <" + pattern
                 + "> but got none");
         }
         String message = throwable.getMessage();
         if ((message == null) || (message.indexOf(pattern) < 0)) {
-            fail("expected pattern <" + pattern + "> in exception <"
+            fail(
+                "expected pattern <" + pattern + "> in exception <"
                 + throwable + ">");
         }
     }
@@ -127,8 +128,7 @@ public abstract class EigenbaseTestCase extends TestCase
      */
     public static TupleIter makeTupleIter(final Object [] a)
     {
-        return new TupleIter()
-            {
+        return new TupleIter() {
                 private List data = Arrays.asList(a);
                 private Iterator iter = data.iterator();
 
@@ -172,7 +172,7 @@ public abstract class EigenbaseTestCase extends TestCase
     protected static List toList(TupleIter tupleIter)
     {
         ArrayList list = new ArrayList();
-        while(true) {
+        while (true) {
             Object o = tupleIter.fetchNext();
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 return list;
@@ -180,7 +180,7 @@ public abstract class EigenbaseTestCase extends TestCase
                 // Busy loops.
                 continue;
             }
-            
+
             list.add(o);
         }
     }
@@ -218,10 +218,10 @@ public abstract class EigenbaseTestCase extends TestCase
      */
     protected void assertEquals(
         TupleIter iterator,
-        Object[] a)
+        Object [] a)
     {
         ArrayList list = new ArrayList();
-        while(true) {
+        while (true) {
             Object next = iterator.fetchNext();
             if (next == TupleIter.NoDataReason.END_OF_DATA) {
                 break;
@@ -262,7 +262,8 @@ public abstract class EigenbaseTestCase extends TestCase
         if (actual instanceof Object []) {
             assertEquals(expected, (Object []) actual);
         } else {
-            // They're different. Let assertEquals(Object,Object) give the error.
+            // They're different. Let assertEquals(Object,Object) give the
+            // error.
             assertEquals((Object) expected, actual);
         }
     }
@@ -297,6 +298,5 @@ public abstract class EigenbaseTestCase extends TestCase
         return newSuite;
     }
 }
-
 
 // End EigenbaseTestCase.java

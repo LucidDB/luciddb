@@ -20,31 +20,29 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.convert.ConverterRel;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 
 
 /**
  * Converts a relational expression to any given output convention.
  *
- * <p>
- * Unlike most {@link ConverterRel}s, an abstract converter is always
- * abstract. You would typically create an <code>AbstractConverter</code>
- * when it is necessary to transform a relational expression immediately;
- * later, rules will transform it into relational expressions which can be
- * implemented.
+ * <p>Unlike most {@link ConverterRel}s, an abstract converter is always
+ * abstract. You would typically create an <code>AbstractConverter</code> when
+ * it is necessary to transform a relational expression immediately; later,
+ * rules will transform it into relational expressions which can be implemented.
  * </p>
  *
- * <p>
- * If an abstract converter cannot be satisfied immediately (because the
+ * <p>If an abstract converter cannot be satisfied immediately (because the
  * source subset is abstract), the set is flagged, so this converter will be
- * expanded as soon as a non-abstract relexp is added to the set.
- * </p>
+ * expanded as soon as a non-abstract relexp is added to the set.</p>
  */
-public class AbstractConverter extends ConverterRel
+public class AbstractConverter
+    extends ConverterRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public AbstractConverter(
         RelOptCluster cluster,
@@ -52,7 +50,9 @@ public class AbstractConverter extends ConverterRel
         CallingConvention outConvention)
     {
         this(
-            cluster, rel, outConvention.getTraitDef(),
+            cluster,
+            rel,
+            outConvention.getTraitDef(),
             new RelTraitSet(outConvention));
     }
 
@@ -65,12 +65,16 @@ public class AbstractConverter extends ConverterRel
         super(cluster, traitDef, traits, rel);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        return new AbstractConverter(
-            getCluster(), getChild(), traitDef, cloneTraits());
+        return
+            new AbstractConverter(
+                getCluster(),
+                getChild(),
+                traitDef,
+                cloneTraits());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
@@ -80,10 +84,10 @@ public class AbstractConverter extends ConverterRel
 
     public void explain(RelOptPlanWriter pw)
     {
-        String[] terms = new String[traits.size() + 1];
-        Object[] values = new Object[traits.size()];
+        String [] terms = new String[traits.size() + 1];
+        Object [] values = new Object[traits.size()];
         terms[0] = "child";
-        for(int i = 0; i < traits.size(); i++) {
+        for (int i = 0; i < traits.size(); i++) {
             terms[i + 1] = traits.getTrait(i).getTraitDef().getSimpleName();
             values[i] = traits.getTrait(i);
         }
@@ -91,32 +95,27 @@ public class AbstractConverter extends ConverterRel
         pw.explain(this, terms, values);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Rule which converts an {@link AbstractConverter} into a chain of
      * converters from the source relation to the target traits.
      *
-     * <p>
-     * The chain produced is mimimal: we have previously built the transitive
-     * closure of the graph of conversions, so we choose the shortest chain.
-     * </p>
+     * <p>The chain produced is mimimal: we have previously built the transitive
+     * closure of the graph of conversions, so we choose the shortest chain.</p>
      *
-     * <p>
-     * Unlike the {@link AbstractConverter} they are replacing, these
+     * <p>Unlike the {@link AbstractConverter} they are replacing, these
      * converters are guaranteed to be able to convert any relation of their
-     * calling convention. Furthermore, because they introduce subsets of
-     * other calling conventions along the way, these subsets may spawn more
-     * efficient conversions which are not generally applicable.
-     * </p>
+     * calling convention. Furthermore, because they introduce subsets of other
+     * calling conventions along the way, these subsets may spawn more efficient
+     * conversions which are not generally applicable.</p>
      *
-     * <p>
-     * AbstractConverters can be messy, so they restrain themselves: they
-     * don't fire if the target subset already has an implementation (with
-     * less than infinite cost).
-     * </p>
+     * <p>AbstractConverters can be messy, so they restrain themselves: they
+     * don't fire if the target subset already has an implementation (with less
+     * than infinite cost).</p>
      */
-    public static class ExpandConversionRule extends RelOptRule
+    public static class ExpandConversionRule
+        extends RelOptRule
     {
         public ExpandConversionRule()
         {
@@ -151,7 +150,7 @@ public class AbstractConverter extends ConverterRel
             final RelSet set = planner.getSet(child);
             for (RelSubset subset : set.subsets) {
                 if (subset.getTraits().equals(child.getTraits())
-                        || subset.getTraits().equals(converter.traits)) {
+                    || subset.getTraits().equals(converter.traits)) {
                     continue;
                 }
                 final AbstractConverter newConverter =
@@ -165,6 +164,5 @@ public class AbstractConverter extends ConverterRel
         }
     }
 }
-
 
 // End AbstractConverter.java

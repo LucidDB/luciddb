@@ -22,18 +22,18 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.fem.security.*;
-
 import java.math.*;
 
+import net.sf.farrago.fem.security.*;
+
+import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.validate.SqlValidatorImpl;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.resgen.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+
 
 /**
  * FarragoSqlValidator refines SqlValidator with some Farrago-specifics.
@@ -41,9 +41,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSqlValidator extends SqlValidatorImpl
+public class FarragoSqlValidator
+    extends SqlValidatorImpl
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoSqlValidator(
         FarragoPreparingStmt preparingStmt,
@@ -56,7 +58,7 @@ public class FarragoSqlValidator extends SqlValidatorImpl
             compatible);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override SqlValidator
     public SqlNode validate(SqlNode topNode)
@@ -65,7 +67,7 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         getPreparingStmt().analyzeRoutineDependencies(node);
         return node;
     }
-    
+
     // override SqlValidator
     protected boolean shouldExpandIdentifiers()
     {
@@ -92,6 +94,7 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         // now use ESP instead.
         switch (literal.getTypeName().getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
+
             // decimal and long have the same precision (as 64-bit integers),
             // so the unscaled value of a decimal must fit into a long.
             BigDecimal bd = (BigDecimal) literal.getValue();
@@ -100,8 +103,9 @@ public class FarragoSqlValidator extends SqlValidatorImpl
             if (!BigInteger.valueOf(longValue).equals(unscaled)) {
                 // overflow
                 throw newValidationError(
-                    literal, EigenbaseResource.instance()
-                    .NumberLiteralOutOfRange.ex(bd.toString()));
+                    literal,
+                    EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                        bd.toString()));
             }
             break;
         case SqlTypeName.Double_ordinal:
@@ -121,9 +125,9 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         if (Double.isInfinite(d) || Double.isNaN(d)) {
             // overflow
             throw newValidationError(
-                literal, EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
-                    Util.toScientificNotation(bd))
-            );
+                literal,
+                EigenbaseResource.instance().NumberLiteralOutOfRange.ex(
+                    Util.toScientificNotation(bd)));
         }
 
         // REVIEW jvs 4-Aug-2004:  what about underflow?
@@ -174,7 +178,7 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         super.validateDelete(call);
         getPreparingStmt().clearDmlValidation();
     }
-    
+
     // override SqlValidatorImpl
     public void validateMerge(SqlMerge call)
     {
@@ -184,7 +188,7 @@ public class FarragoSqlValidator extends SqlValidatorImpl
         super.validateMerge(call);
         getPreparingStmt().clearDmlValidation();
     }
-    
+
     // override SqlValidatorImpl
     protected void validateFeature(
         ResourceDefinition feature,
@@ -192,7 +196,8 @@ public class FarragoSqlValidator extends SqlValidatorImpl
     {
         super.validateFeature(feature, context);
         getPreparingStmt().getStmtValidator().validateFeature(
-            feature, context);
+            feature,
+            context);
     }
 }
 

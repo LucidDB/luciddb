@@ -20,11 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.util.Enumeration;
-import java.util.Iterator;
+import java.util.*;
 
 
 /**
@@ -33,23 +31,24 @@ import java.util.Iterator;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 16 December, 2001
  */
-public class EnumerationIterator implements Iterator
+public class EnumerationIterator
+    implements Iterator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     Enumeration enumeration;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public EnumerationIterator(Enumeration enumeration)
     {
         this.enumeration = enumeration;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean hasNext()
     {
@@ -66,6 +65,5 @@ public class EnumerationIterator implements Iterator
         throw new UnsupportedOperationException();
     }
 }
-
 
 // End EnumerationIterator.java

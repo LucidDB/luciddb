@@ -20,38 +20,45 @@
 */
 package com.lucidera.lurql;
 
+import java.sql.*;
+
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.graph.*;
 import org._3pq.jgrapht.traverse.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
 
-import java.util.*;
-import java.sql.*;
-
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
 
 /**
- * LurqlReflectiveExecutor executes a {@link LurqlPlan} via calls to
- * the JMI reflective interface.
+ * LurqlReflectiveExecutor executes a {@link LurqlPlan} via calls to the JMI
+ * reflective interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class LurqlReflectiveExecutor
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final RefObject [] EMPTY_REFOBJ_ARRAY = new RefObject[0];
 
+    //~ Instance fields --------------------------------------------------------
+
     private final MDRepository repos;
-    
+
     private final LurqlPlan plan;
 
     private final Connection sqlConnection;
-    
+
     private Map vertexToResultMap;
 
     private Map vertexToStashMap;
@@ -61,17 +68,16 @@ public class LurqlReflectiveExecutor
     private Map args;
 
     private Set finalResult;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new executor for a plan.
      *
      * @param repos the repository to be accessed
-     *
      * @param plan the plan to be executed
-     *
-     * @param sqlConnection JDBC connection for evaluation of SQL queries,
-     * or null if no SQL context is available
-     *
+     * @param sqlConnection JDBC connection for evaluation of SQL queries, or
+     * null if no SQL context is available
      * @param args argument values for parameters
      */
     public LurqlReflectiveExecutor(
@@ -86,6 +92,8 @@ public class LurqlReflectiveExecutor
         this.args = args;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Executes the plan specified by the constructor.
      *
@@ -98,7 +106,7 @@ public class LurqlReflectiveExecutor
         vertexToResultMap = new HashMap();
         vertexToStashMap = new HashMap();
         finalResult = new HashSet();
-        
+
         // execute plan
         DirectedGraph graph = plan.getGraph();
         executeGraph(graph);
@@ -124,6 +132,7 @@ public class LurqlReflectiveExecutor
             if (planVertex.isRecursive()) {
                 if (planVertex.getRecursionSubgraph() != null) {
                     executeRecursion(planVertex);
+
                     // take care of non-recursive outputs
                     executeOutgoingEdges(graph, planVertex, result, false);
                 } else {
@@ -143,9 +152,10 @@ public class LurqlReflectiveExecutor
         throws JmiQueryException
     {
         // materialize execution order
-        List vertexList = Util.toList(
-            new TopologicalOrderIterator(
-                rootVertex.getRecursionSubgraph()));
+        List vertexList =
+            Util.toList(
+                new TopologicalOrderIterator(
+                    rootVertex.getRecursionSubgraph()));
 
         Set recursionResult = getResultSet(rootVertex);
         Set stashResult = getResultSet(vertexToStashMap, rootVertex);
@@ -164,11 +174,13 @@ public class LurqlReflectiveExecutor
                 LurqlPlanVertex planVertex = (LurqlPlanVertex) iter.next();
                 Set result = getResultSet(planVertex);
                 executeOutgoingEdges(
-                    rootVertex.getRecursionSubgraph(), planVertex, result,
+                    rootVertex.getRecursionSubgraph(),
+                    planVertex,
+                    result,
                     true);
                 LurqlPlanVertex recursionRoot = planVertex.getRecursionRoot();
                 if (recursionRoot != null) {
-                    assert(recursionRoot == rootVertex);
+                    assert (recursionRoot == rootVertex);
                     recursionResult.addAll(result);
                 }
             }
@@ -176,10 +188,12 @@ public class LurqlReflectiveExecutor
             // transfer current results to stash, clearing current results for
             // next round, but preserving root deltas
             transferResults(
-                vertexList, vertexToStashMap, vertexToResultMap,
+                vertexList,
+                vertexToStashMap,
+                vertexToResultMap,
                 rootVertex);
-            
-            assert(stashResult.size() >= prevSize);
+
+            assert (stashResult.size() >= prevSize);
         } while (stashResult.size() != prevSize);
 
         // transfer stashed results to become final results
@@ -187,7 +201,9 @@ public class LurqlReflectiveExecutor
     }
 
     private void transferResults(
-        List vertexList, Map dstMap, Map srcMap,
+        List vertexList,
+        Map dstMap,
+        Map srcMap,
         LurqlPlanVertex rootVertex)
         throws JmiQueryException
     {
@@ -215,10 +231,11 @@ public class LurqlReflectiveExecutor
         throws JmiQueryException
     {
         LurqlFilter [] filters = getFilters(planVertex);
-        LurqlPlanExistsEdge [] existsEdges = getExistsEdges(
-            plan.getGraph(),
-            planVertex);
-        
+        LurqlPlanExistsEdge [] existsEdges =
+            getExistsEdges(
+                plan.getGraph(),
+                planVertex);
+
         if (planVertex.getRootObjectIds().isEmpty()) {
             Iterator iter = planVertex.getClassVertexSet().iterator();
             while (iter.hasNext()) {
@@ -251,8 +268,9 @@ public class LurqlReflectiveExecutor
 
     private LurqlFilter [] getFilters(LurqlPlanVertex planVertex)
     {
-        return (LurqlFilter [])
-            planVertex.getFilters().toArray(LurqlFilter.EMPTY_ARRAY);
+        return
+            (LurqlFilter []) planVertex.getFilters().toArray(
+                LurqlFilter.EMPTY_ARRAY);
     }
 
     private LurqlPlanExistsEdge [] getExistsEdges(
@@ -266,22 +284,24 @@ public class LurqlReflectiveExecutor
             }
             list.add(obj);
         }
-        return (LurqlPlanExistsEdge [])
-            list.toArray(LurqlPlanExistsEdge.EMPTY_ARRAY);
+        return
+            (LurqlPlanExistsEdge []) list.toArray(
+                LurqlPlanExistsEdge.EMPTY_ARRAY);
     }
 
     private void executeOutgoingEdges(
-        DirectedGraph graph, LurqlPlanVertex planVertex, Set input,
+        DirectedGraph graph,
+        LurqlPlanVertex planVertex,
+        Set input,
         boolean executeRecursive)
         throws JmiQueryException
     {
         // we're going to repetitively iterate the obj list, so
         // copy it as an array
-        RefObject [] objArray = (RefObject [])
-            input.toArray(EMPTY_REFOBJ_ARRAY);
+        RefObject [] objArray =
+            (RefObject []) input.toArray(EMPTY_REFOBJ_ARRAY);
 
-        Iterator edgeIter =
-            graph.outgoingEdgesOf(planVertex).iterator();
+        Iterator edgeIter = graph.outgoingEdgesOf(planVertex).iterator();
         while (edgeIter.hasNext()) {
             Object edgeObj = edgeIter.next();
             if (!(edgeObj instanceof LurqlPlanFollowEdge)) {
@@ -296,12 +316,14 @@ public class LurqlReflectiveExecutor
             AssociationEnd originEnd = edge.getOriginEnd();
             Classifier originType = originEnd.getType();
             LurqlFilter [] filters = getFilters(edge.getPlanTarget());
-            LurqlPlanExistsEdge [] existsEdges = getExistsEdges(
-                graph,
-                edge.getPlanTarget());
+            LurqlPlanExistsEdge [] existsEdges =
+                getExistsEdges(
+                    graph,
+                    edge.getPlanTarget());
             Set output = getResultSet(edge.getPlanTarget());
             for (int i = 0; i < objArray.length; ++i) {
                 RefObject refObj = objArray[i];
+
                 // REVIEW:  maybe it's faster to just swallow the excns
                 // that would result if we skipped this precheck?
                 if (!refObj.refIsInstanceOf(originType, true)) {
@@ -326,8 +348,7 @@ public class LurqlReflectiveExecutor
         throws JmiQueryException
     {
         if ((filters.length == 0) && (existsEdges.length == 0)
-            && (typeFilter == null))
-        {
+            && (typeFilter == null)) {
             output.addAll(input);
             return;
         }
@@ -338,8 +359,8 @@ outer:
             RefObject refObj = (RefObject) iter.next();
             if (typeFilter != null) {
                 if (!refObj.refIsInstanceOf(
-                        typeFilter.getMofClass(), true))
-                {
+                        typeFilter.getMofClass(),
+                        true)) {
                     continue outer;
                 }
             }
@@ -348,8 +369,9 @@ outer:
                 if (filters[i].isMofId()) {
                     value = refObj.refMofId();
                 } else {
-                    Object objValue = refObj.refGetValue(
-                        filters[i].getAttributeName());
+                    Object objValue =
+                        refObj.refGetValue(
+                            filters[i].getAttributeName());
                     if (objValue == null) {
                         continue outer;
                     }
@@ -397,6 +419,7 @@ outer:
             if (result != null) {
                 int nResults = result.size();
                 result.clear();
+
                 // Never count the root; it always has the seed as a result.
                 if (planVertex == root) {
                     continue;
@@ -465,15 +488,15 @@ outer:
             Util.squelchStmt(stmt);
         }
         filterMap.put(filter, set);
-        
+
         return set;
     }
-    
+
     private Set findResultSet(Map map, LurqlPlanVertex planVertex)
     {
         return (Set) map.get(planVertex);
     }
-    
+
     private Set getResultSet(Map map, LurqlPlanVertex planVertex)
     {
         Set set = findResultSet(map, planVertex);
@@ -483,12 +506,12 @@ outer:
         }
         return set;
     }
-    
+
     private Set findResultSet(LurqlPlanVertex planVertex)
     {
         return findResultSet(vertexToResultMap, planVertex);
     }
-    
+
     private Set getResultSet(LurqlPlanVertex planVertex)
     {
         return getResultSet(vertexToResultMap, planVertex);

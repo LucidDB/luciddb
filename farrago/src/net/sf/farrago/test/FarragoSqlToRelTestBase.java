@@ -34,37 +34,42 @@ import net.sf.farrago.util.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.relopt.hep.*;
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.hep.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql2rel.*;
 
+
 /**
  * FarragoSqlToRelTestBase is an abstract base for Farrago tests which involve
  * conversion from SQL to relational algebra.
  *
- *<p>
- *
- * SQL statements to be translated use the normal test catalog.
+ * <p>SQL statements to be translated use the normal test catalog.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoSqlToRelTestBase extends FarragoTestCase
+public abstract class FarragoSqlToRelTestBase
+    extends FarragoTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected FarragoSqlToRelTestBase(String testName)
         throws Exception
     {
         super(testName);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected abstract void initPlanner(FarragoPreparingStmt stmt)
         throws Exception;
-    
+
     protected abstract void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode topRel)
@@ -81,8 +86,7 @@ public abstract class FarragoSqlToRelTestBase extends FarragoTestCase
             (FarragoDbSession) farragoConnection.getSession();
 
         // guarantee release of any resources we allocate on the way
-        FarragoCompoundAllocation allocations =
-            new FarragoCompoundAllocation();
+        FarragoCompoundAllocation allocations = new FarragoCompoundAllocation();
         FarragoReposTxnContext reposTxn = new FarragoReposTxnContext(repos);
         try {
             reposTxn.beginReadTxn();
@@ -94,14 +98,16 @@ public abstract class FarragoSqlToRelTestBase extends FarragoTestCase
 
             // FarragoPreparingStmt does most of the work for us
             FarragoSessionStmtValidator stmtValidator =
-                new FarragoStmtValidator(repos,
-                    session.getDatabase().getFennelDbHandle(), session,
-                    objCache, objCache,
+                new FarragoStmtValidator(
+                    repos,
+                    session.getDatabase().getFennelDbHandle(),
+                    session,
+                    objCache,
+                    objCache,
                     session.getSessionIndexMap(),
                     session.getDatabase().getDdlLockManager());
             allocations.addAllocation(stmtValidator);
-            FarragoPreparingStmt stmt =
-                new FarragoPreparingStmt(stmtValidator);
+            FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
             stmt.enablePartialImplementation();
 
             initPlanner(stmt);

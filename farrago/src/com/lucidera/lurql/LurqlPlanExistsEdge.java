@@ -20,31 +20,41 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
 
-import javax.jmi.model.*;
+import java.util.*;
 
-import org.eigenbase.jmi.*;
+import javax.jmi.model.*;
 
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.edge.*;
 
+import org.eigenbase.jmi.*;
+
+
 /**
- * LurqlPlanExistsEdge implements the exists predicate within a
- * LURQL plan graph.
+ * LurqlPlanExistsEdge implements the exists predicate within a LURQL plan
+ * graph.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlPlanExistsEdge extends LurqlPlanEdge
+public class LurqlPlanExistsEdge
+    extends LurqlPlanEdge
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final LurqlPlanExistsEdge [] EMPTY_ARRAY =
         new LurqlPlanExistsEdge[0];
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final DirectedGraph subgraph;
 
     private final Set projectSet;
+
+    //~ Constructors -----------------------------------------------------------
 
     LurqlPlanExistsEdge(
         LurqlPlanVertex source,
@@ -53,7 +63,7 @@ public class LurqlPlanExistsEdge extends LurqlPlanEdge
         Set projectSet)
     {
         super(source, target);
-        
+
         this.subgraph = subgraph;
         this.projectSet = projectSet;
 
@@ -67,6 +77,8 @@ public class LurqlPlanExistsEdge extends LurqlPlanEdge
         sb.append(getPlanTarget().getName());
         stringRep = sb.toString();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     DirectedGraph getSubgraph()
     {

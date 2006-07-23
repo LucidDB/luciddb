@@ -23,6 +23,7 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.util.*;
@@ -33,24 +34,24 @@ import org.eigenbase.reltype.*;
 
 /**
  * FarragoSessionExecutableStmt represents the executable output of
- * FarragoPreparingStmt processing.  Instances must be reentrant, so that
+ * FarragoPreparingStmt processing. Instances must be reentrant, so that
  * multiple threads can be executed simultaneously (each with a private
  * FarragoSessionRuntimeContext).
  *
- *<p>
- *
- * NOTE: FarragoSessionExecutableStmt implementations must be kept as lean as
+ * <p>NOTE: FarragoSessionExecutableStmt implementations must be kept as lean as
  * possible for optimal caching (we want memory usage to be minimum, and usage
- * estimation to be as accurate as possible).  In particular, they must have no
+ * estimation to be as accurate as possible). In particular, they must have no
  * references to information needed only during preparation; all of that should
  * be made available to the garbage collector.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
+public interface FarragoSessionExecutableStmt
+    extends FarragoAllocationOwner
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Executes this statement.
@@ -67,8 +68,8 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
     public RelDataType getRowType();
 
     /**
-     * @return type descriptor for row of dynamic parameters expected
-     * by this stmt
+     * @return type descriptor for row of dynamic parameters expected by this
+     * stmt
      */
     public RelDataType getDynamicParamRowType();
 
@@ -78,14 +79,13 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
     public boolean isDml();
 
     /**
-     * @return approximate total number of bytes used by this
-     * statement's in-memory representation
+     * @return approximate total number of bytes used by this statement's
+     * in-memory representation
      */
     public long getMemoryUsage();
 
     /**
-     * @return Set of MOFID's of objects accessed when this stmt
-     * is executed
+     * @return Set of MOFID's of objects accessed when this stmt is executed
      */
     public Set getReferencedObjectIds();
 
@@ -99,6 +99,5 @@ public interface FarragoSessionExecutableStmt extends FarragoAllocationOwner
      */
     public Map<String, RelDataType> getResultSetTypeMap();
 }
-
 
 // End FarragoSessionExecutableStmt.java

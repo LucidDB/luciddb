@@ -21,54 +21,60 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
+
 /**
- * This class allows multiple existing {@link SqlOperandTypeChecker} rules
- * to be combined into one rule.  For example, allowing an operand to
- * be either string or numeric could be done by:
- * <blockquote><pre><code>
+ * This class allows multiple existing {@link SqlOperandTypeChecker} rules to be
+ * combined into one rule. For example, allowing an operand to be either string
+ * or numeric could be done by:
+ *
+ * <blockquote>
+ * <pre><code>
  *
  * CompositeOperandsTypeChecking newCompositeRule =
  *  new CompositeOperandsTypeChecking(
  *    Composition.OR,
  *    new SqlOperandTypeChecker[]{stringRule, numericRule});
  *
- * </code></pre></blockquote>
+ * </code></pre>
+ * </blockquote>
  *
  * Similary a rule that would only allow a numeric literal can be done by:
- * <blockquote><pre><code>
+ *
+ * <blockquote>
+ * <pre><code>
  *
  * CompositeOperandsTypeChecking newCompositeRule =
  *  new CompositeOperandsTypeChecking(
  *    Composition.AND,
  *    new SqlOperandTypeChecker[]{numericRule, literalRule});
  *
- * </code></pre></blockquote>
+ * </code></pre>
+ * </blockquote>
  *
- *<p>
+ * <p>Finally, creating a signature expecting a string for the first operand and
+ * a numeric for the second operand can be done by:
  *
- * Finally, creating a signature expecting a string for the first
- * operand and a numeric for the second operand can be done by:
- * <blockquote><pre><code>
+ * <blockquote>
+ * <pre><code>
  *
  * CompositeOperandsTypeChecking newCompositeRule =
  *  new CompositeOperandsTypeChecking(
  *    Composition.SEQUENCE,
  *    new SqlOperandTypeChecker[]{stringRule, numericRule});
  *
- * </code></pre></blockquote>
+ * </code></pre>
+ * </blockquote>
  *
- *<p>
- *
- * For SEQUENCE composition, the rules must be instances of
- * SqlSingleOperandTypeChecker, and signature generation is not supported.
- * For AND composition, only the first rule is used for signature generation.
+ * <p>For SEQUENCE composition, the rules must be instances of
+ * SqlSingleOperandTypeChecker, and signature generation is not supported. For
+ * AND composition, only the first rule is used for signature generation.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -76,12 +82,26 @@ import java.util.*;
 public class CompositeOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
-    private final SqlOperandTypeChecker[] allowedRules;
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final Composition AND = new Composition("AND", 0);
+    public static final Composition OR = new Composition("OR", 1);
+    public static final Composition SEQUENCE = new Composition("SEQUENCE", 2);
+
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(new Composition[] { AND, OR, SEQUENCE });
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final SqlOperandTypeChecker [] allowedRules;
     private final Composition composition;
+
+    //~ Constructors -----------------------------------------------------------
 
     public CompositeOperandTypeChecker(
         Composition composition,
-        SqlOperandTypeChecker[] allowedRules)
+        SqlOperandTypeChecker [] allowedRules)
     {
         Util.pre(null != allowedRules, "null != allowedRules");
         Util.pre(allowedRules.length > 1, "Not a composite type");
@@ -89,7 +109,9 @@ public class CompositeOperandTypeChecker
         this.composition = composition;
     }
 
-    public SqlOperandTypeChecker[] getRules()
+    //~ Methods ----------------------------------------------------------------
+
+    public SqlOperandTypeChecker [] getRules()
     {
         return allowedRules;
     }
@@ -129,8 +151,7 @@ public class CompositeOperandTypeChecker
                 }
                 set.addAll(range.getAllowedList());
             }
-            return new SqlOperandCountRange(
-                new ArrayList<Integer>(set));
+            return new SqlOperandCountRange(new ArrayList<Integer>(set));
         }
     }
 
@@ -145,29 +166,30 @@ public class CompositeOperandTypeChecker
         if (composition == SEQUENCE) {
             SqlSingleOperandTypeChecker singleRule =
                 (SqlSingleOperandTypeChecker) allowedRules[iFormalOperand];
-            return singleRule.checkSingleOperandType(
-                callBinding,
-                node,
-                0,
-                throwOnFailure);
+            return
+                singleRule.checkSingleOperandType(
+                    callBinding,
+                    node,
+                    0,
+                    throwOnFailure);
         }
-        
+
         int typeErrorCount = 0;
 
-        boolean throwOnAndFailure =
-            (composition == AND) && throwOnFailure;
+        boolean throwOnAndFailure = (composition == AND) && throwOnFailure;
 
         for (int i = 0; i < allowedRules.length; i++) {
             SqlSingleOperandTypeChecker rule =
                 (SqlSingleOperandTypeChecker) allowedRules[i];
-            if (!rule.checkSingleOperandType(callBinding, node,
-                    iFormalOperand, throwOnAndFailure))
-            {
+            if (!rule.checkSingleOperandType(callBinding,
+                    node,
+                    iFormalOperand,
+                    throwOnAndFailure)) {
                 typeErrorCount++;
             }
         }
 
-        boolean ret=false;
+        boolean ret = false;
         if (composition == AND) {
             ret = typeErrorCount == 0;
         } else if (composition == OR) {
@@ -184,9 +206,12 @@ public class CompositeOperandTypeChecker
             for (int i = 0; i < allowedRules.length; i++) {
                 SqlSingleOperandTypeChecker rule =
                     (SqlSingleOperandTypeChecker) allowedRules[i];
-                rule.checkSingleOperandType(callBinding, node,
-                    iFormalOperand, true);
+                rule.checkSingleOperandType(callBinding,
+                    node,
+                    iFormalOperand,
+                    true);
             }
+
             //if no exception thrown, just throw a generic validation
             //signature error
             throw callBinding.newValidationSignatureError();
@@ -214,8 +239,7 @@ public class CompositeOperandTypeChecker
                         callBinding,
                         callBinding.getCall().operands[i],
                         0,
-                        false))
-                {
+                        false)) {
                     typeErrorCount++;
                 }
             } else {
@@ -227,7 +251,7 @@ public class CompositeOperandTypeChecker
 
         boolean failed = true;
         if ((composition == AND) || (composition == SEQUENCE)) {
-            failed = typeErrorCount>0;
+            failed = typeErrorCount > 0;
         } else if (composition == OR) {
             failed = (typeErrorCount == allowedRules.length);
         }
@@ -242,6 +266,7 @@ public class CompositeOperandTypeChecker
                         allowedRules[i].checkOperandTypes(callBinding, true);
                     }
                 }
+
                 //if no exception thrown, just throw a generic validation
                 //signature error
                 throw callBinding.newValidationSignatureError();
@@ -251,22 +276,16 @@ public class CompositeOperandTypeChecker
         return true;
     }
 
-    //~ Inner Class ----------------------
-    public static class Composition extends EnumeratedValues.BasicValue
+    //~ Inner Classes ----------------------------------------------------------
+
+    public static class Composition
+        extends EnumeratedValues.BasicValue
     {
         private Composition(String name, int ordinal)
         {
             super(name, ordinal, null);
         }
     }
-    
-    public static final Composition AND = new Composition("AND", 0);
-    public static final Composition OR = new Composition("OR", 1);
-    public static final Composition SEQUENCE = new Composition("SEQUENCE", 2);
-
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new Composition [] { AND, OR, SEQUENCE });
-
 }
 
 // End CompositeOperandTypeChecker.java

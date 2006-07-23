@@ -22,28 +22,31 @@
 */
 package net.sf.farrago.namespace.impl;
 
-import java.util.List;
+import java.util.*;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.fem.fennel.FemBufferingTupleStreamDef;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.FarragoTypeFactory;
+import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * MedAbstractFennelTableModRel refines {@link TableModificationRelBase}.
- * It is also an abstract base class for implementations of the {@link FennelRel} interface.
- * 
+ * MedAbstractFennelTableModRel refines {@link TableModificationRelBase}. It is
+ * also an abstract base class for implementations of the {@link FennelRel}
+ * interface.
+ *
  * @author Rushan Chen
  * @version $Id$
  */
-public abstract class MedAbstractFennelTableModRel 
-    extends TableModificationRelBase 
+public abstract class MedAbstractFennelTableModRel
+    extends TableModificationRelBase
     implements FennelRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public MedAbstractFennelTableModRel(
         RelOptCluster cluster,
@@ -56,21 +59,31 @@ public abstract class MedAbstractFennelTableModRel
         boolean flattened)
     {
         super(
-            cluster, traits, table,
-            connection, child, operation, updateColumnList, flattened);
+            cluster,
+            traits,
+            table,
+            connection,
+            child,
+            operation,
+            updateColumnList,
+            flattened);
     }
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FennelRel
     public RelOptConnection getConnection()
     {
         return connection;
     }
-    
+
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, getChild());
+        return implementor.visitChild(
+                this,
+                0,
+                getChild());
     }
 
     // implement FennelRel
@@ -80,7 +93,7 @@ public abstract class MedAbstractFennelTableModRel
         // FennelRel's guaranteed to return at most one row
         return RelFieldCollation.emptyCollationArray;
     }
-    
+
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
     {
@@ -89,17 +102,17 @@ public abstract class MedAbstractFennelTableModRel
 
     /**
      * Test if input needs to be buffered.
-     * 
-     * @return true if input to this TableModificationRelBase needs to be buffered.
+     *
+     * @return true if input to this TableModificationRelBase needs to be
+     * buffered.
      */
     public boolean inputNeedBuffer()
     {
         boolean needBuffer = false;
 
         //
-        // Except for Delete, if the target table is also the source, buffering
-        // is required.
-        //
+        //Except for Delete, if the target table is also the source, buffering
+        //is required.
         if (!getOperation().equals(TableModificationRel.Operation.DELETE)) {
             TableAccessMap tableAccessMap = new TableAccessMap(this);
             List<String> tableName = tableAccessMap.getQualifiedName(table);
@@ -107,31 +120,32 @@ public abstract class MedAbstractFennelTableModRel
                 needBuffer = true;
             }
         }
-        
-       return needBuffer; 
+
+        return needBuffer;
     }
-    
+
     /**
      * Create a new buffering stream def based on input tuple format.
-     * 
+     *
      * @param repos repos storing object definitions.
+     *
      * @return the newly constructed FemBufferingTupleStreamDef.
      */
     public FemBufferingTupleStreamDef newInputBuffer(FarragoRepos repos)
     {
         FemBufferingTupleStreamDef buffer =
             repos.newFemBufferingTupleStreamDef();
-    
+
         buffer.setInMemory(false);
         buffer.setMultipass(false);
-    
+
         buffer.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
                 repos,
                 getFarragoTypeFactory(),
                 getChild().getRowType()));
-        return buffer;        
-    }    
+        return buffer;
+    }
 }
 
 //End MedAbstractFennelTableModRel.java

@@ -20,45 +20,44 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
-
 
 /**
  * A connection to a database.
  *
- * <p>A connection contains a {@link RelOptSchema}, via which the query
- * planner can access {@link RelOptTable} objects.</p>
+ * <p>A connection contains a {@link RelOptSchema}, via which the query planner
+ * can access {@link RelOptTable} objects.</p>
  *
  * <p>If Saffron is being used as a Java preprocessor, every class which
- * implements <code>RelOptConnection</code> must implement the
- * method<blockquote><pre>public static RelOptSchema getRelOptSchema()</pre>
- * </blockquote></p>
+ * implements <code>RelOptConnection</code> must implement the method
  *
- * @see RelOptConnectionDecorator
- * @see EmptyRelOptConnection
+ * <blockquote>
+ * <pre>public static RelOptSchema getRelOptSchema()</pre>
+ * </blockquote>
+ * </p>
  *
  * @author jhyde
  * @version $Id$
- *
+ * @see RelOptConnectionDecorator
+ * @see EmptyRelOptConnection
  * @since 10 November, 2001
  */
 public interface RelOptConnection
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the schema underlying this connection.  Non-abstract classes
-     * implementing this interface must also provide <code>public static
-     * Schema getRelOptSchemaStatic()</code>.
+     * Returns the schema underlying this connection. Non-abstract classes
+     * implementing this interface must also provide <code>public static Schema
+     * getRelOptSchemaStatic()</code>.
      */
     RelOptSchema getRelOptSchema();
 
     /**
-     * In theory, this method returns the contents of <code>tableName</code>
-     * as an array; in practice, it is a placeholder recognized by the
-     * optimizer to do something much more efficient. This involves calling
-     * <code>{@link
+     * In theory, this method returns the contents of <code>tableName</code> as
+     * an array; in practice, it is a placeholder recognized by the optimizer to
+     * do something much more efficient. This involves calling <code>{@link
      * RelOptSchema#getTableForMember}(qualifier,tableName).{@link
      * RelOptTable#toRel}(cluster, exp)</code>.
      */
@@ -66,6 +65,5 @@ public interface RelOptConnection
         String qualifier,
         String tableName);
 }
-
 
 // End RelOptConnection.java

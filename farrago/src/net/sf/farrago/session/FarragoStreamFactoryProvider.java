@@ -30,6 +30,9 @@ package net.sf.farrago.session;
  */
 public interface FarragoStreamFactoryProvider
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Registers factories for extension ExecStreams in Fennel.
      *
@@ -37,3 +40,5 @@ public interface FarragoStreamFactoryProvider
      */
     void registerStreamFactories(long hStreamGraph);
 }
+
+// End FarragoStreamFactoryProvider.java

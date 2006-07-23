@@ -21,11 +21,12 @@
 */
 package org.eigenbase.test;
 
+import java.util.*;
+import java.util.concurrent.*;
+
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
-import java.util.concurrent.*;
 
 /**
  * Test for {@link ThreadIterator}.
@@ -33,13 +34,19 @@ import java.util.concurrent.*;
  * @author Julian Hyde
  * @version $Id$
  */
-public class ThreadIteratorTest extends EigenbaseTestCase
+public class ThreadIteratorTest
+    extends EigenbaseTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public ThreadIteratorTest(String s)
         throws Exception
     {
         super(s);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void testBeatlesSynchronous()
     {
@@ -55,22 +62,21 @@ public class ThreadIteratorTest extends EigenbaseTestCase
     {
         Iterator beatles =
             new ThreadIterator(queue) {
-                String [] strings;
+                    String [] strings;
 
-                public ThreadIterator start(String [] strings)
-                {
-                    this.strings = strings;
-                    return start();
-                }
-
-                protected void doWork()
-                {
-                    for (int i = 0; i < strings.length; i++) {
-                        put(new Integer(strings[i].length()));
+                    public ThreadIterator start(String [] strings)
+                    {
+                        this.strings = strings;
+                        return start();
                     }
-                }
-            }.start(
-                new String [] { "lennon", "mccartney", null, "starr" });
+
+                    protected void doWork()
+                    {
+                        for (int i = 0; i < strings.length; i++) {
+                            put(new Integer(strings[i].length()));
+                        }
+                    }
+                }.start(new String[] { "lennon", "mccartney", null, "starr" });
         assertTrue(beatles.hasNext());
         assertEquals(
             beatles.next(),
@@ -89,30 +95,29 @@ public class ThreadIteratorTest extends EigenbaseTestCase
 
     public void testDigits()
     {
-        Iterator digits =
-            new ThreadIterator() {
-                int limit;
+        Iterator digits = new ThreadIterator() {
+                    int limit;
 
-                public ThreadIterator start(int limit)
-                {
-                    this.limit = limit;
-                    return super.start();
-                }
-
-                protected void doWork()
-                {
-                    for (int i = 0; i < limit; i++) {
-                        put(new Integer(i));
+                    public ThreadIterator start(int limit)
+                    {
+                        this.limit = limit;
+                        return super.start();
                     }
-                }
-            }.start(10);
+
+                    protected void doWork()
+                    {
+                        for (int i = 0; i < limit; i++) {
+                            put(new Integer(i));
+                        }
+                    }
+                }.start(10);
         assertEquals(
             digits,
-            new Integer [] {
+            new Integer[] {
                 new Integer(0), new Integer(1), new Integer(2),
-                new Integer(3), new Integer(4), new Integer(5),
-                new Integer(6), new Integer(7), new Integer(8),
-                new Integer(9)
+            new Integer(3), new Integer(4), new Integer(5),
+            new Integer(6), new Integer(7), new Integer(8),
+            new Integer(9)
             });
         assertTrue(!digits.hasNext());
     }
@@ -127,13 +132,16 @@ public class ThreadIteratorTest extends EigenbaseTestCase
 
     public void testXyz()
     {
-        String [] xyz = new String [] { "x", "y", "z" };
+        String [] xyz = new String[] { "x", "y", "z" };
         assertEquals(
             new ArrayIterator(xyz),
             xyz);
     }
 
-    private static class ArrayIterator extends ThreadIterator
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ArrayIterator
+        extends ThreadIterator
     {
         Object [] a;
 

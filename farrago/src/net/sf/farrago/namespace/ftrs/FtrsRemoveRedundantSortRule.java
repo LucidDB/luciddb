@@ -40,20 +40,23 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsRemoveRedundantSortRule extends RelOptRule
+class FtrsRemoveRedundantSortRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FtrsRemoveRedundantSortRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -84,6 +87,5 @@ class FtrsRemoveRedundantSortRule extends RelOptRule
         call.transformTo(sortedScanRel);
     }
 }
-
 
 // End FtrsRemoveRedundantSortRule.java

@@ -20,13 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.rel.RelCollation;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -35,18 +34,19 @@ import java.util.List;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since May 3, 2002
  */
-public abstract class RelOptAbstractTable implements RelOptTable
+public abstract class RelOptAbstractTable
+    implements RelOptTable
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RelOptSchema schema;
     protected RelDataType rowType;
     protected String name;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected RelOptAbstractTable(
         RelOptSchema schema,
@@ -58,7 +58,7 @@ public abstract class RelOptAbstractTable implements RelOptTable
         this.rowType = rowType;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public String getName()
     {
@@ -67,7 +67,7 @@ public abstract class RelOptAbstractTable implements RelOptTable
 
     public String [] getQualifiedName()
     {
-        return new String [] { name };
+        return new String[] { name };
     }
 
     public double getRowCount()
@@ -95,6 +95,5 @@ public abstract class RelOptAbstractTable implements RelOptTable
         return RelCollation.emptyList;
     }
 }
-
 
 // End RelOptAbstractTable.java

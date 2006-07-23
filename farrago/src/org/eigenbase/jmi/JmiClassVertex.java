@@ -24,6 +24,7 @@ package org.eigenbase.jmi;
 import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
+
 /**
  * JmiClassVertex represents a class in a JMI model.
  *
@@ -32,14 +33,21 @@ import javax.jmi.reflect.*;
  */
 public class JmiClassVertex
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final MofClass mofClass;
     Class<? extends RefObject> javaInterface;
     RefClass refClass;
+
+    //~ Constructors -----------------------------------------------------------
 
     JmiClassVertex(MofClass mofClass)
     {
         this.mofClass = mofClass;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the MofClass represented by this vertex
@@ -48,7 +56,7 @@ public class JmiClassVertex
     {
         return mofClass;
     }
-    
+
     /**
      * @return the RefClass represented by this vertex
      */

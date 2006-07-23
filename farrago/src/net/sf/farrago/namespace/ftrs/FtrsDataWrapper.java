@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.ftrs;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,15 +33,17 @@ import net.sf.farrago.resource.*;
 
 
 /**
- * FtrsDataWrapper implements the {@link FarragoMedDataWrapper}
- * interface for FTRS data.
+ * FtrsDataWrapper implements the {@link FarragoMedDataWrapper} interface for
+ * FTRS data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FtrsDataWrapper extends MedAbstractDataWrapper
+public class FtrsDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new data wrapper instance.
@@ -49,7 +52,7 @@ public class FtrsDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -72,9 +75,9 @@ public class FtrsDataWrapper extends MedAbstractDataWrapper
         throws SQLException
     {
         return new FtrsDataServer(
-            serverMofId,
-            props,
-            getRepos());
+                serverMofId,
+                props,
+                getRepos());
     }
 
     // implement FarragoMedDataWrapper
@@ -83,6 +86,5 @@ public class FtrsDataWrapper extends MedAbstractDataWrapper
         return false;
     }
 }
-
 
 // End FtrsDataWrapper.java

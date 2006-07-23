@@ -29,6 +29,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FarragoJavaUdxRule is a rule for transforming an abstract {@link
  * TableFunctionRel} into a {@link FarragoJavaUdxRel}.
@@ -36,17 +37,18 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJavaUdxRule extends RelOptRule
+public class FarragoJavaUdxRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * The singleton instance.
      */
-    public static final FarragoJavaUdxRule instance =
-        new FarragoJavaUdxRule();
-    
-    //~ Constructors ----------------------------------------------------------
+    public static final FarragoJavaUdxRule instance = new FarragoJavaUdxRule();
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJavaUdxRule object.
@@ -56,7 +58,7 @@ public class FarragoJavaUdxRule extends RelOptRule
         super(new RelOptRuleOperand(TableFunctionRel.class, null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()

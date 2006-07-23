@@ -22,9 +22,10 @@
 */
 package org.eigenbase.sql.util;
 
+import java.util.*;
+
 import org.eigenbase.sql.*;
 
-import java.util.*;
 
 /**
  * ChainedSqlOperatorTable implements the {@link SqlOperatorTable} interface by
@@ -33,9 +34,15 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class ChainedSqlOperatorTable implements SqlOperatorTable
+public class ChainedSqlOperatorTable
+    implements SqlOperatorTable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final List<SqlOperatorTable> tableList;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new empty table.
@@ -45,9 +52,11 @@ public class ChainedSqlOperatorTable implements SqlOperatorTable
         tableList = new ArrayList<SqlOperatorTable>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Adds an underlying table.  The order in which tables are added
-     * is significant; tables added earlier have higher lookup precedence.
+     * Adds an underlying table. The order in which tables are added is
+     * significant; tables added earlier have higher lookup precedence.
      *
      * @param table table to add
      */
@@ -70,7 +79,7 @@ public class ChainedSqlOperatorTable implements SqlOperatorTable
         }
         return list;
     }
-    
+
     // implement SqlOperatorTable
     public List<SqlOperator> getOperatorList()
     {

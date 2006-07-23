@@ -24,10 +24,10 @@ package net.sf.farrago.namespace.ftrs;
 
 import java.util.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.catalog.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -40,11 +40,15 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTable extends MedAbstractColumnSet
+class FtrsTable
+    extends MedAbstractColumnSet
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FtrsIndexGuide indexGuide;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     FtrsTable(
         String [] localName,
@@ -55,22 +59,23 @@ class FtrsTable extends MedAbstractColumnSet
         super(localName, null, rowType, tableProps, columnPropMap);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public RelNode toRel(
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return new FtrsIndexScanRel(
-            cluster,
-            this,
-            FarragoCatalogUtil.getClusteredIndex(
-                getPreparingStmt().getRepos(),
-                getCwmColumnSet()),
-            connection,
-            null,
-            false);
+        return
+            new FtrsIndexScanRel(
+                cluster,
+                this,
+                FarragoCatalogUtil.getClusteredIndex(
+                    getPreparingStmt().getRepos(),
+                    getCwmColumnSet()),
+                connection,
+                null,
+                false);
     }
 
     public FtrsIndexGuide getIndexGuide()
@@ -78,13 +83,13 @@ class FtrsTable extends MedAbstractColumnSet
         // have to defer initialization because not all information
         // is available at construction time
         if (indexGuide == null) {
-            indexGuide = new FtrsIndexGuide(
-                getPreparingStmt().getFarragoTypeFactory(), 
-                getCwmColumnSet());
+            indexGuide =
+                new FtrsIndexGuide(
+                    getPreparingStmt().getFarragoTypeFactory(),
+                    getCwmColumnSet());
         }
         return indexGuide;
     }
 }
-
 
 // End FtrsTable.java

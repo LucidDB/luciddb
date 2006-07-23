@@ -22,23 +22,25 @@
 */
 package net.sf.farrago.test.regression;
 
-import junit.framework.Test;
+import junit.framework.*;
 
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
 
 /**
- * FarragoSqlRegressionTest is a JUnit harness for executing tests which are implemented
- * by running an SQL script and diffing the output against a reference
- * file containing the expected results.
+ * FarragoSqlRegressionTest is a JUnit harness for executing tests which are
+ * implemented by running an SQL script and diffing the output against a
+ * reference file containing the expected results.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class FarragoSqlRegressionTest extends FarragoSqlTest
+public class FarragoSqlRegressionTest
+    extends FarragoSqlTest
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlRegressionTest(String testName)
         throws Exception
@@ -46,49 +48,53 @@ public class FarragoSqlRegressionTest extends FarragoSqlTest
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Test suite()
         throws Exception
     {
-        return gatherSuite(
-            FarragoProperties.instance().testFilesetRegression.get(true),
-            new FarragoSqlTestFactory() {
-                public FarragoTestCase createSqlTest(String testName)
-                    throws Exception
-                {
-                    return new FarragoSqlRegressionTest(testName);
-                }
-            });
+        return
+            gatherSuite(
+                FarragoProperties.instance().testFilesetRegression.get(true),
+                new FarragoSqlTestFactory() {
+                    public FarragoTestCase createSqlTest(String testName)
+                        throws Exception
+                    {
+                        return new FarragoSqlRegressionTest(testName);
+                    }
+                });
     }
 
     protected void runTest()
         throws Exception
     {
         addDiffMask("\\$Id.*\\$");
+
         // Need to have a specific pair comparison.
         // only both matches then it passes.
         addDiffMask("Error: .*\\(state=,code=0\\)"); // java error msg
-        addDiffMask("Error: could not calculate results for the following row:");
+        addDiffMask(
+            "Error: could not calculate results for the following row:");
+
         /*
-        addDiffMask("2891E");
-        addDiffMask("2889E");
-        addDiffMask("199999999996E");
-        addDiffMask("200000000003E");
-        addDiffMask("4000E");
-        addDiffMask("4003E");
-        addIgnorePattern("\\[.*\\]"); // fennel data row
-        addIgnorePattern("Messages:"); // fennel message
-        addIgnorePattern("\\[0\\].*\\(state=,code=0\\)");  // fennel error code
-        */
+        addDiffMask("2891E"); addDiffMask("2889E");
+         addDiffMask("199999999996E"); addDiffMask("200000000003E");
+         addDiffMask("4000E"); addDiffMask("4003E");
+         addIgnorePattern("\\[.*\\]"); // fennel data row
+         addIgnorePattern("Messages:"); // fennel message
+         addIgnorePattern("\\[0\\].*\\(state=,code=0\\)");  // fennel error code
+         */
         setGC(100);
-        stmt.execute(FarragoCalcSystemTest.VirtualMachine.Fennel
-               .getAlterSystemCommand());
+        stmt.execute(
+            FarragoCalcSystemTest.VirtualMachine.Fennel
+            .getAlterSystemCommand());
         runSqlLineTest(getName());
 
         // stmt.execute(FarragoCalcSystemTest.VirtualMachine.Java
         //      .getAlterSystemCommand());
         // runSqlLineTest(getName());
-        
+
     }
 }
+
+// End FarragoSqlRegressionTest.java

@@ -22,20 +22,21 @@
 */
 package net.sf.farrago.syslib;
 
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.db.FarragoDatabase;
-import net.sf.farrago.db.FarragoDbSession;
-import net.sf.farrago.runtime.FarragoUdrRuntime;
-import net.sf.farrago.trace.FarragoTrace;
-import net.sf.farrago.jdbc.FarragoJdbcUtil;
+import java.sql.*;
 
-import java.sql.SQLException;
-import java.util.logging.Logger;
+import java.util.logging.*;
+
+import net.sf.farrago.db.*;
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+
 
 /**
- * FarragoKillUDR defines some system procedures for killing sessions and executing statements.
- * (Technically these are user-defined procedures.)
- * They are intended for use by a system administrator, and are installed by
+ * FarragoKillUDR defines some system procedures for killing sessions and
+ * executing statements. (Technically these are user-defined procedures.) They
+ * are intended for use by a system administrator, and are installed by
  * initsql/createMgmtViews.sql
  *
  * @author Marc Berkowitz
@@ -43,13 +44,20 @@ import java.util.logging.Logger;
  */
 public abstract class FarragoKillUDR
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static Logger tracer = FarragoTrace.getSyslibTracer();
 
-    /** 
+    //~ Methods ----------------------------------------------------------------
+
+    /**
      * Kills a running session
+     *
      * @param id unique session identifier
      */
-    public static void killSession(long id) throws SQLException
+    public static void killSession(long id)
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
@@ -60,11 +68,13 @@ public abstract class FarragoKillUDR
         }
     }
 
-    /** 
+    /**
      * Kills an executing statement.
+     *
      * @param id unique statement identifier
      */
-    public static void killStatement(long id) throws SQLException
+    public static void killStatement(long id)
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
@@ -77,17 +87,20 @@ public abstract class FarragoKillUDR
 
     /**
      * Kills all statements executing SQL that matches a given substring.
+     *
      * @param s
      */
-    public static void killStatementMatch(String s) throws SQLException
+    public static void killStatementMatch(String s)
+        throws SQLException
     {
         try {
             FarragoSession sess = FarragoUdrRuntime.getSession();
             FarragoDatabase db = ((FarragoDbSession) sess).getDatabase();
             db.killExecutingStmtMatching(s, "call sys_boot.mgmt.kill_"); // exclude self
-
         } catch (Throwable e) {
             throw FarragoJdbcUtil.newSqlException(e, tracer);
         }
     }
 }
+
+// End FarragoKillUDR.java

@@ -35,20 +35,22 @@ import net.sf.farrago.session.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineSavepoint implements Savepoint
+public class FarragoJdbcEngineSavepoint
+    implements Savepoint
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     FarragoSessionSavepoint farragoSavepoint;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcEngineSavepoint(FarragoSessionSavepoint farragoSavepoint)
     {
         this.farragoSavepoint = farragoSavepoint;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Savepoint
     public int getSavepointId()
@@ -71,6 +73,5 @@ public class FarragoJdbcEngineSavepoint implements Savepoint
         return farragoSavepoint.getName();
     }
 }
-
 
 // End FarragoJdbcEngineSavepoint.java

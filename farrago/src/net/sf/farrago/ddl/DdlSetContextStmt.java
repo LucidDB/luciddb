@@ -22,37 +22,48 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.resource.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.reltype.*;
-
 import java.sql.*;
+
 import java.util.*;
 
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.pretty.*;
+import org.eigenbase.sql.type.*;
+
+
 /**
- * DdlSetContextStmt is an abstract base class for DDL statements (such as
- * SET SCHEMA) which modify  context variables.
+ * DdlSetContextStmt is an abstract base class for DDL statements (such as SET
+ * SCHEMA) which modify context variables.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlSetContextStmt extends DdlStmt
+public abstract class DdlSetContextStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlNode valueExpr;
 
     protected String valueString;
 
     protected SqlNode parsedExpr;
 
+    //~ Constructors -----------------------------------------------------------
+
     protected DdlSetContextStmt(SqlNode valueExpr)
     {
         super(null);
         this.valueExpr = valueExpr;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override DdlStmt
     public boolean requiresCommit()
@@ -91,7 +102,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         valueExpr.unparse(writer, 0, 0);
 
         String sql = writer.toString();
-        
+
         // null param def factory okay because the SQL does not use dynamic
         // parameters
         FarragoSessionStmtContext stmtContext = session.newStmtContext(null);
@@ -99,8 +110,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         RelDataType rowType = stmtContext.getPreparedRowType();
         List fieldList = rowType.getFieldList();
         if (fieldList.size() == 1) {
-            RelDataType type =
-                ((RelDataTypeField) fieldList.get(0)).getType();
+            RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
             if (!SqlTypeUtil.inCharFamily(type)) {
                 fieldList = null;
             }
@@ -114,7 +124,7 @@ public abstract class DdlSetContextStmt extends DdlStmt
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
         boolean gotRow = resultSet.next();
-        assert(gotRow);
+        assert (gotRow);
         valueString = resultSet.getString(1);
         resultSet.close();
 

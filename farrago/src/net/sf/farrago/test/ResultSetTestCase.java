@@ -23,28 +23,32 @@
 package net.sf.farrago.test;
 
 import java.sql.*;
-import java.util.*;
-import java.util.regex.Pattern;
 
-import org.eigenbase.test.DiffTestCase;
+import java.util.*;
+import java.util.regex.*;
+
+import org.eigenbase.test.*;
+
 
 /**
- * ResultSetTestCase (refactroed from FarragoTestCase) is a abstract base
- * for JUnit tests (see FarragoJdbcTest) that uses result sets.
+ * ResultSetTestCase (refactroed from FarragoTestCase) is a abstract base for
+ * JUnit tests (see FarragoJdbcTest) that uses result sets.
  *
  * @author Angel Chang
  * @version $Id$
  */
-public abstract class ResultSetTestCase extends DiffTestCase
+public abstract class ResultSetTestCase
+    extends DiffTestCase
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** ResultSet for processing queries. */
+    /**
+     * ResultSet for processing queries.
+     */
     protected ResultSet resultSet;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoTestCase object.
@@ -59,7 +63,7 @@ public abstract class ResultSetTestCase extends DiffTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the number of rows in resultSet (which is consumed as a side
@@ -75,7 +79,6 @@ public abstract class ResultSetTestCase extends DiffTestCase
         resultSet.close();
         return n;
     }
-
 
     /**
      * Compares the first column of a result set against a String-valued
@@ -114,7 +117,8 @@ public abstract class ResultSetTestCase extends DiffTestCase
             fail("Query returned 2 or more rows, expected 1");
         }
         if (!pattern.matcher(actual).matches()) {
-            fail("Query returned '" + actual + "', expected '"
+            fail(
+                "Query returned '" + actual + "', expected '"
                 + pattern.pattern() + "'");
         }
     }
@@ -128,7 +132,8 @@ public abstract class ResultSetTestCase extends DiffTestCase
      */
     protected void compareResultSetWithDelta(
         double expected,
-        double delta) throws Exception
+        double delta)
+        throws Exception
     {
         if (!resultSet.next()) {
             fail("Query returned 0 rows, expected 1");
@@ -137,10 +142,11 @@ public abstract class ResultSetTestCase extends DiffTestCase
         if (resultSet.next()) {
             fail("Query returned 2 or more rows, expected 1");
         }
-        if (actual < expected - delta || actual > expected + delta) {
-            fail("Query returned " + actual +
-                ", expected " + expected +
-                (delta == 0 ? "" : ("+/-" + delta)));
+        if ((actual < (expected - delta)) || (actual > (expected + delta))) {
+            fail(
+                "Query returned " + actual
+                + ", expected " + expected
+                + ((delta == 0) ? "" : ("+/-" + delta)));
         }
     }
 
@@ -164,15 +170,14 @@ public abstract class ResultSetTestCase extends DiffTestCase
         assertEquals(refList, actualSet);
     }
 
-    /** 
-     * Compares the columns of a result set against several
-     * String-valued reference lists, taking order into account.
+    /**
+     * Compares the columns of a result set against several String-valued
+     * reference lists, taking order into account.
      *
-     * @param refLists vararg of List<String>.  The first list is compared
-     *                 to the first column, the second list to the
-     *                 second column and so on
+     * @param refLists vararg of List<String>. The first list is compared to the
+     * first column, the second list to the second column and so on
      */
-    protected void compareResultLists(List<String>... refLists)
+    protected void compareResultLists(List<String> ... refLists)
         throws Exception
     {
         int numExpectedColumns = refLists.length;
@@ -185,21 +190,21 @@ public abstract class ResultSetTestCase extends DiffTestCase
         int numExpectedRows = -1;
 
         List<List<String>> actualLists = new ArrayList<List<String>>();
-        for(int i = 0; i < numExpectedColumns; i++) {
+        for (int i = 0; i < numExpectedColumns; i++) {
             actualLists.add(new ArrayList<String>());
 
             if (i == 0) {
                 numExpectedRows = refLists[i].size();
             } else {
                 assertEquals(
-                    "num rows differ across ref lists", 
-                    numExpectedRows, 
+                    "num rows differ across ref lists",
+                    numExpectedRows,
                     refLists[i].size());
             }
         }
 
-        while(resultSet.next()) {
-            for(int i = 0; i < numExpectedColumns; i++) {
+        while (resultSet.next()) {
+            for (int i = 0; i < numExpectedColumns; i++) {
                 String s = resultSet.getString(i + 1);
 
                 actualLists.get(i).add(s);
@@ -207,7 +212,7 @@ public abstract class ResultSetTestCase extends DiffTestCase
         }
         resultSet.close();
 
-        for(int i = 0; i < numExpectedColumns; i++) {
+        for (int i = 0; i < numExpectedColumns; i++) {
             assertEquals(
                 "column mismatch in column " + (i + 1),
                 refLists[i],
@@ -215,6 +220,5 @@ public abstract class ResultSetTestCase extends DiffTestCase
         }
     }
 }
-
 
 // End FarragoTestCase.java

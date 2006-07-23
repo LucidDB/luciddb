@@ -21,21 +21,26 @@
 */
 package org.eigenbase.sql;
 
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParserPos;
+
 
 /**
  * A character string literal.
  *
- * <p>Its {@link #value} field is an {@link NlsString} and
- * {@link #typeName} is {@link SqlTypeName#Char}.
+ * <p>Its {@link #value} field is an {@link NlsString} and {@link #typeName} is
+ * {@link SqlTypeName#Char}.
  *
  * @author wael
  * @version $Id$
  */
-public class SqlCharStringLiteral extends SqlAbstractStringLiteral
+public class SqlCharStringLiteral
+    extends SqlAbstractStringLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlCharStringLiteral(
         NlsString val,
         SqlParserPos pos)
@@ -43,13 +48,19 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
         super(val, SqlTypeName.Char, pos);
     }
 
-    /** @return the underlying NlsString */
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return the underlying NlsString
+     */
     public NlsString getNlsString()
     {
         return (NlsString) value;
     }
 
-    /** @return the collation */
+    /**
+     * @return the collation
+     */
     public SqlCollation getCollation()
     {
         return getNlsString().getCollation();
@@ -81,9 +92,10 @@ public class SqlCharStringLiteral extends SqlAbstractStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlCharStringLiteral) lits[i]).getNlsString();
         }
-        return new SqlCharStringLiteral(
-            NlsString.concat(args),
-            lits[0].getParserPosition());
+        return
+            new SqlCharStringLiteral(
+                NlsString.concat(args),
+                lits[0].getParserPosition());
     }
 }
 

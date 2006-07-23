@@ -22,24 +22,17 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.File;
-import java.io.BufferedWriter;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
 
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
+import java.util.*;
+
+import net.sf.farrago.jdbc.engine.*;
+
 
 /**
- * FarragoTestConcurrentScriptedTestCase is a base class for
- * multi-threaded, scripted tests.  Subclasses must implement the
- * suite() method in order to get a database connection correctly
- * initialized.
+ * FarragoTestConcurrentScriptedTestCase is a base class for multi-threaded,
+ * scripted tests. Subclasses must implement the suite() method in order to get
+ * a database connection correctly initialized.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -47,6 +40,9 @@ import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
 public abstract class FarragoTestConcurrentScriptedTestCase
     extends FarragoTestConcurrentTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoTestConcurrentScriptedTestCase object.
      *
@@ -60,6 +56,7 @@ public abstract class FarragoTestConcurrentScriptedTestCase
         super(testName);
     }
 
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Executes the given multi-threaded test script.
@@ -68,12 +65,12 @@ public abstract class FarragoTestConcurrentScriptedTestCase
         throws Exception
     {
         FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
-        assert(mtsqlFile.endsWith(".mtsql"));
+        assert (mtsqlFile.endsWith(".mtsql"));
 
-        File mtsqlFileSansExt = 
+        File mtsqlFileSansExt =
             new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
 
-        FarragoTestConcurrentScriptedCommandGenerator cmdGen = 
+        FarragoTestConcurrentScriptedCommandGenerator cmdGen =
             newScriptedCommandGenerator(mtsqlFile);
 
         if (cmdGen.isDisabled()) {
@@ -82,26 +79,29 @@ public abstract class FarragoTestConcurrentScriptedTestCase
 
         cmdGen.executeSetup(newJdbcEngineDriver().getUrlPrefix());
 
-        executeTest(cmdGen, cmdGen.useLockstep());
+        executeTest(
+            cmdGen,
+            cmdGen.useLockstep());
 
         Map results = cmdGen.getResults();
 
         OutputStream outStream = openTestLogOutputStream(mtsqlFileSansExt);
 
-        BufferedWriter out = 
+        BufferedWriter out =
             new BufferedWriter(new OutputStreamWriter(outStream));
 
-        for(Iterator i = results.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry entry = (Map.Entry)i.next();
+        for (Iterator i = results.entrySet().iterator(); i.hasNext();) {
+            Map.Entry entry = (Map.Entry) i.next();
 
-            Integer threadId = (Integer)entry.getKey();
-            String[] threadResult = (String[])entry.getValue();
+            Integer threadId = (Integer) entry.getKey();
+            String [] threadResult = (String []) entry.getValue();
 
             String threadName = "thread " + threadResult[0];
-            if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID.equals(
+            if (FarragoTestConcurrentScriptedCommandGenerator.SETUP_THREAD_ID
+                .equals(
                     threadId)) {
                 threadName = "setup";
-            }                
+            }
 
             out.write("-- " + threadName);
             out.newLine();
@@ -116,3 +116,5 @@ public abstract class FarragoTestConcurrentScriptedTestCase
         diffTestLog();
     }
 }
+
+// End FarragoTestConcurrentScriptedTestCase.java

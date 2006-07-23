@@ -20,24 +20,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.Util;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
+import java.nio.charset.*;
 
-import java.nio.charset.Charset;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * <code>SqlBinaryOperator</code> is a binary operator.
  */
-public class SqlBinaryOperator extends SqlOperator
+public class SqlBinaryOperator
+    extends SqlOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlBinaryOperator(
         String name,
@@ -49,11 +50,16 @@ public class SqlBinaryOperator extends SqlOperator
         SqlOperandTypeChecker operandTypeChecker)
     {
         super(
-            name, kind, leftPrec(prec, leftAssoc), rightPrec(prec, leftAssoc),
-            returnTypeInference, operandTypeInference, operandTypeChecker);
+            name,
+            kind,
+            leftPrec(prec, leftAssoc),
+            rightPrec(prec, leftAssoc),
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -83,24 +89,20 @@ public class SqlBinaryOperator extends SqlOperator
         RelDataType operandType2 =
             validator.getValidatedNodeType(call.operands[1]);
         if (SqlTypeUtil.inCharFamily(operandType1)
-            && SqlTypeUtil.inCharFamily(operandType2))
-        {
+            && SqlTypeUtil.inCharFamily(operandType2)) {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
-            assert ((null != cs1) && (null != cs2)) :
-                "An implicit or explicit charset should have been set";
+            assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
-                throw EigenbaseResource.instance()
-                    .IncompatibleCharset.ex(
-                        getName(),
-                        cs1.name(),
-                        cs2.name());
+                throw EigenbaseResource.instance().IncompatibleCharset.ex(
+                    getName(),
+                    cs1.name(),
+                    cs2.name());
             }
 
             SqlCollation col1 = operandType1.getCollation();
             SqlCollation col2 = operandType2.getCollation();
-            assert ((null != col1) && (null != col2)) :
-                "An implicit or explicit collation should have been set";
+            assert ((null != col1) && (null != col2)) : "An implicit or explicit collation should have been set";
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =
@@ -108,8 +110,9 @@ public class SqlBinaryOperator extends SqlOperator
                     col2);
 
             if (SqlTypeUtil.inCharFamily(type)) {
-                type = validator.getTypeFactory().
-                    createTypeWithCharsetAndCollation(
+                type =
+                    validator.getTypeFactory()
+                    .createTypeWithCharsetAndCollation(
                         type,
                         type.getCharset(),
                         resultCol);
@@ -120,7 +123,8 @@ public class SqlBinaryOperator extends SqlOperator
 
     public RelDataType deriveType(
         SqlValidator validator,
-        SqlValidatorScope scope, SqlCall call)
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         RelDataType type = super.deriveType(validator, scope, call);
 
@@ -129,24 +133,20 @@ public class SqlBinaryOperator extends SqlOperator
         RelDataType operandType2 =
             validator.getValidatedNodeType(call.operands[1]);
         if (SqlTypeUtil.inCharFamily(operandType1)
-            && SqlTypeUtil.inCharFamily(operandType2))
-        {
+            && SqlTypeUtil.inCharFamily(operandType2)) {
             Charset cs1 = operandType1.getCharset();
             Charset cs2 = operandType2.getCharset();
-            assert ((null != cs1) && (null != cs2)) :
-                "An implicit or explicit charset should have been set";
+            assert ((null != cs1) && (null != cs2)) : "An implicit or explicit charset should have been set";
             if (!cs1.equals(cs2)) {
-                throw EigenbaseResource.instance()
-                    .IncompatibleCharset.ex(
-                        getName(),
-                        cs1.name(),
-                        cs2.name());
+                throw EigenbaseResource.instance().IncompatibleCharset.ex(
+                    getName(),
+                    cs1.name(),
+                    cs2.name());
             }
 
             SqlCollation col1 = operandType1.getCollation();
             SqlCollation col2 = operandType2.getCollation();
-            assert ((null != col1) && (null != col2)) :
-                "An implicit or explicit collation should have been set";
+            assert ((null != col1) && (null != col2)) : "An implicit or explicit collation should have been set";
 
             //validation will occur inside getCoercibilityDyadicOperator...
             SqlCollation resultCol =
@@ -155,16 +155,17 @@ public class SqlBinaryOperator extends SqlOperator
 
             if (SqlTypeUtil.inCharFamily(type)) {
                 type =
-                    validator.getTypeFactory().createTypeWithCharsetAndCollation(
+                    validator.getTypeFactory()
+                    .createTypeWithCharsetAndCollation(
                         type,
                         type.getCharset(),
                         resultCol);
             }
         }
-        return type;    //To change body of overridden methods use File | Settings | File Templates.
-
+        return
+            type; //To change body of overridden methods use File | Settings |
+                  //File Templates.
     }
 }
-
 
 // End SqlBinaryOperator.java

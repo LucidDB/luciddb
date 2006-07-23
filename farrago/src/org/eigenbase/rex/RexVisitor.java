@@ -20,24 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
-
 
 /**
  * Visitor pattern for traversing a tree of {@link RexNode} objects.
  *
+ * @author jhyde
+ * @version $Id$
  * @see org.eigenbase.util.Glossary#VisitorPattern
  * @see RexShuttle
  * @see RexVisitorImpl
- *
- * @author jhyde
  * @since May 30, 2004
- * @version $Id$
- **/
-public interface RexVisitor <R>
+ */
+public interface RexVisitor<R>
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     R visitInputRef(RexInputRef inputRef);
 
@@ -57,6 +55,5 @@ public interface RexVisitor <R>
 
     R visitFieldAccess(RexFieldAccess fieldAccess);
 }
-
 
 // End RexVisitor.java

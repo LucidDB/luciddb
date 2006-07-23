@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import openjava.ptree.*;
@@ -29,15 +28,17 @@ import org.eigenbase.rex.*;
 
 
 /**
- * OJRexIgnoredCallImplementor implements {@link OJRexImplementor} by
- * completely ignoring a call and returning its one and only operand.
+ * OJRexIgnoredCallImplementor implements {@link OJRexImplementor} by completely
+ * ignoring a call and returning its one and only operand.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class OJRexIgnoredCallImplementor implements OJRexImplementor
+public class OJRexIgnoredCallImplementor
+    implements OJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public Expression implement(
         RexToOJTranslator translator,
@@ -53,6 +54,5 @@ public class OJRexIgnoredCallImplementor implements OJRexImplementor
         return true;
     }
 }
-
 
 // End OJRexIgnoredCallImplementor.java

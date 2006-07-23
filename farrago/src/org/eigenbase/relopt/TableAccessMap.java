@@ -20,13 +20,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
 import java.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
+
 
 // TODO jvs 9-Mar-2006:  move this class to another package; it
 // doesn't really belong here.  Also, use a proper class for table
@@ -38,19 +38,18 @@ import org.eigenbase.relopt.*;
  *
  * @author John V. Sichi
  * @version $Id$
- *
  */
 public class TableAccessMap
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    public static enum Mode 
-    {
+    //~ Enums ------------------------------------------------------------------
+
+    public static enum Mode {
         /**
          * Table is not accessed at all.
          */
         NO_ACCESS,
-        
+
         /**
          * Table is accessed for read only.
          */
@@ -67,11 +66,11 @@ public class TableAccessMap
         READWRITE_ACCESS
     }
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final Map<List<String>, Mode> accessMap;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a permanently empty TableAccessMap.
@@ -80,10 +79,10 @@ public class TableAccessMap
     {
         accessMap = Collections.EMPTY_MAP;
     }
-    
+
     /**
-     * Constructs a TableAccessMap for all tables accessed by a RelNode and
-     * its descendants.
+     * Constructs a TableAccessMap for all tables accessed by a RelNode and its
+     * descendants.
      *
      * @param rel the RelNode for which to build the map
      */
@@ -92,14 +91,14 @@ public class TableAccessMap
         // NOTE jvs 9-Mar-2006: This method must NOT retain a reference to the
         // input rel, because we use it for cached statements, and we don't
         // want to retain any rel references after preparation completes.
-        
+
         accessMap = new HashMap<List<String>, Mode>();
         RelOptUtil.go(
             new TableRelVisitor(),
             rel);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return set of qualified names for all tables accessed
@@ -175,9 +174,10 @@ public class TableAccessMap
         return Arrays.asList(table.getQualifiedName());
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    private class TableRelVisitor extends RelVisitor
+    private class TableRelVisitor
+        extends RelVisitor
     {
         // implement RelVisitor
         public void visit(
@@ -191,6 +191,7 @@ public class TableAccessMap
                 return;
             }
             Mode newAccess;
+
             // FIXME jvs 1-Feb-2006:  Don't rely on object type here;
             // eventually someone is going to write a rule which transforms
             // to something which doesn't inherit TableModificationRelBase,
@@ -210,3 +211,5 @@ public class TableAccessMap
         }
     }
 }
+
+// End TableAccessMap.java

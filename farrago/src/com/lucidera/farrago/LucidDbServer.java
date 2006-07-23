@@ -20,9 +20,10 @@
 */
 package com.lucidera.farrago;
 
+import java.io.*;
+
 import net.sf.farrago.server.*;
 
-import java.io.*;
 
 /**
  * LucidDbServer is a wrapper to insulate LucidDB scripts from direct
@@ -31,8 +32,12 @@ import java.io.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbServer extends FarragoVjdbcServer
+public class LucidDbServer
+    extends FarragoVjdbcServer
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public LucidDbServer(PrintWriter pw)
         throws Exception
     {

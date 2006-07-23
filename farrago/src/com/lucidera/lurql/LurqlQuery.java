@@ -20,10 +20,12 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
 
+import java.util.*;
+
 import org.eigenbase.util.*;
+
 
 /**
  * LurqlQuery represents the parsed form of a LURQL query.
@@ -31,17 +33,25 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlQuery extends LurqlQueryNode
+public class LurqlQuery
+    extends LurqlQueryNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final List selectList;
 
     private final LurqlQueryNode root;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlQuery(List selectList, LurqlQueryNode root)
     {
         this.selectList = Collections.unmodifiableList(selectList);
         this.root = root;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public List getSelectList()
     {

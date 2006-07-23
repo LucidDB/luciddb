@@ -23,36 +23,35 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
-import java.util.Calendar;
 
-import net.sf.farrago.query.FarragoPreparingStmt;
+import java.util.*;
+
 import net.sf.farrago.util.*;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.SqlKind;
+import org.eigenbase.sql.*;
 
 
 /**
  * FarragoSessionStmtContext represents a context for executing SQL statements
- * within a particular {@link FarragoSession}.  Contrast with {@link
+ * within a particular {@link FarragoSession}. Contrast with {@link
  * net.sf.farrago.jdbc.engine.FarragoJdbcEngineStatement} (a JDBC wrapper),
- * {@link FarragoSessionPreparingStmt} (which manages the
- * preparation process for a single statement), and {@link
- * FarragoSessionExecutableStmt}, (which is shared by all
- * sessions).
+ * {@link FarragoSessionPreparingStmt} (which manages the preparation process
+ * for a single statement), and {@link FarragoSessionExecutableStmt}, (which is
+ * shared by all sessions).
  *
- *<p>
- *
- * TODO:  document statement lifecycle
+ * <p>TODO: document statement lifecycle
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionStmtContext extends FarragoAllocation
+public interface FarragoSessionStmtContext
+    extends FarragoAllocation
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the session from which this statement context was created
@@ -60,11 +59,12 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public FarragoSession getSession();
 
     /**
-     * Returns an object which contains information about this executing statement.
+     * Returns an object which contains information about this executing
+     * statement.
+     *
      * @return FarragoSessionExecutingStmtInfo
      */
     public FarragoSessionExecutingStmtInfo getExecutingStmtInfo();
-
 
     /**
      * @return whether this context currently has a statement prepared
@@ -77,8 +77,8 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public boolean isPreparedDml();
 
     /**
-     * Turns this context into a daemon so that it will be deallocated
-     * as soon as its current result set is closed.
+     * Turns this context into a daemon so that it will be deallocated as soon
+     * as its current result set is closed.
      */
     public void daemonize();
 
@@ -86,9 +86,8 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * Prepares an SQL statement.
      *
      * @param sql text of statement to be prepared
-     *
-     * @param isExecDirect whether the statement is being prepared
-     * as part of direct execution
+     * @param isExecDirect whether the statement is being prepared as part of
+     * direct execution
      */
     public void prepare(
         String sql,
@@ -96,14 +95,14 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
 
     /**
      * Prepares a query or DML statement (not DDL), provided as a query plan.
-     * The system uses this to prepare and execute internal statements.
-     * As with {@link #prepare(String,boolean)}, the statement can be executed
-     * by {@link #execute()}.
+     * The system uses this to prepare and execute internal statements. As with
+     * {@link #prepare(String,boolean)}, the statement can be executed by {@link
+     * #execute()}.
      *
      * @param plan a query plan (ie a relational expression).
      * @param kind SqlKind value that characterized the statement.
      * @param logical true when the query plan is logical (needs to be
-     *  optimized), false when it is physical (already optimized).
+     * optimized), false when it is physical (already optimized).
      * @param prep the FarragoSessionPreparingStatement that is managing the
      * query plan.
      */
@@ -119,8 +118,7 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public RelDataType getPreparedRowType();
 
     /**
-     * @return the input parameter row type for the currently prepared
-     * statement
+     * @return the input parameter row type for the currently prepared statement
      */
     public RelDataType getPreparedParamType();
 
@@ -128,7 +126,6 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * Sets an input parameter.
      *
      * @param iParam 0-based index of parameter to set
-     *
      * @param arg value to set
      */
     public void setDynamicParam(
@@ -139,7 +136,6 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
      * Sets an input parameter.
      *
      * @param iParam 0-based index of parameter to set
-     *
      * @param arg value to set
      */
     public void setDynamicParam(
@@ -158,17 +154,17 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public void execute();
 
     /**
-     * @return the result set produced by execute(), or null
-     * if the statement was not a query
+     * @return the result set produced by execute(), or null if the statement
+     * was not a query
      */
     public ResultSet getResultSet();
 
     /**
-     * Obtains an update count produced by execute(),
-     * clearing this information as a side effect.
+     * Obtains an update count produced by execute(), clearing this information
+     * as a side effect.
      *
-     * @return number of rows affected, or -1 if statement is non-DML
-     * or its update count was already returned
+     * @return number of rows affected, or -1 if statement is non-DML or its
+     * update count was already returned
      */
     public int getUpdateCount();
 
@@ -183,17 +179,16 @@ public interface FarragoSessionStmtContext extends FarragoAllocation
     public void cancel();
 
     /**
-     * Releases any resources (including result sets) associated with
-     * this statement context.
+     * Releases any resources (including result sets) associated with this
+     * statement context.
      */
     public void unprepare();
 
     public void setQueryTimeout(int milliseconds);
 
     public int getQueryTimeout();
-    
+
     public String getSql();
 }
-
 
 // End FarragoSessionStmtContext.java

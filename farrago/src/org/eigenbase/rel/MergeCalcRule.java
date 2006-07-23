@@ -20,43 +20,42 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.rex.RexOver;
-import org.eigenbase.rex.RexProgram;
-import org.eigenbase.rex.RexProgramBuilder;
+import org.eigenbase.rex.*;
 
 
 /**
  * Planner rule which merges a {@link CalcRel} onto a {@link CalcRel}. The
- * resulting {@link CalcRel} has the same project list as the upper
- * {@link CalcRel}, but expressed in terms of the lower {@link CalcRel}'s
- * inputs.
+ * resulting {@link CalcRel} has the same project list as the upper {@link
+ * CalcRel}, but expressed in terms of the lower {@link CalcRel}'s inputs.
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
+ * @since Mar 7, 2004
  */
-public class MergeCalcRule extends RelOptRule
+public class MergeCalcRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final MergeCalcRule instance = new MergeCalcRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private MergeCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 CalcRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(CalcRel.class, null),
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -73,10 +72,11 @@ public class MergeCalcRule extends RelOptRule
 
         // Merge the programs together.
 
-        RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
-            topCalc.getProgram(),
-            bottomCalc.getProgram(),
-            topCalc.getCluster().getRexBuilder());
+        RexProgram mergedProgram =
+            RexProgramBuilder.mergePrograms(
+                topCalc.getProgram(),
+                bottomCalc.getProgram(),
+                topCalc.getCluster().getRexBuilder());
         final CalcRel newCalc =
             new CalcRel(
                 bottomCalc.getCluster(),
@@ -87,7 +87,6 @@ public class MergeCalcRule extends RelOptRule
                 RelCollation.emptyList);
         call.transformTo(newCalc);
     }
-
 }
 
 // End MergeCalcRule.java

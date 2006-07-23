@@ -22,17 +22,21 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import java.sql.Types;
+import java.sql.*;
+
 
 /**
- * FarragoJdbcEngineParamDefFactory create a FarragoJdbcParamDef
- * (refactored from FarragoJdbcEngineParamDefFactory)
+ * FarragoJdbcEngineParamDefFactory create a FarragoJdbcParamDef (refactored
+ * from FarragoJdbcEngineParamDefFactory)
  *
  * @author Angel Chang
  * @version $Id$
  */
-public class FarragoJdbcParamDefFactory 
+public class FarragoJdbcParamDefFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public static FarragoJdbcParamDef newParamDef(
         String paramName,
         FarragoParamFieldMetaData paramMetaData,
@@ -50,8 +54,11 @@ public class FarragoJdbcParamDefFactory
         FarragoParamFieldMetaData paramMetaData)
     {
         FarragoJdbcParamDef paramDef = newParamDef(paramName, paramMetaData);
-        return new FarragoJdbcFennelTupleParamDef(
-            paramName, paramMetaData, paramDef);
+        return
+            new FarragoJdbcFennelTupleParamDef(
+                paramName,
+                paramMetaData,
+                paramDef);
     }
 
     private static FarragoJdbcParamDef newParamDef(
@@ -92,3 +99,4 @@ public class FarragoJdbcParamDefFactory
     }
 }
 
+// End FarragoJdbcParamDefFactory.java

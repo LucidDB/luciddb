@@ -25,29 +25,38 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
+
 /**
  * MultisetSqlType represents a standard SQL2003 multiset type.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class MultisetSqlType extends AbstractSqlType
+public class MultisetSqlType
+    extends AbstractSqlType
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private RelDataType elementType;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Constructs a new MultisetSqlType.  This constructor should only be
-     * called from a factory method.
+     * Constructs a new MultisetSqlType. This constructor should only be called
+     * from a factory method.
      *
      * @pre null!=elementType
      */
     public MultisetSqlType(RelDataType elementType, boolean isNullable)
     {
         super(SqlTypeName.Multiset, isNullable, null);
-        Util.pre(null!=elementType,"null!=elementType");
+        Util.pre(null != elementType, "null!=elementType");
         this.elementType = elementType;
         computeDigest();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
@@ -59,7 +68,7 @@ public class MultisetSqlType extends AbstractSqlType
         }
         sb.append(" MULTISET");
     }
-    
+
     // implement RelDataType
     public RelDataType getComponentType()
     {

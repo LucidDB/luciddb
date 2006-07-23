@@ -21,8 +21,9 @@
 */
 package org.eigenbase.sql.validate;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.reltype.RelDataType;
+
 
 /**
  * Namespace representing the row type produced by joining two relations.
@@ -31,15 +32,23 @@ import org.eigenbase.reltype.RelDataType;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class JoinNamespace extends AbstractNamespace
+class JoinNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlJoin join;
+
+    //~ Constructors -----------------------------------------------------------
 
     JoinNamespace(SqlValidatorImpl validator, SqlJoin join)
     {
         super(validator);
         this.join = join;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected RelDataType validateImpl()
     {
@@ -48,20 +57,28 @@ class JoinNamespace extends AbstractNamespace
         RelDataType rightType =
             validator.getNamespace(join.getRight()).getRowType();
         if (join.getJoinType() == SqlJoinOperator.JoinType.Left) {
-            rightType = validator.getTypeFactory().createTypeWithNullability(
-                rightType, true);
+            rightType =
+                validator.getTypeFactory().createTypeWithNullability(
+                    rightType,
+                    true);
         }
         if (join.getJoinType() == SqlJoinOperator.JoinType.Right) {
-            leftType = validator.getTypeFactory().createTypeWithNullability(
-                leftType, true);
+            leftType =
+                validator.getTypeFactory().createTypeWithNullability(
+                    leftType,
+                    true);
         }
         if (join.getJoinType() == SqlJoinOperator.JoinType.Full) {
-            leftType = validator.getTypeFactory().createTypeWithNullability(
-                leftType, true);
-            rightType = validator.getTypeFactory().createTypeWithNullability(
-                rightType, true);
+            leftType =
+                validator.getTypeFactory().createTypeWithNullability(
+                    leftType,
+                    true);
+            rightType =
+                validator.getTypeFactory().createTypeWithNullability(
+                    rightType,
+                    true);
         }
-        final RelDataType[] types = {leftType, rightType};
+        final RelDataType [] types = { leftType, rightType };
         return validator.getTypeFactory().createJoinType(types);
     }
 
@@ -72,4 +89,3 @@ class JoinNamespace extends AbstractNamespace
 }
 
 // End JoinNamespace.java
-

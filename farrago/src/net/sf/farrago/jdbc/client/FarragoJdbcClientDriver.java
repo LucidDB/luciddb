@@ -23,6 +23,7 @@
 package net.sf.farrago.jdbc.client;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.jdbc.*;
@@ -30,22 +31,25 @@ import net.sf.farrago.release.*;
 
 import org.objectweb.rmijdbc.RJConnectionInterface;
 
+
 /**
- * FarragoJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the RmiJdbc proxy.
+ * FarragoJdbcClientDriver implements the Farrago client side of the {@link
+ * java.sql.Driver} interface via the RmiJdbc proxy.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
+public class FarragoJdbcClientDriver
+    extends FarragoAbstractJdbcDriver
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     static {
         new FarragoJdbcClientDriver().register();
     }
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcClientDriver object.
@@ -54,11 +58,11 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * @return the prefix for JDBC URL's understood by this driver;
-     * subclassing drivers can override this to customize the URL scheme
+     * @return the prefix for JDBC URL's understood by this driver; subclassing
+     * drivers can override this to customize the URL scheme
      */
     public String getUrlPrefix()
     {
@@ -109,10 +113,15 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         return rmiDriver.connect(urlRmi, driverProps);
     }
 
-    private static class CustomRJDriver extends org.objectweb.rmijdbc.Driver 
-        implements java.sql.Driver, java.io.Serializable 
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class CustomRJDriver
+        extends org.objectweb.rmijdbc.Driver
+        implements java.sql.Driver,
+            java.io.Serializable
     {
-        CustomRJDriver() throws Exception
+        CustomRJDriver()
+            throws Exception
         {
             super();
         }
@@ -124,6 +133,5 @@ public class FarragoJdbcClientDriver extends FarragoAbstractJdbcDriver
         }
     }
 }
-
 
 // End FarragoJdbcClientDriver.java

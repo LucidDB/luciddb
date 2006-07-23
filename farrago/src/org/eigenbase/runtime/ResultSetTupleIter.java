@@ -22,23 +22,24 @@
 */
 package org.eigenbase.runtime;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 
 /**
  * A <code>ResultSetTupleIter</code> is an adapter which converts a {@link
  * ResultSet} to a {@link TupleIter}.
  */
-public class ResultSetTupleIter implements TupleIter
+public class ResultSetTupleIter
+    implements TupleIter
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected ResultSet resultSet;
     private Object row;
     private boolean endOfStream;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public ResultSetTupleIter(ResultSet resultSet)
     {
@@ -49,7 +50,7 @@ public class ResultSetTupleIter implements TupleIter
         endOfStream = false;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object fetchNext()
     {
@@ -89,8 +90,8 @@ public class ResultSetTupleIter implements TupleIter
 
     /**
      * Creates an object representing the current row of the result set. The
-     * default implementation of this method returns a {@link Row}, but
-     * derived classes may override this.
+     * default implementation of this method returns a {@link Row}, but derived
+     * classes may override this.
      */
     protected Object makeRow()
         throws SQLException
@@ -117,6 +118,5 @@ public class ResultSetTupleIter implements TupleIter
         }
     }
 }
-
 
 // End ResultSetTupleIter.java

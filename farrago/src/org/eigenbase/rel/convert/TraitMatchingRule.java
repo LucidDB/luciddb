@@ -21,43 +21,51 @@
 */
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * TraitMatchingRule adapts a converter rule, restricting it to
- * fire only when its input already matches the expected output trait.
- * This can be used with {@link org.eigenbase.relopt.hep.HepPlanner}
- * in cases where alternate implementations are available and it
- * is desirable to minimize converters.
+ * TraitMatchingRule adapts a converter rule, restricting it to fire only when
+ * its input already matches the expected output trait. This can be used with
+ * {@link org.eigenbase.relopt.hep.HepPlanner} in cases where alternate
+ * implementations are available and it is desirable to minimize converters.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class TraitMatchingRule extends RelOptRule
+public class TraitMatchingRule
+    extends RelOptRule
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final ConverterRule converter;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new TraitMatchingRule.
      *
-     * @param rule rule to be restricted; rule must take a single
-     * operand expecting a single input
+     * @param rule rule to be restricted; rule must take a single operand
+     * expecting a single input
      */
     public TraitMatchingRule(ConverterRule converter)
     {
         super(
             new RelOptRuleOperand(
                 converter.getOperand().getMatchedClass(),
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(
                         RelNode.class,
                         null)
-                    }));
-        assert(converter.getOperand().getChildren() == null);
+                }));
+        assert (converter.getOperand().getChildren() == null);
         description = "TraitMatchingRule: " + converter;
         this.converter = converter;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()

@@ -20,27 +20,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.stmt;
 
 import java.lang.reflect.*;
 
 
 /**
- * BoundMethod is a "thunk":  a method which has already been bound to a
+ * BoundMethod is a "thunk": a method which has already been bound to a
  * particular object on which it should be invoked, together with the arguments
  * which should be passed on invocation.
  */
 public class BoundMethod
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     Method method;
     Object o;
     String [] parameterNames;
     Object [] args;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     BoundMethod(
         Object o,
@@ -52,7 +52,7 @@ public class BoundMethod
         this.parameterNames = parameterNames;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object call()
         throws IllegalAccessException, InvocationTargetException
@@ -60,6 +60,5 @@ public class BoundMethod
         return method.invoke(o, args);
     }
 }
-
 
 // End BoundMethod.java

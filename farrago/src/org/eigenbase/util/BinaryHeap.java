@@ -20,34 +20,32 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.util.Comparator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
-import junit.framework.TestCase;
+import junit.framework.*;
 
 
 /**
- * A <code>BinaryHeap</code> is a heap implementation of a priority queue. It
- * is similar to BinaryHeap in apache commons, but it also has a {@link
- * #remove} method.
+ * A <code>BinaryHeap</code> is a heap implementation of a priority queue. It is
+ * similar to BinaryHeap in apache commons, but it also has a {@link #remove}
+ * method.
  *
  * @author jhyde
  * @version $Id $
- *
  * @since Dec 8, 2002
  */
-public class BinaryHeap <T>
+public class BinaryHeap<T>
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Comparator<T> comparator;
     private T [] elements;
     private int count;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public BinaryHeap(
         boolean isMin,
@@ -57,20 +55,19 @@ public class BinaryHeap <T>
             this.comparator = comparator;
         } else {
             final Comparator comparator1 = comparator;
-            this.comparator =
-                new Comparator<T>() {
-                        public int compare(
-                            T o1,
-                            T o2)
-                        {
-                            return comparator1.compare(o2, o1);
-                        }
-                    };
+            this.comparator = new Comparator<T>() {
+                    public int compare(
+                        T o1,
+                        T o2)
+                    {
+                        return comparator1.compare(o2, o1);
+                    }
+                };
         }
-        this.elements = (T[]) new Object[7];
+        this.elements = (T []) new Object[7];
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isEmpty()
     {
@@ -134,7 +131,7 @@ public class BinaryHeap <T>
     {
         int newSize = (elements.length * 2) + 3;
         T [] oldElements = elements;
-        elements = (T[]) new Object[newSize];
+        elements = (T []) new Object[newSize];
         System.arraycopy(oldElements, 1, elements, 1, oldElements.length - 1);
     }
 
@@ -211,9 +208,10 @@ public class BinaryHeap <T>
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    public static class BinaryHeapTestCase extends TestCase
+    public static class BinaryHeapTestCase
+        extends TestCase
     {
         public BinaryHeapTestCase(String name)
         {
@@ -223,7 +221,7 @@ public class BinaryHeap <T>
         public void test()
         {
             final String [] a =
-            { "3", "1", "4", "1", "5", "9", "2", "6", "5", "3", "5" };
+                { "3", "1", "4", "1", "5", "9", "2", "6", "5", "3", "5" };
             final BinaryHeap<String> heap =
                 new BinaryHeap<String>(
                     true,
@@ -306,6 +304,5 @@ public class BinaryHeap <T>
         }
     }
 }
-
 
 // End BinaryHeap.java

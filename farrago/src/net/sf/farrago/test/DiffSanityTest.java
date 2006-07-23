@@ -28,6 +28,7 @@ import junit.framework.*;
 
 import org.eigenbase.test.*;
 
+
 /**
  * DiffSanityTest verifies that the facilities in DiffTestCase are actually
  * working and not just happily rubber-stamping away.
@@ -35,9 +36,11 @@ import org.eigenbase.test.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DiffSanityTest extends DiffTestCase
+public class DiffSanityTest
+    extends DiffTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public DiffSanityTest(String testName)
         throws Exception
@@ -45,7 +48,7 @@ public class DiffSanityTest extends DiffTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DiffTestCase
     protected File getTestlogRoot()
@@ -53,10 +56,10 @@ public class DiffSanityTest extends DiffTestCase
     {
         return FarragoTestCase.getTestlogRootStatic();
     }
-    
+
     /**
-     * Negative test.  I checked in a mismatching .ref file to make sure
-     * the diff gets detected.
+     * Negative test. I checked in a mismatching .ref file to make sure the diff
+     * gets detected.
      */
     public void testDiff()
         throws Exception
@@ -77,8 +80,8 @@ public class DiffSanityTest extends DiffTestCase
     }
 
     /**
-     * Negative test.  Purposefully do NOT create a .ref file, and make
-     * sure its absence gets detected.
+     * Negative test. Purposefully do NOT create a .ref file, and make sure its
+     * absence gets detected.
      */
     public void testMissingRefFile()
         throws Exception
@@ -97,7 +100,7 @@ public class DiffSanityTest extends DiffTestCase
     }
 
     /**
-     * Positive test.  The .ref file is good.
+     * Positive test. The .ref file is good.
      */
     public void testNoDiff()
         throws Exception
@@ -127,6 +130,5 @@ public class DiffSanityTest extends DiffTestCase
         fail("Java assert failure undetected");
     }
 }
-
 
 // End DiffSanityTest.java

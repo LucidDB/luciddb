@@ -21,18 +21,19 @@
 package com.lucidera.lcs;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
@@ -44,15 +45,17 @@ import org.eigenbase.util.*;
 
 
 /**
- * LcsDataServer implements the {@link FarragoMedDataServer} interface
- * for LucidDB column-store data.
+ * LcsDataServer implements the {@link FarragoMedDataServer} interface for
+ * LucidDB column-store data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class LcsDataServer extends MedAbstractFennelDataServer
+class LcsDataServer
+    extends MedAbstractFennelDataServer
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     LcsDataServer(
         String serverMofId,
@@ -62,7 +65,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
         super(serverMofId, props, repos);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
@@ -93,40 +96,61 @@ class LcsDataServer extends MedAbstractFennelDataServer
         // because we need to distinguish the cases where there are
         // children below the rowscan; note that the rule is very
         // specific to speed up matching
-        planner.addRule(new LcsIndexSemiJoinRule(
-            new RelOptRuleOperand(
-                SemiJoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class, null)
-                }), "without child"));
-        planner.addRule(new LcsIndexSemiJoinRule(
-            new RelOptRuleOperand(
-                SemiJoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(LcsIndexIntersectRel.class, null)
-                })}), "with intersect child"));
-        planner.addRule(new LcsIndexSemiJoinRule(
-            new RelOptRuleOperand(
-                SemiJoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-                })}), "with index search child"));
-        planner.addRule(new LcsIndexSemiJoinRule(
-            new RelOptRuleOperand(
-                SemiJoinRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(LcsRowScanRel.class,
-                    new RelOptRuleOperand [] {
-                        new RelOptRuleOperand(LcsIndexMergeRel.class,
-                            new RelOptRuleOperand [] {
-                            new RelOptRuleOperand(LcsIndexSearchRel.class, null)
-                })})}), "with merge child"));
+        planner.addRule(
+            new LcsIndexSemiJoinRule(
+                new RelOptRuleOperand(
+                    SemiJoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(LcsRowScanRel.class, null)
+                    }),
+                "without child"));
+        planner.addRule(
+            new LcsIndexSemiJoinRule(
+                new RelOptRuleOperand(
+                    SemiJoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    LcsIndexIntersectRel.class,
+                                    null)
+                            })
+                    }),
+                "with intersect child"));
+        planner.addRule(
+            new LcsIndexSemiJoinRule(
+                new RelOptRuleOperand(
+                    SemiJoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(LcsIndexSearchRel.class,
+                                    null)
+                            })
+                    }),
+                "with index search child"));
+        planner.addRule(
+            new LcsIndexSemiJoinRule(
+                new RelOptRuleOperand(
+                    SemiJoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(
+                            LcsRowScanRel.class,
+                            new RelOptRuleOperand[] {
+                                new RelOptRuleOperand(
+                                    LcsIndexMergeRel.class,
+                                    new RelOptRuleOperand[] {
+                                        new RelOptRuleOperand(
+                                            LcsIndexSearchRel.class,
+                                            null)
+                                    })
+                            })
+                    }),
+                "with merge child"));
 
-        // after join ordering, consider index only access. as above, 
+        // after join ordering, consider index only access. as above,
         // multiple rules are required for various patterns
         planner.addRule(LcsIndexOnlyAccessRule.instanceSearch);
         planner.addRule(LcsIndexOnlyAccessRule.instanceMerge);
@@ -140,30 +164,32 @@ class LcsDataServer extends MedAbstractFennelDataServer
     {
         // Verify that no column has a collection for its type, because
         // we don't support those...yet.
-        Set<CwmColumn> uncoveredColumns = new HashSet<CwmColumn>(
-            table.getFeature());
+        Set<CwmColumn> uncoveredColumns =
+            new HashSet<CwmColumn>(
+                table.getFeature());
         for (CwmColumn col : uncoveredColumns) {
             if (col.getType() instanceof FemSqlcollectionType) {
                 throw Util.needToImplement(
                     "column-store for collection type");
             }
         }
-        
+
         // Verify that clustered indexes do not overlap
         for (Object i : FarragoCatalogUtil.getTableIndexes(repos, table)) {
             FemLocalIndex index = (FemLocalIndex) i;
             if (!index.isClustered()) {
                 continue;
             }
+
             // LCS clustered indexes are sorted on RID, not value
             index.setSorted(false);
             for (Object f : index.getIndexedFeature()) {
                 CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
                 if (!uncoveredColumns.contains(indexedFeature.getFeature())) {
-                    throw FarragoResource.instance().
-                        ValidatorMultipleClusterForColumn.ex(
-                            repos.getLocalizedObjectName(
-                                indexedFeature.getFeature()));
+                    throw FarragoResource.instance()
+                    .ValidatorMultipleClusterForColumn.ex(
+                        repos.getLocalizedObjectName(
+                            indexedFeature.getFeature()));
                 }
                 uncoveredColumns.remove(indexedFeature.getFeature());
             }
@@ -173,19 +199,29 @@ class LcsDataServer extends MedAbstractFennelDataServer
         // covered by user-defined clustered indexes.
         for (CwmColumn col : uncoveredColumns) {
             createSystemIndex(
-                "SYS$CLUSTERED_INDEX", table, col, true, false, false);
+                "SYS$CLUSTERED_INDEX",
+                table,
+                col,
+                true,
+                false,
+                false);
         }
-        
+
         // create the deletion bitmap index if not already created
         if (FarragoCatalogUtil.getDeletionIndex(repos, table) == null) {
             createSystemIndex(
-                "SYS$DELETION_INDEX", table, null, false, true, true);
+                "SYS$DELETION_INDEX",
+                table,
+                null,
+                false,
+                true,
+                true);
         }
     }
-    
+
     /**
      * Creates an index with an internally generated name
-     * 
+     *
      * @param namePrefix the initial prefix of the internal name
      * @param table table that the index will be created on
      * @param col column associated with the index; null if the index is not
@@ -195,8 +231,12 @@ class LcsDataServer extends MedAbstractFennelDataServer
      * @param unique whether the data in the index is unique
      */
     private void createSystemIndex(
-        String namePrefix, CwmTable table, CwmColumn col, boolean clustered,
-        boolean sorted, boolean unique)
+        String namePrefix,
+        CwmTable table,
+        CwmColumn col,
+        boolean clustered,
+        boolean sorted,
+        boolean unique)
     {
         FemLocalIndex index = repos.newFemLocalIndex();
         String name =
@@ -230,19 +270,20 @@ class LcsDataServer extends MedAbstractFennelDataServer
             // TODO: is this supported?
             throw Util.needToImplement("new cluster on existing LCS rows");
         }
-        
-        LcsIndexGuide indexGuide = new LcsIndexGuide(
-            (FarragoTypeFactoryImpl) cluster.getTypeFactory(),
-            FarragoCatalogUtil.getIndexTable(index),
-            index);
+
+        LcsIndexGuide indexGuide =
+            new LcsIndexGuide(
+                (FarragoTypeFactoryImpl) cluster.getTypeFactory(),
+                FarragoCatalogUtil.getIndexTable(index),
+                index);
 
         //
         // Unclustered Lcs indexes are implemented as bitmap indexes.
         // To construct bitmap indexes, we pass initiation parameters
         // to the generators as a row of data.
-        // 
+        //
         OneRowRel oneRowRel = new OneRowRel(cluster);
-        RexNode[] inputValues = 
+        RexNode [] inputValues =
             indexGuide.getUnclusteredInputs(cluster.getRexBuilder());
         RelDataType rowType = indexGuide.getUnclusteredInputType();
         ProjectRel generatorInputs =
@@ -251,20 +292,26 @@ class LcsDataServer extends MedAbstractFennelDataServer
                 oneRowRel,
                 inputValues,
                 rowType,
-                ProjectRel.Flags.Boxed, RelCollation.emptyList);
+                ProjectRel.Flags.Boxed,
+                RelCollation.emptyList);
 
-        return new FarragoIndexBuilderRel(
-            cluster, table, generatorInputs, index);
+        return
+            new FarragoIndexBuilderRel(
+                cluster,
+                table,
+                generatorInputs,
+                index);
     }
-    
+
     protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
         // FIXME: should not create new type factory
-        LcsIndexGuide indexGuide = new LcsIndexGuide(
-            new FarragoTypeFactoryImpl(repos),
-            FarragoCatalogUtil.getIndexTable(index));
+        LcsIndexGuide indexGuide =
+            new LcsIndexGuide(
+                new FarragoTypeFactoryImpl(repos),
+                FarragoCatalogUtil.getIndexTable(index));
         if (index.isClustered()) {
             prepareClusteredIndexCmd(
                 indexGuide,
@@ -285,7 +332,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
     {
         cmd.setTupleDesc(
             indexGuide.createClusteredBTreeTupleDesc());
-        
+
         cmd.setKeyProj(
             indexGuide.createClusteredBTreeRidDesc());
 
@@ -294,7 +341,7 @@ class LcsDataServer extends MedAbstractFennelDataServer
         cmd.setLeafPageIdProj(
             indexGuide.createClusteredBTreePageIdDesc());
     }
-    
+
     private void prepareUnclusteredIndexCmd(
         LcsIndexGuide indexGuide,
         FemIndexCmd cmd,

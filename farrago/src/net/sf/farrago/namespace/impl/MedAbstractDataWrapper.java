@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.impl;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -30,28 +31,30 @@ import net.sf.farrago.namespace.*;
 
 
 /**
- * MedAbstractDataWrapper is an abstract base class for
- * implementations of the {@link FarragoMedDataWrapper} interface.
+ * MedAbstractDataWrapper is an abstract base class for implementations of the
+ * {@link FarragoMedDataWrapper} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractDataWrapper extends MedAbstractBase
+public abstract class MedAbstractDataWrapper
+    extends MedAbstractBase
     implements FarragoMedDataWrapper
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;
     private Properties props;
     private String libraryName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected MedAbstractDataWrapper()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the repos with which this wrapper was initialized
@@ -76,7 +79,7 @@ public abstract class MedAbstractDataWrapper extends MedAbstractBase
     {
         return libraryName;
     }
-    
+
     /**
      * @param libraryName library name used to initialize this wrapper
      */
@@ -150,6 +153,5 @@ public abstract class MedAbstractDataWrapper extends MedAbstractBase
         return false;
     }
 }
-
 
 // End MedAbstractDataWrapper.java

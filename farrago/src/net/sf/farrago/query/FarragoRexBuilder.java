@@ -22,23 +22,25 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.type.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.behavioral.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.core.*;
+import java.math.*;
 
-import org.eigenbase.util.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.type.*;
+
 import org.eigenbase.oj.util.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import java.math.*;
 
 /**
  * FarragoRexBuilder refines JavaRexBuilder with Farrago-specific details.
@@ -46,11 +48,15 @@ import java.math.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRexBuilder extends JavaRexBuilder
+public class FarragoRexBuilder
+    extends JavaRexBuilder
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoPreparingStmt preparingStmt;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoRexBuilder(FarragoPreparingStmt preparingStmt)
     {
@@ -59,7 +65,7 @@ public class FarragoRexBuilder extends JavaRexBuilder
         this.preparingStmt = preparingStmt;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override JavaRexBuilder
     public RexLiteral makeLiteral(String s)
@@ -71,7 +77,7 @@ public class FarragoRexBuilder extends JavaRexBuilder
     {
         return preparingStmt;
     }
-    
+
     // override RexBuilder
     public RexNode makeCall(
         SqlOperator op,
@@ -92,16 +98,19 @@ public class FarragoRexBuilder extends JavaRexBuilder
     {
         FarragoUserDefinedRoutine routine = (FarragoUserDefinedRoutine) op;
         FemRoutine femRoutine = routine.getFemRoutine();
-        FarragoRoutineInvocation invocation = new FarragoRoutineInvocation(
-            routine, exprs);
+        FarragoRoutineInvocation invocation =
+            new FarragoRoutineInvocation(
+                routine,
+                exprs);
 
         RexNode returnNode;
         if (femRoutine.getBody().getLanguage().equals("SQL")) {
             // replace calls to SQL-defined routines by
             // inline expansion of body
             String bodyString = femRoutine.getBody().getBody();
-            bodyString = FarragoUserDefinedRoutine.removeReturnPrefix(
-                bodyString);
+            bodyString =
+                FarragoUserDefinedRoutine.removeReturnPrefix(
+                    bodyString);
             SqlParser parser = new SqlParser(bodyString);
             SqlNode sqlExpr;
             try {
@@ -110,20 +119,20 @@ public class FarragoRexBuilder extends JavaRexBuilder
                 throw Util.newInternal(e,
                     "Error while parsing routine definition:  " + bodyString);
             }
-            returnNode = preparingStmt.expandInvocationExpression(
-                sqlExpr,
-                invocation);
+            returnNode =
+                preparingStmt.expandInvocationExpression(
+                    sqlExpr,
+                    invocation);
         } else {
             // leave calls to external functions alone
             returnNode = super.makeCall(
-                op,
-                invocation.getArgCastExprs());
+                    op,
+                    invocation.getArgCastExprs());
         }
 
         RelDataType [] paramTypes = routine.getParamTypes();
         if (!femRoutine.isCalledOnNullInput()
-            && (paramTypes.length > 0))
-        {
+            && (paramTypes.length > 0)) {
             // To honor RETURNS NULL ON NULL INPUT,  we build up
             // CASE WHEN arg1 IS NULL THEN NULL
             // WHEN arg2 IS NULL THEN NULL
@@ -145,15 +154,17 @@ public class FarragoRexBuilder extends JavaRexBuilder
                         SqlTypeName.Null));
             }
             caseOperandList.add(returnNode);
-            RexNode [] caseOperands = (RexNode [])
-                caseOperandList.toArray(new RexNode[0]);
+            RexNode [] caseOperands =
+                (RexNode []) caseOperandList.toArray(new RexNode[0]);
             RexNode nullCase = makeCall(
-                getOpTab().caseOperator,
-                caseOperands);
+                    getOpTab().caseOperator,
+                    caseOperands);
             returnNode = nullCase;
         }
 
-        RexNode returnCast = makeCast(routine.getReturnType(), returnNode);
+        RexNode returnCast = makeCast(
+                routine.getReturnType(),
+                returnNode);
         return returnCast;
     }
 
@@ -166,13 +177,13 @@ public class FarragoRexBuilder extends JavaRexBuilder
             return super.makeCall(op, exprs);
         }
         SqlIdentifier typeName = type.getSqlIdentifier();
-        CwmSqldataType cwmType = 
+        CwmSqldataType cwmType =
             preparingStmt.getStmtValidator().findSqldataType(typeName);
         if (cwmType instanceof FemUserDefinedType) {
             FemUserDefinedType udt = (FemUserDefinedType) cwmType;
-            assert(udt.getOrdering().size() == 1);
-            FemUserDefinedOrdering udo = (FemUserDefinedOrdering)
-                udt.getOrdering().iterator().next();
+            assert (udt.getOrdering().size() == 1);
+            FemUserDefinedOrdering udo =
+                (FemUserDefinedOrdering) udt.getOrdering().iterator().next();
             preparingStmt.addDependency(udo, null);
             UserDefinedOrderingCategory udoc = udo.getCategory();
             if (udoc == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE) {
@@ -180,9 +191,10 @@ public class FarragoRexBuilder extends JavaRexBuilder
             } else if (udoc == UserDefinedOrderingCategoryEnum.UDOC_MAP) {
                 return makeMapComparison(udt, udo, op, exprs);
             } else {
-                assert(udoc == UserDefinedOrderingCategoryEnum.UDOC_STATE);
+                assert (udoc == UserDefinedOrderingCategoryEnum.UDOC_STATE);
             }
         }
+
         // leave this for RelStructuredTypeFlattener to handle
         // like a ROW
         return super.makeCall(op, exprs);
@@ -196,15 +208,15 @@ public class FarragoRexBuilder extends JavaRexBuilder
     {
         FarragoUserDefinedRoutine routine = getRoutine(udo);
         RexNode routineInvocation = makeUdfInvocation(routine, exprs);
-        return super.makeCall(
-            op,
-            new RexNode [] {
-                routineInvocation,
-                makeExactLiteral(
-                    new BigDecimal(BigInteger.ZERO))
-            });
+        return
+            super.makeCall(
+                op,
+                new RexNode[] {
+                    routineInvocation,
+                makeExactLiteral(new BigDecimal(BigInteger.ZERO))
+                });
     }
-        
+
     private RexNode makeMapComparison(
         FemUserDefinedType udt,
         FemUserDefinedOrdering udo,
@@ -214,11 +226,10 @@ public class FarragoRexBuilder extends JavaRexBuilder
         FarragoUserDefinedRoutine routine = getRoutine(udo);
         RexNode [] mappedExprs = new RexNode[exprs.length];
         for (int i = 0; i < exprs.length; ++i) {
-            mappedExprs[i] = makeUdfInvocation(
-                routine,
-                new RexNode [] {
-                    exprs[i]
-                });
+            mappedExprs[i] =
+                makeUdfInvocation(
+                    routine,
+                    new RexNode[] { exprs[i] });
         }
         return super.makeCall(op, mappedExprs);
     }
@@ -226,7 +237,7 @@ public class FarragoRexBuilder extends JavaRexBuilder
     private FarragoUserDefinedRoutine getRoutine(FemUserDefinedOrdering udo)
     {
         FemRoutine routine = FarragoCatalogUtil.getRoutineForOrdering(udo);
-        assert(routine != null);
+        assert (routine != null);
         return preparingStmt.getRoutineLookup().convertRoutine(routine);
     }
 }

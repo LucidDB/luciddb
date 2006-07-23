@@ -21,38 +21,39 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * <code>TableFunctionRel</code> represents a call to a function which returns
- * a result set.  Currently, it can only appear as a leaf in
- * a query tree, but eventually we will extend it to take relational
- * inputs.
+ * <code>TableFunctionRel</code> represents a call to a function which returns a
+ * result set. Currently, it can only appear as a leaf in a query tree, but
+ * eventually we will extend it to take relational inputs.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class TableFunctionRel extends TableFunctionRelBase
+public class TableFunctionRel
+    extends TableFunctionRelBase
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a <code>TableFunctionRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
-     *
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param rexCall function invocation expression
-     *
      * @param rowType row type produced by function
-     *
      * @param inputs 0 or more relational inputs
      */
     public TableFunctionRel(
-        RelOptCluster cluster, RexNode rexCall, RelDataType rowType,
+        RelOptCluster cluster,
+        RexNode rexCall,
+        RelDataType rowType,
         RelNode [] inputs)
     {
         super(
@@ -63,17 +64,20 @@ public class TableFunctionRel extends TableFunctionRelBase
             inputs);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Object clone()
     {
-        TableFunctionRel clone = new TableFunctionRel(
-            getCluster(),
-            getCall(),
-            getRowType(),
-            RelOptUtil.clone(inputs));
+        TableFunctionRel clone =
+            new TableFunctionRel(
+                getCluster(),
+                getCall(),
+                getRowType(),
+                RelOptUtil.clone(inputs));
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // REVIEW jvs 8-Jan-2006:  what is supposed to be here

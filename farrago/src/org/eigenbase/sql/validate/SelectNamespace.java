@@ -21,31 +21,39 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.SqlSelect;
-import org.eigenbase.sql.SqlNode;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+
 
 /**
  * Namespace offered by a subquery.
  *
- * @see SelectScope
- * @see SetopNamespace
  * @author jhyde
  * @version $Id$
+ * @see SelectScope
+ * @see SetopNamespace
  * @since Mar 25, 2003
  */
-public class SelectNamespace extends AbstractNamespace
+public class SelectNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlSelect select;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SelectNamespace(SqlValidatorImpl validator, SqlSelect select)
     {
         super(validator);
         this.select = select;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {

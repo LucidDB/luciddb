@@ -26,60 +26,63 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rel.ResultSetRel;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
-import org.eigenbase.oj.rex.RexToOJTranslator;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
  * ResultSetToFarragoIteratorConverter is a ConverterRel from the RESULT_SET
- * CallingConvention to the ITERATOR CallingConvention which ensures that
- * the objects returned by the iterator are understood by the rest
- * of Farrago.
+ * CallingConvention to the ITERATOR CallingConvention which ensures that the
+ * objects returned by the iterator are understood by the rest of Farrago.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class ResultSetToFarragoIteratorConverter extends ConverterRel
+class ResultSetToFarragoIteratorConverter
+    extends ConverterRel
     implements JavaRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new ResultSetToFarragoIteratorConverter object.
      *
      * @param cluster RelOptCluster for this rel
-     * @param child input rel producing rows in ResultSet
-     * representation
+     * @param child input rel producing rows in ResultSet representation
      */
     public ResultSetToFarragoIteratorConverter(
         RelOptCluster cluster,
         RelNode child)
     {
         super(
-            cluster, CallingConventionTraitDef.instance,
-            new RelTraitSet(CallingConvention.ITERATOR), child);
+            cluster,
+            CallingConventionTraitDef.instance,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            child);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public Object clone()
     {
         ResultSetToFarragoIteratorConverter clone =
-            new ResultSetToFarragoIteratorConverter(getCluster(), getChild());
+            new ResultSetToFarragoIteratorConverter(
+                getCluster(),
+                getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -112,7 +115,7 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
         RelDataType rowType = getRowType();
         FarragoTypeFactory factory =
             farragoImplementor.getPreparingStmt().getFarragoTypeFactory();
-        OJClass rowClass = OJUtil.typeToOJClass(rowType,factory);
+        OJClass rowClass = OJUtil.typeToOJClass(rowType, factory);
 
         JavaRexBuilder javaRexBuilder =
             (JavaRexBuilder) getCluster().getRexBuilder();
@@ -154,8 +157,10 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
             }
-            RexNode rhs = javaRexBuilder.makeJava(
-                getCluster().getEnv(), rhsExp);
+            RexNode rhs =
+                javaRexBuilder.makeJava(
+                    getCluster().getEnv(),
+                    rhsExp);
             rhs = javaRexBuilder.makeAbstractCast(
                     field.getType(),
                     rhs);
@@ -193,20 +198,21 @@ class ResultSetToFarragoIteratorConverter extends ConverterRel
                 TypeName.forOJClass(OJUtil.clazzObject),
                 "makeRow",
                 new ParameterList(),
-                new TypeName [] {
+                new TypeName[] {
                     TypeName.forOJClass(OJUtil.clazzSQLException)
                 },
                 methodBody));
 
-        return new AllocationExpression(
-            TypeName.forOJClass(OJClass.forClass(ResultSetTupleIter.class)),
-            new ExpressionList(
-                new CastExpression(
-                    TypeName.forOJClass(OJUtil.clazzResultSet),
-                    childObj)),
-            memberList);
+        return
+            new AllocationExpression(
+                TypeName.forOJClass(
+                    OJClass.forClass(ResultSetTupleIter.class)),
+                new ExpressionList(
+                    new CastExpression(
+                        TypeName.forOJClass(OJUtil.clazzResultSet),
+                        childObj)),
+                memberList);
     }
 }
-
 
 // End ResultSetToFarragoIteratorConverter.java

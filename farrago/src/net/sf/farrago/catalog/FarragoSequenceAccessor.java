@@ -21,6 +21,10 @@
 */
 package net.sf.farrago.catalog;
 
+import java.sql.*;
+
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 
@@ -28,34 +32,37 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
-import java.sql.*;
-import javax.jmi.reflect.*;
 
 /**
- * A FarragoSequenceAccessor optimizes access to sequences. A sequence 
- * generates new values on a per-row basis. But a sequence is not updated 
- * after every row (because that would be very slow.) Instead, an accessor 
- * reserves a large cache of values which it quickly allocates.
- * 
- * <p>The accessor synchronizes access so multiple clients can use the 
- * sequence at the same time. However this requires clients to obtain an
- * accessor from the singleton method FarragoRepos.getSequenceAccessor()
+ * A FarragoSequenceAccessor optimizes access to sequences. A sequence generates
+ * new values on a per-row basis. But a sequence is not updated after every row
+ * (because that would be very slow.) Instead, an accessor reserves a large
+ * cache of values which it quickly allocates.
  *
- * <p>To clean up properly after a statement is completed or the database 
- * is shutdown, {@link #unreserve()} should be called to release unused 
- * values.
- * 
- * <p>Due to the use of singleton sequence accessors, sequence accessors 
- * may exist for a long time.
+ * <p>The accessor synchronizes access so multiple clients can use the sequence
+ * at the same time. However this requires clients to obtain an accessor from
+ * the singleton method FarragoRepos.getSequenceAccessor()
+ *
+ * <p>To clean up properly after a statement is completed or the database is
+ * shutdown, {@link #unreserve()} should be called to release unused values.
+ *
+ * <p>Due to the use of singleton sequence accessors, sequence accessors may
+ * exist for a long time.
  *
  * @author John Pham
  * @version $Id$
  */
-public class FarragoSequenceAccessor extends CompoundClosableAllocation
+public class FarragoSequenceAccessor
+    extends CompoundClosableAllocation
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static String NEXT_VALUE_METHOD_NAME = "getNext";
     private static long MAX_RESERVATION_SIZE = 1000;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoRepos repos;
     private final String mofId;
 
@@ -65,28 +72,32 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
     private boolean reserved;
     private Long nextReservedValue;
     private long lastReservedValue;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a FarragoSequenceAccessor
-     * 
+     *
      * @param repos the farrago repository containing the sequence
      * @param sequenceMofId the id of the sequence within the repository
      */
     protected FarragoSequenceAccessor(
-        FarragoRepos repos, 
+        FarragoRepos repos,
         String sequenceMofId)
     {
         this.repos = repos;
         mofId = sequenceMofId;
-        
+
         FemSequenceGenerator sequence = getSequence();
-        assert(sequence != null) : "sequence was null";
+        assert (sequence != null) : "sequence was null";
         loadSequence(sequence);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Initializes the sequence accessor from a sequence.
-     * 
+     *
      * @param sequence up to date sequence
      */
     synchronized private void loadSequence(FemSequenceGenerator sequence)
@@ -108,13 +119,13 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
         unreserve();
         super.closeAllocation();
     }
-    
+
     /**
-     * Retrieves a value from the sequence, possibly reserving more 
-     * values in the process.
-     * 
+     * Retrieves a value from the sequence, possibly reserving more values in
+     * the process.
+     *
      * @return the value retrieved
-     * 
+     *
      * @throws EigenbaseException if the sequence has no more values
      */
     synchronized public long getNext()
@@ -122,8 +133,8 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
         if (nextReservedValue == null) {
             reserve();
             if (nextReservedValue == null) {
-                throw FarragoResource.instance()
-                .SequenceLimitExceeded.ex(getName());
+                throw FarragoResource.instance().SequenceLimitExceeded.ex(
+                    getName());
             }
         }
         long ret = nextReservedValue;
@@ -137,7 +148,7 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
 
     /**
      * Modifies a sequence and loads updated fields.
-     * 
+     *
      * @param options specifies fields to be modified
      * @param dataType the data type of the sequence
      */
@@ -149,7 +160,7 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
         repos.beginReposTxn(true);
         try {
             FemSequenceGenerator sequence = getSequence();
-            assert(sequence != null) : "sequence was null";
+            assert (sequence != null) : "sequence was null";
             options.alter(sequence, dataType);
             loadSequence(sequence);
         } finally {
@@ -159,10 +170,10 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
 
     /**
      * Reserves up to {@link #MAX_RESERVATION_SIZE} values in the sequence.
-     * Updates the baseValue of a sequence in the catalog sequence to the 
-     * first valid unreserved value.
-     * 
-     * <p>If the reservation was successful, then {@link #nextReservedValue} 
+     * Updates the baseValue of a sequence in the catalog sequence to the first
+     * valid unreserved value.
+     *
+     * <p>If the reservation was successful, then {@link #nextReservedValue}
      * will be set to a non-null value.
      */
     synchronized private void reserve()
@@ -182,9 +193,9 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
 
     synchronized private void reserveInternal()
     {
-        assert(nextReservedValue == null);
+        assert (nextReservedValue == null);
         FemSequenceGenerator sequence = getSequence();
-        assert(sequence != null) : "sequence was null";
+        assert (sequence != null) : "sequence was null";
         if (sequence.isExpired()) {
             return;
         }
@@ -194,25 +205,25 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
         long currentBase = sequence.getBaseValue();
         long diff = ascending ? (max - currentBase) : (min - currentBase);
         long incrementCount = diff / increment;
-        long reservation = Math.min(incrementCount+1, MAX_RESERVATION_SIZE);
+        long reservation = Math.min(incrementCount + 1, MAX_RESERVATION_SIZE);
 
         nextReservedValue = currentBase;
-        if (reservation == incrementCount + 1) {
+        if (reservation == (incrementCount + 1)) {
             // need to cycle
             if (cycle) {
                 long first = ascending ? min : max;
                 sequence.setBaseValue(first);
             } else {
-                long lastValid = nextReservedValue + incrementCount * increment;
+                long lastValid =
+                    nextReservedValue + (incrementCount * increment);
                 sequence.setBaseValue(lastValid);
                 sequence.setExpired(true);
             }
         } else {
-            long nextValid = nextReservedValue + reservation * increment;
+            long nextValid = nextReservedValue + (reservation * increment);
             sequence.setBaseValue(nextValid);
         }
-        lastReservedValue = 
-            nextReservedValue + (reservation - 1) * increment;
+        lastReservedValue = nextReservedValue + ((reservation - 1) * increment);
         reserved = true;
     }
 
@@ -221,7 +232,7 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
      */
     synchronized private void unreserve()
     {
-        if (! reserved) {
+        if (!reserved) {
             return;
         }
         repos.beginReposTxn(true);
@@ -244,7 +255,7 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
 
     /**
      * Retrieves the underlying sequence from the catalog
-     * 
+     *
      * @return the underlying sequence, or null if the sequence was deleted
      */
     synchronized private FemSequenceGenerator getSequence()
@@ -252,14 +263,14 @@ public class FarragoSequenceAccessor extends CompoundClosableAllocation
         RefBaseObject o = repos.getMdrRepos().getByMofId(mofId);
         return (FemSequenceGenerator) o;
     }
-    
+
     /**
      * Returns the name of the sequence
      */
-    private String getName() 
+    private String getName()
     {
         FemSequenceGenerator sequence = getSequence();
-        assert(sequence != null) : "sequence was null";
+        assert (sequence != null) : "sequence was null";
         if (sequence.getName().length() > 0) {
             return sequence.getName();
         }

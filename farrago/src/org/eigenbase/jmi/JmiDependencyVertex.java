@@ -21,25 +21,33 @@
 */
 package org.eigenbase.jmi;
 
-import javax.jmi.reflect.*;
-
 import java.util.*;
 
+import javax.jmi.reflect.*;
+
+
 /**
- * JmiDependencyVertex represents a set of JMI objects grouped together
- * as a node in a {@link JmiDependencyGraph}.
+ * JmiDependencyVertex represents a set of JMI objects grouped together as a
+ * node in a {@link JmiDependencyGraph}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JmiDependencyVertex
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private Set<RefObject> elementSet;
+
+    //~ Constructors -----------------------------------------------------------
 
     public JmiDependencyVertex()
     {
         elementSet = new HashSet<RefObject>();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Set<RefObject> getElementSet()
     {

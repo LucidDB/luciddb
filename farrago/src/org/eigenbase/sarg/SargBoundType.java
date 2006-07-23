@@ -27,11 +27,18 @@ package org.eigenbase.sarg;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SargBoundType
-{
+public enum SargBoundType {
     LOWER,
 
     UPPER
 }
 
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
+// End SargBoundType.java
 // End SargBoundType.java

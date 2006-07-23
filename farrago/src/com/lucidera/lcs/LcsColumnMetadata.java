@@ -25,6 +25,7 @@ import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
 
+
 /**
  * LcsColumnMetadata is an implementation of MedAbstractColumnMetadata for
  * LcsRowScanRel
@@ -32,13 +33,19 @@ import org.eigenbase.rel.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsColumnMetadata extends MedAbstractColumnMetadata
+public class LcsColumnMetadata
+    extends MedAbstractColumnMetadata
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     protected int mapColumnToField(
-        RelNode rel, FemAbstractColumn keyCol)
+        RelNode rel,
+        FemAbstractColumn keyCol)
     {
-        return ((LcsRowScanRel) rel).getProjectedColumnOrdinal(
-            keyCol.getOrdinal());
+        return
+            ((LcsRowScanRel) rel).getProjectedColumnOrdinal(
+                keyCol.getOrdinal());
     }
 
     protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)

@@ -22,12 +22,14 @@
 */
 package net.sf.farrago.ojrex;
 
+import java.util.regex.*;
+
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
-import java.util.regex.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
@@ -44,17 +46,25 @@ import org.eigenbase.util.*;
  * @author Xiaoyang Luo
  * @version $Id$
  */
-public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
+public class FarragoOJRexSimilarLikeImplementor
+    extends FarragoOJRexImplementor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     boolean isSimilar;
     boolean isNot;
-    //~ Methods ---------------------------------------------------------------
 
-    public FarragoOJRexSimilarLikeImplementor(boolean bIsSimilar, boolean bIsNot)
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoOJRexSimilarLikeImplementor(boolean bIsSimilar,
+        boolean bIsNot)
     {
         isSimilar = bIsSimilar;
         isNot = bIsNot;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -76,12 +86,17 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
         RelDataType retType = call.getType();
 
         if (SqlTypeUtil.isJavaPrimitive(retType) && !retType.isNullable()) {
-            OJClass retClass = OJUtil.typeToOJClass(
-                retType, translator.getFarragoTypeFactory());
+            OJClass retClass =
+                OJUtil.typeToOJClass(
+                    retType,
+                    translator.getFarragoTypeFactory());
             varResult = translator.getRelImplementor().newVariable();
             translator.addStatement(
-                new VariableDeclaration(TypeName.forOJClass(retClass),
-                    new VariableDeclarator(varResult.toString(), null)));
+                new VariableDeclaration(
+                    TypeName.forOJClass(retClass),
+                    new VariableDeclarator(
+                        varResult.toString(),
+                        null)));
         } else {
             varResult = translator.createScratchVariable(retType);
         }
@@ -92,16 +107,17 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
             ojPatternClass = OJClass.forClass(classPattern);
             ojMatcherClass = OJClass.forClass(classMatcher);
         } catch (Exception e) {
-            assert(false);
+            assert (false);
         }
 
         if (operands.length == 3) {
             hasEscape = true;
         }
-        if ((call.operands[1] instanceof RexLiteral) && 
-            (!hasEscape || 
-             (hasEscape && call.operands[2] instanceof RexLiteral))) 
-        {
+        if ((call.operands[1] instanceof RexLiteral)
+            && (
+                !hasEscape
+                || (hasEscape && (call.operands[2] instanceof RexLiteral))
+               )) {
             atRuntime = false;
         }
 
@@ -121,28 +137,40 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
             }
             String javaPattern = null;
             if (isSimilar) {
-                javaPattern = RuntimeTypeUtil.SqlToRegexSimilar(
-                                    sqlPattern, escapeStr); 
+                javaPattern =
+                    RuntimeTypeUtil.SqlToRegexSimilar(
+                        sqlPattern,
+                        escapeStr);
             } else {
-                javaPattern = RuntimeTypeUtil.SqlToRegexLike(
-                                    sqlPattern, escapeStr); 
+                javaPattern =
+                    RuntimeTypeUtil.SqlToRegexLike(
+                        sqlPattern,
+                        escapeStr);
             }
-            expForPattern = new MethodCall(
-                                ojPatternClass,
-                                "compile",
-                                new ExpressionList(
-                                    Literal.makeLiteral(javaPattern)));
+            expForPattern =
+                new MethodCall(
+                    ojPatternClass,
+                    "compile",
+                    new ExpressionList(
+                        Literal.makeLiteral(javaPattern)));
         }
 
-        varPattern = translator.createScratchVariableWithExpression(
-            ojPatternClass, expForPattern);
+        varPattern =
+            translator.createScratchVariableWithExpression(
+                ojPatternClass,
+                expForPattern);
 
-        varMatcher = translator.createScratchVariableWithExpression(
-            ojMatcherClass, Literal.constantNull());
+        varMatcher =
+            translator.createScratchVariableWithExpression(
+                ojMatcherClass,
+                Literal.constantNull());
 
         for (int i = 0; i < operands.length; i++) {
-            nullTest = translator.createNullTest(
-                call.operands[i], operands[i], nullTest);
+            nullTest =
+                translator.createNullTest(
+                    call.operands[i],
+                    operands[i],
+                    nullTest);
         }
 
         StatementList stmtList = new StatementList();
@@ -152,19 +180,24 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
             OJClass ojUtilClass = null;
             try {
                 Class classString = Class.forName("java.lang.String");
-                Class classUtil = Class.forName(
-                                "net.sf.farrago.type.runtime.RuntimeTypeUtil");
+                Class classUtil =
+                    Class.forName(
+                        "net.sf.farrago.type.runtime.RuntimeTypeUtil");
 
                 ojStringClass = OJClass.forClass(classString);
                 ojUtilClass = OJClass.forClass(classUtil);
             } catch (Exception e) {
-                assert(false);
+                assert (false);
             }
             varJavaPatternStr = translator.getRelImplementor().newVariable();
             translator.addStatement(
-                new VariableDeclaration(TypeName.forOJClass(ojStringClass),
-                    new VariableDeclarator(varJavaPatternStr.toString(), null)));
-            ExpressionList likeArguments = new ExpressionList(
+                new VariableDeclaration(
+                    TypeName.forOJClass(ojStringClass),
+                    new VariableDeclarator(
+                        varJavaPatternStr.toString(),
+                        null)));
+            ExpressionList likeArguments =
+                new ExpressionList(
                     new MethodCall(
                         operands[1],
                         "toString",
@@ -172,7 +205,6 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
 
             if (hasEscape) {
                 likeArguments.add(operands[2]);
-
             } else {
                 likeArguments.add(Literal.constantNull());
             }
@@ -204,49 +236,51 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                             new ExpressionList(
                                 varJavaPatternStr)))));
 
-        stmtList.add(new ExpressionStatement(
-                         new AssignmentExpression(
-                             varMatcher,
-                             AssignmentExpression.EQUALS,
-                             new MethodCall(
-                                 varPattern,
-                                 "matcher",
-                                  new ExpressionList(
-                                          operands[0])))));
-        } else {
-            IfStatement ifStmt = new IfStatement(
-                new BinaryExpression(
-                    varMatcher, 
-                    BinaryExpression.EQUAL,
-                    Literal.constantNull()),
-                new StatementList(
-                    new ExpressionStatement(
-                        new AssignmentExpression(
-                            varMatcher,
-                            AssignmentExpression.EQUALS,
-                            new MethodCall(
-                                varPattern,
-                                "matcher",
-                                 new ExpressionList(
-                                     operands[0]))))),
-                new StatementList(
-                    new ExpressionStatement(
+            stmtList.add(
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        varMatcher,
+                        AssignmentExpression.EQUALS,
                         new MethodCall(
-                            varMatcher,
-                            "reset",
+                            varPattern,
+                            "matcher",
                             new ExpressionList(
                                 operands[0])))));
+        } else {
+            IfStatement ifStmt =
+                new IfStatement(
+                    new BinaryExpression(
+                        varMatcher,
+                        BinaryExpression.EQUAL,
+                        Literal.constantNull()),
+                    new StatementList(
+                        new ExpressionStatement(
+                            new AssignmentExpression(
+                                varMatcher,
+                                AssignmentExpression.EQUALS,
+                                new MethodCall(
+                                    varPattern,
+                                    "matcher",
+                                    new ExpressionList(
+                                        operands[0]))))),
+                    new StatementList(
+                        new ExpressionStatement(
+                            new MethodCall(
+                                varMatcher,
+                                "reset",
+                                new ExpressionList(
+                                    operands[0])))));
             stmtList.add(ifStmt);
         }
 
-        Expression matcherResult = new MethodCall(
-                        varMatcher,
-                        "matches",
-                        emptyArguments);
-
+        Expression matcherResult =
+            new MethodCall(
+                varMatcher,
+                "matches",
+                emptyArguments);
 
         translator.addAssignmentStatement(
-            stmtList, 
+            stmtList,
             matcherResult,
             call.getType(),
             varResult,
@@ -257,9 +291,10 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
             // The optimizer should have already got rid of IS NOT.
             // but we just implement it anyway.
             Expression value = varResult;
-            if (retType.isNullable()) { 
-                value = new FieldAccess(varResult, 
-                                        NullablePrimitive.VALUE_FIELD_NAME);
+            if (retType.isNullable()) {
+                value =
+                    new FieldAccess(varResult,
+                        NullablePrimitive.VALUE_FIELD_NAME);
             } else {
                 value = varResult;
             }
@@ -271,7 +306,6 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
                         new UnaryExpression(
                             value,
                             UnaryExpression.NOT))));
-
         }
 
         // All the builtin function returns null if
@@ -297,7 +331,6 @@ public class FarragoOJRexSimilarLikeImplementor extends FarragoOJRexImplementor
     {
         return true;
     }
-
 }
 
 // End FarragoOJRexSimilarLikeImplementor.java

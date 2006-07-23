@@ -20,28 +20,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 
 
 /**
  * Access to a field of a row-expression.
  *
- * <p>You might expect to use a <code>RexFieldAccess</code> to access columns
- * of relational tables, for example, the expression <code>emp.empno</code> in
- * the query
+ * <p>You might expect to use a <code>RexFieldAccess</code> to access columns of
+ * relational tables, for example, the expression <code>emp.empno</code> in the
+ * query
  *
- * <blockquote><pre>SELECT emp.empno FROM emp</pre></blockquote>
+ * <blockquote>
+ * <pre>SELECT emp.empno FROM emp</pre>
+ * </blockquote>
  *
- * but there is a specialized expression {@link RexInputRef} for this
- * purpose. So in practice, <code>RexFieldAccess</code> is usually used to
- * access fields of correlating variabless, for example the expression
- * <code>emp.deptno</code> in
+ * but there is a specialized expression {@link RexInputRef} for this purpose.
+ * So in practice, <code>RexFieldAccess</code> is usually used to access fields
+ * of correlating variabless, for example the expression <code>emp.deptno</code>
+ * in
  *
- * <blockquote><pre>SELECT ename
+ * <blockquote>
+ * <pre>SELECT ename
  * FROM dept
  * WHERE EXISTS (
  *     SELECT NULL
@@ -51,17 +52,19 @@ import org.eigenbase.reltype.RelDataTypeField;
  * </blockquote>
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
- **/
-public class RexFieldAccess extends RexNode
+ * @since Nov 24, 2003
+ */
+public class RexFieldAccess
+    extends RexNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private RexNode expr;
     private final RelDataTypeField field;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     RexFieldAccess(
         RexNode expr,
@@ -72,7 +75,7 @@ public class RexFieldAccess extends RexNode
         computeDigest();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataTypeField getField()
     {
@@ -130,6 +133,5 @@ public class RexFieldAccess extends RexNode
         return (this.digest = expr + "." + field.getName());
     }
 }
-
 
 // End RexFieldAccess.java

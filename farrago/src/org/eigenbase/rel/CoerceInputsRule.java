@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import java.util.*;
@@ -32,31 +31,31 @@ import org.eigenbase.util.*;
 
 
 /**
- * CoerceInputsRule precasts inputs to a particular type.  This can be used
- * to assist operator implementations which impose requirements on their
- * input types.
+ * CoerceInputsRule precasts inputs to a particular type. This can be used to
+ * assist operator implementations which impose requirements on their input
+ * types.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class CoerceInputsRule extends RelOptRule
+public class CoerceInputsRule
+    extends RelOptRule
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Class consumerRelClass;
 
     private final boolean coerceNames;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs the rule.
      *
-     * @param consumerRelClass the RelNode class which will consume
-     * the inputs
-     *
-     * @param coerceNames if true, coerce names and types; if false,
-     * coerce type only
+     * @param consumerRelClass the RelNode class which will consume the inputs
+     * @param coerceNames if true, coerce names and types; if false, coerce type
+     * only
      */
     public CoerceInputsRule(
         Class consumerRelClass,
@@ -68,7 +67,7 @@ public class CoerceInputsRule extends RelOptRule
         description = "CoerceInputsRule:" + consumerRelClass.getName();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -90,15 +89,18 @@ public class CoerceInputsRule extends RelOptRule
         for (int i = 0; i < inputs.length; ++i) {
             RelDataType expectedType = consumerRel.getExpectedInputRowType(i);
             RelNode input = inputs[i];
-            newInputs[i] = RelOptUtil.createCastRel(
-                input, expectedType, coerceNames);
+            newInputs[i] =
+                RelOptUtil.createCastRel(
+                    input,
+                    expectedType,
+                    coerceNames);
             if (newInputs[i] != input) {
                 coerce = true;
             }
             assert (RelOptUtil.areRowTypesEqual(
-                newInputs[i].getRowType(),
-                expectedType,
-                coerceNames));
+                        newInputs[i].getRowType(),
+                        expectedType,
+                        coerceNames));
         }
         if (!coerce) {
             return;
@@ -110,6 +112,5 @@ public class CoerceInputsRule extends RelOptRule
         call.transformTo(newConsumerRel);
     }
 }
-
 
 // End CoerceInputsRule.java

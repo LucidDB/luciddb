@@ -23,22 +23,25 @@ package org.eigenbase.rel;
 
 import java.util.*;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+
 /**
- * <code>JoinRelBase</code> is an abstract base class for
- * implementations of {@link JoinRel}.
+ * <code>JoinRelBase</code> is an abstract base class for implementations of
+ * {@link JoinRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class JoinRelBase extends AbstractRelNode
+public abstract class JoinRelBase
+    extends AbstractRelNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RexNode condition;
     protected RelNode left;
@@ -50,6 +53,8 @@ public abstract class JoinRelBase extends AbstractRelNode
      * JoinType#RIGHT} is disallowed.
      */
     protected JoinRelType joinType;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected JoinRelBase(
         RelOptCluster cluster,
@@ -70,9 +75,11 @@ public abstract class JoinRelBase extends AbstractRelNode
         this.joinType = joinType;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public RexNode [] getChildExps()
     {
-        return new RexNode [] { condition };
+        return new RexNode[] { condition };
     }
 
     public RexNode getCondition()
@@ -82,7 +89,7 @@ public abstract class JoinRelBase extends AbstractRelNode
 
     public RelNode [] getInputs()
     {
-        return new RelNode [] { left, right };
+        return new RelNode[] { left, right };
     }
 
     public JoinRelType getJoinType()
@@ -109,10 +116,13 @@ public abstract class JoinRelBase extends AbstractRelNode
     }
 
     public static double estimateJoinedRows(
-        JoinRelBase joinRel, RexNode condition)
+        JoinRelBase joinRel,
+        RexNode condition)
     {
-        double product = RelMetadataQuery.getRowCount(joinRel.getLeft())
+        double product =
+            RelMetadataQuery.getRowCount(joinRel.getLeft())
             * RelMetadataQuery.getRowCount(joinRel.getRight());
+
         // TODO:  correlation factor
         return product * RelMetadataQuery.getSelectivity(joinRel, condition);
     }
@@ -138,13 +148,13 @@ public abstract class JoinRelBase extends AbstractRelNode
         visitor.visit(left, 0, this);
         visitor.visit(right, 1, this);
     }
-    
+
     public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] { "left", "right", "condition", "joinType" },
-            new Object [] { joinType.name().toLowerCase() });
+            new String[] { "left", "right", "condition", "joinType" },
+            new Object[] { joinType.name().toLowerCase() });
     }
 
     public void registerStoppedVariable(String name)
@@ -173,9 +183,13 @@ public abstract class JoinRelBase extends AbstractRelNode
 
     protected RelDataType deriveRowType()
     {
-        return deriveJoinRowType(
-            left.getRowType(), right.getRowType(), joinType,
-            getCluster().getTypeFactory(), null);
+        return
+            deriveJoinRowType(
+                left.getRowType(),
+                right.getRowType(),
+                joinType,
+                getCluster().getTypeFactory(),
+                null);
     }
 
     public static RelDataType deriveJoinRowType(
@@ -187,18 +201,14 @@ public abstract class JoinRelBase extends AbstractRelNode
     {
         switch (joinType) {
         case LEFT:
-            rightType =
-                typeFactory.createTypeWithNullability(rightType, true);
+            rightType = typeFactory.createTypeWithNullability(rightType, true);
             break;
         case RIGHT:
-            leftType =
-                typeFactory.createTypeWithNullability(leftType, true);
+            leftType = typeFactory.createTypeWithNullability(leftType, true);
             break;
         case FULL:
-            leftType =
-                typeFactory.createTypeWithNullability(leftType, true);
-            rightType =
-                typeFactory.createTypeWithNullability(rightType, true);
+            leftType = typeFactory.createTypeWithNullability(leftType, true);
+            rightType = typeFactory.createTypeWithNullability(rightType, true);
             break;
         default:
             break;
@@ -208,19 +218,19 @@ public abstract class JoinRelBase extends AbstractRelNode
 
     /**
      * Returns the type of joining two relations. The result type consists of
-     * the fields of the left type plus the fields of the right type. The
-     * field name list, if present, overrides the original names of the fields.
+     * the fields of the left type plus the fields of the right type. The field
+     * name list, if present, overrides the original names of the fields.
      *
      * @param typeFactory Type factory
      * @param leftType Type of left input to join
      * @param rightType Type of right input to join
      * @param fieldNameList If not null, overrides the original names of the
-     *                 fields
+     * fields
+     *
      * @return
-     * @pre fieldNameList == null ||
-     *   fieldNameList.size() ==
-     *   leftType.getFields().length +
-     *   rightType.getFields().length
+     *
+     * @pre fieldNameList == null || fieldNameList.size() ==
+     * leftType.getFields().length + rightType.getFields().length
      */
     public static RelDataType createJoinType(
         RelDataTypeFactory typeFactory,
@@ -228,10 +238,12 @@ public abstract class JoinRelBase extends AbstractRelNode
         RelDataType rightType,
         List<String> fieldNameList)
     {
-        assert fieldNameList == null ||
-            fieldNameList.size() ==
-            leftType.getFields().length +
-            rightType.getFields().length;
+        assert (fieldNameList == null)
+            || (
+                fieldNameList.size()
+                == (leftType.getFields().length
+                    + rightType.getFields().length)
+               );
         List<String> nameList = new ArrayList<String>();
         List<RelDataType> typeList = new ArrayList<RelDataType>();
         addFields(leftType, typeList, nameList);
@@ -269,9 +281,6 @@ public abstract class JoinRelBase extends AbstractRelNode
             typeList.add(field.getType());
         }
     }
-
-    //~ Inner Classes ---------------------------------------------------------
-
 }
 
 // End JoinRelBase.java

@@ -30,6 +30,7 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
  * An implementation of RelOptTable for accessing data in a LucidDB
  * column-store.
@@ -37,14 +38,20 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LcsTable extends MedAbstractColumnSet
+public class LcsTable
+    extends MedAbstractColumnSet
 {
-    /** Helper class to manipulate the cluster indexes. */
+
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Helper class to manipulate the cluster indexes.
+     */
     private LcsIndexGuide indexGuide;
 
     private List<FemLocalIndex> clusteredIndexes;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     LcsTable(
         String [] localName,
@@ -55,7 +62,7 @@ public class LcsTable extends MedAbstractColumnSet
         super(localName, null, rowType, tableProps, columnPropMap);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public RelNode toRel(
@@ -64,34 +71,40 @@ public class LcsTable extends MedAbstractColumnSet
     {
         RelNode [] emptyInput = new RelNode[0];
 
-        clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(
-            getPreparingStmt().getRepos(),
-            getCwmColumnSet());
-        return new LcsRowScanRel(
-            cluster,
-            emptyInput,
-            this,
-            clusteredIndexes,
-            connection,
-            null, true, false);
+        clusteredIndexes =
+            FarragoCatalogUtil.getClusteredIndexes(
+                getPreparingStmt().getRepos(),
+                getCwmColumnSet());
+        return
+            new LcsRowScanRel(
+                cluster,
+                emptyInput,
+                this,
+                clusteredIndexes,
+                connection,
+                null,
+                true,
+                false);
     }
 
     public LcsIndexGuide getIndexGuide()
     {
         if (indexGuide == null) {
-            indexGuide = new LcsIndexGuide(
-                getPreparingStmt().getFarragoTypeFactory(),
-                getCwmColumnSet());
+            indexGuide =
+                new LcsIndexGuide(
+                    getPreparingStmt().getFarragoTypeFactory(),
+                    getCwmColumnSet());
         }
         return indexGuide;
     }
-    
+
     public List<FemLocalIndex> getClusteredIndexes()
     {
         if (clusteredIndexes == null) {
-            clusteredIndexes = FarragoCatalogUtil.getClusteredIndexes(
-                getPreparingStmt().getRepos(),
-                getCwmColumnSet());
+            clusteredIndexes =
+                FarragoCatalogUtil.getClusteredIndexes(
+                    getPreparingStmt().getRepos(),
+                    getCwmColumnSet());
         }
         return clusteredIndexes;
     }

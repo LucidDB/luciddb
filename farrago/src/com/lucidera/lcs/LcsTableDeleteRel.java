@@ -33,23 +33,28 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * LcsTableDeleteRel is the relational expression corresponding to
- * deletes from a column-store table.
- * 
+ * LcsTableDeleteRel is the relational expression corresponding to deletes from
+ * a column-store table.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsTableDeleteRel extends MedAbstractFennelTableModRel
+public class LcsTableDeleteRel
+    extends MedAbstractFennelTableModRel
 {
-    //~ Instance fields -------------------------------------------------------
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     /* Refinement for TableModificationRelBase.table. */
     final LcsTable lcsTable;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructor.
-     * 
+     *
      * @param cluster RelOptCluster for this rel
      * @param lcsTable target table of insert
      * @param connection connection
@@ -59,78 +64,85 @@ public class LcsTableDeleteRel extends MedAbstractFennelTableModRel
      */
     public LcsTableDeleteRel(
         RelOptCluster cluster,
-        LcsTable lcsTable, 
+        LcsTable lcsTable,
         RelOptConnection connection,
         RelNode child,
         Operation operation,
         List updateColumnList)
     {
-        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
-            lcsTable, connection, child, operation, updateColumnList, true);
-        
+        super(
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            lcsTable,
+            connection,
+            child,
+            operation,
+            updateColumnList,
+            true);
+
         assert (getOperation().getOrdinal()
-            == TableModificationRel.Operation.DELETE_ORDINAL);
-        
+                == TableModificationRel.Operation.DELETE_ORDINAL);
+
         this.lcsTable = lcsTable;
-        assert lcsTable.getPreparingStmt() ==
-            FennelRelUtil.getPreparingStmt(this);   
+        assert lcsTable.getPreparingStmt()
+            == FennelRelUtil.getPreparingStmt(this);
     }
-    
-    //~ Methods ---------------------------------------------------------------
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
-    {        
+    {
         double dInputRows = RelMetadataQuery.getRowCount(getChild());
-        
+
         // TODO:  compute page-based I/O cost
         // CPU cost is proportional to number of columns projected
         // I/O cost is proportional to the number of pages of the deletion
         //      index that need to be writen
         double dCpu =
             dInputRows * getChild().getRowType().getFieldList().size();
-        
+
         double dIo = dInputRows;
-        
+
         return planner.makeCost(dInputRows, dCpu, dIo);
-        
     }
-    
+
     // implement Cloneable
     public Object clone()
     {
-        LcsTableDeleteRel clone = new LcsTableDeleteRel(
-            getCluster(),
-            lcsTable,
-            getConnection(),
-            RelOptUtil.clone(getChild()),
-            getOperation(),
-            getUpdateColumnList());
+        LcsTableDeleteRel clone =
+            new LcsTableDeleteRel(
+                getCluster(),
+                lcsTable,
+                getConnection(),
+                RelOptUtil.clone(getChild()),
+                getOperation(),
+                getUpdateColumnList());
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     // Override TableModificationRelBase
     public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] {"child", "table"},
-            new Object [] {Arrays.asList(lcsTable.getQualifiedName())});
+            new String[] { "child", "table" },
+            new Object[] { Arrays.asList(lcsTable.getQualifiedName()) });
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FemExecutionStreamDef input =
             implementor.visitFennelChild((FennelRel) getChild());
-        
+
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         LcsIndexGuide indexGuide = lcsTable.getIndexGuide();
         FemLocalIndex deletionIndex =
             FarragoCatalogUtil.getDeletionIndex(repos, table);
-        
+
         // Determine whether we need to sort the input into the delete.
         // If the input is sorted on the rid column, we can bypass the sort,
         // but still need to buffer the input since the input reads from
@@ -142,9 +154,9 @@ public class LcsTableDeleteRel extends MedAbstractFennelTableModRel
         // NOTE zfong 5/23/06 - The code below only works with Fennel calc.
         // Java calc methods are not propagating collation information.
         boolean sort = true;
-        RelFieldCollation[] collation =
+        RelFieldCollation [] collation =
             ((FennelRel) getChild()).getCollations();
-        if (collation.length > 0 && collation[0].getFieldIndex() == 0) {
+        if ((collation.length > 0) && (collation[0].getFieldIndex() == 0)) {
             sort = false;
         }
         if (sort) {
@@ -154,18 +166,17 @@ public class LcsTableDeleteRel extends MedAbstractFennelTableModRel
             input = sortingStream;
         } else {
             FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
-            implementor.addDataFlowFromProducerToConsumer(input,  buffer);
+            implementor.addDataFlowFromProducerToConsumer(input, buffer);
             input = buffer;
         }
-        
-        FemLbmSplicerStreamDef splicer = 
+
+        FemLbmSplicerStreamDef splicer =
             indexGuide.newSplicer(this, deletionIndex, 0);
         implementor.addDataFlowFromProducerToConsumer(input, splicer);
-  
-        FemBarrierStreamDef barrier = 
-            indexGuide.newBarrier(this, 0);       
+
+        FemBarrierStreamDef barrier = indexGuide.newBarrier(this, 0);
         implementor.addDataFlowFromProducerToConsumer(splicer, barrier);
-        
+
         return barrier;
     }
 }

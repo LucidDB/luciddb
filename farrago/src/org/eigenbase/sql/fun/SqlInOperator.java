@@ -22,40 +22,51 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
+import java.util.*;
 
-import java.util.List;
-import java.util.ArrayList;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Definition of the SQL <code>IN</code> operator, which tests for a value's
  * membership in a subquery or a list of values.
  *
  * @author jhyde
- * @since April 17, 2006
  * @version $Id$
+ * @since April 17, 2006
  */
-class SqlInOperator extends SqlBinaryOperator
+class SqlInOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     SqlInOperator()
     {
         super(
-            "IN", SqlKind.In, 30, true, SqlTypeStrategies.rtiNullableBoolean,
-            SqlTypeStrategies.otiFirstKnown, null);
+            "IN",
+            SqlKind.In,
+            30,
+            true,
+            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            null);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
-        final SqlNode[] operands = call.getOperands();
-        assert(operands.length == 2);
-        
+        final SqlNode [] operands = call.getOperands();
+        assert (operands.length == 2);
+
         final RelDataTypeFactory typeFactory = validator.getTypeFactory();
         RelDataType leftType = validator.deriveType(scope, operands[0]);
         RelDataType rightType;
@@ -70,11 +81,10 @@ class SqlInOperator extends SqlBinaryOperator
                 RelDataType nodeType = validator.deriveType(scope, node);
                 rightTypeList.add(nodeType);
             }
-            RelDataType[] rightTypes =
-                (RelDataType[])
-                rightTypeList.toArray(new RelDataType[rightTypeList.size()]);
-            rightType =
-                typeFactory.leastRestrictive(rightTypes);
+            RelDataType [] rightTypes =
+                (RelDataType []) rightTypeList.toArray(
+                    new RelDataType[rightTypeList.size()]);
+            rightType = typeFactory.leastRestrictive(rightTypes);
 
             // First check that the expressions in the IN list are compatible
             // with each other. Same rules as the VALUES operator (per
@@ -98,15 +108,17 @@ class SqlInOperator extends SqlBinaryOperator
         // type of the list. Same strategy as the '=' operator.
         // Normalize the types on both sides to be row types
         // for the purposes of compatibility-checking.
-        RelDataType leftRowType = SqlTypeUtil.promoteToRowType(
-            typeFactory,
-            leftType,
-            null);
-        RelDataType rightRowType = SqlTypeUtil.promoteToRowType(
-            typeFactory,
-            rightType,
-            null);
-        
+        RelDataType leftRowType =
+            SqlTypeUtil.promoteToRowType(
+                typeFactory,
+                leftType,
+                null);
+        RelDataType rightRowType =
+            SqlTypeUtil.promoteToRowType(
+                typeFactory,
+                rightType,
+                null);
+
         final ComparableOperandTypeChecker checker =
             (ComparableOperandTypeChecker)
             SqlTypeStrategies.otcComparableUnorderedX2;
@@ -114,13 +126,13 @@ class SqlInOperator extends SqlBinaryOperator
                 new ExplicitOperatorBinding(
                     typeFactory,
                     this,
-                    new RelDataType[] {leftRowType, rightRowType}))) {
+                    new RelDataType[] { leftRowType, rightRowType }))) {
             throw validator.newValidationError(
                 call,
                 EigenbaseResource.instance().IncompatibleValueType.ex(
                     SqlStdOperatorTable.inOperator.getName()));
         }
-        
+
         // Result is a boolean, nullable if there are any nullable types
         // on either side.
         RelDataType type = typeFactory.createSqlType(SqlTypeName.Boolean);

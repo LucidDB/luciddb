@@ -20,47 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.RelOptUtil;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.fun.*;
 
 
 /**
  * Planner rule which merges a {@link FilterRel} and a {@link CalcRel}. The
- * result is a {@link CalcRel} whose filter condition is the logical AND of
- * the two.
- *
- * @see MergeFilterOntoCalcRule
+ * result is a {@link CalcRel} whose filter condition is the logical AND of the
+ * two.
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
- **/
-public class MergeFilterOntoCalcRule extends RelOptRule
+ * @see MergeFilterOntoCalcRule
+ * @since Mar 7, 2004
+ */
+public class MergeFilterOntoCalcRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final MergeFilterOntoCalcRule instance =
         new MergeFilterOntoCalcRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private MergeFilterOntoCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FilterRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(CalcRel.class, null),
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -77,23 +75,30 @@ public class MergeFilterOntoCalcRule extends RelOptRule
         // Create a program containing the filter.
         final RexBuilder rexBuilder = filter.getCluster().getRexBuilder();
         final RexProgramBuilder progBuilder =
-            new RexProgramBuilder(calc.getRowType(), rexBuilder);
+            new RexProgramBuilder(
+                calc.getRowType(),
+                rexBuilder);
         progBuilder.addIdentity();
         progBuilder.addCondition(filter.getCondition());
         RexProgram topProgram = progBuilder.getProgram();
         RexProgram bottomProgram = calc.getProgram();
 
         // Merge the programs together.
-        RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
-            topProgram, bottomProgram, rexBuilder);
+        RexProgram mergedProgram =
+            RexProgramBuilder.mergePrograms(
+                topProgram,
+                bottomProgram,
+                rexBuilder);
         final CalcRel newCalc =
             new CalcRel(
-                calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), filter.getRowType(), mergedProgram,
+                calc.getCluster(),
+                RelOptUtil.clone(calc.traits),
+                calc.getChild(),
+                filter.getRowType(),
+                mergedProgram,
                 RelCollation.emptyList);
         call.transformTo(newCalc);
     }
 }
-
 
 // End MergeFilterOntoCalcRule.java

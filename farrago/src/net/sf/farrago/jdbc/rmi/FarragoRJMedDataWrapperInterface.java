@@ -22,21 +22,26 @@
 */
 package net.sf.farrago.jdbc.rmi;
 
-import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
-import java.rmi.RemoteException;
-import java.rmi.Remote;
-import java.sql.DriverPropertyInfo;
-import java.util.Locale;
-import java.util.Properties;
+import java.rmi.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+
 
 /**
- * RMI server interface corresponding to
- * {@link net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
+ * RMI server interface corresponding to {@link
+ * net.sf.farrago.jdbc.FarragoMedDataWrapperInfo}.
  *
  * @author Tim Leung
  * @version $Id$
  */
-public interface FarragoRJMedDataWrapperInterface extends Remote {
+public interface FarragoRJMedDataWrapperInterface
+    extends Remote
+{
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#getPluginPropertyInfo
      */
@@ -78,5 +83,8 @@ public interface FarragoRJMedDataWrapperInterface extends Remote {
     /**
      * @see net.sf.farrago.jdbc.FarragoMedDataWrapperInfo#isForeign
      */
-    boolean isForeign() throws RemoteException;
+    boolean isForeign()
+        throws RemoteException;
 }
+
+// End FarragoRJMedDataWrapperInterface.java

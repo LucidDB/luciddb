@@ -20,19 +20,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
+
+import java.io.*;
 
 import org.eigenbase.util14.*;
 
-import java.io.Serializable;
 
 /**
- * FennelStandardTypeDescriptor implements the
- * {@link FennelStandardTypeDescriptor} enumerations as kept in fennel.
- *
- * This must be kept in sync with any changes to fennel's
- * <code>FennelStandardTypeDescriptor.h</code>.
+ * FennelStandardTypeDescriptor implements the {@link
+ * FennelStandardTypeDescriptor} enumerations as kept in fennel. This must be
+ * kept in sync with any changes to fennel's <code>
+ * FennelStandardTypeDescriptor.h</code>.
  *
  * @author Mike Bennett
  * @version $Id$
@@ -41,7 +40,12 @@ public abstract class FennelStandardTypeDescriptor
     extends Enum14.BasicValue
     implements FennelStoredTypeDescriptor
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * SerialVersionUID created with JDK 1.5 serialver tool.
+     */
     private static final long serialVersionUID = 5514431391550418871L;
 
     public static final int MIN_ORDINAL = 1;
@@ -137,31 +141,35 @@ public abstract class FennelStandardTypeDescriptor
      */
     public static final Type_VARBINARY VARBINARY = new Type_VARBINARY();
 
-    private static final FennelStandardTypeDescriptor[] values = {
-        INT_8,
-        UINT_8,
-        INT_16,
-        UINT_16,
-        INT_32,
-        UINT_32,
-        INT_64,
-        UINT_64,
-        BOOL,
-        REAL,
-        DOUBLE,
-        CHAR,
-        VARCHAR,
-        BINARY,
-        VARBINARY,
-    };
+    private static final FennelStandardTypeDescriptor [] values =
+        {
+            INT_8,
+            UINT_8,
+            INT_16,
+            UINT_16,
+            INT_32,
+            UINT_32,
+            INT_64,
+            UINT_64,
+            BOOL,
+            REAL,
+            DOUBLE,
+            CHAR,
+            VARCHAR,
+            BINARY,
+            VARBINARY,
+        };
 
-    public static final Enum14 enumeration =
-        new Enum14(values);
+    public static final Enum14 enumeration = new Enum14(values);
+
+    //~ Constructors -----------------------------------------------------------
 
     private FennelStandardTypeDescriptor(String name, int ordinal)
     {
         super(name, ordinal, null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the {@link FennelStandardTypeDescriptor} with a given name.
@@ -197,8 +205,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isNativeNotBool()
     {
-        return getOrdinal() <= DOUBLE_ORDINAL &&
-            getOrdinal() != BOOL_ORDINAL;
+        return
+            (getOrdinal() <= DOUBLE_ORDINAL) && (getOrdinal() != BOOL_ORDINAL);
     }
 
     /**
@@ -228,8 +236,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isApprox()
     {
-        if (getOrdinal() == REAL_ORDINAL ||
-            getOrdinal() == DOUBLE_ORDINAL) {
+        if ((getOrdinal() == REAL_ORDINAL)
+            || (getOrdinal() == DOUBLE_ORDINAL)) {
             return true;
         }
         return false;
@@ -240,8 +248,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isArray()
     {
-        if (getOrdinal() >= CHAR_ORDINAL &&
-            getOrdinal() <= VARBINARY_ORDINAL) {
+        if ((getOrdinal() >= CHAR_ORDINAL)
+            && (getOrdinal() <= VARBINARY_ORDINAL)) {
             return true;
         }
         return false;
@@ -252,8 +260,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isVariableLenArray()
     {
-        if (getOrdinal() == VARCHAR_ORDINAL ||
-            getOrdinal() == VARBINARY_ORDINAL) {
+        if ((getOrdinal() == VARCHAR_ORDINAL)
+            || (getOrdinal() == VARBINARY_ORDINAL)) {
             return true;
         }
         return false;
@@ -264,8 +272,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isFixedLenArray()
     {
-        if (getOrdinal() == CHAR_ORDINAL ||
-            getOrdinal() == BINARY_ORDINAL) {
+        if ((getOrdinal() == CHAR_ORDINAL)
+            || (getOrdinal() == BINARY_ORDINAL)) {
             return true;
         }
         return false;
@@ -276,8 +284,8 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isTextArray()
     {
-        if (getOrdinal() == CHAR_ORDINAL ||
-            getOrdinal() == VARCHAR_ORDINAL) {
+        if ((getOrdinal() == CHAR_ORDINAL)
+            || (getOrdinal() == VARCHAR_ORDINAL)) {
             return true;
         }
         return false;
@@ -288,21 +296,26 @@ public abstract class FennelStandardTypeDescriptor
      */
     public boolean isBinaryArray()
     {
-        if (getOrdinal() == VARBINARY_ORDINAL ||
-            getOrdinal() == BINARY_ORDINAL) {
+        if ((getOrdinal() == VARBINARY_ORDINAL)
+            || (getOrdinal() == BINARY_ORDINAL)) {
             return true;
         }
         return false;
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Abstract base class for all types.
      */
     private static abstract class FennelType
         extends FennelStandardTypeDescriptor
-        implements FennelStoredTypeDescriptor, Serializable
+        implements FennelStoredTypeDescriptor,
+            Serializable
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 2487596130623297086L;
 
         FennelType(String name, int ordinal)
@@ -349,9 +362,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Abstract base class for all numeric types.
      */
-    private static abstract class FennelNumericType extends FennelType
+    private static abstract class FennelNumericType
+        extends FennelType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 1126249335998415507L;
 
         private final int bitCount;
@@ -375,6 +391,18 @@ public abstract class FennelStandardTypeDescriptor
             this.fixedByteCount = fixedByteCount;
             this.signed = signed;
             this.exact = exact;
+        }
+
+        /**
+         * Required by the serialization mechanism; should never be used.
+         */
+        protected FennelNumericType()
+        {
+            super(null, -1);
+            this.bitCount = 0;
+            this.fixedByteCount = 0;
+            this.signed = false;
+            this.exact = true;
         }
 
         public int getBitCount()
@@ -411,26 +439,17 @@ public abstract class FennelStandardTypeDescriptor
         {
             return true;
         }
-
-        /**
-         * Required by the serialization mechanism; should never be used.
-         */
-        protected FennelNumericType()
-        {
-            super(null, -1);
-            this.bitCount = 0;
-            this.fixedByteCount = 0;
-            this.signed = false;
-            this.exact = true;
-        }
     }
 
     /**
      * Describes a signed byte.
      */
-    private static class Type_INT_8 extends FennelNumericType
+    private static class Type_INT_8
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -1929462493400009575L;
 
         Type_INT_8()
@@ -442,7 +461,7 @@ public abstract class FennelStandardTypeDescriptor
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
         }
-        
+
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
         {
             return (int) (d2.getByte() - d1.getByte());
@@ -452,21 +471,24 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes an unsigned byte.
      */
-    private static class Type_UINT_8 extends FennelNumericType
+    private static class Type_UINT_8
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 4611295449204872120L;
 
         Type_UINT_8()
         {
             super("u1", UINT_8_ORDINAL, 0, 1, false, true);
         }
-        
+
         public FennelAttributeAccessor newAttributeAccessor()
         {
             return new FennelAttributeAccessor.FennelByteAccessor();
         }
-        
+
         public int compareValues(FennelTupleDatum d1, FennelTupleDatum d2)
         {
             return (int) (d2.getUnsignedByte() - d1.getUnsignedByte());
@@ -476,9 +498,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a signed short.
      */
-    private static class Type_INT_16 extends FennelNumericType
+    private static class Type_INT_16
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 7178036227179809714L;
 
         Type_INT_16()
@@ -500,9 +525,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes an unsigned short.
      */
-    private static class Type_UINT_16 extends FennelNumericType
+    private static class Type_UINT_16
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -4187803364067898572L;
 
         Type_UINT_16()
@@ -524,9 +552,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a signed int.
      */
-    private static class Type_INT_32 extends FennelNumericType
+    private static class Type_INT_32
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 4459795783565074222L;
 
         Type_INT_32()
@@ -548,9 +579,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes an unsigned int.
      */
-    private static class Type_UINT_32 extends FennelNumericType
+    private static class Type_UINT_32
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 4551603883805108096L;
 
         Type_UINT_32()
@@ -572,9 +606,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a signed long.
      */
-    private static class Type_INT_64 extends FennelNumericType
+    private static class Type_INT_64
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 6188765410255919222L;
 
         Type_INT_64()
@@ -596,9 +633,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes an unsigned long.
      */
-    private static class Type_UINT_64 extends FennelNumericType
+    private static class Type_UINT_64
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -2632732624177829892L;
 
         Type_UINT_64()
@@ -620,9 +660,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a float.
      */
-    private static class Type_REAL extends FennelNumericType
+    private static class Type_REAL
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 8925748663583683424L;
 
         Type_REAL()
@@ -644,9 +687,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a double.
      */
-    private static class Type_DOUBLE extends FennelNumericType
+    private static class Type_DOUBLE
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -2610530167912464104L;
 
         public Type_DOUBLE()
@@ -668,9 +714,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a boolean.
      */
-    private static class Type_BOOL extends FennelNumericType
+    private static class Type_BOOL
+        extends FennelNumericType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 1589041391248552300L;
 
         public Type_BOOL()
@@ -698,9 +747,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a fixed-width character string.
      */
-    private static class Type_CHAR extends FennelType
+    private static class Type_CHAR
+        extends FennelType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 422697645810009320L;
 
         Type_CHAR()
@@ -729,11 +781,18 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(d1.getBytes(), 0, c);
-            final String s2 = new String(d2.getBytes(), 0, c);
+            final String s1 = new String(
+                    d1.getBytes(),
+                    0,
+                    c);
+            final String s2 = new String(
+                    d2.getBytes(),
+                    0,
+                    c);
             if (s1.equals(s2)) {
                 return 0;
             }
+
             // arbitrarily mark the first one larger; if this is actually
             // used, compare hashcodes
             return -1;
@@ -743,9 +802,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a variable-width character string.
      */
-    private static class Type_VARCHAR extends FennelType
+    private static class Type_VARCHAR
+        extends FennelType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 563172148879378524L;
 
         Type_VARCHAR()
@@ -769,11 +831,18 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(d1.getBytes(), 0, c);
-            final String s2 = new String(d2.getBytes(), 0, c);
+            final String s1 = new String(
+                    d1.getBytes(),
+                    0,
+                    c);
+            final String s2 = new String(
+                    d2.getBytes(),
+                    0,
+                    c);
             if (s1.equals(s2)) {
                 return 0;
             }
+
             // arbitrarily mark the first one larger; if this is actually
             // used, compare hashcodes
             return -1;
@@ -783,9 +852,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a fixed-width binary string.
      */
-    private static class Type_BINARY extends FennelType
+    private static class Type_BINARY
+        extends FennelType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -2878656484355172778L;
 
         Type_BINARY()
@@ -814,11 +886,18 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(d1.getBytes(), 0, c);
-            final String s2 = new String(d2.getBytes(), 0, c);
+            final String s1 = new String(
+                    d1.getBytes(),
+                    0,
+                    c);
+            final String s2 = new String(
+                    d2.getBytes(),
+                    0,
+                    c);
             if (s1.equals(s2)) {
                 return 0;
             }
+
             // arbitrarily mark the first one larger; if this is actually
             // used, compare hashcodes
             return -1;
@@ -828,9 +907,12 @@ public abstract class FennelStandardTypeDescriptor
     /**
      * Describes a variable-width binary array.
      */
-    private static class Type_VARBINARY extends FennelType
+    private static class Type_VARBINARY
+        extends FennelType
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -8867996175313892900L;
 
         Type_VARBINARY()
@@ -854,11 +936,18 @@ public abstract class FennelStandardTypeDescriptor
             if (c != 0) {
                 return c;
             }
-            final String s1 = new String(d1.getBytes(), 0, c);
-            final String s2 = new String(d2.getBytes(), 0, c);
+            final String s1 = new String(
+                    d1.getBytes(),
+                    0,
+                    c);
+            final String s2 = new String(
+                    d2.getBytes(),
+                    0,
+                    c);
             if (s1.equals(s2)) {
                 return 0;
             }
+
             // arbitrarily mark the first one larger; if this is actually
             // used, compare hashcodes
             return -1;

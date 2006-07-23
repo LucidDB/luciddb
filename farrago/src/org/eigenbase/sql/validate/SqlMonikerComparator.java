@@ -19,32 +19,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.validate;
 
-import java.util.Comparator;
+import java.util.*;
+
 
 /**
- * A generic implementation of {@link SqlMonikerComparator} to 
- * compare {@link SqlMoniker}.
+ * A generic implementation of {@link SqlMonikerComparator} to compare {@link
+ * SqlMoniker}.
  *
  * @author tleung
- * @since Oct 16, 2005
  * @version $$
- **/
-public class SqlMonikerComparator implements Comparator
-{   
-    /* 
+ * @since Oct 16, 2005
+ */
+public class SqlMonikerComparator
+    implements Comparator
+{
+
+    //~ Methods ----------------------------------------------------------------
+
+    /*
      * Compares its arguments for order.  The arguments have to be of type
      * {@link SqlMoniker}
      */
-    public int compare(Object o1, Object o2) 
+    public int compare(Object o1, Object o2)
     {
         if (!(o1 instanceof SqlMoniker) || !(o2 instanceof SqlMoniker)) {
             return 0;
         }
-        SqlMoniker m1 = (SqlMoniker)o1;
-        SqlMoniker m2 = (SqlMoniker)o2;
+        SqlMoniker m1 = (SqlMoniker) o1;
+        SqlMoniker m2 = (SqlMoniker) o2;
 
         if (m1.getType().getOrdinal() > m2.getType().getOrdinal()) {
             return 1;
@@ -55,3 +59,5 @@ public class SqlMonikerComparator implements Comparator
         }
     }
 }
+
+// End SqlMonikerComparator.java

@@ -22,18 +22,18 @@
 package org.eigenbase.jmi;
 
 /**
- * Special exception to flag a reference to an unvalidated dependency.  When
- * such a dependency is detected (usually in the context of a cyclic
- * definition), we throw this exception to terminate processing of the
- * current object.  The JmiChangeSet catches it and recovers, marking the
- * object as needing another try, and moves on to other objects.  If
- * validation reaches a fixpoint, it means there is an object definition cycle
- * (which is illegal).
+ * Special exception to flag a reference to an unvalidated dependency. When such
+ * a dependency is detected (usually in the context of a cyclic definition), we
+ * throw this exception to terminate processing of the current object. The
+ * JmiChangeSet catches it and recovers, marking the object as needing another
+ * try, and moves on to other objects. If validation reaches a fixpoint, it
+ * means there is an object definition cycle (which is illegal).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiUnvalidatedDependencyException extends RuntimeException
+public class JmiUnvalidatedDependencyException
+    extends RuntimeException
 {
 }
 

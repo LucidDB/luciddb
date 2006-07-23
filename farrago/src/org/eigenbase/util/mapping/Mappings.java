@@ -19,31 +19,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.mapping;
 
+import java.util.*;
 
-import org.eigenbase.util.Permutation;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-import java.util.Iterator;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Utility functions related to mappings.
  *
+ * @author jhyde
+ * @version $Id$
  * @see MappingType
  * @see Mapping
  * @see Permutation
- *
- * @author jhyde
- * @version $Id$
  * @since Mar 24, 2006
  */
 public abstract class Mappings
 {
-    private Mappings() {}
+
+    //~ Constructors -----------------------------------------------------------
+
+    private Mappings()
+    {
+    }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Creates a mapping with required properties.
@@ -59,25 +61,29 @@ public abstract class Mappings
             return new Permutation(sourceCount);
         case InverseSurjection:
         case PartialSurjection:
-            return new Mappings.PartialMapping(
-                sourceCount,
-                targetCount,
-                mappingType);
+            return
+                new Mappings.PartialMapping(
+                    sourceCount,
+                    targetCount,
+                    mappingType);
         case PartialFunction:
-            return new PartialFunctionImpl(
-                sourceCount,
-                targetCount,
-                mappingType);
+            return
+                new PartialFunctionImpl(
+                    sourceCount,
+                    targetCount,
+                    mappingType);
         default:
             throw Util.needToImplement(
                 "no known implementation for mapping type " + mappingType);
         }
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     /**
-     * Mapping where every source has a target.
+     * Mapping where every source has a target. But:
      *
-     * But:<ul>
+     * <ul>
      * <li>A target may not have a source.
      * <li>May not be finite.
      * </ul>
@@ -93,7 +99,9 @@ public abstract class Mappings
          * Returns the target that a source maps to.
          *
          * @param source source
+         *
          * @return target
+         *
          * @throws IndexOutOfBoundsException if source is not mapped
          */
         int getTarget(int source);
@@ -103,7 +111,73 @@ public abstract class Mappings
         int getSourceCount();
     }
 
-    public static abstract class AbstractMapping implements Mapping
+    /**
+     * Mapping suitable for sourcing columns.
+     *
+     * <p>Properties:
+     *
+     * <ul>
+     * <li>It has a finite number of sources and targets
+     * <li>Each target has exactly one source
+     * <li>Each source has at most one target
+     * </ul>
+     *
+     * <p>TODO: figure out which interfaces this should extend
+     */
+    public static interface SourceMapping
+    {
+        int getSourceCount();
+
+        int getSource(int target);
+
+        int getSourceOpt(int target);
+
+        int getTargetCount();
+
+        int getTargetOpt(int source);
+
+        MappingType getMappingType();
+
+        Mapping inverse();
+    }
+
+    /**
+     * Mapping suitable for mapping columns to a target.
+     *
+     * <p>Properties:
+     *
+     * <ul>
+     * <li>It has a finite number of sources and targets
+     * <li>Each target has at most one source
+     * <li>Each source has exactly one target
+     * </ul>
+     *
+     * <p>TODO: figure out which interfaces this should extend
+     */
+    public static interface TargetMapping
+        extends Mapping
+    {
+        int getSourceCount();
+
+        int getSourceOpt(int target);
+
+        int getTargetCount();
+
+        int getTarget(int target);
+
+        int getTargetOpt(int source);
+
+        void set(int source, int target);
+
+        MappingType getMappingType();
+
+        Mapping inverse();
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    public static abstract class AbstractMapping
+        implements Mapping
     {
         public int getTargetOpt(int source)
         {
@@ -115,8 +189,8 @@ public abstract class Mappings
             int target = getTargetOpt(source);
             if (target == -1) {
                 throw new IndexOutOfBoundsException(
-                    "source #" + source + " has no target in mapping " +
-                    toString());
+                    "source #" + source + " has no target in mapping "
+                    + toString());
             }
             return target;
         }
@@ -131,8 +205,8 @@ public abstract class Mappings
             int source = getSourceOpt(target);
             if (source == -1) {
                 throw new IndexOutOfBoundsException(
-                    "target #" + source + " has no source in mapping " +
-                    toString());
+                    "target #" + source + " has no source in mapping "
+                    + toString());
             }
             return source;
         }
@@ -148,9 +222,9 @@ public abstract class Mappings
         }
     }
 
-    public static abstract class FiniteAbstractMapping extends AbstractMapping
+    public static abstract class FiniteAbstractMapping
+        extends AbstractMapping
     {
-
         public Iterator<IntPair> iterator()
         {
             return new FunctionMappingIter(this);
@@ -163,18 +237,33 @@ public abstract class Mappings
          *
          * <table border="1">
          * <tr>
-         * <th>source</th><td>0</td><td>1</td><td>2</td>
+         * <th>source</th>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>2</td>
          * </tr>
          * <tr>
-         * <th>target</th><td>-1</td><td>3</td><td>2</td>
+         * <th>target</th>
+         * <td>-1</td>
+         * <td>3</td>
+         * <td>2</td>
          * </tr>
          * </table>
+         *
          * <table border="1">
          * <tr>
-         * <th>target</th><td>0</td><td>1</td><td>2</td><td>3</td>
+         * <th>target</th>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>2</td>
+         * <td>3</td>
          * </tr>
          * <tr>
-         * <th>source</th><td>-1</td><td>-1</td><td>2</td><td>1</td>
+         * <th>source</th>
+         * <td>-1</td>
+         * <td>-1</td>
+         * <td>2</td>
+         * <td>1</td>
          * </tr>
          * </table>
          *
@@ -207,13 +296,14 @@ public abstract class Mappings
         public boolean equals(Object obj)
         {
             // not very efficient
-            return obj instanceof Permutation &&
-                toString().equals(obj.toString());
+            return
+                (obj instanceof Permutation)
+                && toString().equals(obj.toString());
         }
-
     }
 
-    static class FunctionMappingIter implements Iterator<IntPair>
+    static class FunctionMappingIter
+        implements Iterator<IntPair>
     {
         private int i = 0;
         private final FunctionMapping mapping;
@@ -225,14 +315,17 @@ public abstract class Mappings
 
         public boolean hasNext()
         {
-            return i < mapping.getSourceCount() ||
-                mapping.getSourceCount() == -1;
+            return
+                (i < mapping.getSourceCount())
+                || (mapping.getSourceCount() == -1);
         }
 
         public IntPair next()
         {
             int x = i++;
-            return new IntPair(x, mapping.getTarget(x));
+            return new IntPair(
+                    x,
+                    mapping.getTarget(x));
         }
 
         public void remove()
@@ -242,78 +335,34 @@ public abstract class Mappings
     }
 
     /**
-     * Mapping suitable for sourcing columns.
-     *
-     * <p>Properties:<ul>
-     * <li>It has a finite number of sources and targets
-     * <li>Each target has exactly one source
-     * <li>Each source has at most one target
-     * </ul>
-     *
-     * <p>TODO: figure out which interfaces this should extend
-     */
-    public static interface SourceMapping
-    {
-        int getSourceCount();
-        int getSource(int target);
-        int getSourceOpt(int target);
-        int getTargetCount();
-        int getTargetOpt(int source);
-
-        MappingType getMappingType();
-
-        Mapping inverse();
-    }
-
-    /**
-     * Mapping suitable for mapping columns to a target.
-     *
-     * <p>Properties:<ul>
-     * <li>It has a finite number of sources and targets
-     * <li>Each target has at most one source
-     * <li>Each source has exactly one target
-     * </ul>
-     *
-     * <p>TODO: figure out which interfaces this should extend
-     */
-    public static interface TargetMapping extends Mapping
-    {
-        int getSourceCount();
-        int getSourceOpt(int target);
-        int getTargetCount();
-        int getTarget(int target);
-        int getTargetOpt(int source);
-        void set(int source, int target);
-
-        MappingType getMappingType();
-
-        Mapping inverse();
-    }
-
-    /**
      * Thrown when a mapping is expected to return one element but returns
      * several.
      */
-    public static class TooManyElementsException extends RuntimeException
-    {}
+    public static class TooManyElementsException
+        extends RuntimeException
+    {
+    }
 
     /**
-     * Thrown when a mapping is expected to return one element but returns
-     * none.
+     * Thrown when a mapping is expected to return one element but returns none.
      */
-    public static class NoElementException extends RuntimeException
-    {}
+    public static class NoElementException
+        extends RuntimeException
+    {
+    }
 
     /**
-     * A mapping where a source at most one target,
-     * and every target has at most one source.
+     * A mapping where a source at most one target, and every target has at most
+     * one source.
      */
     public static class PartialMapping
         extends FiniteAbstractMapping
-        implements Mapping, FunctionMapping, TargetMapping
+        implements Mapping,
+            FunctionMapping,
+            TargetMapping
     {
-        protected final int[] sources;
-        protected final int[] targets;
+        protected final int [] sources;
+        protected final int [] targets;
         private final MappingType mappingType;
 
         /**
@@ -323,25 +372,40 @@ public abstract class Mappings
          *
          * <table border="1">
          * <tr>
-         * <th>source</th><td>0</td><td>1</td><td>2</td>
+         * <th>source</th>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>2</td>
          * </tr>
          * <tr>
-         * <th>target</th><td>-1</td><td>-1</td><td>-1</td>
+         * <th>target</th>
+         * <td>-1</td>
+         * <td>-1</td>
+         * <td>-1</td>
          * </tr>
          * </table>
+         *
          * <table border="1">
          * <tr>
-         * <th>target</th><td>0</td><td>1</td><td>2</td><td>3</td>
+         * <th>target</th>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>2</td>
+         * <td>3</td>
          * </tr>
          * <tr>
-         * <th>source</th><td>-1</td><td>-1</td><td>-1</td><td>-1</td>
+         * <th>source</th>
+         * <td>-1</td>
+         * <td>-1</td>
+         * <td>-1</td>
+         * <td>-1</td>
          * </tr>
          * </table>
          *
          * @param sourceCount Number of source elements
          * @param targetCount Number of target elements
-         * @param mappingType Mapping type; must not allow multiple sources
-         *   per target or multiple targets per source
+         * @param mappingType Mapping type; must not allow multiple sources per
+         * target or multiple targets per source
          */
         public PartialMapping(
             int sourceCount,
@@ -358,29 +422,36 @@ public abstract class Mappings
         }
 
         /**
-         * Creates a partial mapping from a list.
-         *
-         * For example, <code>PartialMapping({1, 2, 4}, 6)</code> creates the
-         * mapping
+         * Creates a partial mapping from a list. For example, <code>
+         * PartialMapping({1, 2, 4}, 6)</code> creates the mapping
          *
          * <table border="1">
          * <tr>
          * <th>source</th>
-         * <td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>2</td>
+         * <td>3</td>
+         * <td>4</td>
+         * <td>5</td>
          * </tr>
          * <tr>
          * <th>target</th>
-         * <td>-1</td><td>0</td><td>1</td><td>-1</td><td>2</td><td>-1</td>
+         * <td>-1</td>
+         * <td>0</td>
+         * <td>1</td>
+         * <td>-1</td>
+         * <td>2</td>
+         * <td>-1</td>
          * </tr>
          * </table>
          *
          * @param sourceList List whose i'th element is the source of target #i
          * @param sourceCount Number of elements in the source domain
-         * @param mappingType Mapping type, must be
-         *        {@link MappingType.PartialSurjection} or stronger.
+         * @param mappingType Mapping type, must be {@link
+         * MappingType.PartialSurjection} or stronger.
          */
-        public PartialMapping(
-            List<Integer> sourceList,
+        public PartialMapping(List<Integer> sourceList,
             int sourceCount,
             MappingType mappingType)
         {
@@ -401,10 +472,10 @@ public abstract class Mappings
                 }
             }
         }
-        
+
         private PartialMapping(
-            int[] sources,
-            int[] targets,
+            int [] sources,
+            int [] targets,
             MappingType mappingType)
         {
             this.sources = sources;
@@ -429,8 +500,11 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return new PartialMapping(
-                targets.clone(), sources.clone(), mappingType.inverse());
+            return
+                new PartialMapping(
+                    targets.clone(),
+                    sources.clone(),
+                    mappingType.inverse());
         }
 
         public Iterator<IntPair> iterator()
@@ -445,13 +519,13 @@ public abstract class Mappings
             return true;
         }
 
-        private static void assertPartialValid(int[] sources, int[] targets)
+        private static void assertPartialValid(int [] sources, int [] targets)
         {
             for (int i = 0; i < sources.length; i++) {
                 final int source = sources[i];
                 assert source >= -1;
                 assert source < targets.length;
-                assert source == -1 || targets[source] == i;
+                assert (source == -1) || (targets[source] == i);
             }
         }
 
@@ -486,13 +560,14 @@ public abstract class Mappings
             int target = getTargetOpt(source);
             if (target == -1) {
                 throw new IndexOutOfBoundsException(
-                    "source #" + source + " has no target in mapping " +
-                    toString());
+                    "source #" + source + " has no target in mapping "
+                    + toString());
             }
             return target;
         }
 
-        private class MappingItr implements Iterator<IntPair>
+        private class MappingItr
+            implements Iterator<IntPair>
         {
             int i = 0;
 
@@ -522,7 +597,8 @@ public abstract class Mappings
      * <p>If you call {@link #set} on a target, the target's previous source
      * will be lost.
      */
-    static class SurjectionWithInverse extends PartialMapping
+    static class SurjectionWithInverse
+        extends PartialMapping
     {
         SurjectionWithInverse(int sourceCount, int targetCount)
         {
@@ -547,8 +623,8 @@ public abstract class Mappings
             final int prevTarget = targets[source];
             if (prevTarget != -1) {
                 throw new IllegalArgumentException(
-                    "source #" + source +
-                    " is already mapped to target #" + target);
+                    "source #" + source
+                    + " is already mapped to target #" + target);
             }
             targets[source] = target;
             final int prevSource = sources[target];
@@ -564,7 +640,9 @@ public abstract class Mappings
 
     public static class IdentityMapping
         extends AbstractMapping
-        implements FunctionMapping, TargetMapping, SourceMapping
+        implements FunctionMapping,
+            TargetMapping,
+            SourceMapping
     {
         private final int size;
 
@@ -625,26 +703,25 @@ public abstract class Mappings
 
         public Iterator<IntPair> iterator()
         {
-            return new Iterator<IntPair>()
-            {
-                int i = 0;
+            return new Iterator<IntPair>() {
+                    int i = 0;
 
-                public boolean hasNext()
-                {
-                    return size < 0  || i < size;
-                }
+                    public boolean hasNext()
+                    {
+                        return (size < 0) || (i < size);
+                    }
 
-                public IntPair next()
-                {
-                    int x = i++;
-                    return new IntPair(x, x);
-                }
+                    public IntPair next()
+                    {
+                        int x = i++;
+                        return new IntPair(x, x);
+                    }
 
-                public void remove()
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
+                    public void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }
+                };
         }
     }
 
@@ -656,7 +733,9 @@ public abstract class Mappings
         private final int source;
         private final int target;
 
-        public OverridingSourceMapping(SourceMapping parent, int source, int target)
+        public OverridingSourceMapping(SourceMapping parent,
+            int source,
+            int target)
         {
             this.parent = parent;
             this.source = source;
@@ -665,8 +744,10 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return new OverridingTargetMapping(
-                (TargetMapping) parent.inverse(), target, source);
+            return
+                new OverridingTargetMapping((TargetMapping) parent.inverse(),
+                    target,
+                    source);
         }
 
         public MappingType getMappingType()
@@ -699,7 +780,9 @@ public abstract class Mappings
         private final int source;
 
         public OverridingTargetMapping(
-            TargetMapping parent, int target, int source)
+            TargetMapping parent,
+            int target,
+            int source)
         {
             this.parent = parent;
             this.target = target;
@@ -713,8 +796,11 @@ public abstract class Mappings
 
         public Mapping inverse()
         {
-            return new OverridingSourceMapping(
-                parent.inverse(), source, target);
+            return
+                new OverridingSourceMapping(
+                    parent.inverse(),
+                    source,
+                    target);
         }
 
         public MappingType getMappingType()
@@ -739,13 +825,12 @@ public abstract class Mappings
     }
 
     /**
-     * Implementation of {@link Mapping} where
-     * a source can have at most one target, and
-     * a target can have any number of sources.
-     * The source count must be finite, but the target count may be infinite.
+     * Implementation of {@link Mapping} where a source can have at most one
+     * target, and a target can have any number of sources. The source count
+     * must be finite, but the target count may be infinite.
      *
-     * <p>The implementation uses an array for the forward-mapping, but does
-     * not store the backward mapping.
+     * <p>The implementation uses an array for the forward-mapping, but does not
+     * store the backward mapping.
      */
     private static class PartialFunctionImpl
         extends AbstractMapping
@@ -754,10 +839,12 @@ public abstract class Mappings
         private final int sourceCount;
         private final int targetCount;
         private final MappingType mappingType;
-        private final int[] targets;
+        private final int [] targets;
 
         public PartialFunctionImpl(
-            int sourceCount, int targetCount, MappingType mappingType)
+            int sourceCount,
+            int targetCount,
+            MappingType mappingType)
         {
             super();
             if (sourceCount < 0) {
@@ -767,7 +854,8 @@ public abstract class Mappings
             this.targetCount = targetCount;
             this.mappingType = mappingType;
             if (mappingType.isMultipleTarget()) {
-                throw new IllegalArgumentException("Must have at most one target");
+                throw new IllegalArgumentException(
+                    "Must have at most one target");
             }
             this.targets = new int[sourceCount];
             Arrays.fill(targets, -1);
@@ -775,43 +863,43 @@ public abstract class Mappings
 
         public Iterator<IntPair> iterator()
         {
-            return new Iterator<IntPair>()
-            {
-                int i = -1;
-                {
-                    advance();
-                }
+            return new Iterator<IntPair>() {
+                    int i = -1;
 
-                private void advance()
-                {
-                    while (true) {
-                        ++i;
-                        if (i >= sourceCount) {
-                            break; // end
-                        }
-                        if (targets[i] >= 0) {
-                            break; // found one
+                    {
+                        advance();
+                    }
+
+                    private void advance()
+                    {
+                        while (true) {
+                            ++i;
+                            if (i >= sourceCount) {
+                                break; // end
+                            }
+                            if (targets[i] >= 0) {
+                                break; // found one
+                            }
                         }
                     }
-                }
 
-                public boolean hasNext()
-                {
-                    return i < sourceCount;
-                }
+                    public boolean hasNext()
+                    {
+                        return i < sourceCount;
+                    }
 
-                public IntPair next()
-                {
-                    final IntPair pair = new IntPair(i, targets[i]);
-                    advance();
-                    return pair;
-                }
+                    public IntPair next()
+                    {
+                        final IntPair pair = new IntPair(i, targets[i]);
+                        advance();
+                        return pair;
+                    }
 
-                public void remove()
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
+                    public void remove()
+                    {
+                        throw new UnsupportedOperationException();
+                    }
+                };
         }
 
         public MappingType getMappingType()
@@ -827,11 +915,12 @@ public abstract class Mappings
 
         public void set(int source, int target)
         {
-            if (target < 0 && !mappingType.isOptionalTarget()) {
+            if ((target < 0) && !mappingType.isOptionalTarget()) {
                 throw new IllegalArgumentException("Target is required");
             }
-            if (target >= targetCount && targetCount >= 0) {
-                throw new IllegalArgumentException("Target must be less than " + targetCount);
+            if ((target >= targetCount) && (targetCount >= 0)) {
+                throw new IllegalArgumentException(
+                    "Target must be less than " + targetCount);
             }
             targets[source] = target;
         }

@@ -20,38 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelVisitor;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexShuttle;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
 
 
 /**
- * Walks over a tree of {@link RelNode relational expressions}, walking a
- * {@link RexShuttle} over every expression in that tree.
+ * Walks over a tree of {@link RelNode relational expressions}, walking a {@link
+ * RexShuttle} over every expression in that tree.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 22 October, 2001
  */
-public class VisitorRelVisitor extends RelVisitor
+public class VisitorRelVisitor
+    extends RelVisitor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final RexShuttle shuttle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public VisitorRelVisitor(RexShuttle visitor)
     {
         this.shuttle = visitor;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void visit(
         RelNode p,
@@ -66,6 +64,5 @@ public class VisitorRelVisitor extends RelVisitor
         p.childrenAccept(this);
     }
 }
-
 
 // End VisitorRelVisitor.java

@@ -25,21 +25,29 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
+
 /**
- * JmiMofIdComparator implements the {@link Comparator} interface
- * by comparing pairs of {@link RefBaseObject} instances.
+ * JmiMofIdComparator implements the {@link Comparator} interface by comparing
+ * pairs of {@link RefBaseObject} instances.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiMofIdComparator implements Comparator<RefBaseObject>
+public class JmiMofIdComparator
+    implements Comparator<RefBaseObject>
 {
-    public static final JmiMofIdComparator instance =
-        new JmiMofIdComparator();
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final JmiMofIdComparator instance = new JmiMofIdComparator();
+
+    //~ Constructors -----------------------------------------------------------
 
     private JmiMofIdComparator()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public int compare(RefBaseObject o1, RefBaseObject o2)
     {

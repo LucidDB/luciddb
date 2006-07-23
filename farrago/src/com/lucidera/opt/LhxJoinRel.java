@@ -20,17 +20,18 @@
 */
 package com.lucidera.opt;
 
-import net.sf.farrago.catalog.FarragoRepos;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
-import java.util.List;
 
 /**
  * LhxJoinRel implements the hash join.
@@ -38,42 +39,46 @@ import java.util.List;
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxJoinRel extends FennelDoubleRel
+public class LhxJoinRel
+    extends FennelDoubleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Join type. Currently only inner join is supported.
      */
     private final LhxJoinRelType joinType;
-        
+
     /**
      * Join key columns from the left.
      */
     List<Integer> leftKeys;
+
     /**
      * Join key columns from the right.
      */
     List<Integer> rightKeys;
-    
+
     /**
-     * row count on the build side 
+     * row count on the build side
      */
     int numBuildRows;
-    
+
     /**
      * cardinality of the build key
      */
     int cndBuildKey;
-    
+
     /**
-     * This LhxJoinRel implements setop, one of the following:
-     * intersect (distinct), except (distinct)
-     * Setop differs from regular join in its treatment of NULLs and
-     * duplicates: NULLs are considered "matching" and duplicates are
-     * removed by default(the default setop is setop DISTINCT). 
+     * This LhxJoinRel implements setop, one of the following: intersect
+     * (distinct), except (distinct) Setop differs from regular join in its
+     * treatment of NULLs and duplicates: NULLs are considered "matching" and
+     * duplicates are removed by default(the default setop is setop DISTINCT).
      */
     boolean isSetop;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelCartesianProductRel object.
@@ -82,7 +87,7 @@ public class LhxJoinRel extends FennelDoubleRel
      * @param left left input
      * @param right right input
      * @param fieldNameList If not null, the row type will have these field
-     *                      names
+     * names
      */
     public LhxJoinRel(
         RelOptCluster cluster,
@@ -107,18 +112,22 @@ public class LhxJoinRel extends FennelDoubleRel
             this.rowType = left.getRowType();
         } else if (joinType == LhxJoinRelType.RIGHTANTI) {
             // except is implemented using right anti join
-            this.rowType = right.getRowType();            
+            this.rowType = right.getRowType();
         } else {
             // regular join
-            this.rowType = JoinRel.deriveJoinRowType(
-                left.getRowType(), right.getRowType(), joinType.getLogicalJoinType(),
-                cluster.getTypeFactory(), fieldNameList);
+            this.rowType =
+                JoinRel.deriveJoinRowType(
+                    left.getRowType(),
+                    right.getRowType(),
+                    joinType.getLogicalJoinType(),
+                    cluster.getTypeFactory(),
+                    fieldNameList);
         }
         this.numBuildRows = numBuildRows;
         this.cndBuildKey = cndBuildKey;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
@@ -145,22 +154,26 @@ public class LhxJoinRel extends FennelDoubleRel
         // TODO:  account for buffering I/O and CPU
         double rowCount = RelMetadataQuery.getRowCount(this);
         double joinSelectivity = 0.1;
-        return planner.makeCost(rowCount * joinSelectivity, 0,
-            rowCount * getRowType().getFieldList().size() * joinSelectivity);
+        return
+            planner.makeCost(rowCount * joinSelectivity,
+                0,
+                rowCount * getRowType().getFieldList().size()
+                * joinSelectivity);
     }
 
     // implement RelNode
     public double getRows()
     {
         double resultRowCount = 0;
-        
+
         if (joinType == LhxJoinRelType.LEFTSEMI) {
             resultRowCount = RelMetadataQuery.getRowCount(left);
         } else if (joinType == LhxJoinRelType.RIGHTANTI) {
             resultRowCount = RelMetadataQuery.getRowCount(right);
         } else {
-            resultRowCount = RelMetadataQuery.getRowCount(left) *
-                RelMetadataQuery.getRowCount(right);
+            resultRowCount =
+                RelMetadataQuery.getRowCount(left)
+                * RelMetadataQuery.getRowCount(right);
         }
         return resultRowCount;
     }
@@ -168,17 +181,21 @@ public class LhxJoinRel extends FennelDoubleRel
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
-    	if (!isSetop) {
-    		pw.explain(
-    				this,
-    				new String [] { "left", "right", "leftKeys", "rightKeys", "joinType"},
-    				new Object [] {leftKeys, rightKeys, joinType});
-    	} else {
-    		pw.explain(
-    				this,
-    				new String [] { "left", "right", "leftKeys", "rightKeys", "joinType", "setop"},
-    				new Object [] {leftKeys, rightKeys, joinType, isSetop});    		
-    	}
+        if (!isSetop) {
+            pw.explain(
+                this,
+                new String[] {
+                    "left", "right", "leftKeys", "rightKeys", "joinType"
+                },
+                new Object[] { leftKeys, rightKeys, joinType });
+        } else {
+            pw.explain(
+                this,
+                new String[] {
+                    "left", "right", "leftKeys", "rightKeys", "joinType", "setop"
+                },
+                new Object[] { leftKeys, rightKeys, joinType, isSetop });
+        }
     }
 
     // implement RelNode
@@ -186,22 +203,23 @@ public class LhxJoinRel extends FennelDoubleRel
     {
         throw Util.newInternal("row type should have been set already");
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         FarragoRepos repos = FennelRelUtil.getRepos(this);
-        FemLhxJoinStreamDef streamDef =
-            repos.newFemLhxJoinStreamDef();
+        FemLhxJoinStreamDef streamDef = repos.newFemLhxJoinStreamDef();
 
         FemExecutionStreamDef leftInput =
             implementor.visitFennelChild((FennelRel) left);
         implementor.addDataFlowFromProducerToConsumer(
-            leftInput, streamDef);
+            leftInput,
+            streamDef);
         FemExecutionStreamDef rightInput =
             implementor.visitFennelChild((FennelRel) right);
         implementor.addDataFlowFromProducerToConsumer(
-            rightInput, streamDef);
+            rightInput,
+            streamDef);
 
         streamDef.setOutputDesc(
             FennelRelUtil.createTupleDescriptorFromRowType(
@@ -211,7 +229,7 @@ public class LhxJoinRel extends FennelDoubleRel
 
         streamDef.setNumBuildRows(numBuildRows);
         streamDef.setCndBuildKeys(cndBuildKey);
-        
+
         // From join types, derive whether to return matching or non-matching
         // tuples from either side:
         // LeftInner: matching tuples from the left
@@ -221,23 +239,25 @@ public class LhxJoinRel extends FennelDoubleRel
         if (joinType == LhxJoinRelType.RIGHTANTI) {
             streamDef.setLeftInner(false);
         } else {
-            streamDef.setLeftInner(true);            
+            streamDef.setLeftInner(true);
         }
-        if (joinType == LhxJoinRelType.LEFT || joinType == LhxJoinRelType.FULL) {
+        if ((joinType == LhxJoinRelType.LEFT)
+            || (joinType == LhxJoinRelType.FULL)) {
             streamDef.setLeftOuter(true);
         } else {
-            streamDef.setLeftOuter(false);            
+            streamDef.setLeftOuter(false);
         }
 
-        if (joinType == LhxJoinRelType.LEFTSEMI ||
-            joinType == LhxJoinRelType.RIGHTANTI){
+        if ((joinType == LhxJoinRelType.LEFTSEMI)
+            || (joinType == LhxJoinRelType.RIGHTANTI)) {
             streamDef.setRightInner(false);
         } else {
-            streamDef.setRightInner(true);            
+            streamDef.setRightInner(true);
         }
-        
-        if (joinType == LhxJoinRelType.RIGHT || joinType == LhxJoinRelType.FULL ||
-            joinType == LhxJoinRelType.RIGHTANTI) {
+
+        if ((joinType == LhxJoinRelType.RIGHT)
+            || (joinType == LhxJoinRelType.FULL)
+            || (joinType == LhxJoinRelType.RIGHTANTI)) {
             streamDef.setRightOuter(true);
         } else {
             streamDef.setRightOuter(false);
@@ -252,14 +272,16 @@ public class LhxJoinRel extends FennelDoubleRel
             streamDef.setSetopAll(false);
             streamDef.setSetopDistinct(false);
         }
-        
+
         streamDef.setLeftKeyProj(
             FennelRelUtil.createTupleProjection(
-                repos, leftKeys));
-        
+                repos,
+                leftKeys));
+
         streamDef.setRightKeyProj(
             FennelRelUtil.createTupleProjection(
-                repos, rightKeys));
+                repos,
+                rightKeys));
 
         return streamDef;
     }

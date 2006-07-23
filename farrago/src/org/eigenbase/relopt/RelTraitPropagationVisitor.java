@@ -22,28 +22,37 @@
 */
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelVisitor;
+import org.eigenbase.rel.*;
+
 
 /**
  * RelTraitPropagationVisitor traverses a RelNode and its <i>unregistered</i>
- * children, making sure that each has a full complement of traits.  When a
- * RelNode is found to be missing one or more traits, they are copied from
- * a RelTraitSet given during construction.
- * 
+ * children, making sure that each has a full complement of traits. When a
+ * RelNode is found to be missing one or more traits, they are copied from a
+ * RelTraitSet given during construction.
+ *
  * @author Stephan Zuercher
  */
-public class RelTraitPropagationVisitor extends RelVisitor
+public class RelTraitPropagationVisitor
+    extends RelVisitor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelTraitSet baseTraits;
     private final RelOptPlanner planner;
 
+    //~ Constructors -----------------------------------------------------------
+
     public RelTraitPropagationVisitor(
-        RelOptPlanner planner, RelTraitSet baseTraits)
+        RelOptPlanner planner,
+        RelTraitSet baseTraits)
     {
         this.planner = planner;
         this.baseTraits = baseTraits;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void visit(RelNode rel, int ordinal, RelNode parent)
     {
@@ -51,7 +60,7 @@ public class RelTraitPropagationVisitor extends RelVisitor
         // as the VolcanoPlanner's RelSubset always have a full complement
         // of traits and that they either appear as registered or do nothing
         // when childrenAccept is called on them.
-        
+
         if (planner.isRegistered(rel)) {
             return;
         }
@@ -63,11 +72,13 @@ public class RelTraitPropagationVisitor extends RelVisitor
                 relTraits.addTrait(baseTraits.getTrait(i));
             } else {
                 // Verify that the traits are from the same RelTraitDef
-                assert relTraits.getTrait(i).getTraitDef() ==
-                    baseTraits.getTrait(i).getTraitDef();
+                assert relTraits.getTrait(i).getTraitDef()
+                    == baseTraits.getTrait(i).getTraitDef();
             }
         }
 
         rel.childrenAccept(this);
     }
 }
+
+// End RelTraitPropagationVisitor.java

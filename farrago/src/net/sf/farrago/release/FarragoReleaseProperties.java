@@ -21,87 +21,51 @@
 */
 package net.sf.farrago.release;
 
-import org.eigenbase.util.property.*;
+import java.io.*;
+
+import java.net.*;
 
 import java.util.*;
-import java.net.*;
-import java.io.*;
+
+import org.eigenbase.util.property.*;
+
 
 /**
  * Provides immutable properties burned into a particular release of Farrago.
  * See {@link net.sf.farrago.util.FarragoProperties} for an explanation of what
- * NOT to define here.  In addition, no site-specific property should ever be
+ * NOT to define here. In addition, no site-specific property should ever be
  * defined here.
  *
- *<p>
+ * <p>Products and projects which embed or rebrand Farrago rely on being able to
+ * control this information in a self-contained location (typically a file named
+ * FarragoRelease.properties in the root of the release jar).
  *
- * Products and projects which embed or rebrand Farrago rely on being able to
- * control this information in a self-contained location
- * (typically a file named FarragoRelease.properties in the root
- * of the release jar).
- *
- *<p>
- *
- * Note that the default values defined in this class are not appropriate
- * for real releases; they are only defined to allow developer builds to run
- * without a properties file.
+ * <p>Note that the default values defined in this class are not appropriate for
+ * real releases; they are only defined to allow developer builds to run without
+ * a properties file.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoReleaseProperties extends Properties
+public class FarragoReleaseProperties
+    extends Properties
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static FarragoReleaseProperties instance;
-    
-    /**
-     * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
-     * singleton} properties object
-     */
-    public static synchronized FarragoReleaseProperties instance()
-    {
-        if (instance == null) {
-            String resourceName =
-                "FarragoRelease.properties";
-            String failureString = 
-                "Failed to load " + resourceName;
-            instance = new FarragoReleaseProperties();
-            URL url =
-                FarragoReleaseProperties.class.getClassLoader().getResource(
-                    resourceName);
-            if (url == null) {
-                throw new RuntimeException(failureString);
-            }
-            InputStream urlStream = null;
-            try {
-                urlStream = url.openStream();
-                instance.load(urlStream);
-            } catch (IOException ex) {
-                RuntimeException rx = new RuntimeException(failureString);
-                rx.initCause(ex);
-                throw rx;
-            } finally {
-                if (urlStream != null) {
-                    try {
-                        urlStream.close();
-                    } catch (IOException ex) {
-                        // ignore
-                    }
-                }
-            }
-        }
-        return instance;
-    }
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * Base name of the released package for package management systems
-     * such as rpm and deb.
+     * Base name of the released package for package management systems such as
+     * rpm and deb.
      */
     public final StringProperty packageName =
         new StringProperty(this, "package.name", "farrago");
 
     /**
-     * Name of the product (e.g. as reported via
-     * java.sql.DatabaseMetaData)
+     * Name of the product (e.g. as reported via java.sql.DatabaseMetaData)
      */
     public final StringProperty productName =
         new StringProperty(this, "product.name", "Farrago");
@@ -129,14 +93,14 @@ public class FarragoReleaseProperties extends Properties
      */
     public final StringProperty jdbcDriverName =
         new StringProperty(this, "jdbc.driver.name", "FarragoJdbcDriver");
-    
+
     /**
      * JDBC driver major version number as reported via
      * java.sql.DatabaseMetaData.
      */
     public final IntegerProperty jdbcDriverVersionMajor =
         new IntegerProperty(this, "jdbc.driver.version.major", 0);
-    
+
     /**
      * JDBC driver minor version number as reported via
      * java.sql.DatabaseMetaData.
@@ -151,14 +115,52 @@ public class FarragoReleaseProperties extends Properties
         new StringProperty(this, "jdbc.url.base", "jdbc:farrago:");
 
     /**
-     * Default port to use for JDBC connections.  Note that
-     * this is the release-level default; the actual port to use
-     * for a server can be overridden at each site via system
-     * parameter serverRmiRegistryPort, and for a client by
-     * explicitly including the port in the connection URL.
+     * Default port to use for JDBC connections. Note that this is the
+     * release-level default; the actual port to use for a server can be
+     * overridden at each site via system parameter serverRmiRegistryPort, and
+     * for a client by explicitly including the port in the connection URL.
      */
     public final IntegerProperty jdbcUrlPortDefault =
         new IntegerProperty(this, "jdbc.url.port.default", 5433);
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
+     * singleton} properties object
+     */
+    public static synchronized FarragoReleaseProperties instance()
+    {
+        if (instance == null) {
+            String resourceName = "FarragoRelease.properties";
+            String failureString = "Failed to load " + resourceName;
+            instance = new FarragoReleaseProperties();
+            URL url =
+                FarragoReleaseProperties.class.getClassLoader().getResource(
+                    resourceName);
+            if (url == null) {
+                throw new RuntimeException(failureString);
+            }
+            InputStream urlStream = null;
+            try {
+                urlStream = url.openStream();
+                instance.load(urlStream);
+            } catch (IOException ex) {
+                RuntimeException rx = new RuntimeException(failureString);
+                rx.initCause(ex);
+                throw rx;
+            } finally {
+                if (urlStream != null) {
+                    try {
+                        urlStream.close();
+                    } catch (IOException ex) {
+                        // ignore
+                    }
+                }
+            }
+        }
+        return instance;
+    }
 }
 
 // End FarragoReleaseProperties.java

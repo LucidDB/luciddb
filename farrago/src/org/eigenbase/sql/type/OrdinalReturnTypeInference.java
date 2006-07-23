@@ -25,6 +25,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 
+
 /**
  * Returns the type of the operand at a particular 0-based ordinal position.
  *
@@ -34,12 +35,19 @@ import org.eigenbase.sql.validate.*;
 public class OrdinalReturnTypeInference
     implements SqlReturnTypeInference
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int ordinal;
+
+    //~ Constructors -----------------------------------------------------------
 
     public OrdinalReturnTypeInference(int ordinal)
     {
         this.ordinal = ordinal;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)

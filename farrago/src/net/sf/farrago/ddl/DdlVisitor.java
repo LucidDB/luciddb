@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlVisitor implements the visitor pattern for DDL statements.
  *
@@ -31,7 +30,8 @@ package net.sf.farrago.ddl;
  */
 public class DdlVisitor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // visitor dispatch
     public void visit(DdlCreateStmt stmt)
@@ -128,6 +128,5 @@ public class DdlVisitor
     {
     }
 }
-
 
 // End DdlVisitor.java

@@ -21,25 +21,35 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.MultisetSqlType;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * The <code>UNNEST<code> operator.
+ * The <code>UNNEST<code>operator.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlUnnestOperator extends SqlFunctionalOperator
+public class SqlUnnestOperator
+    extends SqlFunctionalOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlUnnestOperator()
     {
         super(
-            "UNNEST", SqlKind.Unnest,
-            200, true, null, null,
+            "UNNEST",
+            SqlKind.Unnest,
+            200,
+            true,
+            null,
+            null,
             SqlTypeStrategies.otcMultisetOrRecordTypeMultiset);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)

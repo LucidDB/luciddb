@@ -22,26 +22,18 @@
 */
 package net.sf.farrago.trace;
 
-import java.util.logging.Logger;
+import com.disruptivetech.farrago.calc.*;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.db.FarragoDatabase;
-import net.sf.farrago.db.FarragoDbSession;
-import net.sf.farrago.db.FarragoDbStmtContext;
-import net.sf.farrago.ddl.DdlValidator;
-import net.sf.farrago.fennel.FennelDbHandle;
-import net.sf.farrago.fennel.FennelJavaHandle;
-import net.sf.farrago.fennel.FennelStreamGraph;
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
-import net.sf.farrago.runtime.FarragoRuntimeContext;
-import net.sf.farrago.runtime.FarragoTupleIterResultSet;
-import net.sf.farrago.runtime.FennelPipeIterator;
-import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.util.FarragoFileAllocation;
-import net.sf.farrago.util.FarragoFileLockAllocation;
-import net.sf.farrago.util.FarragoObjectCache;
+import java.util.logging.*;
 
-import com.disruptivetech.farrago.calc.CalcProgramBuilder;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fennel.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.test.*;
+import net.sf.farrago.util.*;
 
 
 /**
@@ -52,16 +44,17 @@ import com.disruptivetech.farrago.calc.CalcProgramBuilder;
  * there for a description of how to define tracers.
  *
  * @author jhyde
- * @since May 24, 2004
  * @version $Id$
- **/
+ * @since May 24, 2004
+ */
 public abstract class FarragoTrace
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * The tracer "net.sf.farrago.catalog.FarragoRepos"
-     * traces {@link FarragoRepos}.
+     * The tracer "net.sf.farrago.catalog.FarragoRepos" traces {@link
+     * FarragoRepos}.
      */
     public static Logger getReposTracer()
     {
@@ -69,8 +62,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.db.FarragoDatabase"
-     * traces {@link FarragoDatabase}.
+     * The tracer "net.sf.farrago.db.FarragoDatabase" traces {@link
+     * FarragoDatabase}.
      */
     public static Logger getDatabaseTracer()
     {
@@ -78,8 +71,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.db.FarragoDbSession"
-     * traces {@link FarragoDbSession}.
+     * The tracer "net.sf.farrago.db.FarragoDbSession" traces {@link
+     * FarragoDbSession}.
      */
     public static Logger getDatabaseSessionTracer()
     {
@@ -87,8 +80,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.db.FarragoDbStmtContext"
-     * traces {@link FarragoDbStmtContext}.
+     * The tracer "net.sf.farrago.db.FarragoDbStmtContext" traces {@link
+     * FarragoDbStmtContext}.
      */
     public static Logger getDatabaseStatementContextTracer()
     {
@@ -96,8 +89,7 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.ddl.DdlValidator"
-     * traces {@link DdlValidator}.
+     * The tracer "net.sf.farrago.ddl.DdlValidator" traces {@link DdlValidator}.
      */
     public static Logger getDdlValidatorTracer()
     {
@@ -105,8 +97,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.fennel.FarragoDbHandle"
-     * traces {@link FennelDbHandle}.
+     * The tracer "net.sf.farrago.fennel.FarragoDbHandle" traces {@link
+     * FennelDbHandle}.
      */
     public static Logger getFennelDbHandleTracer()
     {
@@ -114,8 +106,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.fennel.FennelJavaHandle"
-     * traces {@link FennelDbHandle}.
+     * The tracer "net.sf.farrago.fennel.FennelJavaHandle" traces {@link
+     * FennelDbHandle}.
      */
     public static Logger getFennelJavaHandleTracer()
     {
@@ -123,8 +115,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.fennel.FennelStreamGraph"
-     * traces {@link FennelStreamGraph}.
+     * The tracer "net.sf.farrago.fennel.FennelStreamGraph" traces {@link
+     * FennelStreamGraph}.
      */
     public static Logger getFennelStreamGraphTracer()
     {
@@ -132,8 +124,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver"
-     * traces {@link FarragoJdbcEngineDriver}.
+     * The tracer "net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver" traces
+     * {@link FarragoJdbcEngineDriver}.
      */
     public static Logger getFarragoJdbcEngineDriverTracer()
     {
@@ -141,8 +133,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.runtime.FennelPipeIterator"
-     * traces {@link FennelPipeIterator}.
+     * The tracer "net.sf.farrago.runtime.FennelPipeIterator" traces {@link
+     * FennelPipeIterator}.
      */
     public static Logger getFennelPipeIteratorTracer()
     {
@@ -150,8 +142,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.runtime.FarragoTupleIterResultSet"
-     * traces {@link FarragoTupleIterResultSet}.
+     * The tracer "net.sf.farrago.runtime.FarragoTupleIterResultSet" traces
+     * {@link FarragoTupleIterResultSet}.
      */
     public static Logger getFarragoTupleIterResultSetTracer()
     {
@@ -159,8 +151,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.test.FarragoTestCase"
-     * controls tracing during regression tests.
+     * The tracer "net.sf.farrago.test.FarragoTestCase" controls tracing during
+     * regression tests.
      *
      * @see FarragoTestCase
      */
@@ -170,8 +162,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.util.FarragoFileAllocation"
-     * traces {@link FarragoFileAllocation}.
+     * The tracer "net.sf.farrago.util.FarragoFileAllocation" traces {@link
+     * FarragoFileAllocation}.
      */
     public static Logger getFileAllocationTracer()
     {
@@ -179,8 +171,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.util.FarragoFileLockAllocation"
-     * traces {@link FarragoFileLockAllocation}.
+     * The tracer "net.sf.farrago.util.FarragoFileLockAllocation" traces {@link
+     * FarragoFileLockAllocation}.
      */
     public static Logger getFileLockAllocationTracer()
     {
@@ -188,8 +180,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.util.FarragoObjectCache"
-     * traces {@link FarragoObjectCache}.
+     * The tracer "net.sf.farrago.util.FarragoObjectCache" traces {@link
+     * FarragoObjectCache}.
      */
     public static Logger getObjectCacheTracer()
     {
@@ -197,9 +189,9 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.dynamic"
-     * controls whether dynamically generated Java code is
-     * preserved for debugging (otherwise it is deleted automatically).
+     * The tracer "net.sf.farrago.dynamic" controls whether dynamically
+     * generated Java code is preserved for debugging (otherwise it is deleted
+     * automatically).
      */
     public static Logger getDynamicTracer()
     {
@@ -207,9 +199,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.query.streamgraph"
-     * traces Fennel execution stream graphs when they are
-     * constructed.
+     * The tracer "net.sf.farrago.query.streamgraph" traces Fennel execution
+     * stream graphs when they are constructed.
      */
     public static Logger getPreparedStreamGraphTracer()
     {
@@ -217,8 +208,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.query.plandump"
-     * cause the plan to be dumped before and after optimization.
+     * The tracer "net.sf.farrago.query.plandump" cause the plan to be dumped
+     * before and after optimization.
      */
     public static Logger getPlanDumpTracer()
     {
@@ -227,26 +218,20 @@ public abstract class FarragoTrace
 
     /**
      * The tracer "net.sf.farrago.plannerviz" controls JGraph visualization of
-     * planner activity.  See <a
-     * href="http://wiki.eigenbase.org/FarragoPlannerVisualization">wiki</a>
-     * for details.
+     * planner activity. See <a
+     * href="http://wiki.eigenbase.org/FarragoPlannerVisualization">wiki</a> for
+     * details.
      *
-     *<p>
-     *
-     * Visualization behavior of the plugin can be controlled via this trace
+     * <p>Visualization behavior of the plugin can be controlled via this trace
      * setting:
      *
      * <ol>
-     *
-     * <li>{@link java.util.logging.Level#FINE}:  render only logical
+     * <li>{@link java.util.logging.Level#FINE}: render only logical equivalence
+     * classes
+     * <li>{@link java.util.logging.Level#FINER}: render only physical
      * equivalence classes
-     *
-     * <li>{@link java.util.logging.Level#FINER}:  render only physical
-     * equivalence classes
-     *
-     * <li>{@link java.util.logging.Level#FINEST}:  render both logical
-     * and physical equivalence classes
-     *
+     * <li>{@link java.util.logging.Level#FINEST}: render both logical and
+     * physical equivalence classes
      * </ol>
      */
     public static Logger getPlannerVizTracer()
@@ -255,8 +240,8 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.query.rule" traces Farrago's custom
-     * optimizer rules.
+     * The tracer "net.sf.farrago.query.rule" traces Farrago's custom optimizer
+     * rules.
      */
     public static Logger getOptimizerRuleTracer()
     {
@@ -264,8 +249,7 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The tracer "net.sf.farrago.mdr" traces Farrago's use of
-     * MDR.
+     * The tracer "net.sf.farrago.mdr" traces Farrago's use of MDR.
      */
     public static Logger getMdrTracer()
     {
@@ -283,17 +267,17 @@ public abstract class FarragoTrace
     }
 
     /**
-     * The "net.sf.farrago.runtime.FarragoRuntimeContext" tracer traces
-     * use of the FarragoRuntimeContext class.
+     * The "net.sf.farrago.runtime.FarragoRuntimeContext" tracer traces use of
+     * the FarragoRuntimeContext class.
      */
     public static Logger getRuntimeContextTracer()
     {
         return Logger.getLogger(FarragoRuntimeContext.class.getName());
     }
-    
+
     /**
-     * The tracer "net.sf.farrago.syslib" traces use of the various system-management UDRs 
-     * defined in that package.
+     * The tracer "net.sf.farrago.syslib" traces use of the various
+     * system-management UDRs defined in that package.
      */
     public static Logger getSyslibTracer()
     {
@@ -312,6 +296,5 @@ public abstract class FarragoTrace
         return Logger.getLogger(clazz.getName());
     }
 }
-
 
 // End FarragoTrace.java

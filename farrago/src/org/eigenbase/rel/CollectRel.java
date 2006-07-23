@@ -22,45 +22,59 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.fun.SqlMultisetQueryConstructor;
-import org.eigenbase.sql.fun.SqlMultisetValueConstructor;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * A relational expression which collapses multiple rows into one.
  *
- * <p>Rules:<ul>
+ * <p>Rules:
+ *
+ * <ul>
  * <li>{@link com.disruptivetech.farrago.rel.FarragoMultisetSplitterRule}
- *     creates a CollectRel from a call
- *     to {@link SqlMultisetValueConstructor}
- *     or to {@link SqlMultisetQueryConstructor}.</li>
- * </ul></p>
+ * creates a CollectRel from a call to {@link SqlMultisetValueConstructor} or to
+ * {@link SqlMultisetQueryConstructor}.</li>
+ * </ul>
+ * </p>
  *
  * @author Wael Chatila
- * @since Dec 12, 2004
  * @version $Id$
+ * @since Dec 12, 2004
  */
-public final class CollectRel extends SingleRel {
+public final class CollectRel
+    extends SingleRel
+{
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String fieldName;
 
+    //~ Constructors -----------------------------------------------------------
+
     public CollectRel(
-        RelOptCluster cluster, RelNode child, String fieldName)
+        RelOptCluster cluster,
+        RelNode child,
+        String fieldName)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            child);
         this.fieldName = fieldName;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone() {
+    public Object clone()
+    {
         CollectRel clone =
             new CollectRel(
-                getCluster(), RelOptUtil.clone(getChild()), fieldName);
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                fieldName);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -76,15 +90,25 @@ public final class CollectRel extends SingleRel {
     }
 
     public static RelDataType deriveCollectRowType(
-        SingleRel rel, String fieldName)
+        SingleRel rel,
+        String fieldName)
     {
         RelDataType childType = rel.getChild().getRowType();
-        assert(childType.isStruct());
-        RelDataType ret = SqlTypeUtil.createMultisetType(
-            rel.getCluster().getTypeFactory(), childType, false);
-        ret = rel.getCluster().getTypeFactory().createStructType(
-            new RelDataType[]{ret}, new String[]{fieldName} );
-        return rel.getCluster().getTypeFactory().createTypeWithNullability(
-            ret, false);
+        assert (childType.isStruct());
+        RelDataType ret =
+            SqlTypeUtil.createMultisetType(
+                rel.getCluster().getTypeFactory(),
+                childType,
+                false);
+        ret =
+            rel.getCluster().getTypeFactory().createStructType(
+                new RelDataType[] { ret },
+                new String[] { fieldName });
+        return
+            rel.getCluster().getTypeFactory().createTypeWithNullability(
+                ret,
+                false);
     }
 }
+
+// End CollectRel.java

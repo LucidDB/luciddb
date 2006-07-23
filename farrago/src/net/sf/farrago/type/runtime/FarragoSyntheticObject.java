@@ -23,17 +23,20 @@
 package net.sf.farrago.type.runtime;
 
 import java.lang.reflect.*;
+
 import java.nio.*;
-import java.util.*;
+
 import java.sql.*;
+
+import java.util.*;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.util.*;
 
 
 /**
- * FarragoSyntheticObject refines SyntheticObject with
- * Farrago-specific runtime information such as null values.
+ * FarragoSyntheticObject refines SyntheticObject with Farrago-specific runtime
+ * information such as null values.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -42,19 +45,18 @@ public abstract class FarragoSyntheticObject
     extends SyntheticObject
     implements Struct
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Array of BitReferences to be used by marshal/unmarshal.
      *
-     * <p>
-     * TODO:  assert somewhere that position in this array corresponds to
-     * FemTupleAccessor info.
-     * </p>
+     * <p>TODO: assert somewhere that position in this array corresponds to
+     * FemTupleAccessor info.</p>
      */
     private BitReference [] bitReferences;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoSyntheticObject object.
@@ -64,14 +66,14 @@ public abstract class FarragoSyntheticObject
         initFields();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Marshals all bit fields in this tuple.
      *
      * @param byteBuffer destination ByteBuffer
      * @param bitFieldByteOffset absolute offset of first byte of bit fields in
-     *        ByteBuffer
+     * ByteBuffer
      */
     public void marshalBitFields(
         ByteBuffer byteBuffer,
@@ -110,7 +112,7 @@ public abstract class FarragoSyntheticObject
      *
      * @param byteBuffer source ByteBuffer
      * @param bitFieldByteOffset absolute offset of first byte of bit fields in
-     *        ByteBuffer
+     * ByteBuffer
      */
     public void unmarshalBitFields(
         ByteBuffer byteBuffer,
@@ -136,9 +138,9 @@ public abstract class FarragoSyntheticObject
 
     /**
      * Constructs an array of BitReferences for use in marshalling and
-     * unmarshalling bit fields.  Note that this can't be done at
-     * construction time, because subclass constructors may change field
-     * references.  Instead, we do it lazily.
+     * unmarshalling bit fields. Note that this can't be done at construction
+     * time, because subclass constructors may change field references. Instead,
+     * we do it lazily.
      */
     private void indexBitFields()
     {
@@ -209,7 +211,7 @@ public abstract class FarragoSyntheticObject
         }
         return objs;
     }
-    
+
     // implement Struct
     public Object [] getAttributes(Map map)
     {
@@ -234,12 +236,13 @@ public abstract class FarragoSyntheticObject
         return Arrays.asList(objs).toString();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Implementation of BitReference for accessing a null indicator.
      */
-    private static class NullIndicatorBitReference implements BitReference
+    private static class NullIndicatorBitReference
+        implements BitReference
     {
         NullableValue nullableValue;
 
@@ -258,7 +261,8 @@ public abstract class FarragoSyntheticObject
     /**
      * Implementation of BitReference for accessing a NOT NULL boolean field.
      */
-    private class BooleanBitReference implements BitReference
+    private class BooleanBitReference
+        implements BitReference
     {
         Field field;
 
@@ -282,6 +286,5 @@ public abstract class FarragoSyntheticObject
         }
     }
 }
-
 
 // End FarragoSyntheticObject.java

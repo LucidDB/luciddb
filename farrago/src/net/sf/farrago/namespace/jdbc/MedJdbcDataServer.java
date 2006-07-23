@@ -23,15 +23,17 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.lang.reflect.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -44,15 +46,17 @@ import org.eigenbase.sql.*;
 // TODO:  throw exception on unknown option?
 
 /**
- * MedJdbcDataServer implements the {@link FarragoMedDataServer} interface
- * for JDBC data.
+ * MedJdbcDataServer implements the {@link FarragoMedDataServer} interface for
+ * JDBC data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcDataServer extends MedAbstractDataServer
+class MedJdbcDataServer
+    extends MedAbstractDataServer
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String PROP_URL = "URL";
     public static final String PROP_DRIVER_CLASS = "DRIVER_CLASS";
@@ -70,7 +74,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     public static final String PROP_NAME = "NAME";
     public static final String PROP_TYPE = "TYPE";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     // TODO:  add a parameter for JNDI lookup of a DataSource so we can support
     // app servers and distributed txns
@@ -82,7 +86,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
     boolean supportsMetaData;
     DatabaseMetaData databaseMetaData;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedJdbcDataServer(
         String serverMofId,
@@ -91,7 +95,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
         super(serverMofId, props);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     void initialize()
         throws SQLException
@@ -133,7 +137,7 @@ class MedJdbcDataServer extends MedAbstractDataServer
             databaseMetaData =
                 (DatabaseMetaData) Proxy.newProxyInstance(
                     null,
-                    new Class [] { DatabaseMetaData.class },
+                    new Class[] { DatabaseMetaData.class },
                     new SqlUtil.DatabaseMetaDataInvocationHandler(
                         "UNKNOWN",
                         ""));
@@ -193,8 +197,12 @@ class MedJdbcDataServer extends MedAbstractDataServer
         String tableName = tableProps.getProperty(PROP_TABLE_NAME);
         MedJdbcNameDirectory directory =
             new MedJdbcNameDirectory(this, tableSchemaName);
-        return directory.lookupColumnSetAndImposeType(
-            typeFactory, tableName, localName, rowType);
+        return
+            directory.lookupColumnSetAndImposeType(
+                typeFactory,
+                tableName,
+                localName,
+                rowType);
     }
 
     // implement FarragoMedDataServer
@@ -226,13 +234,16 @@ class MedJdbcDataServer extends MedAbstractDataServer
 
         // tell optimizer how to convert data from JDBC into Farrago
         planner.addRule(
-            new ConverterRule(RelNode.class, CallingConvention.RESULT_SET,
-                CallingConvention.ITERATOR, "ResultSetToFarragoIteratorRule") {
+            new ConverterRule(RelNode.class,
+                CallingConvention.RESULT_SET,
+                CallingConvention.ITERATOR,
+                "ResultSetToFarragoIteratorRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return new ResultSetToFarragoIteratorConverter(
-                        rel.getCluster(),
-                        rel);
+                    return
+                        new ResultSetToFarragoIteratorConverter(
+                            rel.getCluster(),
+                            rel);
                 }
 
                 public boolean isGuaranteed()
@@ -244,17 +255,18 @@ class MedJdbcDataServer extends MedAbstractDataServer
         // optimizer sometimes can't figure out how to convert data
         // from JDBC directly into Fennel, so help it out
         planner.addRule(
-            new ConverterRule(RelNode.class, CallingConvention.RESULT_SET,
+            new ConverterRule(RelNode.class,
+                CallingConvention.RESULT_SET,
                 FennelRel.FENNEL_EXEC_CONVENTION,
-                "ResultSetToFennelRule")
-            {
+                "ResultSetToFennelRule") {
                 public RelNode convert(RelNode rel)
                 {
-                    return new IteratorToFennelConverter(
-                        rel.getCluster(),
-                        new ResultSetToFarragoIteratorConverter(
+                    return
+                        new IteratorToFennelConverter(
                             rel.getCluster(),
-                            rel));
+                            new ResultSetToFarragoIteratorConverter(
+                                rel.getCluster(),
+                                rel));
                 }
 
                 public boolean isGuaranteed()
@@ -276,6 +288,5 @@ class MedJdbcDataServer extends MedAbstractDataServer
         }
     }
 }
-
 
 // End MedJdbcDataServer.java

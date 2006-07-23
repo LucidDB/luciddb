@@ -26,8 +26,8 @@ package net.sf.farrago.fennel;
  * uniquely identify dynamic parameters within a {@link FennelStreamGraph}.
  * Fennel dynamic parameters may be used to implement user-level dynamic
  * parameters (represented as question marks in SQL text); they may also be
- * generated internally by the optimizer as part of physical implementation.
- * In the latter case, they are used for out-of-band communication between
+ * generated internally by the optimizer as part of physical implementation. In
+ * the latter case, they are used for out-of-band communication between
  * ExecStreams which cannot be expressed via the usual producer/consumer
  * dataflow mechanisms (e.g. when the streams are not adjacent, or when
  * communication is required from consumer back to producer).
@@ -37,12 +37,19 @@ package net.sf.farrago.fennel;
  */
 public class FennelDynamicParamId
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int id;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FennelDynamicParamId(int id)
     {
         this.id = id;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the underlying int value
@@ -55,8 +62,11 @@ public class FennelDynamicParamId
     // implement Object
     public boolean equals(Object other)
     {
-        return ((other instanceof FennelDynamicParamId)
-            && (((FennelDynamicParamId) other).intValue() == id));
+        return
+            (
+                (other instanceof FennelDynamicParamId)
+                && (((FennelDynamicParamId) other).intValue() == id)
+            );
     }
 
     // implement Object
@@ -64,7 +74,7 @@ public class FennelDynamicParamId
     {
         return id;
     }
-    
+
     // implement Object
     public String toString()
     {

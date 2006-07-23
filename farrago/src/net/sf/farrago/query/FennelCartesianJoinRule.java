@@ -25,6 +25,7 @@ package net.sf.farrago.query;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * FennelCartesianJoinRule is a rule for converting an INNER JoinRel with no
  * join condition into a FennelCartesianProductRel.
@@ -32,9 +33,11 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelCartesianJoinRule extends RelOptRule
+public class FennelCartesianJoinRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FennelCartesianJoinRule()
     {
@@ -43,7 +46,7 @@ public class FennelCartesianJoinRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -59,8 +62,8 @@ public class FennelCartesianJoinRule extends RelOptRule
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
 
-        if ((joinRel.getJoinType() != JoinRelType.INNER) &&
-            (joinRel.getJoinType() != JoinRelType.LEFT)) {
+        if ((joinRel.getJoinType() != JoinRelType.INNER)
+            && (joinRel.getJoinType() != JoinRelType.LEFT)) {
             return;
         }
 
@@ -77,7 +80,8 @@ public class FennelCartesianJoinRule extends RelOptRule
 
         RelNode fennelLeft =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 leftRel);
         if (fennelLeft == null) {
             return;
@@ -85,7 +89,8 @@ public class FennelCartesianJoinRule extends RelOptRule
 
         RelNode fennelRight =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 rightRel);
         if (fennelRight == null) {
             return;
@@ -109,6 +114,5 @@ public class FennelCartesianJoinRule extends RelOptRule
         // plan variants with and without buffering and use cost to decide.
     }
 }
-
 
 // End FennelCartesianJoinRule.java

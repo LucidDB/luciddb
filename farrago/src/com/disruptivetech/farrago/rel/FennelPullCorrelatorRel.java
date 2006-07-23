@@ -20,41 +20,45 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import net.sf.farrago.query.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.catalog.FarragoRepos;
-import org.eigenbase.relopt.*;
+import net.sf.farrago.query.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 
-import java.util.*;
 
 /**
  * FennelPullCorrelatorRel is the relational expression corresponding to a
  * correlation between two streams implemented inside of Fennel.
  *
  * @author Wael Chatila
- * @since Feb 1, 2005
  * @version $Id$
+ * @since Feb 1, 2005
  */
-public class FennelPullCorrelatorRel extends FennelDoubleRel
+public class FennelPullCorrelatorRel
+    extends FennelDoubleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final List<CorrelatorRel.Correlation> correlations;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Correlator.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param left left input relational expression
-     * @param right right  input relational expression
+     * @param right right input relational expression
      * @param correlations set of expressions to set as variables each time a
-     *        row arrives from the left input
+     * row arrives from the left input
      */
     public FennelPullCorrelatorRel(
         RelOptCluster cluster,
@@ -66,16 +70,17 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
         this.correlations = correlations;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
     {
-        FennelPullCorrelatorRel clone = new FennelPullCorrelatorRel(
-            getCluster(),
-            RelOptUtil.clone(left),
-            RelOptUtil.clone(right),
-            cloneCorrelations());
+        FennelPullCorrelatorRel clone =
+            new FennelPullCorrelatorRel(
+                getCluster(),
+                RelOptUtil.clone(left),
+                RelOptUtil.clone(right),
+                cloneCorrelations());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -84,22 +89,24 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
     {
         return new ArrayList<CorrelatorRel.Correlation>(correlations);
     }
-    
+
     // override RelNode
     public void explain(RelOptPlanWriter pw)
     {
         pw.explain(
             this,
-            new String [] { "left", "right" },
-            new Object [] {  });
+            new String[] { "left", "right" },
+            new Object[] {});
     }
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double rowCount = RelMetadataQuery.getRowCount(this);
-        return planner.makeCost(rowCount, 0,
-            rowCount * getRowType().getFieldList().size());
+        return
+            planner.makeCost(rowCount,
+                0,
+                rowCount * getRowType().getFieldList().size());
     }
 
     // implement RelNode
@@ -110,9 +117,13 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
 
     protected RelDataType deriveRowType()
     {
-        return JoinRel.deriveJoinRowType(
-            left.getRowType(), right.getRowType(), JoinRelType.INNER,
-            getCluster().getTypeFactory(), null);
+        return
+            JoinRel.deriveJoinRowType(
+                left.getRowType(),
+                right.getRowType(),
+                JoinRelType.INNER,
+                getCluster().getTypeFactory(),
+                null);
     }
 
     // implement FennelRel
@@ -143,6 +154,5 @@ public class FennelPullCorrelatorRel extends FennelDoubleRel
         return streamDef;
     }
 }
-
 
 // End FennelPullCorrelatorRel.java

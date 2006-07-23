@@ -25,30 +25,33 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * <code>OneRowRelBase</code> is an abstract base class for implementations
- * of {@link OneRowRel}.
+ * <code>OneRowRelBase</code> is an abstract base class for implementations of
+ * {@link OneRowRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class OneRowRelBase extends AbstractRelNode
+public abstract class OneRowRelBase
+    extends AbstractRelNode
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a <code>OneRowRelBase</code> with specific traits.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param traits for this rel
      */
     protected OneRowRelBase(RelOptCluster cluster, RelTraitSet traits)
     {
         super(cluster, traits);
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
@@ -67,10 +70,13 @@ public abstract class OneRowRelBase extends AbstractRelNode
 
     public static RelDataType deriveOneRowType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createStructType(
-            new RelDataType [] { typeFactory.createSqlType(
-                    SqlTypeName.Integer) },
-            new String [] { "ZERO" });
+        return
+            typeFactory.createStructType(
+                new RelDataType[] {
+                    typeFactory.createSqlType(
+                        SqlTypeName.Integer)
+                },
+                new String[] { "ZERO" });
     }
 }
 

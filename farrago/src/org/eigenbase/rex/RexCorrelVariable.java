@@ -20,10 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+
 
 /**
  * Reference to the current row of a correlating relational expression.
@@ -33,12 +33,14 @@ import org.eigenbase.reltype.RelDataType;
  * assigned a value, and the other side of the join is restarted.</p>
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
+ * @since Nov 24, 2003
  */
-public class RexCorrelVariable extends RexVariable
+public class RexCorrelVariable
+    extends RexVariable
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     RexCorrelVariable(
         String varName,
@@ -47,7 +49,7 @@ public class RexCorrelVariable extends RexVariable
         super(varName, type);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
@@ -59,6 +61,5 @@ public class RexCorrelVariable extends RexVariable
         return visitor.visitCorrelVariable(this);
     }
 }
-
 
 // End RexCorrelVariable.java

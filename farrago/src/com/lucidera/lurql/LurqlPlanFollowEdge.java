@@ -20,14 +20,16 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
 
 import javax.jmi.model.*;
 
+import org._3pq.jgrapht.edge.*;
+
 import org.eigenbase.jmi.*;
 
-import org._3pq.jgrapht.edge.*;
 
 /**
  * LurqlPlanEdge is a follow edge in a LURQL plan graph.
@@ -35,8 +37,12 @@ import org._3pq.jgrapht.edge.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlPlanFollowEdge extends LurqlPlanEdge
+public class LurqlPlanFollowEdge
+    extends LurqlPlanEdge
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * The model edge representing the association to be traversed.
      */
@@ -48,10 +54,12 @@ public class LurqlPlanFollowEdge extends LurqlPlanEdge
     private final int iOriginEnd;
 
     /**
-     * If non-null, traverse to only those destination objects which
-     * instantiate the given class.
+     * If non-null, traverse to only those destination objects which instantiate
+     * the given class.
      */
     private final JmiClassVertex destinationTypeFilter;
+
+    //~ Constructors -----------------------------------------------------------
 
     LurqlPlanFollowEdge(
         LurqlPlanVertex source,
@@ -61,11 +69,11 @@ public class LurqlPlanFollowEdge extends LurqlPlanEdge
         JmiClassVertex destinationTypeFilter)
     {
         super(source, target);
-        
+
         this.assocEdge = assocEdge;
         this.iOriginEnd = iOriginEnd;
         this.destinationTypeFilter = destinationTypeFilter;
-        
+
         StringBuffer sb = new StringBuffer();
         sb.append(getPlanSource().getName());
         sb.append(":");
@@ -83,6 +91,8 @@ public class LurqlPlanFollowEdge extends LurqlPlanEdge
         }
         stringRep = sb.toString();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public JmiAssocEdge getAssocEdge()
     {

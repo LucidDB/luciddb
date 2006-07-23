@@ -23,48 +23,58 @@ package org.eigenbase.sarg;
 
 import java.util.*;
 
+
 /**
- * SargIntervalSequence represents the union of a set of disjoint
- * {@link SargInterval} instances.  (If any adjacent intervals weren't
- * disjoint, they would have been combined into one bigger one before creation
- * of the sequence.)  Intervals are maintained in coordinate order.
+ * SargIntervalSequence represents the union of a set of disjoint {@link
+ * SargInterval} instances. (If any adjacent intervals weren't disjoint, they
+ * would have been combined into one bigger one before creation of the
+ * sequence.) Intervals are maintained in coordinate order.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class SargIntervalSequence
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final List<SargInterval> list;
+
+    //~ Constructors -----------------------------------------------------------
 
     SargIntervalSequence()
     {
         list = new ArrayList<SargInterval>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return true if this sequence represents a point range.
      */
     public boolean isPoint()
     {
-    	return (list.size() == 1 && list.get(0).isPoint());
+        return ((list.size() == 1) && list.get(0).isPoint());
     }
-    
+
     /**
      * @return true if this sequence represents an empty range.
      */
     public boolean isEmpty()
     {
-    	return (list.size() == 1 && list.get(0).isEmpty());
+        return ((list.size() == 1) && list.get(0).isEmpty());
     }
-    
+
     /**
-     * @return true if this sequence represents a non-point, 
-     * non-empty range.
+     * @return true if this sequence represents a non-point, non-empty range.
      */
     public boolean isRange()
     {
-    	return (list.size() > 1 || 
-    			(list.size() == 1 && list.get(0).isRange()));
+        return
+            (
+                (list.size() > 1)
+                || ((list.size() == 1) && list.get(0).isRange())
+            );
     }
 
     /**
@@ -102,7 +112,7 @@ public class SargIntervalSequence
             sb.append(" ");
             sb.append(interval);
         }
-        
+
         sb.append(" )");
         return sb.toString();
     }

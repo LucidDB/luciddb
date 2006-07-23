@@ -22,23 +22,25 @@
 package net.sf.farrago.session;
 
 /**
- * FarragoSessionPersonalityFactory defines a factory interface for
- * creating instances of {@link FarragoSessionPersonality}.
+ * FarragoSessionPersonalityFactory defines a factory interface for creating
+ * instances of {@link FarragoSessionPersonality}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoSessionPersonalityFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a new session personality.
      *
-     * @param session session for which personality is being created;
-     * note that the personality may be used for other sessions as well,
-     * so no reference to this session should be retained
-     *
-     * @param defaultPersonality a default personality to which the
-     * new personality may delegate, or null if no default is available
+     * @param session session for which personality is being created; note that
+     * the personality may be used for other sessions as well, so no reference
+     * to this session should be retained
+     * @param defaultPersonality a default personality to which the new
+     * personality may delegate, or null if no default is available
      *
      * @return personality
      */

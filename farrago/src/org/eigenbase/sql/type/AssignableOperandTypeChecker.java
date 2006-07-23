@@ -22,34 +22,40 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * AssignableOperandTypeChecker implements {@link SqlOperandTypeChecker} by
- * verifying that the type of each argument is assignable to a
- * predefined set of parameter types (under the SQL definition of
- * "assignable").
+ * verifying that the type of each argument is assignable to a predefined set of
+ * parameter types (under the SQL definition of "assignable").
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
+public class AssignableOperandTypeChecker
+    implements SqlOperandTypeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType [] paramTypes;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Instantiates this strategy with a specific set of parameter types.
      *
-     * @param paramTypes parameter types for operands; index in
-     * this array corresponds to operand number
+     * @param paramTypes parameter types for operands; index in this array
+     * corresponds to operand number
      */
     public AssignableOperandTypeChecker(RelDataType [] paramTypes)
     {
         this.paramTypes = paramTypes;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement SqlOperandTypeChecker
     public SqlOperandCountRange getOperandCountRange()
@@ -63,9 +69,10 @@ public class AssignableOperandTypeChecker implements SqlOperandTypeChecker
         boolean throwOnFailure)
     {
         for (int i = 0; i < callBinding.getOperandCount(); ++i) {
-            RelDataType argType = callBinding.getValidator().deriveType(
-                callBinding.getScope(),
-                callBinding.getCall().operands[i]);
+            RelDataType argType =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    callBinding.getCall().operands[i]);
             if (!SqlTypeUtil.canAssignFrom(paramTypes[i], argType)) {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();

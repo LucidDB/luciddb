@@ -22,15 +22,22 @@ package com.lucidera.lurql;
 
 import java.io.*;
 
+
 /**
  * LurqlRecurse represents a parsed RECURSIVELY clause in a LURQL query.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlRecurse extends LurqlPathBranch
+public class LurqlRecurse
+    extends LurqlPathBranch
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final LurqlPathSpec pathSpec;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlRecurse(LurqlPathSpec pathSpec, LurqlPathSpec thenSpec)
     {
@@ -38,11 +45,13 @@ public class LurqlRecurse extends LurqlPathBranch
         this.pathSpec = pathSpec;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public LurqlPathSpec getPathSpec()
     {
         return pathSpec;
     }
-    
+
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {

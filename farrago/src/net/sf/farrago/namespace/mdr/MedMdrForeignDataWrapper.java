@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mdr;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -31,16 +32,18 @@ import net.sf.farrago.namespace.impl.*;
 
 
 /**
- * MedMdrForeignDataWrapper implements the FarragoMedDataWrapper
- * interface by representing classes in an MDR repository as tables
- * (mapping the class extent to a corresponding set of rows).
+ * MedMdrForeignDataWrapper implements the FarragoMedDataWrapper interface by
+ * representing classes in an MDR repository as tables (mapping the class extent
+ * to a corresponding set of rows).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMdrForeignDataWrapper extends MedAbstractDataWrapper
+public class MedMdrForeignDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Default constructor for access to external repositories.
@@ -49,7 +52,7 @@ public class MedMdrForeignDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -82,7 +85,9 @@ public class MedMdrForeignDataWrapper extends MedAbstractDataWrapper
         throws SQLException
     {
         MedMdrDataServer server =
-            new MedMdrDataServer(serverMofId, props,
+            new MedMdrDataServer(
+                serverMofId,
+                props,
                 getRepos());
         boolean success = false;
         try {
@@ -96,6 +101,5 @@ public class MedMdrForeignDataWrapper extends MedAbstractDataWrapper
         }
     }
 }
-
 
 // End MedMdrForeignDataWrapper.java

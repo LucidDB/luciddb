@@ -22,52 +22,61 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
+
 
 /**
- * Definition of the SQL:2003 standard MULTISET constructor,
- * <code>MULTISET [&lt;expr&gt;, ...]</code>.
+ * Definition of the SQL:2003 standard MULTISET constructor, <code>MULTISET
+ * [&lt;expr&gt;, ...]</code>.
  *
- * @see SqlMultisetQueryConstructor
  * @author Wael Chatila
- * @since Oct 17, 2004
  * @version $Id$
+ * @see SqlMultisetQueryConstructor
+ * @since Oct 17, 2004
  */
-public class SqlMultisetValueConstructor extends SqlSpecialOperator
+public class SqlMultisetValueConstructor
+    extends SqlSpecialOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlMultisetValueConstructor()
     {
-        super("MULTISET", SqlKind.MultisetValueConstructor, MaxPrec, false,
+        super("MULTISET",
+            SqlKind.MultisetValueConstructor,
+            MaxPrec,
+            false,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcVariadic);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
-        RelDataType type = getComponentType(
-            opBinding.getTypeFactory(),  opBinding.collectOperandTypes());
+        RelDataType type =
+            getComponentType(
+                opBinding.getTypeFactory(),
+                opBinding.collectOperandTypes());
         if (null == type) {
             return null;
         }
-        return SqlTypeUtil.createMultisetType(
-            opBinding.getTypeFactory(), type, false);
+        return
+            SqlTypeUtil.createMultisetType(
+                opBinding.getTypeFactory(),
+                type,
+                false);
     }
 
     private RelDataType getComponentType(
         RelDataTypeFactory typeFactory,
-        RelDataType[] argTypes)
+        RelDataType [] argTypes)
     {
         return typeFactory.leastRestrictive(argTypes);
     }
@@ -76,13 +85,15 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        final RelDataType[] argTypes =
+        final RelDataType [] argTypes =
             SqlTypeUtil.deriveAndCollectTypes(
                 callBinding.getValidator(),
                 callBinding.getScope(),
                 callBinding.getCall().operands);
-        final RelDataType componentType = getComponentType(
-            callBinding.getTypeFactory(), argTypes);
+        final RelDataType componentType =
+            getComponentType(
+                callBinding.getTypeFactory(),
+                argTypes);
         if (null == componentType) {
             if (throwOnFailure) {
                 throw callBinding.newValidationError(
@@ -95,10 +106,10 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
-        int rightPrec) {
-
+        int rightPrec)
+    {
         writer.keyword("MULTISET");
         final SqlWriter.Frame frame = writer.startList("[", "]");
         for (int i = 0; i < operands.length; i++) {
@@ -109,6 +120,4 @@ public class SqlMultisetValueConstructor extends SqlSpecialOperator
     }
 }
 
-
 // End SqlMultisetValueConstructor.java
-

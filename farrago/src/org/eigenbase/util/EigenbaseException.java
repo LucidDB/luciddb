@@ -22,7 +22,6 @@
 */
 package org.eigenbase.util;
 
-
 // NOTE:  This class gets compiled independently of everything else so that
 // resource generation can use reflection.  That means it must have no
 // dependencies on other Eigenbase code.
@@ -32,26 +31,27 @@ import java.util.logging.*;
 /**
  * Base class for all exceptions originating from Farrago.
  *
- * @see EigenbaseContextException
- *
  * @author John V. Sichi
  * @version $Id$
+ * @see EigenbaseContextException
  */
-public class EigenbaseException extends RuntimeException
+public class EigenbaseException
+    extends RuntimeException
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * SerialVersionUID created with JDK 1.5 serialver tool.
-     * Prevents incompatible class conflict when serialized
-     * from JDK 1.5-built server to JDK 1.4-built client.
+     * SerialVersionUID created with JDK 1.5 serialver tool. Prevents
+     * incompatible class conflict when serialized from JDK 1.5-built server to
+     * JDK 1.4-built client.
      */
     private static final long serialVersionUID = -1314522633397794178L;
 
     private static Logger tracer =
         Logger.getLogger(EigenbaseException.class.getName());
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new EigenbaseException object.
@@ -71,6 +71,5 @@ public class EigenbaseException extends RuntimeException
         tracer.severe(toString());
     }
 }
-
 
 // End EigenbaseException.java

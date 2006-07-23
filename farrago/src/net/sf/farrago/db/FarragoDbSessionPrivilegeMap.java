@@ -21,34 +21,42 @@
 */
 package net.sf.farrago.db;
 
-import net.sf.farrago.session.*;
-
-import org.eigenbase.jmi.*;
-
 import java.util.*;
 
 import javax.jmi.reflect.*;
 
+import net.sf.farrago.session.*;
+
+import org.eigenbase.jmi.*;
+
+
 /**
- * FarragoDbSessionPrivilegeMap is a default implementation for
- * {@link FarragoSessionPrivilegeMap}.
+ * FarragoDbSessionPrivilegeMap is a default implementation for {@link
+ * FarragoSessionPrivilegeMap}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoDbSessionPrivilegeMap implements FarragoSessionPrivilegeMap
+class FarragoDbSessionPrivilegeMap
+    implements FarragoSessionPrivilegeMap
 {
     // TODO jvs 13-Aug-2005: factor out MultiMapUnique or whatever it's called
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final JmiModelView modelView;
-    
+
     private final Map mapTypeToSet;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     FarragoDbSessionPrivilegeMap(JmiModelView modelView)
     {
         this.modelView = modelView;
         mapTypeToSet = new HashMap();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPrivilegeMap
     public void mapPrivilegeForType(
@@ -57,12 +65,12 @@ class FarragoDbSessionPrivilegeMap implements FarragoSessionPrivilegeMap
         boolean isLegal,
         boolean includeSubclasses)
     {
-        
         if (includeSubclasses) {
             JmiClassVertex classVertex =
                 modelView.getModelGraph().getVertexForRefClass(refClass);
-            Iterator iter = modelView.getAllSubclassVertices(
-                classVertex).iterator();
+            Iterator iter =
+                modelView.getAllSubclassVertices(
+                    classVertex).iterator();
             while (iter.hasNext()) {
                 classVertex = (JmiClassVertex) iter.next();
                 mapPrivilegeForType(

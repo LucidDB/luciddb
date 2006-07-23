@@ -20,29 +20,34 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.CollectRel;
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * FennelCollectRule is a rule to implement a call made with the
- * {@link org.eigenbase.sql.fun.SqlMultisetValueConstructor}
+ * FennelCollectRule is a rule to implement a call made with the {@link
+ * org.eigenbase.sql.fun.SqlMultisetValueConstructor}
  *
- * @author Wael Chatila 
- * @since Dec 11, 2004
+ * @author Wael Chatila
  * @version $Id$
+ * @since Dec 11, 2004
  */
-public class FennelCollectRule extends RelOptRule {
+public class FennelCollectRule
+    extends RelOptRule
+{
 
-    public FennelCollectRule() {
+    //~ Constructors -----------------------------------------------------------
+
+    public FennelCollectRule()
+    {
         super(new RelOptRuleOperand(
                 CollectRel.class,
                 null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -50,12 +55,14 @@ public class FennelCollectRule extends RelOptRule {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
-    public void onMatch(RelOptRuleCall call) {
+    public void onMatch(RelOptRuleCall call)
+    {
         CollectRel collectRel = (CollectRel) call.rels[0];
         RelNode relInput = collectRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                collectRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                collectRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;
@@ -69,3 +76,5 @@ public class FennelCollectRule extends RelOptRule {
         call.transformTo(fennelCollectRel);
     }
 }
+
+// End FennelCollectRule.java

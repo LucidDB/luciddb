@@ -22,41 +22,43 @@
 */
 package net.sf.farrago.namespace.mdr;
 
-import java.util.List;
+import java.util.*;
 
-import javax.jmi.model.Reference;
-import javax.jmi.model.StructuralFeature;
+import javax.jmi.model.*;
 
-import net.sf.farrago.util.JmiUtil;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
 
 /**
- * MedMdrJoinRule is a rule for converting a JoinRel into a
- * MedMdrJoinRel when the join condition navigates an association.
+ * MedMdrJoinRule is a rule for converting a JoinRel into a MedMdrJoinRel when
+ * the join condition navigates an association.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMdrJoinRule extends RelOptRule
+class MedMdrJoinRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     MedMdrJoinRule()
     {
         // TODO:  allow join to work on inputs other
         // than MedMdrClassExtentRel (e.g. filters, projects, other joins)
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 JoinRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(RelNode.class, null),
-                    new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
+            new RelOptRuleOperand(MedMdrClassExtentRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -77,7 +79,7 @@ class MedMdrJoinRule extends RelOptRule
         }
 
         if ((joinRel.getJoinType() != JoinRelType.INNER)
-                && (joinRel.getJoinType() != JoinRelType.LEFT)) {
+            && (joinRel.getJoinType() != JoinRelType.LEFT)) {
             return;
         }
 
@@ -92,7 +94,8 @@ class MedMdrJoinRule extends RelOptRule
         // left side type
         List<StructuralFeature> features =
             JmiUtil.getFeatures(rightRel.mdrClassExtent.refClass,
-                StructuralFeature.class, false);
+                StructuralFeature.class,
+                false);
         Reference reference;
         if (rightOrdinal == features.size()) {
             // join to mofId: this is a many-to-one join (primary key lookup on
@@ -116,27 +119,27 @@ class MedMdrJoinRule extends RelOptRule
 
         /*
         Classifier referencedType = reference.getReferencedEnd().getType();
-        Classifier leftType =
-            (Classifier) leftRel.mdrClassExtent.refClass.refMetaObject();
-        if (!leftType.equals(referencedType)
-            && !leftType.allSupertypes().contains(referencedType))
-        {
-            // REVIEW: we now know this is a bogus join; could optimize it by
-            // skipping querying altogether, but a warning of some kind would
-            // be friendlier
-            return;
-        }
-        */
+         Classifier leftType = (Classifier)
+         leftRel.mdrClassExtent.refClass.refMetaObject(); if
+         (!leftType.equals(referencedType) &&
+         !leftType.allSupertypes().contains(referencedType)) { // REVIEW: we now
+         know this is a bogus join; could optimize it by // skipping querying
+         altogether, but a warning of some kind would // be friendlier return; }
+         */
         RelNode iterLeft =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), CallingConvention.ITERATOR, leftRel);
+                joinRel.getTraits(),
+                CallingConvention.ITERATOR,
+                leftRel);
         if (iterLeft == null) {
             return;
         }
 
         RelNode iterRight =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), CallingConvention.ITERATOR, rightRel);
+                joinRel.getTraits(),
+                CallingConvention.ITERATOR,
+                rightRel);
         if (iterRight == null) {
             return;
         }
@@ -152,6 +155,5 @@ class MedMdrJoinRule extends RelOptRule
                 reference));
     }
 }
-
 
 // End MedMdrJoinRule.java

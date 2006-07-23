@@ -19,11 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import java.util.List;
-import java.util.Collections;
+import java.util.*;
+
 
 /**
  * Description of the physical ordering of a relational expression.
@@ -32,18 +31,22 @@ import java.util.Collections;
  * direction of the ordering.
  *
  * @author jhyde
- * @since March 6, 2006
  * @version $Id$
+ * @since March 6, 2006
  */
 public interface RelCollation
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final List<RelCollation> emptyList = Collections.emptyList();
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the ordinals and directions of the columns in this ordering.
      */
     List<RelFieldCollation> getFieldCollations();
-
-    public static final List<RelCollation> emptyList = Collections.emptyList();
-
 }
 
 // End RelCollation.java

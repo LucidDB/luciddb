@@ -22,22 +22,30 @@
 */
 package org.eigenbase.util;
 
-import junit.framework.TestCase;
 import java.math.*;
 
+import junit.framework.*;
+
+
 /**
- * ReflectVisitorTest tests {@link ReflectUtil.invokeVisitor} and
- * provides a contrived example of how to use it.
+ * ReflectVisitorTest tests {@link ReflectUtil.invokeVisitor} and provides a
+ * contrived example of how to use it.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ReflectVisitorTest extends TestCase
+public class ReflectVisitorTest
+    extends TestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public ReflectVisitorTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Tests CarelessNumberNegater.
@@ -49,7 +57,9 @@ public class ReflectVisitorTest extends TestCase
 
         // verify that negater is capable of handling integers
         result = negater.negate(new Integer(5));
-        assertEquals(-5, result.intValue());
+        assertEquals(
+            -5,
+            result.intValue());
     }
 
     /**
@@ -63,14 +73,18 @@ public class ReflectVisitorTest extends TestCase
         // verify that negater is capable of handling integers,
         // and that result comes back with same type
         result = negater.negate(new Integer(5));
-        assertEquals(-5, result.intValue());
+        assertEquals(
+            -5,
+            result.intValue());
         assertTrue(result instanceof Integer);
 
         // verify that negater is capable of handling longs;
         // even though it doesn't provide an explicit implementation,
         // it should inherit the one from CarelessNumberNegater
         result = negater.negate(new Long(5));
-        assertEquals(-5, result.longValue());
+        assertEquals(
+            -5,
+            result.longValue());
     }
 
     /**
@@ -80,11 +94,13 @@ public class ReflectVisitorTest extends TestCase
     {
         NumberNegater negater = new CluelessNumberNegater();
         Number result;
-        
+
         // verify that negater is capable of handling shorts,
         // and that result comes back with same type
         result = negater.negate(new Short((short) 5));
-        assertEquals(-5, result.shortValue());
+        assertEquals(
+            -5,
+            result.shortValue());
         assertTrue(result instanceof Short);
 
         // verify that negater is NOT capable of handling integers
@@ -111,8 +127,8 @@ public class ReflectVisitorTest extends TestCase
     }
 
     /**
-     * Tests that ambiguity detection in method lookup does not kick
-     * in when a better match is available.
+     * Tests that ambiguity detection in method lookup does not kick in when a
+     * better match is available.
      */
     public void testNonAmbiguity()
     {
@@ -120,16 +136,42 @@ public class ReflectVisitorTest extends TestCase
         Number result;
 
         result = negater.negate(new SomewhatAmbiguousNumber());
-        assertEquals(0.0, result.doubleValue(), 0.001);
+        assertEquals(
+            0.0,
+            result.doubleValue(),
+            0.001);
+    }
+
+    //~ Inner Interfaces -------------------------------------------------------
+
+    /**
+     * An interface for introducing ambiguity into the class hierarchy.
+     */
+    public interface CrunchableNumber
+    {
     }
 
     /**
-     * NumberNegater defines the abstract base for a computation object
-     * capable of negating an arbitrary number.  Subclasses implement
-     * the computation by publishing methods with the signature
-     * "void visit(X x)" where X is a subclass of Number.
+     * An interface for introducing ambiguity into the class hierarchy.
      */
-    public abstract class NumberNegater 
+    public interface FudgeableNumber
+    {
+    }
+
+    public interface DiceyNumber
+        extends FudgeableNumber
+    {
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * NumberNegater defines the abstract base for a computation object capable
+     * of negating an arbitrary number. Subclasses implement the computation by
+     * publishing methods with the signature "void visit(X x)" where X is a
+     * subclass of Number.
+     */
+    public abstract class NumberNegater
     {
         protected Number result;
 
@@ -157,10 +199,11 @@ public class ReflectVisitorTest extends TestCase
 
     /**
      * CarelessNumberNegater implements NumberNegater in a careless fashion by
-     * converting its input to a double and then negating that.  This can lose
+     * converting its input to a double and then negating that. This can lose
      * precision for types such as BigInteger.
      */
-    public class CarelessNumberNegater extends NumberNegater
+    public class CarelessNumberNegater
+        extends NumberNegater
     {
         public void visit(Number n)
         {
@@ -171,16 +214,17 @@ public class ReflectVisitorTest extends TestCase
     /**
      * CarefulNumberNegater implements NumberNegater in a careful fashion by
      * providing overloads for each known subclass of Number and returning the
-     * same subclass for the result.  Extends CarelessNumberNegater so that it
+     * same subclass for the result. Extends CarelessNumberNegater so that it
      * can still handle unknown types of Number.
      */
-    public class CarefulNumberNegater extends CarelessNumberNegater
+    public class CarefulNumberNegater
+        extends CarelessNumberNegater
     {
         public void visit(Integer i)
         {
             result = new Integer(-i.intValue());
         }
-        
+
         public void visit(Short s)
         {
             result = new Short((short) (-s.shortValue()));
@@ -195,13 +239,14 @@ public class ReflectVisitorTest extends TestCase
      * This is just here for testing the hierarchyRoot parameter of
      * invokeVisitor.
      */
-    public class CluelessNumberNegater extends NumberNegater
+    public class CluelessNumberNegater
+        extends NumberNegater
     {
         public void visit(Object obj)
         {
             result = new Integer(42);
         }
-        
+
         public void visit(Short s)
         {
             result = new Short((short) (-s.shortValue()));
@@ -209,32 +254,32 @@ public class ReflectVisitorTest extends TestCase
     }
 
     /**
-     * IndecisiveNumberNegater implements NumberNegater in such
-     * a way that it doesn't know what to do when presented
-     * with an AmbiguousNumber.
+     * IndecisiveNumberNegater implements NumberNegater in such a way that it
+     * doesn't know what to do when presented with an AmbiguousNumber.
      */
-    public class IndecisiveNumberNegater extends NumberNegater
+    public class IndecisiveNumberNegater
+        extends NumberNegater
     {
         public void visit(CrunchableNumber n)
         {
         }
-        
+
         public void visit(FudgeableNumber n)
         {
         }
     }
 
     /**
-     * SomewhatIndecisiveNumberNegater implements NumberNegater in such
-     * a way that it knows what to do when presented
-     * with a SomewhatAmbiguousNumber.
+     * SomewhatIndecisiveNumberNegater implements NumberNegater in such a way
+     * that it knows what to do when presented with a SomewhatAmbiguousNumber.
      */
-    public class SomewhatIndecisiveNumberNegater extends NumberNegater
+    public class SomewhatIndecisiveNumberNegater
+        extends NumberNegater
     {
         public void visit(FudgeableNumber n)
         {
         }
-        
+
         public void visit(AmbiguousNumber n)
         {
             result = new Double(-n.doubleValue());
@@ -242,24 +287,12 @@ public class ReflectVisitorTest extends TestCase
     }
 
     /**
-     * An interface for introducing ambiguity into the class hierarchy.
-     */
-    public interface CrunchableNumber
-    {
-    }
-
-    /**
-     * An interface for introducing ambiguity into the class hierarchy.
-     */
-    public interface FudgeableNumber
-    {
-    }
-
-    /**
-     * A class inheriting two interfaces,  leading to ambiguity.
+     * A class inheriting two interfaces, leading to ambiguity.
      */
     public class AmbiguousNumber
-        extends BigDecimal implements CrunchableNumber, FudgeableNumber
+        extends BigDecimal
+        implements CrunchableNumber,
+            FudgeableNumber
     {
         AmbiguousNumber()
         {
@@ -267,16 +300,13 @@ public class ReflectVisitorTest extends TestCase
         }
     }
 
-    public interface DiceyNumber extends FudgeableNumber
-    {
-    }
-
     /**
-     * A class inheriting a root interface (FudgeableNumber) two
-     * different ways, which should not lead to ambiguity in some cases.
+     * A class inheriting a root interface (FudgeableNumber) two different ways,
+     * which should not lead to ambiguity in some cases.
      */
     public class SomewhatAmbiguousNumber
-        extends AmbiguousNumber implements DiceyNumber
+        extends AmbiguousNumber
+        implements DiceyNumber
     {
     }
 }

@@ -21,11 +21,11 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.util.SqlShuttle;
+import java.util.*;
 
-import java.util.Stack;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
+
 
 /**
  * Refinement to {@link SqlShuttle} which maintains a stack of scopes.
@@ -37,15 +37,23 @@ import java.util.Stack;
  * @version $Id$
  * @since Jun 10, 2006
  */
-public abstract class SqlScopedShuttle extends SqlShuttle
+public abstract class SqlScopedShuttle
+    extends SqlShuttle
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Stack<SqlValidatorScope> scopes =
         new Stack<SqlValidatorScope>();
+
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlScopedShuttle(SqlValidatorScope initialScope)
     {
         scopes.push(initialScope);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public final SqlNode visit(SqlCall call)
     {

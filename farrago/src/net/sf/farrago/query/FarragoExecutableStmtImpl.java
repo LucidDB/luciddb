@@ -39,16 +39,18 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
+abstract class FarragoExecutableStmtImpl
+    extends FarragoCompoundAllocation
     implements FarragoSessionExecutableStmt
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final boolean isDml;
     private final RelDataType dynamicParamRowType;
     private final TableAccessMap tableAccessMap;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected FarragoExecutableStmtImpl(
         RelDataType dynamicParamRowType,
@@ -60,7 +62,7 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
         this.tableAccessMap = tableAccessMap;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionExecutableStmt
     public boolean isDml()
@@ -79,7 +81,7 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
     {
         return Collections.EMPTY_SET;
     }
-    
+
     // implement FarragoSessionExecutableStmt
     public TableAccessMap getTableAccessMap()
     {
@@ -92,6 +94,5 @@ abstract class FarragoExecutableStmtImpl extends FarragoCompoundAllocation
         return Collections.EMPTY_MAP;
     }
 }
-
 
 // End FarragoExecutableStmtImpl.java

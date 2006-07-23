@@ -21,13 +21,12 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * The <code>AS</code> operator associates an expression with an alias.
@@ -35,8 +34,12 @@ import org.eigenbase.reltype.RelDataType;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlAsOperator extends SqlBinaryOperator
+public class SqlAsOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlAsOperator()
     {
         super(
@@ -48,7 +51,9 @@ public class SqlAsOperator extends SqlBinaryOperator
             SqlTypeStrategies.otiReturnType,
             SqlTypeStrategies.otcAnyX2);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public void validateCall(
         SqlCall call,
         SqlValidator validator,
@@ -63,14 +68,15 @@ public class SqlAsOperator extends SqlBinaryOperator
         operands[0].validateExpr(validator, scope);
         SqlIdentifier id = (SqlIdentifier) operands[1];
         if (!id.isSimple()) {
-            throw validator.newValidationError(id,
-                EigenbaseResource.instance()
-                .AliasMustBeSimpleIdentifier.ex());
+            throw validator.newValidationError(
+                id,
+                EigenbaseResource.instance().AliasMustBeSimpleIdentifier.ex());
         }
     }
 
-    public <R> void acceptCall(
-        SqlVisitor<R> visitor, SqlCall call, boolean onlyExpressions,
+    public <R> void acceptCall(SqlVisitor<R> visitor,
+        SqlCall call,
+        boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
     {
         if (onlyExpressions) {
@@ -82,7 +88,9 @@ public class SqlAsOperator extends SqlBinaryOperator
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         // special case for AS:  never try to derive type for alias
         RelDataType nodeType = validator.deriveType(scope, call.operands[0]);

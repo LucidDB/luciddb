@@ -20,24 +20,24 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
- * A <code>SqlSelect</code> is a node of a parse tree which represents a
- * select statement. It warrants its own node type just because we have a lot
- * of methods to put somewhere.
+ * A <code>SqlSelect</code> is a node of a parse tree which represents a select
+ * statement. It warrants its own node type just because we have a lot of
+ * methods to put somewhere.
  */
-public class SqlSelect extends SqlCall
+public class SqlSelect
+    extends SqlCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int KEYWORDS_OPERAND = 0;
@@ -50,7 +50,7 @@ public class SqlSelect extends SqlCall
     public static final int ORDER_OPERAND = 7;
     public static final int OPERAND_COUNT = 8;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     SqlSelect(
         SqlSelectOperator operator,
@@ -67,11 +67,11 @@ public class SqlSelect extends SqlCall
         Util.pre(operands[WINDOW_OPERAND] != null,
             "operands[WINDOW_OPERAND] != null");
         Util.pre(operands[WINDOW_OPERAND] instanceof SqlNodeList,
-                "operands[WINDOW_OPERAND] instanceof SqlNodeList");
+            "operands[WINDOW_OPERAND] instanceof SqlNodeList");
         Util.pre(pos != null, "pos != null");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public final boolean isDistinct()
     {
@@ -83,8 +83,8 @@ public class SqlSelect extends SqlCall
         final SqlNodeList keywords =
             (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywords.size(); i++) {
-            SqlSelectKeyword keyword = (SqlSelectKeyword)
-                SqlLiteral.symbolValue(keywords.get(i));
+            SqlSelectKeyword keyword =
+                (SqlSelectKeyword) SqlLiteral.symbolValue(keywords.get(i));
             if (keyword == modifier) {
                 return keywords.get(i);
             }
@@ -135,15 +135,16 @@ public class SqlSelect extends SqlCall
         } else {
             fromClause =
                 SqlStdOperatorTable.joinOperator.createCall(
-                    fromClause,tableId, null);
+                    fromClause,
+                    tableId,
+                    null);
         }
         operands[FROM_OPERAND] = fromClause;
     }
 
     public void addWhere(SqlNode condition)
     {
-        assert (operands[SELECT_OPERAND] == null) :
-                "cannot add a filter if there is already a select list";
+        assert (operands[SELECT_OPERAND] == null) : "cannot add a filter if there is already a select list";
         operands[WHERE_OPERAND] =
             SqlUtil.andExpressions(operands[WHERE_OPERAND], condition);
     }
@@ -157,8 +158,8 @@ public class SqlSelect extends SqlCall
     public void unparse(SqlWriter writer, int leftPrec, int rightPrec)
     {
         if (!writer.inQuery()) {
-            // If this SELECT is the topmost item in a subquery, introduce a
-            // new frame. (The topmost item in the subquery might be a UNION or
+            // If this SELECT is the topmost item in a subquery, introduce a new
+            // frame. (The topmost item in the subquery might be a UNION or
             // ORDER. In this case, we don't need a wrapper frame.)
             final SqlWriter.Frame frame =
                 writer.startList(SqlWriter.FrameType.Subquery, "(", ")");
@@ -182,11 +183,11 @@ public class SqlSelect extends SqlCall
 
     public boolean isKeywordPresent(SqlSelectKeyword targetKeyWord)
     {
-        final SqlNodeList keywordList = (SqlNodeList)
-            operands[SqlSelect.KEYWORDS_OPERAND];
+        final SqlNodeList keywordList =
+            (SqlNodeList) operands[SqlSelect.KEYWORDS_OPERAND];
         for (int i = 0; i < keywordList.size(); i++) {
-            final SqlSelectKeyword keyWord = (SqlSelectKeyword)
-                SqlLiteral.symbolValue(keywordList.get(i));
+            final SqlSelectKeyword keyWord =
+                (SqlSelectKeyword) SqlLiteral.symbolValue(keywordList.get(i));
             if (keyWord == targetKeyWord) {
                 return true;
             }

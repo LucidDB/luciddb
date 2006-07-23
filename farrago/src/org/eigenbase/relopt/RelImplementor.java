@@ -20,22 +20,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 
 
 /**
- * Callback used to hold state while converting a tree of
- * {@link RelNode relational expressions} into a plan. Calling conventions
- * typically have their own protocol for walking over a tree, and
- * correspondingly have their own implementors, which are subclasses of
- * <code>RelImplementor</code>.
+ * Callback used to hold state while converting a tree of {@link RelNode
+ * relational expressions} into a plan. Calling conventions typically have their
+ * own protocol for walking over a tree, and correspondingly have their own
+ * implementors, which are subclasses of <code>RelImplementor</code>.
  */
 public interface RelImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Implements a relational expression according to a calling convention.
@@ -46,13 +45,14 @@ public interface RelImplementor
         RelNode child);
 
     /**
-     * Called from {@link #visitChild} after the frame has been set up.
-     * Specific implementors should override this method.
+     * Called from {@link #visitChild} after the frame has been set up. Specific
+     * implementors should override this method.
+     *
      * @param child Child relational expression
+     *
      * @return
      */
     Object visitChildInternal(RelNode child);
 }
-
 
 // End RelImplementor.java

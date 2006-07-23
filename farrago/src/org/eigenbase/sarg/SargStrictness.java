@@ -28,11 +28,18 @@ package org.eigenbase.sarg;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SargStrictness
-{
+public enum SargStrictness {
     OPEN,
 
     CLOSED
 }
 
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
+// End SargStrictness.java
 // End SargStrictness.java

@@ -33,30 +33,34 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FtrsTableProjectionRule implements the rule for pushing a Projection into
- * a FtrsIndexScanRel.
+ * FtrsTableProjectionRule implements the rule for pushing a Projection into a
+ * FtrsIndexScanRel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
+class FtrsTableProjectionRule
+    extends MedAbstractFennelProjectionRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsTableProjectionRule object.
      */
     public FtrsTableProjectionRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(FtrsIndexScanRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -83,9 +87,13 @@ class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
             // there are expressions in the projection; we need to split
             // the projection to first project the input references
             PushProjector pushProject = new PushProjector();
-            ProjectRel newProject = pushProject.convertProject(
-                origProject, null, origScan, Collections.EMPTY_SET,
-                null);
+            ProjectRel newProject =
+                pushProject.convertProject(
+                    origProject,
+                    null,
+                    origScan,
+                    Collections.EMPTY_SET,
+                    null);
             if (newProject != null) {
                 call.transformTo(newProject);
             }
@@ -97,8 +105,10 @@ class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
         // based on cost, since sort order and I/O may be in competition.
         final FarragoRepos repos = FennelRelUtil.getRepos(origScan);
 
-        Iterator iter = FarragoCatalogUtil.getTableIndexes(
-            repos, origScan.ftrsTable.getCwmColumnSet()).iterator();
+        Iterator iter =
+            FarragoCatalogUtil.getTableIndexes(
+                repos,
+                origScan.ftrsTable.getCwmColumnSet()).iterator();
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
 
@@ -110,7 +120,8 @@ class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
 
             if (!testIndexCoverage(
                     origScan.ftrsTable.getIndexGuide(),
-                    index, projectedColumns)) {
+                    index,
+                    projectedColumns)) {
                 continue;
             }
 
@@ -146,10 +157,10 @@ class FtrsTableProjectionRule extends MedAbstractFennelProjectionRule
         }
         Integer [] indexProjection =
             indexGuide.getUnclusteredCoverageArray(index);
-        return Arrays.asList(indexProjection).containsAll(
-            Arrays.asList(projection));
+        return
+            Arrays.asList(indexProjection).containsAll(
+                Arrays.asList(projection));
     }
 }
-
 
 // End FtrsTableProjectionRule.java

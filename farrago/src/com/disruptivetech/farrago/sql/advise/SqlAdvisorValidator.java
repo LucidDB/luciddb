@@ -18,29 +18,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.sql.advise;
 
-import org.eigenbase.util.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.util.*;
+
 
 /**
  * <code>SqlAdvisorValidator</code> is used by {@link SqlAdvisor} to traverse
- * the parse tree of a SQL statement, not for validation purpose but for
- * setting up the scopes and namespaces to facilitate retrieval of SQL
- * statement completion hints.
+ * the parse tree of a SQL statement, not for validation purpose but for setting
+ * up the scopes and namespaces to facilitate retrieval of SQL statement
+ * completion hints.
  *
  * @author tleung
  * @version $Id$
- *
  * @since Jan 16, 2005
  */
-public class SqlAdvisorValidator extends SqlValidatorImpl
+public class SqlAdvisorValidator
+    extends SqlValidatorImpl
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a SqlAdvisor validator.
@@ -59,12 +59,13 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
         super(opTab, catalogReader, typeFactory, compatible);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Registers all the SqlIdentifiers in this parse tree into a map keyed by
-     * their respective ParserPostion.  Performs the same for the associated
+     * their respective ParserPostion. Performs the same for the associated
      * scopes
+     *
      * @param id
      * @param scope
      */
@@ -95,12 +96,12 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
         SqlNode operand)
     {
         // REVIEW Do not mask Error (indicates a serious system problem) or
-        //   UnsupportedOperationException (a bug).
-        // I have to mask UnsupportedOperationException because 
+        // UnsupportedOperationException (a bug). I have to mask
+        // UnsupportedOperationException because
         // SqlValidatorImpl.getValidatedNodeType throws it for an unrecognized
-        // identifier node
-        // I have to mask Error as well because AbstractNamespace.getRowType 
-        // called in super.deriveType can do a Util.permAssert that throws Error
+        // identifier node I have to mask Error as well because
+        // AbstractNamespace.getRowType  called in super.deriveType can do a
+        // Util.permAssert that throws Error
         try {
             return super.deriveType(scope, operand);
         } catch (EigenbaseException e) {
@@ -146,4 +147,3 @@ public class SqlAdvisorValidator extends SqlValidatorImpl
 }
 
 // End of SqlAdvisorValidator.java
-

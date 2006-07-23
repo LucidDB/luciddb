@@ -24,7 +24,6 @@ package net.sf.farrago.catalog;
 import java.util.*;
 
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
@@ -32,46 +31,55 @@ import org.eigenbase.rel.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
 
+
 /**
- * This class reads statistics for a Farrago table from data stored in 
- * the catalog.
+ * This class reads statistics for a Farrago table from data stored in the
+ * catalog.
  *
  * @author John Pham
  * @version $Id$
  */
-public class FarragoTableStatistics implements RelStatSource
+public class FarragoTableStatistics
+    implements RelStatSource
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoRepos repos;
     private FemAbstractColumnSet table;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Initialize an object for retrieving table statistics
-     * 
+     *
      * @param repos the repository containing stats
      * @param table the table for which to retrieve stats
      */
     public FarragoTableStatistics(
-        FarragoRepos repos, 
-        FemAbstractColumnSet table) 
+        FarragoRepos repos,
+        FemAbstractColumnSet table)
     {
         this.repos = repos;
         this.table = table;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelStatSource
-    public Double getRowCount() {
+    public Double getRowCount()
+    {
         Long rowCount = table.getRowCount();
         return (rowCount == null) ? null : Double.valueOf(rowCount);
     }
-    
+
     // implement RelStatSource
     public RelStatColumnStatistics getColumnStatistics(
         int ordinal,
         SargIntervalSequence predicate)
     {
         List features = table.getFeature();
-        FemAbstractColumn column = 
-            (FemAbstractColumn) features.get(ordinal);
+        FemAbstractColumn column = (FemAbstractColumn) features.get(ordinal);
 
         FarragoColumnHistogram result =
             new FarragoColumnHistogram(column, predicate);

@@ -22,13 +22,14 @@
 */
 package net.sf.farrago.server;
 
-import net.sf.farrago.jdbc.FarragoConnection;
-import org.objectweb.rmijdbc.RJConnectionInterface;
-import org.objectweb.rmijdbc.RJDriverServer;
-import org.objectweb.rmijdbc.RJDriverInterface;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
-import java.sql.Connection;
+import java.sql.*;
+
+import net.sf.farrago.jdbc.*;
+
+import org.objectweb.rmijdbc.*;
+
 
 /**
  * RMI server-side implementation of {@link java.sql.Driver}.
@@ -36,13 +37,20 @@ import java.sql.Connection;
  * @author Tim Leung
  * @version $Id$
  */
-public class FarragoRJDriverServer extends RJDriverServer
+public class FarragoRJDriverServer
+    extends RJDriverServer
     implements RJDriverInterface
 {
-    public FarragoRJDriverServer(String admpasswd) throws RemoteException
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoRJDriverServer(String admpasswd)
+        throws RemoteException
     {
         super(admpasswd);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected RJConnectionInterface buildConnectionServer(Connection c)
         throws RemoteException
@@ -53,3 +61,5 @@ public class FarragoRJDriverServer extends RJDriverServer
         return super.buildConnectionServer(c);
     }
 }
+
+// End FarragoRJDriverServer.java

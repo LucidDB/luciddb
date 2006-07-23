@@ -22,14 +22,16 @@
 package net.sf.farrago.type.runtime;
 
 /**
- * DataValue is an interface representing a runtime holder for a
- * data value.
+ * DataValue is an interface representing a runtime holder for a data value.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface DataValue
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return an Object representation of this value's data, or null if this
      * value is null

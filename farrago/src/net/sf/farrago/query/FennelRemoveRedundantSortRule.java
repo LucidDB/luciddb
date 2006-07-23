@@ -22,39 +22,36 @@
 */
 package net.sf.farrago.query;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 
 /**
- * FennelRemoveRedundantSortRule removes instances of SortRel which are
- * already satisfied by the physical ordering produced by an underlying
- * FennelRel.
+ * FennelRemoveRedundantSortRule removes instances of SortRel which are already
+ * satisfied by the physical ordering produced by an underlying FennelRel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelRemoveRedundantSortRule extends RelOptRule
+public class FennelRemoveRedundantSortRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FennelRemoveRedundantSortRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 FennelSortRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(FennelRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -75,15 +72,16 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
         if (inputRel instanceof FennelSortRel) {
             RelNode newRel =
                 mergeTraitsAndConvert(
-                    sortRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                    sortRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
                     inputRel);
             if (newRel == null) {
                 return;
             }
             call.transformTo(newRel);
         } else {
-            // REVIEW: don't blindly eliminate sort without know what aspects
-            // of the input we're relying on?
+            // REVIEW: don't blindly eliminate sort without know what aspects of
+            // the input we're relying on?
         }
     }
 
@@ -115,6 +113,5 @@ public class FennelRemoveRedundantSortRule extends RelOptRule
         return inputCollationList.equals(outputCollationList);
     }
 }
-
 
 // End FennelRemoveRedundantSortRule.java

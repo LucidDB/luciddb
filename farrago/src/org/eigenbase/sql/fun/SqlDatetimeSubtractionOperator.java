@@ -22,28 +22,38 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * A special operator for the subtraction of two DATETIMEs.  The format of
- * DATETIME substraction is: <br> <code>"(" &lt;datetime&gt; "-"
- * &lt;datetime&gt; ")" <interval qualifier></code>.  This operator
- * is special since it needs to hold the additional interval qualifier
- * specification.
+ * A special operator for the subtraction of two DATETIMEs. The format of
+ * DATETIME substraction is:<br>
+ * <code>"(" &lt;datetime&gt; "-" &lt;datetime&gt; ")" <interval
+ * qualifier></code>. This operator is special since it needs to hold the
+ * additional interval qualifier specification.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
+public class SqlDatetimeSubtractionOperator
+    extends SqlSpecialOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlDatetimeSubtractionOperator()
     {
         super(
-            "-", SqlKind.Minus, 40, true,
+            "-",
+            SqlKind.Minus,
+            40,
+            true,
             SqlTypeStrategies.rtiThirdArgType,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusDateOperator);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -52,7 +62,7 @@ public class SqlDatetimeSubtractionOperator extends SqlSpecialOperator
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {

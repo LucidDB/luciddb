@@ -22,21 +22,22 @@
 package net.sf.farrago.syslib;
 
 import java.sql.*;
+
 import java.util.*;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.resource.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.namespace.util.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
 
-import net.sf.farrago.fem.med.*;
-
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
-import org.eigenbase.reltype.*;
+
 
 /**
  * FarragoMedUDR is a set of user-defined routines providing access to SQL/MED
@@ -47,14 +48,15 @@ import org.eigenbase.reltype.*;
  */
 public abstract class FarragoMedUDR
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Queries SQL/MED connection information for a foreign data server.
      *
      * @param wrapperName name of foreign data wrapper to use
-     *
-     * @param serverOptions table of option NAME/VALUE
-     * pairs to use; this can be empty to query for all options
-     *
+     * @param serverOptions table of option NAME/VALUE pairs to use; this can be
+     * empty to query for all options
      * @param resultInserter writes result table
      */
     public static void browseConnectServer(
@@ -70,7 +72,7 @@ public abstract class FarragoMedUDR
             String value = serverOptions.getString(2);
             if (value != null) {
                 value = value.trim();
-            }                
+            }
             serverProps.setProperty(name, value);
         }
 
@@ -94,13 +96,15 @@ public abstract class FarragoMedUDR
         PreparedStatement resultInserter)
         throws SQLException
     {
-        FemDataWrapper femWrapper = stmtValidator.findDataWrapper(
-            new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
-            true);
+        FemDataWrapper femWrapper =
+            stmtValidator.findDataWrapper(
+                new SqlIdentifier(wrapperName, SqlParserPos.ZERO),
+                true);
         FarragoDataWrapperCache wrapperCache =
             stmtValidator.getDataWrapperCache();
-        Properties wrapperProps = wrapperCache.getStorageOptionsAsProperties(
-            femWrapper);
+        Properties wrapperProps =
+            wrapperCache.getStorageOptionsAsProperties(
+                femWrapper);
         FarragoMedDataWrapper medWrapper =
             wrapperCache.loadWrapperFromCatalog(femWrapper);
         DriverPropertyInfo [] infoArray =
@@ -116,7 +120,10 @@ public abstract class FarragoMedUDR
             }
             for (int iChoice = 0; iChoice < info.choices.length; ++iChoice) {
                 browseConnectServerChoice(
-                    iOption, info, iChoice, resultInserter);
+                    iOption,
+                    info,
+                    iChoice,
+                    resultInserter);
             }
         }
     }
@@ -159,16 +166,17 @@ public abstract class FarragoMedUDR
             stmtValidator.closeAllocation();
         }
     }
-    
+
     private static void browseForeignSchemasImpl(
         FarragoSessionStmtValidator stmtValidator,
         String serverName,
         PreparedStatement resultInserter)
         throws SQLException
     {
-        FemDataServer femServer = stmtValidator.findDataServer(
-            new SqlIdentifier(serverName, SqlParserPos.ZERO));
-        
+        FemDataServer femServer =
+            stmtValidator.findDataServer(
+                new SqlIdentifier(serverName, SqlParserPos.ZERO));
+
         FarragoMedDataServer medServer =
             stmtValidator.getDataWrapperCache().loadServerFromCatalog(
                 femServer);
@@ -179,16 +187,22 @@ public abstract class FarragoMedUDR
         }
         FarragoMedMetadataQuery query = new MedMetadataQueryImpl();
         query.getResultObjectTypes().add(FarragoMedMetadataQuery.OTN_SCHEMA);
-        FarragoMedMetadataSink sink = new BrowseSchemaSink(
-            query, serverName, resultInserter);
+        FarragoMedMetadataSink sink =
+            new BrowseSchemaSink(
+                query,
+                serverName,
+                resultInserter);
         dir.queryMetadata(query, sink);
     }
 
-    private static class BrowseSchemaSink extends MedAbstractMetadataSink
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class BrowseSchemaSink
+        extends MedAbstractMetadataSink
     {
         private final String serverName;
         private final PreparedStatement resultInserter;
-        
+
         BrowseSchemaSink(
             FarragoMedMetadataQuery query,
             String serverName,
@@ -216,12 +230,14 @@ public abstract class FarragoMedUDR
                 resultInserter.executeUpdate();
             } catch (SQLException ex) {
                 throw FarragoResource.instance().ValidatorImportFailed.ex(
-                    name, serverName, ex);
+                    name,
+                    serverName,
+                    ex);
             }
-            
+
             return true;
         }
-        
+
         // implement FarragoMedMetadataSink
         public boolean writeColumnDescriptor(
             String tableName,

@@ -21,19 +21,20 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.ListIterator;
-import java.util.List;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+
 
 /**
- * The name-resolution scope of a SELECT clause. The objects visible are
- * those in the FROM clause, and objects inherited from the parent scope.
+ * The name-resolution scope of a SELECT clause. The objects visible are those
+ * in the FROM clause, and objects inherited from the parent scope.
+ *
  * <p/>
- * <p>This object is both a {@link SqlValidatorScope} and a
- * {@link SqlValidatorNamespace}. In the query
+ * <p>This object is both a {@link SqlValidatorScope} and a {@link
+ * SqlValidatorNamespace}. In the query
+ *
  * <p/>
  * <blockquote>
  * <pre>SELECT name FROM (
@@ -56,43 +57,55 @@ import java.util.List;
  *     t2,
  *     (SELECT expr2 FROM t3) AS q3
  * WHERE c1 IN (SELECT expr3 FROM t4)
- * ORDER BY expr4</pre></blockquote>
- * <p/>
- * The scopes available at various points of the query are as follows:<ul>
+ * ORDER BY expr4</pre>
+ * </blockquote>
+ *
+ * <p/>The scopes available at various points of the query are as follows:
+ *
+ * <ul>
  * <li>expr1 can see t1, t2, q3</li>
  * <li>expr2 can see t3</li>
  * <li>expr3 can see t4, t1, t2</li>
- * <li>expr4 can see t1, t2, q3, plus (depending upon the dialect) any
- *     aliases defined in the SELECT clause</li>
+ * <li>expr4 can see t1, t2, q3, plus (depending upon the dialect) any aliases
+ * defined in the SELECT clause</li>
  * </ul>
+ *
  * <p/>
  * <h3>Namespaces</h3>
+ *
  * <p/>
- * <p>In the above query, there are 4 namespaces:<ul>
+ * <p>In the above query, there are 4 namespaces:
+ *
+ * <ul>
  * <li>t1</li>
  * <li>t2</li>
  * <li>(SELECT expr2 FROM t3) AS q3</li>
  * <li>(SELECT expr3 FROM t4)</li>
  * </ul>
  *
- * @see SelectNamespace
  * @author jhyde
  * @version $Id$
+ * @see SelectNamespace
  * @since Mar 25, 2003
  */
-public class SelectScope extends ListScope
+public class SelectScope
+    extends ListScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlSelect select;
     protected final List<String> windowNames = new ArrayList<String>();
 
     private List<SqlNode> expandedSelectList = null;
 
     /**
-     * List of column names which sort this scope.
-     * Empty if this scope is not sorted.
-     * Null if has not been computed yet.
+     * List of column names which sort this scope. Empty if this scope is not
+     * sorted. Null if has not been computed yet.
      */
     private SqlNodeList orderList;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a scope corresponding to a SELECT clause.
@@ -106,6 +119,8 @@ public class SelectScope extends ListScope
         super(parent);
         this.select = select;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlValidatorTable getTable()
     {
@@ -139,8 +154,8 @@ public class SelectScope extends ListScope
 
         // TODO: compare fully qualified names
         final SqlNodeList orderList = getOrderList();
-        if (orderList.size() == 1 &&
-            expr.equalsDeep((SqlNode) orderList.get(0), false)) {
+        if ((orderList.size() == 1)
+            && expr.equalsDeep((SqlNode) orderList.get(0), false)) {
             return true;
         }
 
@@ -172,15 +187,16 @@ public class SelectScope extends ListScope
     {
         String listName;
         ListIterator<String> entry = windowNames.listIterator();
-        while(entry.hasNext()) {
+        while (entry.hasNext()) {
             listName = entry.next();
             if (0 == listName.compareToIgnoreCase(winName)) {
                 return true;
             }
         }
+
         // if the name wasn't found then check the parent(s)
         SqlValidatorScope walker = parent;
-        while (null != walker && !(walker instanceof EmptyScope)) {
+        while ((null != walker) && !(walker instanceof EmptyScope)) {
             if (walker instanceof SelectScope) {
                 final SelectScope parentScope = (SelectScope) walker;
                 return parentScope.existingWindowName(winName);

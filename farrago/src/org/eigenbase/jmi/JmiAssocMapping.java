@@ -28,8 +28,7 @@ package org.eigenbase.jmi;
  * @author John Sichi
  * @version $Id$
  */
-public enum JmiAssocMapping
-{
+public enum JmiAssocMapping {
     /**
      * The association should be left out of the transformed graph.
      */
@@ -53,4 +52,12 @@ public enum JmiAssocMapping
     CONTRACTION
 }
 
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
+// End JmiAssocMapping.java
 // End JmiAssocMapping.java

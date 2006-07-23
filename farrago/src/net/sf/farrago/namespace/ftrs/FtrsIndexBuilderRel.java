@@ -36,14 +36,13 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FtrsIndexBuilderRel is the relational expression corresponding to building a
- * single unclustered index on an FTRS table.  Currently it is implemented via
- * a FemTableWriter; TODO: use a BTreeBuilder instead.
+ * single unclustered index on an FTRS table. Currently it is implemented via a
+ * FemTableWriter; TODO: use a BTreeBuilder instead.
  *
- *<p>
- *
- * The input must be the coverage tuple of the index.
+ * <p>The input must be the coverage tuple of the index.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -51,11 +50,16 @@ import org.eigenbase.util.*;
 class FtrsIndexBuilderRel
     extends FennelSingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Index to be built.
      */
     private final FemLocalIndex index;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     FtrsIndexBuilderRel(
         RelOptCluster cluster,
         RelNode child,
@@ -65,13 +69,16 @@ class FtrsIndexBuilderRel
         this.index = index;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement Cloneable
     public Object clone()
     {
-        FtrsIndexBuilderRel clone = new FtrsIndexBuilderRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            index);
+        FtrsIndexBuilderRel clone =
+            new FtrsIndexBuilderRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                index);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -91,9 +98,10 @@ class FtrsIndexBuilderRel
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemTableWriterDef tableWriterDef = repos.newFemTableInserterDef();
-        FtrsIndexGuide indexGuide = new FtrsIndexGuide(
-            typeFactory,
-            FarragoCatalogUtil.getIndexTable(index));
+        FtrsIndexGuide indexGuide =
+            new FtrsIndexGuide(
+                typeFactory,
+                FarragoCatalogUtil.getIndexTable(index));
         FemIndexWriterDef indexWriter = indexGuide.newIndexWriter(this, index);
         indexWriter.setUpdateInPlace(false);
 
@@ -102,7 +110,7 @@ class FtrsIndexBuilderRel
         // coverage tuple.  Down in the depths, this also means that
         // FtrsTableWriter will use the index ID as the "table ID" for
         // recovery purposes, and that's OK.
-        
+
         tableWriterDef.getIndexWriter().add(indexWriter);
         implementor.addDataFlowFromProducerToConsumer(
             input,
@@ -121,13 +129,13 @@ class FtrsIndexBuilderRel
     {
         pw.explain(
             this,
-            new String [] { "child", "index" },
-            new Object [] {
+            new String[] { "child", "index" },
+            new Object[] {
                 Arrays.asList(
                     FarragoCatalogUtil.getQualifiedName(index).names)
             });
     }
-    
+
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {

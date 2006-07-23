@@ -21,34 +21,43 @@
 */
 package org.eigenbase.rel.rules;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * TableAccessRule converts a TableAccessRel to the result
- * of calling {@link RelOptTable#toRel}.
+ * TableAccessRule converts a TableAccessRel to the result of calling {@link
+ * RelOptTable#toRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class TableAccessRule extends RelOptRule
+public class TableAccessRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final TableAccessRule instance = new TableAccessRule();
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     private TableAccessRule()
     {
-        super(
-            new RelOptRuleOperand(
+        super(new RelOptRuleOperand(
                 TableAccessRel.class,
                 null));
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void onMatch(RelOptRuleCall call)
     {
         TableAccessRel oldRel = (TableAccessRel) call.rels[0];
-        RelNode newRel = oldRel.getTable().toRel(
-            oldRel.getCluster(),
-            oldRel.getConnection());
+        RelNode newRel =
+            oldRel.getTable().toRel(
+                oldRel.getCluster(),
+                oldRel.getConnection());
         call.transformTo(newRel);
     }
 }

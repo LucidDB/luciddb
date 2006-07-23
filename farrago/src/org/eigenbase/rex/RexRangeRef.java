@@ -20,49 +20,47 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
  * Reference to a range of columns.
  *
- * <p>This construct is used only during the process of translating a
- * {@link org.eigenbase.sql.SqlNode SQL} tree to a
- * {@link org.eigenbase.rel.RelNode rel}/{@link RexNode rex} tree.
- * <em>Regular {@link RexNode rex} trees do not contain this
- * construct.</em></p>
+ * <p>This construct is used only during the process of translating a {@link
+ * org.eigenbase.sql.SqlNode SQL} tree to a {@link org.eigenbase.rel.RelNode
+ * rel}/{@link RexNode rex} tree. <em>Regular {@link RexNode rex} trees do not
+ * contain this construct.</em></p>
  *
- * <p>While translating a join of
- * EMP(EMPNO, ENAME, DEPTNO) to DEPT(DEPTNO2, DNAME) we create
- * <code>RexRangeRef(DeptType,3)</code> to represent the pair of
- * columns (DEPTNO2, DNAME) which came from DEPT. The type has 2 columns,
- * and therefore the range represents columns {3, 4} of the input.</p>
+ * <p>While translating a join of EMP(EMPNO, ENAME, DEPTNO) to DEPT(DEPTNO2,
+ * DNAME) we create <code>RexRangeRef(DeptType,3)</code> to represent the pair of
+ * columns (DEPTNO2, DNAME) which came from DEPT. The type has 2 columns, and
+ * therefore the range represents columns {3, 4} of the input.</p>
  *
- * <p>Suppose we later create
- * a reference to the DNAME field of this RexRangeRef; it will
- * return a <code>{@link RexInputRef}(5,Integer)</code>, and the
- * {@link org.eigenbase.rex.RexRangeRef} will disappear.</p>
+ * <p>Suppose we later create a reference to the DNAME field of this
+ * RexRangeRef; it will return a <code>{@link RexInputRef}(5,Integer)</code>,
+ * and the {@link org.eigenbase.rex.RexRangeRef} will disappear.</p>
  *
  * @author jhyde
- * @since Nov 23, 2003
  * @version $Id$
+ * @since Nov 23, 2003
  */
-public class RexRangeRef extends RexNode
+public class RexRangeRef
+    extends RexNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final RelDataType type;
     private final int offset;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a range reference.
      *
-     * @param rangeType   Type of the record returned
+     * @param rangeType Type of the record returned
      * @param offset Offset of the first column within the input record
      */
     RexRangeRef(RelDataType rangeType,
@@ -72,7 +70,7 @@ public class RexRangeRef extends RexNode
         this.offset = offset;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType getType()
     {
@@ -94,6 +92,5 @@ public class RexRangeRef extends RexNode
         return visitor.visitRangeRef(this);
     }
 }
-
 
 // End RexRangeRef.java

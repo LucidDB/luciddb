@@ -20,245 +20,352 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.fun.SqlTrimFunction;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.sql.DatabaseMetaData;
-import java.util.HashMap;
-import java.util.Map;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
- * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which
- * represents a JDBC function call. A JDBC call is of the form
- * <code>{fn NAME(arg0, arg1, ...)}</code>.
+ * A <code>SqlJdbcFunctionCall</code> is a node of a parse tree which represents
+ * a JDBC function call. A JDBC call is of the form <code>{fn NAME(arg0, arg1,
+ * ...)}</code>.
  *
  * <p>See <a href="http://java.sun.com/products/jdbc/driverdevs.html">Sun's
- * documentation for writers of JDBC drivers</a>.
+ * documentation for writers of JDBC drivers</a>.*
  *
- *  * <table>
+ * <table>
  * <tr>
  * <th>Function Name</th>
  * <th>Function Returns</th>
  * </tr>
+ * <tr>
+ * <td colspan="2"><br/>
  *
- * <tr><td colspan="2"><br/><h3>NUMERIC FUNCTIONS</h3></td></tr>
+ * <h3>NUMERIC FUNCTIONS</h3>
+ * </td>
+ * </tr>
+ * <tr>
+ * <td>ABS(number)</td>
+ * <td>Absolute value of number</td>
+ * </tr>
+ * <tr>
+ * <td>ACOS(float)</td>
+ * <td>Arccosine, in radians, of float</td>
+ * </tr>
+ * <tr>
+ * <td>ASIN(float)</td>
+ * <td>Arcsine, in radians, of float</td>
+ * </tr>
+ * <tr>
+ * <td>ATAN(float)</td>
+ * <td>Arctangent, in radians, of float</td>
+ * </tr>
+ * <tr>
+ * <td>ATAN2(float1, float2)</td>
+ * <td>Arctangent, in radians, of float2 / float1</td>
+ * </tr>
+ * <tr>
+ * <td>CEILING(number)</td>
+ * <td>Smallest integer &gt;= number</td>
+ * </tr>
+ * <tr>
+ * <td>COS(float)</td>
+ * <td>Cosine of float radians</td>
+ * </tr>
+ * <tr>
+ * <td>COT(float)</td>
+ * <td>Cotangent of float radians</td>
+ * </tr>
+ * <tr>
+ * <td>DEGREES(number)</td>
+ * <td>Degrees in number radians</td>
+ * </tr>
+ * <tr>
+ * <td>EXP(float)</td>
+ * <td>Exponential function of float</td>
+ * </tr>
+ * <tr>
+ * <td>FLOOR(number)</td>
+ * <td>Largest integer &lt;= number</td>
+ * </tr>
+ * <tr>
+ * <td>LOG(float)</td>
+ * <td>Base e logarithm of float</td>
+ * </tr>
+ * <tr>
+ * <td>LOG10(float)</td>
+ * <td>Base 10 logarithm of float</td>
+ * </tr>
+ * <tr>
+ * <td>MOD(integer1, integer2)</td>
+ * <td>Rh3ainder for integer1 / integer2</td>
+ * </tr>
+ * <tr>
+ * <td>PI()</td>
+ * <td>The constant pi</td>
+ * </tr>
+ * <tr>
+ * <td>POWER(number, power)</td>
+ * <td>number raised to (integer) power</td>
+ * </tr>
+ * <tr>
+ * <td>RADIANS(number)</td>
+ * <td>Radians in number degrees</td>
+ * </tr>
+ * <tr>
+ * <td>RAND(integer)</td>
+ * <td>Random floating point for seed integer</td>
+ * </tr>
+ * <tr>
+ * <td>ROUND(number, places)</td>
+ * <td>number rounded to places places</td>
+ * </tr>
+ * <tr>
+ * <td>SIGN(number)</td>
+ * <td>-1 to indicate number is &lt; 0; 0 to indicate number is = 0; 1 to
+ * indicate number is &gt; 0</td>
+ * </tr>
+ * <tr>
+ * <td>SIN(float)</td>
+ * <td>Sine of float radians</td>
+ * </tr>
+ * <tr>
+ * <td>SQRT(float)</td>
+ * <td>Square root of float</td>
+ * </tr>
+ * <tr>
+ * <td>TAN(float)</td>
+ * <td>Tangent of float radians</td>
+ * </tr>
+ * <tr>
+ * <td>TRUNCATE(number, places)</td>
+ * <td>number truncated to places places</td>
+ * </tr>
+ * <tr>
+ * <td colspan="2"><br/>
  *
- * <tr><td>ABS(number)</td>
- * 		   <td>Absolute value of number</td></tr>
- * <tr><td>ACOS(float)</td>
- * 		   <td>Arccosine, in radians, of float</td></tr>
- * <tr><td>ASIN(float)</td>
- * 		   <td>Arcsine, in radians, of float</td></tr>
- * <tr><td>ATAN(float)</td>
- * 		   <td>Arctangent, in radians, of float</td></tr>
- * <tr><td>ATAN2(float1, float2)</td>
- * 		   <td>Arctangent, in radians, of float2 / float1</td></tr>
- * <tr><td>CEILING(number)</td>
- * 		   <td>Smallest integer &gt;= number</td></tr>
- * <tr><td>COS(float)</td>
- * 		   <td>Cosine of float radians</td></tr>
- * <tr><td>COT(float)</td>
- * 		   <td>Cotangent of float radians</td></tr>
- * <tr><td>DEGREES(number)</td>
- * 		   <td>Degrees in number radians</td></tr>
- * <tr><td>EXP(float)</td>
- * 		   <td>Exponential function of float</td></tr>
- * <tr><td>FLOOR(number)</td>
- * 		   <td>Largest integer &lt;= number</td></tr>
- * <tr><td>LOG(float)</td>
- * 		   <td>Base e logarithm of float</td></tr>
- * <tr><td>LOG10(float)</td>
- * 		   <td>Base 10 logarithm of float</td></tr>
- * <tr><td>MOD(integer1, integer2)</td>
- * 		   <td>Rh3ainder for integer1 / integer2</td></tr>
- * <tr><td>PI()</td>
- * 		   <td>The constant pi</td></tr>
- * <tr><td>POWER(number, power)</td>
- * 		   <td>number raised to (integer) power</td></tr>
- * <tr><td>RADIANS(number)</td>
- * 		   <td>Radians in number degrees</td></tr>
- * <tr><td>RAND(integer)</td>
- * 		   <td>Random floating point for seed integer</td></tr>
- * <tr><td>ROUND(number, places)</td>
- * 		   <td>number rounded to places places</td></tr>
- * <tr><td>SIGN(number)</td>
- * 		   <td>-1 to indicate number is &lt; 0;
- * 		   0 to indicate number is = 0;
- * 		   1 to indicate number is &gt; 0</td></tr>
- * <tr><td>SIN(float)</td>
- * 		   <td>Sine of float radians</td></tr>
- * <tr><td>SQRT(float)</td>
- * 		   <td>Square root of float</td></tr>
- * <tr><td>TAN(float)</td>
- * 		   <td>Tangent of float radians</td></tr>
- * <tr><td>TRUNCATE(number, places)</td>
- * 		   <td>number truncated to places places</td></tr>
+ * <h3>STRING FUNCTIONS</h3>
+ * </td>
+ * </tr>
+ * <tr>
+ * <td>ASCII(string)</td>
+ * <td>Integer representing the ASCII code value of the leftmost character in
+ * string</td>
+ * </tr>
+ * <tr>
+ * <td>CHAR(code)</td>
+ * <td>Character with ASCII code value code, where code is between 0 and
+ * 255</td>
+ * </tr>
+ * <tr>
+ * <td>CONCAT(string1, string2)</td>
+ * <td>Character string formed by appending string2 to string1; if a string is
+ * null, the result is DBMS-dependent</td>
+ * </tr>
+ * <tr>
+ * <td>DIFFERENCE(string1, string2)</td>
+ * <td>Integer indicating the difference between the values returned by the
+ * function SOUNDEX for string1 and string2</td>
+ * </tr>
+ * <tr>
+ * <td>INSERT(string1, start, length, string2)</td>
+ * <td>A character string formed by deleting length characters from string1
+ * beginning at start, and inserting string2 into string1 at start</td>
+ * </tr>
+ * <tr>
+ * <td>LCASE(string)</td>
+ * <td>Converts all uppercase characters in string to lowercase</td>
+ * </tr>
+ * <tr>
+ * <td>LEFT(string, count)</td>
+ * <td>The count leftmost characters from string</td>
+ * </tr>
+ * <tr>
+ * <td>LENGTH(string)</td>
+ * <td>Number of characters in string, excluding trailing blanks</td>
+ * </tr>
+ * <tr>
+ * <td>LOCATE(string1, string2[, start])</td>
+ * <td>Position in string2 of the first occurrence of string1, searching from
+ * the beginning of string2; if start is specified, the search begins from
+ * position start. 0 is returned if string2 does not contain string1. Position 1
+ * is the first character in string2.</td>
+ * </tr>
+ * <tr>
+ * <td>LTRIM(string)</td>
+ * <td>Characters of string with leading blank spaces rh3oved</td>
+ * </tr>
+ * <tr>
+ * <td>REPEAT(string, count)</td>
+ * <td>A character string formed by repeating string count times</td>
+ * </tr>
+ * <tr>
+ * <td>REPLACE(string1, string2, string3)</td>
+ * <td>Replaces all occurrences of string2 in string1 with string3</td>
+ * </tr>
+ * <tr>
+ * <td>RIGHT(string, count)</td>
+ * <td>The count rightmost characters in string</td>
+ * </tr>
+ * <tr>
+ * <td>RTRIM(string)</td>
+ * <td>The characters of string with no trailing blanks</td>
+ * </tr>
+ * <tr>
+ * <td>SOUNDEX(string)</td>
+ * <td>A character string, which is data source-dependent, representing the
+ * sound of the words in string; this could be a four-digit SOUNDEX code, a
+ * phonetic representation of each word, etc.</td>
+ * </tr>
+ * <tr>
+ * <td>SPACE(count)</td>
+ * <td>A character string consisting of count spaces</td>
+ * </tr>
+ * <tr>
+ * <td>SUBSTRING(string, start, length)</td>
+ * <td>A character string formed by extracting length characters from string
+ * beginning at start</td>
+ * </tr>
+ * <tr>
+ * <td>UCASE(string)</td>
+ * <td>Converts all lowercase characters in string to uppercase</td>
+ * </tr>
+ * <tr>
+ * <td colspan="2"><br/>
  *
- * <tr><td colspan="2"><br/><h3>STRING FUNCTIONS</h3></td></tr>
+ * <h3>TIME and DATE FUNCTIONS</h3>
+ * </td>
+ * </tr>
+ * <tr>
+ * <td>CURDATE()</td>
+ * <td>The current date as a date value</td>
+ * </tr>
+ * <tr>
+ * <td>CURTIME()</td>
+ * <td>The current local time as a time value</td>
+ * </tr>
+ * <tr>
+ * <td>DAYNAME(date)</td>
+ * <td>A character string representing the day component of date; the name for
+ * the day is specific to the data source</td>
+ * </tr>
+ * <tr>
+ * <td>DAYOFMONTH(date)</td>
+ * <td>An integer from 1 to 31 representing the day of the month in date</td>
+ * </tr>
+ * <tr>
+ * <td>DAYOFWEEK(date)</td>
+ * <td>An integer from 1 to 7 representing the day of the week in date; 1
+ * represents Sunday</td>
+ * </tr>
+ * <tr>
+ * <td>DAYOFYEAR(date)</td>
+ * <td>An integer from 1 to 366 representing the day of the year in date</td>
+ * </tr>
+ * <tr>
+ * <td>HOUR(time)</td>
+ * <td>An integer from 0 to 23 representing the hour component of time</td>
+ * </tr>
+ * <tr>
+ * <td>MINUTE(time)</td>
+ * <td>An integer from 0 to 59 representing the minute component of time</td>
+ * </tr>
+ * <tr>
+ * <td>MONTH(date)</td>
+ * <td>An integer from 1 to 12 representing the month component of date</td>
+ * </tr>
+ * <tr>
+ * <td>MONTHNAME(date)</td>
+ * <td>A character string representing the month component of date; the name for
+ * the month is specific to the data source</td>
+ * </tr>
+ * <tr>
+ * <td>NOW()</td>
+ * <td>A timestamp value representing the current date and time</td>
+ * </tr>
+ * <tr>
+ * <td>QUARTER(date)</td>
+ * <td>An integer from 1 to 4 representing the quarter in date; 1 represents
+ * January 1 through March 31</td>
+ * </tr>
+ * <tr>
+ * <td>SECOND(time)</td>
+ * <td>An integer from 0 to 59 representing the second component of time</td>
+ * </tr>
+ * <tr>
+ * <td>TIMESTAMPADD(interval,count, timestamp)</td>
+ * <td>A timestamp calculated by adding count number of interval(s) to
+ * timestamp; interval may be one of the following: SQL_TSI_FRAC_SECOND,
+ * SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK,
+ * SQL_TSI_MONTH, SQL_TSI_QUARTER, or SQL_TSI_YEAR</td>
+ * </tr>
+ * <tr>
+ * <td>TIMESTAMPDIFF(interval,timestamp1, timestamp2)</td>
+ * <td>An integer representing the number of interval(s) by which timestamp2 is
+ * greater than timestamp1; interval may be one of the following:
+ * SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND, SQL_TSI_MINUTE, SQL_TSI_HOUR,
+ * SQL_TSI_DAY, SQL_TSI_WEEK, SQL_TSI_MONTH, SQL_TSI_QUARTER, or
+ * SQL_TSI_YEAR</td>
+ * </tr>
+ * <tr>
+ * <td>WEEK(date)</td>
+ * <td>An integer from 1 to 53 representing the week of the year in date</td>
+ * </tr>
+ * <tr>
+ * <td>YEAR(date)</td>
+ * <td>An integer representing the year component of date</td>
+ * </tr>
+ * <tr>
+ * <td colspan="2"><br/>
  *
- * <tr><td>ASCII(string)</td>
- * 		   <td>Integer representing the ASCII code value of the
- * 		   leftmost character in string</td></tr>
- * <tr><td>CHAR(code)</td>
- * 		   <td>Character with ASCII code value code, where
- * 		   code is between 0 and 255</td></tr>
- * <tr><td>CONCAT(string1, string2)</td>
- * 		   <td>Character string formed by appending string2
- * 		   to string1; if a string is null, the result is
- * 		   DBMS-dependent</td></tr>
- * <tr><td>DIFFERENCE(string1, string2)</td>
- * 		   <td>Integer indicating the difference between the
- * 		   values returned by the function SOUNDEX for
- * 		   string1 and string2</td></tr>
- * <tr><td>INSERT(string1, start, length, string2)</td>
- * 		   <td>A character string formed by deleting length
- * 		   characters from string1 beginning at start,
- * 		   and inserting string2 into string1 at start</td></tr>
- * <tr><td>LCASE(string)</td>
- * 		   <td>Converts all uppercase characters in string to
- * 		   lowercase</td></tr>
- * <tr><td>LEFT(string, count)</td>
- * 		   <td>The count leftmost characters from string</td></tr>
- * <tr><td>LENGTH(string)</td>
- * 		   <td>Number of characters in string, excluding trailing
- * 		   blanks</td></tr>
- * <tr><td>LOCATE(string1, string2[, start])</td>
- * 		   <td>Position in string2 of the first occurrence of
- * 		   string1, searching from the beginning of
- * 		   string2; if start is specified, the search begins
- * 		   from position start. 0 is returned if string2
- * 		   does not contain string1. Position 1 is the first
- * 		   character in string2.</td></tr>
- * <tr><td>LTRIM(string)</td>
- * 		   <td>Characters of string with leading blank spaces
- * 		   rh3oved</td></tr>
- * <tr><td>REPEAT(string, count)</td>
- * 		   <td>A character string formed by repeating string
- * 		   count times</td></tr>
- * <tr><td>REPLACE(string1, string2, string3)</td>
- * 		   <td>Replaces all occurrences of string2 in string1
- * 		   with string3</td></tr>
- * <tr><td>RIGHT(string, count)</td>
- * 		   <td>The count rightmost characters in string </td></tr>
- * <tr><td>RTRIM(string)</td>
- * 		   <td>The characters of string with no trailing blanks</td></tr>
- * <tr><td>SOUNDEX(string)</td>
- * 		   <td>A character string, which is data source-dependent,
- * 		   representing the sound of the words in
- * 		   string; this could be a four-digit SOUNDEX
- * 		   code, a phonetic representation of each word,
- * 		   etc.</td></tr>
- * <tr><td>SPACE(count)</td>
- * 		   <td>A character string consisting of count spaces</td></tr>
- * <tr><td>SUBSTRING(string, start, length)</td>
- * 		   <td>A character string formed by extracting length
- * 		   characters from string beginning at start </td></tr>
- * <tr><td>UCASE(string)</td><td>Converts all lowercase characters in string to
- * 		   uppercase </td></tr>
+ * <h3>SYSTEM FUNCTIONS</h3>
+ * </td>
+ * </tr>
+ * <tr>
+ * <td>DATABASE()</td>
+ * <td>Name of the database</td>
+ * </tr>
+ * <tr>
+ * <td>IFNULL(expression, value)</td>
+ * <td>value if expression is null; expression if expression is not null</td>
+ * </tr>
+ * <tr>
+ * <td>USER()</td>
+ * <td>User name in the DBMS
  *
- * <tr><td colspan="2"><br/><h3>TIME and DATE FUNCTIONS</h3></td></tr>
+ * <tr>
+ * <td colspan="2"><br/>
  *
- * <tr><td>CURDATE()</td>
- * 		   <td>The current date as a date value</td></tr>
- * <tr><td>CURTIME()</td>
- * 		   <td>The current local time as a time value</td></tr>
- * <tr><td>DAYNAME(date)</td>
- * 		   <td>A character string representing the day component
- * 		   of date; the name for the day is specific to
- * 		   the data source</td></tr>
- * <tr><td>DAYOFMONTH(date)</td>
- * 		   <td>An integer from 1 to 31 representing the day of
- * 		   the month in date</td></tr>
- * <tr><td>DAYOFWEEK(date)</td>
- * 		   <td>An integer from 1 to 7 representing the day of
- * 		   the week in date; 1 represents Sunday</td></tr>
- * <tr><td>DAYOFYEAR(date)</td>
- * 		   <td>An integer from 1 to 366 representing the day of
- * 		   the year in date</td></tr>
- * <tr><td>HOUR(time)</td>
- * 		   <td>An integer from 0 to 23 representing the hour
- * 		   component of time</td></tr>
- * <tr><td>MINUTE(time)</td>
- * 		   <td>An integer from 0 to 59 representing the minute
- * 		   component of time</td></tr>
- * <tr><td>MONTH(date)</td>
- * 		   <td>An integer from 1 to 12 representing the month
- * 		   component of date</td></tr>
- * <tr><td>MONTHNAME(date)</td>
- * 		   <td>A character string representing the month component
- * 		   of date; the name for the month is specific
- * 		   to the data source</td></tr>
- * <tr><td>NOW()</td>
- * 		   <td>A timestamp value representing the current date
- * 		   and time</td></tr>
- * <tr><td>QUARTER(date)</td>
- * 		   <td>An integer from 1 to 4 representing the quarter
- * 		   in date; 1 represents January 1 through March
- * 		   31</td></tr>
- * <tr><td>SECOND(time)</td>
- * 		   <td>An integer from 0 to 59 representing the second
- * 		   component of time</td></tr>
- * <tr><td>TIMESTAMPADD(interval,count, timestamp)</td>
- * 		   <td>A timestamp calculated by adding count
- * 		   number of interval(s) to timestamp; interval may
- * 		   be one of the following: SQL_TSI_FRAC_SECOND,
- * 		   SQL_TSI_SECOND, SQL_TSI_MINUTE,
- * 		   SQL_TSI_HOUR, SQL_TSI_DAY, SQL_TSI_WEEK,
- * 		   SQL_TSI_MONTH, SQL_TSI_QUARTER, or
- * 		   SQL_TSI_YEAR</td></tr>
- * <tr><td>TIMESTAMPDIFF(interval,timestamp1, timestamp2)</td>
- * 		   <td>An integer representing the number of
- * 		   interval(s) by which timestamp2 is greater than
- * 		   timestamp1; interval may be one of the following:
- * 		   SQL_TSI_FRAC_SECOND, SQL_TSI_SECOND,
- * 		   SQL_TSI_MINUTE, SQL_TSI_HOUR, SQL_TSI_DAY,
- * 		   SQL_TSI_WEEK, SQL_TSI_MONTH,
- * 		   SQL_TSI_QUARTER, or SQL_TSI_YEAR</td></tr>
- * <tr><td>WEEK(date)</td>
- * 		   <td>An integer from 1 to 53 representing the week of
- * 		   the year in date</td></tr>
- * <tr><td>YEAR(date)</td>
- * 		   <td>An integer representing the year component of
- * 		   date</td></tr>
- *
- * <tr><td colspan="2"><br/><h3>SYSTEM FUNCTIONS</h3></td></tr>
- *
- * <tr><td>DATABASE()</td>
- * 		   <td>Name of the database</td></tr>
- * <tr><td>IFNULL(expression, value)</td>
- * 		   <td>value if expression is null;
- * 		   expression if expression is not null</td></tr>
- * <tr><td>USER()</td>
- * 		   <td>User name in the DBMS
- *
- * <tr><td colspan="2"><br/><h3>CONVERSION FUNCTIONS</h3></td></tr>
- *
- * <tr><td>CONVERT(value, SQLtype)</td>
- * 		   <td>value converted to SQLtype where SQLtype may
- * 		   be one of the following SQL types:
- * 		   BIGINT, BINARY, BIT, CHAR, DATE, DECIMAL, DOUBLE,
- * 		   FLOAT, INTEGER, LONGVARBINARY, LONGVARCHAR,
- * 		   REAL, SMALLINT, TIME, TIMESTAMP,
- * 		   TINYINT, VARBINARY, or VARCHAR</td></tr>
- *
+ * <h3>CONVERSION FUNCTIONS</h3>
+ * </td>
+ * </tr>
+ * <tr>
+ * <td>CONVERT(value, SQLtype)</td>
+ * <td>value converted to SQLtype where SQLtype may be one of the following SQL
+ * types: BIGINT, BINARY, BIT, CHAR, DATE, DECIMAL, DOUBLE, FLOAT, INTEGER,
+ * LONGVARBINARY, LONGVARCHAR, REAL, SMALLINT, TIME, TIMESTAMP, TINYINT,
+ * VARBINARY, or VARCHAR</td>
+ * </tr>
  * </table>
  *
  * @author Wael Chatila
- * @since June 28, 2004
  * @version $Id$
- **/
-public class SqlJdbcFunctionCall extends SqlFunction
+ * @since June 28, 2004
+ */
+public class SqlJdbcFunctionCall
+    extends SqlFunction
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String numericFunctions;
     private static final String stringFunctions;
     private static final String timeDateFunctions;
@@ -267,40 +374,51 @@ public class SqlJdbcFunctionCall extends SqlFunction
     /**
      * List of all numeric function names defined by JDBC.
      */
-    private static final String [] allNumericFunctions = {
-        "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
-        "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
-        "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
-        "TAN", "TRUNCATE"
-    };
+    private static final String [] allNumericFunctions =
+        {
+            "ABS", "ACOS", "ASIN", "ATAN", "ATAN2", "CEILING", "COS", "COT",
+            "DEGREES", "EXP", "FLOOR", "LOG", "LOG10", "MOD", "PI",
+            "POWER", "RADIANS", "RAND", "ROUND", "SIGN", "SIN", "SQRT",
+            "TAN", "TRUNCATE"
+        };
 
     /**
      * List of all string function names defined by JDBC.
      */
-    private static final String [] allStringFunctions = {
-        "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
-        "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
-        "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
-    };
+    private static final String [] allStringFunctions =
+        {
+            "ASCII", "CHAR", "CONCAT", "DIFFERENCE", "INSERT", "LCASE",
+            "LEFT", "LENGTH", "LOCATE", "LTRIM", "REPEAT", "REPLACE",
+            "RIGHT", "RTRIM", "SOUNDEX", "SPACE", "SUBSTRING", "UCASE"
+        };
 
     /**
      * List of all time/date function names defined by JDBC.
      */
-    private static final String [] allTimeDateFunctions = {
-        "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
-        "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
-        "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
-        "WEEK", "YEAR"
-    };
+    private static final String [] allTimeDateFunctions =
+        {
+            "CURDATE", "CURTIME", "DAYNAME", "DAYOFMONTH", "DAYOFWEEK",
+            "DAYOFYEAR", "HOUR", "MINUTE", "MONTH", "MONTHNAME", "NOW",
+            "QUARTER", "SECOND", "TIMESTAMPADD", "TIMESTAMPDIFF",
+            "WEEK", "YEAR"
+        };
 
     /**
      * List of all system function names defined by JDBC.
      */
-    private static final String [] allSystemFunctions = {
-        "DATABASE", "IFNULL", "USER"
-    };
+    private static final String [] allSystemFunctions =
+        {
+            "DATABASE", "IFNULL", "USER"
+        };
 
-    //~ Instance fields -------------------------------------------------------
+    static {
+        numericFunctions = constructFuncList(allNumericFunctions);
+        stringFunctions = constructFuncList(allStringFunctions);
+        timeDateFunctions = constructFuncList(allTimeDateFunctions);
+        systemFunctions = constructFuncList(allSystemFunctions);
+    }
+
+    //~ Instance fields --------------------------------------------------------
 
     String jdbcName;
     MakeCall lookupMakeCallObj;
@@ -309,13 +427,23 @@ public class SqlJdbcFunctionCall extends SqlFunction
     //    private SqlCall thisCall;
     SqlNode [] thisOperands;
 
-    static
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlJdbcFunctionCall(String name)
     {
-        numericFunctions = constructFuncList(allNumericFunctions);
-        stringFunctions = constructFuncList(allStringFunctions);
-        timeDateFunctions = constructFuncList(allTimeDateFunctions);
-        systemFunctions = constructFuncList(allSystemFunctions);
+        super(
+            "{fn " + name + "}",
+            SqlKind.JdbcFn,
+            null,
+            null,
+            SqlTypeStrategies.otcVariadic,
+            null);
+        jdbcName = name;
+        lookupMakeCallObj = JdbcToInternalLookupTable.instance.lookup(name);
+        lookupCall = null;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     private static String constructFuncList(String [] functionNames)
     {
@@ -335,24 +463,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
         }
         return sb.toString();
     }
-
-    //~ Constructors ----------------------------------------------------------
-
-    public SqlJdbcFunctionCall(String name)
-    {
-        super(
-            "{fn "+name+"}",
-            SqlKind.JdbcFn,
-            null,
-            null,
-            SqlTypeStrategies.otcVariadic,
-            null);
-        jdbcName = name;
-        lookupMakeCallObj = JdbcToInternalLookupTable.instance.lookup(name);
-        lookupCall = null;
-    }
-
-    //~ Methods ---------------------------------------------------------------
 
     public SqlCall createCall(
         SqlNode [] operands,
@@ -378,13 +488,15 @@ public class SqlJdbcFunctionCall extends SqlFunction
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         // Override SqlFunction.deriveType, because function-resolution is
         // not relevant to a JDBC function call.
         // REVIEW: jhyde, 2006/4/18: Should SqlJdbcFunctionCall even be a
         // subclass of SqlFunction?
-        final SqlNode[] operands = call.operands;
+        final SqlNode [] operands = call.operands;
 
         for (int i = 0; i < operands.length; ++i) {
             RelDataType nodeType = validator.deriveType(scope, operands[i]);
@@ -407,8 +519,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
         }
 
         if (!lookupMakeCallObj.checkNumberOfArg(
-                opBinding.getOperandCount()))
-        {
+                opBinding.getOperandCount())) {
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().WrongNumberOfParam.ex(
                     getName(),
@@ -417,18 +528,18 @@ public class SqlJdbcFunctionCall extends SqlFunction
         }
 
         if (!lookupMakeCallObj.operator.checkOperandTypes(
-                    new SqlCallBinding(
-                        callBinding.getValidator(),
-                        callBinding.getScope(),
-                        getLookupCall()),
-                    false))
-        {
+                new SqlCallBinding(
+                    callBinding.getValidator(),
+                    callBinding.getScope(),
+                    getLookupCall()),
+                false)) {
             throw callBinding.newValidationSignatureError();
         }
-        return lookupMakeCallObj.operator.validateOperands(
-            callBinding.getValidator(),
-            callBinding.getScope(),
-            getLookupCall());
+        return
+            lookupMakeCallObj.operator.validateOperands(
+                callBinding.getValidator(),
+                callBinding.getScope(),
+                getLookupCall());
     }
 
     private String getArgCountMismatchMsg()
@@ -494,16 +605,17 @@ public class SqlJdbcFunctionCall extends SqlFunction
         return systemFunctions;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Represent a Strategy Object to create a {@link SqlCall} by providing
-     * the feature of reording, adding/dropping operands.
+     * Represent a Strategy Object to create a {@link SqlCall} by providing the
+     * feature of reording, adding/dropping operands.
      */
     private static class MakeCall
     {
         final SqlOperator operator;
         final int [] order;
+
         /**
          * List of the possible numbers of operands this function can take.
          */
@@ -515,7 +627,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
         {
             this.operator = operator;
             this.order = null;
-            this.argCounts = new int [] { argCount };
+            this.argCounts = new int[] { argCount };
         }
 
         /**
@@ -525,12 +637,13 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * element at position <code>i</code> indicates to which element in a
          * new SqlNode[] array the operand goes.
          *
+         * @param operator
+         * @param order
+         *
          * @pre order != null
          * @pre order[i] < order.length
          * @pre order.length > 0
          * @pre argCounts == order.length
-         * @param operator
-         * @param order
          */
         MakeCall(
             SqlOperator operator,
@@ -539,12 +652,13 @@ public class SqlJdbcFunctionCall extends SqlFunction
         {
             Util.pre(null != order, "null!=order");
             Util.pre(order.length > 0, "order.length > 0");
+
             // Currently operation overloading when reordering is necessary is
             // NOT implemented
             Util.pre(argCount == order.length, "argCounts==order.length");
             this.operator = operator;
             this.order = order;
-            this.argCounts = new int [] { order.length };
+            this.argCounts = new int[] { order.length };
 
             // sanity checking ...
             for (int i = 0; i < order.length; i++) {
@@ -559,6 +673,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
 
         /**
          * Uses the data in {@link #order} to reorder a SqlNode[] array.
+         *
          * @param operands
          */
         protected SqlNode [] reorder(SqlNode [] operands)
@@ -578,6 +693,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
          * Creates and return a {@link SqlCall}. If the MakeCall strategy object
          * was created with a reording specified the call will be created with
          * the operands reordered, otherwise no change of ordering is applied
+         *
          * @param operands
          */
         SqlCall createCall(
@@ -588,8 +704,8 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 return operator.createCall(operands, pos);
             }
             return operator.createCall(
-                reorder(operands),
-                pos);
+                    reorder(operands),
+                    pos);
         }
 
         /**
@@ -614,6 +730,12 @@ public class SqlJdbcFunctionCall extends SqlFunction
      */
     private static class JdbcToInternalLookupTable
     {
+        /**
+         * The {@link org.eigenbase.util.Glossary#SingletonPattern singleton}
+         * instance.
+         */
+        static final JdbcToInternalLookupTable instance =
+            new JdbcToInternalLookupTable();
         private final Map map = new HashMap();
 
         private JdbcToInternalLookupTable()
@@ -648,7 +770,7 @@ public class SqlJdbcFunctionCall extends SqlFunction
                 new MakeCall(
                     SqlStdOperatorTable.overlayFunc,
                     4,
-                    new int [] { 0, 2, 3, 1 }));
+                    new int[] { 0, 2, 3, 1 }));
             map.put(
                 "LCASE",
                 new MakeCall(SqlStdOperatorTable.lowerFunc, 1));
@@ -666,10 +788,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
                         assert (null != operands);
                         assert (1 == operands.length);
                         SqlNode [] newOperands = new SqlNode[3];
-                        newOperands[0] = SqlLiteral
-                            .createSymbol(SqlTrimFunction.Flag.Leading, null);
-                        newOperands[1] =
-                            SqlLiteral.createCharString(" ", null);
+                        newOperands[0] =
+                            SqlLiteral.createSymbol(
+                                SqlTrimFunction.Flag.Leading,
+                                null);
+                        newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];
 
                         return super.createCall(newOperands, null);
@@ -683,10 +806,11 @@ public class SqlJdbcFunctionCall extends SqlFunction
                         assert (null != operands);
                         assert (1 == operands.length);
                         SqlNode [] newOperands = new SqlNode[3];
-                        newOperands[0] = SqlLiteral
-                            .createSymbol(SqlTrimFunction.Flag.Trailing, null);
-                        newOperands[1] =
-                            SqlLiteral.createCharString(" ", null);
+                        newOperands[0] =
+                            SqlLiteral.createSymbol(
+                                SqlTrimFunction.Flag.Trailing,
+                                null);
+                        newOperands[1] = SqlLiteral.createCharString(" ", null);
                         newOperands[2] = operands[0];
 
                         return super.createCall(newOperands, null);
@@ -718,13 +842,6 @@ public class SqlJdbcFunctionCall extends SqlFunction
         {
             return (MakeCall) map.get(name);
         }
-
-        /**
-         * The {@link org.eigenbase.util.Glossary#SingletonPattern singleton}
-         * instance.
-         */
-        static final JdbcToInternalLookupTable instance =
-            new JdbcToInternalLookupTable();
     }
 }
 

@@ -26,17 +26,17 @@ import net.sf.farrago.type.runtime.*;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+
 /**
- * An {@link OJRexImplementor} for reinterpret casts. Reinterpret 
- * casts are important for generated Java code, because while 
- * Sql types may share the same primitive types, they may require 
- * different wrappers. Currently this class can only handle 
- * conversions between Decimals and Bigints.
+ * An {@link OJRexImplementor} for reinterpret casts. Reinterpret casts are
+ * important for generated Java code, because while Sql types may share the same
+ * primitive types, they may require different wrappers. Currently this class
+ * can only handle conversions between Decimals and Bigints.
  *
  * @author John Pham
  * @version $Id$
@@ -44,24 +44,32 @@ import org.eigenbase.util.*;
 public class FarragoOJRexReinterpretImplementor
     extends FarragoOJRexImplementor
 {
-    /** Constructs an OJRexReinterpretCastImplementor */
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Constructs an OJRexReinterpretCastImplementor
+     */
     public FarragoOJRexReinterpretImplementor()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement OJRexImplementor
     public boolean canImplement(RexCall call)
     {
         return call.isA(RexKind.Reinterpret);
     }
-    
+
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
     {
-        Util.pre(call.isA(RexKind.Reinterpret),
+        Util.pre(
+            call.isA(RexKind.Reinterpret),
             "call.isA(RexKind.Reinterpret)");
 
         RelDataType retType = call.getType();
@@ -80,7 +88,7 @@ public class FarragoOJRexReinterpretImplementor
                 new ExpressionStatement(
                     new MethodCall(
                         varResult,
-                        EncodedSqlDecimal.REINTERPRET_METHOD_NAME, 
+                        EncodedSqlDecimal.REINTERPRET_METHOD_NAME,
                         args)));
             retVal = varResult;
         } else if (retType.isNullable()) {
@@ -90,7 +98,7 @@ public class FarragoOJRexReinterpretImplementor
                 new ExpressionStatement(
                     new MethodCall(
                         operands[0],
-                        EncodedSqlDecimal.ASSIGN_TO_METHOD_NAME, 
+                        EncodedSqlDecimal.ASSIGN_TO_METHOD_NAME,
                         new ExpressionList(varResult))));
             retVal = varResult;
         } else {
@@ -101,13 +109,15 @@ public class FarragoOJRexReinterpretImplementor
                     EncodedSqlDecimal.VALUE_FIELD_NAME);
         }
         checkNullability(
-            translator, retType, call.operands[0], operands[0]);
+            translator,
+            retType,
+            call.operands[0],
+            operands[0]);
         return retVal;
     }
 
     /**
-     * Inserts a null test if a value is nullable, but a target type 
-     * is not.
+     * Inserts a null test if a value is nullable, but a target type is not.
      */
     private void checkNullability(
         FarragoRexToOJTranslator translator,
@@ -117,11 +127,10 @@ public class FarragoOJRexReinterpretImplementor
     {
         ExpressionStatement nullTest = null;
         if (!targetType.isNullable() && rexValue.getType().isNullable()) {
-            nullTest = 
+            nullTest =
                 new ExpressionStatement(
                     new MethodCall(
-                        translator.getRelImplementor()
-                        .getConnectionVariable(),
+                        translator.getRelImplementor().getConnectionVariable(),
                         "checkNotNull",
                         new ExpressionList(
                             Literal.makeLiteral(rexValue.toString()),

@@ -21,21 +21,20 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.PrintStream;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.io.*;
+
+import java.util.*;
 
 
 /**
- * FarragoTestConcurrentTimedCommandGenerator extends
- * {@link FarragoTestConcurrentCommandGenerator} and repeats the configured
- * command sequence until a certain amount of time has elapsed.
+ * FarragoTestConcurrentTimedCommandGenerator extends {@link
+ * FarragoTestConcurrentCommandGenerator} and repeats the configured command
+ * sequence until a certain amount of time has elapsed.
  *
- * <p>The command sequence is always completed in full, even if the
- * time limit has been exceeded.  Therefore, the time limit can only
- * be considered the minimum length of time that the test will run and
- * not a guarantee of how long the test will take.
+ * <p>The command sequence is always completed in full, even if the time limit
+ * has been exceeded. Therefore, the time limit can only be considered the
+ * minimum length of time that the test will run and not a guarantee of how long
+ * the test will take.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -43,18 +42,19 @@ import java.util.NoSuchElementException;
 public class FarragoTestConcurrentTimedCommandGenerator
     extends FarragoTestConcurrentCommandGenerator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private int runTimeSeconds;
     private long endTimeMillis;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Constructs a new FarragoTestConcurrentTimedCommandGenerator that
-     * will run for at least the given amount of time.  See
-     * {@link FarragoTestConcurrentTimedCommandGenerator} for more
-     * information on the semantics of run-time length.
+     * Constructs a new FarragoTestConcurrentTimedCommandGenerator that will run
+     * for at least the given amount of time. See {@link
+     * FarragoTestConcurrentTimedCommandGenerator} for more information on the
+     * semantics of run-time length.
      *
      * @param runTimeSeconds minimum run-time length, in seconds
      */
@@ -65,18 +65,17 @@ public class FarragoTestConcurrentTimedCommandGenerator
         this.runTimeSeconds = runTimeSeconds;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Retrieves an Iterator based on the configured commands.  This
-     * Iterator, when it reaches the end of the command list will
-     * compare the current time with the test's end time.  If there is
-     * time left, the Iterator will repeat the command sequence.
+     * Retrieves an Iterator based on the configured commands. This Iterator,
+     * when it reaches the end of the command list will compare the current time
+     * with the test's end time. If there is time left, the Iterator will repeat
+     * the command sequence.
      *
-     * <p>The test's end time is computed by taking the value of
-     * <code>System.currentTimeMillis()</code> the first time this
-     * method is called (across all thread IDs) and adding the
-     * configured run time.
+     * <p>The test's end time is computed by taking the value of <code>
+     * System.currentTimeMillis()</code> the first time this method is called
+     * (across all thread IDs) and adding the configured run time.
      *
      * @param threadId the thread ID to get an Iterator on
      */
@@ -90,13 +89,13 @@ public class FarragoTestConcurrentTimedCommandGenerator
         }
 
         return new TimedIterator(
-            getCommands(threadId),
-            endTimeMillis);
+                getCommands(threadId),
+                endTimeMillis);
     }
 
     /**
-     * Outputs command sequence and notes how long the sequence will
-     * be repeated.
+     * Outputs command sequence and notes how long the sequence will be
+     * repeated.
      */
     void printCommands(
         PrintStream out,
@@ -106,14 +105,14 @@ public class FarragoTestConcurrentTimedCommandGenerator
         out.println("Repeat sequence for " + runTimeSeconds + " seconds");
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * TimedIterator is an Iterator that repeats a given collection's
-     * elements until <code>System.currentTimeMillis() >=
-     * endTimeMillis</code>.
+     * TimedIterator is an Iterator that repeats a given collection's elements
+     * until <code>System.currentTimeMillis() >= endTimeMillis</code>.
      */
-    private class TimedIterator implements Iterator
+    private class TimedIterator
+        implements Iterator
     {
         private Object [] commands;
         private long endTimeMillis;
@@ -157,3 +156,5 @@ public class FarragoTestConcurrentTimedCommandGenerator
         }
     }
 }
+
+// End FarragoTestConcurrentTimedCommandGenerator.java

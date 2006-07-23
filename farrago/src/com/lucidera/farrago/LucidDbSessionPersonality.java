@@ -20,31 +20,32 @@
 */
 package com.lucidera.farrago;
 
+// TODO jvs 9-Apr-2006:  eliminate this once we stop depending on
+// Fennel calc, or make it dynamic for GPL version only.
+
+import com.disruptivetech.farrago.rel.*;
+
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
 
-// TODO jvs 9-Apr-2006:  eliminate this once we stop depending on
-// Fennel calc, or make it dynamic for GPL version only.
-import com.disruptivetech.farrago.rel.*;
+import java.util.*;
 
-import net.sf.farrago.session.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
-import net.sf.farrago.query.*;
-
 import net.sf.farrago.fem.config.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
-import org.eigenbase.oj.rel.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 
-import java.util.*;
 
 /**
  * Customizes Farrago session personality with LucidDB behavior.
@@ -52,12 +53,18 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
+public class LucidDbSessionPersonality
+    extends FarragoDefaultSessionPersonality
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected LucidDbSessionPersonality(FarragoDbSession session)
     {
         super(session);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonality
     public String getDefaultLocalDataServerName(
@@ -65,7 +72,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
     {
         return "SYS_COLUMN_STORE_DATA_SERVER";
     }
-    
+
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
@@ -82,7 +89,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         if (feature == EigenbaseResource.instance().SQLFeature_E151) {
             return false;
         }
-                
+
         return super.supportsFeature(feature);
     }
 
@@ -97,8 +104,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
     // implement FarragoSessionPersonality
     public void registerRelMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        chain.addProvider(
-            new LoptMetadataProvider(database.getSystemRepos()));
+        chain.addProvider(new LoptMetadataProvider(database.getSystemRepos()));
     }
 
     private FarragoSessionPlanner newHepPlanner(
@@ -109,15 +115,17 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             stmt.getRepos().getCurrentConfig().getCalcVirtualMachine();
 
         Collection<RelOptRule> medPluginRules = new LinkedHashSet<RelOptRule>();
-        
-        HepProgram program = createHepProgram(
-            fennelEnabled,
-            calcVM,
-            medPluginRules);
-        FarragoSessionPlanner planner = new LucidDbPlanner(
-            program,
-            stmt,
-            medPluginRules);
+
+        HepProgram program =
+            createHepProgram(
+                fennelEnabled,
+                calcVM,
+                medPluginRules);
+        FarragoSessionPlanner planner =
+            new LucidDbPlanner(
+                program,
+                stmt,
+                medPluginRules);
 
         // TODO jvs 9-Apr-2006: Get rid of !fennelEnabled configuration
         // altogether once there are packaged Windows binary builds available.
@@ -131,7 +139,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             planner,
             fennelEnabled,
             calcVM);
-        
+
         planner.addRule(new PushSemiJoinPastFilterRule());
         planner.addRule(new PushSemiJoinPastJoinRule());
         planner.addRule(new ConvertMultiJoinRule());
@@ -139,9 +147,9 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             new LoptOptimizeJoinRule(
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand [] {
+                    new RelOptRuleOperand[] {
                         new RelOptRuleOperand(MultiJoinRel.class, null)
-                }),
+                    }),
                 "with project"));
         planner.addRule(
             new LoptOptimizeJoinRule(
@@ -170,17 +178,17 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // Eliminate AGG(DISTINCT x) now, because this transformation
         // may introduce new joins which need to be optimized further on.
         builder.addRuleInstance(RemoveDistinctAggregateRule.instance);
-        
+
         // Eliminate reducible constant expression.  TODO jvs 26-May-2006: do
         // this again later wherever more such expressions may be reintroduced.
         builder.addRuleClass(FarragoReduceExpressionsRule.class);
-        
+
         // Now, pull join conditions out of joins, leaving behind Cartesian
         // products.  Why?  Because PushFilterRule doesn't start from
         // join conditions, only filters.  It will push them right back
         // into and possibly through the join.
         builder.addRuleInstance(ExtractJoinFilterRule.instance);
-            
+
         // Need to fire delete and merge rules before any projection rules
         // since they modify the projection
         builder.addRuleInstance(new LcsTableDeleteRule());
@@ -191,26 +199,26 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
         // Push filters down.
-        builder.addRuleInstance(new PushFilterRule(
-            new RelOptRuleOperand(
-                FilterRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(JoinRel.class, null)
-            }),
-            "with filter above join"));
-        
+        builder.addRuleInstance(
+            new PushFilterRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(JoinRel.class, null)
+                    }),
+                "with filter above join"));
+
         builder.addRuleInstance(
             new PushFilterRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));        
-
+                "without filter above join"));
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
         // all of its children have been converted to MultiJoinRels
         builder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         builder.addRuleInstance(new ConvertMultiJoinRule());
-        
+
         // Optimize join order; this will spit back out all 2-way joins and
         // semijoins.  Note that the match order is still bottom-up, so we
         // can optimize lower-level joins before their ancestors.  That allows
@@ -224,20 +232,20 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             new LoptOptimizeJoinRule(
                 new RelOptRuleOperand(
                     ProjectRel.class,
-                    new RelOptRuleOperand [] {
+                    new RelOptRuleOperand[] {
                         new RelOptRuleOperand(MultiJoinRel.class, null)
-                }),
+                    }),
                 "with project"));
         builder.addRuleInstance(
             new LoptOptimizeJoinRule(
                 new RelOptRuleOperand(MultiJoinRel.class, null),
                 "without project"));
         builder.addMatchOrder(HepMatchOrder.ARBITRARY);
-        
+
         // Convert filters to bitmap index searches and boolean operators.  We
         // didn't do this earlier to make join costing easier.
         builder.addRuleByDescription("LcsIndexAccessRule");
-        
+
         // Push semijoins down to tables.  (The join part is a NOP for now,
         // but once we start taking more kinds of join factors, it won't be.)
         builder.addGroupBegin();
@@ -247,7 +255,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         // Convert semijoins to physical index access.
         builder.addRuleClass(LcsIndexSemiJoinRule.class);
- 
+
         // Remove any semijoins that couldn't be converted
         builder.addRuleInstance(new RemoveSemiJoinRule());
 
@@ -255,26 +263,29 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // since the rule only matches on JoinRel.
         builder.addGroupBegin();
         builder.addRuleInstance(new RemoveTrivialProjectRule());
-        builder.addRuleInstance(new PushProjectPastJoinRule(
-            LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
-        
+        builder.addRuleInstance(
+            new PushProjectPastJoinRule(
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+
         // Push project past filter so that we can reduce the number
         // of clustered indexes accessed by row scan.  There are two rule
         // patterns because the second is needed to handle the case where
         // the projection has been trivially removed but we still need to
         // pull special columns referenced in filters into a new projection
-        builder.addRuleInstance(new PushProjectPastFilterRule(
-            new RelOptRuleOperand(
-                ProjectRel.class,
-                new RelOptRuleOperand [] {
-                    new RelOptRuleOperand(FilterRel.class, null)
-                }),
-            LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
-            "with project"));
-        builder.addRuleInstance(new PushProjectPastFilterRule(
-            new RelOptRuleOperand(FilterRel.class, null),
-            LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
-            "without project"));
+        builder.addRuleInstance(
+            new PushProjectPastFilterRule(
+                new RelOptRuleOperand(
+                    ProjectRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(FilterRel.class, null)
+                    }),
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                "with project"));
+        builder.addRuleInstance(
+            new PushProjectPastFilterRule(
+                new RelOptRuleOperand(FilterRel.class, null),
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                "without project"));
         builder.addGroupEnd();
 
         // Apply physical projection to row scans, eliminating access
@@ -302,16 +313,16 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         // Use hash semi join if possible.
         builder.addRuleInstance(new LhxSemiJoinRule());
-        
+
         // Use hash join wherever possible.
         builder.addRuleInstance(new LhxJoinRule());
-        
+
         // Use hash join to implement set op: Intersect.
-        builder.addRuleInstance(new LhxIntersectRule());        
+        builder.addRuleInstance(new LhxIntersectRule());
 
         // Use hash join to implement set op: Except(minus).
-        builder.addRuleInstance(new LhxMinusRule());        
-        
+        builder.addRuleInstance(new LhxMinusRule());
+
         // Extract join conditions again so that FennelCartesianJoinRule can do
         // its job.  Need to do this before converting filters to calcs, but
         // after other join strategies such as hash join have been attempted,
@@ -321,7 +332,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         // Replace AVG with SUM/COUNT (need to do this BEFORE calc conversion
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
-        
+
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -353,6 +364,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             builder.addRuleInstance(new FennelCartesianJoinRule());
             builder.addRuleInstance(new FennelAggRule());
             builder.addRuleInstance(new FennelValuesRule());
+
             // Requires CoerceInputsRule.
             builder.addRuleInstance(FennelUnionRule.instance);
         } else {
@@ -362,7 +374,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
-            assert(fennelEnabled);
+            assert (fennelEnabled);
             builder.addRuleInstance(FennelCalcRule.instance);
             builder.addRuleInstance(new FennelOneRowRule());
         } else if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_JAVA)) {
@@ -380,19 +392,23 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
             // First, attempt to choose calculators such that converters are
             // minimized
             builder.addConverters(false);
+
             // Split remaining expressions into Fennel part and Java part
             builder.addRuleInstance(FarragoAutoCalcRule.instance);
+
             // Convert expressions, giving preference to Java
             builder.addRuleInstance(new IterRules.OneRowToIteratorRule());
             builder.addRuleInstance(IterRules.IterCalcRule.instance);
             builder.addRuleInstance(FennelCalcRule.instance);
         }
-        
+
         // Finally, add generic converters as necessary.
         builder.addConverters(true);
-        
+
         return builder.createProgram();
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     // TODO jvs 9-Apr-2006:  Move this to com.lucidera.opt once
     // naming convention has been decided there.
@@ -403,7 +419,7 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         private final FarragoSessionPreparingStmt stmt;
         private final Collection<RelOptRule> medPluginRules;
         private boolean inPluginRegistration;
-        
+
         LucidDbPlanner(
             HepProgram program,
             FarragoSessionPreparingStmt stmt,
@@ -431,14 +447,14 @@ public class LucidDbSessionPersonality extends FarragoDefaultSessionPersonality
         {
             inPluginRegistration = false;
         }
-        
+
         // implement RelOptPlanner
         public JavaRelImplementor getJavaRelImplementor(RelNode rel)
         {
             return stmt.getRelImplementor(
-                rel.getCluster().getRexBuilder());
+                    rel.getCluster().getRexBuilder());
         }
-        
+
         // implement RelOptPlanner
         public boolean addRule(RelOptRule rule)
         {

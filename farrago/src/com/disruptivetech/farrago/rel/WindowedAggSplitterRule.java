@@ -20,36 +20,38 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import org.eigenbase.rel.CalcRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.WindowedAggregateRel;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Glossary;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
- * Rule which slices the {@link CalcRel} into sections which contain
- * windowed agg functions and sections which do not.
+ * Rule which slices the {@link CalcRel} into sections which contain windowed
+ * agg functions and sections which do not.
  *
  * <p>The sections which contain windowed agg functions become instances of
- * {@link WindowedAggregateRel}. If the {@link CalcRel}
- * does not contain any windowed agg functions, does nothing.
+ * {@link WindowedAggregateRel}. If the {@link CalcRel} does not contain any
+ * windowed agg functions, does nothing.
  *
  * @author Julian Hyde
- * @since April 24, 2005
  * @version $Id$
+ * @since April 24, 2005
  */
-public class WindowedAggSplitterRule extends RelOptRule
+public class WindowedAggSplitterRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    /** The {@link Glossary#SingletonPattern singleton} instance. */
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * The {@link Glossary#SingletonPattern singleton} instance.
+     */
     public static final WindowedAggSplitterRule instance =
         new WindowedAggSplitterRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a rule.
@@ -57,11 +59,11 @@ public class WindowedAggSplitterRule extends RelOptRule
     private WindowedAggSplitterRule()
     {
         super(new RelOptRuleOperand(
-            CalcRel.class,
-            null));
+                CalcRel.class,
+                null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -75,18 +77,20 @@ public class WindowedAggSplitterRule extends RelOptRule
         call.transformTo(newRel);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Splitter which distinguishes between windowed aggregation expressions
      * (calls to {@link RexOver}) and ordinary expressions.
      */
-    static class WindowedAggRelSplitter extends CalcRelSplitter
+    static class WindowedAggRelSplitter
+        extends CalcRelSplitter
     {
         WindowedAggRelSplitter(CalcRel calc)
         {
-            super(calc, new RelType[] {
-                new CalcRelSplitter.RelType("CalcRelType") {
+            super(
+                calc,
+                new RelType[] { new CalcRelSplitter.RelType("CalcRelType") {
                     protected boolean canImplement(RexFieldAccess field)
                     {
                         return true;
@@ -108,16 +112,22 @@ public class WindowedAggSplitterRule extends RelOptRule
                     }
 
                     protected RelNode makeRel(
-                        RelOptCluster cluster,
-                        RelTraitSet traits,
-                        RelDataType rowType,
-                        RelNode child,
-                        RexProgram program)
+                            RelOptCluster cluster,
+                            RelTraitSet traits,
+                            RelDataType rowType,
+                            RelNode child,
+                            RexProgram program)
                     {
                         assert !program.containsAggs();
-                        return super.makeRel(cluster, traits, rowType, child, program);
+                        return
+                            super.makeRel(cluster,
+                                    traits,
+                                    rowType,
+                                    child,
+                                    program);
                     }
-                },
+                }
+                ,
 
                 new CalcRelSplitter.RelType("WinAggRelType") {
                     protected boolean canImplement(RexFieldAccess field)
@@ -146,19 +156,24 @@ public class WindowedAggSplitterRule extends RelOptRule
                     }
 
                     protected RelNode makeRel(
-                        RelOptCluster cluster,
-                        RelTraitSet traits,
-                        RelDataType rowType,
-                        RelNode child,
-                        RexProgram program)
+                            RelOptCluster cluster,
+                            RelTraitSet traits,
+                            RelDataType rowType,
+                            RelNode child,
+                            RexProgram program)
                     {
                         Util.permAssert(program.getCondition() == null,
-                            "WindowedAggregateRel cannot accept a condition");
-                        return new WindowedAggregateRel(
-                            cluster, traits, child, program, rowType);
+                                "WindowedAggregateRel cannot accept a condition");
+                        return
+                            new WindowedAggregateRel(
+                                    cluster,
+                                    traits,
+                                    child,
+                                    program,
+                                    rowType);
                     }
                 }
-            });
+                 });
         }
     }
 }

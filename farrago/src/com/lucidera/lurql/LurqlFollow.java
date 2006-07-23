@@ -20,10 +20,12 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
 
+import java.util.*;
+
 import org.eigenbase.util.*;
+
 
 /**
  * LurqlFollow represents a parsed FOLLOW clause in a LURQL query.
@@ -31,8 +33,12 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlFollow extends LurqlPathBranch
+public class LurqlFollow
+    extends LurqlPathBranch
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String AF_ORIGIN_END = "origin end";
 
     public static final String AF_ORIGIN_CLASS = "origin class";
@@ -51,9 +57,13 @@ public class LurqlFollow extends LurqlPathBranch
 
     public static final String AF_BACKWARD = "backward";
 
+    //~ Instance fields --------------------------------------------------------
+
     private final List filterList;
 
     private final Map associationFilters;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlFollow(
         String aliasName,
@@ -62,16 +72,19 @@ public class LurqlFollow extends LurqlPathBranch
         LurqlPathSpec thenSpec)
     {
         super(aliasName, thenSpec);
-        this.associationFilters = Collections.unmodifiableMap(
-            associationFilters);
+        this.associationFilters =
+            Collections.unmodifiableMap(
+                associationFilters);
         this.filterList = Collections.unmodifiableList(filterList);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Map getAssociationFilters()
     {
         return associationFilters;
     }
-    
+
     public List getFilterList()
     {
         return filterList;
@@ -88,7 +101,9 @@ public class LurqlFollow extends LurqlPathBranch
             pw.print(entry.getKey());
             if (entry.getValue() != null) {
                 pw.print(" ");
-                StackWriter.printSqlIdentifier(pw, entry.getValue().toString());
+                StackWriter.printSqlIdentifier(
+                    pw,
+                    entry.getValue().toString());
             }
         }
         unparseAlias(pw);

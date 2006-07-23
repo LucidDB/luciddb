@@ -22,35 +22,35 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
+import java.lang.reflect.*;
 
-import net.sf.farrago.session.*;
-import net.sf.farrago.plugin.*;
+import java.sql.*;
+
+import java.util.*;
+import java.util.List;
+
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.resource.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ojrex.*;
-
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
-import org.eigenbase.oj.rex.*;
+import net.sf.farrago.plugin.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 
 import openjava.ptree.*;
 
-import java.lang.reflect.*;
-import java.util.*;
-import java.sql.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
-import java.util.List;
 
 /**
- * FarragoUserDefinedRoutine extends {@link SqlFunction} with a
- * repository reference to a specific user-defined routine.
+ * FarragoUserDefinedRoutine extends {@link SqlFunction} with a repository
+ * reference to a specific user-defined routine.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -59,6 +59,13 @@ public class FarragoUserDefinedRoutine
     extends SqlFunction
     implements OJRexImplementor
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final String RETURN_PREFIX = "RETURN ";
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FemRoutine routine;
 
     private final RelDataType returnType;
@@ -68,6 +75,8 @@ public class FarragoUserDefinedRoutine
     private final FarragoPreparingStmt preparingStmt;
 
     private FemJar femJar;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoUserDefinedRoutine(
         FarragoSessionStmtValidator stmtValidator,
@@ -82,16 +91,20 @@ public class FarragoUserDefinedRoutine
             new ExplicitOperandTypeInference(paramTypes),
             new AssignableOperandTypeChecker(paramTypes),
             paramTypes,
-            routine.getType() == ProcedureTypeEnum.PROCEDURE
+            (routine.getType() == ProcedureTypeEnum.PROCEDURE)
             ? SqlFunctionCategory.UserDefinedProcedure
-            : (FarragoCatalogUtil.isRoutineConstructor(routine)
+            : (
+                FarragoCatalogUtil.isRoutineConstructor(routine)
                 ? SqlFunctionCategory.UserDefinedConstructor
-                : SqlFunctionCategory.UserDefinedSpecificFunction));
+                : SqlFunctionCategory.UserDefinedSpecificFunction
+              ));
         this.stmtValidator = stmtValidator;
         this.preparingStmt = preparingStmt;
         this.routine = routine;
         this.returnType = returnType;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public FarragoPreparingStmt getPreparingStmt()
     {
@@ -115,7 +128,7 @@ public class FarragoUserDefinedRoutine
         }
         super.preValidateCall(validator, scope, call);
     }
-    
+
     public RelDataType getReturnType()
     {
         return returnType;
@@ -125,7 +138,7 @@ public class FarragoUserDefinedRoutine
     {
         // TODO jvs 9-Jan-2006:  somewhere or other we need to validate
         // that a table function can't be invoked from anywhere other
-        // than as a table reference; or rather, if invoked elsewhere, 
+        // than as a table reference; or rather, if invoked elsewhere,
         // it should return a MULTISET value per the standard.
         return FarragoCatalogUtil.isTableFunction(routine);
     }
@@ -141,8 +154,8 @@ public class FarragoUserDefinedRoutine
      *
      * @return Java method
      *
-     * @exception SqlValidatorException if matching Java method could
-     * not be found
+     * @exception SqlValidatorException if matching Java method could not be
+     * found
      */
     public Method getJavaMethod()
         throws SqlValidatorException
@@ -152,12 +165,12 @@ public class FarragoUserDefinedRoutine
         // TODO jvs 18-Jan-2005:  support OUT and INOUT parameters
 
         String externalName = routine.getExternalName();
+
         // TODO jvs 11-Jan-2005:  move some of this code to FarragoPluginCache
         String jarName = null;
         String fullMethodName;
         if (!FarragoPluginClassLoader.isLibraryClass(
-                externalName))
-        {
+                externalName)) {
             int iColon = externalName.indexOf(':');
             if (iColon == -1) {
                 // force error below
@@ -167,8 +180,9 @@ public class FarragoUserDefinedRoutine
                 jarName = externalName.substring(0, iColon);
             }
         } else {
-            fullMethodName = FarragoPluginClassLoader.getLibraryClassReference(
-                externalName);
+            fullMethodName =
+                FarragoPluginClassLoader.getLibraryClassReference(
+                    externalName);
         }
         int iLeftParen = fullMethodName.indexOf('(');
         String classPlusMethodName;
@@ -179,10 +193,10 @@ public class FarragoUserDefinedRoutine
         }
         int iLastDot = classPlusMethodName.lastIndexOf('.');
         if (iLastDot == -1) {
-            throw FarragoResource.instance().
-                ValidatorRoutineInvalidJavaMethod.ex(
-                    repos.getLocalizedObjectName(routine),
-                    repos.getLocalizedObjectName(externalName));
+            throw FarragoResource.instance().ValidatorRoutineInvalidJavaMethod
+            .ex(
+                repos.getLocalizedObjectName(routine),
+                repos.getLocalizedObjectName(externalName));
         }
         String javaClassName = classPlusMethodName.substring(0, iLastDot);
         String javaMethodName = classPlusMethodName.substring(iLastDot + 1);
@@ -193,7 +207,7 @@ public class FarragoUserDefinedRoutine
             // one extra for PreparedStatement
             ++nJavaParams;
         }
-        
+
         Class [] javaParamClasses = new Class[nJavaParams];
         if (iLeftParen == -1) {
             List params = routine.getParameter();
@@ -217,24 +231,27 @@ public class FarragoUserDefinedRoutine
                 int iComma = fullMethodName.indexOf(',', iNameStart);
                 if (iComma == -1) {
                     iComma = fullMethodName.indexOf(')', iNameStart);
+
                     // TODO:  assert nothing past rparen
                     if (iComma == -1) {
-                        throw FarragoResource.instance().
-                            ValidatorRoutineInvalidJavaMethod.ex(
-                                repos.getLocalizedObjectName(routine),
-                                repos.getLocalizedObjectName(externalName));
+                        throw FarragoResource.instance()
+                        .ValidatorRoutineInvalidJavaMethod.ex(
+                            repos.getLocalizedObjectName(routine),
+                            repos.getLocalizedObjectName(externalName));
                     }
                     last = true;
                 }
                 String typeName = fullMethodName.substring(
-                    iNameStart, iComma);
+                        iNameStart,
+                        iComma);
                 Class paramClass;
                 try {
                     paramClass = ReflectUtil.getClassForName(typeName);
                 } catch (Exception ex) {
                     // TODO jvs 16-Jan-2005:  more specific err msg
                     throw FarragoResource.instance().PluginInitFailed.ex(
-                        javaClassName, ex);
+                        javaClassName,
+                        ex);
                 }
                 javaParamClasses[i] = paramClass;
                 iNameStart = iComma + 1;
@@ -254,44 +271,48 @@ public class FarragoUserDefinedRoutine
                 javaClass = Class.forName(javaClassName);
             } catch (Exception ex) {
                 throw FarragoResource.instance().PluginInitFailed.ex(
-                    javaClassName, ex);
+                    javaClassName,
+                    ex);
             }
         } else {
             if (femJar == null) {
                 femJar = stmtValidator.findJarFromLiteralName(jarName);
             }
             String url = FarragoCatalogUtil.getJarUrl(femJar);
-            javaClass = stmtValidator.getSession().getPluginClassLoader()
+            javaClass =
+                stmtValidator.getSession().getPluginClassLoader()
                 .loadClassFromJarUrl(url, javaClassName);
             if (preparingStmt != null) {
                 preparingStmt.addJarUrl(url);
             }
         }
 
-        String javaUnmangledMethodName = ReflectUtil.getUnmangledMethodName(
-            javaClass,
-            javaMethodName,
-            javaParamClasses);
+        String javaUnmangledMethodName =
+            ReflectUtil.getUnmangledMethodName(
+                javaClass,
+                javaMethodName,
+                javaParamClasses);
 
         Method javaMethod;
         try {
             javaMethod = javaClass.getMethod(javaMethodName, javaParamClasses);
         } catch (NoSuchMethodException ex) {
-            throw FarragoResource.instance().
-                ValidatorRoutineJavaMethodNotFound.ex(
-                    repos.getLocalizedObjectName(routine),
-                    repos.getLocalizedObjectName(javaUnmangledMethodName));
+            throw FarragoResource.instance().ValidatorRoutineJavaMethodNotFound
+            .ex(
+                repos.getLocalizedObjectName(routine),
+                repos.getLocalizedObjectName(javaUnmangledMethodName));
         } catch (Exception ex) {
             throw FarragoResource.instance().PluginInitFailed.ex(
-                javaClassName, ex);
+                javaClassName,
+                ex);
         }
 
         int modifiers = javaMethod.getModifiers();
         if (!Modifier.isStatic(modifiers) || !Modifier.isPublic(modifiers)) {
-            throw FarragoResource.instance().
-                ValidatorRoutineJavaMethodNotPublicStatic.ex(
-                    repos.getLocalizedObjectName(routine),
-                    repos.getLocalizedObjectName(javaUnmangledMethodName));
+            throw FarragoResource.instance()
+            .ValidatorRoutineJavaMethodNotPublicStatic.ex(
+                repos.getLocalizedObjectName(routine),
+                repos.getLocalizedObjectName(javaUnmangledMethodName));
         }
 
         // verify compatibility between SQL and Java types for return type
@@ -301,25 +322,24 @@ public class FarragoUserDefinedRoutine
 
         Class javaReturnClass = javaMethod.getReturnType();
         if ((routine.getType() == ProcedureTypeEnum.FUNCTION)
-            && (!isTableFunction()))
-        {
+            && (!isTableFunction())) {
             SqlTypeName actualReturnSqlType = rules.lookup(javaReturnClass);
             SqlTypeName declReturnSqlType = returnType.getSqlTypeName();
             if (!checkCompatibility(actualReturnSqlType, declReturnSqlType)) {
-                throw FarragoResource.instance().
-                    ValidatorRoutineJavaReturnMismatch.ex(
-                        repos.getLocalizedObjectName(routine),
-                        returnType.toString(),
-                        repos.getLocalizedObjectName(javaUnmangledMethodName),
-                        javaReturnClass.toString());
+                throw FarragoResource.instance()
+                .ValidatorRoutineJavaReturnMismatch.ex(
+                    repos.getLocalizedObjectName(routine),
+                    returnType.toString(),
+                    repos.getLocalizedObjectName(javaUnmangledMethodName),
+                    javaReturnClass.toString());
             }
         } else {
             if (!javaReturnClass.equals(void.class)) {
-                throw FarragoResource.instance().
-                    ValidatorRoutineJavaProcReturnVoid.ex(
-                        repos.getLocalizedObjectName(routine),
-                        repos.getLocalizedObjectName(javaUnmangledMethodName),
-                        javaReturnClass.toString());
+                throw FarragoResource.instance()
+                .ValidatorRoutineJavaProcReturnVoid.ex(
+                    repos.getLocalizedObjectName(routine),
+                    repos.getLocalizedObjectName(javaUnmangledMethodName),
+                    javaReturnClass.toString());
             }
         }
 
@@ -328,25 +348,25 @@ public class FarragoUserDefinedRoutine
             SqlTypeName actualParamSqlType = rules.lookup(javaParamClass);
             SqlTypeName declParamSqlType = getParamTypes()[i].getSqlTypeName();
             if (!checkCompatibility(actualParamSqlType, declParamSqlType)) {
-                throw FarragoResource.instance().
-                    ValidatorRoutineJavaParamMismatch.ex(
-                        repos.getLocalizedObjectName((FemRoutineParameter)
-                            (routine.getParameter().get(i))),
-                        repos.getLocalizedObjectName(routine),
-                        getParamTypes()[i].toString(),
-                        repos.getLocalizedObjectName(javaUnmangledMethodName),
-                        javaParamClass.toString());
+                throw FarragoResource.instance()
+                .ValidatorRoutineJavaParamMismatch.ex(
+                    repos.getLocalizedObjectName(
+                        (FemRoutineParameter) (routine.getParameter().get(i))),
+                    repos.getLocalizedObjectName(routine),
+                    getParamTypes()[i].toString(),
+                    repos.getLocalizedObjectName(javaUnmangledMethodName),
+                    javaParamClass.toString());
             }
             if (isTableFunction()) {
                 if (javaParamClasses[nParams] != PreparedStatement.class) {
-                    throw FarragoResource.instance().
-                        ValidatorRoutineJavaParamMismatch.ex(
-                            "RETURNS TABLE",
-                            repos.getLocalizedObjectName(routine),
-                            "java.sql.PreparedStatement",
-                            repos.getLocalizedObjectName(
-                                javaUnmangledMethodName),
-                            javaParamClass.toString());
+                    throw FarragoResource.instance()
+                    .ValidatorRoutineJavaParamMismatch.ex(
+                        "RETURNS TABLE",
+                        repos.getLocalizedObjectName(routine),
+                        "java.sql.PreparedStatement",
+                        repos.getLocalizedObjectName(
+                            javaUnmangledMethodName),
+                        javaParamClass.toString());
                 }
             }
         }
@@ -371,7 +391,7 @@ public class FarragoUserDefinedRoutine
         FarragoRexToOJTranslator farragoTranslator =
             (FarragoRexToOJTranslator) translator;
 
-        assert(call.getOperator() == this);
+        assert (call.getOperator() == this);
         Method method;
         try {
             method = getJavaMethod();
@@ -387,35 +407,37 @@ public class FarragoUserDefinedRoutine
         Expression [] args = new Expression[nJavaArgs];
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {
-            args[i] = translateOperand(
-                farragoTranslator,
-                (FemRoutineParameter) routine.getParameter().get(i), 
-                operands[i],
-                javaParams[i],
-                getParamTypes()[i]);
+            args[i] =
+                translateOperand(
+                    farragoTranslator,
+                    (FemRoutineParameter) routine.getParameter().get(i),
+                    operands[i],
+                    javaParams[i],
+                    getParamTypes()[i]);
         }
 
         if (isTableFunction()) {
             // NOTE jvs 8-Jan-2006:  "this" here refers to the
             // calling instance of FarragoJavaUdxIterator
-            args[operands.length] = new MethodCall(
-                "getResultInserter",
-                new ExpressionList());
+            args[operands.length] =
+                new MethodCall(
+                    "getResultInserter",
+                    new ExpressionList());
         }
-        
+
         FarragoOJRexStaticMethodImplementor implementor =
             new FarragoOJRexStaticMethodImplementor(
                 method,
                 routine.getDataAccess() != RoutineDataAccessEnum.RDA_NO_SQL,
                 returnType);
-        Expression varResult = 
+        Expression varResult =
             implementor.implementFarrago(farragoTranslator, call, args);
 
         if (method.getReturnType() == Void.TYPE) {
             // for procedures, need to skip extra conversions below
             return varResult;
         }
-        
+
         RelDataType actualReturnType;
         if (method.getReturnType().isPrimitive()) {
             actualReturnType =
@@ -427,12 +449,13 @@ public class FarragoUserDefinedRoutine
                 stmtValidator.getTypeFactory().createJavaType(
                     method.getReturnType());
         }
-        return farragoTranslator.convertCastOrAssignment(
-            call.toString(), 
-            returnType,
-            actualReturnType,
-            null,
-            varResult);
+        return
+            farragoTranslator.convertCastOrAssignment(
+                call.toString(),
+                returnType,
+                actualReturnType,
+                null,
+                varResult);
     }
 
     // implement OJRexImplementor
@@ -453,15 +476,16 @@ public class FarragoUserDefinedRoutine
             // case of NULL argument detection; also optimize
             // away NULL detection when the routine is declared as
             // RETURNS NULL ON NULL INPUT
-            return farragoTranslator.convertCastOrAssignment(
-                preparingStmt.getRepos().getLocalizedObjectName(
-                    param.getName()),
-                stmtValidator.getTypeFactory().createTypeWithNullability(
+            return
+                farragoTranslator.convertCastOrAssignment(
+                    preparingStmt.getRepos().getLocalizedObjectName(
+                        param.getName()),
+                    stmtValidator.getTypeFactory().createTypeWithNullability(
+                        paramType,
+                        false),
                     paramType,
-                    false),
-                paramType,
-                null,
-                argExpr);
+                    null,
+                    argExpr);
         } else {
             return argExpr;
         }
@@ -469,24 +493,21 @@ public class FarragoUserDefinedRoutine
 
     public boolean hasDefinition()
     {
-        if (routine.getLanguage().equals(ExtensionLanguageEnum.SQL.toString()))
-        {
+        if (routine.getLanguage().equals(ExtensionLanguageEnum.SQL.toString())) {
             return !routine.getBody().getBody().equals(";");
         } else {
             return routine.getExternalName() != null;
         }
     }
-    
-    public boolean requiresDecimalExpansion() 
+
+    public boolean requiresDecimalExpansion()
     {
         return false;
     }
-    
-    private static final String RETURN_PREFIX = "RETURN ";
 
     public static String removeReturnPrefix(String body)
     {
-        assert(hasReturnPrefix(body));
+        assert (hasReturnPrefix(body));
         return body.substring(RETURN_PREFIX.length());
     }
 

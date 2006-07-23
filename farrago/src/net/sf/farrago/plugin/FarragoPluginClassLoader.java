@@ -21,28 +21,32 @@
 */
 package net.sf.farrago.plugin;
 
-import net.sf.farrago.resource.*;
-import net.sf.farrago.util.*;
-
 import java.net.*;
+
 import java.util.*;
 import java.util.jar.*;
 
+import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
+
+
 /**
- * FarragoPluginClassLoader allows plugin jars to be added to the
- * ClassLoader dynamically.
+ * FarragoPluginClassLoader allows plugin jars to be added to the ClassLoader
+ * dynamically.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoPluginClassLoader extends URLClassLoader
+public class FarragoPluginClassLoader
+    extends URLClassLoader
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Prefix used to indicate that a wrapper library is loaded directly from
-     * a class rather than a jar.  TODO:  get rid of this
-     * and use only LIBRARY_CLASS_PREFIX2.
+     * Prefix used to indicate that a wrapper library is loaded directly from a
+     * class rather than a jar. TODO: get rid of this and use only
+     * LIBRARY_CLASS_PREFIX2.
      */
     public static final String LIBRARY_CLASS_PREFIX1 = "class ";
 
@@ -52,28 +56,31 @@ public class FarragoPluginClassLoader extends URLClassLoader
     public static final String LIBRARY_CLASS_PREFIX2 = "class:";
 
     /**
-     * Attribute name used in jar manifest for identifying the class
-     * to be used as a plugin factory.
+     * Attribute name used in jar manifest for identifying the class to be used
+     * as a plugin factory.
      */
-    public static final String PLUGIN_FACTORY_CLASS_ATTRIBUTE
-        = "PluginFactoryClassName";
+    public static final String PLUGIN_FACTORY_CLASS_ATTRIBUTE =
+        "PluginFactoryClassName";
 
     /**
-     * Attribute name used in jar manifest for identifying the XMI file
-     * to be used as a model extension.
+     * Attribute name used in jar manifest for identifying the XMI file to be
+     * used as a model extension.
      */
-    public static final String PLUGIN_MODEL_ATTRIBUTE
-        = "PluginModel";
+    public static final String PLUGIN_MODEL_ATTRIBUTE = "PluginModel";
 
-    //~ Instance fields -------------------------------------------------------
-    
+    //~ Instance fields --------------------------------------------------------
+
     private final Set urlSet;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoPluginClassLoader()
     {
         super(new URL[0]);
         urlSet = new HashSet();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Adds a URL from which plugins can be loaded.
@@ -88,16 +95,14 @@ public class FarragoPluginClassLoader extends URLClassLoader
         addURL(url);
         urlSet.add(url);
     }
-    
+
     /**
-     * Loads a Java class from a library (either a jarfile using
-     * a manifest to get the classname, or else a named
-     * class from the classpath).
+     * Loads a Java class from a library (either a jarfile using a manifest to
+     * get the classname, or else a named class from the classpath).
      *
      * @param libraryName filename of jar containing plugin implementation
-     *
-     * @param jarAttributeName name of jar attribute to use to determine
-     * class name
+     * @param jarAttributeName name of jar attribute to use to determine class
+     * name
      *
      * @return loaded class
      */
@@ -118,8 +123,8 @@ public class FarragoPluginClassLoader extends URLClassLoader
                 String className =
                     manifest.getMainAttributes().getValue(jarAttributeName);
                 return loadClassFromJarUrl(
-                    "file:" + libraryName,
-                    className);
+                        "file:" + libraryName,
+                        className);
             }
         } catch (Throwable ex) {
             throw FarragoResource.instance().PluginJarLoadFailed.ex(
@@ -129,13 +134,12 @@ public class FarragoPluginClassLoader extends URLClassLoader
     }
 
     /**
-     * Loads a Java class from a jar URL, using the manifest to
-     * determine the classname.
+     * Loads a Java class from a jar URL, using the manifest to determine the
+     * classname.
      *
      * @param jarUrl URL of jar containing plugin implementation
-     *
-     * @param jarAttributeName name of jar attribute to use to determine
-     * class name
+     * @param jarAttributeName name of jar attribute to use to determine class
+     * name
      *
      * @return loaded class
      */
@@ -153,13 +157,12 @@ public class FarragoPluginClassLoader extends URLClassLoader
                     ex);
             }
         }
-        jarUrl =
-            FarragoProperties.instance().expandProperties(jarUrl);
+        jarUrl = FarragoProperties.instance().expandProperties(jarUrl);
         String className;
         try {
             URL url = new URL("jar:" + jarUrl + "!/");
-            JarURLConnection jarConnection = (JarURLConnection)
-                url.openConnection();
+            JarURLConnection jarConnection =
+                (JarURLConnection) url.openConnection();
             Manifest manifest = jarConnection.getManifest();
             className = manifest.getMainAttributes().getValue(jarAttributeName);
         } catch (Throwable ex) {
@@ -169,12 +172,11 @@ public class FarragoPluginClassLoader extends URLClassLoader
         }
         return loadClassFromJarUrl(jarUrl, className);
     }
-    
+
     /**
      * Loads a Java class from a jar URL.
      *
      * @param jarUrl URL for jar containing class implementation
-     *
      * @param className name of class to load
      *
      * @return loaded class
@@ -197,8 +199,8 @@ public class FarragoPluginClassLoader extends URLClassLoader
 
     /**
      * Constructs a new object instance of a plugin class, making sure the
-     * thread's context ClassLoader is set to <code>this</code> for the
-     * duration of the construction.
+     * thread's context ClassLoader is set to <code>this</code> for the duration
+     * of the construction.
      *
      * @param pluginClass class to instantiate
      *
@@ -218,8 +220,8 @@ public class FarragoPluginClassLoader extends URLClassLoader
     }
 
     /**
-     * Tests whether a library name references a Java class directly rather
-     * than a jar.
+     * Tests whether a library name references a Java class directly rather than
+     * a jar.
      *
      * @param libraryName library name to be tested
      *
@@ -227,7 +229,8 @@ public class FarragoPluginClassLoader extends URLClassLoader
      */
     public static boolean isLibraryClass(String libraryName)
     {
-        return libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
+        return
+            libraryName.startsWith(LIBRARY_CLASS_PREFIX1)
             || libraryName.startsWith(LIBRARY_CLASS_PREFIX2);
     }
 
@@ -241,7 +244,7 @@ public class FarragoPluginClassLoader extends URLClassLoader
      */
     public static String getLibraryClassReference(String libraryName)
     {
-        assert(isLibraryClass(libraryName));
+        assert (isLibraryClass(libraryName));
         return libraryName.substring(LIBRARY_CLASS_PREFIX2.length());
     }
 }

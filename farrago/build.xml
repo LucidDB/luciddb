@@ -1057,31 +1057,23 @@ please disable it and try again.
     </exec>
   </target>
 
-  <!-- Beautify Farrago source code.  This forks a separate ant process using
-       the server JVM to work around a problem documented at
-       http://jalopy.sourceforge.net/javadoc.html. -->
-  <target name="jalopy" depends="clean">
-    <farrago.antFork target="forked_jalopy">
-      <jvmargs>
-        <jvmarg value="-server"/>
-      </jvmargs>
-    </farrago.antFork>
-  </target>
-
-  <target name="forked_jalopy">
+  <!-- Beautify Farrago source code.  This currently requires
+       the commercial Triemax version of Jalopy, which needs to
+       be installed manually under thirdparty/jalopy. -->
+  <target name="jalopy">
     <taskdef name="jalopy"
-      classname="de.hunsicker.jalopy.plugin.ant.AntPlugin">
+      classname="com.triemax.JalopyTask">
       <classpath>
         <fileset dir="${jalopy.dir}/lib">
           <include name="*.jar"/>
         </fileset>
       </classpath>
     </taskdef>
-    <!-- NOTE: may want to turn force off once rules stabilize -->
-    <jalopy backup="true" convention="${farrago.src.dir}/jalopy.xml"
-      classpathref="farrago.run.classpath" history="FILE" force="true">
+    <jalopy backup="false" convention="${farrago.src.dir}/jalopy.xml"
+      classpathref="farrago.jalopy.classpath" history="NONE" force="true">
       <fileset dir="${farrago.src.dir}">
         <include name="**/*.java"/>
+        <exclude name="org/eigenbase/inventory/**/*.java"/>
       </fileset>
     </jalopy>
   </target>

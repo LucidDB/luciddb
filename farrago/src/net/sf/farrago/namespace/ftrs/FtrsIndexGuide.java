@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -39,33 +39,37 @@ import net.sf.farrago.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
  * FtrsIndexGuide provides information about the mapping from catalog
  * definitions for tables and indexes to their Fennel representation.
  *
- * <p>Examples in the comments
- * refer to the test tables EMPS and DEPTS defined in
- * <code>farrago/initsql/createSalesSchema.sql</code>.  For an overview and
- * terminology, please see
- * <a href="http://farrago.sf.net/design/TableIndexing.html">
- * the design docs</a>.
+ * <p>Examples in the comments refer to the test tables EMPS and DEPTS defined
+ * in <code>farrago/initsql/createSalesSchema.sql</code>. For an overview and
+ * terminology, please see <a
+ * href="http://farrago.sf.net/design/TableIndexing.html">the design docs</a>.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 class FtrsIndexGuide
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoTypeFactory typeFactory;
-    
+
     private FarragoRepos repos;
-    
+
     private CwmColumnSet table;
-    
+
     private RelDataType unflattenedRowType;
-    
+
     private RelDataType flattenedRowType;
 
     private int [] flatteningMap;
+
+    //~ Constructors -----------------------------------------------------------
 
     FtrsIndexGuide(
         FarragoTypeFactory typeFactory,
@@ -74,10 +78,9 @@ class FtrsIndexGuide
         this.typeFactory = typeFactory;
         this.table = table;
         repos = typeFactory.getRepos();
-        
-        unflattenedRowType =
-            typeFactory.createStructTypeFromClassifier(table);
-        
+
+        unflattenedRowType = typeFactory.createStructTypeFromClassifier(table);
+
         int n = unflattenedRowType.getFieldList().size();
         flatteningMap = new int[n];
         flattenedRowType =
@@ -86,6 +89,8 @@ class FtrsIndexGuide
                 unflattenedRowType,
                 flatteningMap);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the flattened row type for the indexed table
@@ -97,10 +102,10 @@ class FtrsIndexGuide
 
     /**
      * Determines whether an index is in a valid state for satisfying queries.
-     * This returns false for a new index under construction.  Optimization
-     * rules which consider unclustered indexes must test this state.
-     * For FTRS, clustered indexes are always valid since they can
-     * only be created together with the table.
+     * This returns false for a new index under construction. Optimization rules
+     * which consider unclustered indexes must test this state. For FTRS,
+     * clustered indexes are always valid since they can only be created
+     * together with the table.
      *
      * @param index index to test
      *
@@ -114,10 +119,7 @@ class FtrsIndexGuide
     /**
      * Gets a list of columns covered by an unclustered index.
      *
-     *<p>
-     *
-     * Example:  for index EMPS_UX, the result is
-     * [ NAME, DEPTNO, EMPNO ]
+     * <p>Example: for index EMPS_UX, the result is [ NAME, DEPTNO, EMPNO ]
      *
      * @param index index for which to compute column list
      *
@@ -126,8 +128,10 @@ class FtrsIndexGuide
     List getUnclusteredCoverageColList(
         FemLocalIndex index)
     {
-        FemLocalIndex clusteredIndex = FarragoCatalogUtil.getClusteredIndex(
-            repos, index.getSpannedClass());
+        FemLocalIndex clusteredIndex =
+            FarragoCatalogUtil.getClusteredIndex(
+                repos,
+                index.getSpannedClass());
         List indexColumnList = new ArrayList();
         appendDefinedKey(indexColumnList, index);
         appendClusteredDistinctKey(clusteredIndex, indexColumnList);
@@ -138,10 +142,7 @@ class FtrsIndexGuide
      * Same as getUnclusteredCoverageColList, but returns flattened column
      * ordinals instead.
      *
-     *<p>
-     *
-     * Example:  for index EMPS_UX, the result is
-     * [ 1, 2, 0 ]
+     * <p>Example: for index EMPS_UX, the result is [ 1, 2, 0 ]
      *
      * @param index index for which to compute projection
      *
@@ -157,8 +158,8 @@ class FtrsIndexGuide
         for (; iter.hasNext(); ++i) {
             FemAbstractColumn column = (FemAbstractColumn) iter.next();
             projection[i] = new Integer(
-                flattenOrdinal(
-                    column.getOrdinal()));
+                    flattenOrdinal(
+                        column.getOrdinal()));
         }
         return projection;
     }
@@ -166,12 +167,10 @@ class FtrsIndexGuide
     /**
      * Gets the distinct key of a clustered index.
      *
-     *<p>
-     *
-     * Example:  for the clustered index on table EMPS, the result is
-     * [ 2, 0 ].  But if the clustered index were defined as non-unique on
-     * column city instead, then the result would be [ 4, 2, 0 ].  For a
-     * non-unique clustered index on empno, the result would be [ 0, 2 ].
+     * <p>Example: for the clustered index on table EMPS, the result is [ 2, 0
+     * ]. But if the clustered index were defined as non-unique on column city
+     * instead, then the result would be [ 4, 2, 0 ]. For a non-unique clustered
+     * index on empno, the result would be [ 0, 2 ].
      *
      * @param index the FemLocalIndex for which the key is to be projected
      *
@@ -188,8 +187,8 @@ class FtrsIndexGuide
             FemAbstractColumn column =
                 (FemAbstractColumn) indexColumnList.get(i);
             array[i] = new Integer(
-                flattenOrdinal(
-                    column.getOrdinal()));
+                    flattenOrdinal(
+                        column.getOrdinal()));
         }
         return array;
     }
@@ -213,10 +212,7 @@ class FtrsIndexGuide
     /**
      * Gets the collation key of an index.
      *
-     *<p>
-     *
-     * Example:  for index DEPTS_UNIQUE_NAME, the result is
-     * [ 1, 0 ]
+     * <p>Example: for index DEPTS_UNIQUE_NAME, the result is [ 1, 0 ]
      *
      * @param index index for which to compute projection
      *
@@ -233,15 +229,13 @@ class FtrsIndexGuide
     }
 
     /**
-     * Gets a FemTupleProjection which specifies how to extract the distinct
-     * key from the result of getCoverageTupleDescriptor.  The projected
-     * ordinals are relative to the index coverage tuple, not the table.
+     * Gets a FemTupleProjection which specifies how to extract the distinct key
+     * from the result of getCoverageTupleDescriptor. The projected ordinals are
+     * relative to the index coverage tuple, not the table.
      *
-     *<p>
-     *
-     * Example:  for the clustered index of table EMPS, the result is
-     * [ 2, 0 ].  For index DEPTS_UNIQUE_NAME, the result is [ 0 ].
-     * For index EMPS_UX, the result is [ 0, 1, 2 ].
+     * <p>Example: for the clustered index of table EMPS, the result is [ 2, 0
+     * ]. For index DEPTS_UNIQUE_NAME, the result is [ 0 ]. For index EMPS_UX,
+     * the result is [ 0, 1, 2 ].
      *
      * @param index the FemLocalIndex for which the key is to be projected
      *
@@ -271,9 +265,10 @@ class FtrsIndexGuide
             // deletions and rollbacks without requiring linear search.
             n = getUnclusteredCoverageColList(index).size();
         }
-        return FennelRelUtil.createTupleProjection(
-            repos,
-            FennelRelUtil.newIotaProjection(n));
+        return
+            FennelRelUtil.createTupleProjection(
+                repos,
+                FennelRelUtil.newIotaProjection(n));
     }
 
     /**
@@ -294,14 +289,11 @@ class FtrsIndexGuide
     }
 
     /**
-     * Creates a FemTupleProjection which specifies how to extract the
-     * index coverage tuple from a full table tuple.
+     * Creates a FemTupleProjection which specifies how to extract the index
+     * coverage tuple from a full table tuple.
      *
-     *<p>
-     *
-     * Example:  for the clustered index of table EMPS, the result is
-     * [ 0, 1, 2, 3, 4, 5 ].  For index DEPTS_UNIQUE_NAME, the result
-     * is [ 1, 0 ].
+     * <p>Example: for the clustered index of table EMPS, the result is [ 0, 1,
+     * 2, 3, 4, 5 ]. For index DEPTS_UNIQUE_NAME, the result is [ 1, 0 ].
      *
      * @param index the FemLocalIndex for which the tuple is to be projected
      *
@@ -312,10 +304,11 @@ class FtrsIndexGuide
     {
         if (index.isClustered()) {
             // clustered index tuple is full table tuple
-            return FennelRelUtil.createTupleProjection(
-                repos,
-                FennelRelUtil.newIotaProjection(
-                    flattenedRowType.getFieldList().size()));
+            return
+                FennelRelUtil.createTupleProjection(
+                    repos,
+                    FennelRelUtil.newIotaProjection(
+                        flattenedRowType.getFieldList().size()));
         }
 
         List indexColumnList = getUnclusteredCoverageColList(index);
@@ -340,8 +333,7 @@ class FtrsIndexGuide
         while (indexColumnIter.hasNext()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexColumnIter.next();
-            FemTupleAttrProjection attrProj =
-                repos.newFemTupleAttrProjection();
+            FemTupleAttrProjection attrProj = repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(
                 flattenOrdinal(
@@ -355,7 +347,6 @@ class FtrsIndexGuide
      * initializing any invariant information.
      *
      * @param rel relational expression modifying the index
-     *
      * @param index the index of interest
      *
      * @return new writer
@@ -381,8 +372,9 @@ class FtrsIndexGuide
             getCoverageTupleDescriptor(index));
         indexWriter.setKeyProj(
             getDistinctKeyProjection(index));
-        indexWriter.setDistinctness(index.isUnique()
-            ? DistinctnessEnum.DUP_FAIL : DistinctnessEnum.DUP_ALLOW);
+        indexWriter.setDistinctness(
+            index.isUnique() ? DistinctnessEnum.DUP_FAIL
+            : DistinctnessEnum.DUP_ALLOW);
         return indexWriter;
     }
 
@@ -462,10 +454,10 @@ class FtrsIndexGuide
 
     /**
      * Converts from unflattened 0-based logical column ordinal to 0-based
-     * flattened tuple ordinal (as known by Fennel).  These differ in the
-     * presence of user-defined types.  For example, consider DDL like
+     * flattened tuple ordinal (as known by Fennel). These differ in the
+     * presence of user-defined types. For example, consider DDL like
      *
-     *<pre><code>
+     * <pre><code>
      *
      * create type pencil (
      *     outer_radius_mm double,
@@ -494,7 +486,7 @@ class FtrsIndexGuide
     private int flattenOrdinal(int columnOrdinal)
     {
         int i = flatteningMap[columnOrdinal];
-        assert(i != -1);
+        assert (i != -1);
         return i;
     }
 }

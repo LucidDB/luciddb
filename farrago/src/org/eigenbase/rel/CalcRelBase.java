@@ -21,27 +21,31 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.metadata.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexProgram;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
 
 /**
- * <code>CalcRelBase</code> is an abstract base class for implementations
- * of {@link CalcRel}.
+ * <code>CalcRelBase</code> is an abstract base class for implementations of
+ * {@link CalcRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class CalcRelBase extends SingleRel
+public abstract class CalcRelBase
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final RexProgram program;
     private final List<RelCollation> collationList;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected CalcRelBase(
         RelOptCluster cluster,
@@ -55,28 +59,37 @@ public abstract class CalcRelBase extends SingleRel
         this.rowType = rowType;
         this.program = program;
         this.collationList =
-            collationList.isEmpty() ? RelCollation.emptyList :
-            collationList;
+            collationList.isEmpty() ? RelCollation.emptyList : collationList;
         assert isValid(true);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isValid(boolean fail)
     {
         if (!RelOptUtil.equal(
-            "program's input type", program.getInputRowType(),
-            "child's output type", getChild().getRowType(),
-            fail)) {
+                "program's input type",
+                program.getInputRowType(),
+                "child's output type",
+                getChild().getRowType(),
+                fail)) {
             return false;
         }
         if (!RelOptUtil.equal(
-            "rowtype of program", program.getOutputRowType(),
-            "declared rowtype of rel", rowType, fail)) {
+                "rowtype of program",
+                program.getOutputRowType(),
+                "declared rowtype of rel",
+                rowType,
+                fail)) {
             return false;
         }
         if (!program.isValid(fail)) {
             return false;
         }
-        if (!RelCollationImpl.isValid(getRowType(), collationList, fail)) {
+        if (!RelCollationImpl.isValid(
+                getRowType(),
+                collationList,
+                fail)) {
             return false;
         }
         return true;
@@ -89,8 +102,10 @@ public abstract class CalcRelBase extends SingleRel
 
     public double getRows()
     {
-        return FilterRel.estimateFilteredRows(
-            getChild(), program.getCondition());
+        return
+            FilterRel.estimateFilteredRows(
+                getChild(),
+                program.getCondition());
     }
 
     public List<RelCollation> getCollationList()
@@ -101,7 +116,8 @@ public abstract class CalcRelBase extends SingleRel
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = RelMetadataQuery.getRowCount(this);
-        double dCpu = RelMetadataQuery.getRowCount(getChild())
+        double dCpu =
+            RelMetadataQuery.getRowCount(getChild())
             * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);

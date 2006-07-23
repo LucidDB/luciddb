@@ -20,26 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
 import java.util.*;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rex.*;
-import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelImplementor;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.SaffronProperties;
-import org.eigenbase.util.Util;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -47,37 +43,36 @@ import org.eigenbase.util.Util;
  * of relational expressions into an implementation, generally an {@link
  * ParseTree openjava parse tree}.
  *
- * <p>
- * The {@link #bind} method allows relational expressions to register which
- * Java variable holds their row. They can bind 'lazily', so that the
- * variable is only declared and initialized if it is actually used in
- * another expression.
- * </p>
+ * <p>The {@link #bind} method allows relational expressions to register which
+ * Java variable holds their row. They can bind 'lazily', so that the variable
+ * is only declared and initialized if it is actually used in another
+ * expression.</p>
  *
- * <p>
- * TODO jvs 14-June-2004:  some of JavaRelImplementor is specific to
- * the JAVA calling convention; those portions should probably be
- * factored out into a subclass.
- * </p>
+ * <p>TODO jvs 14-June-2004: some of JavaRelImplementor is specific to the JAVA
+ * calling convention; those portions should probably be factored out into a
+ * subclass.</p>
  */
-public class JavaRelImplementor implements RelImplementor
+public class JavaRelImplementor
+    implements RelImplementor
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
         EigenbaseTrace.getRelImplementorTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Maps a {@link String} to the {@link Frame} whose
-     * {@link Frame#rel}.correlVariable == correlName.
+    /**
+     * Maps a {@link String} to the {@link Frame} whose {@link
+     * Frame#rel}.correlVariable == correlName.
      */
     final HashMap mapCorrel2Frame = new HashMap();
     final HashMap mapCorrelNameToVariable = new HashMap();
 
     /**
-     * Maps a {@link RelNode} to the unique frame whose {@link Frame#rel}
-     * is that relational expression.
+     * Maps a {@link RelNode} to the unique frame whose {@link Frame#rel} is
+     * that relational expression.
      */
     final HashMap mapRel2Frame = new HashMap();
 
@@ -90,14 +85,14 @@ public class JavaRelImplementor implements RelImplementor
     private int nextVariableId;
     protected final OJRexImplementorTable implementorTable;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a JavaRelImplementor
      *
      * @param rexBuilder Builder for {@link RexNode}s
      * @param implementorTable Table of implementations of operators. Must not
-     *    be null
+     * be null
      */
     public JavaRelImplementor(
         RexBuilder rexBuilder,
@@ -110,7 +105,7 @@ public class JavaRelImplementor implements RelImplementor
         nextVariableId = 0;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setExitStatement(openjava.ptree.Statement stmt)
     {
@@ -170,15 +165,19 @@ public class JavaRelImplementor implements RelImplementor
             };
         Variable variable = newVariable();
         LazyBind bind =
-            new LazyBind(variable, statementList,
-                getTypeFactory(), rel.getRowType(), thunk);
+            new LazyBind(
+                variable,
+                statementList,
+                getTypeFactory(),
+                rel.getRowType(),
+                thunk);
         bind(rel, bind);
         return bind.getVariable();
     }
 
     /**
-     * Shares a variable between relations.  <code>previous</code> already has
-     * a variable, and calling this method indicates that <code>rel</code>'s
+     * Shares a variable between relations. <code>previous</code> already has a
+     * variable, and calling this method indicates that <code>rel</code>'s
      * output will appear in this variable too.
      */
     public void bind(
@@ -191,9 +190,9 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Binds a correlating variable. References to correlating variables such
-     * as <code>$cor2</code> will be replaced with java variables such as
-     * <code>$Oj14</code>.
+     * Binds a correlating variable. References to correlating variables such as
+     * <code>$cor2</code> will be replaced with java variables such as <code>
+     * $Oj14</code>.
      */
     public void bindCorrel(
         String correlName,
@@ -208,10 +207,13 @@ public class JavaRelImplementor implements RelImplementor
     {
         if (expression instanceof RexInputRef) {
             RexInputRef variable = (RexInputRef) expression;
+
             // REVIEW jvs 30-May-2005:  What's up with this?  The "&& false"
             // should have at least a comment!
-            if (rel instanceof JoinRelBase && false) {
-                return (JavaRel) findInputRel(rel, variable.getIndex());
+            if ((rel instanceof JoinRelBase) && false) {
+                return (JavaRel) findInputRel(
+                        rel,
+                        variable.getIndex());
             } else {
                 return (JavaRel) rel.getInput(variable.getIndex());
             }
@@ -230,8 +232,8 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Burrows into a synthetic record and returns the underlying relation
-     * which provides the field called <code>fieldName</code>.
+     * Burrows into a synthetic record and returns the underlying relation which
+     * provides the field called <code>fieldName</code>.
      */
     public JavaRel implementFieldAccess(
         JavaRel rel,
@@ -247,9 +249,10 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Implements the body of the current expression's parent.  If
-     * <code>variable</code> is not null, bind the current expression to
-     * <code>variable</code>. For example, a nested loops join would generate
+     * Implements the body of the current expression's parent. If <code>
+     * variable</code> is not null, bind the current expression to <code>
+     * variable</code>. For example, a nested loops join would generate
+     *
      * <blockquote>
      * <pre>
      * for (int i = 0; i < emps.length; i++) {
@@ -263,7 +266,9 @@ public class JavaRelImplementor implements RelImplementor
      * }
      * </pre>
      * </blockquote>
+     *
      * which corresponds to
+     *
      * <blockquote>
      * <pre>
      * [emp:iter
@@ -303,7 +308,8 @@ public class JavaRelImplementor implements RelImplementor
             // this relational expression has not bound itself, so we presume
             // that we can call its implementSelf() method
             if (!(rel instanceof JavaSelfRel)) {
-                throw Util.newInternal("In order to bind-deferred, a "
+                throw Util.newInternal(
+                    "In order to bind-deferred, a "
                     + "relational expression must implement JavaSelfRel: "
                     + rel);
             }
@@ -317,12 +323,13 @@ public class JavaRelImplementor implements RelImplementor
                     new VariableInitializerThunk() {
                         public VariableInitializer getInitializer()
                         {
-                            return selfRel.implementSelf(JavaRelImplementor.this);
+                            return
+                                selfRel.implementSelf(JavaRelImplementor.this);
                         }
                     });
             bind(rel, lazyBind);
-        } else if (frame.bind instanceof LazyBind
-                && (((LazyBind) frame.bind).statementList != statementList)) {
+        } else if ((frame.bind instanceof LazyBind)
+            && (((LazyBind) frame.bind).statementList != statementList)) {
             // Frame is already bound, but to a variable declared in a different
             // scope. Re-bind it.
             final LazyBind lazyBind = (LazyBind) frame.bind;
@@ -378,7 +385,8 @@ public class JavaRelImplementor implements RelImplementor
     {
         final CallingConvention convention = child.getConvention();
         if (!(child instanceof JavaRel)) {
-            throw Util.newInternal("Relational expression '" + child
+            throw Util.newInternal(
+                "Relational expression '" + child
                 + "' has '" + convention
                 + "' calling convention, so must implement interface "
                 + JavaRel.class);
@@ -386,7 +394,8 @@ public class JavaRelImplementor implements RelImplementor
         JavaRel javaRel = (JavaRel) child;
         final ParseTree p = javaRel.implement(this);
         if ((convention == CallingConvention.JAVA) && (p != null)) {
-            throw Util.newInternal("Relational expression '" + child
+            throw Util.newInternal(
+                "Relational expression '" + child
                 + "' returned '" + p + " on implement, but should have "
                 + "returned null, because it has JAVA calling-convention. "
                 + "(Note that similar calling-conventions, such as "
@@ -396,8 +405,8 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Starts an iteration, by calling
-     * {@link org.eigenbase.oj.rel.JavaRel#implement} on the root element.
+     * Starts an iteration, by calling {@link
+     * org.eigenbase.oj.rel.JavaRel#implement} on the root element.
      */
     public Expression implementRoot(JavaRel rel)
     {
@@ -405,11 +414,10 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Creates an expression which references correlating variable
-     * <code>correlName</code> from the context of <code>rel</code>.  For
-     * example, if <code>correlName</code> is set by the 1st child of
-     * <code>rel</code>'s 2nd child, then this method returns
-     * <code>$input2.$input1</code>.
+     * Creates an expression which references correlating variable <code>
+     * correlName</code> from the context of <code>rel</code>. For example, if
+     * <code>correlName</code> is set by the 1st child of <code>rel</code>'s 2nd
+     * child, then this method returns <code>$input2.$input1</code>.
      */
     public Expression makeReference(
         String correlName,
@@ -418,8 +426,8 @@ public class JavaRelImplementor implements RelImplementor
         Frame frame = (Frame) mapCorrel2Frame.get(correlName);
         assert (frame != null);
         assert (Util.equal(
-            frame.rel.getCorrelVariable(),
-            correlName));
+                    frame.rel.getCorrelVariable(),
+                    correlName));
         assert (frame.hasVariable());
         return frame.getVariable();
     }
@@ -468,16 +476,16 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Converts an expression in internal form (the input relation is
-     * referenced using the variable <code>$input0</code>) to generated form
-     * (the input relation is referenced using the bindings in this
-     * <code>JavaRelImplementor</code>).  Compare this method with
+     * Converts an expression in internal form (the input relation is referenced
+     * using the variable <code>$input0</code>) to generated form (the input
+     * relation is referenced using the bindings in this <code>
+     * JavaRelImplementor</code>). Compare this method with
      * net.sf.saffron.oj.xlat.QueryInfo.convertExpToInternal(), which converts
      * from source form to internal form.
      *
      * @param exp the expression to translate (it is cloned, not modified)
-     * @param rel the relational expression which is the context for
-     *        <code>exp</code>
+     * @param rel the relational expression which is the context for <code>
+     * exp</code>
      */
     public Expression translate(
         JavaRel rel,
@@ -488,10 +496,11 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Determines whether it is possible to implement a set of expressions
-     * in Java.
+     * Determines whether it is possible to implement a set of expressions in
+     * Java.
      *
      * @param program Program to translate
+     *
      * @return whether all expressions in the program can be implemented
      */
     public boolean canTranslate(
@@ -510,14 +519,13 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Determines whether it is possible to implement an expression in
-     * Java.
+     * Determines whether it is possible to implement an expression in Java.
      *
      * @param rel Relational expression
      * @param expression Expression
-     * @param deep if true, operands of the given expression are
-     *             tested for translatability as well; if false only
-     *             the top level expression is tested
+     * @param deep if true, operands of the given expression are tested for
+     * translatability as well; if false only the top level expression is tested
+     *
      * @return whether the expression can be implemented
      */
     public boolean canTranslate(
@@ -535,16 +543,13 @@ public class JavaRelImplementor implements RelImplementor
      * scratch variables, and helper functions.
      *
      * <p>If you want to avoid generating common expressions, it is better to
-     * create a translator using
-     * {@link #newStmtTranslator(JavaRel, StatementList, MemberDeclarationList)}
-     * and use it to translate multiple expressions.
+     * create a translator using {@link #newStmtTranslator(JavaRel,
+     * StatementList, MemberDeclarationList)} and use it to translate multiple
+     * expressions.
      *
      * @param rel the relational expression which is the context for exp
-     *
      * @param exp the row expression to be translated
-     *
      * @param stmtList optional code can be appended here
-     *
      * @param memberList optional member declarations can be appended here (if
      * needed for reusable scratch space or helper functions; local variables
      * can also be allocated in stmtList)
@@ -579,9 +584,9 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Creates a {@link RexToOJTranslator} with which to translate the
-     * {@link RexNode row-expressions} within a relational expression
-     * into OpenJava expressions.
+     * Creates a {@link RexToOJTranslator} with which to translate the {@link
+     * RexNode row-expressions} within a relational expression into OpenJava
+     * expressions.
      */
     protected RexToOJTranslator newTranslator(RelNode rel)
     {
@@ -593,11 +598,15 @@ public class JavaRelImplementor implements RelImplementor
      * possibly using multiple statements, scratch variables, and helper
      * functions.
      *
-     * <p>Typical usage:<blockquote><pre>
+     * <p>Typical usage:
+     *
+     * <blockquote>
+     * <pre>
      * Translator translator = newStmtTranslator(rel, stmtList, memberList);
      * translator.translateRexNode(exp1);
      * translator.translateRexNode(exp2);
-     * </pre></blockquote>
+     * </pre>
+     * </blockquote>
      *
      * @param rel the relational expression which is the context for exp
      * @param stmtList optional code can be appended here
@@ -622,14 +631,15 @@ public class JavaRelImplementor implements RelImplementor
     {
         final RelDataType rowType = rel.getRowType();
         int fieldOffset = computeFieldOffset(rel, ordinal);
-        return translate(
-            rel,
-            rexBuilder.makeRangeReference(rowType, fieldOffset, false));
+        return
+            translate(
+                rel,
+                rexBuilder.makeRangeReference(rowType, fieldOffset, false));
     }
 
     /**
-     * Returns the index of the first field in <code>rel</code> which comes
-     * from its <code>ordinal</code>th input.
+     * Returns the index of the first field in <code>rel</code> which comes from
+     * its <code>ordinal</code>th input.
      *
      * <p>For example, if rel joins T0(A,B,C) to T1(D,E), then
      * countFields(0,rel) yields 0, and countFields(1,rel) yields 3.</p>
@@ -652,14 +662,12 @@ public class JavaRelImplementor implements RelImplementor
     }
 
     /**
-     * Creates an expression which references the
-     * <i>fieldOrdinal</i><sup>th</sup> field of the
-     * <i>ordinal</i><sup>th</sup> input.
+     * Creates an expression which references the <i>
+     * fieldOrdinal</i><sup>th</sup> field of the <i>ordinal</i><sup>th</sup>
+     * input.
      *
-     * <p>
-     * (We can potentially optimize the generation process, so we can access
-     * field values without actually instantiating the row.)
-     * </p>
+     * <p>(We can potentially optimize the generation process, so we can access
+     * field values without actually instantiating the row.)</p>
      */
     public Expression translateInputField(
         JavaRel rel,
@@ -669,7 +677,8 @@ public class JavaRelImplementor implements RelImplementor
         assert ordinal >= 0;
         assert ordinal < rel.getInputs().length;
         assert fieldOrdinal >= 0;
-        assert fieldOrdinal < rel.getInput(ordinal).getRowType().getFieldList().size();
+        assert fieldOrdinal
+            < rel.getInput(ordinal).getRowType().getFieldList().size();
         RelDataType rowType = rel.getRowType();
         final RelDataTypeField [] fields = rowType.getFields();
         final int fieldIndex = computeFieldOffset(rel, ordinal) + fieldOrdinal;
@@ -706,9 +715,9 @@ public class JavaRelImplementor implements RelImplementor
         int offset)
     {
         return findInputRel(
-            rel,
-            offset,
-            new int [] { 0 });
+                rel,
+                offset,
+                new int[] { 0 });
     }
 
     private RelNode findInputRel(
@@ -784,10 +793,8 @@ public class JavaRelImplementor implements RelImplementor
         aggImplementor.implementNext(this, rel, accumulator, call);
     }
 
-
     /**
-     * Generates the expression to retrieve the result of this
-     * aggregation.
+     * Generates the expression to retrieve the result of this aggregation.
      */
     public Expression implementResult(
         AggregateRel.Call call,
@@ -796,22 +803,6 @@ public class JavaRelImplementor implements RelImplementor
         OJAggImplementor aggImplementor =
             implementorTable.get(call.getAggregation());
         return aggImplementor.implementResult(this, accumulator, call);
-    }
-
-    //~ Inner Interfaces ------------------------------------------------------
-
-    /**
-     * A <code>VariableInitializerThunk</code> yields a {@link
-     * VariableInitializer}.
-     */
-    public interface VariableInitializerThunk
-    {
-        VariableInitializer getInitializer();
-    }
-
-    private interface Bind
-    {
-        Variable getVariable();
     }
 
     /**
@@ -838,9 +829,26 @@ public class JavaRelImplementor implements RelImplementor
         return ancestorList;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
-    private static class EagerBind implements Bind
+    /**
+     * A <code>VariableInitializerThunk</code> yields a {@link
+     * VariableInitializer}.
+     */
+    public interface VariableInitializerThunk
+    {
+        VariableInitializer getInitializer();
+    }
+
+    private interface Bind
+    {
+        Variable getVariable();
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class EagerBind
+        implements Bind
     {
         Variable variable;
 
@@ -871,7 +879,8 @@ public class JavaRelImplementor implements RelImplementor
      * "deptno = 20". The "emp" reader will assign its current row to "var4" in
      * the first binding, and to "var8" in the second.</p>
      */
-    private class RelBind implements Bind
+    private class RelBind
+        implements Bind
     {
         private final RelNode rel;
 
@@ -908,16 +917,24 @@ public class JavaRelImplementor implements RelImplementor
 
     private static class Frame
     {
-        /** <code>rel</code>'s parent */
+        /**
+         * <code>rel</code>'s parent
+         */
         RelNode parent;
 
-        /** relation which is being implemented in this frame */
+        /**
+         * relation which is being implemented in this frame
+         */
         RelNode rel;
 
-        /** ordinal of <code>rel</code> within <code>parent</code> */
+        /**
+         * ordinal of <code>rel</code> within <code>parent</code>
+         */
         int ordinal;
 
-        /** Holds variable which hasn't been declared yet. */
+        /**
+         * Holds variable which hasn't been declared yet.
+         */
         private Bind bind;
 
         /**
@@ -938,7 +955,8 @@ public class JavaRelImplementor implements RelImplementor
         }
     }
 
-    private static class LazyBind implements Bind
+    private static class LazyBind
+        implements Bind
     {
         final RelDataTypeFactory typeFactory;
         final RelDataType type;
@@ -983,8 +1001,9 @@ public class JavaRelImplementor implements RelImplementor
 
         public String toString()
         {
-            return super.toString() + "(variable=" + variable.toString()
-            + ", thunk=" + thunk.toString() + ")";
+            return
+                super.toString() + "(variable=" + variable.toString()
+                + ", thunk=" + thunk.toString() + ")";
         }
 
         private static int find(
@@ -999,7 +1018,8 @@ public class JavaRelImplementor implements RelImplementor
                         return i + 1;
                     }
                 }
-                throw Util.newInternal("could not find statement " + statement
+                throw Util.newInternal(
+                    "could not find statement " + statement
                     + " in list " + list);
             }
         }
@@ -1036,12 +1056,14 @@ public class JavaRelImplementor implements RelImplementor
         }
 
         /**
-         * Walks over an expression, and throws {@link org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate} if
-         * expression cannot be translated.
+         * Walks over an expression, and throws {@link
+         * org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate
+         * } if expression cannot be translated.
          *
          * @param rex Expression
-         * @throws org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate if expression or a sub-expression cannot be
-         *   translated
+         *
+         * @throws org.eigenbase.oj.rel.JavaRelImplementor.TranslationTester.CannotTranslate
+         * if expression or a sub-expression cannot be translated
          */
         protected void go(RexNode rex)
             throws CannotTranslate
@@ -1068,12 +1090,12 @@ public class JavaRelImplementor implements RelImplementor
         }
 
         /**
-         * Thrown when we encounter an expression which cannot be translated.
-         * It is always handled by
-         * {@link TranslationTester#canTranslate(RexNode)}, and is not really
-         * an error.
+         * Thrown when we encounter an expression which cannot be translated. It
+         * is always handled by {@link TranslationTester#canTranslate(RexNode)},
+         * and is not really an error.
          */
-        private static class CannotTranslate extends Exception
+        private static class CannotTranslate
+            extends Exception
         {
             public CannotTranslate()
             {

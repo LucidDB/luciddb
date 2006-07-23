@@ -21,33 +21,38 @@
 */
 package org.eigenbase.test;
 
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rel.*;
+
 
 /**
- * RelOptTestBase is an abstract base for tests which exercise a
- * planner and/or rules via {@link DiffRepository}.
+ * RelOptTestBase is an abstract base for tests which exercise a planner and/or
+ * rules via {@link DiffRepository}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-abstract class RelOptTestBase extends SqlToRelTestBase
+abstract class RelOptTestBase
+    extends SqlToRelTestBase
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     protected abstract DiffRepository getDiffRepos();
-    
+
     protected void checkPlanning(
         RelOptRule rule,
         String sql)
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(rule);
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             sql);
     }
-    
+
     protected void checkPlanning(
         HepProgram program,
         String sql)
@@ -56,7 +61,7 @@ abstract class RelOptTestBase extends SqlToRelTestBase
             new HepPlanner(program),
             sql);
     }
-    
+
     protected void checkPlanning(
         RelOptPlanner planner,
         String sql)
@@ -69,10 +74,10 @@ abstract class RelOptTestBase extends SqlToRelTestBase
 
         String planBefore = NL + RelOptUtil.toString(relBefore);
         diffRepos.assertEquals("planBefore", "${planBefore}", planBefore);
-        
+
         planner.setRoot(relBefore);
         RelNode relAfter = planner.findBestExp();
-        
+
         String planAfter = NL + RelOptUtil.toString(relAfter);
         diffRepos.assertEquals("planAfter", "${planAfter}", planAfter);
     }

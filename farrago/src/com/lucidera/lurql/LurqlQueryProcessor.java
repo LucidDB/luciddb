@@ -20,38 +20,43 @@
 */
 package com.lucidera.lurql;
 
-import org.eigenbase.util.*;
+import com.lucidera.lurql.parser.*;
+
+import java.io.*;
+
+import java.sql.*;
+
+import java.util.*;
+
 import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
 
-import com.lucidera.lurql.parser.*;
-
-import java.util.*;
-import java.sql.*;
-import java.io.*;
 
 /**
- * LurqlQueryProcessor implements the {@link JmiQueryProcessor} interface
- * for LURQL with the following implementation-specific behavior:
+ * LurqlQueryProcessor implements the {@link JmiQueryProcessor} interface for
+ * LURQL with the following implementation-specific behavior:
  *
- *<ul>
- *
- *<li>parameters are not yet supported
- *
- *<li>multiple threads may execute the same prepared query concurrently
- *
- *<li>the repository must be MDR
- *
- *</ul>
+ * <ul>
+ * <li>parameters are not yet supported
+ * <li>multiple threads may execute the same prepared query concurrently
+ * <li>the repository must be MDR
+ * </ul>
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlQueryProcessor implements JmiQueryProcessor
+public class LurqlQueryProcessor
+    implements JmiQueryProcessor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final MDRepository repos;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a new LurqlQueryProcessor.
      */
@@ -60,12 +65,13 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
         this.repos = repos;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement JmiQueryProcessor
     public JmiPreparedQuery prepare(JmiModelView modelView, String queryText)
         throws JmiQueryException
     {
-        LurqlParser parser =
-            new LurqlParser(new StringReader(queryText));
+        LurqlParser parser = new LurqlParser(new StringReader(queryText));
         LurqlQuery query;
         try {
             query = parser.LurqlQuery();
@@ -73,12 +79,15 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
             throw new JmiQueryException("LURQL parse failed", ex);
         }
         LurqlPlan plan = new LurqlPlan(
-            modelView,
-            query);
+                modelView,
+                query);
         return new PreparedQuery(plan);
     }
 
-    private class PreparedQuery implements JmiPreparedQuery
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class PreparedQuery
+        implements JmiPreparedQuery
     {
         private final LurqlPlan plan;
 
@@ -92,7 +101,7 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
         {
             return plan.getParamMap();
         }
-        
+
         // implement JmiPreparedQuery
         public String explainPlan()
         {
@@ -102,7 +111,7 @@ public class LurqlQueryProcessor implements JmiQueryProcessor
             pw.close();
             return sw.toString();
         }
-        
+
         // implement JmiPreparedQuery
         public Collection execute(Connection connection, Map args)
             throws JmiQueryException

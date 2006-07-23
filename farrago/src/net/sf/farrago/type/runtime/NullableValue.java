@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.type.runtime;
 
-
 /**
  * NullableValue is an interface representing a runtime holder for a nullable
  * object.
@@ -30,9 +29,11 @@ package net.sf.farrago.type.runtime;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface NullableValue extends DataValue
+public interface NullableValue
+    extends DataValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * Name of accessor method for null indicator.
@@ -44,15 +45,15 @@ public interface NullableValue extends DataValue
      */
     public static final String NULL_IND_MUTATOR_NAME = "setNull";
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Sets whether or not the value is null.  Note that once a value has been
-     * set to null, its data should not be updated until the null state has
-     * been cleared with a call to setNull(false).
+     * Sets whether or not the value is null. Note that once a value has been
+     * set to null, its data should not be updated until the null state has been
+     * cleared with a call to setNull(false).
      *
      * @param isNull true to set a null value; false to indicate a non-null
-     *        value
+     * value
      */
     void setNull(boolean isNull);
 
@@ -61,6 +62,5 @@ public interface NullableValue extends DataValue
      */
     boolean isNull();
 }
-
 
 // End NullableValue.java

@@ -22,38 +22,54 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import java.util.*;
 
-import java.util.ArrayList;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * SqlOverlapsOperator represents the SQL:1999 standard OVERLAPS function
  * Determins if two anchored time intervals overlaps.
+ *
  * @author Wael Chatila
- * @since Dec 11, 2004
  * @version $Id$
+ * @since Dec 11, 2004
  */
-public class SqlOverlapsOperator extends SqlSpecialOperator {
-    private static final SqlWriter.FrameType OverlapsFrameType = SqlWriter.FrameType.create("OVERLAPS");
+public class SqlOverlapsOperator
+    extends SqlSpecialOperator
+{
 
-    public SqlOverlapsOperator() {
-        super("OVERLAPS", SqlKind.Overlaps, 30, true,
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final SqlWriter.FrameType OverlapsFrameType =
+        SqlWriter.FrameType.create("OVERLAPS");
+
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlOverlapsOperator()
+    {
+        super("OVERLAPS",
+            SqlKind.Overlaps,
+            30,
+            true,
             SqlTypeStrategies.rtiNullableBoolean,
-            SqlTypeStrategies.otiFirstKnown, null);
+            SqlTypeStrategies.otiFirstKnown,
+            null);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {
-        final SqlWriter.Frame frame = writer.startList(OverlapsFrameType, "(", ")");
+        final SqlWriter.Frame frame =
+            writer.startList(OverlapsFrameType, "(", ")");
         operands[0].unparse(writer, leftPrec, rightPrec);
         writer.sep(",", true);
         operands[1].unparse(writer, leftPrec, rightPrec);
@@ -66,7 +82,8 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         writer.endList(frame);
     }
 
-    public SqlOperandCountRange getOperandCountRange() {
+    public SqlOperandCountRange getOperandCountRange()
+    {
         return SqlOperandCountRange.Four;
     }
 
@@ -75,7 +92,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         if (4 == operandsCount) {
             return "({1}, {2}) {0} ({3}, {4})";
         }
-        assert(false);
+        assert (false);
         return null;
     }
 
@@ -83,15 +100,15 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
     {
         final String d = "DATETIME";
         final String i = "INTERVAL";
-        String[] typeNames = {
-            d, d,
-            d, i,
-            i, d,
-            i, i
-        };
+        String [] typeNames = {
+                d, d,
+                d, i,
+                i, d,
+                i, i
+            };
 
         StringBuffer ret = new StringBuffer();
-        for (int y = 0; y < typeNames.length; y+=2) {
+        for (int y = 0; y < typeNames.length; y += 2) {
             if (y > 0) {
                 ret.append(NL);
             }
@@ -99,7 +116,7 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
             list.add(d);
             list.add(typeNames[y]);
             list.add(d);
-            list.add(typeNames[y+1]);
+            list.add(typeNames[y + 1]);
             ret.append(SqlUtil.getAliasedSignature(this, opName, list));
         }
         return ret.toString();
@@ -113,11 +130,17 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         SqlValidator validator = callBinding.getValidator();
         SqlValidatorScope scope = callBinding.getScope();
         if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
-            callBinding, call.operands[0], 0, throwOnFailure)) {
+                callBinding,
+                call.operands[0],
+                0,
+                throwOnFailure)) {
             return false;
         }
         if (!SqlTypeStrategies.otcDatetime.checkSingleOperandType(
-            callBinding, call.operands[2], 0, throwOnFailure)) {
+                callBinding,
+                call.operands[2],
+                0,
+                throwOnFailure)) {
             return false;
         }
 
@@ -168,3 +191,5 @@ public class SqlOverlapsOperator extends SqlSpecialOperator {
         return true;
     }
 }
+
+// End SqlOverlapsOperator.java

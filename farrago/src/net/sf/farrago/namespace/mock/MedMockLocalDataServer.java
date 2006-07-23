@@ -10,12 +10,12 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.cwm.relational.*;
@@ -32,14 +33,15 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * MedMockLocalDataServer provides a mock implementation of the
- * {@link FarragoMedLocalDataServer} interface.
+ * MedMockLocalDataServer provides a mock implementation of the {@link
+ * FarragoMedLocalDataServer} interface.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -48,6 +50,9 @@ class MedMockLocalDataServer
     extends MedMockDataServer
     implements FarragoMedLocalDataServer
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     MedMockLocalDataServer(
         MedAbstractDataWrapper wrapper,
         String serverMofId,
@@ -55,7 +60,9 @@ class MedMockLocalDataServer
     {
         super(wrapper, serverMofId, props);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoMedLocalDataServer
     public void setFennelDbHandle(FennelDbHandle fennelDbHandle)
     {
@@ -70,7 +77,7 @@ class MedMockLocalDataServer
     {
         // no special validation rules
     }
-    
+
     // implement FarragoMedLocalDataServer
     public long createIndex(FemLocalIndex index)
         throws SQLException
@@ -98,7 +105,7 @@ class MedMockLocalDataServer
     {
         // ignore
     }
-    
+
     // implement FarragoMedDataServer
     public void registerRules(RelOptPlanner planner)
     {
@@ -119,17 +126,21 @@ class MedMockLocalDataServer
         String executorImpl =
             tableProps.getProperty(PROP_EXECUTOR_IMPL, PROPVAL_JAVA);
         assert (executorImpl.equals(PROPVAL_JAVA)
-            || executorImpl.equals(PROPVAL_FENNEL));
-        String udxSpecificName =
-            tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
+                || executorImpl.equals(PROPVAL_FENNEL));
+        String udxSpecificName = tableProps.getProperty(PROP_UDX_SPECIFIC_NAME);
 
         if (udxSpecificName != null) {
             assert (executorImpl.equals(PROPVAL_JAVA));
         }
 
-        return new MedMockColumnSet(
-            this,
-            localName, rowType, nRows, executorImpl, udxSpecificName);
+        return
+            new MedMockColumnSet(
+                this,
+                localName,
+                rowType,
+                nRows,
+                executorImpl,
+                udxSpecificName);
     }
 
     // implement FarragoMedLocalDataServer
@@ -140,21 +151,23 @@ class MedMockLocalDataServer
     {
         // Fake out the build plan with a dummy iterator which returns a
         // rowcount of 0.
-        MedMockIterRel rel = new MedMockIterRel(
-            new MedMockColumnSet(
-                this,
-                table.getQualifiedName(),
-                RelOptUtil.createDmlRowType(
-                    cluster.getTypeFactory()),
-                1,
-                "JAVA",
-                null),
-            cluster, null);
+        MedMockIterRel rel =
+            new MedMockIterRel(
+                new MedMockColumnSet(
+                    this,
+                    table.getQualifiedName(),
+                    RelOptUtil.createDmlRowType(
+                        cluster.getTypeFactory()),
+                    1,
+                    "JAVA",
+                    null),
+                cluster,
+                null);
 
         // Add a dummy project on top to keep the optimizer happy.
         return RelOptUtil.createRenameRel(
-            rel.getRowType(),
-            rel);
+                rel.getRowType(),
+                rel);
     }
 }
 

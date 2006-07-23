@@ -21,34 +21,37 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 
+
 /**
- * <code>FilterRelBase</code> is an abstract base class for implementations
- * of {@link FilterRel}.
+ * <code>FilterRelBase</code> is an abstract base class for implementations of
+ * {@link FilterRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FilterRelBase extends SingleRel
+public abstract class FilterRelBase
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final RexNode condition;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a filter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param traits the traits of this rel
      * @param child input relational expression
      * @param condition boolean expression which determines whether a row is
-     *        allowed to pass
+     * allowed to pass
      */
     protected FilterRelBase(
         RelOptCluster cluster,
@@ -60,11 +63,11 @@ public abstract class FilterRelBase extends SingleRel
         this.condition = condition;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RexNode [] getChildExps()
     {
-        return new RexNode [] { condition };
+        return new RexNode[] { condition };
     }
 
     public RexNode getCondition()
@@ -83,12 +86,16 @@ public abstract class FilterRelBase extends SingleRel
     // override RelNode
     public double getRows()
     {
-        return estimateFilteredRows(getChild(), condition);
+        return estimateFilteredRows(
+                getChild(),
+                condition);
     }
 
-    public static double estimateFilteredRows(RelNode child, RexNode condition)
+    public static double estimateFilteredRows(RelNode child,
+        RexNode condition)
     {
-        return RelMetadataQuery.getRowCount(child)
+        return
+            RelMetadataQuery.getRowCount(child)
             * RelMetadataQuery.getSelectivity(child, condition);
     }
 
@@ -96,7 +103,7 @@ public abstract class FilterRelBase extends SingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "condition" });
+            new String[] { "child", "condition" });
     }
 }
 

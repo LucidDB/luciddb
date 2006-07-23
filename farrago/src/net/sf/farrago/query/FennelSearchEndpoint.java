@@ -23,16 +23,16 @@ package net.sf.farrago.query;
 
 import java.math.*;
 
+
 /**
- * FennelSearchEndpoint defines an enumeration corresponding
- * to fennel/common/SearchEndpoint.h.  Any changes there must
- * be applied here as well.
+ * FennelSearchEndpoint defines an enumeration corresponding to
+ * fennel/common/SearchEndpoint.h. Any changes there must be applied here as
+ * well.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum FennelSearchEndpoint
-{
+public enum FennelSearchEndpoint {
     /**
      * Defines the beginning of an interval which is unbounded below.  The
      * associated key value should be all null.
@@ -43,30 +43,30 @@ public enum FennelSearchEndpoint
      * Defines the beginning of an interval which has an open bound below.
      */
     SEARCH_OPEN_LOWER('('),
-    
+
     /**
      * Defines the beginning of an interval which has a closed bound below.
      */
     SEARCH_CLOSED_LOWER('['),
-    
+
     /**
      * Defines the end of an interval which has an open bound above.
      */
     SEARCH_OPEN_UPPER(')'),
-    
+
     /**
      * Defines the end of an interval which has a closed bound above.
      */
     SEARCH_CLOSED_UPPER(']'),
-    
+
     /**
      * Defines the end of an interval which is unbounded above.  The associated
      * key value should be all null.
      */
     SEARCH_UNBOUNDED_UPPER('+');
-    
+
     private final String symbol;
-    
+
     private FennelSearchEndpoint(char symbol)
     {
         this.symbol = new String(new char[] { symbol });
@@ -81,4 +81,12 @@ public enum FennelSearchEndpoint
     }
 }
 
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
+// End FennelSearchEndpoint.java
 // End FennelSearchEndpoint.java

@@ -22,8 +22,8 @@
 package net.sf.farrago.session;
 
 /**
- * FarragoSessionTxnId is an opaque transaction ID provided by
- * {@link FarragoSessionTxnMgr}.
+ * FarragoSessionTxnId is an opaque transaction ID provided by {@link
+ * FarragoSessionTxnMgr}.
  *
  * @author John V. Sichi
  * @version $Id$

@@ -22,35 +22,40 @@
 */
 package org.eigenbase.sql.fun;
 
-import openjava.mop.OJClass;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlKind;
+import openjava.mop.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+
 
 /**
  * <code>HistogramAgg</code> is base operator which supports the Histogram
- * MIN/MAX aggregatoin functions. which returns the sum of the values
- * which go into it. It has precisely one argument of numeric type
- * (<code>int</code>, <code>long</code>, <code>float</code>,
- * <code>double</code>) results are retrived with (<code>HistogramMin</code>)
- * and (<code>HistogramMax</code>)
+ * MIN/MAX aggregatoin functions. which returns the sum of the values which go
+ * into it. It has precisely one argument of numeric type (<code>int</code>,
+ * <code>long</code>, <code>float</code>, <code>double</code>) results are
+ * retrived with (<code>HistogramMin</code>) and (<code>HistogramMax</code>)
  *
  * @author jfrost
  * @version $Id$
  */
-public class SqlHistogramAggFunction extends SqlAggFunction
+public class SqlHistogramAggFunction
+    extends SqlAggFunction
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType type;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlHistogramAggFunction(RelDataType type)
     {
         super(
-            "$HISTOGRAM", SqlKind.Function,
-//            SqlTypeStrategies.rtiFirstArgType,
+            "$HISTOGRAM",
+            SqlKind.Function,
+
+            //            SqlTypeStrategies.rtiFirstArgType,
             SqlTypeStrategies.rtiHistogram,
             null,
             SqlTypeStrategies.otcNumericOrString,
@@ -58,9 +63,11 @@ public class SqlHistogramAggFunction extends SqlAggFunction
         this.type = type;
     }
 
-    public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
+    //~ Methods ----------------------------------------------------------------
+
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
-        return new RelDataType [] { type };
+        return new RelDataType[] { type };
     }
 
     public RelDataType getType()

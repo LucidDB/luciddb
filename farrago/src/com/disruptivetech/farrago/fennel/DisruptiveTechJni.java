@@ -22,6 +22,7 @@ package com.disruptivetech.farrago.fennel;
 
 import org.eigenbase.util.*;
 
+
 /**
  * JNI interface for Disruptive Tech extensions to Fennel which are used by
  * Farrago.
@@ -31,9 +32,14 @@ import org.eigenbase.util.*;
  */
 public abstract class DisruptiveTechJni
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
         Util.loadLibrary("farrago_dt");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public static native void registerStreamFactory(long hStreamGraph);
 }

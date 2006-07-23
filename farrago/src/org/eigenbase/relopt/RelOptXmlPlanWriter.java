@@ -22,23 +22,29 @@
 */
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.xom.XMLOutput;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.*;
+import java.io.*;
 
-import java.io.PrintWriter;
+import org.eigenbase.rel.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.xom.*;
+
 
 /**
  * Callback for a relational expression to dump in XML format.
  *
- * @testcase {@link org.eigenbase.test.SqlToRelConverterTest#testExplainAsXml()} 
+ * @testcase
  */
-public class RelOptXmlPlanWriter extends RelOptPlanWriter
+public class RelOptXmlPlanWriter
+    extends RelOptPlanWriter
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final XMLOutput xmlOutput;
     boolean generic = true;
+
+    //~ Constructors -----------------------------------------------------------
 
     // TODO jvs 23-Dec-2005:  honor detail level.  The current inheritance
     // structure makes this difficult without duplication; need to factor
@@ -52,7 +58,9 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
         xmlOutput.setCompact(false);
     }
 
-    public void explain(RelNode rel, String[] terms, Object[] values)
+    //~ Methods ----------------------------------------------------------------
+
+    public void explain(RelNode rel, String [] terms, Object [] values)
     {
         if (generic) {
             explainGeneric(rel, terms, values);
@@ -62,8 +70,8 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
     }
 
     /**
-     * Generates generic XML (sometimes called 'element-oriented XML').
-     * Like this:
+     * Generates generic XML (sometimes called 'element-oriented XML'). Like
+     * this:
      *
      * <pre>
      * &lt;RelNode id="1" type="Join"&gt;
@@ -84,17 +92,21 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
      * @param terms
      * @param values
      */
-    private void explainGeneric(RelNode rel, String[] terms, Object[] values)
+    private void explainGeneric(RelNode rel,
+        String [] terms,
+        Object [] values)
     {
         RelNode [] inputs = rel.getInputs();
         RexNode [] children = rel.getChildExps();
-        assert terms.length == (inputs.length + children.length
-            + values.length) : "terms.length=" + terms.length
+        assert terms.length
+            == (inputs.length + children.length
+                + values.length) : "terms.length=" + terms.length
             + " inputs.length=" + inputs.length + " children.length="
             + children.length + " values.length=" + values.length;
         String relType = rel.getRelTypeName();
         xmlOutput.beginBeginTag("RelNode");
         xmlOutput.attribute("type", relType);
+
         //xmlOutput.attribute("id", rel.getId() + "");
         xmlOutput.endBeginTag("RelNode");
 
@@ -127,8 +139,8 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
     }
 
     /**
-     * Generates specific XML (sometimes called 'attribute-oriented XML').
-     * Like this:
+     * Generates specific XML (sometimes called 'attribute-oriented XML'). Like
+     * this:
      *
      * <pre>
      * &lt;Join condition="EMP.DEPTNO = DEPT.DEPTNO"&gt;
@@ -141,11 +153,15 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
      * @param terms
      * @param values
      */
-    private void explainSpecific(RelNode rel, String[] terms, Object[] values) {
+    private void explainSpecific(RelNode rel,
+        String [] terms,
+        Object [] values)
+    {
         RelNode [] inputs = rel.getInputs();
         RexNode [] children = rel.getChildExps();
-        assert terms.length == (inputs.length + children.length
-            + values.length) : "terms.length=" + terms.length
+        assert terms.length
+            == (inputs.length + children.length
+                + values.length) : "terms.length=" + terms.length
             + " inputs.length=" + inputs.length + " children.length="
             + children.length + " values.length=" + values.length;
         String tagName = rel.getRelTypeName();
@@ -155,11 +171,15 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
         int j = 0;
         for (int i = 0; i < children.length; i++) {
             RexNode child = children[i];
-            xmlOutput.attribute(terms[inputs.length + j++], child.toString());
+            xmlOutput.attribute(
+                terms[inputs.length + j++],
+                child.toString());
         }
         for (int i = 0; i < values.length; i++) {
             Object value = values[i];
-            xmlOutput.attribute(terms[inputs.length + j++], value.toString());
+            xmlOutput.attribute(
+                terms[inputs.length + j++],
+                value.toString());
         }
         xmlOutput.endBeginTag(tagName);
         level++;
@@ -169,8 +189,6 @@ public class RelOptXmlPlanWriter extends RelOptPlanWriter
         }
         level--;
     }
-
 }
 
 // End RelOptXmlPlanWriter.java
-

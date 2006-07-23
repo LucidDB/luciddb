@@ -23,38 +23,41 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
-import org.eigenbase.util14.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorUtil;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.rel.RelNode;
+import java.nio.charset.*;
 
 import java.util.*;
-import java.nio.charset.Charset;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
+
 
 /**
  * Contains utility methods used during SQL validation or type derivation.
  *
  * @author Wael Chatila
- * @since Sep 3, 2004
  * @version $Id$
+ * @since Sep 3, 2004
  */
 public abstract class SqlTypeUtil
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Checks whether two types or more are char comparable.
      *
+     * @return Returns true if all operands are of char type and if they are
+     * comparable, i.e. of the same charset and collation of same charset
+     *
      * @pre argTypes != null
      * @pre argTypes.length >= 2
-     * @return Returns true if all operands are of char type
-     *         and if they are comparable, i.e. of the same charset and
-     *         collation of same charset
      */
     public static boolean isCharTypeComparable(RelDataType [] argTypes)
     {
@@ -82,7 +85,7 @@ public abstract class SqlTypeUtil
                     "RelDataType object should have been assigned a "
                     + "(default) collation when calling deriveType");
             } else if (!t0.getCollation().getCharset().equals(
-                        t1.getCollation().getCharset())) {
+                    t1.getCollation().getCharset())) {
                 return false;
             }
         }
@@ -119,8 +122,7 @@ public abstract class SqlTypeUtil
         Util.pre(2 <= operands.length, "2<=operands.length");
 
         if (!isCharTypeComparable(
-                deriveAndCollectTypes(validator, scope, operands)))
-        {
+                deriveAndCollectTypes(validator, scope, operands))) {
             if (throwOnFailure) {
                 String msg = "";
                 for (int i = 0; i < operands.length; i++) {
@@ -137,8 +139,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Iterates over all operands, derives their types, and collects them
-     * into an array.
+     * Iterates over all operands, derives their types, and collects them into
+     * an array.
      */
     public static RelDataType [] deriveAndCollectTypes(
         SqlValidator validator,
@@ -172,9 +174,8 @@ public abstract class SqlTypeUtil
      * Promotes a type to a row type (does nothing if it already is one).
      *
      * @param type type to be promoted
-     *
-     * @param fieldName name to give field in row type;
-     * null for default of "ROW_VALUE"
+     * @param fieldName name to give field in row type; null for default of
+     * "ROW_VALUE"
      *
      * @return row type
      */
@@ -187,9 +188,10 @@ public abstract class SqlTypeUtil
             if (fieldName == null) {
                 fieldName = "ROW_VALUE";
             }
-            type = typeFactory.createStructType(
-                new RelDataType [] { type },
-                new String [] { fieldName });
+            type =
+                typeFactory.createStructType(
+                    new RelDataType[] { type },
+                    new String[] { fieldName });
         }
         return type;
     }
@@ -235,7 +237,7 @@ public abstract class SqlTypeUtil
     /**
      * Returns whether one or more of an array of types is nullable.
      */
-    public static boolean containsNullable(RelDataType[] types)
+    public static boolean containsNullable(RelDataType [] types)
     {
         for (int i = 0; i < types.length; i++) {
             if (containsNullable(types[i])) {
@@ -246,8 +248,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Determines whether a type or any of its fields (if a structured type)
-     * are nullable.
+     * Determines whether a type or any of its fields (if a structured type) are
+     * nullable.
      */
     public static boolean containsNullable(RelDataType type)
     {
@@ -278,7 +280,8 @@ public abstract class SqlTypeUtil
                 RelDataType argType = argTypes[i];
                 msg += argType.toString();
             }
-            throw EigenbaseResource.instance().TypeNotComparableEachOther.ex(msg);
+            throw EigenbaseResource.instance().TypeNotComparableEachOther.ex(
+                msg);
         }
     }
 
@@ -287,19 +290,21 @@ public abstract class SqlTypeUtil
      * typeName.equals(SqlTypeName.Any) true is always returned.
      */
     public static boolean isOfSameTypeName(SqlTypeName typeName,
-        RelDataType type) {
-        return SqlTypeName.Any.equals(typeName) ||
-               typeName.equals(type.getSqlTypeName());
+        RelDataType type)
+    {
+        return
+            SqlTypeName.Any.equals(typeName)
+            || typeName.equals(type.getSqlTypeName());
     }
 
     /**
-     * Returns true if any element in typeNames
-     * matches type.getSqlTypeName().
+     * Returns true if any element in typeNames matches type.getSqlTypeName().
      *
      * @see {@link #isOfSameTypeName(SqlTypeName, RelDataType)}
      */
-    public static boolean isOfSameTypeName(SqlTypeName[] typeNames,
-        RelDataType type) {
+    public static boolean isOfSameTypeName(SqlTypeName [] typeNames,
+        RelDataType type)
+    {
         for (int i = 0; i < typeNames.length; i++) {
             SqlTypeName typeName = typeNames[i];
             if (isOfSameTypeName(typeName, type)) {
@@ -312,14 +317,16 @@ public abstract class SqlTypeUtil
     /**
      * @return true if type is DATE, TIME, or TIMESTAMP
      */
-    public static boolean isDatetime(RelDataType type) {
+    public static boolean isDatetime(RelDataType type)
+    {
         return isOfSameTypeName(SqlTypeName.datetimeTypes, type);
     }
 
     /**
      * @return true if type is some kind of INTERVAL
      */
-    public static boolean isInterval(RelDataType type) {
+    public static boolean isInterval(RelDataType type)
+    {
         return isOfSameTypeName(SqlTypeName.timeIntervalTypes, type);
     }
 
@@ -336,8 +343,9 @@ public abstract class SqlTypeUtil
      */
     public static boolean inCharFamily(SqlTypeName typeName)
     {
-        return SqlTypeFamily.getFamilyForSqlType(typeName) ==
-               SqlTypeFamily.Character;
+        return
+            SqlTypeFamily.getFamilyForSqlType(typeName)
+            == SqlTypeFamily.Character;
     }
 
     /**
@@ -357,8 +365,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * @return true if two types are in same type family,
-     * or one or the other is of type SqlTypeName.Null
+     * @return true if two types are in same type family, or one or the other is
+     * of type SqlTypeName.Null
      */
     public static boolean inSameFamilyOrNull(RelDataType t1, RelDataType t2)
     {
@@ -376,8 +384,9 @@ public abstract class SqlTypeUtil
      */
     public static boolean inCharOrBinaryFamilies(RelDataType type)
     {
-        return type.getFamily() == SqlTypeFamily.Character
-            || type.getFamily() == SqlTypeFamily.Binary;
+        return
+            (type.getFamily() == SqlTypeFamily.Character)
+            || (type.getFamily() == SqlTypeFamily.Binary);
     }
 
     /**
@@ -401,6 +410,7 @@ public abstract class SqlTypeUtil
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Varbinary_ordinal:
+
         // TODO angel 8-June-2005: Multiset should be LOB
         case SqlTypeName.Multiset_ordinal:
             return true;
@@ -493,20 +503,20 @@ public abstract class SqlTypeUtil
         }
     }
 
-
     /**
      * @return true if type is numeric
      */
-    public static boolean isNumeric(RelDataType type) {
+    public static boolean isNumeric(RelDataType type)
+    {
         return isExactNumeric(type) || isApproximateNumeric(type);
     }
 
     /**
-     * Tests whether two types have the same name and structure, possibly
-     * with differing modifiers.  For example, VARCHAR(1) and VARCHAR(10)
-     * are considered the same, while VARCHAR(1) and CHAR(1) are
-     * considered different.  Likewise, VARCHAR(1) MULTISET and
-     * VARCHAR(10) MULTISET are considered the same.
+     * Tests whether two types have the same name and structure, possibly with
+     * differing modifiers. For example, VARCHAR(1) and VARCHAR(10) are
+     * considered the same, while VARCHAR(1) and CHAR(1) are considered
+     * different. Likewise, VARCHAR(1) MULTISET and VARCHAR(10) MULTISET are
+     * considered the same.
      *
      * @return true if types have same name and structure
      */
@@ -522,8 +532,9 @@ public abstract class SqlTypeUtil
             RelDataTypeField [] fields1 = t1.getFields();
             RelDataTypeField [] fields2 = t2.getFields();
             for (int i = 0; i < fields1.length; ++i) {
-                if (!sameNamedType(fields1[i].getType(), fields2[i].getType()))
-                {
+                if (!sameNamedType(
+                        fields1[i].getType(),
+                        fields2[i].getType())) {
                     return false;
                 }
             }
@@ -544,15 +555,15 @@ public abstract class SqlTypeUtil
 
     /**
      * Computes the maximum number of bytes required to represent a value of a
-     * type having user-defined precision.  This computation assumes no
-     * overhead such as length indicators and NUL-terminators.  Complex types
-     * for which multiple representations are possible (e.g. DECIMAL or
-     * TIMESTAMP) return 0.
+     * type having user-defined precision. This computation assumes no overhead
+     * such as length indicators and NUL-terminators. Complex types for which
+     * multiple representations are possible (e.g. DECIMAL or TIMESTAMP) return
+     * 0.
      *
      * @param type type for which to compute storage
      *
-     * @return maximum bytes, or 0 for a fixed-width type or type
-     * with unknown maximum
+     * @return maximum bytes, or 0 for a fixed-width type or type with unknown
+     * maximum
      */
     public static int getMaxByteSize(RelDataType type)
     {
@@ -565,19 +576,21 @@ public abstract class SqlTypeUtil
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
-            return (int) Math.ceil(
-                ((double) type.getPrecision()) *
-                type.getCharset().newEncoder().maxBytesPerChar());
+            return
+                (int) Math.ceil(
+                    ((double) type.getPrecision())
+                    * type.getCharset().newEncoder().maxBytesPerChar());
 
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Varbinary_ordinal:
             return type.getPrecision();
 
         case SqlTypeName.Multiset_ordinal:
+
             // TODO Wael Jan-24-2005: Need a better way to tell fennel this
             // number. This a very generic place and implementation details like
-            // this doesnt belong here. Waiting to change this once we have
-            // blob support
+            // this doesnt belong here. Waiting to change this once we have blob
+            // support
             return 4096;
 
         default:
@@ -587,13 +600,13 @@ public abstract class SqlTypeUtil
 
     /**
      * Determines the minimum unscaled value of a numeric type
-     * 
+     *
      * @param type a numeric type
      */
     public static long getMinValue(RelDataType type)
     {
         SqlTypeName typeName = type.getSqlTypeName();
-        switch(typeName.getOrdinal()) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Tinyint_ordinal:
             return Byte.MIN_VALUE;
         case SqlTypeName.Smallint_ordinal:
@@ -610,13 +623,13 @@ public abstract class SqlTypeUtil
 
     /**
      * Determines the maximum unscaled value of a numeric type
-     * 
+     *
      * @param type a numeric type
      */
     public static long getMaxValue(RelDataType type)
     {
         SqlTypeName typeName = type.getSqlTypeName();
-        switch(typeName.getOrdinal()) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Tinyint_ordinal:
             return Byte.MAX_VALUE;
         case SqlTypeName.Smallint_ordinal:
@@ -632,8 +645,8 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * @return true if type has a representation as a Java primitive
-     * (ignoring nullability)
+     * @return true if type has a representation as a Java primitive (ignoring
+     * nullability)
      */
     public static boolean isJavaPrimitive(RelDataType type)
     {
@@ -691,12 +704,10 @@ public abstract class SqlTypeUtil
         }
     }
 
-
     /**
      * Tests assignability of a value to a site.
      *
      * @param toType type of the target site
-     *
      * @param fromType type of the source value
      *
      * @return true iff assignable
@@ -714,24 +725,19 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Compares two types and returns true if fromType can
-     * be cast to toType.
+     * Compares two types and returns true if fromType can be cast to toType.
      *
-     *<p>
-     *
-     * REVIEW jvs 17-Dec-2004:  the coerce param below shouldn't really be
-     * necessary.  We're using it as a hack because
-     * {@link SqlTypeFactoryImpl#leastRestrictiveSqlType} isn't complete enough
-     * yet.  Once it is, this param (and the non-coerce rules of
-     * {@link SqlTypeAssignmentRules}) should go away.
+     * <p>REVIEW jvs 17-Dec-2004: the coerce param below shouldn't really be
+     * necessary. We're using it as a hack because {@link
+     * SqlTypeFactoryImpl#leastRestrictiveSqlType} isn't complete enough yet.
+     * Once it is, this param (and the non-coerce rules of {@link
+     * SqlTypeAssignmentRules}) should go away.
      *
      * @param toType target of assignment
-     *
      * @param fromType source of assignment
-     *
-     * @param coerce if true, the SQL rules for CAST are used; if
-     * false, the rules are similar to Java; e.g. you can't assign
-     * short x = (int) y, and you can't assign int x = (String) z.
+     * @param coerce if true, the SQL rules for CAST are used; if false, the
+     * rules are similar to Java; e.g. you can't assign short x = (int) y, and
+     * you can't assign int x = (String) z.
      *
      * @return true iff cast is legal
      */
@@ -749,15 +755,17 @@ public abstract class SqlTypeUtil
                     // can't cast between different distinct types
                     return false;
                 }
-                return canCastFrom(
-                    toType.getFields()[0].getType(),
-                    fromType,
-                    coerce);
+                return
+                    canCastFrom(
+                        toType.getFields()[0].getType(),
+                        fromType,
+                        coerce);
             } else if (fromType.getSqlTypeName() == SqlTypeName.Distinct) {
-                return canCastFrom(
-                    toType,
-                    fromType.getFields()[0].getType(),
-                    coerce);
+                return
+                    canCastFrom(
+                        toType,
+                        fromType.getFields()[0].getType(),
+                        coerce);
             } else if (toType.getSqlTypeName() == SqlTypeName.Row) {
                 if (fromType.getSqlTypeName() != SqlTypeName.Row) {
                     return false;
@@ -770,10 +778,9 @@ public abstract class SqlTypeUtil
                     RelDataTypeField toField = toType.getFields()[i];
                     RelDataTypeField fromField = fromType.getFields()[i];
                     if (!canCastFrom(
-                        toField.getType(),
-                        fromField.getType(),
-                        coerce))
-                    {
+                            toField.getType(),
+                            fromField.getType(),
+                            coerce)) {
                         return false;
                     }
                 }
@@ -785,10 +792,11 @@ public abstract class SqlTypeUtil
                 if (fromType.getSqlTypeName() != SqlTypeName.Multiset) {
                     return false;
                 }
-                return canCastFrom(
-                    toType.getComponentType(),
-                    fromType.getComponentType(),
-                    coerce);
+                return
+                    canCastFrom(
+                        toType.getComponentType(),
+                        fromType.getComponentType(),
+                        coerce);
             } else if (fromType.getSqlTypeName() == SqlTypeName.Multiset) {
                 return false;
             } else {
@@ -815,10 +823,10 @@ public abstract class SqlTypeUtil
     /**
      * @return the field names of a struct type
      */
-    public static String[] getFieldNames(RelDataType type)
+    public static String [] getFieldNames(RelDataType type)
     {
-        RelDataTypeField[] fields = type.getFields();
-        String[] ret = new String[fields.length];
+        RelDataTypeField [] fields = type.getFields();
+        String [] ret = new String[fields.length];
         for (int i = 0; i < fields.length; i++) {
             ret[i] = fields[i].getName();
         }
@@ -828,10 +836,10 @@ public abstract class SqlTypeUtil
     /**
      * @return the field types of a struct type
      */
-    public static RelDataType[] getFieldTypes(RelDataType type)
+    public static RelDataType [] getFieldTypes(RelDataType type)
     {
-        RelDataTypeField[] fields = type.getFields();
-        RelDataType[] ret = new RelDataType[fields.length];
+        RelDataTypeField [] fields = type.getFields();
+        RelDataType [] ret = new RelDataType[fields.length];
         for (int i = 0; i < fields.length; i++) {
             ret[i] = fields[i].getType();
         }
@@ -839,19 +847,16 @@ public abstract class SqlTypeUtil
     }
 
     /**
-     * Flattens a record type by recursively expanding any
-     * fields which are themselves record types.  For each
-     * record type, a representative null value field is also prepended
-     * (with state NULL for a null value and FALSE for non-null),
-     * and all component types are asserted to be nullable, since
+     * Flattens a record type by recursively expanding any fields which are
+     * themselves record types. For each record type, a representative null
+     * value field is also prepended (with state NULL for a null value and FALSE
+     * for non-null), and all component types are asserted to be nullable, since
      * SQL doesn't allow NOT NULL to be specified on attributes.
      *
      * @param typeFactory factory which should produced flattened type
-     *
      * @param recordType type with possible nesting
-     *
-     * @param flatteningMap if non-null, receives map from unflattened
-     * ordinal to flattened ordinal (must have length at least
+     * @param flatteningMap if non-null, receives map from unflattened ordinal
+     * to flattened ordinal (must have length at least
      * recordType.getFieldList().size())
      *
      * @return flattened equivalent
@@ -881,37 +886,34 @@ public abstract class SqlTypeUtil
             ++i;
             types.add(field.getType());
             fieldNames.add(field.getName() + "_" + i);
-        }        
+        }
         return typeFactory.createStructType(types, fieldNames);
     }
 
-    
     /**
      * Creates a record type with anonymous field names.
-     */ 
+     */
     public static RelDataType createStructType(
         RelDataTypeFactory typeFactory,
-        final RelDataType[] types)
+        final RelDataType [] types)
     {
-        return typeFactory.createStructType(
-            new RelDataTypeFactory.FieldInfo()
-            {
-                public int getFieldCount()
-                {
-                    return types.length;
-                }
+        return
+            typeFactory.createStructType(new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return types.length;
+                    }
 
-                public String getFieldName(int index)
-                {
-                    return "$" + index;
-                }
+                    public String getFieldName(int index)
+                    {
+                        return "$" + index;
+                    }
 
-                public RelDataType getFieldType(int index)
-                {
-                    return types[index];
-                }
-            }
-        );
+                    public RelDataType getFieldType(int index)
+                    {
+                        return types[index];
+                    }
+                });
     }
 
     public static boolean needsNullIndicator(RelDataType recordType)
@@ -937,13 +939,16 @@ public abstract class SqlTypeUtil
             RelDataType indicatorType =
                 typeFactory.createSqlType(SqlTypeName.Boolean);
             if (type.isNullable()) {
-                indicatorType = typeFactory.createTypeWithNullability(
-                    indicatorType, true);
+                indicatorType =
+                    typeFactory.createTypeWithNullability(
+                        indicatorType,
+                        true);
             }
-            RelDataTypeField nullIndicatorField = new RelDataTypeFieldImpl(
-                "NULL_VALUE",
-                0,
-                indicatorType);
+            RelDataTypeField nullIndicatorField =
+                new RelDataTypeFieldImpl(
+                    "NULL_VALUE",
+                    0,
+                    indicatorType);
             list.add(nullIndicatorField);
             nested = true;
         }
@@ -962,6 +967,7 @@ public abstract class SqlTypeUtil
                     null);
             } else if (field.getType().getComponentType() != null) {
                 nested = true;
+
                 // TODO jvs 14-Feb-2005:  generalize to any kind of
                 // collection type
                 RelDataType flattenedCollectionType =
@@ -971,10 +977,11 @@ public abstract class SqlTypeUtil
                             field.getType().getComponentType(),
                             null),
                         -1);
-                field = new RelDataTypeFieldImpl(
-                    field.getName(),
-                    field.getIndex(),
-                    flattenedCollectionType);
+                field =
+                    new RelDataTypeFieldImpl(
+                        field.getName(),
+                        field.getIndex(),
+                        flattenedCollectionType);
                 list.add(field);
             } else {
                 list.add(field);
@@ -996,9 +1003,11 @@ public abstract class SqlTypeUtil
 
         // TODO jvs 28-Dec-2004:  support row types, user-defined types,
         // interval types, multiset types, etc
-        assert(typeName != null);
+        assert (typeName != null);
         SqlIdentifier typeIdentifier =
-            new SqlIdentifier(typeName.getName(), SqlParserPos.ZERO);
+            new SqlIdentifier(
+                typeName.getName(),
+                SqlParserPos.ZERO);
 
         String charSetName = null;
 
@@ -1014,29 +1023,32 @@ public abstract class SqlTypeUtil
         // Use neg numbers to indicate unspecified precision/scale
 
         if (typeName.allowsScale()) {
-            return new SqlDataTypeSpec(
-                typeIdentifier,
-                type.getPrecision(),
-                type.getScale(),
-                charSetName,
-                null,
-                SqlParserPos.ZERO);
+            return
+                new SqlDataTypeSpec(
+                    typeIdentifier,
+                    type.getPrecision(),
+                    type.getScale(),
+                    charSetName,
+                    null,
+                    SqlParserPos.ZERO);
         } else if (typeName.allowsPrec()) {
-            return new SqlDataTypeSpec(
-                typeIdentifier,
-                type.getPrecision(),
-                -1,
-                charSetName,
-                null,
-                SqlParserPos.ZERO);
+            return
+                new SqlDataTypeSpec(
+                    typeIdentifier,
+                    type.getPrecision(),
+                    -1,
+                    charSetName,
+                    null,
+                    SqlParserPos.ZERO);
         } else {
-            return new SqlDataTypeSpec(
-                typeIdentifier,
-                -1,
-                -1,
-                charSetName,
-                null,
-                SqlParserPos.ZERO);
+            return
+                new SqlDataTypeSpec(
+                    typeIdentifier,
+                    -1,
+                    -1,
+                    charSetName,
+                    null,
+                    SqlParserPos.ZERO);
         }
     }
 
@@ -1055,8 +1067,9 @@ public abstract class SqlTypeUtil
      *
      * @param type Type
      * @param typeFactory Type factory
-     * @return Type with added charset and collation, or unchanged type if
-     *   it is not a char type.
+     *
+     * @return Type with added charset and collation, or unchanged type if it is
+     * not a char type.
      */
     public static RelDataType addCharsetAndCollation(
         RelDataType type,
@@ -1076,12 +1089,14 @@ public abstract class SqlTypeUtil
 
         // todo: should get the implicit collation from repository
         //   instead of null
-        type = typeFactory.createTypeWithCharsetAndCollation(
-            type, charset, collation);
+        type =
+            typeFactory.createTypeWithCharsetAndCollation(
+                type,
+                charset,
+                collation);
         SqlValidatorUtil.checkCharsetAndCollateConsistentIfCharType(type);
         return type;
     }
-
 }
 
 // End SqlTypeUtil.java

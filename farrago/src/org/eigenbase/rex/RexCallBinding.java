@@ -21,29 +21,38 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.util.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
- * <code>RexCallBinding</code> implements {@link SqlOperatorBinding}
- * by referring to an underlying collection of {@link RexNode} operands.
+ * <code>RexCallBinding</code> implements {@link SqlOperatorBinding} by
+ * referring to an underlying collection of {@link RexNode} operands.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class RexCallBinding extends SqlOperatorBinding
+public class RexCallBinding
+    extends SqlOperatorBinding
 {
-    private final RexNode[] operands;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final RexNode [] operands;
+
+    //~ Constructors -----------------------------------------------------------
 
     public RexCallBinding(
         RelDataTypeFactory typeFactory,
         SqlOperator sqlOperator,
-        RexNode[] operands)
+        RexNode [] operands)
     {
         super(typeFactory, sqlOperator);
         this.operands = operands;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement SqlOperatorBinding
     public String getStringLiteralOperand(int ordinal)

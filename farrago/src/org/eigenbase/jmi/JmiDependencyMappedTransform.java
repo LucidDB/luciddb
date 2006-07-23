@@ -23,8 +23,9 @@ package org.eigenbase.jmi;
 
 import java.util.*;
 
-import javax.jmi.reflect.*;
 import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
 
 /**
  * JmiDependencyMappedTransform implements {@link JmiDependencyTransform} by
@@ -33,8 +34,12 @@ import javax.jmi.model.*;
  * @author John Sichi
  * @version $Id$
  */
-public class JmiDependencyMappedTransform implements JmiDependencyTransform
+public class JmiDependencyMappedTransform
+    implements JmiDependencyTransform
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Map<JmiAssocEdge, List<AssocRule>> map;
 
     private final JmiModelView modelView;
@@ -43,14 +48,14 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
 
     private boolean sortByMofId;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new mapped transform.  Initially, all associations are mapped
-     * to JmiAssocMapping.REMOVAL.  Callers should use setXXX methods to change
+     * Creates a new mapped transform. Initially, all associations are mapped to
+     * JmiAssocMapping.REMOVAL. Callers should use setXXX methods to change
      * mappings.
      *
-     * @param modelView the model for which dependencies are being
-     * defined
-     *
+     * @param modelView the model for which dependencies are being defined
      * @param produceSelfLoops see {@link
      * JmiDependencyTransform#shouldProduceSelfLoops}
      */
@@ -64,21 +69,23 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         sortByMofId = true;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Disables sorting by MofId (which is enabled by default),
-     * causing {@link #shouldSortByMofId} to return false.
+     * Disables sorting by MofId (which is enabled by default), causing {@link
+     * #shouldSortByMofId} to return false.
      */
     public void disableSortByMofId()
     {
         sortByMofId = false;
     }
-    
+
     // implement JmiDependencyTransform
     public boolean shouldSortByMofId()
     {
         return sortByMofId;
     }
-    
+
     // implement JmiDependencyTransform
     public Collection<RefObject> getSourceNeighbors(
         RefObject target,
@@ -90,40 +97,49 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         JmiClassVertex targetClassVertex =
             modelView.getModelGraph().getVertexForRefClass(refClass);
         for (Object assocEdgeObj
-                 : modelView.getAllIncomingAssocEdges(targetClassVertex))
-        {
+            : modelView.getAllIncomingAssocEdges(targetClassVertex)) {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             List<AssocRule> rules = map.get(assocEdge);
             if (rules == null) {
                 continue;
             }
+
             // optimize common case:  no refinements
             if (rules.size() == 1) {
                 if (rules.get(0).mapping != mapping) {
                     continue;
                 }
             }
-            if (!(target.refIsInstanceOf(
-                      assocEdge.getTargetEnd().getType(), true)))
-            {
+            if (!(
+                    target.refIsInstanceOf(
+                        assocEdge.getTargetEnd().getType(),
+                        true)
+                 )) {
                 continue;
             }
-            Collection sources = assocEdge.getRefAssoc().refQuery(
-                assocEdge.getTargetEnd(), target);
+            Collection sources =
+                assocEdge.getRefAssoc().refQuery(
+                    assocEdge.getTargetEnd(),
+                    target);
 
             if (rules.size() == 1) {
                 AssocRule rule = rules.get(0);
-                if (rule.sourceClass == null && rule.targetClass == null) {
+                if ((rule.sourceClass == null) && (rule.targetClass == null)) {
                     // optimize common case:  no refinements
                     collection.addAll(sources);
                     continue;
                 }
             }
+
             // deal with refinements
             for (Object obj : sources) {
                 RefObject source = (RefObject) obj;
                 applyRefinedRules(
-                    rules, source, target, collection, mapping);
+                    rules,
+                    source,
+                    target,
+                    collection,
+                    mapping);
             }
         }
         collection.retainAll(candidates);
@@ -133,8 +149,7 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         return collection;
     }
 
-    private void applyRefinedRules(
-        List<AssocRule> rules,
+    private void applyRefinedRules(List<AssocRule> rules,
         RefObject source,
         RefObject target,
         Collection result,
@@ -157,7 +172,7 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
             break;
         }
     }
-    
+
     // implement JmiDependencyTransform
     public boolean shouldProduceSelfLoops()
     {
@@ -169,15 +184,14 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
      * discarding any existing mappings for those associations.
      *
      * @param requestedKind association filter
-     *
      * @param mapping mapping to use for matching associations
      */
     public void setAllByAggregation(
-        AggregationKind requestedKind, JmiAssocMapping mapping)
+        AggregationKind requestedKind,
+        JmiAssocMapping mapping)
     {
         for (Object assocEdgeObj
-                 : modelView.getModelGraph().getAssocGraph().edgeSet())
-        {
+            : modelView.getModelGraph().getAssocGraph().edgeSet()) {
             JmiAssocEdge assocEdge = (JmiAssocEdge) assocEdgeObj;
             AggregationKind actualKind = AggregationKindEnum.NONE;
             for (int i = 0; i < 2; i++) {
@@ -196,19 +210,19 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
     }
 
     /**
-     * Sets mapping for a specific association, discarding any
-     * existing mappings for that association.
+     * Sets mapping for a specific association, discarding any existing mappings
+     * for that association.
      *
      * @param assoc association to map
-     *
      * @param mapping mapping to use
      */
     public void setByRefAssoc(
-        RefAssociation assoc, JmiAssocMapping mapping)
+        RefAssociation assoc,
+        JmiAssocMapping mapping)
     {
         JmiAssocEdge assocEdge =
             modelView.getModelGraph().getEdgeForRefAssoc(assoc);
-        assert(assocEdge != null);
+        assert (assocEdge != null);
         map.put(
             assocEdge,
             new ArrayList<AssocRule>(
@@ -217,16 +231,13 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
 
     /**
      * Sets mapping for a specific association, refining the rule to only apply
-     * in the context of specific end classes.  Does not discard any existing
-     * mappings.  Refined mappings are used in the reverse of the order in
-     * which they are defined (later definition overrides earlier).
+     * in the context of specific end classes. Does not discard any existing
+     * mappings. Refined mappings are used in the reverse of the order in which
+     * they are defined (later definition overrides earlier).
      *
      * @param assoc association to map
-     *
      * @param mapping mapping to use
-     *
      * @param sourceClass source class required for match, or null for wildcard
-     *
      * @param targetClass target class required for match, or null for wildcard
      */
     public void setByRefAssocRefined(
@@ -237,12 +248,13 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
     {
         JmiAssocEdge assocEdge =
             modelView.getModelGraph().getEdgeForRefAssoc(assoc);
-        assert(assocEdge != null);
+        assert (assocEdge != null);
         List<AssocRule> list = map.get(assocEdge);
         if (list == null) {
             list = new ArrayList<AssocRule>();
             map.put(assocEdge, list);
         }
+
         // add in reverse order
         list.add(
             0,
@@ -260,18 +272,20 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         return modelView.getModelGraph().getVertexForRefClass(c).getMofClass();
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class AssocRule
     {
         /**
          * Mapping to use when this rule applies.
          */
         final JmiAssocMapping mapping;
-        
+
         /**
          * Source class required for match, or null for wildcard.
          */
         final MofClass sourceClass;
-        
+
         /**
          * Target class required for match, or null for wildcard.
          */
@@ -281,7 +295,7 @@ public class JmiDependencyMappedTransform implements JmiDependencyTransform
         {
             this(mapping, null, null);
         }
-        
+
         AssocRule(
             JmiAssocMapping mapping,
             MofClass sourceClass,

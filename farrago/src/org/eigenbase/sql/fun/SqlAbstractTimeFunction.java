@@ -21,11 +21,12 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Base class for time functions such as "LOCALTIME", "LOCALTIME(n)".
@@ -33,23 +34,38 @@ import org.eigenbase.resource.EigenbaseResource;
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlAbstractTimeFunction extends SqlFunction
+public class SqlAbstractTimeFunction
+    extends SqlFunction
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
                 SqlTypeStrategies.otcPositiveIntLit,
-                SqlTypeStrategies.otcNiladic
+            SqlTypeStrategies.otcNiladic
             });
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlTypeName typeName;
 
-    protected SqlAbstractTimeFunction(String name, SqlTypeName typeName) {
-        super(name, SqlKind.Function, null, null, otcCustom,
+    //~ Constructors -----------------------------------------------------------
+
+    protected SqlAbstractTimeFunction(String name, SqlTypeName typeName)
+    {
+        super(name,
+            SqlKind.Function,
+            null,
+            null,
+            otcCustom,
             SqlFunctionCategory.TimeDate);
         this.typeName = typeName;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -67,7 +83,7 @@ public class SqlAbstractTimeFunction extends SqlFunction
                 precision = opBinding.getIntLiteralOperand(0);
             }
         }
-        assert(precision >= 0);
+        assert (precision >= 0);
         if (precision > SqlTypeName.MAX_DATETIME_PRECISION) {
             throw EigenbaseResource.instance().ArgumentMustBeValidPrecision.ex(
                 opBinding.getOperator().getName(),
@@ -82,7 +98,7 @@ public class SqlAbstractTimeFunction extends SqlFunction
     {
         return true;
     }
-    
+
     // Context variables are never deterministic
     public boolean isDeterministic()
     {

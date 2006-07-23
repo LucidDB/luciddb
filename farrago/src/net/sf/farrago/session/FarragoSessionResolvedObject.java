@@ -25,16 +25,18 @@ package net.sf.farrago.session;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 
+
 /**
- * Information about a catalog object whose name has been fully resolved
- * within the scope of a particular session.
+ * Information about a catalog object whose name has been fully resolved within
+ * the scope of a particular session.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoSessionResolvedObject<T extends CwmModelElement>
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     public CwmCatalog catalog;
     public CwmSchema schema;
@@ -43,13 +45,12 @@ public class FarragoSessionResolvedObject<T extends CwmModelElement>
     public String schemaName;
     public String objectName;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public String [] getQualifiedName()
     {
-        return new String [] { catalogName, schemaName, objectName };
+        return new String[] { catalogName, schemaName, objectName };
     }
 }
-
 
 // End FarragoSessionResolvedObject.java

@@ -20,29 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+
 
 /**
  * A <code>FilterRel</code> is a relational expression which iterates over its
  * input, and returns elements for which <code>condition</code> evaluates to
  * <code>true</code>.
  */
-public final class FilterRel extends FilterRelBase
+public final class FilterRel
+    extends FilterRelBase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a filter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param child input relational expression
      * @param condition boolean expression which determines whether a row is
-     *        allowed to pass
+     * allowed to pass
      */
     public FilterRel(
         RelOptCluster cluster,
@@ -50,22 +52,24 @@ public final class FilterRel extends FilterRelBase
         RexNode condition)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.NONE), child,
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            child,
             condition);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        FilterRel clone = new FilterRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            RexUtil.clone(getCondition()));
+        FilterRel clone =
+            new FilterRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                RexUtil.clone(getCondition()));
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End FilterRel.java

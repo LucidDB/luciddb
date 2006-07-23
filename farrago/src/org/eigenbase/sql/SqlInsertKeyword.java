@@ -19,25 +19,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.*;
+
 
 /**
- * Defines the keywords which can occur immediately after the "INSERT"
- * keyword.  Standard SQL has no such keywords.  This enumeration exists
- * only to allow extension projects to define them.
+ * Defines the keywords which can occur immediately after the "INSERT" keyword.
+ * Standard SQL has no such keywords. This enumeration exists only to allow
+ * extension projects to define them.
  */
-public class SqlInsertKeyword extends EnumeratedValues.BasicValue
+public class SqlInsertKeyword
+    extends EnumeratedValues.BasicValue
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(new SqlInsertKeyword[] {});
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlInsertKeyword(String name, int ordinal)
     {
         super(name, ordinal, null);
     }
-
-    public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new SqlInsertKeyword[] { });
 }
 
 // End SqlInsertKeyword.java

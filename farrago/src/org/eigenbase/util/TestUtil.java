@@ -21,10 +21,10 @@
 */
 package org.eigenbase.util;
 
-import junit.framework.ComparisonFailure;
+import java.util.regex.*;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import junit.framework.*;
+
 
 /**
  * Static utilities for JUnit tests.
@@ -34,18 +34,27 @@ import java.util.regex.Matcher;
  */
 public abstract class TestUtil
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final Pattern LineBreakPattern =
         Pattern.compile("\r\n|\r|\n");
     private static final Pattern TabPattern = Pattern.compile("\t");
 
     /**
-     * System-dependent newline character. <p/>
+     * System-dependent newline character.
      *
-     * Do not use '\n' in strings which are samples for test results.
-     * {@link java.io.PrintWriter#println()}  produces '\n' on Unix and '\r\n'
-     * on Windows, but '\n' is always '\n', so your tests will fail on Windows. 
+     * <p/>Do not use '\n' in strings which are samples for test results. {@link
+     * java.io.PrintWriter#println()} produces '\n' on Unix and '\r\n' on
+     * Windows, but '\n' is always '\n', so your tests will fail on Windows.
      */
     public static final String NL = Util.lineSeparator;
+
+    private static final String lineBreak = "\" + NL +" + NL + "\"";
+
+    private static final String commaLineBreak = "\"," + NL + "\"";
+
+    //~ Methods ----------------------------------------------------------------
 
     public static void assertEqualsVerbose(
         String expected,
@@ -56,13 +65,13 @@ public abstract class TestUtil
                 return;
             } else {
                 String message =
-                    "Expected:" + NL +
-                    expected + NL +
-                    "Actual: null";
+                    "Expected:" + NL
+                    + expected + NL
+                    + "Actual: null";
                 throw new ComparisonFailure(message, expected, actual);
             }
         }
-        if (expected != null && expected.equals(actual)) {
+        if ((expected != null) && expected.equals(actual)) {
             return;
         }
         String s = quoteForJavaUsingFold(actual);
@@ -75,19 +84,16 @@ public abstract class TestUtil
     }
 
     /**
-     * Converts a string (which may contain quotes and newlines) into a
-     * java literal.
+     * Converts a string (which may contain quotes and newlines) into a java
+     * literal.
      *
-     * <p>For example,
-     *
-     * <code><pre>string with "quotes" split
-     * across lines</pre></code>
-     *
-     * becomes
-     *
-     * <code><pre>"string with \"quotes\" split" + NL +
-     *  "across lines"</pre></code>
-     *
+     * <p>For example, <code>
+     * <pre>string with "quotes" split
+     * across lines</pre>
+     * </code> becomes <code>
+     * <pre>"string with \"quotes\" split" + NL +
+     *  "across lines"</pre>
+     * </code>
      */
     public static String quoteForJava(String s)
     {
@@ -103,25 +109,18 @@ public abstract class TestUtil
         return s;
     }
 
-    private static final String lineBreak =
-        "\" + NL +" + NL + "\"";
-
-
     /**
-     * Converts a string (which may contain quotes and newlines) into a
-     * java literal.
+     * Converts a string (which may contain quotes and newlines) into a java
+     * literal.
      *
-     * <p>For example,
-     *
-     * <code><pre>string with "quotes" split
-     * across lines</pre></code>
-     *
-     * becomes
-     *
-     * <code><pre>fold(new String[] {
+     * <p>For example, <code>
+     * <pre>string with "quotes" split
+     * across lines</pre>
+     * </code> becomes <code>
+     * <pre>fold(new String[] {
      *  "string with \"quotes\" split",
-     *  "across lines"})</pre></code>
-     *
+     *  "across lines"})</pre>
+     * </code>
      */
     public static String quoteForJavaUsingFold(String s)
     {
@@ -139,15 +138,11 @@ public abstract class TestUtil
         }
     }
 
-    private static final String commaLineBreak =
-        "\"," + NL + "\"";
-
-
     /**
      * Combines an array of strings, each representing a line, into a single
      * string containing line separators.
      */
-    public static String fold(String[] strings)
+    public static String fold(String [] strings)
     {
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < strings.length; i++) {
@@ -178,19 +173,14 @@ public abstract class TestUtil
      */
     public static String quotePattern(String s)
     {
-        return s
-            .replaceAll("\\\\", "\\\\")
-            .replaceAll("\\.", "\\\\.")
-            .replaceAll("\\+", "\\\\+")
-            .replaceAll("\\{", "\\\\{")
-            .replaceAll("\\}", "\\\\}")
-            .replaceAll("\\|", "\\\\||")
-            .replaceAll("[$]", "\\\\\\$")
-            .replaceAll("\\?", "\\\\?")
-            .replaceAll("\\*", "\\\\*")
-            .replaceAll("\\(", "\\\\(")
-            .replaceAll("\\)", "\\\\)")
-            .replaceAll("\\[", "\\\\[")
+        return
+            s.replaceAll("\\\\", "\\\\").replaceAll("\\.", "\\\\.").replaceAll(
+                "\\+",
+                "\\\\+").replaceAll("\\{", "\\\\{").replaceAll("\\}", "\\\\}")
+            .replaceAll("\\|", "\\\\||").replaceAll("[$]", "\\\\\\$")
+            .replaceAll("\\?", "\\\\?").replaceAll("\\*", "\\\\*").replaceAll(
+                "\\(",
+                "\\\\(").replaceAll("\\)", "\\\\)").replaceAll("\\[", "\\\\[")
             .replaceAll("\\]", "\\\\]");
     }
 }

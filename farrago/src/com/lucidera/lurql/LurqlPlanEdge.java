@@ -20,28 +20,36 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
 
 import javax.jmi.model.*;
 
-import org.eigenbase.jmi.*;
-
 import org._3pq.jgrapht.edge.*;
 
+import org.eigenbase.jmi.*;
+
+
 /**
- * LurqlPlanEdge is a follow edge in a LURQL plan graph.  (TODO:  factor
- * out subclass.)
+ * LurqlPlanEdge is a follow edge in a LURQL plan graph. (TODO: factor out
+ * subclass.)
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlPlanEdge extends DirectedEdge
+public class LurqlPlanEdge
+    extends DirectedEdge
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * String representation of this edge.
      */
     protected String stringRep;
+
+    //~ Constructors -----------------------------------------------------------
 
     LurqlPlanEdge(
         LurqlPlanVertex source,
@@ -50,16 +58,18 @@ public class LurqlPlanEdge extends DirectedEdge
         super(source, target);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public LurqlPlanVertex getPlanSource()
     {
         return (LurqlPlanVertex) getSource();
     }
-    
+
     public LurqlPlanVertex getPlanTarget()
     {
         return (LurqlPlanVertex) getTarget();
     }
-    
+
     public String toString()
     {
         return stringRep;

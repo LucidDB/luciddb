@@ -20,60 +20,49 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.util.SqlBasicVisitor;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+
 
 /**
  * An operator describing a query. (Not a query itself.)
  *
- * <p>
- * Operands are:
+ * <p>Operands are:
  *
  * <ul>
- * <li>
- * 0: distinct ({@link SqlLiteral})
- * </li>
- * <li>
- * 1: selectClause ({@link SqlNodeList})
- * </li>
- * <li>
- * 2: fromClause ({@link SqlCall} to "join" operator)
- * </li>
- * <li>
- * 3: whereClause ({@link SqlNode})
- * </li>
- * <li>
- * 4: havingClause ({@link SqlNode})
- * </li>
- * <li>
- * 5: groupClause ({@link SqlNode})
- * </li>
- * <li>
- * 6: windowClause ({@link SqlNodeList})
- * </li>
- * <li>
- * 7: orderClause ({@link SqlNode})
- * </li>
+ * <li>0: distinct ({@link SqlLiteral})</li>
+ * <li>1: selectClause ({@link SqlNodeList})</li>
+ * <li>2: fromClause ({@link SqlCall} to "join" operator)</li>
+ * <li>3: whereClause ({@link SqlNode})</li>
+ * <li>4: havingClause ({@link SqlNode})</li>
+ * <li>5: groupClause ({@link SqlNode})</li>
+ * <li>6: windowClause ({@link SqlNodeList})</li>
+ * <li>7: orderClause ({@link SqlNode})</li>
  * </ul>
  * </p>
  */
-public class SqlSelectOperator extends SqlOperator
+public class SqlSelectOperator
+    extends SqlOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlSelectOperator()
     {
-        super("SELECT", SqlKind.Select, 2, true,
-            SqlTypeStrategies.rtiScope, null, null);
+        super("SELECT",
+            SqlKind.Select,
+            2,
+            true,
+            SqlTypeStrategies.rtiScope,
+            null,
+            null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -92,16 +81,17 @@ public class SqlSelectOperator extends SqlOperator
     /**
      * Creates a call to the <code>SELECT</code> operator.
      *
-     * @param keywordList  List of keywords such DISTINCT and ALL, or null
-     * @param selectList   The SELECT clause, or null if empty
-     * @param fromClause   The FROM clause
-     * @param whereClause  The WHERE clause, or null if not present
-     * @param groupBy      The GROUP BY clause, or null if not present
-     * @param having       The HAVING clause, or null if not present
-     * @param windowDecls  The WINDOW clause, or null if not present
-     * @param orderBy      The ORDER BY clause, or null if not present
-     * @param pos          The parser position, or {@link SqlParserPos#ZERO}
-     *                     if not specified; must not be null.
+     * @param keywordList List of keywords such DISTINCT and ALL, or null
+     * @param selectList The SELECT clause, or null if empty
+     * @param fromClause The FROM clause
+     * @param whereClause The WHERE clause, or null if not present
+     * @param groupBy The GROUP BY clause, or null if not present
+     * @param having The HAVING clause, or null if not present
+     * @param windowDecls The WINDOW clause, or null if not present
+     * @param orderBy The ORDER BY clause, or null if not present
+     * @param pos The parser position, or {@link SqlParserPos#ZERO} if not
+     * specified; must not be null.
+     *
      * @return A {@link SqlSelect}, never null
      */
     public SqlSelect createCall(
@@ -113,7 +103,7 @@ public class SqlSelectOperator extends SqlOperator
         SqlNode having,
         SqlNodeList windowDecls,
         SqlNode orderBy,
-            SqlParserPos pos)
+        SqlParserPos pos)
     {
         if (keywordList == null) {
             keywordList = new SqlNodeList(pos);
@@ -121,16 +111,16 @@ public class SqlSelectOperator extends SqlOperator
         if (windowDecls == null) {
             windowDecls = new SqlNodeList(pos);
         }
-        return (SqlSelect) createCall(
-            new SqlNode [] {
-                keywordList, selectList, fromClause, whereClause, groupBy,
+        return
+            (SqlSelect) createCall(
+                new SqlNode[] {
+                    keywordList, selectList, fromClause, whereClause, groupBy,
                 having, windowDecls, orderBy
-            },
-            pos);
+                },
+                pos);
     }
 
-    public <R> void acceptCall(
-        SqlVisitor<R> visitor,
+    public <R> void acceptCall(SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
@@ -208,8 +198,8 @@ public class SqlSelectOperator extends SqlOperator
             writer.sep("HAVING");
             havingClause.unparse(writer, 0, 0);
         }
-        SqlNodeList windowDecls = (SqlNodeList)
-            operands[SqlSelect.WINDOW_OPERAND];
+        SqlNodeList windowDecls =
+            (SqlNodeList) operands[SqlSelect.WINDOW_OPERAND];
         if (windowDecls.size() > 0) {
             writer.sep("WINDOW");
             final SqlWriter.Frame windowFrame =
@@ -232,6 +222,5 @@ public class SqlSelectOperator extends SqlOperator
         writer.endList(selectFrame);
     }
 }
-
 
 // End SqlSelectOperator.java

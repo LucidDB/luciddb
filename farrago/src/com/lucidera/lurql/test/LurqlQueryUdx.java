@@ -20,26 +20,28 @@
 */
 package com.lucidera.lurql.test;
 
+import com.lucidera.lurql.*;
+
+import java.io.*;
+
+import java.sql.*;
+
+import java.util.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.mdr.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.runtime.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.db.*;
 import net.sf.farrago.util.*;
-
-import net.sf.farrago.fem.med.*;
-
-import com.lucidera.lurql.*;
 
 import org.eigenbase.jmi.*;
 
-import javax.jmi.reflect.*;
-
-import java.sql.*;
-import java.io.*;
-import java.util.*;
 
 /**
  * LurqlQueryUdx executes a LURQL query and returns the resulting collection as
@@ -50,28 +52,24 @@ import java.util.*;
  */
 public abstract class LurqlQueryUdx
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Executes a LURQL query, producing result columns as follows:
      *
-     *<ol>
-     *
-     *<li>CLASS_NAME:  class name of matching object
-     *
-     *<li>OBJ_NAME:  name of matching object, or null if it lacks
-     * a "name" attribute
-     *
-     *<li>MOF_ID:  MOFID of matching object
-     *
-     *<li>OBJ_ATTRS:  concatenation of attribute/value pairs defining
-     * matching object
-     *
-     *</ol>
+     * <ol>
+     * <li>CLASS_NAME: class name of matching object
+     * <li>OBJ_NAME: name of matching object, or null if it lacks a "name"
+     * attribute
+     * <li>MOF_ID: MOFID of matching object
+     * <li>OBJ_ATTRS: concatenation of attribute/value pairs defining matching
+     * object
+     * </ol>
      *
      * @param foreignServerName name of predefined foreign server to use as
      * source; must be defined using the MDR foreign data wrapper
-     *
      * @param lurql LURQL query to execute (may not contain parameters)
-     *
      * @param resultInserter used to write results
      */
     public static void queryMedMdr(
@@ -103,7 +101,7 @@ public abstract class LurqlQueryUdx
             }
             FarragoMedDataServer dataServer =
                 wrapperCache.loadServerFromCatalog(femServer);
-            assert(dataServer != null);
+            assert (dataServer != null);
             if (!(dataServer instanceof MedMdrDataServer)) {
                 throw new SQLException(
                     "Foreign server " + foreignServerName
@@ -111,15 +109,19 @@ public abstract class LurqlQueryUdx
             }
             MedMdrDataServer mdrServer = (MedMdrDataServer) dataServer;
             RefPackage refPackage = mdrServer.getRootPackage();
+
             // NOTE jvs 12-June-2006:  pass strict=false in
             // case extent references other packages we can't see
-            JmiModelGraph modelGraph = new JmiModelGraph(refPackage, null, false);
+            JmiModelGraph modelGraph =
+                new JmiModelGraph(refPackage, null, false);
             JmiModelView modelView = new JmiModelView(modelGraph);
             JmiQueryProcessor queryProcessor =
                 new LurqlQueryProcessor(
                     mdrServer.getMdrRepository());
             JmiPreparedQuery query = queryProcessor.prepare(
-                modelView, lurql);
+                    modelView,
+                    lurql);
+
             // TODO jvs 11-June-2006:  Configure loopback connection
             Collection results = query.execute(null, null);
             for (Object obj : results) {

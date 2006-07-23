@@ -21,6 +21,10 @@
 */
 package net.sf.farrago.ddl;
 
+import java.sql.*;
+
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
@@ -35,27 +39,31 @@ import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 import org.eigenbase.util14.*;
 
-import java.sql.*;
-import java.util.*;
 
 /**
  * DdlAnalyzeStmt is a Farrago statement for computing the statistics of a
- * relational expression and storing them in repository. Currently, sample
- * table is supported.
+ * relational expression and storing them in repository. Currently, sample table
+ * is supported.
  *
  * @author John Pham
  * @version $Id$
  */
-public class DdlAnalyzeStmt extends DdlStmt
+public class DdlAnalyzeStmt
+    extends DdlStmt
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private final static int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     // ddl fields
     private CwmTable table;
     private List<CwmColumn> columnList;
     private boolean estimate;
     private int samplePercent;
-    
+
     // convenience fields
     private FemAbstractColumnSet femTable;
     private FarragoSessionStmtContext stmtContext;
@@ -63,14 +71,14 @@ public class DdlAnalyzeStmt extends DdlStmt
     private SqlIdentifier tableName;
     private FarragoRepos repos;
 
-    //~ Constructors ------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public DdlAnalyzeStmt()
     {
         super(null);
     }
 
-    //~ Accessors ---------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setTable(CwmTable table)
     {
@@ -97,8 +105,6 @@ public class DdlAnalyzeStmt extends DdlStmt
         samplePercent = percent;
     }
 
-    //~ Methods -----------------------------------------------------------
-
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
@@ -106,7 +112,7 @@ public class DdlAnalyzeStmt extends DdlStmt
     }
 
     // implement FarragoSessionDdlStmt
-    public void preValidate(FarragoSessionDdlValidator ddlValidator) 
+    public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         // Use a reentrant session to simplify cleanup.
         FarragoSession session = ddlValidator.newReentrantSession();
@@ -120,38 +126,38 @@ public class DdlAnalyzeStmt extends DdlStmt
     }
 
     /**
-     * Analyzes a table and associated indexes and columns. The following
-     * data are collected:
-     * 
+     * Analyzes a table and associated indexes and columns. The following data
+     * are collected:
+     *
      * <ul>
-     *   <li>The number of rows in the table
-     *   <li>The number of pages in each associated index
-     *   <li>A histogram of each column specified
-     *   <li>For columns with indexes sorted by the column, 
-     *       number of distinct values for the column.
+     * <li>The number of rows in the table
+     * <li>The number of pages in each associated index
+     * <li>A histogram of each column specified
+     * <li>For columns with indexes sorted by the column, number of distinct
+     * values for the column.
      * </ul>
-     * 
+     *
      * This implementation issues recursive SQL.
-     * 
+     *
      * @param session reentrant session
+     *
      * @throws Exception
      */
     private void analyzeTable(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
-    throws Exception
+        throws Exception
     {
         // null param def factory okay because the SQL does not use dynamic
         // parameters
         stmtContext = session.newStmtContext(null);
         SqlDialect dialect = new SqlDialect(session.getDatabaseMetaData());
         writer = new SqlPrettyWriter(dialect);
-        tableName = 
-            FarragoCatalogUtil.getQualifiedName(table);
+        tableName = FarragoCatalogUtil.getQualifiedName(table);
         repos = session.getRepos();
 
         // Cast abstract catalog objects to required types
-        List<FemAbstractColumn> femColumnList = 
+        List<FemAbstractColumn> femColumnList =
             new ArrayList<FemAbstractColumn>();
         try {
             femTable = (FemAbstractColumnSet) table;
@@ -168,10 +174,9 @@ public class DdlAnalyzeStmt extends DdlStmt
         for (FemAbstractColumn column : femColumnList) {
             updateColumnStats(column);
         }
-        
+
         // Update index page counts
-        Collection indexes = 
-            FarragoCatalogUtil.getTableIndexes(repos, table);
+        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
         for (Object o : indexes) {
             FemLocalIndex index = (FemLocalIndex) o;
             ddlValidator.getIndexMap().computeIndexStats(
@@ -180,24 +185,24 @@ public class DdlAnalyzeStmt extends DdlStmt
                 estimate);
         }
     }
-    
+
     private void updateRowCount()
-    throws SQLException
+        throws SQLException
     {
         String sql = getRowCountQuery();
         stmtContext.prepare(sql, true);
         checkRowCountQuery();
-        
+
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
         boolean gotRow = resultSet.next();
-        assert(gotRow);
+        assert (gotRow);
         long rowCount = resultSet.getLong(1);
         resultSet.close();
 
         FarragoCatalogUtil.updateRowCount(femTable, rowCount);
     }
-    
+
     private String getRowCountQuery()
     {
         writer.print("select count(*) from ");
@@ -205,35 +210,33 @@ public class DdlAnalyzeStmt extends DdlStmt
         String sql = writer.toString();
         return sql;
     }
-    
+
     private void checkRowCountQuery()
     {
         RelDataType rowType = stmtContext.getPreparedRowType();
         List fieldList = rowType.getFieldList();
         assert (fieldList.size() == 1) : "row count wrong number of columns";
-        RelDataType type =
-            ((RelDataTypeField) fieldList.get(0)).getType();
+        RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
         assert (SqlTypeUtil.isExactNumeric(type)) : "row count invalid type";
     }
-    
+
     private void updateColumnStats(FemAbstractColumn column)
-    throws SQLException
+        throws SQLException
     {
         String sql = getColumnDistributionQuery(column);
         stmtContext.prepare(sql, true);
         checkColumnDistributionQuery(stmtContext);
-        
+
         stmtContext.execute();
         ResultSet resultSet = stmtContext.getResultSet();
         buildHistogram(column, resultSet);
         resultSet.close();
     }
-    
+
     private String getColumnDistributionQuery(
         FemAbstractColumn column)
     {
-        SqlIdentifier columnName = 
-            FarragoCatalogUtil.getQualifiedName(column);
+        SqlIdentifier columnName = FarragoCatalogUtil.getQualifiedName(column);
         writer.reset();
         writer.print("select ");
         columnName.unparse(writer, 0, 0);
@@ -246,27 +249,25 @@ public class DdlAnalyzeStmt extends DdlStmt
         String sql = writer.toString();
         return sql;
     }
-    
+
     private void checkColumnDistributionQuery(
         FarragoSessionStmtContext stmtContext)
     {
         RelDataType rowType = stmtContext.getPreparedRowType();
         List fieldList = rowType.getFieldList();
-        assert (fieldList.size() == 2) 
-            : "column query wrong number of columns";
-        RelDataType type =
-            ((RelDataTypeField) fieldList.get(1)).getType();
-        assert (SqlTypeUtil.isExactNumeric(type)) 
-            : "column query invalid type";
+        assert (fieldList.size() == 2) : "column query wrong number of columns";
+        RelDataType type = ((RelDataTypeField) fieldList.get(1)).getType();
+        assert (SqlTypeUtil.isExactNumeric(type)) : "column query invalid type";
     }
-    
+
     private void buildHistogram(
-        FemAbstractColumn column, ResultSet resultSet)
-    throws SQLException
+        FemAbstractColumn column,
+        ResultSet resultSet)
+        throws SQLException
     {
         long tableRowCount = femTable.getRowCount();
         int defaultBarCount = DEFAULT_HISTOGRAM_BAR_COUNT;
-        
+
         int barCount;
         long rowsPerBar, rowsLastBar;
         if (tableRowCount <= defaultBarCount) {
@@ -274,20 +275,20 @@ public class DdlAnalyzeStmt extends DdlStmt
             rowsPerBar = rowsLastBar = 1;
         } else {
             rowsPerBar = tableRowCount / defaultBarCount;
-            if (tableRowCount % defaultBarCount != 0) {
+            if ((tableRowCount % defaultBarCount) != 0) {
                 rowsPerBar++;
             }
             barCount = (int) (tableRowCount / rowsPerBar);
-            if (tableRowCount % rowsPerBar != 0) {
+            if ((tableRowCount % rowsPerBar) != 0) {
                 barCount++;
-                rowsLastBar = (tableRowCount - (barCount-1) * rowsPerBar);
+                rowsLastBar = (tableRowCount - ((barCount - 1) * rowsPerBar));
             } else {
                 rowsLastBar = rowsPerBar;
             }
         }
 
-        List<FemColumnHistogramBar> bars = 
-            buildBars(resultSet, rowsPerBar);
+        List<FemColumnHistogramBar> bars = buildBars(resultSet, rowsPerBar);
+
         // for compute statistics, total cardinality is sum of bar values
         long distinctValues = 0;
         for (FemColumnHistogramBar bar : bars) {
@@ -295,33 +296,39 @@ public class DdlAnalyzeStmt extends DdlStmt
         }
 
         FarragoCatalogUtil.updateHistogram(
-            repos, column, distinctValues, 100, 
-            bars.size(), rowsPerBar, rowsLastBar, bars);
+            repos,
+            column,
+            distinctValues,
+            100,
+            bars.size(),
+            rowsPerBar,
+            rowsLastBar,
+            bars);
     }
 
     private List<FemColumnHistogramBar> buildBars(
         ResultSet resultSet,
         long rowsPerBar)
-    throws SQLException
+        throws SQLException
     {
-        List<FemColumnHistogramBar> bars = 
+        List<FemColumnHistogramBar> bars =
             new LinkedList<FemColumnHistogramBar>();
         boolean newBar = true;
         String barStartValue = null;
         long barValueCount = 0;
         long barRowCount = 0;
-        
+
         RelDataType rowType = stmtContext.getPreparedRowType();
         List fieldList = rowType.getFieldList();
-        RelDataType type =
-            ((RelDataTypeField) fieldList.get(0)).getType();
+        RelDataType type = ((RelDataTypeField) fieldList.get(0)).getType();
         while (resultSet.next()) {
             Object o = resultSet.getObject(1);
             String nextValue;
             if (o == null) {
                 nextValue = null;
-            } else if (o instanceof byte[]) {
-                nextValue = ConversionUtil.toStringFromByteArray((byte []) o, 16);
+            } else if (o instanceof byte []) {
+                nextValue =
+                    ConversionUtil.toStringFromByteArray((byte []) o, 16);
             } else {
                 nextValue = resultSet.getString(1);
             }
@@ -335,12 +342,12 @@ public class DdlAnalyzeStmt extends DdlStmt
             }
             barValueCount++;
             barRowCount += nextRows;
-            
+
             while (barRowCount >= rowsPerBar) {
-                FemColumnHistogramBar bar = 
+                FemColumnHistogramBar bar =
                     buildBar(barStartValue, barValueCount);
                 bars.add(bar);
-                
+
                 barRowCount -= rowsPerBar;
                 if (barRowCount > 0) {
                     // the next bar starts with the current value
@@ -351,6 +358,7 @@ public class DdlAnalyzeStmt extends DdlStmt
                 }
             }
         }
+
         // build partial last bars
         if (barRowCount > 0) {
             bars.add(buildBar(barStartValue, barValueCount));
@@ -360,8 +368,7 @@ public class DdlAnalyzeStmt extends DdlStmt
 
     private FemColumnHistogramBar buildBar(String startValue, long valueCount)
     {
-        FemColumnHistogramBar bar = 
-            repos.newFemColumnHistogramBar();
+        FemColumnHistogramBar bar = repos.newFemColumnHistogramBar();
         bar.setStartingValue(startValue);
         bar.setValueCount(valueCount);
         return bar;

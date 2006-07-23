@@ -20,39 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
 import java.util.Collections;
 
-import openjava.mop.OJClass;
+import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.util.Util;
-import org.eigenbase.oj.util.OJUtil;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.relopt.*;
 import org.eigenbase.runtime.*;
 
 
 /**
- * <code>IterOneRowRel</code> is an iterator implementation of
- * {@link OneRowRel}.
+ * <code>IterOneRowRel</code> is an iterator implementation of {@link
+ * OneRowRel}.
  */
-public class IterOneRowRel extends OneRowRelBase implements JavaRel
+public class IterOneRowRel
+    extends OneRowRelBase
+    implements JavaRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public IterOneRowRel(RelOptCluster cluster)
     {
-        super(cluster, new RelTraitSet(CallingConvention.ITERATOR));
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
@@ -62,8 +62,10 @@ public class IterOneRowRel extends OneRowRelBase implements JavaRel
     // implement RelNode
     public ParseTree implement(JavaRelImplementor implementor)
     {
-        OJClass outputRowClass = OJUtil.typeToOJClass(
-            getRowType(), getCluster().getTypeFactory());
+        OJClass outputRowClass =
+            OJUtil.typeToOJClass(
+                getRowType(),
+                getCluster().getTypeFactory());
 
         Expression newRowExp =
             new AllocationExpression(
@@ -79,9 +81,8 @@ public class IterOneRowRel extends OneRowRelBase implements JavaRel
                         OJUtil.typeNameForClass(Collections.class),
                         "singletonList",
                         new ExpressionList(newRowExp))));
-            return iterExp;
+        return iterExp;
     }
 }
-
 
 // End IterOneRowRel.java

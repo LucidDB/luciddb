@@ -22,24 +22,26 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.TestCase;
+import junit.framework.*;
 
-import net.sf.farrago.util.FarragoProperties;
+import net.sf.farrago.util.*;
 
 
 /**
  * FarragoPropertiesTest tests the {@link FarragoProperties} class.
  */
-public class FarragoPropertiesTest extends TestCase
+public class FarragoPropertiesTest
+    extends TestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoPropertiesTest(String name)
     {
         super(name);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void testPropertyFields()
         throws Exception
@@ -55,7 +57,7 @@ public class FarragoPropertiesTest extends TestCase
         FarragoProperties props = FarragoProperties.instance();
 
         String [] expectUnchanged =
-            new String [] {
+            new String[] {
                 "foo", "foo ${", "} foo", "${foo}", "${}", "${", "$}", "{}",
                 "$ {FARRAGO_HOME}", "${ FARRAGO_HOME}", "${FARRAGO_HOME }",
                 "${ FARRAGO_HOME }", "$ { FARRAGO_HOME }", "$FARRAGO_HOME",
@@ -71,7 +73,7 @@ public class FarragoPropertiesTest extends TestCase
         String home = props.homeDir.get();
 
         String [][] expectChanged =
-            new String [][] {
+            new String[][] {
                 { "${FARRAGO_HOME}", home },
                 { "{${FARRAGO_HOME}}", "{" + home + "}" },
                 { "${FARRAGO_HOME}/foo", home + "/foo" },
@@ -96,3 +98,5 @@ public class FarragoPropertiesTest extends TestCase
         }
     }
 }
+
+// End FarragoPropertiesTest.java

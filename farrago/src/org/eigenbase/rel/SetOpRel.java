@@ -22,23 +22,26 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+
 
 /**
- * <code>SetOpRel</code> is an abstract base for relational set operators
- * such as union, minus, and intersect.
+ * <code>SetOpRel</code> is an abstract base for relational set operators such
+ * as union, minus, and intersect.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class SetOpRel extends AbstractRelNode
+public abstract class SetOpRel
+    extends AbstractRelNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RelNode [] inputs;
     protected boolean all;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected SetOpRel(
         RelOptCluster cluster,
@@ -51,9 +54,9 @@ public abstract class SetOpRel extends AbstractRelNode
         this.all = all;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
-    public abstract SetOpRel clone(RelNode[] inputs, boolean all);
+    public abstract SetOpRel clone(RelNode [] inputs, boolean all);
 
     public boolean isDistinct()
     {
@@ -75,7 +78,7 @@ public abstract class SetOpRel extends AbstractRelNode
         pw.explain(
             this,
             terms,
-            new Object [] { Boolean.valueOf(all) });
+            new Object[] { Boolean.valueOf(all) });
     }
 
     public void replaceInput(

@@ -20,15 +20,13 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
-
 
 /**
  * Abstract base class for a Java application invoked from the command-line.
  *
- * <p>
- * Example usage:
+ * <p>Example usage:
+ *
  * <blockquote>
  * <pre>public class MyClass extends MainApp {
  *     public static void main(String[] args) {
@@ -43,18 +41,18 @@ package org.eigenbase.util;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Aug 31, 2003
  */
 public abstract class MainApp
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final String [] args;
     private OptionsList options = new OptionsList();
     private int exitCode;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected MainApp(String [] args)
     {
@@ -62,7 +60,7 @@ public abstract class MainApp
         exitCode = 0;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Does the work of the application. Derived classes must implement this
@@ -121,10 +119,14 @@ public abstract class MainApp
     protected void initializeOptions()
     {
         options.add(
-            new OptionsList.BooleanOption("-h", "help",
-                "Prints command-line parameters", false, false, false, null));
+            new OptionsList.BooleanOption("-h",
+                "help",
+                "Prints command-line parameters",
+                false,
+                false,
+                false,
+                null));
     }
 }
-
 
 // End MainApp.java

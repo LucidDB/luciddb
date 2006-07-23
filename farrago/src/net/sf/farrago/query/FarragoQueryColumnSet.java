@@ -27,16 +27,18 @@ import net.sf.farrago.namespace.*;
 
 
 /**
- * FarragoQueryColumnSet represents a specialization of
- * {@link FarragoMedColumnSet} which knows how to interact with
- * {@link FarragoPreparingStmt}.
+ * FarragoQueryColumnSet represents a specialization of {@link
+ * FarragoMedColumnSet} which knows how to interact with {@link
+ * FarragoPreparingStmt}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoQueryColumnSet extends FarragoMedColumnSet
+public interface FarragoQueryColumnSet
+    extends FarragoMedColumnSet
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the FarragoPreparingStmt acting on this column set
@@ -58,11 +60,10 @@ public interface FarragoQueryColumnSet extends FarragoMedColumnSet
     /**
      * Sets the CwmNamedColumnSet corresponding to this column set.
      *
-     * @param cwmColumnSet the CwmNamedColumnSet, or null if this column
-     * set is not defined in the catalog
+     * @param cwmColumnSet the CwmNamedColumnSet, or null if this column set is
+     * not defined in the catalog
      */
     public void setCwmColumnSet(CwmNamedColumnSet cwmColumnSet);
 }
-
 
 // End FarragoQueryColumnSet.java

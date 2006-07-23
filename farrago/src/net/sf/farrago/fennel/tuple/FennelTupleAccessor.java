@@ -20,25 +20,50 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.ArrayList;
+import java.nio.*;
+
+import java.util.*;
+
 
 // NOTE: see comments on struct StoredNode before modifying the way tuples are
 // stored.
 
 /**
- * FennelTupleAccessor defines how to efficiently marshall and unmarshall
- * values in a stored tuple.  The same logical tuple definition can have
- * multiple storage formats.
- * See <a href="structTupleDesign.html#FennelTupleAccessor">the design
- * docs</a> for more details.
+ * FennelTupleAccessor defines how to efficiently marshall and unmarshall values
+ * in a stored tuple. The same logical tuple definition can have multiple
+ * storage formats. See <a href="structTupleDesign.html#FennelTupleAccessor">the
+ * design docs</a> for more details.
  */
 public final class FennelTupleAccessor
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * format of the constructed buffer. FIXME: not supported; is this
+     * necessary?
+     */
+    public static final int TUPLE_FORMAT_STANDARD = 0;
+    public static final int TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED = 1;
+    public static final int TUPLE_FORMAT_NETWORK = 2;
+
+    // stored values offsets are (unsigned) short
+    static final int STOREDVALUEOFFSETSIZE = 2;
+
+    /**
+     * specify 4-byte alignment.
+     */
+    public static final int TUPLE_ALIGN4 = 4;
+
+    /**
+     * specify 8-byte alignment.
+     */
+    public static final int TUPLE_ALIGN8 = 8;
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Precomputed accessors for attributes, in logical tuple order.
      */
@@ -48,7 +73,7 @@ public final class FennelTupleAccessor
      * Array of 0-based indices of variable-width attributes.
      */
     private final List varWidthAccessors = new ArrayList();
-    
+
     /**
      * maximum marshalled size of this tuple
      */
@@ -63,7 +88,7 @@ public final class FennelTupleAccessor
      * Precomputed size of bit field array (in bits).
      */
     private int nBitFields;
-    
+
     /**
      * Precomputed byte offset for bit array.
      */
@@ -84,48 +109,56 @@ public final class FennelTupleAccessor
     private int lastVarEndIndirectOffset;
 
     /**
-     * Precomputed offset for fixed start of first variable-width
-     * attribute, or Integer.MAX_VALUE if there are no variable-width
-     * attributes.
+     * Precomputed offset for fixed start of first variable-width attribute, or
+     * Integer.MAX_VALUE if there are no variable-width attributes.
      */
     private int firstVarOffset;
-    
+
     /**
      * current ByteBuffer used for unmarshalling; set by setCurrentTupleBuf().
      */
     private ByteBuffer currTupleBuf;
 
     /**
-     * format of the constructed buffer.
-     * FIXME: not supported; is this necessary?
-     */
-    public static final int TUPLE_FORMAT_STANDARD = 0;
-    public static final int TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED = 1;
-    public static final int TUPLE_FORMAT_NETWORK = 2;
-
-    /**
-     *  actual format of this accessor.
+     * actual format of this accessor.
      */
     private int format;
 
-    // stored values offsets are (unsigned) short
-    static final int STOREDVALUEOFFSETSIZE = 2;
-
-    /** specify 4-byte alignment. */
-    public static final int TUPLE_ALIGN4 = 4;
-
-    /** specify 8-byte alignment. */
-    public static final int TUPLE_ALIGN8 = 8;
-
-    /** tuple byte alignment. */
+    /**
+     * tuple byte alignment.
+     */
     private int tupleAlignment;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * default construction.
+     */
+    public FennelTupleAccessor()
+    {
+        this(TUPLE_ALIGN4); // default 4-byte alignment
+    }
+
+    /**
+     * Creates tuple accessor with specified byte alignmnent.
+     *
+     * @param alignment must be multiple of 4
+     */
+    public FennelTupleAccessor(int alignment)
+    {
+        assert ((alignment % 4) == 0) : "alignment (" + alignment
+            + ") not multiple of 4";
+        this.tupleAlignment = alignment;
+    }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * rounds up a value to the next multiple of {@link #tupleAlignment}.
      */
     private int alignRoundUp(int val)
     {
-        int mask = tupleAlignment -1;
+        int mask = tupleAlignment - 1;
         int lobits = val & mask;
         if (lobits != 0) {
             val += (tupleAlignment - lobits);
@@ -151,7 +184,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     *  Initialize all the fixed width accessors in a tuple.
+     * Initialize all the fixed width accessors in a tuple.
      */
     private void initFixedAccessors(FennelTupleDescriptor tuple, List list)
     {
@@ -166,7 +199,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     *  Initialize all the variable width accessors in a tuple.
+     * Initialize all the variable width accessors in a tuple.
      */
     private void initVarWidthAccessors(FennelTupleDescriptor tuple, List list)
     {
@@ -181,7 +214,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     *  Initialize all the bit accessors in a tuple.
+     * Initialize all the bit accessors in a tuple.
      */
     private void initBitFieldAccessors(FennelTupleDescriptor tuple, List list)
     {
@@ -195,7 +228,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     *  reset this accessor.
+     * reset this accessor.
      */
     private void clear()
     {
@@ -205,26 +238,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     *  default construction.
-     */
-    public FennelTupleAccessor()
-    {
-        this(TUPLE_ALIGN4);    // default 4-byte alignment
-    }
-
-    /**
-     * Creates tuple accessor with specified byte alignmnent.
-     * @param alignment must be multiple of 4
-     */
-    public FennelTupleAccessor(int alignment)
-    {
-        assert (alignment % 4 == 0) :
-            "alignment (" +alignment +") not multiple of 4";
-        this.tupleAlignment = alignment;
-    }
-
-    /**
-     *  gets an accessor by its numeric position.
+     * gets an accessor by its numeric position.
      */
     public FennelAttributeAccessor getAccessor(int i)
     {
@@ -232,11 +246,10 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Precomputes access for a particular tuple format.  Must be called
-     * before any other method.
+     * Precomputes access for a particular tuple format. Must be called before
+     * any other method.
      *
      * @param tuple the tuple to be accessed
-     *
      * @param format how to store tuple
      */
     public void compute(FennelTupleDescriptor tuple, int format)
@@ -246,11 +259,11 @@ public final class FennelTupleAccessor
 
         // these vectors keep track of the logical 0-based indices of the
         // attributes belonging to the various attribute storage classes
-        ArrayList aligned8       = new ArrayList();
-        ArrayList aligned4       = new ArrayList();
-        ArrayList aligned2       = new ArrayList();
+        ArrayList aligned8 = new ArrayList();
+        ArrayList aligned4 = new ArrayList();
+        ArrayList aligned2 = new ArrayList();
         ArrayList unalignedFixed = new ArrayList();
-        ArrayList bitAccessors   = new ArrayList();
+        ArrayList bitAccessors = new ArrayList();
 
         // special-case reference to the accessor for the first variable-width
         // attribute
@@ -268,21 +281,21 @@ public final class FennelTupleAccessor
 
         // first pass over all attributes in logical order:  collate them into
         // storage classes and precompute everything we can
-        int iAttr; 
+        int iAttr;
         for (iAttr = 0; iAttr < tuple.getAttrCount(); iAttr++) {
             FennelAttributeAccessor newAccessor;
             FennelTupleAttributeDescriptor attr = tuple.getAttr(iAttr);
 
-            int  fixedSize = attr.typeDescriptor.getFixedByteCount();
-            int  minSize   = attr.typeDescriptor.getMinByteCount(
-                attr.storageSize);
+            int fixedSize = attr.typeDescriptor.getFixedByteCount();
+            int minSize = attr.typeDescriptor.getMinByteCount(
+                    attr.storageSize);
 
             if (fixedSize > 0) {
-                assert(fixedSize == attr.storageSize);
-                assert(fixedSize == minSize);
+                assert (fixedSize == attr.storageSize);
+                assert (fixedSize == minSize);
             }
             boolean isFixedWidth = (minSize == attr.storageSize);
-            if (isFixedWidth && attr.storageSize == 0) {
+            if (isFixedWidth && (attr.storageSize == 0)) {
                 if (attr.typeDescriptor.getMinByteCount(1) == 0) {
                     // this is a "0-length variable-width" field masquerading
                     // as a fixed-width field
@@ -291,20 +304,19 @@ public final class FennelTupleAccessor
             }
             boolean isNullable = attr.isNullable;
             int nBits = attr.typeDescriptor.getBitCount();
-            assert(nBits <= 1);
+            assert (nBits <= 1);
+
             /*
-            if (format == TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED) {
-                isFixedWidth = true;
-                isNullable = false;
-                nBits = 0;
-            }
-            */
-            int alignment = attr.typeDescriptor.getAlignmentByteCount(
-                attr.storageSize);
+            if (format == TUPLE_FORMAT_ALL_NOT_NULL_AND_FIXED) { isFixedWidth =
+             true; isNullable = false; nBits = 0; }
+             */
+            int alignment =
+                attr.typeDescriptor.getAlignmentByteCount(
+                    attr.storageSize);
             newAccessor = attr.typeDescriptor.newAttributeAccessor();
             if (!isFixedWidth) {
                 varDataMax += attr.storageSize;
-                assert(alignment == 1);
+                assert (alignment == 1);
                 if (firstVariableAccessor == null) {
                     firstVariableAccessor = newAccessor;
                 }
@@ -314,8 +326,8 @@ public final class FennelTupleAccessor
                 nBitFields++;
             } else {
                 // fixed-width accessors
-                assert((minSize%alignment) == 0);
-                switch(alignment) {
+                assert ((minSize % alignment) == 0);
+                switch (alignment) {
                 case 1:
                     unalignedFixed.add(new Integer(iAttr));
                     break;
@@ -336,14 +348,14 @@ public final class FennelTupleAccessor
 
             /*
              * set nullable
-             */ 
+             */
             if (isNullable) {
                 newAccessor.nullBitNdx = nBitFields;
                 nBitFields++;
             }
 
             // track which accessors have bitfield offsets
-            if (isNullable || nBits > 0) {
+            if (isNullable || (nBits > 0)) {
                 bitAccessors.add(new Integer(iAttr));
             }
             newAccessor.capacity = attr.storageSize;
@@ -353,27 +365,28 @@ public final class FennelTupleAccessor
         // now, make a pass over each storage class, calculating actual
         // offsets; note that initFixedAccessors advances maxStorage
         // as a side-effect
-        initFixedAccessors(tuple,aligned8);
-        initFixedAccessors(tuple,aligned4);
-        initFixedAccessors(tuple,aligned2);
-        
+        initFixedAccessors(tuple, aligned8);
+        initFixedAccessors(tuple, aligned4);
+        initFixedAccessors(tuple, aligned2);
+
         if (firstVariableAccessor != null) {
             firstVarEndIndirectOffset = maxStorage;
             initVarWidthAccessors(tuple, varWidthAccessors);
             lastVarEndIndirectOffset = maxStorage - STOREDVALUEOFFSETSIZE;
         } else {
             firstVarEndIndirectOffset = Integer.MAX_VALUE;
-            lastVarEndIndirectOffset  = Integer.MAX_VALUE;
+            lastVarEndIndirectOffset = Integer.MAX_VALUE;
         }
-        
+
         initFixedAccessors(tuple, unalignedFixed);
 
         if (nBitFields > 0) {
             bitFieldOffset = maxStorage;
             initBitFieldAccessors(tuple, bitAccessors);
+
             // allocate space, rounding up
-            // FIXME: change 'divide' to 'bitshift' once proven 
-            maxStorage += (7+nBitFields)/8;
+            // FIXME: change 'divide' to 'bitshift' once proven
+            maxStorage += (7 + nBitFields) / 8;
         } else {
             bitFieldOffset = Integer.MAX_VALUE;
         }
@@ -383,7 +396,7 @@ public final class FennelTupleAccessor
         } else {
             firstVarOffset = Integer.MAX_VALUE;
         }
-        minStorage  = maxStorage;
+        minStorage = maxStorage;
         maxStorage += varDataMax;
 
         // Avoid 0-byte tuples, because it's very hard to count something
@@ -402,8 +415,8 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Precomputes access for a particular tuple format.  Must be called
-     * before any other method. Assumes the default format parameter.
+     * Precomputes access for a particular tuple format. Must be called before
+     * any other method. Assumes the default format parameter.
      *
      * @param tuple the tuple to be accessed
      */
@@ -431,9 +444,7 @@ public final class FennelTupleAccessor
     /**
      * Indicates whether all tuples will have the same fixed size.
      *
-     * <p>
-     *
-     * NOTE: this is copied from fennel, but what about isNullable fields? 
+     * <p>NOTE: this is copied from fennel, but what about isNullable fields?
      */
     public boolean isFixedWidth()
     {
@@ -441,14 +452,14 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * gets the offset of the first byte of bit fields, or Integer.MAX_VALUE
-     * if no bit fields are present.
+     * gets the offset of the first byte of bit fields, or Integer.MAX_VALUE if
+     * no bit fields are present.
      */
     public int getBitFieldOffset()
     {
         return bitFieldOffset;
     }
-    
+
     /**
      * Accesses the ByteBuffer storing the current tuple image.
      *
@@ -460,14 +471,14 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Sets the buffer storing the current tuple image.  Must be called
-     * before getCurrentByteCount and unmarshal.
+     * Sets the buffer storing the current tuple image. Must be called before
+     * getCurrentByteCount and unmarshal.
      *
      * @param currTupleBuf address of tuple image
      */
     public void setCurrentTupleBuf(ByteBuffer currTupleBuf)
     {
-        synchronized(attrAccessors) {
+        synchronized (attrAccessors) {
             this.currTupleBuf = currTupleBuf;
         }
     }
@@ -481,7 +492,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Determines the number of bytes stored in the current tuple buffer.  This
+     * Determines the number of bytes stored in the current tuple buffer. This
      * will always be greater than or equal to getMinByteCount() and less than
      * getMaxByteCount().
      *
@@ -489,13 +500,13 @@ public final class FennelTupleAccessor
      */
     public int getCurrentByteCount()
     {
-        assert(currTupleBuf != null);
+        assert (currTupleBuf != null);
         return getBufferByteCount(currTupleBuf);
     }
 
     /**
-     * Determines the number of bytes stored in a tuple buffer without
-     * actually preparing to unmarshal it.
+     * Determines the number of bytes stored in a tuple buffer without actually
+     * preparing to unmarshal it.
      *
      * @param pBuf tuple buffer
      *
@@ -512,8 +523,8 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Determines the number of bytes required to store a tuple without
-     * actually marshalling it.
+     * Determines the number of bytes required to store a tuple without actually
+     * marshalling it.
      *
      * @param tuple the tuple data
      *
@@ -528,12 +539,14 @@ public final class FennelTupleAccessor
         int cb = firstVarOffset;
         int i;
         for (i = 0; i < varWidthAccessors.size(); ++i) {
-            FennelTupleDatum datum = tuple.getDatum(
-                ((Integer) varWidthAccessors.get(i)).intValue());
+            FennelTupleDatum datum =
+                tuple.getDatum(
+                    ((Integer) varWidthAccessors.get(i)).intValue());
             if (datum.isPresent()) {
                 cb += datum.getLength();
             }
         }
+
         // round up for alignment padding
         return alignRoundUp(cb);
     }
@@ -542,12 +555,11 @@ public final class FennelTupleAccessor
      * Determines whether a buffer is big enough to fit marshalled tuple data.
      *
      * @param tuple the tuple to be marshalled
-     *
      * @param bufSize the size of the candidate buffer
      *
      * @return true if bufSize is big enough
      */
-    public boolean isBufferSufficient(FennelTupleData tuple,int bufSize)
+    public boolean isBufferSufficient(FennelTupleData tuple, int bufSize)
     {
         if (getMaxByteCount() <= bufSize) {
             return true;
@@ -556,12 +568,11 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Unmarshals the current tuple buffer, setting a tuple's values
-     * to reference the contents.
+     * Unmarshals the current tuple buffer, setting a tuple's values to
+     * reference the contents.
      *
      * @param tuple the tuple which will be modified to reference the
      * unmarshalled values
-     *
      * @param iFirstDatum 0-based index of FennelTupleDatum at which to start
      * writing to tuple (defaults to first FennelTupleDatum); note that
      * unmarshalling always starts with the first attribute
@@ -573,27 +584,29 @@ public final class FennelTupleAccessor
             n = attrAccessors.size();
         }
 
-        boolean    sliced = false;
+        boolean sliced = false;
         ByteBuffer prevCurrent = currTupleBuf;
 
-        synchronized(attrAccessors) {
+        synchronized (attrAccessors) {
             // see if we're not at the beginning of the tuple buffer; if not
             // we have to slice it
             if (currTupleBuf.position() != 0) {
-                while ((currTupleBuf.position()&0x3) != 0) {
+                while ((currTupleBuf.position() & 0x3) != 0) {
                     currTupleBuf.position(currTupleBuf.position() + 1);
                 }
                 currTupleBuf = currTupleBuf.slice();
                 sliced = true;
             }
-            
-            int i; 
+
+            int i;
             for (i = 0; i < n; ++i) {
                 FennelAttributeAccessor attr = getAttributeAccessor(i);
-                if (! attr.isPresent(currTupleBuf)) {
+                if (!attr.isPresent(currTupleBuf)) {
                     tuple.getDatum(iFirstDatum + i).reset();
                 } else {
-                    attr.unmarshalValue(this, tuple.getDatum(iFirstDatum + i));
+                    attr.unmarshalValue(
+                        this,
+                        tuple.getDatum(iFirstDatum + i));
                 }
             }
             currTupleBuf.position(getByteCount(tuple));
@@ -606,7 +619,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Unmarshals the current tuple buffer, setting a tuple's values to 
+     * Unmarshals the current tuple buffer, setting a tuple's values to
      * reference the contents. Assumes starting at the first FennelTupleDatum
      * (index zero).
      *
@@ -619,7 +632,7 @@ public final class FennelTupleAccessor
     }
 
     /**
-     * Gets an accessor for an individual attribute.  This can be used to
+     * Gets an accessor for an individual attribute. This can be used to
      * unmarshall values individually.
      *
      * @param iAttribute 0-based index of the attribute within the tuple
@@ -632,26 +645,25 @@ public final class FennelTupleAccessor
     // REVIEW jvs 19-Feb-2006:  The comment below says tupleBuf
     // becomes the current buffer, and that's the case in the original
     // Fennel code, but I don't think it's actually happening here.
-    
+
     /**
      * Marshalls a tuple's values into a buffer.
      *
      * @param tuple the tuple to be marshalled
-     *
-     * @param tupleBuf the buffer into which to marshal,
-     * which also becomes the current tuple buffer
+     * @param tupleBuf the buffer into which to marshal, which also becomes the
+     * current tuple buffer
      */
-    public void marshal(FennelTupleData tuple,ByteBuffer tupleBuf)
+    public void marshal(FennelTupleData tuple, ByteBuffer tupleBuf)
     {
         // support appending tuples to the end of an existing tuple buffer
         ByteBuffer workBuf;
-        boolean    sliced = false;
+        boolean sliced = false;
         if (tupleBuf.position() == 0) {
             tupleBuf.clear(); // why not?
             workBuf = tupleBuf;
         } else {
-            while ((tupleBuf.position()&0x3) != 0) {
-                tupleBuf.put((byte)0);
+            while ((tupleBuf.position() & 0x3) != 0) {
+                tupleBuf.put((byte) 0);
             }
             workBuf = tupleBuf.slice();
             sliced = true;
@@ -661,12 +673,13 @@ public final class FennelTupleAccessor
         int pNextVarEndOffset = firstVarEndIndirectOffset;
 
         int i;
+
         // initialize any bitfields
         if (nBitFields > 0) {
-            // FIXME - should be: 
+            // FIXME - should be:
             //      int bfLen = (nBitFields+7)>>>3;
             // but that's tough to stomach. later, once it's proven
-            int bfLen = (nBitFields+7)/8;
+            int bfLen = (nBitFields + 7) / 8;
             for (i = 0; i < bfLen; i++) {
                 workBuf.put(i + bitFieldOffset, (byte) 0);
             }
@@ -678,7 +691,9 @@ public final class FennelTupleAccessor
 
             // set is-value-present for nullables
             if (accessor.nullBitNdx != Integer.MAX_VALUE) {
-                accessor.setPresent(workBuf, value.isPresent());
+                accessor.setPresent(
+                    workBuf,
+                    value.isPresent());
             }
 
             if (value.isPresent()) {
@@ -689,7 +704,7 @@ public final class FennelTupleAccessor
                     } else {
                         iOffset = iNextVarOffset;
                     }
-                    assert(value.getLength() <= accessor.capacity);
+                    assert (value.getLength() <= accessor.capacity);
                     workBuf.position(iOffset);
                     accessor.marshalValueData(workBuf, value);
                 } else {
@@ -699,14 +714,15 @@ public final class FennelTupleAccessor
                 // if you hit this assert, most likely the result produced
                 // an null but type derivation in SqlValidator derived an
                 // non nullable result type
-                assert(accessor.nullBitNdx != Integer.MAX_VALUE);
+                assert (accessor.nullBitNdx != Integer.MAX_VALUE);
             }
             if (accessor.endIndirectOffset != Integer.MAX_VALUE) {
-//                assert(pNextVarEndOffset ==
-//                       referenceIndirectOffset(accessor.endIndirectOffset));
+                //                assert(pNextVarEndOffset ==
+                //    referenceIndirectOffset(accessor.endIndirectOffset));
                 if (value.isPresent()) {
                     iNextVarOffset += value.getLength();
                 }
+
                 // regardless of whether the value is null, we need to record
                 // the end offset since it also marks the start of the next
                 // non-null value
@@ -720,6 +736,7 @@ public final class FennelTupleAccessor
             tupleBuf.position(getByteCount(tuple));
         }
     }
-};
+}
+;
 
 // End FennelTupleAccessor.java

@@ -20,28 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.test;
 
-import junit.framework.TestCase;
-import junit.framework.Assert;
-import junit.framework.AssertionFailedError;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.util.Bug;
+import junit.framework.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
- * Abstract implementation of {@link SqlTester}. A derived class only needs
- * to implement {@link #check} and {@link #checkType}.
+ * Abstract implementation of {@link SqlTester}. A derived class only needs to
+ * implement {@link #check} and {@link #checkType}.
  *
  * @author wael
- * @since May 22, 2004
  * @version $Id$
- **/
-public abstract class AbstractSqlTester implements SqlTester
+ * @since May 22, 2004
+ */
+public abstract class AbstractSqlTester
+    implements SqlTester
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     // ~ Constants ------------------------------------------------------------
     public static final TypeChecker IntegerTypeChecker =
         new SqlTypeChecker(SqlTypeName.Integer);
@@ -52,22 +54,25 @@ public abstract class AbstractSqlTester implements SqlTester
     /**
      * Checker which allows any type.
      */
-    public static final TypeChecker AnyTypeChecker = new TypeChecker()
-    {
-        public void checkType(RelDataType type)
-        {
-        }
-    };
+    public static final TypeChecker AnyTypeChecker =
+        new TypeChecker() {
+            public void checkType(RelDataType type)
+            {
+            }
+        };
+
+
+    //~ Instance fields --------------------------------------------------------
 
     // ~ Members --------------------------------------------------------------
 
     private SqlOperator operator;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setFor(SqlOperator operator)
     {
-        if (operator != null && this.operator != null) {
+        if ((operator != null) && (this.operator != null)) {
             throw new AssertionFailedError("isFor() called twice");
         }
         this.operator = operator;
@@ -75,7 +80,7 @@ public abstract class AbstractSqlTester implements SqlTester
 
     public void checkAgg(
         String expr,
-        String[] inputValues,
+        String [] inputValues,
         Object result,
         int delta)
     {
@@ -90,28 +95,26 @@ public abstract class AbstractSqlTester implements SqlTester
     public static String getTypeString(RelDataType sqlType)
     {
         switch (sqlType.getSqlTypeName().getOrdinal()) {
-            case SqlTypeName.Varchar_ordinal:
-                String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            case SqlTypeName.Char_ordinal:
-                actual = "CHAR(" + sqlType.getPrecision() + ")";
-                return sqlType.isNullable() ?
-                    actual :
-                    actual + " NOT NULL";
-            default:
-                // Get rid of the verbose charset/collation stuff.
-                // TODO: There's probably a better way to do this.
-                final String s = sqlType.getFullTypeString();
-                final String s2 = s.replace(
+        case SqlTypeName.Varchar_ordinal:
+            String actual = "VARCHAR(" + sqlType.getPrecision() + ")";
+            return sqlType.isNullable() ? actual : (actual + " NOT NULL");
+        case SqlTypeName.Char_ordinal:
+            actual = "CHAR(" + sqlType.getPrecision() + ")";
+            return sqlType.isNullable() ? actual : (actual + " NOT NULL");
+        default:
+
+            // Get rid of the verbose charset/collation stuff.
+            // TODO: There's probably a better way to do this.
+            final String s = sqlType.getFullTypeString();
+            final String s2 =
+                s.replace(
                     " CHARACTER SET \"ISO-8859-1\" COLLATE \"ISO-8859-1$en_US$primary\"",
                     "");
-                return s2;
+            return s2;
         }
     }
 
-    public static String generateAggQuery(String expr, String[] inputValues)
+    public static String generateAggQuery(String expr, String [] inputValues)
     {
         StringBuffer buf = new StringBuffer();
         buf.append("SELECT ").append(expr).append(" FROM (");
@@ -131,8 +134,8 @@ public abstract class AbstractSqlTester implements SqlTester
     /**
      * Helper method which converts a scalar expression into a SQL query.
      *
-     * <p>By default, "expr" becomes "VALUES (expr)". Derived
-     * classes may override.
+     * <p>By default, "expr" becomes "VALUES (expr)". Derived classes may
+     * override.
      */
     protected String buildQuery(String expression)
     {
@@ -165,11 +168,14 @@ public abstract class AbstractSqlTester implements SqlTester
     {
         String sql = buildQuery(expression);
         TypeChecker typeChecker =
-            expectedType.startsWith("todo:") &&
-            !Bug.Dt315Fixed  ?
-            AnyTypeChecker :
-            new StringTypeChecker(expectedType);
-        check(sql, typeChecker, new Double(expectedResult), delta);
+            (expectedType.startsWith("todo:")
+                && !Bug.Dt315Fixed) ? AnyTypeChecker
+            : new StringTypeChecker(expectedType);
+        check(
+            sql,
+            typeChecker,
+            new Double(expectedResult),
+            delta);
     }
 
     public void checkBoolean(
@@ -182,7 +188,8 @@ public abstract class AbstractSqlTester implements SqlTester
         } else {
             check(
                 sql,
-                BooleanTypeChecker, result.toString(),
+                BooleanTypeChecker,
+                result.toString(),
                 0);
         }
     }
@@ -194,10 +201,9 @@ public abstract class AbstractSqlTester implements SqlTester
     {
         String sql = buildQuery(expression);
         TypeChecker typeChecker =
-            expectedType.startsWith("todo:") &&
-            !Bug.Dt315Fixed ?
-            AnyTypeChecker :
-            new StringTypeChecker(expectedType);
+            (expectedType.startsWith("todo:")
+                && !Bug.Dt315Fixed) ? AnyTypeChecker
+            : new StringTypeChecker(expectedType);
         check(sql, typeChecker, result, 0);
     }
 
@@ -213,12 +219,16 @@ public abstract class AbstractSqlTester implements SqlTester
         String resultType)
     {
         checkType(expression, resultType);
-        check(buildQuery(expression), AnyTypeChecker, result, 0);
+        check(
+            buildQuery(expression),
+            AnyTypeChecker,
+            result,
+            0);
     }
 
     /**
-     * Returns the operator this test is for.
-     * Throws if no operator has been set.
+     * Returns the operator this test is for. Throws if no operator has been
+     * set.
      */
     protected SqlOperator getFor()
     {
@@ -226,11 +236,14 @@ public abstract class AbstractSqlTester implements SqlTester
         return operator;
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Checks that a type matches a given SQL type. Does not care about
      * nullability.
      */
-    private static class SqlTypeChecker implements TypeChecker
+    private static class SqlTypeChecker
+        implements TypeChecker
     {
         private final SqlTypeName typeName;
 
@@ -251,15 +264,18 @@ public abstract class AbstractSqlTester implements SqlTester
      * Type checker which compares types to a specified string.
      *
      * <p>The string contains "NOT NULL" constraints, but does not contain
-     * collations and charsets. For example,<ul>
-     *   <li><code>INTEGER NOT NULL</code></li>
-     *   <li><code>BOOLEAN</code></li>
-     *   <li><code>DOUBLE NOT NULL MULTISET NOT NULL</code></li>
-     *   <li><code>CHAR(3) NOT NULL</code></li>
-     *   <li><code>RecordType(INTEGER X, VARCHAR(10) Y)</code></li>
+     * collations and charsets. For example,
+     *
+     * <ul>
+     * <li><code>INTEGER NOT NULL</code></li>
+     * <li><code>BOOLEAN</code></li>
+     * <li><code>DOUBLE NOT NULL MULTISET NOT NULL</code></li>
+     * <li><code>CHAR(3) NOT NULL</code></li>
+     * <li><code>RecordType(INTEGER X, VARCHAR(10) Y)</code></li>
      * </ul>
      */
-    public static class StringTypeChecker implements TypeChecker
+    public static class StringTypeChecker
+        implements TypeChecker
     {
         private final String expected;
 

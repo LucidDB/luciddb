@@ -22,14 +22,17 @@
 package net.sf.farrago.session;
 
 /**
- * FarragoSessionModelExtensionFactory defines a factory interface for
- * creating instances of {@link FarragoSessionModelExtension}.
+ * FarragoSessionModelExtensionFactory defines a factory interface for creating
+ * instances of {@link FarragoSessionModelExtension}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoSessionModelExtensionFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a new model extension.
      *

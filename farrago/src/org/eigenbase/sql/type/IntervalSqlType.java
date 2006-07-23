@@ -24,8 +24,9 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
+
 
 /**
  * IntervalSqlType represents a standard SQL datetime interval type.
@@ -33,27 +34,34 @@ import org.eigenbase.util.*;
  * @author wael
  * @version $Id$
  */
-public class IntervalSqlType extends AbstractSqlType
+public class IntervalSqlType
+    extends AbstractSqlType
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private SqlIntervalQualifier intervalQualifier;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Constructs an IntervalSqlType.  This should only be called from a
-     * factory method.
+     * Constructs an IntervalSqlType. This should only be called from a factory
+     * method.
      */
     public IntervalSqlType(
         SqlIntervalQualifier intervalQualifier,
         boolean isNullable)
     {
         super(
-            intervalQualifier.isYearMonth()
-            ? SqlTypeName.IntervalYearMonth
+            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
             : SqlTypeName.IntervalDayTime,
             isNullable,
             null);
         this.intervalQualifier = intervalQualifier;
         computeDigest();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)
@@ -69,17 +77,18 @@ public class IntervalSqlType extends AbstractSqlType
     }
 
     /**
-     * Combines two IntervalTypes and returns the result.
-     * E.g. the result of combining <br>
-     * <code>INTERVAL DAY TO HOUR</code> <br>
-     * with <br>
-     * <code>INTERVAL SECOND</code> is <br>
+     * Combines two IntervalTypes and returns the result. E.g. the result of
+     * combining<br>
+     * <code>INTERVAL DAY TO HOUR</code><br>
+     * with<br>
+     * <code>INTERVAL SECOND</code> is<br>
      * <code>INTERVAL DAY TO SECOND</code>
      */
-    public IntervalSqlType combine(IntervalSqlType that) {
-        assert this.intervalQualifier.isYearMonth() ==
-            that.intervalQualifier.isYearMonth();
-        boolean  nullable = isNullable || that.isNullable;
+    public IntervalSqlType combine(IntervalSqlType that)
+    {
+        assert this.intervalQualifier.isYearMonth()
+            == that.intervalQualifier.isYearMonth();
+        boolean nullable = isNullable || that.isNullable;
         SqlIntervalQualifier.TimeUnit thisStart =
             this.intervalQualifier.getStartUnit();
         SqlIntervalQualifier.TimeUnit thisEnd =
@@ -93,33 +102,41 @@ public class IntervalSqlType extends AbstractSqlType
         assert null != thatStart;
 
         int secondPrec = intervalQualifier.getStartPrecision();
-        int fracPrec = Math.max(
-            this.intervalQualifier.getFractionalSecondPrecision(),
-            that.intervalQualifier.getFractionalSecondPrecision());
+        int fracPrec =
+            Math.max(
+                this.intervalQualifier.getFractionalSecondPrecision(),
+                that.intervalQualifier.getFractionalSecondPrecision());
 
         if (thisStart.getOrdinal() > thatStart.getOrdinal()) {
             thisEnd = thisStart;
             thisStart = thatStart;
             secondPrec = that.intervalQualifier.getStartPrecision();
         } else if (thisStart.getOrdinal() == thatStart.getOrdinal()) {
-            secondPrec = Math.max(secondPrec,
-                that.intervalQualifier.getStartPrecision());
-        } else if ((null == thisEnd) ||
-            (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
+            secondPrec =
+                Math.max(
+                    secondPrec,
+                    that.intervalQualifier.getStartPrecision());
+        } else if ((null == thisEnd)
+            || (thisEnd.getOrdinal() < thatStart.getOrdinal())) {
             thisEnd = thatStart;
         }
 
         if (null != thatEnd) {
-            if ((null == thisEnd) ||
-                (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
+            if ((null == thisEnd)
+                || (thisEnd.getOrdinal() < thatEnd.getOrdinal())) {
                 thisEnd = thatEnd;
             }
         }
 
-        return new IntervalSqlType(
-            new SqlIntervalQualifier(
-                thisStart, secondPrec, thisEnd, fracPrec, SqlParserPos.ZERO),
-            nullable);
+        return
+            new IntervalSqlType(
+                new SqlIntervalQualifier(
+                    thisStart,
+                    secondPrec,
+                    thisEnd,
+                    fracPrec,
+                    SqlParserPos.ZERO),
+                nullable);
     }
 
     // implement RelDataType

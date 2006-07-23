@@ -20,27 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
 /**
- * SqlOrderByOperator is used to represent an ORDER BY on a query
- * other than a SELECT (e.g. VALUES or UNION).  It is a purely syntactic
- * operator, and is eliminated by SqlValidator.performUnconditionalRewrites
- * and replaced with the ORDER_OPERAND of SqlSelect.
+ * SqlOrderByOperator is used to represent an ORDER BY on a query other than a
+ * SELECT (e.g. VALUES or UNION). It is a purely syntactic operator, and is
+ * eliminated by SqlValidator.performUnconditionalRewrites and replaced with the
+ * ORDER_OPERAND of SqlSelect.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlOrderByOperator extends SqlSpecialOperator
+public class SqlOrderByOperator
+    extends SqlSpecialOperator
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int QUERY_OPERAND = 0;
     public static final int ORDER_OPERAND = 1;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlOrderByOperator()
     {
@@ -48,7 +49,7 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         super("ORDER BY", SqlKind.OrderBy, 0);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -64,7 +65,10 @@ public class SqlOrderByOperator extends SqlSpecialOperator
         assert (operands.length == 2);
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameType.OrderBy);
-        operands[QUERY_OPERAND].unparse(writer, getLeftPrec(), getRightPrec());
+        operands[QUERY_OPERAND].unparse(
+            writer,
+            getLeftPrec(),
+            getRightPrec());
         writer.sep(getName());
         final SqlWriter.Frame listFrame =
             writer.startList(SqlWriter.FrameType.OrderByList);

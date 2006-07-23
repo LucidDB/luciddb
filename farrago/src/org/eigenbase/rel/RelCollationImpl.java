@@ -19,34 +19,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.List;
-import java.util.Collections;
+import org.eigenbase.reltype.*;
+
 
 /**
  * Simple implementation of {@link RelCollation}.
  *
  * @author jhyde
- * @since March 6, 2006
  * @version $Id$
+ * @since March 6, 2006
  */
-public class RelCollationImpl implements RelCollation
+public class RelCollationImpl
+    implements RelCollation
 {
-    private final List<RelFieldCollation> fieldCollations;
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * An ordering by the zeroth column.
      */
     public static final List<RelCollation> Singleton0 = createSingleton(0);
 
+    //~ Instance fields --------------------------------------------------------
+
+    private final List<RelFieldCollation> fieldCollations;
+
+    //~ Constructors -----------------------------------------------------------
+
     public RelCollationImpl(List<RelFieldCollation> fieldCollations)
     {
         this.fieldCollations = fieldCollations;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public List<RelFieldCollation> getFieldCollations()
     {
@@ -77,12 +86,13 @@ public class RelCollationImpl implements RelCollation
      */
     public static List<RelCollation> createSingleton(int fieldIndex)
     {
-        return Collections.singletonList(
-            (RelCollation) new RelCollationImpl(
-                Collections.singletonList(
-                    new RelFieldCollation(
-                        fieldIndex,
-                        RelFieldCollation.Direction.Ascending))));
+        return
+            Collections.singletonList(
+                (RelCollation) new RelCollationImpl(
+                    Collections.singletonList(
+                        new RelFieldCollation(
+                            fieldIndex,
+                            RelFieldCollation.Direction.Ascending))));
     }
 
     /**
@@ -91,17 +101,20 @@ public class RelCollationImpl implements RelCollation
      * @param rowType Row type of the relational expression
      * @param collationList List of collations
      * @param fail Whether to fail if invalid
+     *
      * @return Whether valid
      */
     public static boolean isValid(
-        RelDataType rowType, List<RelCollation> collationList, boolean fail)
+        RelDataType rowType,
+        List<RelCollation> collationList,
+        boolean fail)
     {
         final int fieldCount = rowType.getFieldCount();
         for (RelCollation collation : collationList) {
-            for (RelFieldCollation fieldCollation : collation.getFieldCollations()) {
+            for (RelFieldCollation fieldCollation
+                : collation.getFieldCollations()) {
                 final int index = fieldCollation.getFieldIndex();
-                if (index < 0 ||
-                    index >= fieldCount) {
+                if ((index < 0) || (index >= fieldCount)) {
                     assert !fail;
                     return false;
                 }
@@ -110,8 +123,7 @@ public class RelCollationImpl implements RelCollation
         return true;
     }
 
-    public static boolean equal(
-        List<RelCollation> collationList1,
+    public static boolean equal(List<RelCollation> collationList1,
         List<RelCollation> collationList2)
     {
         return collationList1.equals(collationList2);

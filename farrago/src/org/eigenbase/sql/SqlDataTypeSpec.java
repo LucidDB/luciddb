@@ -20,22 +20,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.Util;
+import java.nio.charset.*;
 
-import java.nio.charset.Charset;
-import java.util.TimeZone;
+import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -48,25 +45,21 @@ import java.util.TimeZone;
  *
  * <p>In its full glory, we will have to support complex type expressions like
  *
- * <blockquote><code>
- * ROW(
- *     NUMBER(5,2) NOT NULL AS foo,
- *     ROW(
- *         BOOLEAN AS b,
- *         MyUDT NOT NULL AS i
- *     ) AS rec
- * )</code></blockquote>
+ * <blockquote><code>ROW( NUMBER(5,2) NOT NULL AS foo, ROW( BOOLEAN AS b, MyUDT
+ * NOT NULL AS i ) AS rec )</code></blockquote>
  *
- * <p>Currently it only supports simple datatypes like CHAR, VARCHAR and
- * DOUBLE, with optional precision and scale.
+ * <p>Currently it only supports simple datatypes like CHAR, VARCHAR and DOUBLE,
+ * with optional precision and scale.
  *
  * @author Lee Schumacher
- * @since Jun 4, 2004
  * @version $Id$
+ * @since Jun 4, 2004
  */
-public class SqlDataTypeSpec extends SqlNode
+public class SqlDataTypeSpec
+    extends SqlNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlIdentifier collectionsTypeName;
     private final SqlIdentifier typeName;
@@ -75,7 +68,7 @@ public class SqlDataTypeSpec extends SqlNode
     private final String charSetName;
     private final TimeZone timeZone;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a type specification.
@@ -117,16 +110,26 @@ public class SqlDataTypeSpec extends SqlNode
         this.timeZone = null;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return collectionsTypeName == null ?
-            new SqlDataTypeSpec(
-                collectionsTypeName, typeName, precision, scale, charSetName,
-                pos) :
-            new SqlDataTypeSpec(
-                typeName, precision, scale, charSetName, timeZone, pos);
+        return
+            (collectionsTypeName == null)
+            ? new SqlDataTypeSpec(
+                collectionsTypeName,
+                typeName,
+                precision,
+                scale,
+                charSetName,
+                pos)
+            : new SqlDataTypeSpec(
+                typeName,
+                precision,
+                scale,
+                charSetName,
+                timeZone,
+                pos);
     }
 
     public SqlIdentifier getCollectionsTypeName()
@@ -160,8 +163,8 @@ public class SqlDataTypeSpec extends SqlNode
     }
 
     /**
-     * Returns a new SqlDataTypeSpec corresponding to the component type if
-     * the type spec is a collections type spec.<br>
+     * Returns a new SqlDataTypeSpec corresponding to the component type if the
+     * type spec is a collections type spec.<br>
      * Collection types are <code>ARRAY</code> and <code>MULTISET</code>.
      *
      * @pre null != getCollectionsTypeName()
@@ -169,10 +172,16 @@ public class SqlDataTypeSpec extends SqlNode
     public SqlDataTypeSpec getComponentTypeSpec()
     {
         Util.pre(
-            null != getCollectionsTypeName(), "null != getCollectionsTypeName()");
-        return new SqlDataTypeSpec(
-            typeName, precision, scale, charSetName, timeZone,
-            getParserPosition());
+            null != getCollectionsTypeName(),
+            "null != getCollectionsTypeName()");
+        return
+            new SqlDataTypeSpec(
+                typeName,
+                precision,
+                scale,
+                charSetName,
+                timeZone,
+                getParserPosition());
     }
 
     public void unparse(
@@ -187,11 +196,11 @@ public class SqlDataTypeSpec extends SqlNode
             // we have a built-in data type
             writer.keyword(name);
 
-            if (sqlTypeName.allowsPrec() && precision >= 0) {
+            if (sqlTypeName.allowsPrec() && (precision >= 0)) {
                 final SqlWriter.Frame frame =
                     writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
                 writer.print(precision);
-                if (sqlTypeName.allowsScale() && scale >= 0) {
+                if (sqlTypeName.allowsScale() && (scale >= 0)) {
                     writer.sep(",", true);
                     writer.print(scale);
                 }
@@ -206,7 +215,6 @@ public class SqlDataTypeSpec extends SqlNode
             if (collectionsTypeName != null) {
                 writer.keyword(collectionsTypeName.getSimple());
             }
-
         } else {
             // else we have a user defined type
             typeName.unparse(writer, leftPrec, rightPrec);
@@ -231,8 +239,9 @@ public class SqlDataTypeSpec extends SqlNode
         }
         SqlDataTypeSpec that = (SqlDataTypeSpec) node;
         if (!SqlNode.equalDeep(
-            this.collectionsTypeName,
-            that.collectionsTypeName, fail)) {
+                this.collectionsTypeName,
+                that.collectionsTypeName,
+                fail)) {
             return false;
         }
         if (!this.typeName.equalsDeep(that.typeName, fail)) {
@@ -266,14 +275,16 @@ public class SqlDataTypeSpec extends SqlNode
 
         //for now we only support builtin datatypes
         if (!SqlTypeName.containsName(name)) {
-            throw validator.newValidationError(this,
+            throw validator.newValidationError(
+                this,
                 EigenbaseResource.instance().UnknownDatatypeName.ex(name));
         }
 
         if (null != collectionsTypeName) {
             final String collectionName = collectionsTypeName.getSimple();
             if (!SqlTypeName.containsName(collectionName)) {
-                throw validator.newValidationError(this,
+                throw validator.newValidationError(
+                    this,
                     EigenbaseResource.instance().UnknownDatatypeName.ex(
                         collectionName));
             }
@@ -296,13 +307,13 @@ public class SqlDataTypeSpec extends SqlNode
         // validation errors instead; need to share code with DDL
         RelDataType type;
         if ((precision >= 0) && (scale >= 0)) {
-            assert(sqlTypeName.allowsPrecScale(true, true));
+            assert (sqlTypeName.allowsPrecScale(true, true));
             type = typeFactory.createSqlType(sqlTypeName, precision, scale);
         } else if (precision >= 0) {
-            assert(sqlTypeName.allowsPrecNoScale());
+            assert (sqlTypeName.allowsPrecNoScale());
             type = typeFactory.createSqlType(sqlTypeName, precision);
         } else {
-            assert(sqlTypeName.allowsNoPrecNoScale());
+            assert (sqlTypeName.allowsNoPrecNoScale());
             type = typeFactory.createSqlType(sqlTypeName);
         }
 
@@ -323,7 +334,8 @@ public class SqlDataTypeSpec extends SqlNode
                 charset = Charset.forName(charSetName);
             }
             type =
-                typeFactory.createTypeWithCharsetAndCollation(type, charset,
+                typeFactory.createTypeWithCharsetAndCollation(type,
+                    charset,
                     collation);
         }
 

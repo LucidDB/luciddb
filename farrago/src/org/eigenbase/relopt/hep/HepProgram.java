@@ -21,18 +21,17 @@
 */
 package org.eigenbase.relopt.hep;
 
-import org.eigenbase.relopt.*;
-
 import java.util.*;
 
+import org.eigenbase.relopt.*;
+
+
 /**
- * HepProgram specifies the order in which rules should be attempted
- * by {@link HepPlanner}.  Use {@link HepProgramBuilder} to create
- * a new instance of HepProgram.
+ * HepProgram specifies the order in which rules should be attempted by {@link
+ * HepPlanner}. Use {@link HepProgramBuilder} to create a new instance of
+ * HepProgram.
  *
- *<p>
- *
- * Note that the structure of a program is immutable, but the planner uses it
+ * <p>Note that the structure of a program is immutable, but the planner uses it
  * as read/write during planning, so a program can only be in use by a single
  * planner at a time.
  *
@@ -41,11 +40,16 @@ import java.util.*;
  */
 public class HepProgram
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Symbolic constant for matching until no more matches occur.
      */
     public static final int MATCH_UNTIL_FIXPOINT = Integer.MAX_VALUE;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     final List<HepInstruction> instructions;
 
     int matchLimit;
@@ -54,22 +58,26 @@ public class HepProgram
 
     HepInstruction.EndGroup group;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new empty HepProgram.  The program has an initial
-     * match order of {@link HepMatchOrder#ARBIRARY},
-     * and an initial match limit of {@link #MATCH_UNTIL_FIXPOINT}.
+     * Creates a new empty HepProgram. The program has an initial match order of
+     * {@link HepMatchOrder#ARBIRARY}, and an initial match limit of {@link
+     * #MATCH_UNTIL_FIXPOINT}.
      */
     HepProgram(List<HepInstruction> instructions)
     {
         this.instructions = instructions;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     void initialize(boolean clearCache)
     {
         matchLimit = MATCH_UNTIL_FIXPOINT;
         matchOrder = HepMatchOrder.ARBITRARY;
         group = null;
-        
+
         for (HepInstruction instruction : instructions) {
             instruction.initialize(clearCache);
         }

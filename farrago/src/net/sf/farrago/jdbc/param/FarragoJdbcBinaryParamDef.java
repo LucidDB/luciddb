@@ -22,18 +22,25 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.util14.*;
+
 
 /**
- * FarragoJdbcEngineBinaryParamDef defines a binary parameter. Only accepts 
+ * FarragoJdbcEngineBinaryParamDef defines a binary parameter. Only accepts
  * byte-array values.
- * 
+ *
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcBinaryParamDef extends FarragoJdbcParamDef
+class FarragoJdbcBinaryParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int maxByteCount;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoJdbcBinaryParamDef(
         String paramName,
@@ -42,6 +49,8 @@ class FarragoJdbcBinaryParamDef extends FarragoJdbcParamDef
         super(paramName, paramMetaData);
         maxByteCount = paramMetaData.precision;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
@@ -56,8 +65,10 @@ class FarragoJdbcBinaryParamDef extends FarragoJdbcParamDef
         final byte [] bytes = (byte []) x;
         if (bytes.length > maxByteCount) {
             throw newValueTooLong(
-                ConversionUtil.toStringFromByteArray(bytes,16));
+                ConversionUtil.toStringFromByteArray(bytes, 16));
         }
         return bytes;
     }
 }
+
+// End FarragoJdbcBinaryParamDef.java

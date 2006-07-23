@@ -28,8 +28,8 @@ import net.sf.farrago.fem.sql2003.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import org.eigenbase.sql.SqlUtil;
 
 
 /**
@@ -38,12 +38,16 @@ import org.eigenbase.sql.SqlUtil;
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoView extends FarragoQueryNamedColumnSet
+class FarragoView
+    extends FarragoQueryNamedColumnSet
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String datasetName;
     private final ModalityType modality;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoView object.
@@ -64,7 +68,7 @@ class FarragoView extends FarragoQueryNamedColumnSet
         this.modality = modality;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public FemLocalView getFemView()
     {
@@ -79,14 +83,16 @@ class FarragoView extends FarragoQueryNamedColumnSet
         String queryString = getFemView().getQueryExpression().getBody();
         if (datasetName != null) {
             queryString =
-                (modality == ModalityTypeEnum.MODALITYTYPE_STREAM ?
-                    "SELECT STREAM" :
-                    "SELECT") +
-                " * FROM (" +
-                queryString +
-                ") TABLESAMPLE SUBSTITUTE (" +
-                SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName) +
-                ") AS x";
+                (
+                    (modality == ModalityTypeEnum.MODALITYTYPE_STREAM)
+                    ? "SELECT STREAM"
+                    : "SELECT"
+                )
+                + " * FROM ("
+                + queryString
+                + ") TABLESAMPLE SUBSTITUTE ("
+                + SqlUtil.eigenbaseDialect.quoteStringLiteral(datasetName)
+                + ") AS x";
         }
         return expandView(queryString);
     }
@@ -95,8 +101,10 @@ class FarragoView extends FarragoQueryNamedColumnSet
     {
         try {
             // REVIEW:  cache view definition?
-            RelNode rel = getPreparingStmt().expandView(
-                getRowType(), queryString);
+            RelNode rel =
+                getPreparingStmt().expandView(
+                    getRowType(),
+                    queryString);
             rel = RelOptUtil.createRenameRel(rowType, rel);
             rel = getPreparingStmt().flattenTypes(rel, false);
             return rel;

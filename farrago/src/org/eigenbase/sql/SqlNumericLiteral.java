@@ -21,26 +21,32 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Util;
+import java.math.*;
 
-import java.math.BigDecimal;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * A numeric SQL literal.
  *
  * @author jhyde
- * @since Nov 18, 2004
  * @version $Id$
- **/
-public class SqlNumericLiteral extends SqlLiteral
+ * @since Nov 18, 2004
+ */
+public class SqlNumericLiteral
+    extends SqlLiteral
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private Integer prec;
     private Integer scale;
     private boolean isExact;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlNumericLiteral(
         BigDecimal value,
@@ -55,6 +61,8 @@ public class SqlNumericLiteral extends SqlLiteral
         this.scale = scale;
         this.isExact = isExact;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Integer getPrec()
     {
@@ -73,8 +81,13 @@ public class SqlNumericLiteral extends SqlLiteral
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlNumericLiteral(
-            (BigDecimal) value, getPrec(), getScale(), isExact, pos);
+        return
+            new SqlNumericLiteral(
+                (BigDecimal) value,
+                getPrec(),
+                getScale(),
+                isExact,
+                pos);
     }
 
     public void unparse(
@@ -82,7 +95,7 @@ public class SqlNumericLiteral extends SqlLiteral
         int leftPrec,
         int rightPrec)
     {
-	writer.literal(toValue());
+        writer.literal(toValue());
     }
 
     public String toValue()
@@ -111,13 +124,15 @@ public class SqlNumericLiteral extends SqlLiteral
             }
 
             //else we have a decimal
-            return typeFactory.createSqlType(
-                SqlTypeName.Decimal,
-                prec.intValue(),
-                scaleValue);
+            return
+                typeFactory.createSqlType(
+                    SqlTypeName.Decimal,
+                    prec.intValue(),
+                    scaleValue);
         }
 
-        // else we have a a float, real or double.  make them all double for now.
+        // else we have a a float, real or double.  make them all double for
+        // now.
         return typeFactory.createSqlType(SqlTypeName.Double);
     }
 

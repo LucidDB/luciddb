@@ -27,8 +27,7 @@ package org.eigenbase.sql;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlExplainLevel
-{
+public enum SqlExplainLevel {
     /**
      * Suppress all attributes.
      */
@@ -45,4 +44,12 @@ public enum SqlExplainLevel
     ALL_ATTRIBUTES
 }
 
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
+// End SqlExplainLevel.java
 // End SqlExplainLevel.java

@@ -22,20 +22,21 @@ package com.lucidera.opt;
 
 import com.lucidera.lcs.*;
 
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
-import org.eigenbase.util14.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rel.rules.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
+import org.eigenbase.util14.*;
 
-import java.util.*;
 
 // REVIEW jvs 19-Apr-2006:  watch out for division-by-zero everywhere;
 // may need some utilities to help with this.  I think Broadbase
@@ -46,38 +47,42 @@ import java.util.*;
 // because it was part of each XO).
 
 /**
- * LoptMetadataProvider supplies relational expression metadata
- * specific to LucidDB.
+ * LoptMetadataProvider supplies relational expression metadata specific to
+ * LucidDB.
  *
- *<p>
- *
- * NOTE jvs 10-Apr-2006:  For now, I just created one class; if
- * it gets too big we can split it up like the ones in
- * {@link org.eigenbase.rel.metadata}, e.g. add LoptRelMdCost.
+ * <p>NOTE jvs 10-Apr-2006: For now, I just created one class; if it gets too
+ * big we can split it up like the ones in {@link org.eigenbase.rel.metadata},
+ * e.g. add LoptRelMdCost.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
+public class LoptMetadataProvider
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoRepos repos;
-    
+
     private LcsColumnMetadata columnMd;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public LoptMetadataProvider(FarragoRepos repos)
     {
         this.repos = repos;
         columnMd = new LcsColumnMetadata();
-        
+
         mapParameterTypes(
             "getCostWithFilters",
             Collections.singletonList((Class) RexNode.class));
-        
+
         List<Class> args = new ArrayList<Class>();
         args.add((Class) BitSet.class);
         args.add((Class) RexNode.class);
         mapParameterTypes("getDistinctRowCount", args);
-        
+
         mapParameterTypes(
             "getSelectivity",
             Collections.singletonList((Class) RexNode.class));
@@ -86,7 +91,9 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             "getPopulationSize",
             Collections.singletonList((Class) BitSet.class));
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // override the default; LucidDB computes cumulative cost in terms
     // of CostWithFilters
     public RelOptCost getCumulativeCost(RelNode rel)
@@ -120,8 +127,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             result += selfCost;
         }
         for (RelNode child : rel.getInputs()) {
-            RelOptCost childCost =
-                RelMetadataQuery.getCumulativeCost(child);
+            RelOptCost childCost = RelMetadataQuery.getCumulativeCost(child);
             if (childCost == null) {
                 return null;
             }
@@ -145,23 +151,22 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         // NOTE jvs 19-Apr-2006: This holy formula is preserved straight from
         // Broadbase.  It is the geometric average of the number of rows in the
         // table and the number of rows which will be produced by the row scan
-        // ExecStream.  Consider a million-row table.  If we're going to
-        // produce all the rows, then the cost is one million, on the
-        // assumption that the optimizer won't bother with the extra cost of
-        // index lookup.  If we're only going to produce one row, then the cost
-        // is one thousand (not one), the idea being that we'll have to do some
-        // work (e.g. bitmap intersection) to identify that row.  This would be
-        // a bad assumption for OLTP index lookup, but it's reasonable for
-        // analytic queries.  If we're going to produce 10% of the rows, the
-        // cost works out to about a third of a million.  Sargable filters are
-        // of interest regardless of whether they are evaluated via an
-        // unclustered index on the assumption that we can handle the residuals
-        // during clustered index scan (not true yet but should be soon).  For
-        // our purposes here, semijoin selectivity is rolled into
-        // sargableSelectivity since it lets us skip rows.  Non-sargable
-        // filters are NOT taken into account here because they have to be
-        // handled via a calculator on top, so they don't reduce the cost of
-        // the row scan itself in any way.
+        // ExecStream.  Consider a million-row table.  If we're going to produce
+        // all the rows, then the cost is one million, on the assumption that
+        // the optimizer won't bother with the extra cost of index lookup.  If
+        // we're only going to produce one row, then the cost is one thousand
+        // (not one), the idea being that we'll have to do some work (e.g.
+        // bitmap intersection) to identify that row.  This would be a bad
+        // assumption for OLTP index lookup, but it's reasonable for analytic
+        // queries.  If we're going to produce 10% of the rows, the cost works
+        // out to about a third of a million.  Sargable filters are of interest
+        // regardless of whether they are evaluated via an unclustered index on
+        // the assumption that we can handle the residuals during clustered
+        // index scan (not true yet but should be soon).  For our purposes here,
+        // semijoin selectivity is rolled into sargableSelectivity since it lets
+        // us skip rows.  Non-sargable filters are NOT taken into account here
+        // because they have to be handled via a calculator on top, so they
+        // don't reduce the cost of the row scan itself in any way.
         return Math.sqrt(nRowsInTable * sargableRowCount);
     }
 
@@ -179,36 +184,40 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         // TODO jvs 19-Apr-2006: come up with more consistent nomenclature for
         // andJoinFilters, unionPreds, and decompCF.  And maybe use unionPreds
         // here?
-        RexNode combinedFilter = RelOptUtil.andJoinFilters(
-            rel.getCluster().getRexBuilder(),
-            filter,
-            rel.getCondition());
-        return LoptMetadataQuery.getCostWithFilters(
-            rel.getChild(),
-            combinedFilter);
+        RexNode combinedFilter =
+            RelOptUtil.andJoinFilters(
+                rel.getCluster().getRexBuilder(),
+                filter,
+                rel.getCondition());
+        return
+            LoptMetadataQuery.getCostWithFilters(
+                rel.getChild(),
+                combinedFilter);
     }
 
     public Double getCostWithFilters(SemiJoinRel rel, RexNode filter)
     {
-        RexNode selectivityNode =
-            RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
-        RexNode combinedFilter = RelOptUtil.andJoinFilters(
-            rel.getCluster().getRexBuilder(),
-            filter,
-            selectivityNode);
-        Double leftCost = LoptMetadataQuery.getCostWithFilters(
-            rel.getLeft(),
-            combinedFilter);
+        RexNode selectivityNode = RelMdUtil.makeSemiJoinSelectivityRexNode(rel);
+        RexNode combinedFilter =
+            RelOptUtil.andJoinFilters(
+                rel.getCluster().getRexBuilder(),
+                filter,
+                selectivityNode);
+        Double leftCost =
+            LoptMetadataQuery.getCostWithFilters(
+                rel.getLeft(),
+                combinedFilter);
         if (leftCost == null) {
             return null;
         }
-        
+
         // TODO jvs 19-Apr-2006: once we can buffer the RHS and reuse it via a
         // tee into both the row scan and the join, don't add on its cost here,
-        // since the join will already account for it (but still need
-        // to add the sorting overhead)
-        RelOptCost rightCost = LoptMetadataQuery.getCumulativeCost(
-            rel.getRight());
+        // since the join will already account for it (but still need to add the
+        // sorting overhead)
+        RelOptCost rightCost =
+            LoptMetadataQuery.getCumulativeCost(
+                rel.getRight());
         if (rightCost == null) {
             return null;
         }
@@ -225,18 +234,19 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
     public Double getCostWithFilters(ProjectRel rel, RexNode filter)
     {
         if (filter == null) {
-            RelOptCost cost = LoptMetadataQuery.getCumulativeCost(
-                rel.getChild());
+            RelOptCost cost =
+                LoptMetadataQuery.getCumulativeCost(
+                    rel.getChild());
             if (cost == null) {
                 return null;
             }
             return cost.getRows();
         }
-        
+
         // NOTE jvs 19-Apr-2006:  I borrowed most of this sequence
         // for combining a filter on top of a project from
         // MergeFilterOntoCalcRule.
-        
+
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         RexProgram bottomProgram =
             RexProgram.create(
@@ -253,19 +263,21 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         topProgramBuilder.addIdentity();
         topProgramBuilder.addCondition(filter);
         RexProgram topProgram = topProgramBuilder.getProgram();
-        
+
         RexProgram mergedProgram =
             RexProgramBuilder.mergePrograms(
                 topProgram,
                 bottomProgram,
                 rexBuilder);
-        
-        RexNode expandedFilter = mergedProgram.expandLocalRef(
-            mergedProgram.getCondition());
-        
-        return LoptMetadataQuery.getCostWithFilters(
-            rel.getChild(),
-            expandedFilter);
+
+        RexNode expandedFilter =
+            mergedProgram.expandLocalRef(
+                mergedProgram.getCondition());
+
+        return
+            LoptMetadataQuery.getCostWithFilters(
+                rel.getChild(),
+                expandedFilter);
     }
 
     public Double getCostWithFilters(JoinRel rel, RexNode filter)
@@ -285,7 +297,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         // to an asymptote of 1 representing one side being infinitely larger
         // than the other.  If one input is twice as big as the other,
         // the factor is 10^(1/2) = ~3.16.
-        
+
         Double leftRowCount = RelMetadataQuery.getRowCount(rel.getLeft());
         if (leftRowCount == null) {
             return null;
@@ -301,7 +313,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             joinRowCount *= Math.pow(10.0, minInputRowCount / maxInputRowCount);
             result += joinRowCount;
         }
-        
+
         return result;
     }
 
@@ -316,35 +328,42 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             return null;
         }
 
-        RelOptCost childCost = 
+        RelOptCost childCost =
             RelMetadataQuery.getCumulativeCost(rel.getChild());
         if (childCost == null) {
             return null;
         }
-        return 3*relRowCount + childRowCount + childCost.getRows();
+        return (3 * relRowCount) + childRowCount + childCost.getRows();
     }
-    
+
     public Double getDistinctRowCount(
-        LcsRowScanRel rel, BitSet groupKey, RexNode predicate)
+        LcsRowScanRel rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         return columnMd.getDistinctRowCount(rel, groupKey, predicate);
     }
-    
+
     public Double getSelectivity(JoinRel rel, RexNode predicate)
     {
-        RexNode unionPreds = RelMdUtil.unionPreds(
-            rel.getCluster().getRexBuilder(), predicate, rel.getCondition());
-        
+        RexNode unionPreds =
+            RelMdUtil.unionPreds(
+                rel.getCluster().getRexBuilder(),
+                predicate,
+                rel.getCondition());
+
         Double rowCount = RelMetadataQuery.getRowCount(rel);
         if (rowCount == null) {
             return null;
         } else if (rowCount < 1.0) {
             rowCount = 1.0;
         }
-        return NumberUtil.divide(
-            computeRowCountGivenConds(rel, unionPreds), rowCount);
+        return
+            NumberUtil.divide(
+                computeRowCountGivenConds(rel, unionPreds),
+                rowCount);
     }
-    
+
     public Double getSelectivity(LcsRowScanRel rel, RexNode predicate)
     {
         return estimateRowScanSelectivity(rel, predicate, false);
@@ -359,18 +378,18 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         if (predicate == null) {
             return selectivity;
         }
-        
+
         // if no stats are available and we're not discriminating by
         // which filters require a calculator, return a guess
         RelStatSource tabStats = RelMetadataQuery.getStatistics(rel);
         if ((tabStats == null) && !excludeCalc) {
             return RelMdUtil.guessSelectivity(predicate);
         }
-        
+
         SargFactory sargFactory =
-            new SargFactory(rel.getCluster().getRexBuilder());            
+            new SargFactory(rel.getCluster().getRexBuilder());
         SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-    
+
         // determine which predicates are sargable
         List<SargBinding> sargBindingList = rexAnalyzer.analyzeAll(predicate);
         Map<CwmColumn, SargIntervalSequence> col2SeqMap = null;
@@ -382,7 +401,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         // TODO jvs 19-Apr-2006:  get LcsIndexGuide to help with
         // mapping columns to ordinals, since it knows about UDT
         // flattening.
-        
+
         // if the column has sargable predicates, compute the
         // selectivity based on those predicates
         if (col2SeqMap != null) {
@@ -393,8 +412,7 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
                     int colno = ((FemAbstractColumn) col).getOrdinal();
                     RelStatColumnStatistics colStats = null;
                     if (tabStats != null) {
-                        colStats = 
-                            tabStats.getColumnStatistics(colno, sargSeq);
+                        colStats = tabStats.getColumnStatistics(colno, sargSeq);
                     }
                     Double colSel = null;
                     if (colStats != null) {
@@ -407,17 +425,18 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
                     } else {
                         selectivity *= colSel;
                     }
-                } 
+                }
             }
         }
-        
+
         // compute the selectivity of the non-sargable predicates; if
         // excludeCalc is true, we include only artificial selectivities;
         // otherwise, pass artificialOnly=false, which includes everything
-        selectivity *= RelMdUtil.guessSelectivity(
-            rexAnalyzer.getPostFilterRexNode(),
-            excludeCalc);
-        
+        selectivity *=
+            RelMdUtil.guessSelectivity(
+                rexAnalyzer.getPostFilterRexNode(),
+                excludeCalc);
+
         // selectivity must return at least one row
         Double rowCount = RelMetadataQuery.getRowCount(rel);
         if (rowCount != null) {
@@ -426,30 +445,37 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
             }
             selectivity = Math.max(selectivity, 1.0 / rowCount);
         }
-        
+
         return selectivity;
     }
-    
+
     public Double getRowCount(JoinRel rel)
     {
-        return computeRowCountGivenConds(rel, rel.getCondition());
+        return computeRowCountGivenConds(
+                rel,
+                rel.getCondition());
     }
-    
+
     private Double computeRowCountGivenConds(
-        JoinRel rel, RexNode predicate)
+        JoinRel rel,
+        RexNode predicate)
     {
         // locate the columns that participate in equijoins
         BitSet leftJoinCols = new BitSet();
         BitSet rightJoinCols = new BitSet();
-        RexNode nonEquiJoin = RelMdUtil.findEquiJoinCols(
-            rel, predicate, leftJoinCols, rightJoinCols);
-        
+        RexNode nonEquiJoin =
+            RelMdUtil.findEquiJoinCols(
+                rel,
+                predicate,
+                leftJoinCols,
+                rightJoinCols);
+
         Double nRowsLeft = RelMetadataQuery.getRowCount(rel.getLeft());
         Double nRowsRight = RelMetadataQuery.getRowCount(rel.getRight());
-        if (nRowsLeft == null || nRowsRight == null) {
+        if ((nRowsLeft == null) || (nRowsRight == null)) {
             return null;
         }
-        
+
         // Calculate the number of groups (distinct join values)
         // on each side of the join, taking into account table level
         // filters (including semijoin filters).
@@ -459,113 +485,131 @@ public class LoptMetadataProvider extends ReflectiveRelMetadataProvider
         // getDistinctRowCount() instead of getPopulationSize(), we take
         // into account semijoins in both the numerator and denominator
         // when calculating the rowcount
-        Double leftCard = RelMetadataQuery.getDistinctRowCount(
-            rel.getLeft(), leftJoinCols, null);
-        Double rightCard = RelMetadataQuery.getDistinctRowCount(
-            rel.getRight(), rightJoinCols, null);
-        double nGroups = leftCard!= null && rightCard != null ?
-            Math.max(Math.max(leftCard, rightCard), 1.0) : 0.0;
-            
+        Double leftCard =
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getLeft(),
+                leftJoinCols,
+                null);
+        Double rightCard =
+            RelMetadataQuery.getDistinctRowCount(
+                rel.getRight(),
+                rightJoinCols,
+                null);
+        double nGroups =
+            ((leftCard != null) && (rightCard != null))
+            ? Math.max(
+                Math.max(leftCard, rightCard),
+                1.0)
+            : 0.0;
+
         double rowCount;
-        
+
         // Compute expected rowcount using different methods depending on how
         // much information we have.
         if (nGroups > 0.0) {
-            
             // Calculate expected rowcount based on equi-join conditions,
             // assuming we don't have an outer join
             // rowcount = nRowsPerGroupLeft * nRowsPerGroupRight * nGroups
             //          = (nRowsLeft/nGroups) * (nRowsRight/nGroups) * nGroups
             //          = nRowsLeft * nRowsRight / nGroups
             rowCount = nRowsLeft * nRowsRight / nGroups;
+
             // adjust for non-equijoin filters
             rowCount *= RelMdUtil.guessSelectivity(nonEquiJoin);
         } else {
-            
             // determine which side corresponds to the dimension table
             // and return the number of rows on the fact table side
             if (leftJoinCols.cardinality() > 0) {
                 Boolean dimLeft = dimOnLeft(rel, leftJoinCols, rightJoinCols);
                 if (dimLeft == null) {
-                    rowCount = nRowsLeft * nRowsRight *
-                        RelMdUtil.guessSelectivity(predicate);
+                    rowCount =
+                        nRowsLeft * nRowsRight
+                        * RelMdUtil.guessSelectivity(predicate);
                 } else if (dimLeft == true) {
                     rowCount = nRowsRight;
                 } else {
                     rowCount = nRowsLeft;
                 }
+
                 // adjust for non-equijoin filters
-                rowCount *= RelMdUtil.guessSelectivity(nonEquiJoin); 
+                rowCount *= RelMdUtil.guessSelectivity(nonEquiJoin);
             } else {
-                rowCount = nRowsLeft * nRowsRight *
-                    RelMdUtil.guessSelectivity(predicate);
+                rowCount =
+                    nRowsLeft * nRowsRight
+                    * RelMdUtil.guessSelectivity(predicate);
             }
         }
-        
+
         if (rel.getJoinType().generatesNullsOnLeft()) {
             rowCount = Math.max(rowCount, nRowsLeft);
         }
         if (rel.getJoinType().generatesNullsOnRight()) {
             rowCount = Math.max(rowCount, nRowsRight);
         }
-        
+
         return rowCount;
     }
-    
+
     /**
      * Returns true if the dimension table is on the LHS of a join
-     * 
+     *
      * @param rel the join rel
      * @param leftJoinCols equijoin columns from the left hand side of the join
      * @param rightJoinCols equijoin columns from the right hand side of the
      * join
+     *
      * @return true if dimension table is on the left; null if cannot determine
      */
     private Boolean dimOnLeft(
-        JoinRelBase rel, BitSet leftJoinCols, BitSet rightJoinCols)
+        JoinRelBase rel,
+        BitSet leftJoinCols,
+        BitSet rightJoinCols)
     {
-        Boolean leftUnique = RelMdUtil.areColumnsUnique(
-            rel.getLeft(), leftJoinCols);
-        Boolean rightUnique = RelMdUtil.areColumnsUnique(
-            rel.getRight(), rightJoinCols);
-        
-        if (leftUnique == null || rightUnique == null) {
+        Boolean leftUnique =
+            RelMdUtil.areColumnsUnique(
+                rel.getLeft(),
+                leftJoinCols);
+        Boolean rightUnique =
+            RelMdUtil.areColumnsUnique(
+                rel.getRight(),
+                rightJoinCols);
+
+        if ((leftUnique == null) || (rightUnique == null)) {
             return null;
         }
-        
+
         // if one side has unique columns, then that's the dimension table
         if (leftUnique) {
             return true;
         } else if (rightUnique) {
             return false;
-        } 
-        
+        }
+
         // if neither side is unique, then whichever side yields a smaller
         // result after filtering is the dimension table
         RelNode left = rel.getLeft();
         RelNode right = rel.getRight();
-        
+
         Double leftPercent = RelMetadataQuery.getPercentageOriginalRows(left);
         Double rightPercent = RelMetadataQuery.getPercentageOriginalRows(right);
-        if (leftPercent == null || rightPercent == null) {
+        if ((leftPercent == null) || (rightPercent == null)) {
             return null;
         }
-        if (RelMetadataQuery.getRowCount(left) / leftPercent <
-            RelMetadataQuery.getRowCount(right) / rightPercent) 
-        {
+        if ((RelMetadataQuery.getRowCount(left) / leftPercent)
+            < (RelMetadataQuery.getRowCount(right) / rightPercent)) {
             return true;
         } else {
             return false;
         }
     }
-    
+
     public Double getPopulationSize(LcsRowScanRel rel, BitSet groupKey)
     {
         return columnMd.getPopulationSize(rel, groupKey);
     }
-    
+
     public Set<BitSet> getUniqueKeys(LcsRowScanRel rel)
-    {    
+    {
         return columnMd.getUniqueKeys(rel, repos);
     }
 }

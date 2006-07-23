@@ -23,6 +23,7 @@
 package net.sf.farrago.test;
 
 import java.sql.*;
+
 import java.util.*;
 
 import junit.framework.*;
@@ -35,9 +36,11 @@ import junit.framework.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelDmlTest extends FarragoTestCase
+public class FennelDmlTest
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelDmlTest object.
@@ -52,7 +55,7 @@ public class FennelDmlTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -294,7 +297,7 @@ public class FennelDmlTest extends FarragoTestCase
             connection.rollback();
         }
     }
-    
+
     /**
      * Tests DELETE ... WHERE ...
      *
@@ -354,8 +357,7 @@ public class FennelDmlTest extends FarragoTestCase
         try {
             int rowCount = stmt.executeUpdate(sql);
             assertEquals(1, rowCount);
-            resultSet =
-                stmt.executeQuery("select name from depts order by 1");
+            resultSet = stmt.executeQuery("select name from depts order by 1");
             List refList = new ArrayList();
             refList.add("Marketing");
             refList.add("Sales");
@@ -367,8 +369,8 @@ public class FennelDmlTest extends FarragoTestCase
     }
 
     /**
-     * Tests explicit checkpoint (results are not verifiable so just test
-     * that the statement is accepted).
+     * Tests explicit checkpoint (results are not verifiable so just test that
+     * the statement is accepted).
      *
      * @throws Exception .
      */
@@ -479,6 +481,5 @@ public class FennelDmlTest extends FarragoTestCase
         stmt.execute("set schema 'sales'");
     }
 }
-
 
 // End FennelDmlTest.java

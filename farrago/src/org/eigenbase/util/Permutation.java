@@ -21,10 +21,10 @@
 */
 package org.eigenbase.util;
 
+import java.util.*;
+
 import org.eigenbase.util.mapping.*;
 
-import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * Represents a mapping which reorders elements in an array.
@@ -32,15 +32,22 @@ import java.util.Iterator;
  * @author Julian Hyde
  * @version $Id$
  */
-public class Permutation implements Mapping, Mappings.TargetMapping
+public class Permutation
+    implements Mapping,
+        Mappings.TargetMapping
 {
-    private int[] targets;
-    private int[] sources;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private int [] targets;
+    private int [] sources;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a permutation of a given size.<p>
+     * Creates a permutation of a given size.
      *
-     * It is intialized to the identity permutation, such as "[0, 1, 2, 3]".
+     * <p>It is intialized to the identity permutation, such as "[0, 1, 2, 3]".
      *
      * @param size Number of elements in the permutation
      */
@@ -48,6 +55,7 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     {
         targets = new int[size];
         sources = new int[size];
+
         // Initialize to identity.
         identity();
     }
@@ -56,11 +64,12 @@ public class Permutation implements Mapping, Mappings.TargetMapping
      * Creates a permutation from an array.
      *
      * @param targets Array of targets
+     *
      * @throws IllegalArgumentException if elements of array are not unique
      * @throws ArrayIndexOutOfBoundsException if elements of array are not
-     *   between 0 through targets.length - 1 inclusive
+     * between 0 through targets.length - 1 inclusive
      */
-    public Permutation(int[] targets)
+    public Permutation(int [] targets)
     {
         this.targets = targets.clone();
         this.sources = new int[targets.length];
@@ -69,8 +78,8 @@ public class Permutation implements Mapping, Mappings.TargetMapping
             int target = targets[i];
             if (sources[target] != -1) {
                 throw new IllegalArgumentException(
-                    "more than one permutation element maps to position " +
-                    target);
+                    "more than one permutation element maps to position "
+                    + target);
             }
             sources[target] = i;
         }
@@ -78,19 +87,23 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     }
 
     /**
-     * Creates a permuation. Arrays are not copied, and are assumed to be
-     * valid permutations.
+     * Creates a permuation. Arrays are not copied, and are assumed to be valid
+     * permutations.
      */
-    private Permutation(int[] targets, int[] sources)
+    private Permutation(int [] targets, int [] sources)
     {
         this.targets = targets;
         this.sources = sources;
         assert isValid(true);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Object clone()
     {
-        return new Permutation(targets.clone(), sources.clone());
+        return new Permutation(
+                targets.clone(),
+                sources.clone());
     }
 
     /**
@@ -117,11 +130,26 @@ public class Permutation implements Mapping, Mappings.TargetMapping
      * <p>For example, the mapping
      *
      * <table>
-     * <tr> <th>source</th> <th>target</th> </tr>
-     * <tr> <td>0</td>      <td>2</td>      </tr>
-     * <tr> <td>1</td>      <td>0</td>      </tr>
-     * <tr> <td>2</td>      <td>1</td>      </tr>
-     * <tr> <td>3</td>      <td>3</td>      </tr>
+     * <tr>
+     * <th>source</th>
+     * <th>target</th>
+     * </tr>
+     * <tr>
+     * <td>0</td>
+     * <td>2</td>
+     * </tr>
+     * <tr>
+     * <td>1</td>
+     * <td>0</td>
+     * </tr>
+     * <tr>
+     * <td>2</td>
+     * <td>1</td>
+     * </tr>
+     * <tr>
+     * <td>3</td>
+     * <td>3</td>
+     * </tr>
      * </table>
      *
      * is represented by the string "[2, 0, 1, 3]".
@@ -147,25 +175,30 @@ public class Permutation implements Mapping, Mappings.TargetMapping
      * source becomes the new target of the previous source.
      *
      * <p>For example, given the permutation
+     *
      * <pre>[3, 2, 0, 1]</pre>
-     * suppose we map position 2 to target 1.
-     * Position 2 currently has target 0,
-     * and the source of position 1 is position 3.
-     * We preserve the permutation property by
-     * mapping the previous source 3 to the previous target 0.
-     * The new permutation is
+     *
+     * suppose we map position 2 to target 1. Position 2 currently has target 0,
+     * and the source of position 1 is position 3. We preserve the permutation
+     * property by mapping the previous source 3 to the previous target 0. The
+     * new permutation is
+     *
      * <pre>[3, 2, 1, 0].</pre>
      *
      * <p>Another example. Again starting from
+     *
      * <pre>[3, 2, 0, 1]</pre>
-     * suppose we map position 2 to target 3.
-     * We map the previous source 0 to the previous target 0, which gives
+     *
+     * suppose we map position 2 to target 3. We map the previous source 0 to
+     * the previous target 0, which gives
+     *
      * <pre>[0, 2, 3, 1].</pre>
      *
      * @param source Source position
      * @param target Target position
-     * @throws ArrayIndexOutOfBoundsException if source or target is negative
-     *   or greater than or equal to the size of the permuation
+     *
+     * @throws ArrayIndexOutOfBoundsException if source or target is negative or
+     * greater than or equal to the size of the permuation
      */
     public void set(int source, int target)
     {
@@ -173,35 +206,40 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     }
 
     /**
-     * Maps source position to target position, automatically resizing if
-     * source or target is out of bounds.
+     * Maps source position to target position, automatically resizing if source
+     * or target is out of bounds.
      *
      * <p>To preserve the 1:1 nature of the permutation, the previous target of
      * source becomes the new target of the previous source.
      *
      * <p>For example, given the permutation
+     *
      * <pre>[3, 2, 0, 1]</pre>
-     * suppose we map position 2 to target 1.
-     * Position 2 currently has target 0,
-     * and the source of position 1 is position 3.
-     * We preserve the permutation property by
-     * mapping the previous source 3 to the previous target 0.
-     * The new permutation is
+     *
+     * suppose we map position 2 to target 1. Position 2 currently has target 0,
+     * and the source of position 1 is position 3. We preserve the permutation
+     * property by mapping the previous source 3 to the previous target 0. The
+     * new permutation is
+     *
      * <pre>[3, 2, 1, 0].</pre>
      *
      * <p>Another example. Again starting from
+     *
      * <pre>[3, 2, 0, 1]</pre>
-     * suppose we map position 2 to target 3.
-     * We map the previous source 0 to the previous target 0, which gives
+     *
+     * suppose we map position 2 to target 3. We map the previous source 0 to
+     * the previous target 0, which gives
+     *
      * <pre>[0, 2, 3, 1].</pre>
      *
      * @param source Source position
      * @param target Target position
      * @param allowResize Whether to resize the permutation if the source or
-     *   target is greater than the current capacity
+     * target is greater than the current capacity
+     *
      * @throws ArrayIndexOutOfBoundsException if source or target is negative,
-     *   or greater than or equal to the size of the permutation,
-     *   and <code>allowResize</code> is false
+     * or greater than or equal to the size of the permutation, and <code>
+     * allowResize</code> is false
      */
     public void set(int source, int target, boolean allowResize)
     {
@@ -218,6 +256,7 @@ public class Permutation implements Mapping, Mappings.TargetMapping
         int prevSource = sources[target];
         assert targets[prevSource] == target;
         setInternal(source, target);
+
         // To balance things up, make the previous source reference the
         // previous target. This ensures that each ordinal occurs precisely
         // once in the sources array and the targets array.
@@ -233,34 +272,56 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     }
 
     /**
-     * Inserts into the targets.<p/>
+     * Inserts into the targets.
      *
-     * For example, consider the permutation
-     *
-     * <table border="1">
-     * <tr>
-     * <td>source</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td>
-     * </tr>
-     * <tr>
-     * <td>target</td><td>3</td><td>0</td><td>4</td><td>2</td><td>1</td>
-     * </tr>
-     * </table>
-     *
-     * After applying <code>insertTarget(2)</code> every target 2 or higher
-     * is shifted up one.<p/>
+     * <p/>For example, consider the permutation
      *
      * <table border="1">
      * <tr>
-     * <td>source</td><td>0</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+     * <td>source</td>
+     * <td>0</td>
+     * <td>1</td>
+     * <td>2</td>
+     * <td>3</td>
+     * <td>4</td>
      * </tr>
      * <tr>
-     * <td>target</td><td>4</td><td>0</td><td>5</td><td>3</td><td>1</td><td>2</td>
+     * <td>target</td>
+     * <td>3</td>
+     * <td>0</td>
+     * <td>4</td>
+     * <td>2</td>
+     * <td>1</td>
      * </tr>
      * </table>
      *
-     * Note that the array has been extended to accomodate
-     * the new target, and the previously unmapped source 5 is mapped to the
-     * unused target slot 2.
+     * After applying <code>insertTarget(2)</code> every target 2 or higher is
+     * shifted up one.
+     *
+     * <p/>
+     * <table border="1">
+     * <tr>
+     * <td>source</td>
+     * <td>0</td>
+     * <td>1</td>
+     * <td>2</td>
+     * <td>3</td>
+     * <td>4</td>
+     * <td>5</td>
+     * </tr>
+     * <tr>
+     * <td>target</td>
+     * <td>4</td>
+     * <td>0</td>
+     * <td>5</td>
+     * <td>3</td>
+     * <td>1</td>
+     * <td>2</td>
+     * </tr>
+     * </table>
+     *
+     * Note that the array has been extended to accomodate the new target, and
+     * the previously unmapped source 5 is mapped to the unused target slot 2.
      *
      * @param x
      */
@@ -271,6 +332,7 @@ public class Permutation implements Mapping, Mappings.TargetMapping
 
         // Shuffle sources up.
         shuffleUp(sources, x);
+
         // Shuffle targets.
         increment(x, targets);
 
@@ -278,9 +340,9 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     }
 
     /**
-     * Inserts into the sources.<p/>
+     * Inserts into the sources.
      *
-     * Behavior is analogous to {@link #insertTarget(int)}.
+     * <p/>Behavior is analogous to {@link #insertTarget(int)}.
      *
      * @param x
      */
@@ -291,17 +353,18 @@ public class Permutation implements Mapping, Mappings.TargetMapping
 
         // Shuffle targets up.
         shuffleUp(targets, x);
+
         // Increment sources.
         increment(x, sources);
 
         assert isValid(true);
     }
 
-    private void increment(int x, int[] zzz)
+    private void increment(int x, int [] zzz)
     {
         final int size = zzz.length;
         for (int i = 0; i < size; i++) {
-            if (targets[i] == size - 1) {
+            if (targets[i] == (size - 1)) {
                 targets[i] = x;
             } else if (targets[i] >= x) {
                 ++targets[i];
@@ -309,7 +372,7 @@ public class Permutation implements Mapping, Mappings.TargetMapping
         }
     }
 
-    private void shuffleUp(final int[] zz, int x)
+    private void shuffleUp(final int [] zz, int x)
     {
         final int size = zz.length;
         int t = zz[size - 1];
@@ -323,10 +386,11 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     {
         assert isValid(true);
         final int size = targets.length;
-        int[] newTargets = new int[newSize];
+        int [] newTargets = new int[newSize];
         System.arraycopy(targets, 0, newTargets, 0, size);
-        int[] newSources = new int[newSize];
+        int [] newSources = new int[newSize];
         System.arraycopy(sources, 0, newSources, 0, size);
+
         // Initialize the new elements to the identity mapping.
         for (int i = size; i < newSize; i++) {
             newSources[i] = i;
@@ -348,11 +412,9 @@ public class Permutation implements Mapping, Mappings.TargetMapping
      */
     public Permutation inverse()
     {
-        return new Permutation(
-            (int []) sources.clone(),
-            (int []) targets.clone());
+        return
+            new Permutation((int []) sources.clone(), (int []) targets.clone());
     }
-
 
     /**
      * Returns whether this is the identity permutation.
@@ -384,9 +446,12 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     }
 
     /**
-     * Checks whether this permutation is valid.<p>
+     * Checks whether this permutation is valid.
+     *
+     * <p>
      *
      * @param fail Whether to assert if invalid
+     *
      * @return Whether valid
      */
     private boolean isValid(boolean fail)
@@ -396,25 +461,26 @@ public class Permutation implements Mapping, Mappings.TargetMapping
             assert !fail : "different lengths";
             return false;
         }
+
         // Every element in sources has corresponding element in targets.
-        int[] occurCount = new int[size];
+        int [] occurCount = new int[size];
         for (int i = 0; i < size; i++) {
             int target = targets[i];
             if (sources[target] != i) {
-                assert !fail : "source[" + target + "] = " +
-                    sources[target] + ", should be " + i;
+                assert !fail : "source[" + target + "] = " + sources[target]
+                    + ", should be " + i;
                 return false;
             }
             int source = sources[i];
             if (targets[source] != i) {
-                assert !fail : "target[" + source + "] = " +
-                    targets[source] + ", should be " + i;
+                assert !fail : "target[" + source + "] = " + targets[source]
+                    + ", should be " + i;
                 return false;
             }
+
             // Every member should occur once.
             if (occurCount[target] != 0) {
-                assert !fail :
-                    "target " + target + " occurs more than once";
+                assert !fail : "target " + target + " occurs more than once";
                 return false;
             }
         }
@@ -430,35 +496,34 @@ public class Permutation implements Mapping, Mappings.TargetMapping
     public boolean equals(Object obj)
     {
         // not very efficient
-        return obj instanceof Permutation &&
-            toString().equals(obj.toString());
+        return
+            (obj instanceof Permutation)
+            && toString().equals(obj.toString());
     }
-
 
     // implement Mapping
     public Iterator<IntPair> iterator()
     {
-        return new Iterator<IntPair>()
-        {
-            private int i = 0;
+        return new Iterator<IntPair>() {
+                private int i = 0;
 
-            public boolean hasNext()
-            {
-                return i < targets.length;
-            }
+                public boolean hasNext()
+                {
+                    return i < targets.length;
+                }
 
-            public IntPair next()
-            {
-                final IntPair pair = new IntPair(i, targets[i]);
-                ++i;
-                return pair;
-            }
+                public IntPair next()
+                {
+                    final IntPair pair = new IntPair(i, targets[i]);
+                    ++i;
+                    return pair;
+                }
 
-            public void remove()
-            {
-                throw new UnsupportedOperationException();
-            }
-        };
+                public void remove()
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
     }
 
     public int getSourceCount()

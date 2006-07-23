@@ -24,28 +24,32 @@ package org.eigenbase.reltype;
 
 import org.eigenbase.oj.util.*;
 
+
 // REVIEW jvs 17-Dec-2004:  does this still need to exist?  Is it supposed
 // to have fields?
 
 /**
  * Type of the cartesian product of two or more sets of records.
  *
- * <p>
- * Its fields are those of its constituent records, but unlike a {@link
- * RelRecordType}, those fields' names are not
- * necessarily distinct.
- * </p>
+ * <p>Its fields are those of its constituent records, but unlike a {@link
+ * RelRecordType}, those fields' names are not necessarily distinct.</p>
  *
  * @author jhyde
  * @version $Id$
  */
-public class RelCrossType extends RelDataTypeImpl
+public class RelCrossType
+    extends RelDataTypeImpl
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     public final RelDataType [] types;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a cartesian product type.  This should only
-     * be called from a factory method.
+     * Creates a cartesian product type. This should only be called from a
+     * factory method.
      *
      * @pre types != null
      * @pre types.length >= 1
@@ -65,11 +69,13 @@ public class RelCrossType extends RelDataTypeImpl
         computeDigest();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public boolean isStruct()
     {
         return false;
     }
-    
+
     public RelDataTypeField getField(String fieldName)
     {
         throw new UnsupportedOperationException(

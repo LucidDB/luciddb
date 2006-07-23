@@ -22,16 +22,17 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlSavepointStmt represents a SAVEPOINT statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlSavepointStmt extends DdlSavepointTxnStmt
+public class DdlSavepointStmt
+    extends DdlSavepointTxnStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlSavepointStmt.
@@ -43,7 +44,7 @@ public class DdlSavepointStmt extends DdlSavepointTxnStmt
         super(savepointName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -51,6 +52,5 @@ public class DdlSavepointStmt extends DdlSavepointTxnStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlSavepointStmt.java

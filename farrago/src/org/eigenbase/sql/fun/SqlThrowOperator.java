@@ -24,35 +24,45 @@ package org.eigenbase.sql.fun;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * An internal operator that throws an exception. <br>
+ * An internal operator that throws an exception.<br>
  * The exception is thrown with a (localized) error message which is the only
  * input paramter to the operator.<br>
- * The return type is defined as a <code>BOOLEAN</code> to facilitate
- * the use of it in constructs like the following:<p>
- * <code>
- * CASE<br>
- *  WHEN &lt;conditionn&gt; THEN true<br>
- *  ELSE throw("what's wrong with you man?")<br>
+ * The return type is defined as a <code>BOOLEAN</code> to facilitate the use of
+ * it in constructs like the following:
+ *
+ * <p><code>CASE<br>
+ * WHEN &lt;conditionn&gt; THEN true<br>
+ * ELSE throw("what's wrong with you man?")<br>
  * END
  *
  * @author Wael Chatila
- * @since Mar 29, 2005
  * @version $Id$
+ * @since Mar 29, 2005
  */
-public class SqlThrowOperator extends SqlInternalOperator
+public class SqlThrowOperator
+    extends SqlInternalOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlThrowOperator()
     {
-        super("$throw", SqlKind.Other, 2, true,
+        super("$throw",
+            SqlKind.Other,
+            2,
+            true,
             SqlTypeStrategies.rtiBoolean,
             null,
             SqlTypeStrategies.otcCharString);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {
@@ -61,3 +71,5 @@ public class SqlThrowOperator extends SqlInternalOperator
         writer.endFunCall(frame);
     }
 }
+
+// End SqlThrowOperator.java

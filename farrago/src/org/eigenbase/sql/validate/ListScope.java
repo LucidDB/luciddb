@@ -21,24 +21,28 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.util.Util;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Abstract base for a scope which is defined by a list of child
- * namespaces and which inherits from a parent scope.
+ * Abstract base for a scope which is defined by a list of child namespaces and
+ * which inherits from a parent scope.
  *
  * @author jhyde
  * @version $Id$
  * @since Mar 25, 2003
  */
-public abstract class ListScope extends DelegatingScope
+public abstract class ListScope
+    extends DelegatingScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * List of child {@link SqlValidatorNamespace} objects.
      */
@@ -50,10 +54,14 @@ public abstract class ListScope extends DelegatingScope
      */
     protected final List<String> childrenNames = new ArrayList<String>();
 
+    //~ Constructors -----------------------------------------------------------
+
     public ListScope(SqlValidatorScope parent)
     {
         super(parent);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void addChild(SqlValidatorNamespace ns, String alias)
     {
@@ -65,7 +73,7 @@ public abstract class ListScope extends DelegatingScope
     public SqlValidatorNamespace getChild(int index)
     {
         SqlValidatorNamespace rtSpace = null;
-        if (index >= 0 && index < children.size()) {
+        if ((index >= 0) && (index < children.size())) {
             rtSpace = children.get(index);
         }
         return rtSpace;
@@ -75,7 +83,8 @@ public abstract class ListScope extends DelegatingScope
     {
         if (alias == null) {
             if (children.size() != 1) {
-                throw Util.newInternal("no alias specified, but more than one table in from list");
+                throw Util.newInternal(
+                    "no alias specified, but more than one table in from list");
             }
             return children.get(0);
         } else {
@@ -89,7 +98,8 @@ public abstract class ListScope extends DelegatingScope
     }
 
     public void findAllColumnNames(
-        String parentObjName, List<SqlMoniker> result)
+        String parentObjName,
+        List<SqlMoniker> result)
     {
         if (parentObjName == null) {
             for (SqlValidatorNamespace ns : children) {
@@ -97,8 +107,7 @@ public abstract class ListScope extends DelegatingScope
             }
             parent.findAllColumnNames(parentObjName, result);
         } else {
-            final SqlValidatorNamespace ns =
-                resolve(parentObjName, null, null);
+            final SqlValidatorNamespace ns = resolve(parentObjName, null, null);
             if (ns != null) {
                 addColumnNames(ns, result);
             }
@@ -133,15 +142,16 @@ public abstract class ListScope extends DelegatingScope
         case 1:
             return tableName;
         default:
-            throw validator.newValidationError(ctx,
+            throw validator.newValidationError(
+                ctx,
                 EigenbaseResource.instance().ColumnAmbiguous.ex(columnName));
         }
     }
 
     public SqlValidatorNamespace resolve(
         String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut)
     {
         // First resolve by looking through the child namespaces.
         final int i = childrenNames.indexOf(name);
@@ -154,6 +164,7 @@ public abstract class ListScope extends DelegatingScope
             }
             return children.get(i);
         }
+
         // Then call the base class method, which will delegate to the
         // parent scope.
         return parent.resolve(name, ancestorOut, offsetOut);
@@ -175,13 +186,13 @@ public abstract class ListScope extends DelegatingScope
         if (found == 0) {
             return null;
         } else if (found > 1) {
-            throw validator.newValidationError(ctx,
+            throw validator.newValidationError(
+                ctx,
                 EigenbaseResource.instance().ColumnAmbiguous.ex(columnName));
         } else {
             return theType;
         }
     }
 }
-
 
 // End ListScope.java

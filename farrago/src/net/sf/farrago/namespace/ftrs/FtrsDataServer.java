@@ -23,44 +23,47 @@
 package net.sf.farrago.namespace.ftrs;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 
 /**
- * FtrsDataServer implements the {@link FarragoMedDataServer} interface
- * for FTRS data.
+ * FtrsDataServer implements the {@link FarragoMedDataServer} interface for FTRS
+ * data.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsDataServer extends MedAbstractFennelDataServer
+class FtrsDataServer
+    extends MedAbstractFennelDataServer
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoTypeFactory indexTypeFactory;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FtrsDataServer(
         String serverMofId,
@@ -71,7 +74,7 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         indexTypeFactory = new FarragoTypeFactoryImpl(repos);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataServer
     public FarragoMedColumnSet newColumnSet(
@@ -114,11 +117,11 @@ class FtrsDataServer extends MedAbstractFennelDataServer
             }
         }
         if (nClustered > 1) {
-            throw FarragoResource.instance().
-                ValidatorDuplicateClusteredIndex.ex(
-                    repos.getLocalizedObjectName(table));
+            throw FarragoResource.instance().ValidatorDuplicateClusteredIndex
+            .ex(
+                repos.getLocalizedObjectName(table));
         }
-        
+
         if (FarragoCatalogUtil.getPrimaryKey(table) == null) {
             // TODO:  This is not SQL-standard.  Fixing it requires the
             // introduction of a system-managed surrogate key.
@@ -135,9 +138,11 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         }
 
         // Mark all columns in the clustered index as NOT NULL.
-        FemLocalIndex clusteredIndex = FarragoCatalogUtil.getClusteredIndex(
-            repos, table);
-        assert(clusteredIndex != null);
+        FemLocalIndex clusteredIndex =
+            FarragoCatalogUtil.getClusteredIndex(
+                repos,
+                table);
+        assert (clusteredIndex != null);
         for (Object obj : clusteredIndex.getIndexedFeature()) {
             CwmIndexedFeature indexedFeature = (CwmIndexedFeature) obj;
             FemStoredColumn col = (FemStoredColumn) indexedFeature.getFeature();
@@ -156,7 +161,7 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         //     SELECT index-coverage-tuple
         //     FROM table
         //     ORDER BY index-coverage-tuple
-        
+
         FtrsTable ftrsTable = (FtrsTable) table;
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
@@ -169,31 +174,32 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         RelFieldCollation [] collations =
             new RelFieldCollation[projOrdinals.length];
         for (int i = 0; i < projOrdinals.length; ++i) {
-            projExps[i] = new RexInputRef(
-                projOrdinals[i],
-                fields[projOrdinals[i]].getType());
+            projExps[i] =
+                new RexInputRef(
+                    projOrdinals[i],
+                    fields[projOrdinals[i]].getType());
             collations[i] = new RelFieldCollation(i);
         }
 
         RelNode project = CalcRel.createProject(tableScan, projExps, null);
 
-        SortRel sort =
-            new SortRel(
+        SortRel sort = new SortRel(
                 cluster,
                 project,
                 collations);
-        
+
         return new FarragoIndexBuilderRel(cluster, table, sort, index);
     }
-    
+
     // implement MedAbstractFennelDataServer
     protected void prepareIndexCmd(
         FemIndexCmd cmd,
         FemLocalIndex index)
     {
-        FtrsIndexGuide indexGuide = new FtrsIndexGuide(
-            indexTypeFactory,
-            FarragoCatalogUtil.getIndexTable(index));
+        FtrsIndexGuide indexGuide =
+            new FtrsIndexGuide(
+                indexTypeFactory,
+                FarragoCatalogUtil.getIndexTable(index));
         cmd.setTupleDesc(
             indexGuide.getCoverageTupleDescriptor(index));
         cmd.setKeyProj(indexGuide.getDistinctKeyProjection(index));
@@ -206,6 +212,5 @@ class FtrsDataServer extends MedAbstractFennelDataServer
         return false;
     }
 }
-
 
 // End FtrsDataServer.java

@@ -22,32 +22,43 @@
 */
 package org.eigenbase.sql.type;
 
+import java.nio.charset.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
-import java.nio.charset.*;
 
 /**
- * BasicSqlType represents a standard atomic SQL type (excluding
- * interval types).
+ * BasicSqlType represents a standard atomic SQL type (excluding interval
+ * types).
  *
  * @author jhyde
  * @version $Id$
  */
-public class BasicSqlType extends AbstractSqlType
+public class BasicSqlType
+    extends AbstractSqlType
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int SCALE_NOT_SPECIFIED = Integer.MIN_VALUE;
     public static final int PRECISION_NOT_SPECIFIED = -1;
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int precision;
     private final int scale;
     private SqlCollation collation;
     private Charset charset;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Constructs a type with no parameters.
-     * This should only be called from a factory method.
+     * Constructs a type with no parameters. This should only be called from a
+     * factory method.
      *
      * @param typeName Type name
+     *
      * @pre typeName.allowsNoPrecNoScale(false,false)
      */
     public BasicSqlType(SqlTypeName typeName)
@@ -64,7 +75,9 @@ public class BasicSqlType extends AbstractSqlType
 
     /**
      * Constructs a type with precision/length but no scale.
+     *
      * @param typeName Type name
+     *
      * @pre typeName.allowsPrecNoScale(true,false)
      */
     public BasicSqlType(
@@ -82,7 +95,9 @@ public class BasicSqlType extends AbstractSqlType
 
     /**
      * Constructs a type with precision/length and scale.
+     *
      * @param typeName Type name
+     *
      * @pre typeName.allowsPrecScale(true,true)
      */
     public BasicSqlType(
@@ -98,6 +113,8 @@ public class BasicSqlType extends AbstractSqlType
         this.scale = scale;
         computeDigest();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Constructs a type with nullablity
@@ -117,6 +134,7 @@ public class BasicSqlType extends AbstractSqlType
 
     /**
      * Constructs a type with charset and collation
+     *
      * @pre SqlTypeUtil.inCharFamily(this)
      */
     BasicSqlType createWithCharsetAndCollation(
@@ -159,20 +177,23 @@ public class BasicSqlType extends AbstractSqlType
             case SqlTypeName.Double_ordinal:
                 return 15;
             case SqlTypeName.Time_ordinal:
-                return 0;               // SQL99 part 2 section 6.1 syntax rule 30
+                return 0; // SQL99 part 2 section 6.1 syntax rule 30
             case SqlTypeName.Timestamp_ordinal:
-                // farrago supports only 0 (see SqlTypeName.getDefaultPrecision),
-                // but it should be 6 (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
-                return 0;  
+
+                // farrago supports only 0 (see
+                // SqlTypeName.getDefaultPrecision), but it should be 6
+                // (microseconds) per SQL99 part 2 section 6.1 syntax rule 30.
+                return 0;
             case SqlTypeName.Date_ordinal:
                 return 0;
             case SqlTypeName.Char_ordinal:
             case SqlTypeName.Varchar_ordinal:
             case SqlTypeName.Binary_ordinal:
             case SqlTypeName.Varbinary_ordinal:
-                return 1;              // SQL2003 part 2 section 6.1 syntax rule 5
+                return 1; // SQL2003 part 2 section 6.1 syntax rule 5
             default:
-                throw Util.newInternal("type "+typeName+" does not have a precision");
+                throw Util.newInternal(
+                    "type " + typeName + " does not have a precision");
             }
         }
         return precision;
@@ -190,7 +211,8 @@ public class BasicSqlType extends AbstractSqlType
             case SqlTypeName.Decimal_ordinal:
                 return 0;
             default:
-                throw Util.newInternal("type "+typeName+" does not have a scale");
+                throw Util.newInternal(
+                    "type " + typeName + " does not have a scale");
             }
         }
         return scale;
@@ -209,7 +231,6 @@ public class BasicSqlType extends AbstractSqlType
     {
         return collation;
     }
-
 
     // implement RelDataTypeImpl
     protected void generateTypeString(StringBuffer sb, boolean withDetail)

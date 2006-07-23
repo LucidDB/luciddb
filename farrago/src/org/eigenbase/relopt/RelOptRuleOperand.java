@@ -20,39 +20,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import java.util.Arrays;
+import java.util.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.util.Util;
-import org.eigenbase.util.Walkable;
+import org.eigenbase.rel.*;
+import org.eigenbase.util.*;
 
 
 /**
  * A <code>RelOptRuleOperand</code> determines whether a {@link
  * org.eigenbase.relopt.RelOptRule} can be applied to a particular expression.
  *
- * <p>
- * For example, the rule to pull a filter up from the left side of a join
- * takes operands: <code>(Join (Filter) (Any))</code>.
- * </p>
+ * <p>For example, the rule to pull a filter up from the left side of a join
+ * takes operands: <code>(Join (Filter) (Any))</code>.</p>
  *
- * <p>
- * Note that <code>children</code> means different things if it is empty or it
+ * <p>Note that <code>children</code> means different things if it is empty or it
  * is <code>null</code>: <code>(Join (Filter <b>()</b>) (Any))</code> means
- * that, to match the rule, <code>Filter</code> must have no operands.
- * </p>
+ * that, to match the rule, <code>Filter</code> must have no operands.</p>
  */
-public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
+public class RelOptRuleOperand
+    implements Walkable<RelOptRuleOperand>
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final RelOptRuleOperand [] noOperands =
         new RelOptRuleOperand[0];
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private RelOptRuleOperand parent;
     private RelOptRule rule;
@@ -66,7 +62,7 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
     private final Class clazz;
     private final RelOptRuleOperand [] children;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an operand which matches any {@link CallingConvention}.
@@ -77,7 +73,7 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
         Class clazz,
         RelOptRuleOperand [] children)
     {
-        this(clazz, (RelTraitSet)null, children);
+        this(clazz, (RelTraitSet) null, children);
     }
 
     /**
@@ -90,7 +86,10 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
         CallingConvention convention,
         RelOptRuleOperand [] children)
     {
-        this(clazz, new RelTraitSet(convention), children);
+        this(
+            clazz,
+            new RelTraitSet(convention),
+            children);
     }
 
     public RelOptRuleOperand(
@@ -109,7 +108,7 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptRuleOperand getParent()
     {
@@ -130,7 +129,7 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
     {
         this.rule = rule;
     }
-    
+
     public int hashCode()
     {
         int h = clazz.hashCode();
@@ -149,11 +148,11 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
         RelOptRuleOperand that = (RelOptRuleOperand) obj;
 
         boolean equalTraits =
-            this.traits != null
-            ? this.traits.equals(that.traits)
-            : that.traits == null;
+            (this.traits != null) ? this.traits.equals(that.traits)
+            : (that.traits == null);
 
-        return (this.clazz == that.clazz)
+        return
+            (this.clazz == that.clazz)
             && equalTraits
             && Arrays.equals(this.children, that.children);
     }
@@ -173,8 +172,8 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
     }
 
     /**
-     * Returns whether a relational expression matches this operand. It must
-     * be of the right class and calling convention.
+     * Returns whether a relational expression matches this operand. It must be
+     * of the right class and calling convention.
      */
     public boolean matches(RelNode rel)
     {
@@ -187,6 +186,5 @@ public class RelOptRuleOperand implements Walkable<RelOptRuleOperand>
         return true;
     }
 }
-
 
 // End RelOptRuleOperand.java

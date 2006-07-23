@@ -21,11 +21,12 @@
 */
 package net.sf.farrago.session;
 
-import org.eigenbase.relopt.RelOptPlanner;
+import org.eigenbase.relopt.*;
+
 
 /**
- * FarragoSessionPlanner represents a query planner/optimizer associated with
- * a specific FarragoPreparingStmt.
+ * FarragoSessionPlanner represents a query planner/optimizer associated with a
+ * specific FarragoPreparingStmt.
  *
  * @author stephan
  * @version $Id$
@@ -33,6 +34,9 @@ import org.eigenbase.relopt.RelOptPlanner;
 public interface FarragoSessionPlanner
     extends RelOptPlanner
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return the FarragoSessionPreparingStmt associated with this planner.
      */
@@ -53,3 +57,5 @@ public interface FarragoSessionPlanner
      */
     public void endMedPluginRegistration();
 }
+
+// End FarragoSessionPlanner.java

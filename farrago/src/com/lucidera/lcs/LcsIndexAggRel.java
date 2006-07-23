@@ -26,14 +26,19 @@ import net.sf.farrago.query.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * An aggregate on bitmap data
  *
  * @author John Pham
  * @version $Id$
  */
-public class LcsIndexAggRel extends FennelAggRel
+public class LcsIndexAggRel
+    extends FennelAggRel
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public LcsIndexAggRel(
         RelOptCluster cluster,
         RelNode child,
@@ -43,14 +48,17 @@ public class LcsIndexAggRel extends FennelAggRel
         super(cluster, child, groupCount, aggCalls);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement AbstractRelNode
     public AbstractRelNode clone()
     {
-        LcsIndexAggRel clone = new LcsIndexAggRel(
-            getCluster(),
-            getChild(),
-            groupCount,
-            aggCalls);
+        LcsIndexAggRel clone =
+            new LcsIndexAggRel(
+                getCluster(),
+                getChild(),
+                groupCount,
+                aggCalls);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -58,13 +66,13 @@ public class LcsIndexAggRel extends FennelAggRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmSortedAggStreamDef aggStream = 
+        FemLbmSortedAggStreamDef aggStream =
             repos.newFemLbmSortedAggStreamDef();
         defineAggStream(aggStream);
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             aggStream);
-        
+
         return aggStream;
     }
 }

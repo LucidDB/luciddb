@@ -28,11 +28,17 @@ package org.eigenbase.reltype;
  * @author jhyde
  * @version $Id$
  */
-public class RelDataTypeFieldImpl implements RelDataTypeField
+public class RelDataTypeFieldImpl
+    implements RelDataTypeField
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType type;
     private final String name;
     private final int index;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * @pre name != null
@@ -49,6 +55,8 @@ public class RelDataTypeFieldImpl implements RelDataTypeField
         this.index = index;
         this.type = type;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeField
     public String getName()

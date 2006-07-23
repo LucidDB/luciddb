@@ -31,16 +31,18 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class VarbinaryComparator implements Comparator
+public class VarbinaryComparator
+    implements Comparator
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public static final int compareVarbinary(
         Object o1,
         Object o2)
     {
-        assert(o1 instanceof BytePointer) : o1.getClass();
-        assert(o2 instanceof BytePointer) : o2.getClass();
+        assert (o1 instanceof BytePointer) : o1.getClass();
+        assert (o2 instanceof BytePointer) : o2.getClass();
         BytePointer bp1 = (BytePointer) o1;
         BytePointer bp2 = (BytePointer) o2;
         return bp1.compareBytes(bp2);
@@ -53,6 +55,5 @@ public class VarbinaryComparator implements Comparator
         return compareVarbinary(o1, o2);
     }
 }
-
 
 // End VarbinaryComparator.java

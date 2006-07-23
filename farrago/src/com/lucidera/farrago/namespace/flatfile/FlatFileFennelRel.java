@@ -34,21 +34,25 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+
 /**
- * FlatFileFennelRel provides a flatfile implementation for
- * {@link TableAccessRel} with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
+ * FlatFileFennelRel provides a flatfile implementation for {@link
+ * TableAccessRel} with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
  *
  * @author John Pham
  * @version $Id$
  */
-class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
+class FlatFileFennelRel
+    extends TableAccessRelBase
+    implements FennelRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FlatFileColumnSet columnSet;
     FlatFileParams.SchemaType schemaType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected FlatFileFennelRel(
         FlatFileColumnSet columnSet,
@@ -57,45 +61,46 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         FlatFileParams.SchemaType schemaType)
     {
         super(
-            cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), columnSet,
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            columnSet,
             connection);
         this.columnSet = columnSet;
         this.schemaType = schemaType;
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Determines whether the flatfile scan can be implemented entirely 
-     * within this Fennel RelNode. If not, then it requires a Java program.
+     * Determines whether the flatfile scan can be implemented entirely within
+     * this Fennel RelNode. If not, then it requires a Java program.
      */
     public boolean isPureFennel()
     {
-        // Use only FennelRel in basic modes, or if 
+        // Use only FennelRel in basic modes, or if
         // the Fennel calc mode is turned on
-        CalcVirtualMachine calcVm = 
-            FennelRelUtil.getPreparingStmt(this).getRepos()
-            .getCurrentConfig().getCalcVirtualMachine();
-        if (schemaType == FlatFileParams.SchemaType.DESCRIBE
-            || schemaType == FlatFileParams.SchemaType.SAMPLE
-            || calcVm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) 
-        {
+        CalcVirtualMachine calcVm =
+            FennelRelUtil.getPreparingStmt(this).getRepos().getCurrentConfig()
+            .getCalcVirtualMachine();
+        if ((schemaType == FlatFileParams.SchemaType.DESCRIBE)
+            || (schemaType == FlatFileParams.SchemaType.SAMPLE)
+            || calcVm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             return true;
         }
         return false;
     }
 
     /**
-     * Forces a flatfile scan to run in text only mode, bypassing 
-     * the casting of columns into typed data. This call is only 
-     * valid for regular queries (not describe or sample).
-     * 
-     * @param textRowType target row type for the scan, all columns must 
-     *     be character columns.
+     * Forces a flatfile scan to run in text only mode, bypassing the casting of
+     * columns into typed data. This call is only valid for regular queries (not
+     * describe or sample).
+     *
+     * @param textRowType target row type for the scan, all columns must be
+     * character columns.
      */
     public void setTextOnly(RelDataType textRowType)
     {
-        assert(schemaType == FlatFileParams.SchemaType.QUERY);
+        assert (schemaType == FlatFileParams.SchemaType.QUERY);
         schemaType = FlatFileParams.SchemaType.QUERY_TEXT;
         rowType = textRowType;
     }
@@ -111,7 +116,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FlatFileParams params = columnSet.getParams();
-        
+
         FemFlatFileTupleStreamDef streamDef =
             repos.newFemFlatFileTupleStreamDef();
         streamDef.setDataFilePath(columnSet.getFilePath());
@@ -122,8 +127,8 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         streamDef.setRowDelimiter(encodeChar(params.getLineDelimiter()));
         streamDef.setQuoteCharacter(encodeChar(params.getQuoteChar()));
         streamDef.setEscapeCharacter(encodeChar(params.getEscapeChar()));
-        
-        // The schema type is encoded into the number of rows to 
+
+        // The schema type is encoded into the number of rows to
         // scan and program parameters
         int numRowsScan = 0;
         String program = "";
@@ -135,8 +140,7 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             numRowsScan = params.getNumRowsScan();
             // fall through to get program
         case QUERY:
-            FlatFileProgramWriter pw = 
-                new FlatFileProgramWriter(this);
+            FlatFileProgramWriter pw = new FlatFileProgramWriter(this);
             RexProgram rexProgram = pw.getProgram(rowType);
             program = pw.toFennelProgram(rexProgram);
             break;
@@ -147,9 +151,9 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
             break;
         }
         boolean header = params.getWithHeader();
-        if (numRowsScan > 0 && header) {
-            // during a sample or describe query, treat header as any 
-            // other data, but do not count it against the user specified 
+        if ((numRowsScan > 0) && header) {
+            // during a sample or describe query, treat header as any
+            // other data, but do not count it against the user specified
             // number of rows to scan
             numRowsScan++;
             header = false;
@@ -162,10 +166,10 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
         streamDef.setSubstituteCharacter("?");
         streamDef.setCodePage(0);
         streamDef.setTranslationRecovery(true);
-        
+
         return streamDef;
     }
-    
+
     public String encodeChar(char c)
     {
         return (c == 0) ? "" : Character.toString(c);
@@ -175,20 +179,23 @@ class FlatFileFennelRel extends TableAccessRelBase implements FennelRel
     public RelFieldCollation [] getCollations()
     {
         // REVIEW jvs 18-Feb-2006:  how so?
-        
+
         // trivially sorted
-        return new RelFieldCollation [] { new RelFieldCollation(0) };
+        return new RelFieldCollation[] { new RelFieldCollation(0) };
     }
 
     // implement RelNode
     public Object clone()
     {
-        FlatFileFennelRel clone = new FlatFileFennelRel(
-            columnSet, getCluster(), connection, schemaType);
+        FlatFileFennelRel clone =
+            new FlatFileFennelRel(
+                columnSet,
+                getCluster(),
+                connection,
+                schemaType);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End FlatFileFennelRel.java

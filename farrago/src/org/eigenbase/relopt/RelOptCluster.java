@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import openjava.mop.Environment;
+import openjava.mop.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -34,21 +33,19 @@ import org.eigenbase.rex.*;
 
 /**
  * A <code>RelOptCluster</code> is a collection of {@link RelNode relational
- * expressions } which have the same environment.
+ * expressions} which have the same environment.
  *
- * <p>
- * See the comment against <code>net.sf.saffron.oj.xlat.QueryInfo</code> on
- * why you should put fields in that class, not this one.
- * </p>
+ * <p>See the comment against <code>net.sf.saffron.oj.xlat.QueryInfo</code> on
+ * why you should put fields in that class, not this one.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 27 September, 2001
  */
 public class RelOptCluster
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Environment env;
     private final RelDataTypeFactory typeFactory;
@@ -59,7 +56,7 @@ public class RelOptCluster
     private RexToSqlTranslator rexToSqlTranslator;
     private RelMetadataProvider metadataProvider;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a cluster.
@@ -90,7 +87,7 @@ public class RelOptCluster
         metadataProvider = defaultMetadataProvider;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Environment getEnv()
     {
@@ -106,7 +103,7 @@ public class RelOptCluster
     {
         return rexToSqlTranslator;
     }
-    
+
     public RexNode getOriginalExpression()
     {
         return originalExpression;
@@ -138,8 +135,7 @@ public class RelOptCluster
     }
 
     /**
-     * Overrides the default metadata provider for this
-     * cluster.
+     * Overrides the default metadata provider for this cluster.
      *
      * @param metadataProvider custom provider
      */
@@ -148,6 +144,5 @@ public class RelOptCluster
         this.metadataProvider = metadataProvider;
     }
 }
-
 
 // End RelOptCluster.java

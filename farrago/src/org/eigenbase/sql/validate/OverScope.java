@@ -23,31 +23,42 @@ package org.eigenbase.sql.validate;
 
 import org.eigenbase.sql.*;
 
+
 /**
- * The name-resolution scope of a OVER clause. The objects visible are
- * those in the parameters found on the left side of the over clause, and
- * objects inherited from the parent scope.
+ * The name-resolution scope of a OVER clause. The objects visible are those in
+ * the parameters found on the left side of the over clause, and objects
+ * inherited from the parent scope.
+ *
  * <p/>
- * <p>This object is both a {@link SqlValidatorScope} only.
- * In the query
+ * <p>This object is both a {@link SqlValidatorScope} only. In the query
+ *
  * <p/>
  * <blockquote>
  * <pre>SELECT name FROM (
  *     SELECT *
  *     FROM emp over (order by empno range between 2 preceding and 2 following)
+ * </pre>
+ * </blockquote>
+ *
  * <p/>
- * <p>we need to use the {@link OverScope} as a
- * {@link SqlValidatorNamespace} when resolving names used in the window
- * specification.
+ * <p>we need to use the {@link OverScope} as a {@link SqlValidatorNamespace}
+ * when resolving names used in the window specification.
+ *
  * <p/>
  *
  * @author jack
  * @version $Id$
  * @since Mar 25, 2003
  */
-public class OverScope extends ListScope
+public class OverScope
+    extends ListScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlCall overCall;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a scope corresponding to a SELECT clause.
@@ -61,6 +72,8 @@ public class OverScope extends ListScope
         super(parent);
         this.overCall = overCall;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {

@@ -21,63 +21,39 @@
 */
 package net.sf.farrago.test.concurrent;
 
-import java.io.IOException;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.io.*;
 
-import junit.framework.TestCase;
+import java.sql.*;
 
-import net.sf.farrago.trace.FarragoTrace;
+import java.util.*;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.trace.*;
 
 import org.eigenbase.runtime.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
- * FarragoTestConcurrentScriptedCommandGenerator creates instances of
- * {@link FarragoTestConcurrentCommand} that perform specific actions in a
- * specific order and within the context of a test thread
- * ({@link FarragoTestConcurrentCommandExecutor}).
+ * FarragoTestConcurrentScriptedCommandGenerator creates instances of {@link
+ * FarragoTestConcurrentCommand} that perform specific actions in a specific
+ * order and within the context of a test thread ({@link
+ * FarragoTestConcurrentCommandExecutor}).
  *
- * <p>Actions are loaded from a script.
- *
- * TODO: Put script definition in package.html and link to it.
+ * <p>Actions are loaded from a script. TODO: Put script definition in
+ * package.html and link to it.
  *
  * <p>A single FarragoTestConcurrentScriptedCommandGenerator creates commands
- * for multiple threads.  Each thread is represented by an integer
- * "thread ID" and, optionally, a String thread name.  Thread IDs may
- * take on any positive integer value and may be a sparse set (e.g. 1,
- * 2, 5).  Thread names may be any String.
+ * for multiple threads. Each thread is represented by an integer "thread ID"
+ * and, optionally, a String thread name. Thread IDs may take on any positive
+ * integer value and may be a sparse set (e.g. 1, 2, 5). Thread names may be any
+ * String.
  *
- * <p>When each command is created, it is associated with a thread and
- * given an execution order.  Execution order values are positive
- * integers, must be unique within a thread, and may be a sparse set
- * See
- * {@link FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
- *                                               boolean)}
- * for other considerations.
+ * <p>When each command is created, it is associated with a thread and given an
+ * execution order. Execution order values are positive integers, must be unique
+ * within a thread, and may be a sparse set See {@link
+ * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
+ * boolean)} for other considerations.
  *
  * @author Stephan Zuercher
  * @version $Id$
@@ -85,7 +61,8 @@ import org.eigenbase.util.Util;
 public class FarragoTestConcurrentScriptedCommandGenerator
     extends FarragoTestConcurrentCommandGenerator
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final String PRE_SETUP_STATE = "pre-setup";
     private static final String SETUP_STATE = "setup";
@@ -111,48 +88,60 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final String CLOSE = "@close";
     private static final String SLEEP = "@sleep";
     private static final String ERR = "@err";
-    
+
     private static final String SQL = "";
     private static final String EOF = null;
 
-    private static final Object[][] STATE_TABLE = {
-        { PRE_SETUP_STATE,   new Object[][] { { LOCKSTEP,   PRE_SETUP_STATE },
-                                              { NOLOCKSTEP, PRE_SETUP_STATE },
-                                              { ENABLED,    PRE_SETUP_STATE },
-                                              { DISABLED,   PRE_SETUP_STATE },
-                                              { SETUP,      SETUP_STATE },
-                                              { THREAD,     THREAD_STATE } } },
+    private static final Object [][] STATE_TABLE =
+        {
+            { PRE_SETUP_STATE, new Object[][] {
+                    { LOCKSTEP, PRE_SETUP_STATE },
+                    { NOLOCKSTEP, PRE_SETUP_STATE },
+                    { ENABLED, PRE_SETUP_STATE },
+                    { DISABLED, PRE_SETUP_STATE },
+                    { SETUP, SETUP_STATE },
+                    { THREAD, THREAD_STATE }
+                } },
 
-        { SETUP_STATE,       new Object[][] { { END,        POST_SETUP_STATE },
-                                              { SQL,        SETUP_STATE } } },
+            { SETUP_STATE, new Object[][] {
+                    { END, POST_SETUP_STATE },
+                    { SQL, SETUP_STATE }
+                } },
 
-        { POST_SETUP_STATE,  new Object[][] { { THREAD,     THREAD_STATE } } },
+            { POST_SETUP_STATE, new Object[][] {
+                    { THREAD, THREAD_STATE }
+                } },
 
-        { THREAD_STATE,      new Object[][] { { REPEAT,     REPEAT_STATE },
-                                              { SYNC,       THREAD_STATE },
-                                              { TIMEOUT,    THREAD_STATE },
-                                              { PREPARE,    THREAD_STATE },
-                                              { FETCH,      THREAD_STATE },
-                                              { CLOSE,      THREAD_STATE },
-                                              { SLEEP,      THREAD_STATE },
-                                              { SQL,        THREAD_STATE },
-                                              { ERR,        THREAD_STATE },
-                                              { END,        POST_THREAD_STATE }
-                                            } },
+            { THREAD_STATE, new Object[][] {
+                    { REPEAT, REPEAT_STATE },
+                    { SYNC, THREAD_STATE },
+                    { TIMEOUT, THREAD_STATE },
+                    { PREPARE, THREAD_STATE },
+                    { FETCH, THREAD_STATE },
+                    { CLOSE, THREAD_STATE },
+                    { SLEEP, THREAD_STATE },
+                    { SQL, THREAD_STATE },
+                    { ERR, THREAD_STATE },
+                    { END, POST_THREAD_STATE }
+                } },
 
-        { REPEAT_STATE,      new Object[][] { { SYNC,       REPEAT_STATE },
-                                              { TIMEOUT,    REPEAT_STATE },
-                                              { PREPARE,    REPEAT_STATE },
-                                              { FETCH,      REPEAT_STATE },
-                                              { CLOSE,      REPEAT_STATE },
-                                              { SLEEP,      REPEAT_STATE },
-                                              { SQL,        REPEAT_STATE },
-                                              { ERR,        THREAD_STATE },
-                                              { END,        THREAD_STATE } } },
+            { REPEAT_STATE, new Object[][] {
+                    { SYNC, REPEAT_STATE },
+                    { TIMEOUT, REPEAT_STATE },
+                    { PREPARE, REPEAT_STATE },
+                    { FETCH, REPEAT_STATE },
+                    { CLOSE, REPEAT_STATE },
+                    { SLEEP, REPEAT_STATE },
+                    { SQL, REPEAT_STATE },
+                    { ERR, THREAD_STATE },
+                    { END, THREAD_STATE }
+                } },
 
-        { POST_THREAD_STATE, new Object[][] { { THREAD,     THREAD_STATE },
-                                              { EOF,        EOF_STATE } } }
-    };
+            { POST_THREAD_STATE, new Object[][] {
+                    { THREAD, THREAD_STATE },
+                    { EOF, EOF_STATE }
+                } }
+        };
 
     private static final int FETCH_LEN = FETCH.length();
     private static final int PREPARE_LEN = PREPARE.length();
@@ -162,8 +151,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     private static final int TIMEOUT_LEN = TIMEOUT.length();
     private static final int ERR_LEN = ERR.length();
 
-    private static final char[] spaces;
-    private static final char[] dashes;
+    private static final char [] spaces;
+    private static final char [] dashes;
 
     private static final int BUF_SIZE = 1024;
     private static final int REPEAT_READ_AHEAD_LIMIT = 65536;
@@ -172,7 +161,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         spaces = new char[BUF_SIZE];
         dashes = new char[BUF_SIZE];
 
-        for(int i = 0; i < BUF_SIZE; i++) {
+        for (int i = 0; i < BUF_SIZE; i++) {
             spaces[i] = ' ';
             dashes[i] = '-';
         }
@@ -180,10 +169,10 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
     public static final Integer SETUP_THREAD_ID = new Integer(-1);
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private Boolean lockstep;
-    
+
     private Boolean disabled;
 
     private List setupCommands = new ArrayList();
@@ -192,7 +181,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
     private Map threadStringWriters = new HashMap();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new FarragoTestConcurrentScriptedCommandGenerator.
@@ -204,20 +193,24 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         parseScript(filename);
 
-        for(Iterator i = getThreadIds().iterator(); i.hasNext(); ) {
-            Integer threadId = (Integer)i.next();
+        for (Iterator i = getThreadIds().iterator(); i.hasNext();) {
+            Integer threadId = (Integer) i.next();
 
             StringWriter w = new StringWriter();
             threadStringWriters.put(threadId, w);
-            threadBufferedWriters.put(threadId, new BufferedWriter(w));
+            threadBufferedWriters.put(
+                threadId,
+                new BufferedWriter(w));
         }
 
         StringWriter w = new StringWriter();
         threadStringWriters.put(SETUP_THREAD_ID, w);
-        threadBufferedWriters.put(SETUP_THREAD_ID, new BufferedWriter(w));
+        threadBufferedWriters.put(
+            SETUP_THREAD_ID,
+            new BufferedWriter(w));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     boolean useLockstep()
     {
@@ -227,7 +220,6 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         return lockstep.booleanValue();
     }
-
 
     boolean isDisabled()
     {
@@ -241,20 +233,23 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     void executeSetup(String jdbcUrl)
         throws Exception
     {
-        if (setupCommands == null || setupCommands.size() == 0) {
+        if ((setupCommands == null) || (setupCommands.size() == 0)) {
             return;
         }
 
-        Connection connection = DriverManager.getConnection(
-            jdbcUrl, FarragoCatalogInit.SA_USER_NAME, null);
+        Connection connection =
+            DriverManager.getConnection(
+                jdbcUrl,
+                FarragoCatalogInit.SA_USER_NAME,
+                null);
         if (connection.getMetaData().supportsTransactions()) {
             connection.setAutoCommit(false);
         }
 
         try {
-            for(Iterator i = setupCommands.iterator(); i.hasNext(); ) {
-                String sql = ((String)i.next()).trim();
-                
+            for (Iterator i = setupCommands.iterator(); i.hasNext();) {
+                String sql = ((String) i.next()).trim();
+
                 storeSql(SETUP_THREAD_ID, sql);
 
                 if (sql.endsWith(";")) {
@@ -278,11 +273,11 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     Statement stmt = connection.createStatement();
                     try {
                         int rows = stmt.executeUpdate(sql);
-                        
+
                         if (rows != 1) {
                             storeMessage(SETUP_THREAD_ID,
-                                         String.valueOf(rows)
-                                         + " rows affected.");
+                                String.valueOf(rows)
+                                + " rows affected.");
                         } else {
                             storeMessage(SETUP_THREAD_ID, "1 row affected.");
                         }
@@ -300,8 +295,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Parses a multi-threaded script and converts it into test
-     * commands.
+     * Parses a multi-threaded script and converts it into test commands.
      */
     private void parseScript(String mtsqlFile)
         throws IOException
@@ -316,7 +310,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             int order = 1;
             int repeatCount = 0;
 
-            while(!EOF_STATE.equals(state)) {
+            while (!EOF_STATE.equals(state)) {
                 String line = in.readLine();
                 String trimmedLine = "";
                 if (line != null) {
@@ -341,10 +335,10 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                             "Premature end of file in '" + state
                             + "' state");
                     }
-                    
+
                     command = EOF;
-                } else if (trimmedLine.equals("") ||
-                           trimmedLine.startsWith("--")) {
+                } else if (trimmedLine.equals("")
+                    || trimmedLine.startsWith("--")) {
                     continue;
                 } else {
                     if (!commandStateMap.containsKey(SQL)) {
@@ -357,67 +351,67 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
                 if (isSql) {
                     command = SQL;
-                    
+
                     String sql = readSql(line, in);
 
                     if (SETUP_STATE.equals(state)) {
                         setupCommands.add(sql.toString().trim());
-                    } else if (THREAD_STATE.equals(state) || 
-                               REPEAT_STATE.equals(state)) {
+                    } else if (THREAD_STATE.equals(state)
+                        || REPEAT_STATE.equals(state)) {
                         boolean isSelect = isSelect(sql);
 
-                        for(int i = threadId; i < nextThreadId; i++) {
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addCommand(
                                 i,
                                 order,
                                 (isSelect
-                                 ? (AbstractCommand)new SelectCommand(sql)
-                                 : (AbstractCommand)new SqlCommand(sql)));
+                                    ? (AbstractCommand) new SelectCommand(sql)
+                                    : (AbstractCommand) new SqlCommand(sql)));
                         }
                         order++;
                     } else {
-                        assert(false);
+                        assert (false);
                     }
                 } else {
                     // commands are handled here
                     if (LOCKSTEP.equals(command)) {
-                        assert(lockstep == null): 
-                            LOCKSTEP + " and " + NOLOCKSTEP
+                        assert (lockstep == null) : LOCKSTEP + " and "
+                            + NOLOCKSTEP
                             + " may only appear once";
                         lockstep = Boolean.TRUE;
                     } else if (NOLOCKSTEP.equals(command)) {
-                        assert(lockstep == null): 
-                            LOCKSTEP + " and " + NOLOCKSTEP
+                        assert (lockstep == null) : LOCKSTEP + " and "
+                            + NOLOCKSTEP
                             + " may only appear once";
                         lockstep = Boolean.FALSE;
                     } else if (DISABLED.equals(command)) {
-                        assert(disabled == null): 
-                            DISABLED + " and " + ENABLED 
+                        assert (disabled == null) : DISABLED + " and " + ENABLED
                             + " may only appear once";
                         disabled = Boolean.TRUE;
                     } else if (ENABLED.equals(command)) {
-                        assert(disabled == null): 
-                            DISABLED + " and " + ENABLED 
+                        assert (disabled == null) : DISABLED + " and " + ENABLED
                             + " may only appear once";
                         disabled = Boolean.FALSE;
                     } else if (SETUP.equals(command)) {
                         //  nothing to do
                     } else if (THREAD.equals(command)) {
-                        String threadNamesStr = 
+                        String threadNamesStr =
                             trimmedLine.substring(THREAD_LEN).trim();
-                        StringTokenizer threadNamesTok = 
+                        StringTokenizer threadNamesTok =
                             new StringTokenizer(threadNamesStr, ",");
 
-                        while(threadNamesTok.hasMoreTokens()) {
-                            setThreadName(nextThreadId++,
-                                          threadNamesTok.nextToken());
+                        while (threadNamesTok.hasMoreTokens()) {
+                            setThreadName(
+                                nextThreadId++,
+                                threadNamesTok.nextToken());
                         }
 
                         order = 1;
                     } else if (REPEAT.equals(command)) {
-                        repeatCount = Integer.parseInt(
-                            trimmedLine.substring(REPEAT_LEN).trim());
-                        assert(repeatCount > 0): "Repeat count must be > 0";
+                        repeatCount =
+                            Integer.parseInt(
+                                trimmedLine.substring(REPEAT_LEN).trim());
+                        assert (repeatCount > 0) : "Repeat count must be > 0";
 
                         in.mark(REPEAT_READ_AHEAD_LIMIT);
                     } else if (END.equals(command)) {
@@ -430,7 +424,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                             if (repeatCount > 0) {
                                 try {
                                     in.reset();
-                                } catch(IOException e) {
+                                } catch (IOException e) {
                                     throw new IllegalStateException(
                                         "Unable to reset reader -- repeat "
                                         + "contents must be less than "
@@ -441,53 +435,57 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                                 continue;
                             }
                         } else {
-                            assert(false);
+                            assert (false);
                         }
                     } else if (SYNC.equals(command)) {
-                        for(int i = threadId; i < nextThreadId; i++) {
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addSynchronizationCommand(i, order);
                         }
                         order++;
                     } else if (TIMEOUT.equals(command)) {
-                        String args = 
-                            trimmedLine.substring(TIMEOUT_LEN).trim();
+                        String args = trimmedLine.substring(TIMEOUT_LEN).trim();
                         String millisStr = firstWord(args);
                         long millis = Long.parseLong(millisStr);
-                        assert(millis >= 0L): "Timeout must be >= 0";
+                        assert (millis >= 0L) : "Timeout must be >= 0";
 
-                        String sql = readSql(skipFirstWord(args).trim(), in);
+                        String sql = readSql(
+                                skipFirstWord(args).trim(),
+                                in);
 
                         boolean isSelect = isSelect(sql);
-                        
-                        for(int i = threadId; i < nextThreadId; i++) {
+
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addCommand(
                                 i,
                                 order,
                                 (isSelect
-                                 ? (AbstractCommand)new SelectCommand(sql,
-                                                                      millis)
-                                 : (AbstractCommand)new SqlCommand(sql,
-                                                                   millis)));
+                                    ? (AbstractCommand) new SelectCommand(sql,
+                                        millis)
+                                    : (AbstractCommand) new SqlCommand(sql,
+                                        millis)));
                         }
                         order++;
                     } else if (PREPARE.equals(command)) {
-                        String startOfSql = 
+                        String startOfSql =
                             trimmedLine.substring(PREPARE_LEN).trim();
-                        
+
                         String sql = readSql(startOfSql, in);
 
-                        for(int i = threadId; i < nextThreadId; i++) {
-                            addCommand(i, order, new PrepareCommand(sql));
+                        for (int i = threadId; i < nextThreadId; i++) {
+                            addCommand(
+                                i,
+                                order,
+                                new PrepareCommand(sql));
                         }
                         order++;
                     } else if (ERR.equals(command)) {
-                        String startOfSql = 
+                        String startOfSql =
                             trimmedLine.substring(ERR_LEN).trim();
-                        
+
                         String sql = readSql(startOfSql, in);
                         boolean isSelect = isSelect(sql);
-                        
-                        for(int i = threadId; i < nextThreadId; i++) {
+
+                        for (int i = threadId; i < nextThreadId; i++) {
                             CommandWithTimeout newCommand;
                             if (isSelect) {
                                 newCommand = new SelectCommand(sql, true);
@@ -501,41 +499,44 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                         }
                         order++;
                     } else if (FETCH.equals(command)) {
-                        String millisStr = 
+                        String millisStr =
                             trimmedLine.substring(FETCH_LEN).trim();
 
                         long millis = 0L;
                         if (millisStr.length() > 0) {
                             millis = Long.parseLong(millisStr);
-                            assert(millis >= 0L): "Fetch timeout must be >= 0";
+                            assert (millis >= 0L) : "Fetch timeout must be >= 0";
                         }
 
-                        for(int i = threadId; i < nextThreadId; i++) {
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addCommand(
-                                i, order, new FetchAndPrintCommand(millis));
+                                i,
+                                order,
+                                new FetchAndPrintCommand(millis));
                         }
                         order++;
                     } else if (CLOSE.equals(command)) {
-                        for(int i = threadId; i < nextThreadId; i++) {
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addCloseCommand(i, order);
                         }
                         order++;
                     } else if (SLEEP.equals(command)) {
-                        long millis = Long.parseLong(
-                            trimmedLine.substring(SLEEP_LEN).trim());
-                        assert(millis >= 0L): "Sleep timeout must be >= 0";
+                        long millis =
+                            Long.parseLong(
+                                trimmedLine.substring(SLEEP_LEN).trim());
+                        assert (millis >= 0L) : "Sleep timeout must be >= 0";
 
-                        for(int i = threadId; i < nextThreadId; i++) {
+                        for (int i = threadId; i < nextThreadId; i++) {
                             addSleepCommand(i, order, millis);
                         }
                         order++;
                     } else {
-                        assert(command == EOF): "Unknown command " + command;
+                        assert (command == EOF) : "Unknown command " + command;
                     }
                 }
-                
-                state = (String)commandStateMap.get(command);
-                assert(state != null);
+
+                state = (String) commandStateMap.get(command);
+                assert (state != null);
             }
         } finally {
             in.close();
@@ -543,35 +544,34 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Converts a state name into a map.  Map keys are the names of
-     * available commands (e.g. @sync), and map values are the state
-     * to switch to open seeing the command.
+     * Converts a state name into a map. Map keys are the names of available
+     * commands (e.g. @sync), and map values are the state to switch to open
+     * seeing the command.
      */
     private Map lookupState(String state)
     {
-        assert(state != null);
+        assert (state != null);
 
-        for(int i = 0, n = STATE_TABLE.length; i < n; i++) {
+        for (int i = 0, n = STATE_TABLE.length; i < n; i++) {
             if (state.equals(STATE_TABLE[i][0])) {
-                Object[][] stateData = (Object[][])STATE_TABLE[i][1];
+                Object [][] stateData = (Object [][]) STATE_TABLE[i][1];
 
                 HashMap result = new HashMap();
-                for(int j = 0, m = stateData.length; j < m; j++) {
+                for (int j = 0, m = stateData.length; j < m; j++) {
                     result.put(stateData[j][0], stateData[j][1]);
                 }
                 return result;
             }
         }
 
-        assert(false);
+        assert (false);
 
         return null;
     }
 
     /**
-     * Returns the first word of the given line, assuming the line is
-     * trimmed.  Returns the characters up the first non-whitespace
-     * character in the line.
+     * Returns the first word of the given line, assuming the line is trimmed.
+     * Returns the characters up the first non-whitespace character in the line.
      */
     private String firstWord(String trimmedLine)
     {
@@ -579,10 +579,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Returns everything but the first word of the given line,
-     * assuming the line is trimmed.  Returns the characters following
-     * the first series of consecutive whitespace characters in the
-     * line.
+     * Returns everything but the first word of the given line, assuming the
+     * line is trimmed. Returns the characters following the first series of
+     * consecutive whitespace characters in the line.
      */
     private String skipFirstWord(String trimmedLine)
     {
@@ -590,9 +589,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Returns a block of SQL, starting with the given String.  Returns
-     * <code>startOfSql</code> concatenated with each line from
-     * <code>in</code> until a line ending with a semicolon is found.
+     * Returns a block of SQL, starting with the given String. Returns <code>
+     * startOfSql</code> concatenated with each line from <code>in</code> until
+     * a line ending with a semicolon is found.
      */
     private String readSql(String startOfSql, BufferedReader in)
         throws IOException
@@ -602,7 +601,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         if (!startOfSql.trim().endsWith(";")) {
             String line;
-            while((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null) {
                 sql.append(line).append('\n');
                 if (line.trim().endsWith(";")) {
                     break;
@@ -622,36 +621,35 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         try {
             String line;
-            while((line = rdr.readLine()) != null) {
+            while ((line = rdr.readLine()) != null) {
                 line = line.trim().toLowerCase();
                 if (line.startsWith("--")) {
                     continue;
                 }
-                
+
                 if (line.startsWith("select") || line.startsWith("explain")) {
                     return true;
                 } else {
                     return false;
                 }
             }
-        } catch(IOException e) {
-            assert(false): "IOException via StringReader";
+        } catch (IOException e) {
+            assert (false) : "IOException via StringReader";
         } finally {
             try {
                 rdr.close();
-            } catch(IOException e) {
-                assert(false): "IOException via StringReader";
+            } catch (IOException e) {
+                assert (false) : "IOException via StringReader";
             }
         }
-            
+
         return false;
     }
 
-
     /**
-     * Returns a map of thread ids to result data for the thread.  The
-     * result data is an <code>String[2]</code> containing the thread
-     * name and the thread's output.
+     * Returns a map of thread ids to result data for the thread. The result
+     * data is an <code>String[2]</code> containing the thread name and the
+     * thread's output.
      */
     public Map getResults()
     {
@@ -660,29 +658,30 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         TreeSet threadIds = new TreeSet(getThreadIds());
         threadIds.add(SETUP_THREAD_ID);
 
-        for(Iterator i = threadIds.iterator(); i.hasNext(); ) {
-            Integer threadId = (Integer)i.next();
+        for (Iterator i = threadIds.iterator(); i.hasNext();) {
+            Integer threadId = (Integer) i.next();
             String threadName = getThreadName(threadId);
             try {
-                BufferedWriter bout = 
-                    (BufferedWriter)threadBufferedWriters.get(threadId);
+                BufferedWriter bout =
+                    (BufferedWriter) threadBufferedWriters.get(threadId);
                 bout.flush();
-            } catch(IOException e) {
-                assert(false): "IOException via StringWriter";
+            } catch (IOException e) {
+                assert (false) : "IOException via StringWriter";
             }
-            
-            StringWriter out = (StringWriter)threadStringWriters.get(threadId);
 
-            results.put(threadId, new String[] { threadName, out.toString() });
+            StringWriter out = (StringWriter) threadStringWriters.get(threadId);
+
+            results.put(
+                threadId,
+                new String[] { threadName, out.toString() });
         }
 
         return results;
     }
 
-
     /**
-     * Causes errors to be send here for custom handling.  See
-     * {@link #customErrorHandler(FarragoTestConcurrentCommandExecutor)}.
+     * Causes errors to be send here for custom handling. See {@link
+     * #customErrorHandler(FarragoTestConcurrentCommandExecutor)}.
      */
     public boolean requiresCustomErrorHandling()
     {
@@ -696,19 +695,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         Throwable cause = executor.getFailureCause();
         FarragoTestConcurrentCommand command = executor.getFailureCommand();
 
-        if (command == null || !command.isFailureExpected()) {
+        if ((command == null) || !command.isFailureExpected()) {
             message.append(cause.getMessage());
-            StackTraceElement[] trace = cause.getStackTrace();
-            for(int i = 0; i < trace.length; i++) {
-                message
-                    .append("\n\t")
-                    .append(trace[i].toString());
+            StackTraceElement [] trace = cause.getStackTrace();
+            for (int i = 0; i < trace.length; i++) {
+                message.append("\n\t").append(trace[i].toString());
             }
         } else {
-            message.append(cause.getClass().getName() + ": " + cause.getMessage());            
+            message.append(
+                cause.getClass().getName() + ": " + cause.getMessage());
         }
-        
-        storeMessage(executor.getThreadId(), message.toString());
+
+        storeMessage(
+            executor.getThreadId(),
+            message.toString());
     }
 
     /**
@@ -718,33 +718,34 @@ public class FarragoTestConcurrentScriptedCommandGenerator
      */
     private BufferedWriter getThreadWriter(Integer threadId)
     {
-        assert(threadBufferedWriters.containsKey(threadId));
+        assert (threadBufferedWriters.containsKey(threadId));
 
-        return (BufferedWriter)threadBufferedWriters.get(threadId);
+        return (BufferedWriter) threadBufferedWriters.get(threadId);
     }
 
     /**
      * Outputs a ResultSet for a thread.
      */
     private void storeResults(Integer threadId,
-                              ResultSet rset,
-                              boolean timeoutSet)
+        ResultSet rset,
+        boolean timeoutSet)
         throws SQLException
     {
         BufferedWriter out = getThreadWriter(threadId);
-        int[] widths = null;
+        int [] widths = null;
 
         try {
             ResultSetMetaData meta = rset.getMetaData();
 
             int columns = meta.getColumnCount();
 
-            String[] values = new String[columns];
-            String[] labels = new String[columns];
+            String [] values = new String[columns];
+            String [] labels = new String[columns];
             widths = new int[columns];
-            for(int i = 0; i < columns; i++) {
+            for (int i = 0; i < columns; i++) {
                 labels[i] = meta.getColumnLabel(i + 1);
                 int displaySize = meta.getColumnDisplaySize(i + 1);
+
                 // NOTE jvs 13-June-2006:  I put this in to cap
                 // EXPLAIN PLAN, which now returns a very large
                 // worst-case display size.
@@ -752,8 +753,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                     displaySize = 0;
                 }
                 widths[i] = Math.max(
-                    labels[i].length(),
-                    displaySize);
+                        labels[i].length(),
+                        displaySize);
             }
 
             printSeparator(out, widths);
@@ -761,14 +762,14 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             printSeparator(out, widths);
 
             int rowCount = 0;
-            while(rset.next()) {
-                if (rowCount > 0 && rowCount % 100 == 0) {
+            while (rset.next()) {
+                if ((rowCount > 0) && ((rowCount % 100) == 0)) {
                     printSeparator(out, widths);
                     printRow(out, labels, widths);
                     printSeparator(out, widths);
                 }
-                
-                for(int i = 0; i < columns; i++) {
+
+                for (int i = 0; i < columns; i++) {
                     values[i] = rset.getString(i + 1);
                 }
 
@@ -781,13 +782,15 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 throw e;
             }
 
-            Util.swallow(e, FarragoTrace.getTestTracer());
+            Util.swallow(
+                e,
+                FarragoTrace.getTestTracer());
         } finally {
             printSeparator(out, widths);
             try {
                 out.newLine();
-            } catch(IOException e) {
-                assert(false): "IOException via a StringWriter";
+            } catch (IOException e) {
+                assert (false) : "IOException via a StringWriter";
             }
 
             rset.close();
@@ -795,13 +798,13 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * Prints an output table separator.  Something like
-     * <code>"+----+--------+"</code>.
+     * Prints an output table separator. Something like <code>
+     * "+----+--------+"</code>.
      */
-    private void printSeparator(BufferedWriter out, int[] widths)
+    private void printSeparator(BufferedWriter out, int [] widths)
     {
         try {
-            for(int i = 0; i < widths.length; i++) {
+            for (int i = 0; i < widths.length; i++) {
                 if (i > 0) {
                     out.write("-+-");
                 } else {
@@ -809,26 +812,29 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 }
 
                 int numDashes = widths[i];
-                while(numDashes > 0) {
-                    out.write(dashes, 0, Math.min(numDashes, BUF_SIZE));
+                while (numDashes > 0) {
+                    out.write(
+                        dashes,
+                        0,
+                        Math.min(numDashes, BUF_SIZE));
                     numDashes -= Math.min(numDashes, BUF_SIZE);
                 }
             }
             out.write("-+");
             out.newLine();
-        } catch(IOException e) {
-            assert(false): "IOException on StringWriter";
+        } catch (IOException e) {
+            assert (false) : "IOException on StringWriter";
         }
     }
 
     /**
-     * Prints an output table row.  Something like
-     * <code>"| COL1 | COL2    |"</code>.
+     * Prints an output table row. Something like <code>"| COL1 | COL2
+     * |"</code>.
      */
-    private void printRow(BufferedWriter out, String[] values, int[] widths)
+    private void printRow(BufferedWriter out, String [] values, int [] widths)
     {
         try {
-            for(int i = 0; i < values.length; i++) {
+            for (int i = 0; i < values.length; i++) {
                 String value = values[i];
                 if (value == null) {
                     value = "";
@@ -841,18 +847,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 }
                 out.write(value);
                 int excess = widths[i] - value.length();
-                while(excess > 0) {
-                    out.write(spaces, 0, Math.min(excess, BUF_SIZE));
+                while (excess > 0) {
+                    out.write(
+                        spaces,
+                        0,
+                        Math.min(excess, BUF_SIZE));
                     excess -= Math.min(excess, BUF_SIZE);
                 }
             }
             out.write(" |");
             out.newLine();
-        } catch(IOException e) {
-            assert(false): "IOException on StringWriter";
+        } catch (IOException e) {
+            assert (false) : "IOException on StringWriter";
         }
     }
-
 
     /**
      * Prints the given SQL to the thread's output.
@@ -865,7 +873,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         try {
             String line;
-            while((line = rdr.readLine()) != null) {
+            while ((line = rdr.readLine()) != null) {
                 line = line.trim();
 
                 if (message.length() > 0) {
@@ -874,19 +882,20 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
                 message.append("> ").append(line);
             }
-        } catch(IOException e) {
-            assert(false): "IOException via StringReader";
+        } catch (IOException e) {
+            assert (false) : "IOException via StringReader";
         } finally {
             try {
                 rdr.close();
-            } catch(IOException e) {
-                assert(false): "IOException via StringReader";
+            } catch (IOException e) {
+                assert (false) : "IOException via StringReader";
             }
         }
-            
-        storeMessage(threadId, message.toString());
-    }
 
+        storeMessage(
+            threadId,
+            message.toString());
+    }
 
     /**
      * Prints the given message to the thread's output.
@@ -898,12 +907,12 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         try {
             out.write(message);
             out.newLine();
-        } catch(IOException e) {
-            assert(false): "IOException on StringWriter";
+        } catch (IOException e) {
+            assert (false) : "IOException on StringWriter";
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     private static abstract class CommandWithTimeout
         extends AbstractCommand
@@ -923,8 +932,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             if (timeout > 0) {
                 // TODO: add support for millisecond timeouts to
                 // FarragoJdbcEngineStatement
-                assert(timeout >= 1000);
-                stmt.setQueryTimeout((int)(timeout / 1000));
+                assert (timeout >= 1000);
+                stmt.setQueryTimeout((int) (timeout / 1000));
                 return true;
             }
 
@@ -933,10 +942,11 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * SelectCommand creates and executes a SQL select statement, with
-     * optional timeout.
+     * SelectCommand creates and executes a SQL select statement, with optional
+     * timeout.
      */
-    private class SelectCommand extends CommandWithTimeout
+    private class SelectCommand
+        extends CommandWithTimeout
     {
         private String sql;
         private long timeout;
@@ -967,7 +977,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         {
             String properSql = sql.trim();
 
-            storeSql(executor.getThreadId(), properSql);
+            storeSql(
+                executor.getThreadId(),
+                properSql);
 
             if (properSql.endsWith(";")) {
                 properSql = properSql.substring(0, properSql.length() - 1);
@@ -979,25 +991,26 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             boolean timeoutSet = setTimeout(stmt);
 
             try {
-                storeResults(executor.getThreadId(),
-                             stmt.executeQuery(),
-                             timeoutSet);
+                storeResults(
+                    executor.getThreadId(),
+                    stmt.executeQuery(),
+                    timeoutSet);
             } finally {
                 stmt.close();
             }
         }
     }
 
-
     /**
-     * SelectCommand creates and executes a SQL select statement, with
-     * optional timeout.
+     * SelectCommand creates and executes a SQL select statement, with optional
+     * timeout.
      */
-    private class SqlCommand extends CommandWithTimeout
+    private class SqlCommand
+        extends CommandWithTimeout
     {
         private String sql;
         private long timeout;
-        
+
         private SqlCommand(String sql)
         {
             super(0);
@@ -1024,7 +1037,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         {
             String properSql = sql.trim();
 
-            storeSql(executor.getThreadId(), properSql);
+            storeSql(
+                executor.getThreadId(),
+                properSql);
 
             if (properSql.endsWith(";")) {
                 properSql = properSql.substring(0, properSql.length() - 1);
@@ -1047,31 +1062,38 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 int rows = stmt.executeUpdate();
 
                 if (rows != 1) {
-                    storeMessage(executor.getThreadId(),
-                                 String.valueOf(rows) + " rows affected.");
+                    storeMessage(
+                        executor.getThreadId(),
+                        String.valueOf(rows) + " rows affected.");
                 } else {
-                    storeMessage(executor.getThreadId(), "1 row affected.");
+                    storeMessage(
+                        executor.getThreadId(),
+                        "1 row affected.");
                 }
             } catch (AbstractIterResultSet.SqlTimeoutException e) {
                 if (!timeoutSet) {
                     throw e;
                 }
 
-                Util.swallow(e, FarragoTrace.getTestTracer());
+                Util.swallow(
+                    e,
+                    FarragoTrace.getTestTracer());
 
-                storeMessage(executor.getThreadId(), "Timeout");
+                storeMessage(
+                    executor.getThreadId(),
+                    "Timeout");
             } finally {
                 stmt.close();
             }
         }
     }
 
-
     /**
-     * PrepareCommand creates a {@link PreparedStatement}.  Stores the
-     * prepared statement in the FarragoTestConcurrentCommandExecutor.
+     * PrepareCommand creates a {@link PreparedStatement}. Stores the prepared
+     * statement in the FarragoTestConcurrentCommandExecutor.
      */
-    private class PrepareCommand extends AbstractCommand
+    private class PrepareCommand
+        extends AbstractCommand
     {
         private String sql;
 
@@ -1085,7 +1107,9 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         {
             String properSql = sql.trim();
 
-            storeSql(executor.getThreadId(), properSql);
+            storeSql(
+                executor.getThreadId(),
+                properSql);
 
             if (properSql.endsWith(";")) {
                 properSql = properSql.substring(0, properSql.length() - 1);
@@ -1099,11 +1123,12 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     }
 
     /**
-     * FetchAndPrintCommand executes a previously prepared statement
-     * stored inthe FarragoTestConcurrentCommandExecutor and then outputs the
-     * returned rows.
+     * FetchAndPrintCommand executes a previously prepared statement stored
+     * inthe FarragoTestConcurrentCommandExecutor and then outputs the returned
+     * rows.
      */
-    private class FetchAndPrintCommand extends CommandWithTimeout
+    private class FetchAndPrintCommand
+        extends CommandWithTimeout
     {
         private FetchAndPrintCommand(long timeout)
         {
@@ -1118,9 +1143,12 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
             boolean timeoutSet = setTimeout(stmt);
 
-            storeResults(executor.getThreadId(),
-                         stmt.executeQuery(),
-                         timeoutSet);
+            storeResults(
+                executor.getThreadId(),
+                stmt.executeQuery(),
+                timeoutSet);
         }
     }
 }
+
+// End FarragoTestConcurrentScriptedCommandGenerator.java

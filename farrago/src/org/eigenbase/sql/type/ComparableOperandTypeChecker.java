@@ -21,14 +21,15 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.reltype.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
+
 /**
- * Type checking strategy which verifies that types have the required
- * attributes to be used as arguments to comparison operators.
+ * Type checking strategy which verifies that types have the required attributes
+ * to be used as arguments to comparison operators.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -36,8 +37,13 @@ import java.util.*;
 public class ComparableOperandTypeChecker
     extends SameOperandTypeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataTypeComparability requiredComparability;
-        
+
+    //~ Constructors -----------------------------------------------------------
+
     public ComparableOperandTypeChecker(
         int nOperands,
         RelDataTypeComparability requiredComparability)
@@ -46,8 +52,11 @@ public class ComparableOperandTypeChecker
         this.requiredComparability = requiredComparability;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public boolean checkOperandTypes(
-        SqlCallBinding callBinding, boolean throwOnFailure)
+        SqlCallBinding callBinding,
+        boolean throwOnFailure)
     {
         boolean b = true;
         for (int i = 0; i < nOperands; ++i) {
@@ -70,9 +79,8 @@ public class ComparableOperandTypeChecker
         boolean throwOnFailure,
         RelDataType type)
     {
-        if (type.getComparability().getOrdinal() <
-            requiredComparability.getOrdinal())
-        {
+        if (type.getComparability().getOrdinal()
+            < requiredComparability.getOrdinal()) {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
             } else {
@@ -84,9 +92,8 @@ public class ComparableOperandTypeChecker
     }
 
     /**
-     * Similar functionality to
-     * {@link #checkOperandTypes(SqlCallBinding, boolean)},
-     * but not part of the interface, and cannot throw an error.
+     * Similar functionality to {@link #checkOperandTypes(SqlCallBinding,
+     * boolean)}, but not part of the interface, and cannot throw an error.
      */
     public boolean checkOperandTypes(
         SqlOperatorBinding callBinding)
@@ -95,9 +102,8 @@ public class ComparableOperandTypeChecker
         for (int i = 0; i < nOperands; ++i) {
             RelDataType type = callBinding.getOperandType(i);
             boolean result;
-            if (type.getComparability().getOrdinal() <
-                requiredComparability.getOrdinal())
-            {
+            if (type.getComparability().getOrdinal()
+                < requiredComparability.getOrdinal()) {
                 result = false;
             } else {
                 result = true;
@@ -110,16 +116,17 @@ public class ComparableOperandTypeChecker
             b = super.checkOperandTypes(callBinding);
         }
         return b;
-
     }
-
 
     // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
         String [] array = new String[nOperands];
         Arrays.fill(array, "COMPARABLE_TYPE");
-        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(array));
+        return SqlUtil.getAliasedSignature(
+                op,
+                opName,
+                Arrays.asList(array));
     }
 }
 

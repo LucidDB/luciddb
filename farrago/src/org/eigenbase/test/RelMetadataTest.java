@@ -21,41 +21,48 @@
 */
 package org.eigenbase.test;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
-import java.util.*;
 
 /**
- * Unit test for {@link DefaultRelMetadataProvider}.  See {@link
- * SqlToRelTestBase} class comments for details on the schema used.  Note that
- * no optimizer rules are fired on the translation of the SQL into relational
- * algebra (e.g. join conditions in the WHERE clause will look like filters),
- * so it's necessary to phrase the SQL carefully.
+ * Unit test for {@link DefaultRelMetadataProvider}. See {@link
+ * SqlToRelTestBase} class comments for details on the schema used. Note that no
+ * optimizer rules are fired on the translation of the SQL into relational
+ * algebra (e.g. join conditions in the WHERE clause will look like filters), so
+ * it's necessary to phrase the SQL carefully.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RelMetadataTest extends SqlToRelTestBase
+public class RelMetadataTest
+    extends SqlToRelTestBase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final double EPSILON = 1.0e-5;
-    
+
     private static final double DEFAULT_EQUAL_SELECTIVITY = 0.15;
-    
+
     private static final double DEFAULT_EQUAL_SELECTIVITY_SQUARED =
         DEFAULT_EQUAL_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY;
-    
+
     private static final double DEFAULT_COMP_SELECTIVITY = 0.5;
-    
+
     private static final double DEFAULT_NOTNULL_SELECTIVITY = 0.9;
-    
+
     private static final double DEFAULT_SELECTIVITY = 0.25;
-    
+
     private static final double EMP_SIZE = 1000.0;
-    
+
     private static final double DEPT_SIZE = 100.0;
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // ----------------------------------------------------------------------
     // Tests for getPercentageOriginalRows
     // ----------------------------------------------------------------------
@@ -67,42 +74,47 @@ public class RelMetadataTest extends SqlToRelTestBase
         rel.getCluster().setMetadataProvider(provider);
         return rel;
     }
-    
+
     private void checkPercentageOriginalRows(String sql, double expected)
     {
         checkPercentageOriginalRows(sql, expected, EPSILON);
     }
-    
+
     private void checkPercentageOriginalRows(
-        String sql, double expected, double epsilon)
+        String sql,
+        double expected,
+        double epsilon)
     {
         RelNode rel = convertSql(sql);
         Double result = RelMetadataQuery.getPercentageOriginalRows(rel);
         assertTrue(result != null);
-        assertEquals(expected, result.doubleValue(), epsilon);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            epsilon);
     }
-    
+
     public void testPercentageOriginalRowsTableOnly()
     {
         checkPercentageOriginalRows(
             "select * from dept",
             1.0);
     }
-    
+
     public void testPercentageOriginalRowsAgg()
     {
         checkPercentageOriginalRows(
             "select deptno from dept group by deptno",
             1.0);
     }
-    
+
     public void testPercentageOriginalRowsOneFilter()
     {
         checkPercentageOriginalRows(
             "select * from dept where deptno = 20",
             DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testPercentageOriginalRowsTwoFilters()
     {
         checkPercentageOriginalRows(
@@ -118,14 +130,14 @@ public class RelMetadataTest extends SqlToRelTestBase
             + " where deptno = 20",
             DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testPercentageOriginalRowsJoin()
     {
         checkPercentageOriginalRows(
             "select * from emp inner join dept on emp.deptno=dept.deptno",
             1.0);
     }
-    
+
     public void testPercentageOriginalRowsJoinTwoFilters()
     {
         checkPercentageOriginalRows(
@@ -134,29 +146,29 @@ public class RelMetadataTest extends SqlToRelTestBase
             + " on e.deptno=d.deptno",
             DEFAULT_EQUAL_SELECTIVITY_SQUARED);
     }
-    
+
     public void testPercentageOriginalRowsUnionNoFilter()
     {
         checkPercentageOriginalRows(
             "select name from dept union all select ename from emp",
             1.0);
     }
-    
+
     public void testPercentageOriginalRowsUnionLittleFilter()
     {
         checkPercentageOriginalRows(
             "select name from dept where deptno=20"
             + " union all select ename from emp",
-            (DEPT_SIZE*DEFAULT_EQUAL_SELECTIVITY + EMP_SIZE)
+            ((DEPT_SIZE * DEFAULT_EQUAL_SELECTIVITY) + EMP_SIZE)
             / (DEPT_SIZE + EMP_SIZE));
     }
-    
+
     public void testPercentageOriginalRowsUnionBigFilter()
     {
         checkPercentageOriginalRows(
             "select name from dept"
             + " union all select ename from emp where deptno=20",
-            (EMP_SIZE*DEFAULT_EQUAL_SELECTIVITY + DEPT_SIZE)
+            ((EMP_SIZE * DEFAULT_EQUAL_SELECTIVITY) + DEPT_SIZE)
             / (DEPT_SIZE + EMP_SIZE));
     }
 
@@ -169,7 +181,7 @@ public class RelMetadataTest extends SqlToRelTestBase
         RelNode rel = convertSql(sql);
         return RelMetadataQuery.getColumnOrigins(rel, 0);
     }
-    
+
     private void checkNoColumnOrigin(String sql)
     {
         Set<RelColumnOrigin> result = checkColumnOrigin(sql);
@@ -189,14 +201,14 @@ public class RelMetadataTest extends SqlToRelTestBase
             actualTableName[actualTableName.length - 1],
             expectedTableName);
         assertEquals(
-            actualTable.getRowType().getFields()[
-                rco.getOriginColumnOrdinal()].getName(),
+            actualTable.getRowType().getFields()[rco.getOriginColumnOrdinal()]
+            .getName(),
             expectedColumnName);
         assertEquals(
             rco.isDerived(),
             expectedDerived);
     }
-    
+
     private void checkSingleColumnOrigin(
         String sql,
         String expectedTableName,
@@ -205,7 +217,9 @@ public class RelMetadataTest extends SqlToRelTestBase
     {
         Set<RelColumnOrigin> result = checkColumnOrigin(sql);
         assertTrue(result != null);
-        assertEquals(1, result.size());
+        assertEquals(
+            1,
+            result.size());
         RelColumnOrigin rco = result.iterator().next();
         checkColumnOrigin(
             rco,
@@ -225,7 +239,9 @@ public class RelMetadataTest extends SqlToRelTestBase
     {
         Set<RelColumnOrigin> result = checkColumnOrigin(sql);
         assertTrue(result != null);
-        assertEquals(2, result.size());
+        assertEquals(
+            2,
+            result.size());
         for (RelColumnOrigin rco : result) {
             RelOptTable actualTable = rco.getOriginTable();
             String [] actualTableName = actualTable.getQualifiedName();
@@ -246,7 +262,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             }
         }
     }
-    
+
     public void testColumnOriginsTableOnly()
     {
         checkSingleColumnOrigin(
@@ -255,7 +271,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             false);
     }
-    
+
     public void testColumnOriginsExpression()
     {
         checkSingleColumnOrigin(
@@ -264,7 +280,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             true);
     }
-    
+
     public void testColumnOriginsDyadicExpression()
     {
         checkTwoColumnOrigin(
@@ -275,13 +291,13 @@ public class RelMetadataTest extends SqlToRelTestBase
             "ENAME",
             true);
     }
-    
+
     public void testColumnOriginsConstant()
     {
         checkNoColumnOrigin(
             "select 'Minstrelsy' as dname from dept");
     }
-    
+
     public void testColumnOriginsFilter()
     {
         checkSingleColumnOrigin(
@@ -290,7 +306,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             false);
     }
-    
+
     public void testColumnOriginsJoinLeft()
     {
         checkSingleColumnOrigin(
@@ -299,7 +315,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "ENAME",
             false);
     }
-    
+
     public void testColumnOriginsJoinRight()
     {
         checkSingleColumnOrigin(
@@ -308,7 +324,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             false);
     }
-    
+
     public void testColumnOriginsJoinOuter()
     {
         checkSingleColumnOrigin(
@@ -318,7 +334,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             true);
     }
-    
+
     public void testColumnOriginsJoinFullOuter()
     {
         checkSingleColumnOrigin(
@@ -328,7 +344,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             true);
     }
-    
+
     public void testColumnOriginsAggKey()
     {
         checkSingleColumnOrigin(
@@ -337,7 +353,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "NAME",
             false);
     }
-    
+
     public void testColumnOriginsAggMeasure()
     {
         checkSingleColumnOrigin(
@@ -346,19 +362,19 @@ public class RelMetadataTest extends SqlToRelTestBase
             "DEPTNO",
             true);
     }
-    
+
     public void testColumnOriginsAggCountStar()
     {
         checkNoColumnOrigin(
             "select count(*),name from dept group by name");
     }
-    
+
     public void testColumnOriginsValues()
     {
         checkNoColumnOrigin(
             "values(1,2,3)");
     }
-    
+
     public void testColumnOriginsUnion()
     {
         checkTwoColumnOrigin(
@@ -369,7 +385,7 @@ public class RelMetadataTest extends SqlToRelTestBase
             "ENAME",
             false);
     }
-    
+
     public void testColumnOriginsSelfUnion()
     {
         checkSingleColumnOrigin(
@@ -386,7 +402,9 @@ public class RelMetadataTest extends SqlToRelTestBase
         RelNode rel = convertSql(sql);
         Double result = RelMetadataQuery.getRowCount(rel);
         assertTrue(result != null);
-        assertEquals(expected, result.doubleValue());
+        assertEquals(
+            expected,
+            result.doubleValue());
     }
 
     public void testRowCountEmp()
@@ -423,104 +441,119 @@ public class RelMetadataTest extends SqlToRelTestBase
             "select ename from emp union all select name from dept",
             EMP_SIZE + DEPT_SIZE);
     }
-    
+
     public void testRowCountFilter()
     {
         checkRowCount(
             "select * from emp where ename='Mathilda'",
             EMP_SIZE * DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testRowCountSort()
     {
         checkRowCount(
             "select * from emp order by ename",
             EMP_SIZE);
     }
-    
+
     private void checkFilterSelectivity(
-        String sql, double expected)
+        String sql,
+        double expected)
     {
         RelNode rel = convertSql(sql);
         Double result = RelMetadataQuery.getSelectivity(rel, null);
         assertTrue(result != null);
-        assertEquals(expected, result.doubleValue(), EPSILON);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            EPSILON);
     }
-    
+
     public void testSelectivityIsNotNullFilter()
     {
         checkFilterSelectivity(
             "select * from emp where deptno is not null",
             DEFAULT_NOTNULL_SELECTIVITY);
     }
-    
+
     public void testSelectivityComparisonFilter()
     {
         checkFilterSelectivity(
             "select * from emp where deptno > 10",
             DEFAULT_COMP_SELECTIVITY);
     }
-    
+
     public void testSelectivityAndFilter()
     {
         checkFilterSelectivity(
             "select * from emp where ename = 'foo' and deptno = 10",
             DEFAULT_EQUAL_SELECTIVITY_SQUARED);
     }
-    
+
     public void testSelectivityOrFilter()
     {
         checkFilterSelectivity(
             "select * from emp where ename = 'foo' or deptno = 10",
             DEFAULT_SELECTIVITY);
     }
-    
+
     private void checkRelSelectivity(
-        RelNode rel, double expected)
+        RelNode rel,
+        double expected)
     {
         Double result = RelMetadataQuery.getSelectivity(rel, null);
         assertTrue(result != null);
-        assertEquals(expected, result.doubleValue(), EPSILON);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            EPSILON);
     }
-    
+
     public void testSelectivityRedundantFilter()
     {
         RelNode rel = convertSql("select * from emp where deptno = 10");
         checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testSelectivitySort()
     {
-        RelNode rel = convertSql(
-            "select * from emp where deptno = 10" +
-            "order by ename");
+        RelNode rel =
+            convertSql(
+                "select * from emp where deptno = 10"
+                + "order by ename");
         checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testSelectivityUnion()
     {
-        RelNode rel = convertSql(
-            "select * from (select * from emp union all select * from emp) " +
-            "where deptno = 10");
+        RelNode rel =
+            convertSql(
+                "select * from (select * from emp union all select * from emp) "
+                + "where deptno = 10");
         checkRelSelectivity(rel, DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testSelectivityAgg()
     {
-        RelNode rel = convertSql(
-            "select deptno, count(*) from emp where deptno > 10 " +
-            "group by deptno having count(*) = 0");
+        RelNode rel =
+            convertSql(
+                "select deptno, count(*) from emp where deptno > 10 "
+                + "group by deptno having count(*) = 0");
         checkRelSelectivity(
-            rel, DEFAULT_COMP_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY);
+            rel,
+            DEFAULT_COMP_SELECTIVITY * DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testDistinctRowCountTable()
     {
         // no unique key information is available so return null
         RelNode rel = convertSql("select * from emp where deptno = 10");
         BitSet groupKey = new BitSet();
-        Double result = RelMetadataQuery.getDistinctRowCount(
-            rel, groupKey, null);
+        Double result =
+            RelMetadataQuery.getDistinctRowCount(
+                rel,
+                groupKey,
+                null);
         assertTrue(result == null);
     }
 }

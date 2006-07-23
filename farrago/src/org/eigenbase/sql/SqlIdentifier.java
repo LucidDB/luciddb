@@ -20,35 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.Util;
-
 import java.util.*;
+
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
  * A <code>SqlIdentifier</code> is an identifier, possibly compound.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-public class SqlIdentifier extends SqlNode
+public class SqlIdentifier
+    extends SqlNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Array of the components of this compound identifier.
      *
      * <p>It's convenient to have this member public, and it's convenient to
      * have this member not-final, but it's a shame it's public and not-final.
-     * If you assign to this member, please use
-     * {@link #setNames(String[], SqlParserPos[])}.
-     * And yes, we'd like to make identifiers immutable one day.
+     * If you assign to this member, please use {@link #setNames(String[],
+     * SqlParserPos[])}. And yes, we'd like to make identifiers immutable one
+     * day.
      */
     public String [] names;
 
@@ -60,9 +61,9 @@ public class SqlIdentifier extends SqlNode
     /**
      * A list of the positions of the components of compound identifiers.
      */
-    private SqlParserPos[] componentPositions;
+    private SqlParserPos [] componentPositions;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a compound identifier, for example <code>foo.bar</code>.
@@ -73,7 +74,7 @@ public class SqlIdentifier extends SqlNode
         String [] names,
         SqlCollation collation,
         SqlParserPos pos,
-        SqlParserPos[] componentPositions)
+        SqlParserPos [] componentPositions)
     {
         super(pos);
         this.names = names;
@@ -89,15 +90,19 @@ public class SqlIdentifier extends SqlNode
     }
 
     /**
-     * Creates a simple identifier, for example <code>foo</code>,
-     * with a collation.
+     * Creates a simple identifier, for example <code>foo</code>, with a
+     * collation.
      */
     public SqlIdentifier(
         String name,
         SqlCollation collation,
         SqlParserPos pos)
     {
-        this(new String [] { name }, collation, pos, null);
+        this(
+            new String[] { name },
+            collation,
+            pos,
+            null);
     }
 
     /**
@@ -107,10 +112,14 @@ public class SqlIdentifier extends SqlNode
         String name,
         SqlParserPos pos)
     {
-        this(new String [] { name }, null, pos, null);
+        this(
+            new String[] { name },
+            null,
+            pos,
+            null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlKind getKind()
     {
@@ -119,11 +128,12 @@ public class SqlIdentifier extends SqlNode
 
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlIdentifier(
-            Util.clone(names),
-            collation,
-            pos,
-            componentPositions);
+        return
+            new SqlIdentifier(
+                Util.clone(names),
+                collation,
+                pos,
+                componentPositions);
     }
 
     public String toString()
@@ -143,7 +153,7 @@ public class SqlIdentifier extends SqlNode
      *
      * @deprecated Identifiers should be immutable
      */
-    public void setNames(String[] names, SqlParserPos[] poses)
+    public void setNames(String [] names, SqlParserPos [] poses)
     {
         this.names = names;
         this.componentPositions = poses;
@@ -155,27 +165,28 @@ public class SqlIdentifier extends SqlNode
      * is not present.
      *
      * @param i Ordinal of component.
+     *
      * @return Position of i'th component
      */
     public SqlParserPos getComponentParserPosition(int i)
     {
-        assert i >= 0 && i < names.length;
-        return componentPositions == null ?
-            getParserPosition() :
-            componentPositions[i];
+        assert (i >= 0) && (i < names.length);
+        return
+            (componentPositions == null) ? getParserPosition()
+            : componentPositions[i];
     }
 
     /**
      * Creates an identifier which contains only the <code>ordinal</code>th
-     * component of this compound identifier. It will have the correct
-     * {@link SqlParserPos}, provided that detailed position information is
-     * available.
+     * component of this compound identifier. It will have the correct {@link
+     * SqlParserPos}, provided that detailed position information is available.
      */
     public SqlIdentifier getComponent(int ordinal)
     {
-        return new SqlIdentifier(
-            names[ordinal],
-            getComponentParserPosition(ordinal));
+        return
+            new SqlIdentifier(
+                names[ordinal],
+                getComponentParserPosition(ordinal));
     }
 
     public void unparse(
@@ -223,24 +234,28 @@ public class SqlIdentifier extends SqlNode
             tableName = names[names.length - 2];
         } else {
             tableName = null;
+
             // table names are valid completion hints when the identifier
             // has only 1 name part
             scope.findAllTableNames(hintList);
             findAllValidFunctionNames(validator, scope, hintList);
         }
         findAllValidUdfNames(names, validator, hintList);
+
         // if the identifer has more than 1 part, use the tableName to limit
         // the choices of valid column names
         scope.findAllColumnNames(tableName, hintList);
-        Collections.sort(hintList, new SqlMonikerComparator());
+        Collections.sort(
+            hintList,
+            new SqlMonikerComparator());
     }
 
     private void findAllValidUdfNames(
-        String[] names,
+        String [] names,
         SqlValidator validator,
         List<SqlMoniker> result)
     {
-        SqlMoniker [] objNames = 
+        SqlMoniker [] objNames =
             validator.getCatalogReader().getAllSchemaObjectNames(names);
         for (int i = 0; i < objNames.length; i++) {
             if (objNames[i].getType() == SqlMonikerType.Function) {
@@ -253,24 +268,29 @@ public class SqlIdentifier extends SqlNode
         SqlValidator validator,
         SqlValidatorScope scope,
         List<SqlMoniker> result)
-    {   
+    {
         // a function name can only be 1 part
         if (names.length > 1) {
             return;
         }
         for (SqlOperator op : validator.getOperatorTable().getOperatorList()) {
             SqlIdentifier curOpId =
-                new SqlIdentifier(op.getName(), getParserPosition());
+                new SqlIdentifier(
+                    op.getName(),
+                    getParserPosition());
 
             final SqlCall call =
-                SqlUtil.makeCall(validator.getOperatorTable(), curOpId);
+                SqlUtil.makeCall(
+                    validator.getOperatorTable(),
+                    curOpId);
             if (call != null) {
                 result.add(
                     new SqlMonikerImpl(
-                        op.getName(), SqlMonikerType.Function));
+                        op.getName(),
+                        SqlMonikerType.Function));
             } else {
-                if (op.getSyntax() == SqlSyntax.Function ||
-                    op.getSyntax() == SqlSyntax.Prefix) {
+                if ((op.getSyntax() == SqlSyntax.Function)
+                    || (op.getSyntax() == SqlSyntax.Prefix)) {
                     if (op.getOperandTypeChecker() != null) {
                         String sig = op.getAllowedSignatures();
                         sig = sig.replaceAll("'", "");
@@ -286,7 +306,6 @@ public class SqlIdentifier extends SqlNode
                             SqlMonikerType.Function));
                 }
             }
-
         }
     }
 
@@ -294,7 +313,9 @@ public class SqlIdentifier extends SqlNode
     {
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
-        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), this);
+        SqlCall call = SqlUtil.makeCall(
+                validator.getOperatorTable(),
+                this);
         if (call != null) {
             validator.validateCall(call, scope);
             return;
@@ -353,7 +374,7 @@ public class SqlIdentifier extends SqlNode
      */
     public boolean isSimple()
     {
-        return names.length == 1 && !names[0].equals("*");
+        return (names.length == 1) && !names[0].equals("*");
     }
 
     public boolean isMonotonic(SqlValidatorScope scope)
@@ -361,7 +382,9 @@ public class SqlIdentifier extends SqlNode
         // First check for builtin functions which don't have parentheses,
         // like "LOCALTIME".
         final SqlValidator validator = scope.getValidator();
-        SqlCall call = SqlUtil.makeCall(validator.getOperatorTable(), this);
+        SqlCall call = SqlUtil.makeCall(
+                validator.getOperatorTable(),
+                this);
         if (call != null) {
             return call.isMonotonic(scope);
         }
@@ -373,11 +396,10 @@ public class SqlIdentifier extends SqlNode
         return ns.isMonotonic(fqId.names[fqId.names.length - 1]);
     }
 
-    public boolean equalsBaseName(String name) {
+    public boolean equalsBaseName(String name)
+    {
         return names[names.length - 1].equals(name);
     }
-
 }
-
 
 // End SqlIdentifier.java

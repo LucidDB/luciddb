@@ -21,53 +21,60 @@
 */
 package org.eigenbase.sql.type;
 
+import java.util.*;
+
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * Parameter type-checking strategy for a set operator (UNION, INTERSECT,
  * EXCEPT).
  *
- * <p>Both arguments must be records with the same number
- * of fields, and the fields must be union-compatible.
+ * <p>Both arguments must be records with the same number of fields, and the
+ * fields must be union-compatible.
  *
  * @author Jack Frost
  * @version $Id$
  */
-public class SetopOperandTypeChecker implements SqlOperandTypeChecker
+public class SetopOperandTypeChecker
+    implements SqlOperandTypeChecker
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        assert (callBinding.getOperandCount() == 2)
-            : "setops are binary (for now)";
-        RelDataType[] argTypes = new RelDataType[callBinding.getOperandCount()];
+        assert (callBinding.getOperandCount() == 2) : "setops are binary (for now)";
+        RelDataType [] argTypes =
+            new RelDataType[callBinding.getOperandCount()];
         int colCount = -1;
         for (int i = 0; i < argTypes.length; i++) {
             final SqlNode operand = callBinding.getCall().operands[i];
             final RelDataType argType =
                 argTypes[i] =
-                callBinding.getValidator().getValidatedNodeType(operand);
-            Util.permAssert(argType.isStruct(),
+                    callBinding.getValidator().getValidatedNodeType(operand);
+            Util.permAssert(
+                argType.isStruct(),
                 "setop arg must be a struct");
             if (i == 0) {
                 colCount = argTypes[0].getFieldList().size();
                 continue;
             }
+
             // Each operand must have the same number of columns.
-            final RelDataTypeField[] fields = argType.getFields();
+            final RelDataTypeField [] fields = argType.getFields();
             if (fields.length != colCount) {
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
                         operand,
-                        EigenbaseResource.instance()
-                        .ColumnCountMismatchInSetop.ex(
+                        EigenbaseResource.instance().ColumnCountMismatchInSetop
+                        .ex(
                             callBinding.getOperator().getName()));
                 } else {
                     return false;
@@ -78,7 +85,8 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
         // The columns must be pairwise union compatible. For each column
         // ordinal, form a 'slice' containing the types of the ordinal'th
         // column j.
-        RelDataType[] colTypes = new RelDataType[callBinding.getOperandCount()];
+        RelDataType [] colTypes =
+            new RelDataType[callBinding.getOperandCount()];
         for (int i = 0; i < colCount; i++) {
             for (int j = 0; j < argTypes.length; j++) {
                 final RelDataTypeField field = argTypes[j].getFields()[i];
@@ -88,19 +96,20 @@ public class SetopOperandTypeChecker implements SqlOperandTypeChecker
                 callBinding.getTypeFactory().leastRestrictive(colTypes);
             if (type == null) {
                 if (throwOnFailure) {
-                    SqlNode field = SqlUtil.getSelectListItem(
-                        callBinding.getCall().operands[0], i);
+                    SqlNode field =
+                        SqlUtil.getSelectListItem(
+                            callBinding.getCall().operands[0],
+                            i);
                     throw callBinding.getValidator().newValidationError(
                         field,
-                        EigenbaseResource.instance()
-                        .ColumnTypeMismatchInSetop.ex(
+                        EigenbaseResource.instance().ColumnTypeMismatchInSetop
+                        .ex(
                             new Integer(i + 1), // 1-based
                             callBinding.getOperator().getName()));
                 } else {
                     return false;
                 }
             }
-
         }
 
         return true;

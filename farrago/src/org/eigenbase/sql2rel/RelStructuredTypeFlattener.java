@@ -22,16 +22,17 @@
 */
 package org.eigenbase.sql2rel;
 
+import java.util.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 // TODO jvs 10-Feb-2005:  factor out generic rewrite helper, with the
 // ability to map between old and new rels and field ordinals.  Also,
@@ -39,26 +40,24 @@ import java.util.*;
 
 /**
  * RelStructuredTypeFlattener removes all structured types from a tree of
- * relational expressions.  Because it must operate globally on the tree, it is
+ * relational expressions. Because it must operate globally on the tree, it is
  * implemented as an explicit self-contained rewrite operation instead of via
- * normal optimizer rules.  This approach has the benefit that real optimizer
- * and codegen rules never have to deal with structured types.
+ * normal optimizer rules. This approach has the benefit that real optimizer and
+ * codegen rules never have to deal with structured types.
  *
- *<p>
+ * <p>As an example, suppose we have a structured type <code>ST(A1 smallint, A2
+ * bigint)</code>, a table <code>T(c1 ST, c2 double)</code>, and a query <code>
+ * select t.c2, t.c1.a2 from t</code>. After SqlToRelConverter executes, the
+ * unflattened tree looks like:
  *
- * As an example, suppose we have a structured type <code>ST(A1 smallint, A2
- * bigint)</code>, a table <code>T(c1 ST, c2 double)</code>, and a query
- * <code>select t.c2, t.c1.a2 from t</code>.  After SqlToRelConverter
- * executes, the unflattened tree looks like:
- *
- *<pre><code>
+ * <pre><code>
  * ProjectRel(C2=[$1], A2=[$0.A2])
  *   TableAccessRel(table=[T])
  *</code></pre>
  *
  * After flattening, the resulting tree looks like
  *
- *<pre><code>
+ * <pre><code>
  * ProjectRel(C2=[$3], A2=[$2])
  *   FtrsIndexScanRel(table=[T], index=[clustered])
  *</code></pre>
@@ -66,10 +65,10 @@ import java.util.*;
  * The index scan produces a flattened row type <code>(boolean, smallint,
  * bigint, double)</code> (the boolean is a null indicator for c1), and the
  * projection picks out the desired attributes (omitting <code>$0</code> and
- * <code>$1</code> altogether).  After optimization, the projection might be
+ * <code>$1</code> altogether). After optimization, the projection might be
  * pushed down into the index scan, resulting in a final tree like
  *
- *<pre><code>
+ * <pre><code>
  * FtrsIndexScanRel(table=[T], index=[clustered], projection=[3, 2])
  *</code></pre>
  *
@@ -78,21 +77,28 @@ import java.util.*;
  */
 public class RelStructuredTypeFlattener
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RexBuilder rexBuilder;
     private final RewriteRelVisitor visitor;
-    
+
     private Map oldToNewRelMap;
     private RelNode currentRel;
     private int iRestructureInput;
     private RelDataType flattenedRootType;
     boolean restructured;
 
+    //~ Constructors -----------------------------------------------------------
+
     public RelStructuredTypeFlattener(RexBuilder rexBuilder)
     {
         this.rexBuilder = rexBuilder;
         visitor = new RewriteRelVisitor();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public RelNode rewrite(RelNode root, boolean restructure)
     {
         // Perform flattening.
@@ -100,7 +106,7 @@ public class RelStructuredTypeFlattener
         visitor.visit(root, 0, null);
         RelNode flattened = getNewForOldRel(root);
         flattenedRootType = flattened.getRowType();
-        
+
         // If requested, add an additional projection which puts
         // everything back into structured form for return to the
         // client.
@@ -114,10 +120,11 @@ public class RelStructuredTypeFlattener
             // REVIEW jvs 23-Mar-2005:  How do we make sure that this
             // implementation stays in Java?  Fennel can't handle
             // structured types.
-            return CalcRel.createProject(
-                flattened,
-                structuringExps,
-                RelOptUtil.getFieldNames(root.getRowType()));
+            return
+                CalcRel.createProject(
+                    flattened,
+                    structuringExps,
+                    RelOptUtil.getFieldNames(root.getRowType()));
         } else {
             return flattened;
         }
@@ -137,7 +144,9 @@ public class RelStructuredTypeFlattener
                 ++iOutput;
             } else {
                 structuringExps[iOutput] =
-                    new RexInputRef(iRestructureInput, field.getType());
+                    new RexInputRef(
+                        iRestructureInput,
+                        field.getType());
                 ++iOutput;
                 ++iRestructureInput;
             }
@@ -149,16 +158,18 @@ public class RelStructuredTypeFlattener
         RelDataType structuredType)
     {
         // Access null indicator for entire structure.
-        RexInputRef nullIndicator = new RexInputRef(
-            iRestructureInput,
-            flattenedRootType.getFields()[iRestructureInput].getType());
+        RexInputRef nullIndicator =
+            new RexInputRef(
+                iRestructureInput,
+                flattenedRootType.getFields()[iRestructureInput].getType());
         ++iRestructureInput;
 
         // Use NEW to put flattened data back together into a structure.
         RexNode [] inputExprs = restructureFields(structuredType);
-        RexNode newInvocation = rexBuilder.makeNewInvocation(
-            structuredType,
-            inputExprs);
+        RexNode newInvocation =
+            rexBuilder.makeNewInvocation(
+                structuredType,
+                inputExprs);
 
         if (!structuredType.isNullable()) {
             // Optimize away the null test.
@@ -170,21 +181,24 @@ public class RelStructuredTypeFlattener
         RexNode [] caseOperands = new RexNode[3];
 
         // WHEN StructuredType.Indicator IS NULL
-        caseOperands[0] = rexBuilder.makeCall(
-            SqlStdOperatorTable.isNullOperator,
-            nullIndicator);
+        caseOperands[0] =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator,
+                nullIndicator);
 
         // THEN CAST(NULL AS StructuredType)
-        caseOperands[1] = rexBuilder.makeCast(
-            structuredType,
-            rexBuilder.constantNull());
+        caseOperands[1] =
+            rexBuilder.makeCast(
+                structuredType,
+                rexBuilder.constantNull());
 
         // ELSE NEW StructuredType(inputs...) END
         caseOperands[2] = newInvocation;
 
-        return rexBuilder.makeCall(
-            SqlStdOperatorTable.caseOperator,
-            caseOperands);
+        return
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.caseOperator,
+                caseOperands);
     }
 
     protected void setNewForOldRel(RelNode oldRel, RelNode newRel)
@@ -202,11 +216,12 @@ public class RelStructuredTypeFlattener
      * corresponding field post-flattening, and optionally returns its type.
      *
      * @param oldOrdinal Pre-flattening ordinal
+     *
      * @return Post-flattening ordinal
      */
     private int getNewForOldInput(int oldOrdinal)
     {
-        assert(currentRel != null);
+        assert (currentRel != null);
         int newOrdinal = 0;
 
         // determine which input rel oldOrdinal references, and adjust
@@ -244,11 +259,12 @@ public class RelStructuredTypeFlattener
             if (oldFieldType.isStruct()) {
                 // TODO jvs 10-Feb-2005:  this isn't terribly efficient;
                 // keep a mapping somewhere
-                RelDataType flattened = SqlTypeUtil.flattenRecordType(
-                    rexBuilder.getTypeFactory(),
-                    oldFieldType,
-                    null);
-                final RelDataTypeField[] fields = flattened.getFields();
+                RelDataType flattened =
+                    SqlTypeUtil.flattenRecordType(
+                        rexBuilder.getTypeFactory(),
+                        oldFieldType,
+                        null);
+                final RelDataTypeField [] fields = flattened.getFields();
                 offset += fields.length;
             } else {
                 ++offset;
@@ -265,14 +281,15 @@ public class RelStructuredTypeFlattener
 
     public void rewriteRel(TableModificationRel rel)
     {
-        TableModificationRel newRel = new TableModificationRel(
-            rel.getCluster(),
-            rel.getTable(),
-            rel.getConnection(),
-            getNewForOldRel(rel.getChild()),
-            rel.getOperation(),
-            rel.getUpdateColumnList(),
-            true);
+        TableModificationRel newRel =
+            new TableModificationRel(
+                rel.getCluster(),
+                rel.getTable(),
+                rel.getConnection(),
+                getNewForOldRel(rel.getChild()),
+                rel.getOperation(),
+                rel.getUpdateColumnList(),
+                true);
         setNewForOldRel(rel, newRel);
     }
 
@@ -285,7 +302,7 @@ public class RelStructuredTypeFlattener
                 throw Util.needToImplement("aggregation on structured types");
             }
         }
-            
+
         rewriteGeneric(rel);
     }
 
@@ -296,39 +313,43 @@ public class RelStructuredTypeFlattener
             new RelFieldCollation[oldCollations.length];
         for (int i = 0; i < oldCollations.length; ++i) {
             int oldInput = oldCollations[i].getFieldIndex();
-            RelDataType sortFieldType = 
+            RelDataType sortFieldType =
                 rel.getChild().getRowType().getFields()[oldInput].getType();
             if (sortFieldType.isStruct()) {
                 // TODO jvs 10-Feb-2005
                 throw Util.needToImplement("sorting on structured types");
             }
-            newCollations[i] = new RelFieldCollation(
-                getNewForOldInput(oldInput));
+            newCollations[i] =
+                new RelFieldCollation(
+                    getNewForOldInput(oldInput));
         }
-        SortRel newRel = new SortRel(
-            rel.getCluster(),
-            getNewForOldRel(rel.getChild()),
-            newCollations);
+        SortRel newRel =
+            new SortRel(
+                rel.getCluster(),
+                getNewForOldRel(rel.getChild()),
+                newCollations);
         setNewForOldRel(rel, newRel);
     }
 
     public void rewriteRel(FilterRel rel)
     {
-        RelNode newRel = CalcRel.createFilter(
-            getNewForOldRel(rel.getChild()),
-            flattenFieldAccesses(rel.getCondition()));
+        RelNode newRel =
+            CalcRel.createFilter(
+                getNewForOldRel(rel.getChild()),
+                flattenFieldAccesses(rel.getCondition()));
         setNewForOldRel(rel, newRel);
     }
 
     public void rewriteRel(JoinRel rel)
     {
-        JoinRel newRel = new JoinRel(
-            rel.getCluster(),
-            getNewForOldRel(rel.getLeft()),
-            getNewForOldRel(rel.getRight()),
-            flattenFieldAccesses(rel.getCondition()),
-            rel.getJoinType(),
-            rel.getVariablesStopped());
+        JoinRel newRel =
+            new JoinRel(
+                rel.getCluster(),
+                getNewForOldRel(rel.getLeft()),
+                getNewForOldRel(rel.getRight()),
+                flattenFieldAccesses(rel.getCondition()),
+                rel.getJoinType(),
+                rel.getVariablesStopped());
         setNewForOldRel(rel, newRel);
     }
 
@@ -337,8 +358,8 @@ public class RelStructuredTypeFlattener
         Iterator oldCorrelations = rel.getCorrelations().iterator();
         ArrayList newCorrelations = new ArrayList();
         while (oldCorrelations.hasNext()) {
-            CorrelatorRel.Correlation c = (CorrelatorRel.Correlation)
-                oldCorrelations.next();
+            CorrelatorRel.Correlation c =
+                (CorrelatorRel.Correlation) oldCorrelations.next();
             RelDataType corrFieldType =
                 rel.getLeft().getRowType().getFields()[c.getOffset()].getType();
             if (corrFieldType.isStruct()) {
@@ -349,12 +370,13 @@ public class RelStructuredTypeFlattener
                     c.getId(),
                     getNewForOldInput(c.getOffset())));
         }
-        CorrelatorRel newRel = new CorrelatorRel(
-            rel.getCluster(), 
-            getNewForOldRel(rel.getLeft()),
-            getNewForOldRel(rel.getRight()),
-            newCorrelations,
-            JoinRelType.LEFT);
+        CorrelatorRel newRel =
+            new CorrelatorRel(
+                rel.getCluster(),
+                getNewForOldRel(rel.getLeft()),
+                getNewForOldRel(rel.getRight()),
+                newCorrelations,
+                JoinRelType.LEFT);
         setNewForOldRel(rel, newRel);
     }
 
@@ -406,7 +428,7 @@ public class RelStructuredTypeFlattener
     {
         final List<RexNode> flattenedExpList = new ArrayList<RexNode>();
         final List<String> flattenedFieldNameList = new ArrayList<String>();
-        String[] fieldNames = RelOptUtil.getFieldNames(rel.getRowType());
+        String [] fieldNames = RelOptUtil.getFieldNames(rel.getRowType());
         flattenProjections(
             rel.getProjectExps(),
             fieldNames,
@@ -415,13 +437,14 @@ public class RelStructuredTypeFlattener
             flattenedFieldNameList);
         final RexNode [] flattenedExps =
             (RexNode []) flattenedExpList.toArray(RexNode.EMPTY_ARRAY);
-        final String[] flattenedFieldNames =
-            (String[]) flattenedFieldNameList.toArray(
+        final String [] flattenedFieldNames =
+            (String []) flattenedFieldNameList.toArray(
                 new String[flattenedFieldNameList.size()]);
-        RelNode newRel = CalcRel.createProject(
-            getNewForOldRel(rel.getChild()),
-            flattenedExps,
-            flattenedFieldNames);
+        RelNode newRel =
+            CalcRel.createProject(
+                getNewForOldRel(rel.getChild()),
+                flattenedExps,
+                flattenedFieldNames);
         setNewForOldRel(rel, newRel);
     }
 
@@ -446,9 +469,9 @@ public class RelStructuredTypeFlattener
         // Convert the projections.
         final List<RexNode> flattenedExpList = new ArrayList<RexNode>();
         final List<String> flattenedFieldNameList = new ArrayList<String>();
-        String[] fieldNames = RelOptUtil.getFieldNames(rel.getRowType());
+        String [] fieldNames = RelOptUtil.getFieldNames(rel.getRowType());
         flattenProjections(
-            (RexNode[]) program.getProjectList().toArray(
+            (RexNode []) program.getProjectList().toArray(
                 new RexNode[program.getProjectList().size()]),
             fieldNames,
             "",
@@ -460,7 +483,8 @@ public class RelStructuredTypeFlattener
         for (RexNode flattenedExp : flattenedExpList) {
             ++i;
             programBuilder.addProject(
-                flattenedExp, flattenedFieldNameList.get(i));
+                flattenedExp,
+                flattenedFieldNameList.get(i));
         }
 
         // Translate the condition.
@@ -475,13 +499,14 @@ public class RelStructuredTypeFlattener
         RexProgram newProgram = programBuilder.getProgram();
 
         // Create a new calc relational expression.
-        CalcRel newRel = new CalcRel(
-            cluster,
-            rel.cloneTraits(),
-            newChild,
-            newProgram.getOutputRowType(),
-            newProgram,
-            RelCollation.emptyList);
+        CalcRel newRel =
+            new CalcRel(
+                cluster,
+                rel.cloneTraits(),
+                newChild,
+                newProgram.getOutputRowType(),
+                newProgram,
+                RelCollation.emptyList);
         setNewForOldRel(rel, newRel);
     }
 
@@ -489,7 +514,7 @@ public class RelStructuredTypeFlattener
     {
         rel.flattenRel(this);
     }
-    
+
     public void rewriteGeneric(RelNode rel)
     {
         RelNode newRel = RelOptUtil.clone(rel);
@@ -503,8 +528,8 @@ public class RelStructuredTypeFlattener
     }
 
     private void flattenProjections(
-        RexNode[] exps,
-        String[] fieldNames,
+        RexNode [] exps,
+        String [] fieldNames,
         String prefix,
         List<RexNode> flattenedExps,
         List<String> flattenedFieldNames)
@@ -512,13 +537,16 @@ public class RelStructuredTypeFlattener
         for (int i = 0; i < exps.length; ++i) {
             RexNode exp = exps[i];
             String fieldName =
-                fieldNames == null || fieldNames[i] == null ? "$" + i :
-                fieldNames[i];
+                ((fieldNames == null) || (fieldNames[i] == null)) ? ("$" + i)
+                : fieldNames[i];
             if (!prefix.equals("")) {
                 fieldName = prefix + "$" + fieldName;
             }
             flattenProjection(
-                exp, fieldName, flattenedExps, flattenedFieldNames);
+                exp,
+                fieldName,
+                flattenedExps,
+                flattenedFieldNames);
         }
     }
 
@@ -532,11 +560,13 @@ public class RelStructuredTypeFlattener
             if (exp instanceof RexInputRef) {
                 RexInputRef inputRef = (RexInputRef) exp;
                 int newOffset = getNewForOldInput(inputRef.getIndex());
+
                 // expand to range
-                RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
-                    rexBuilder.getTypeFactory(),
-                    exp.getType(),
-                    null);
+                RelDataType flattenedType =
+                    SqlTypeUtil.flattenRecordType(
+                        rexBuilder.getTypeFactory(),
+                        exp.getType(),
+                        null);
                 List<RelDataTypeField> fieldList = flattenedType.getFieldList();
                 int n = fieldList.size();
                 for (int j = 0; j < n; ++j) {
@@ -576,15 +606,16 @@ public class RelStructuredTypeFlattener
                     flattenedExps,
                     flattenedFieldNames);
             } else if (exp instanceof RexCall) {
-                // NOTE jvs 10-Feb-2005:  This is a lame hack to
-                // keep special functions which return row types
-                // working.
+                // NOTE jvs 10-Feb-2005:  This is a lame hack to keep special
+                // functions which return row types working.
 
                 int j = 0;
                 for (RelDataTypeField field : exp.getType().getFieldList()) {
                     RexNode cloneCall = RexUtil.clone(exp);
-                    RexNode fieldAccess = rexBuilder.makeFieldAccess(
-                        cloneCall, field.getIndex());
+                    RexNode fieldAccess =
+                        rexBuilder.makeFieldAccess(
+                            cloneCall,
+                            field.getIndex());
                     flattenedExps.add(fieldAccess);
                     flattenedFieldNames.add(fieldName + "$" + (j++));
                 }
@@ -603,10 +634,11 @@ public class RelStructuredTypeFlattener
         List<RexNode> flattenedExps,
         List<String> flattenedFieldNames)
     {
-        RelDataType flattenedType = SqlTypeUtil.flattenRecordType(
-            rexBuilder.getTypeFactory(),
-            type,
-            null);
+        RelDataType flattenedType =
+            SqlTypeUtil.flattenRecordType(
+                rexBuilder.getTypeFactory(),
+                type,
+                null);
         for (RelDataTypeField field : flattenedType.getFieldList()) {
             flattenedExps.add(
                 rexBuilder.makeCast(
@@ -623,20 +655,33 @@ public class RelStructuredTypeFlattener
             return false;
         }
         RexCall call = (RexCall) rexNode;
-        return call.getOperator().getName().equalsIgnoreCase("row")
+        return
+            call.getOperator().getName().equalsIgnoreCase("row")
             || (call.isA(RexKind.NewSpecification));
     }
 
     public void rewriteRel(TableAccessRel rel)
     {
-        RelNode newRel = rel.getTable().toRel(
-            rel.getCluster(),
-            rel.getConnection());
-        
+        RelNode newRel =
+            rel.getTable().toRel(
+                rel.getCluster(),
+                rel.getConnection());
+
         setNewForOldRel(rel, newRel);
     }
 
-    private class RewriteRelVisitor extends RelVisitor
+    //~ Inner Interfaces -------------------------------------------------------
+
+    public interface SelfFlatteningRel
+        extends RelNode
+    {
+        void flattenRel(RelStructuredTypeFlattener flattener);
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class RewriteRelVisitor
+        extends RelVisitor
     {
         // implement RelVisitor
         public void visit(RelNode p, int ordinal, RelNode parent)
@@ -646,11 +691,12 @@ public class RelStructuredTypeFlattener
 
             currentRel = p;
             final String visitMethodName = "rewriteRel";
-            boolean found = ReflectUtil.invokeVisitor(
-                RelStructuredTypeFlattener.this,
-                currentRel,
-                RelNode.class,
-                visitMethodName);
+            boolean found =
+                ReflectUtil.invokeVisitor(
+                    RelStructuredTypeFlattener.this,
+                    currentRel,
+                    RelNode.class,
+                    visitMethodName);
             currentRel = null;
             if (!found) {
                 if (p.getInputs().length == 0) {
@@ -661,19 +707,21 @@ public class RelStructuredTypeFlattener
             }
             if (!found) {
                 throw Util.newInternal(
-                    "no '" + visitMethodName + "' method found for class " +
-                    p.getClass().getName());
+                    "no '" + visitMethodName + "' method found for class "
+                    + p.getClass().getName());
             }
         }
     }
 
-    private class RewriteRexShuttle extends RexShuttle
+    private class RewriteRexShuttle
+        extends RexShuttle
     {
         // override RexShuttle
         public RexNode visitInputRef(RexInputRef input)
         {
             final int oldIndex = input.getIndex();
             final int newIndex = getNewForOldInput(oldIndex);
+
             // FIXME: jhyde, 2005/12/3: Once indicator fields have been
             //  introduced, the new field type may be very different to the
             //  old field type. We should look at the actual flattened types,
@@ -698,13 +746,15 @@ public class RelStructuredTypeFlattener
             // the desired input number
             int iInput = 0;
             RelDataType fieldType = removeDistinct(fieldAccess.getType());
-            
+
             for (;;) {
                 RexNode refExp = fieldAccess.getReferenceExpr();
-                int ordinal = refExp.getType().getFieldOrdinal(
-                    fieldAccess.getField().getName());
+                int ordinal =
+                    refExp.getType().getFieldOrdinal(
+                        fieldAccess.getField().getName());
                 iInput += calculateFlattenedOffset(
-                    refExp.getType(), ordinal);
+                        refExp.getType(),
+                        ordinal);
                 if (refExp instanceof RexInputRef) {
                     RexInputRef inputRef = (RexInputRef) refExp;
                     iInput += getNewForOldInput(inputRef.getIndex());
@@ -716,15 +766,15 @@ public class RelStructuredTypeFlattener
                     refExp = cast.getOperands()[0];
                 }
                 if (refExp.isA(RexKind.NewSpecification)) {
-                    return ((RexCall) refExp).getOperands()[
-                        fieldAccess.getField().getIndex()];
+                    return
+                        ((RexCall) refExp).getOperands()[fieldAccess.getField()
+                            .getIndex()];
                 }
                 if (!(refExp instanceof RexFieldAccess)) {
                     throw Util.needToImplement(refExp);
                 }
                 fieldAccess = (RexFieldAccess) refExp;
             }
-
         }
 
         // override RexShuttle
@@ -734,25 +784,27 @@ public class RelStructuredTypeFlattener
                 RexNode input = rexCall.getOperands()[0].accept(this);
                 RelDataType targetType = removeDistinct(rexCall.getType());
                 return rexBuilder.makeCast(
-                    targetType,
-                    input);
+                        targetType,
+                        input);
             }
             if (!rexCall.isA(RexKind.Comparison)) {
                 return super.visitCall(rexCall);
             }
             RexNode lhs = rexCall.getOperands()[0];
             if (!lhs.getType().isStruct()) {
-                // NOTE jvs 9-Mar-2005:  Calls like IS NULL operate 
+                // NOTE jvs 9-Mar-2005:  Calls like IS NULL operate
                 // on the representative null indicator.  Since it comes
                 // first, we don't have to do any special translation.
                 return super.visitCall(rexCall);
             }
+
             // NOTE jvs 22-Mar-2005:  Likewise, the null indicator takes
             // care of comparison null semantics without any special casing.
-            return flattenComparison(
-                rexBuilder,
-                rexCall.getOperator(),
-                rexCall.getOperands());
+            return
+                flattenComparison(
+                    rexBuilder,
+                    rexCall.getOperator(),
+                    rexCall.getOperands());
         }
 
         private RexNode flattenComparison(
@@ -779,32 +831,30 @@ public class RelStructuredTypeFlattener
             }
             RexNode conjunction = null;
             for (int i = 0; i < n; ++i) {
-                RexNode comparison = rexBuilder.makeCall(
-                    op,
-                    (RexNode) flattenedExps.get(i), 
-                    (RexNode) flattenedExps.get(i + n));
+                RexNode comparison =
+                    rexBuilder.makeCall(
+                        op,
+                        (RexNode) flattenedExps.get(i),
+                        (RexNode) flattenedExps.get(i + n));
                 if (conjunction == null) {
                     conjunction = comparison;
                 } else {
-                    conjunction = rexBuilder.makeCall(
-                        SqlStdOperatorTable.andOperator,
-                        conjunction,
-                        comparison);
+                    conjunction =
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.andOperator,
+                            conjunction,
+                            comparison);
                 }
             }
             if (negate) {
-                return rexBuilder.makeCall(
-                    SqlStdOperatorTable.notOperator,
-                    conjunction);
+                return
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.notOperator,
+                        conjunction);
             } else {
                 return conjunction;
             }
         }
-    }
-    
-    public interface SelfFlatteningRel extends RelNode
-    {
-        void flattenRel(RelStructuredTypeFlattener flattener);
     }
 }
 

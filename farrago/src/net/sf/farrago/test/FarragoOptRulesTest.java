@@ -21,39 +21,48 @@
 */
 package net.sf.farrago.test;
 
-import org.eigenbase.test.*;
+import com.disruptivetech.farrago.rel.*;
+
+import java.util.logging.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.namespace.ftrs.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
-import org.eigenbase.oj.rel.*;
+import org.eigenbase.test.*;
 
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
-import net.sf.farrago.namespace.ftrs.*;
-
-import com.disruptivetech.farrago.rel.*;
-
-import junit.framework.*;
-
-import java.util.logging.*;
 
 /**
- * FarragoOptRulesTest is like {@link RelOptRulesTest}, but for
- * rules specific to Farrago.
+ * FarragoOptRulesTest is like {@link RelOptRulesTest}, but for rules specific
+ * to Farrago.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
+public class FarragoOptRulesTest
+    extends FarragoSqlToRelTestBase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     protected static final String NL = System.getProperty("line.separator");
-    
-    private HepProgram program;
 
     private static boolean doneStaticSetup;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
+    private HepProgram program;
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoOptRulesTest object.
      *
@@ -66,6 +75,8 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
     {
         super(testName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -98,12 +109,12 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             "alter session implementation set jar"
             + " plannerviz.plannerviz_plugin");
     }
-    
+
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(FarragoOptRulesTest.class);
     }
-    
+
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)
@@ -113,31 +124,30 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
 
         String planBefore = NL + RelOptUtil.toString(relBefore);
         diffRepos.assertEquals("planBefore", "${planBefore}", planBefore);
-        
+
         RelOptPlanner planner = stmt.getPlanner();
         planner.setRoot(relBefore);
         RelNode relAfter = planner.findBestExp();
-        
+
         String planAfter = NL + RelOptUtil.toString(relAfter);
         diffRepos.assertEquals("planAfter", "${planAfter}", planAfter);
     }
-    
+
     private void check(
         HepProgram program,
         String sql)
         throws Exception
     {
         this.program = program;
-        
+
         final DiffRepository diffRepos = getDiffRepos();
         String sql2 = diffRepos.expand("sql", sql);
 
-        String explainQuery =
-            "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql2;
+        String explainQuery = "EXPLAIN PLAN WITHOUT IMPLEMENTATION FOR " + sql2;
 
         checkQuery(explainQuery);
     }
-    
+
     private void check(
         RelOptRule rule,
         String sql)
@@ -150,12 +160,12 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             programBuilder.createProgram(),
             sql);
     }
-    
+
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
         FarragoSessionPlanner planner = new FarragoTestPlanner(
-            program,
-            stmt);
+                program,
+                stmt);
         stmt.setPlanner(planner);
     }
 
@@ -172,7 +182,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(ProjectToCalcRule.instance);
         programBuilder.addRuleInstance(IterRules.IterCalcRule.instance);
         programBuilder.addRuleInstance(FennelToIteratorConverter.Rule);
-        
+
         check(
             programBuilder.createProgram(),
             "select d.name as dname,e.name as ename"
@@ -180,7 +190,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             + " on e.deptno=d.deptno"
             + " where d.name='Propane'");
     }
-    
+
     public void testHeterogeneousConversion()
         throws Exception
     {
@@ -207,7 +217,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         // Let the converter rule fire to its heart's content.
         programBuilder.addMatchLimit(HepProgram.MATCH_UNTIL_FIXPOINT);
         programBuilder.addRuleInstance(FennelToIteratorConverter.Rule);
-        
+
         check(
             programBuilder.createProgram(),
             "select upper(name) from sales.emps union all"
@@ -226,7 +236,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
             programBuilder.createProgram(),
             "select upper(name) from sales.emps");
     }
-    
+
     public void testFtrsScanToSearchRule()
         throws Exception
     {
@@ -279,7 +289,7 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         // contain any rules like that.  In this case, the planner
         // picks the unclustered index scan over the clustered index
         // scan because the unclustered index is narrower.
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(TableAccessRule.instance);
         programBuilder.addRuleByDescription("FtrsTableProjectionRule");
@@ -298,10 +308,10 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-            "where e1.deptno = d.deptno and e1.empno = e2.empno");
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
+            + "where e1.deptno = d.deptno and e1.empno = e2.empno");
     }
-    
+
     public void testPushSemiJoinPastJoinRule_Right()
         throws Exception
     {
@@ -312,10 +322,10 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
+            + "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
-    
+
     public void testPushSemiJoinPastFilter()
         throws Exception
     {
@@ -325,10 +335,10 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
         check(
             programBuilder.createProgram(),
-            "select e.name from sales.emps e, sales.depts d " +
-            "where e.deptno = d.deptno and e.name = 'foo'");
+            "select e.name from sales.emps e, sales.depts d "
+            + "where e.deptno = d.deptno and e.name = 'foo'");
     }
-    
+
     public void testConvertMultiJoinRule()
         throws Exception
     {
@@ -338,8 +348,8 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new ConvertMultiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
+            + "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
 
     public void testReduceConstants()
@@ -354,15 +364,15 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         // NOTE jvs 27-May-2006: among other things, this verifies
         // intentionally different treatment for identical coalesce expression
         // in select and where.
-        
+
         check(
             programBuilder.createProgram(),
-            "select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer)," +
-            " coalesce(2,null)" +
-            " from sales.depts" +
-            " where deptno=(7+8) and deptno=coalesce(2,null)");
+            "select 1+2, deptno+(3+4), (5+6)+deptno, cast(null as integer),"
+            + " coalesce(2,null)"
+            + " from sales.depts"
+            + " where deptno=(7+8) and deptno=coalesce(2,null)");
     }
-    
+
     public void testRemoveSemiJoin()
         throws Exception
     {
@@ -372,10 +382,10 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e.name from sales.emps e, sales.depts d " +
-            "where e.deptno = d.deptno");
-    }	
-    	
+            "select e.name from sales.emps e, sales.depts d "
+            + "where e.deptno = d.deptno");
+    }
+
     public void testRemoveSemiJoinWithFilter()
         throws Exception
     {
@@ -386,28 +396,28 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e.name from sales.emps e, sales.depts d " +
-            "where e.deptno = d.deptno and e.name = 'foo'");
+            "select e.name from sales.emps e, sales.depts d "
+            + "where e.deptno = d.deptno and e.name = 'foo'");
     }
-    
+
     public void testRemoveSemiJoinRight()
-    	throws Exception
+        throws Exception
     {
-    	HepProgramBuilder programBuilder = new HepProgramBuilder();
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new PushFilterRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-            "where e1.deptno = d.deptno and d.deptno = e2.deptno");
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
+            + "where e1.deptno = d.deptno and d.deptno = e2.deptno");
     }
-    
+
     public void testRemoveSemiJoinRightWithFilter()
-		throws Exception
+        throws Exception
     {
-	    HepProgramBuilder programBuilder = new HepProgramBuilder();
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new PushFilterRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
@@ -415,9 +425,9 @@ public class FarragoOptRulesTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
         check(
             programBuilder.createProgram(),
-            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 " +
-            "where e1.deptno = d.deptno and d.deptno = e2.deptno " +
-            "and d.name = 'foo'");
+            "select e1.name from sales.emps e1, sales.depts d, sales.emps e2 "
+            + "where e1.deptno = d.deptno and d.deptno = e2.deptno "
+            + "and d.name = 'foo'");
     }
 }
 

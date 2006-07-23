@@ -22,21 +22,29 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import java.math.BigDecimal;
-import java.sql.Types;
+import java.math.*;
 
-import org.eigenbase.util14.NumberUtil;
+import java.sql.*;
+
+import org.eigenbase.util14.*;
+
 
 /**
  * FarragoJdbcEngineIntParamDef defines a integer parameter.
- * 
+ *
  * @author Angel Chang
  * @version $Id$
  */
-class FarragoJdbcIntParamDef extends FarragoJdbcParamDef
+class FarragoJdbcIntParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final long min;
     final long max;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcIntParamDef(
         String paramName,
@@ -45,28 +53,30 @@ class FarragoJdbcIntParamDef extends FarragoJdbcParamDef
         super(paramName, paramMetaData);
 
         switch (paramMetaData.type) {
-            case Types.TINYINT:
-                min = Byte.MIN_VALUE;
-                max = Byte.MAX_VALUE;
-                break;
-            case Types.SMALLINT:
-                min = Short.MIN_VALUE;
-                max = Short.MAX_VALUE;
-                break;
-            case Types.INTEGER:
-                min = Integer.MIN_VALUE;
-                max = Integer.MAX_VALUE;
-                break;
-            case Types.BIGINT:
-                min = Long.MIN_VALUE;
-                max = Long.MAX_VALUE;
-                break;
-            default:
-                min = 0;
-                max = 0;
-                assert(false) : "Integral paramMetaData expected";
+        case Types.TINYINT:
+            min = Byte.MIN_VALUE;
+            max = Byte.MAX_VALUE;
+            break;
+        case Types.SMALLINT:
+            min = Short.MIN_VALUE;
+            max = Short.MAX_VALUE;
+            break;
+        case Types.INTEGER:
+            min = Integer.MIN_VALUE;
+            max = Integer.MAX_VALUE;
+            break;
+        case Types.BIGINT:
+            min = Long.MIN_VALUE;
+            max = Long.MAX_VALUE;
+            break;
+        default:
+            min = 0;
+            max = 0;
+            assert (false) : "Integral paramMetaData expected";
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     private long getLong(Object value)
     {
@@ -100,3 +110,5 @@ class FarragoJdbcIntParamDef extends FarragoJdbcParamDef
         }
     }
 }
+
+// End FarragoJdbcIntParamDef.java

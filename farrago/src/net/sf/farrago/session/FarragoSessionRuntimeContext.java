@@ -27,6 +27,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 
+
 /**
  * FarragoSessionRuntimeContext defines runtime support routines needed by
  * generated code.
@@ -34,13 +35,15 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
+public interface FarragoSessionRuntimeContext
+    extends FarragoAllocationOwner
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Loads the Fennel portion of an execution plan (either creating
-     * a new XO graph or reusing a cached instance).
+     * Loads the Fennel portion of an execution plan (either creating a new XO
+     * graph or reusing a cached instance).
      *
      * @param xmiFennelPlan XMI representation of plan definition
      */
@@ -48,14 +51,13 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
 
     /**
      * Opens all streams, including the Fennel portion of the execution plan.
-     * This should only be called after all Java TupleStreams have been
-     * created.
+     * This should only be called after all Java TupleStreams have been created.
      */
     public void openStreams();
 
     /**
-     * Requests cancellation of this execution (either for asynchronous
-     * abort, or because execution has ended).
+     * Requests cancellation of this execution (either for asynchronous abort,
+     * or because execution has ended).
      */
     public void cancel();
 
@@ -63,7 +65,7 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * Throws an exception if execution has been canceled.
      */
     public void checkCancel();
-    
+
     /**
      * @return FennelStreamGraph pinned by loadFennelPlan
      */
@@ -72,11 +74,9 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
     /**
      * Pushes a routine invocation onto the context stack.
      *
-     * @param udrContext context holder for routine invocation
-     * instance within statement being executed
-     *
-     * @param allowSql whether SQL execution should be allowed in
-     * this routine
+     * @param udrContext context holder for routine invocation instance within
+     * statement being executed
+     * @param allowSql whether SQL execution should be allowed in this routine
      */
     public void pushRoutineInvocation(
         FarragoSessionUdrContext udrContext,
@@ -91,18 +91,18 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
      * Handles an exception caught by invocation of a routine.
      *
      * @param ex exception
-     *
      * @param methodName name of external Java method
      *
      * @return exception to be re-thrown
      */
     public RuntimeException handleRoutineInvocationException(
-        Throwable ex, String methodName);
-    
+        Throwable ex,
+        String methodName);
+
     /**
-     * Configures a custom class loader used to load extra classes that
-     * may be needed during statement runtime.  Specifically, allows
-     * Fennel to load implementations of FarragoTransform. 
+     * Configures a custom class loader used to load extra classes that may be
+     * needed during statement runtime. Specifically, allows Fennel to load
+     * implementations of FarragoTransform.
      */
     public void setStatementClassLoader(ClassLoader classLoader);
 
@@ -116,11 +116,9 @@ public interface FarragoSessionRuntimeContext extends FarragoAllocationOwner
     public RelDataType getRowTypeForResultSet(String resultSetName);
 
     /**
-     * @return session on behalf of which this runtime context is
-     * executing
+     * @return session on behalf of which this runtime context is executing
      */
     public FarragoSession getSession();
 }
-
 
 // End FarragoSessionRuntimeContext.java

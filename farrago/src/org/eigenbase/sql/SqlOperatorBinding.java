@@ -22,12 +22,9 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.util.Util;
+
 
 /**
  * <code>SqlOperatorBinding</code> represents the binding of an {@link
@@ -35,13 +32,18 @@ import org.eigenbase.util.Util;
  * required to validate those operands if needed.
  *
  * @author Wael Chatila
- * @since Dec 16, 2004
  * @version $Id$
+ * @since Dec 16, 2004
  */
 public abstract class SqlOperatorBinding
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final RelDataTypeFactory typeFactory;
     private final SqlOperator sqlOperator;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlOperatorBinding(
         RelDataTypeFactory typeFactory,
@@ -50,6 +52,8 @@ public abstract class SqlOperatorBinding
         this.typeFactory = typeFactory;
         this.sqlOperator = sqlOperator;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return bound operator
@@ -99,8 +103,8 @@ public abstract class SqlOperatorBinding
      * @param ordinal zero-based ordinal of operand of interest
      * @param allowCast whether to regard CAST(constant) as a constant
      *
-     * @return whether operand is null; false for everything
-     * except SQL validation
+     * @return whether operand is null; false for everything except SQL
+     * validation
      */
     public boolean isOperandNull(int ordinal, boolean allowCast)
     {
@@ -126,9 +130,9 @@ public abstract class SqlOperatorBinding
      *
      * @return collected array
      */
-    public RelDataType[] collectOperandTypes()
+    public RelDataType [] collectOperandTypes()
     {
-        RelDataType[] ret = new RelDataType[getOperandCount()];
+        RelDataType [] ret = new RelDataType[getOperandCount()];
         for (int i = 0; i < ret.length; i++) {
             ret[i] = getOperandType(i);
         }
@@ -142,6 +146,7 @@ public abstract class SqlOperatorBinding
      * <p>This is only implemented for {@link SqlCallBinding}.
      *
      * @param ordinal Ordinal of the operand
+     *
      * @return Rowtype of the query underlying the cursor
      */
     public RelDataType getCursorOperand(int ordinal)

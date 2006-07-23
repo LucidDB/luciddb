@@ -22,51 +22,48 @@
 */
 package net.sf.farrago.db;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.logging.Level;
+import java.sql.*;
 
-import net.sf.farrago.resource.FarragoResource;
-import net.sf.farrago.session.FarragoSessionExecutableStmt;
-import net.sf.farrago.session.FarragoSessionPreparingStmt;
-import net.sf.farrago.session.FarragoSessionRuntimeContext;
-import net.sf.farrago.session.FarragoSessionRuntimeParams;
-import net.sf.farrago.session.FarragoSessionStmtContext;
-import net.sf.farrago.session.FarragoSessionStmtParamDefFactory;
-import net.sf.farrago.util.FarragoCompoundAllocation;
-import net.sf.farrago.util.FarragoDdlLockManager;
+import java.util.logging.*;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.runtime.AbstractIterResultSet;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.util.Util;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
 
 
 /**
- * FarragoDbStmtContext implements the
- * {@link net.sf.farrago.session.FarragoSessionStmtContext} interface
- * in terms of a {@link FarragoDbSession}.
+ * FarragoDbStmtContext implements the {@link
+ * net.sf.farrago.session.FarragoSessionStmtContext} interface in terms of a
+ * {@link FarragoDbSession}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoDbStmtContext extends FarragoDbStmtContextBase
+public class FarragoDbStmtContext
+    extends FarragoDbStmtContextBase
     implements FarragoSessionStmtContext
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private int updateCount;
     private ResultSet resultSet;
     private FarragoSessionExecutableStmt executableStmt;
     private FarragoCompoundAllocation allocations;
     private FarragoSessionRuntimeContext runningContext;
+
     /**
      * query timeout in seconds, default to 0.
      */
     private int queryTimeoutMillis = 0;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoDbStmtContext object.
@@ -74,7 +71,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
      * @param session the session creating this statement
      */
     public FarragoDbStmtContext(
-        FarragoDbSession session, 
+        FarragoDbSession session,
         FarragoSessionStmtParamDefFactory paramDefFactory,
         FarragoDdlLockManager ddlLockManager)
     {
@@ -83,7 +80,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         updateCount = -1;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtContext
     public boolean isPrepared()
@@ -105,8 +102,13 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         unprepare();
         allocations = new FarragoCompoundAllocation();
         this.sql = sql;
-        executableStmt = session.prepare(
-            this, sql, allocations, isExecDirect, null);
+        executableStmt =
+            session.prepare(
+                this,
+                sql,
+                allocations,
+                isExecDirect,
+                null);
         finishPrepare();
     }
 
@@ -134,7 +136,10 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
         this.sql = ""; // not available
 
         executableStmt =
-            session.getDatabase().implementStmt(prep, plan, kind, logical,
+            session.getDatabase().implementStmt(prep,
+                plan,
+                kind,
+                logical,
                 allocations);
         if (isPrepared()) {
             lockObjectsInUse(executableStmt);
@@ -192,7 +197,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             params.isDml = isDml;
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.dynamicParamValues = dynamicParamValues;
-            assert(runningContext == null);
+            assert (runningContext == null);
             newContext = session.getPersonality().newRuntimeContext(params);
             if (allocations != null) {
                 newContext.addAllocation(allocations);
@@ -213,7 +218,7 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             newContext = null;
 
             if (queryTimeoutMillis > 0) {
-                AbstractIterResultSet iteratorRS = 
+                AbstractIterResultSet iteratorRS =
                     (AbstractIterResultSet) resultSet;
                 iteratorRS.setTimeout(queryTimeoutMillis);
             }
@@ -316,10 +321,9 @@ public class FarragoDbStmtContext extends FarragoDbStmtContextBase
             allocations = null;
         }
         executableStmt = null;
-        
+
         super.unprepare();
     }
 }
-
 
 // End FarragoDbStmtContext.java

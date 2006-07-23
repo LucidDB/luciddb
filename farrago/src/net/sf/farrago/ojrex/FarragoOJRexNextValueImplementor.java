@@ -24,21 +24,28 @@ package net.sf.farrago.ojrex;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.runtime.*;
 
-import org.eigenbase.rex.*;
-
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
+import org.eigenbase.rex.*;
+
+
 /**
- * This implementor writes code to retrieve the next value from 
- * a sequence.
+ * This implementor writes code to retrieve the next value from a sequence.
  *
  * @author John Pham
  * @version $Id$
  */
-class FarragoOJRexNextValueImplementor extends FarragoOJRexImplementor
+class FarragoOJRexNextValueImplementor
+    extends FarragoOJRexImplementor
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static String GET_SEQUENCE_METHOD_NAME = "getSequenceAccessor";
+
+    //~ Methods ----------------------------------------------------------------
 
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,
@@ -48,32 +55,35 @@ class FarragoOJRexNextValueImplementor extends FarragoOJRexImplementor
         // make sequence a static member variable
         // to avoid retrieving it every iteration
         Variable sequence = translator.newVariable();
-        FieldDeclaration declaration = translator.newMember(
-            ModifierList.STATIC,
-            OJClass.forClass(FarragoSequenceAccessor.class),
-            sequence,
-            null);
+        FieldDeclaration declaration =
+            translator.newMember(
+                ModifierList.STATIC,
+                OJClass.forClass(FarragoSequenceAccessor.class),
+                sequence,
+                null);
         translator.addMember(declaration);
 
-        // before processing a row, inialize the sequence if 
+        // before processing a row, inialize the sequence if
         // it has not been intialized yet
         // FIXME: this should be synchronized
         Expression mofId = translator.toString(operands[0]);
-        Expression expForSequence = new MethodCall(
-            translator.getRelImplementor().getConnectionVariable(),
-            GET_SEQUENCE_METHOD_NAME,
-            new ExpressionList(mofId));
+        Expression expForSequence =
+            new MethodCall(
+                translator.getRelImplementor().getConnectionVariable(),
+                GET_SEQUENCE_METHOD_NAME,
+                new ExpressionList(mofId));
         Statement stmt = translator.setIfNull(sequence, expForSequence);
         translator.addStatement(stmt);
 
-        // perform value access once per row; a variable is returned 
+        // perform value access once per row; a variable is returned
         // to avoid recomputation of the expression
         OJClass ojClass = translator.typeToOJClass(call.getType());
         Variable value = translator.newVariable();
-        Expression expForValue = new MethodCall(
-            sequence,
-            FarragoSequenceAccessor.NEXT_VALUE_METHOD_NAME,
-            new ExpressionList());
+        Expression expForValue =
+            new MethodCall(
+                sequence,
+                FarragoSequenceAccessor.NEXT_VALUE_METHOD_NAME,
+                new ExpressionList());
         stmt = translator.declareLocalVariable(ojClass, value, expForValue);
         translator.addStatement(stmt);
 

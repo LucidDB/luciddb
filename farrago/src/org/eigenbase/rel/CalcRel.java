@@ -20,45 +20,48 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
+import java.util.*;
+
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.Set;
-import java.util.List;
 
 /**
  * A relational expression which computes project expressions and also filters.
  *
- * <p>This relational expression combines the functionality of
- * {@link ProjectRel} and {@link FilterRel}. It should be created in the
- * latter stages of optimization, by merging consecutive {@link ProjectRel}
- * and {@link FilterRel} nodes together.
+ * <p>This relational expression combines the functionality of {@link
+ * ProjectRel} and {@link FilterRel}. It should be created in the latter stages
+ * of optimization, by merging consecutive {@link ProjectRel} and {@link
+ * FilterRel} nodes together.
  *
- * <p>The following rules relate to <code>CalcRel</code>:<ul>
+ * <p>The following rules relate to <code>CalcRel</code>:
+ *
+ * <ul>
  * <li>{@link FilterToCalcRule} creates this from a {@link FilterRel}</li>
  * <li>{@link ProjectToCalcRule} creates this from a {@link FilterRel}</li>
- * <li>{@link MergeFilterOntoCalcRule} merges this with a
- *     {@link FilterRel}</li>
- * <li>{@link MergeProjectOntoCalcRule} merges this with a
- *     {@link ProjectRel}</li>
+ * <li>{@link MergeFilterOntoCalcRule} merges this with a {@link FilterRel}</li>
+ * <li>{@link MergeProjectOntoCalcRule} merges this with a {@link
+ * ProjectRel}</li>
  * <li>{@link MergeCalcRule} merges two CalcRels</li>
- * </ul></p>
+ * </ul>
+ * </p>
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
+ * @since Mar 7, 2004
  */
-public final class CalcRel extends CalcRelBase
+public final class CalcRel
+    extends CalcRelBase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final boolean DeprecateProjectAndFilter = false;
 
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public CalcRel(
         RelOptCluster cluster,
@@ -71,13 +74,18 @@ public final class CalcRel extends CalcRelBase
         super(cluster, traits, child, rowType, program, collationList);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        return new CalcRel(
-            getCluster(), cloneTraits(), getChild(), rowType,
-            program.copy(), getCollationList());
+        return
+            new CalcRel(
+                getCluster(),
+                cloneTraits(),
+                getChild(),
+                rowType,
+                program.copy(),
+                getCollationList());
     }
 
     /**
@@ -92,11 +100,12 @@ public final class CalcRel extends CalcRelBase
         List<RexNode> exprList,
         List<String> fieldNameList)
     {
-        return CalcRel.createProject(
-            child,
-            exprList.toArray(new RexNode[exprList.size()]),
-            fieldNameList == null ? null :
-            fieldNameList.toArray(new String[fieldNameList.size()]));
+        return
+            CalcRel.createProject(
+                child,
+                exprList.toArray(new RexNode[exprList.size()]),
+                (fieldNameList == null) ? null
+                : fieldNameList.toArray(new String[fieldNameList.size()]));
     }
 
     /**
@@ -108,38 +117,48 @@ public final class CalcRel extends CalcRelBase
      */
     public static RelNode createProject(
         RelNode child,
-        RexNode[] exprs,
-        String[] fieldNames)
+        RexNode [] exprs,
+        String [] fieldNames)
     {
-        assert fieldNames == null || fieldNames.length == exprs.length;
+        assert (fieldNames == null) || (fieldNames.length == exprs.length);
         final RelOptCluster cluster = child.getCluster();
-        RexProgramBuilder builder = new RexProgramBuilder(
-            child.getRowType(), cluster.getRexBuilder());
+        RexProgramBuilder builder =
+            new RexProgramBuilder(
+                child.getRowType(),
+                cluster.getRexBuilder());
         int i = -1;
         for (RexNode expr : exprs) {
             ++i;
-            final String fieldName = fieldNames == null ? null : fieldNames[i];
+            final String fieldName =
+                (fieldNames == null) ? null : fieldNames[i];
             builder.addProject(expr, fieldName);
         }
         final RexProgram program = builder.getProgram();
         final List<RelCollation> collationList =
             program.getCollations(child.getCollationList());
         if (DeprecateProjectAndFilter) {
-            return new CalcRel(
-                cluster,
-                RelOptUtil.clone(child.getTraits()),
-                child,
-                program.getOutputRowType(),
-                program,
-                collationList);
+            return
+                new CalcRel(
+                    cluster,
+                    RelOptUtil.clone(child.getTraits()),
+                    child,
+                    program.getOutputRowType(),
+                    program,
+                    collationList);
         } else {
             final RelDataType rowType =
                 RexUtil.createStructType(
-                    child.getCluster().getTypeFactory(), exprs, fieldNames);
+                    child.getCluster().getTypeFactory(),
+                    exprs,
+                    fieldNames);
             final ProjectRel project =
                 new ProjectRel(
-                    child.getCluster(), child, exprs, rowType,
-                    ProjectRelBase.Flags.Boxed, collationList);
+                    child.getCluster(),
+                    child,
+                    exprs,
+                    rowType,
+                    ProjectRelBase.Flags.Boxed,
+                    collationList);
 
             return project;
         }
@@ -151,6 +170,7 @@ public final class CalcRel extends CalcRelBase
      *
      * @param child Child relational expression
      * @param condition Condition
+     *
      * @return Relational expression
      */
     public static RelNode createFilter(
@@ -160,19 +180,25 @@ public final class CalcRel extends CalcRelBase
         if (DeprecateProjectAndFilter) {
             final RelOptCluster cluster = child.getCluster();
             RexProgramBuilder builder =
-                new RexProgramBuilder(child.getRowType(), cluster.getRexBuilder());
+                new RexProgramBuilder(
+                    child.getRowType(),
+                    cluster.getRexBuilder());
             builder.addIdentity();
             builder.addCondition(condition);
             final RexProgram program = builder.getProgram();
-            return new CalcRel(
-                cluster,
-                RelOptUtil.clone(child.getTraits()),
-                child,
-                program.getOutputRowType(),
-                program,
-                RelCollation.emptyList);
+            return
+                new CalcRel(
+                    cluster,
+                    RelOptUtil.clone(child.getTraits()),
+                    child,
+                    program.getOutputRowType(),
+                    program,
+                    RelCollation.emptyList);
         } else {
-            return new FilterRel(child.getCluster(), child, condition);
+            return new FilterRel(
+                    child.getCluster(),
+                    child,
+                    condition);
         }
     }
 
@@ -182,17 +208,20 @@ public final class CalcRel extends CalcRelBase
      *
      * @param rel Relational expression
      * @param fieldNames Field names
+     *
      * @return Renamed relational expression
      */
     public static RelNode createRename(
         RelNode rel,
-        String[] fieldNames)
+        String [] fieldNames)
     {
-        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        final RelDataTypeField [] fields = rel.getRowType().getFields();
         assert fieldNames.length == fields.length;
-        final RexInputRef[] refs = new RexInputRef[fieldNames.length];
+        final RexInputRef [] refs = new RexInputRef[fieldNames.length];
         for (int i = 0; i < refs.length; i++) {
-            refs[i] = new RexInputRef(i, fields[i].getType());
+            refs[i] = new RexInputRef(
+                    i,
+                    fields[i].getType());
         }
         return createProject(rel, refs, fieldNames);
     }

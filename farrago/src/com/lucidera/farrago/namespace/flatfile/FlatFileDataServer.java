@@ -21,16 +21,18 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
-import java.io.File;
+import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 import javax.sql.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.FarragoResource;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 
@@ -39,6 +41,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FlatFileDataServer provides an implementation of the {@link
  * FarragoMedDataServer} interface.
@@ -46,9 +49,11 @@ import org.eigenbase.util.*;
  * @author John Pham
  * @version $Id$
  */
-class FlatFileDataServer extends MedAbstractDataServer
+class FlatFileDataServer
+    extends MedAbstractDataServer
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
         FarragoTrace.getClassTracer(FlatFileDataServer.class);
@@ -58,10 +63,12 @@ class FlatFileDataServer extends MedAbstractDataServer
     private static String QUALIFIED_NAME_SEPARATOR = ".";
     private static String SQL_QUOTE_CHARACTER = "\"";
 
+    //~ Instance fields --------------------------------------------------------
+
     private MedAbstractDataWrapper wrapper;
     FlatFileParams params;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FlatFileDataServer(
         MedAbstractDataWrapper wrapper,
@@ -72,7 +79,7 @@ class FlatFileDataServer extends MedAbstractDataServer
         this.wrapper = wrapper;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     void initialize()
         throws SQLException
@@ -86,15 +93,14 @@ class FlatFileDataServer extends MedAbstractDataServer
             throw FarragoResource.instance().InvalidDirectory.ex(
                 params.getDirectory());
         }
-        
-        // throw an error when using fixed position parsing mode 
+
+        // throw an error when using fixed position parsing mode
         // with incompatible parameters
         if (params.getFieldDelimiter() == 0) {
-            if (params.getQuoteChar() != 0 
-                || params.getEscapeChar() != 0) 
-            {
-                throw FarragoResource.instance().
-                    FlatFileInvalidFixedPosParams.ex();
+            if ((params.getQuoteChar() != 0)
+                || (params.getEscapeChar() != 0)) {
+                throw FarragoResource.instance().FlatFileInvalidFixedPosParams
+                .ex();
             }
         }
     }
@@ -104,9 +110,10 @@ class FlatFileDataServer extends MedAbstractDataServer
         throws SQLException
     {
         // scan directory and files for metadata (Phase II)
-        return new FlatFileNameDirectory(
-            this,
-            FarragoMedMetadataQuery.OTN_SCHEMA);
+        return
+            new FlatFileNameDirectory(
+                this,
+                FarragoMedMetadataQuery.OTN_SCHEMA);
     }
 
     // implement FarragoMedDataServer
@@ -123,31 +130,45 @@ class FlatFileDataServer extends MedAbstractDataServer
             FlatFileParams.getSchemaType(schemaName, true);
         if (rowType == null) {
             // scan control file/data file for metadata (Phase II)
-            String filename = tableProps.getProperty(
-                FlatFileColumnSet.PROP_FILENAME);
+            String filename =
+                tableProps.getProperty(
+                    FlatFileColumnSet.PROP_FILENAME);
             if (filename == null) {
                 filename = getTableName(localName);
             }
+
             // check data file exists
-            String dataFilePath = params.getDirectory() + filename +
-                params.getFileExtenstion();
+            String dataFilePath =
+                params.getDirectory() + filename
+                + params.getFileExtenstion();
             File dataFile = new File(dataFilePath);
             if (!dataFile.exists()) {
                 return null;
             }
 
-            String ctrlFilePath = params.getDirectory() + filename +
-            	params.getControlFileExtenstion();
+            String ctrlFilePath =
+                params.getDirectory() + filename
+                + params.getControlFileExtenstion();
             FlatFileBCPFile bcpFile =
                 new FlatFileBCPFile(ctrlFilePath, typeFactory);
-            rowType = deriveRowType(
-                typeFactory, schemaType, localName, filename, bcpFile);
+            rowType =
+                deriveRowType(
+                    typeFactory,
+                    schemaType,
+                    localName,
+                    filename,
+                    bcpFile);
         }
         if (rowType == null) {
             return null;
         }
-        return new FlatFileColumnSet(
-            localName, rowType, params, tableProps, schemaType);
+        return
+            new FlatFileColumnSet(
+                localName,
+                rowType,
+                params,
+                tableProps,
+                schemaType);
     }
 
     // implement FarragoMedDataServer
@@ -176,56 +197,61 @@ class FlatFileDataServer extends MedAbstractDataServer
 
     RelDataType createRowType(
         FarragoTypeFactory typeFactory,
-        RelDataType[] types,
-        String[] names)
+        RelDataType [] types,
+        String [] names)
     {
         return typeFactory.createStructType(types, names);
     }
 
     /**
-     * Derives the row type of a table when other type information
-     * is not available. Also derives the row type of internal queries.
+     * Derives the row type of a table when other type information is not
+     * available. Also derives the row type of internal queries.
      *
      * @throws SQLException
      */
     private RelDataType deriveRowType(
         FarragoTypeFactory typeFactory,
         FlatFileParams.SchemaType schemaType,
-        String[] localName,
+        String [] localName,
         String filename,
         FlatFileBCPFile bcpFile)
         throws SQLException
     {
         List<RelDataType> fieldTypes = new ArrayList<RelDataType>();
         List<String> fieldNames = new ArrayList<String>();
-        String[] foreignName = {this.getProperties().getProperty("NAME"),
-                                FlatFileParams.SchemaType.QUERY.getSchemaName(),
-                                filename};
+        String [] foreignName =
+            {
+                this.getProperties().getProperty("NAME"),
+                FlatFileParams.SchemaType.QUERY.getSchemaName(),
+                filename
+            };
 
         // Cannot describe or sample a fixed position data file
         if (params.getFieldDelimiter() == 0) {
             switch (schemaType) {
             case DESCRIBE:
             case SAMPLE:
-                throw FarragoResource.instance().
-                    FlatFileNoFixedPosSample.ex(filename);
+                throw FarragoResource.instance().FlatFileNoFixedPosSample.ex(
+                    filename);
             }
         }
 
-        switch(schemaType) {
+        switch (schemaType) {
         case DESCRIBE:
             fieldTypes.add(
                 typeFactory.createSqlType(
-                    SqlTypeName.Varchar, DESCRIBE_COLUMN_LENGTH));
+                    SqlTypeName.Varchar,
+                    DESCRIBE_COLUMN_LENGTH));
             fieldNames.add(DESCRIBE_COLUMN_NAME);
             break;
         case SAMPLE:
             List<Integer> fieldSizes = getFieldSizes(foreignName);
             int i = 1;
             for (Integer size : fieldSizes) {
-                RelDataType type = 
+                RelDataType type =
                     typeFactory.createSqlType(
-                        SqlTypeName.Varchar, size.intValue());
+                        SqlTypeName.Varchar,
+                        size.intValue());
                 RelDataType nullableType =
                     typeFactory.createTypeWithNullability(type, true);
                 fieldTypes.add(nullableType);
@@ -233,16 +259,20 @@ class FlatFileDataServer extends MedAbstractDataServer
             }
             break;
         case QUERY:
-            synchronized(FlatFileBCPFile.class) {
-                if (! bcpFile.exists()) {
-                    if (! sampleAndCreateBcp(foreignName, bcpFile)) {
+            synchronized (FlatFileBCPFile.class) {
+                if (!bcpFile.exists()) {
+                    if (!sampleAndCreateBcp(foreignName, bcpFile)) {
                         return null;
                     }
                 }
                 if (bcpFile.parse()) {
-                    return createRowType(
-                        typeFactory, bcpFile.types, bcpFile.colNames);
+                    return
+                        createRowType(
+                            typeFactory,
+                            bcpFile.types,
+                            bcpFile.colNames);
                 }
+
                 // couldn't parse control file
                 return null;
             }
@@ -256,44 +286,47 @@ class FlatFileDataServer extends MedAbstractDataServer
      * Returns the sizes of a flat file's fields, based upon an internal
      * describe query.
      */
-    private List<Integer> getFieldSizes(String[] localName)
+    private List<Integer> getFieldSizes(String [] localName)
         throws SQLException
     {
         // Attempt to issue a loopback query into Farrago to
         // get the number of rows to produce.
         DataSource loopbackDataSource = getLoopbackDataSource();
         Connection connection = null;
-        if (loopbackDataSource != null) try {
-            connection = loopbackDataSource.getConnection();
-            Statement stmt = connection.createStatement();
-            String sql = getDescribeQuery(localName);
-            ResultSet resultSet = stmt.executeQuery(sql);
-            if (resultSet.next()) {
-                String result = resultSet.getString(1);
-                StringTokenizer parser = new StringTokenizer(result);
-                List<Integer> sizes = new ArrayList<Integer>();
+        if (loopbackDataSource != null) {
+            try {
+                connection = loopbackDataSource.getConnection();
+                Statement stmt = connection.createStatement();
+                String sql = getDescribeQuery(localName);
+                ResultSet resultSet = stmt.executeQuery(sql);
+                if (resultSet.next()) {
+                    String result = resultSet.getString(1);
+                    StringTokenizer parser = new StringTokenizer(result);
+                    List<Integer> sizes = new ArrayList<Integer>();
 
-                while ( parser.hasMoreTokens() ) {
-                    String token = parser.nextToken();
-                    Integer columnSize;
-                    try {
-                        columnSize = Integer.valueOf(token);
-                    } catch (NumberFormatException e) {
-                        throw Util.newInternal(
-                            "failed to parse sample desc: '" + result + "'");
+                    while (parser.hasMoreTokens()) {
+                        String token = parser.nextToken();
+                        Integer columnSize;
+                        try {
+                            columnSize = Integer.valueOf(token);
+                        } catch (NumberFormatException e) {
+                            throw Util.newInternal(
+                                "failed to parse sample desc: '" + result
+                                + "'");
+                        }
+                        sizes.add(columnSize);
                     }
-                    sizes.add(columnSize);
+                    return sizes;
                 }
-                return sizes;
-            }
-        } finally {
-            // It's OK not to clean up stmt and resultSet;
-            // connection.close() will do that for us.
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException ignore) {
-                    tracer.severe("could not close connection");
+            } finally {
+                // It's OK not to clean up stmt and resultSet;
+                // connection.close() will do that for us.
+                if (connection != null) {
+                    try {
+                        connection.close();
+                    } catch (SQLException ignore) {
+                        tracer.severe("could not close connection");
+                    }
                 }
             }
         }
@@ -301,61 +334,63 @@ class FlatFileDataServer extends MedAbstractDataServer
     }
 
     /**
-     * Creates the given control file based on an internal
-     * sample query.
+     * Creates the given control file based on an internal sample query.
      */
     public boolean sampleAndCreateBcp(
-        String[] localName,
+        String [] localName,
         FlatFileBCPFile bcpFile)
-    	throws SQLException
+        throws SQLException
     {
         // Attempt to issue a loopback query into Farrago to
         // get sample data back
         DataSource loopbackDataSource = getLoopbackDataSource();
         Connection connection = null;
-        if (loopbackDataSource != null) try {
-            connection = loopbackDataSource.getConnection();
-            Statement stmt = connection.createStatement();
-            String sql = getSampleQuery(localName);
-            ResultSet resultSet = stmt.executeQuery(sql);
-            ResultSetMetaData rsmeta = resultSet.getMetaData();
+        if (loopbackDataSource != null) {
+            try {
+                connection = loopbackDataSource.getConnection();
+                Statement stmt = connection.createStatement();
+                String sql = getSampleQuery(localName);
+                ResultSet resultSet = stmt.executeQuery(sql);
+                ResultSetMetaData rsmeta = resultSet.getMetaData();
 
-            String[] cols = new String[rsmeta.getColumnCount()];
-            String[] numRows = {Integer.toString(rsmeta.getColumnCount())};
+                String [] cols = new String[rsmeta.getColumnCount()];
+                String [] numRows =
+                    { Integer.toString(rsmeta.getColumnCount()) };
 
-            if (!bcpFile.create()) { // write version
-                throw FarragoResource.instance().FileWriteFailed.ex(
-                    bcpFile.fileName);
-            }
-            if (!bcpFile.write(numRows, null)) { // write numCols
-                throw FarragoResource.instance().FileWriteFailed.ex(
-                    bcpFile.fileName);
-            }
-            boolean skipNext = params.getWithHeader();
-            while (resultSet.next()) {
-                for (int j=0; j<cols.length; j++) {
-                    cols[j] = resultSet.getString(j+1);
+                if (!bcpFile.create()) { // write version
+                    throw FarragoResource.instance().FileWriteFailed.ex(
+                        bcpFile.fileName);
                 }
-                if (skipNext) {
-                    skipNext = false;
-                    bcpFile.update(cols, true);
-                } else {
-                    bcpFile.update(cols, false);
+                if (!bcpFile.write(numRows, null)) { // write numCols
+                    throw FarragoResource.instance().FileWriteFailed.ex(
+                        bcpFile.fileName);
                 }
-            }
-            if (!bcpFile.write(cols, params)) {
-                throw FarragoResource.instance().FileWriteFailed.ex(
-                    bcpFile.fileName);
-            }
-            return true;
-        } finally {
-            // It's OK not to clean up stmt and resultSet;
-            // connection.close() will do that for us.
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (SQLException ignore) {
-                    tracer.severe("could not close connection");
+                boolean skipNext = params.getWithHeader();
+                while (resultSet.next()) {
+                    for (int j = 0; j < cols.length; j++) {
+                        cols[j] = resultSet.getString(j + 1);
+                    }
+                    if (skipNext) {
+                        skipNext = false;
+                        bcpFile.update(cols, true);
+                    } else {
+                        bcpFile.update(cols, false);
+                    }
+                }
+                if (!bcpFile.write(cols, params)) {
+                    throw FarragoResource.instance().FileWriteFailed.ex(
+                        bcpFile.fileName);
+                }
+                return true;
+            } finally {
+                // It's OK not to clean up stmt and resultSet;
+                // connection.close() will do that for us.
+                if (connection != null) {
+                    try {
+                        connection.close();
+                    } catch (SQLException ignore) {
+                        tracer.severe("could not close connection");
+                    }
                 }
             }
         }
@@ -365,29 +400,33 @@ class FlatFileDataServer extends MedAbstractDataServer
     /**
      * Constructs an internal query to describe the results of sampling
      */
-    private String getDescribeQuery(String[] localName)
+    private String getDescribeQuery(String [] localName)
     {
-        assert(localName.length == 3);
-        String[] newName = setSchemaName(
-            localName, FlatFileParams.SchemaType.DESCRIBE.getSchemaName());
+        assert (localName.length == 3);
+        String [] newName =
+            setSchemaName(
+                localName,
+                FlatFileParams.SchemaType.DESCRIBE.getSchemaName());
         return "select * from " + getQualifiedName(newName);
     }
 
     /**
      * Constructs an internal query to sample
      */
-    private String getSampleQuery(String[] localName)
+    private String getSampleQuery(String [] localName)
     {
-        assert(localName.length == 3);
-        String[] newName = setSchemaName(
-            localName, FlatFileParams.SchemaType.SAMPLE.getSchemaName());
+        assert (localName.length == 3);
+        String [] newName =
+            setSchemaName(
+                localName,
+                FlatFileParams.SchemaType.SAMPLE.getSchemaName());
         return "select * from " + getQualifiedName(newName);
     }
 
     /**
      * Constructs a qualified (multi-part) name
      */
-    private String getQualifiedName(String[] localName)
+    private String getQualifiedName(String [] localName)
     {
         String qual = quoteName(localName[0]);
         for (int i = 1; i < localName.length; i++) {
@@ -405,37 +444,35 @@ class FlatFileDataServer extends MedAbstractDataServer
     }
 
     /**
-     * Returns the last name of localName.
-     * TODO: move this into a better place
+     * Returns the last name of localName. TODO: move this into a better place
      */
-    private String getTableName(String[] localName)
+    private String getTableName(String [] localName)
     {
-        assert(localName.length > 0);
+        assert (localName.length > 0);
         return localName[localName.length - 1];
     }
 
     /**
-     * Returns the second to last name of localName.
-     * TODO: move this into a better place
+     * Returns the second to last name of localName. TODO: move this into a
+     * better place
      */
-    private String getSchemaName(String[] localName)
+    private String getSchemaName(String [] localName)
     {
-        assert(localName.length > 1);
+        assert (localName.length > 1);
         return localName[localName.length - 2];
     }
 
     /**
-     * Sets the second to last name of localName.
-     * TODO: move this into a better place
+     * Sets the second to last name of localName. TODO: move this into a better
+     * place
      */
-    private String[] setSchemaName(String[] localName, String schemaName)
+    private String [] setSchemaName(String [] localName, String schemaName)
     {
-        String[] newName = localName.clone();
-        assert(newName.length > 1);
+        String [] newName = localName.clone();
+        assert (newName.length > 1);
         newName[newName.length - 2] = schemaName;
         return newName;
     }
 }
-
 
 // End FlatFileDataServer.java

@@ -37,20 +37,22 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoOJRexNullTestImplementor extends FarragoOJRexImplementor
+public class FarragoOJRexNullTestImplementor
+    extends FarragoOJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private boolean isNull;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexNullTestImplementor(boolean isNull)
     {
         this.isNull = isNull;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -60,8 +62,10 @@ public class FarragoOJRexNullTestImplementor extends FarragoOJRexImplementor
     {
         if (call.operands[0].getType().isNullable()) {
             Expression expr =
-                new MethodCall(operands[0],
-                    NullableValue.NULL_IND_ACCESSOR_NAME, new ExpressionList());
+                new MethodCall(
+                    operands[0],
+                    NullableValue.NULL_IND_ACCESSOR_NAME,
+                    new ExpressionList());
             if (isNull) {
                 return expr;
             } else {
@@ -76,6 +80,5 @@ public class FarragoOJRexNullTestImplementor extends FarragoOJRexImplementor
         }
     }
 }
-
 
 // End FarragoOJRexNullTestImplementor.java

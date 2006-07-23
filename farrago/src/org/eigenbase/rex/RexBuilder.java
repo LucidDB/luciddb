@@ -20,22 +20,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
+import java.math.*;
 
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.util.Calendar;
+import java.nio.*;
+
+import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
@@ -44,12 +41,13 @@ import java.util.Calendar;
  * <p>Some common literal values (NULL, TRUE, FALSE, 0, 1, '') are cached.</p>
  *
  * @author jhyde
- * @since Nov 23, 2003
  * @version $Id$
- **/
+ * @since Nov 23, 2003
+ */
 public class RexBuilder
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final RelDataTypeFactory typeFactory;
     private final RexLiteral booleanTrue;
@@ -58,7 +56,7 @@ public class RexBuilder
     private final RexLiteral constantNull;
     private final SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     // REVIEW jvs 22-Jan-2005: I changed this constructor from protected to
     // public so that unit tests needn't depend on oj.  If RexBuilder
@@ -88,7 +86,7 @@ public class RexBuilder
                 SqlTypeName.Null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataTypeFactory getTypeFactory()
     {
@@ -107,7 +105,8 @@ public class RexBuilder
         final RelDataType type = expr.getType();
         final RelDataTypeField field = type.getField(fieldName);
         if (field == null) {
-            throw Util.newInternal("Type '" + type + "' has no field '"
+            throw Util.newInternal(
+                "Type '" + type + "' has no field '"
                 + fieldName + "'");
         }
         return makeFieldAccessInternal(expr, field);
@@ -120,7 +119,8 @@ public class RexBuilder
         final RelDataType type = expr.getType();
         final RelDataTypeField [] fields = type.getFields();
         if ((i < 0) || (i >= fields.length)) {
-            throw Util.newInternal("Field ordinal " + i + " is invalid for "
+            throw Util.newInternal(
+                "Field ordinal " + i + " is invalid for "
                 + " type '" + type + "'");
         }
         return makeFieldAccessInternal(expr, fields[i]);
@@ -132,9 +132,10 @@ public class RexBuilder
     {
         if (expr instanceof RexRangeRef) {
             RexRangeRef range = (RexRangeRef) expr;
-            return new RexInputRef(
-                range.getOffset() + field.getIndex(),
-                field.getType());
+            return
+                new RexInputRef(
+                    range.getOffset() + field.getIndex(),
+                    field.getType());
         }
         return new RexFieldAccess(expr, field);
     }
@@ -148,9 +149,9 @@ public class RexBuilder
         RexNode expr0)
     {
         return new RexCall(
-            returnType,
-            op,
-            new RexNode [] { expr0 });
+                returnType,
+                op,
+                new RexNode[] { expr0 });
     }
 
     /**
@@ -161,8 +162,8 @@ public class RexBuilder
         RexNode expr0)
     {
         return makeCall(
-            op,
-            new RexNode [] { expr0 });
+                op,
+                new RexNode[] { expr0 });
     }
 
     /**
@@ -174,16 +175,16 @@ public class RexBuilder
         RexNode expr1)
     {
         return makeCall(
-            op,
-            new RexNode [] { expr0, expr1 });
+                op,
+                new RexNode[] { expr0, expr1 });
     }
 
     /**
      * Creates a call with an array of arguments.
      *
-     * <p>This is the fundamental method called by all of the other
-     * <code>makeCall</code> methods. If you derive a class from
-     * {@link RexBuilder}, this is the only method you need to override.</p>
+     * <p>This is the fundamental method called by all of the other <code>
+     * makeCall</code> methods. If you derive a class from {@link RexBuilder},
+     * this is the only method you need to override.</p>
      */
     public RexNode makeCall(
         SqlOperator op,
@@ -197,9 +198,9 @@ public class RexBuilder
             //}
             int count = 0;
             for (int i = 0; i < exprs.length; i++) {
-                if (exprs[i] instanceof RexLiteral &&
-                    exprs[i].getType() instanceof IntervalSqlType &&
-                    exprs[i].getType().getIntervalQualifier() != null) {
+                if ((exprs[i] instanceof RexLiteral)
+                    && (exprs[i].getType() instanceof IntervalSqlType)
+                    && (exprs[i].getType().getIntervalQualifier() != null)) {
                     exprs[i] = null;
                     continue;
                 }
@@ -220,9 +221,7 @@ public class RexBuilder
      * Derives the return type of a call to an operator.
      *
      * @param op the operator being called
-     *
      * @param typeFactory factory for return type
-     *
      * @param exprs actual operands
      *
      * @return derived type
@@ -232,8 +231,7 @@ public class RexBuilder
         RelDataTypeFactory typeFactory,
         RexNode [] exprs)
     {
-        return op.inferReturnType(
-            new RexCallBinding(typeFactory, op, exprs));
+        return op.inferReturnType(new RexCallBinding(typeFactory, op, exprs));
     }
 
     /**
@@ -242,9 +240,9 @@ public class RexBuilder
     public RexNode makeOver(
         RelDataType type,
         SqlAggFunction operator,
-        RexNode[] exprs,
-        RexNode[] partitionKeys,
-        RexNode[] orderKeys,
+        RexNode [] exprs,
+        RexNode [] partitionKeys,
+        RexNode [] orderKeys,
         SqlNode lowerBound,
         SqlNode upperBound,
         boolean physical)
@@ -253,8 +251,13 @@ public class RexBuilder
         assert exprs != null;
         assert partitionKeys != null;
         assert orderKeys != null;
-        final RexWindow window = new RexWindow(
-            partitionKeys, orderKeys, lowerBound, upperBound, physical);
+        final RexWindow window =
+            new RexWindow(
+                partitionKeys,
+                orderKeys,
+                lowerBound,
+                upperBound,
+                physical);
         return new RexOver(type, operator, exprs, window);
     }
 
@@ -278,9 +281,9 @@ public class RexBuilder
         RexNode [] exprs)
     {
         return new RexCall(
-            type,
-            SqlStdOperatorTable.newOperator,
-            exprs);
+                type,
+                SqlStdOperatorTable.newOperator,
+                exprs);
     }
 
     public RexNode makeCast(
@@ -294,15 +297,16 @@ public class RexBuilder
         RelDataType type,
         RexNode exp)
     {
-        return new RexCall(
-            type,
-            SqlStdOperatorTable.castFunc,
-            new RexNode [] { exp });
+        return
+            new RexCall(
+                type,
+                SqlStdOperatorTable.castFunc,
+                new RexNode[] { exp });
     }
 
     /**
      * Makes a reinterpret cast
-     * 
+     *
      * @param type type returned by the cast
      * @param exp expression to be casted
      * @param checkOverflow whether an overflow check is required
@@ -314,21 +318,21 @@ public class RexBuilder
         RexNode exp,
         RexNode checkOverflow)
     {
-        RexNode[] args;
-        if (checkOverflow != null && checkOverflow.isAlwaysTrue()) {
-            args = new RexNode [] { exp, checkOverflow };
+        RexNode [] args;
+        if ((checkOverflow != null) && checkOverflow.isAlwaysTrue()) {
+            args = new RexNode[] { exp, checkOverflow };
         } else {
-            args = new RexNode [] { exp };
+            args = new RexNode[] { exp };
         }
         return new RexCall(
-            type,
-            SqlStdOperatorTable.reinterpretOperator,
-            args);
+                type,
+                SqlStdOperatorTable.reinterpretOperator,
+                args);
     }
-    
+
     /**
-     * Creates a reference to all the fields in the row. That is, the whole
-     * row as a single record object.
+     * Creates a reference to all the fields in the row. That is, the whole row
+     * as a single record object.
      *
      * @param rowType Type of the input row.
      */
@@ -341,11 +345,11 @@ public class RexBuilder
      * Creates a reference to all the fields in the row.
      *
      * <p>For example, if the input row has type <code>T{f0,f1,f2,f3,f4}</code>
-     * then <code>makeRangeReference(T{f0,f1,f2,f3,f4}, S{f3,f4}, 3)</code>
-     * is an expression which yields the last 2 fields.
+     * then <code>makeRangeReference(T{f0,f1,f2,f3,f4}, S{f3,f4}, 3)</code> is
+     * an expression which yields the last 2 fields.
      *
-     * @param type     Type of the resulting range record.
-     * @param offset   Index of first field.
+     * @param type Type of the resulting range record.
+     * @param offset Index of first field.
      * @param nullable Whether the record is nullable.
      */
     public RexNode makeRangeReference(
@@ -355,7 +359,8 @@ public class RexBuilder
     {
         if (nullable && !type.isNullable()) {
             type = typeFactory.createTypeWithNullability(
-                type, nullable);
+                    type,
+                    nullable);
         }
         return new RexRangeRef(type, offset);
     }
@@ -375,10 +380,11 @@ public class RexBuilder
         EnumeratedValues.Value flag)
     {
         assert flag != null;
-        return makeLiteral(
-            flag,
-            typeFactory.createSqlType(SqlTypeName.Symbol),
-            SqlTypeName.Symbol);
+        return
+            makeLiteral(
+                flag,
+                typeFactory.createSqlType(SqlTypeName.Symbol),
+                SqlTypeName.Symbol);
     }
 
     protected RexLiteral makeLiteral(
@@ -392,15 +398,16 @@ public class RexBuilder
             // Character literals must have a charset and collation. Populate
             // from the type if necessary.
             NlsString nlsString = (NlsString) o;
-            if (nlsString.getCollation() == null ||
-                nlsString.getCharset() == null) {
+            if ((nlsString.getCollation() == null)
+                || (nlsString.getCharset() == null)) {
                 assert type.getSqlTypeName() == SqlTypeName.Char;
                 assert type.getCharset().name() != null;
                 assert type.getCollation() != null;
-                o = new NlsString(
-                    nlsString.getValue(),
-                    type.getCharset().name(),
-                    type.getCollation());
+                o =
+                    new NlsString(
+                        nlsString.getValue(),
+                        type.getCharset().name(),
+                        type.getCollation());
             }
         }
         return new RexLiteral(o, type, typeName);
@@ -422,8 +429,8 @@ public class RexBuilder
         RelDataType relType;
         int scale = bd.scale();
         long l = bd.unscaledValue().longValue();
-        assert(scale >= 0 && scale <= SqlTypeName.MAX_NUMERIC_SCALE);
-        assert(BigDecimal.valueOf(l, scale).equals(bd));
+        assert ((scale >= 0) && (scale <= SqlTypeName.MAX_NUMERIC_SCALE));
+        assert (BigDecimal.valueOf(l, scale).equals(bd));
         if (scale == 0) {
             if ((l >= Integer.MIN_VALUE) && (l <= Integer.MAX_VALUE)) {
                 relType = typeFactory.createSqlType(SqlTypeName.Integer);
@@ -447,9 +454,9 @@ public class RexBuilder
     public RexLiteral makeExactLiteral(BigDecimal bd, RelDataType type)
     {
         return makeLiteral(
-            bd,
-            type,
-            SqlTypeName.Decimal);
+                bd,
+                type,
+                SqlTypeName.Decimal);
     }
 
     /**
@@ -457,10 +464,12 @@ public class RexBuilder
      */
     public RexLiteral makeBinaryLiteral(byte [] byteArray)
     {
-        return makeLiteral(
-            ByteBuffer.wrap(byteArray),
-            typeFactory.createSqlType(SqlTypeName.Varbinary, byteArray.length),
-            SqlTypeName.Binary);
+        return
+            makeLiteral(
+                ByteBuffer.wrap(byteArray),
+                typeFactory.createSqlType(SqlTypeName.Varbinary,
+                    byteArray.length),
+                SqlTypeName.Binary);
     }
 
     /**
@@ -473,32 +482,33 @@ public class RexBuilder
         if (bd.doubleValue() == 0) {
             bd = BigDecimal.ZERO;
         }
-        return makeApproxLiteral(
-            bd,
-            typeFactory.createSqlType(SqlTypeName.Double));
+        return
+            makeApproxLiteral(
+                bd,
+                typeFactory.createSqlType(SqlTypeName.Double));
     }
 
     /**
      * Creates an approximate numeric literal (double or float).
      *
      * @param bd literal value
-     *
      * @param type approximate numeric type
      *
      * @return new literal
      */
     public RexLiteral makeApproxLiteral(BigDecimal bd, RelDataType type)
     {
-        assert(SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
-            type.getSqlTypeName()));
+        assert (SqlTypeFamily.ApproximateNumeric.getTypeNames().contains(
+                    type.getSqlTypeName()));
         return makeLiteral(
-            bd,
-            type,
-            SqlTypeName.Double);
+                bd,
+                type,
+                SqlTypeName.Double);
     }
 
     /**
      * Creates a character string literal.
+     *
      * @pre s != null
      */
     public RexLiteral makeLiteral(String s)
@@ -512,12 +522,13 @@ public class RexBuilder
         if (s.equals("")) {
             return charEmpty;
         } else {
-            return makeLiteral(
-                new NlsString(s, null, null),
-                typeFactory.createSqlType(
-                    SqlTypeName.Char,
-                    s.length()),
-                SqlTypeName.Char);
+            return
+                makeLiteral(
+                    new NlsString(s, null, null),
+                    typeFactory.createSqlType(
+                        SqlTypeName.Char,
+                        s.length()),
+                    SqlTypeName.Char);
         }
     }
 
@@ -538,19 +549,22 @@ public class RexBuilder
 
     /**
      * Creates a Date literal.
+     *
      * @pre date != null
      */
     public RexLiteral makeDateLiteral(Calendar date)
     {
         Util.pre(date != null, "date != null");
-        return makeLiteral(
-            date,
-            typeFactory.createSqlType(SqlTypeName.Date),
-            SqlTypeName.Date);
+        return
+            makeLiteral(
+                date,
+                typeFactory.createSqlType(SqlTypeName.Date),
+                SqlTypeName.Date);
     }
 
     /**
      * Creates a Time literal.
+     *
      * @pre time != null
      */
     public RexLiteral makeTimeLiteral(
@@ -558,14 +572,16 @@ public class RexBuilder
         int precision)
     {
         Util.pre(time != null, "time != null");
-        return makeLiteral(
-            time,
-            typeFactory.createSqlType(SqlTypeName.Time, precision),
-            SqlTypeName.Time);
+        return
+            makeLiteral(
+                time,
+                typeFactory.createSqlType(SqlTypeName.Time, precision),
+                SqlTypeName.Time);
     }
 
     /**
      * Creates a Timestamp literal.
+     *
      * @pre timestamp != null
      */
     public RexLiteral makeTimestampLiteral(
@@ -573,10 +589,11 @@ public class RexBuilder
         int precision)
     {
         Util.pre(timestamp != null, "timestamp != null");
-        return makeLiteral(
-            timestamp,
-            typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
-            SqlTypeName.Timestamp);
+        return
+            makeLiteral(
+                timestamp,
+                typeFactory.createSqlType(SqlTypeName.Timestamp, precision),
+                SqlTypeName.Timestamp);
     }
 
     /**
@@ -586,11 +603,12 @@ public class RexBuilder
         SqlIntervalQualifier intervalQualifier)
     {
         Util.pre(intervalQualifier != null, "intervalQualifier != null");
-        return makeLiteral(
-            null,
-            new IntervalSqlType(intervalQualifier, false),
-            intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth :
-                SqlTypeName.IntervalDayTime);
+        return
+            makeLiteral(
+                null,
+                new IntervalSqlType(intervalQualifier, false),
+                intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
+                : SqlTypeName.IntervalDayTime);
     }
 
     /**
@@ -598,9 +616,11 @@ public class RexBuilder
      */
     public RexLiteral makeIntervalLiteral(long l)
     {
-        return makeLiteral(
-            new BigDecimal(l), typeFactory.createSqlType(SqlTypeName.Bigint),
-            SqlTypeName.Decimal);
+        return
+            makeLiteral(
+                new BigDecimal(l),
+                typeFactory.createSqlType(SqlTypeName.Bigint),
+                SqlTypeName.Decimal);
     }
 
     public RexDynamicParam makeDynamicParam(
@@ -609,30 +629,37 @@ public class RexBuilder
     {
         return new RexDynamicParam(type, index);
     }
-    
+
     /**
-     * Creates an expression corresponding to a null literal, cast to a
-     * specific type and precision
-     * 
+     * Creates an expression corresponding to a null literal, cast to a specific
+     * type and precision
+     *
      * @param typeName name of the type that the null will be cast to
      * @param precision precision of the type
-     * 
+     *
      * @return created expression
      */
     public RexNode makeNullLiteral(SqlTypeName typeName, int precision)
     {
-        RelDataType type = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(typeName, precision), true);
-        return makeCast(type, constantNull());
+        RelDataType type =
+            typeFactory.createTypeWithNullability(
+                typeFactory.createSqlType(typeName, precision),
+                true);
+        return makeCast(
+                type,
+                constantNull());
     }
-    
+
     public RexNode makeNullLiteral(SqlTypeName typeName)
     {
-        RelDataType type = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(typeName), true);
-        return makeCast(type, constantNull());
+        RelDataType type =
+            typeFactory.createTypeWithNullability(
+                typeFactory.createSqlType(typeName),
+                true);
+        return makeCast(
+                type,
+                constantNull());
     }
 }
-
 
 // End RexBuilder.java

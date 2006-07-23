@@ -10,40 +10,41 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.catalog;
 
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.security.*;
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.behavioral.*;
-import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-
-
-import net.sf.farrago.util.*;
-
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
-
-import javax.jmi.reflect.*;
-import java.util.*;
 import java.lang.reflect.*;
 
 import java.sql.Timestamp;
+
+import java.util.*;
+
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.jmi.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Static utilities for accessing the Farrago catalog.
@@ -53,11 +54,13 @@ import java.sql.Timestamp;
  */
 public abstract class FarragoCatalogUtil
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Sets default attributes for a new catalog instance.
      *
      * @param repos repository in which catalog is stored
-     *
      * @param catalog catalog to initialize
      */
     public static void initializeCatalog(
@@ -67,12 +70,12 @@ public abstract class FarragoCatalogUtil
         catalog.setDefaultCharacterSetName(repos.getDefaultCharsetName());
         catalog.setDefaultCollationName(repos.getDefaultCollationName());
     }
-    
+
     /**
-     * Calculates the number of parameters expected by a routine.
-     * For functions, this is different from the number of parameters
-     * defined in the repository, because CWM represents the return
-     * type by appending an extra parameter.
+     * Calculates the number of parameters expected by a routine. For functions,
+     * this is different from the number of parameters defined in the
+     * repository, because CWM represents the return type by appending an extra
+     * parameter.
      */
     public static int getRoutineParamCount(FemRoutine routine)
     {
@@ -112,9 +115,7 @@ public abstract class FarragoCatalogUtil
      * Sets the specification for a routine.
      *
      * @param repos repository storing the routine definition
-     *
      * @param routine new routine
-     *
      * @param typeDef owning type if a method, else null
      */
     public static void setRoutineSpecification(
@@ -156,7 +157,7 @@ public abstract class FarragoCatalogUtil
     {
         return (CwmTable) index.getSpannedClass();
     }
-    
+
     /**
      * Determines whether an index implements its table's primary key.
      *
@@ -168,27 +169,29 @@ public abstract class FarragoCatalogUtil
     {
         return index.getName().startsWith("SYS$PRIMARY_KEY");
     }
-    
+
     /**
      * Determines whether an index implements an internal deletion index.
-     * 
+     *
      * @param index the index in question
-     * 
+     *
      * @return true if index is the deletion index
      */
     public static boolean isDeletionIndex(FemLocalIndex index)
     {
         return index.getName().startsWith("SYS$DEL");
-    }   
-    
+    }
+
     /**
      * Finds the unique key constraints for a table.
      *
      * @param table the table of interest
      *
-     * @return a list of unique key constraints, or an empty list if none is defined
+     * @return a list of unique key constraints, or an empty list if none is
+     * defined
      */
-    public static List<FemUniqueKeyConstraint> getUniqueKeyConstraints(CwmClassifier table)
+    public static List<FemUniqueKeyConstraint> getUniqueKeyConstraints(
+        CwmClassifier table)
     {
         List<FemUniqueKeyConstraint> listOfConstraints =
             new ArrayList<FemUniqueKeyConstraint>();
@@ -200,8 +203,7 @@ public abstract class FarragoCatalogUtil
         }
         return listOfConstraints;
     }
-    
-    
+
     /**
      * Finds the primary key for a table.
      *
@@ -218,18 +220,18 @@ public abstract class FarragoCatalogUtil
         }
         return null;
     }
-    
+
     /**
      * Finds the clustered index storing a table's data.
      *
      * @param repos repository storing the table definition
-     *
      * @param table the table to access
      *
      * @return clustered index or null if none
      */
     public static FemLocalIndex getClusteredIndex(
-        FarragoRepos repos, CwmClass table)
+        FarragoRepos repos,
+        CwmClass table)
     {
         for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (index.isClustered()) {
@@ -241,14 +243,15 @@ public abstract class FarragoCatalogUtil
 
     /**
      * Finds all clustered indexes storing a table's data.
-     * 
+     *
      * @param repos repository storing the table definition
      * @param table the table to access
      *
      * @return list of clustered indexes or an empty list if none
      */
     public static List<FemLocalIndex> getClusteredIndexes(
-        FarragoRepos repos, CwmClass table)
+        FarragoRepos repos,
+        CwmClass table)
     {
         ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
@@ -259,17 +262,18 @@ public abstract class FarragoCatalogUtil
         }
         return indexList;
     }
-        
+
     /**
      * Finds all unclustered indexes storing a table's data.
-     * 
+     *
      * @param repos repository storing the table definition
      * @param table the table to access
      *
      * @return list of clustered indexes or an empty list if none
      */
     public static List<FemLocalIndex> getUnclusteredIndexes(
-        FarragoRepos repos, CwmClass table)
+        FarragoRepos repos,
+        CwmClass table)
     {
         ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
@@ -280,17 +284,18 @@ public abstract class FarragoCatalogUtil
         }
         return indexList;
     }
-    
+
     /**
      * Returns the index corresponding to the internal deletion index
-     * 
+     *
      * @param repos repository storing the table definition
      * @param table the table to access
-     * 
+     *
      * @return the deletion index if it exists, otherwise NULL
      */
     public static FemLocalIndex getDeletionIndex(
-        FarragoRepos repos, CwmClass table)
+        FarragoRepos repos,
+        CwmClass table)
     {
         for (FemLocalIndex index : getTableIndexes(repos, table)) {
             if (isDeletionIndex(index)) {
@@ -304,13 +309,13 @@ public abstract class FarragoCatalogUtil
      * Gets the collection of indexes spanning a table.
      *
      * @param repos repository storing the table definition
-     *
      * @param table the table of interest
      *
      * @return index collection
      */
     public static Collection<FemLocalIndex> getTableIndexes(
-        FarragoRepos repos, CwmClass table)
+        FarragoRepos repos,
+        CwmClass table)
     {
         return
             repos.getKeysIndexesPackage().getIndexSpansClass().getIndex(table);
@@ -324,7 +329,7 @@ public abstract class FarragoCatalogUtil
      * @param index the index implementing the constraint
      */
     public static void generateConstraintIndexName(
-        FarragoRepos repos, 
+        FarragoRepos repos,
         FemAbstractUniqueConstraint constraint,
         CwmSqlindex index)
     {
@@ -341,7 +346,7 @@ public abstract class FarragoCatalogUtil
      * @param constraint the anonymous constraint
      */
     public static void generateConstraintName(
-        FarragoRepos repos, 
+        FarragoRepos repos,
         FemAbstractUniqueConstraint constraint)
     {
         if (constraint instanceof FemPrimaryKeyConstraint) {
@@ -353,11 +358,11 @@ public abstract class FarragoCatalogUtil
             constraint.setName(uniquifyGeneratedName(repos, constraint, name));
         }
     }
-    
+
     /**
-     * Generated names are normally unique by construction.  However, if they
-     * exceed the name length limit, truncation could cause collisions.  In
-     * that case, we use repository object ID's to distinguish them.
+     * Generated names are normally unique by construction. However, if they
+     * exceed the name length limit, truncation could cause collisions. In that
+     * case, we use repository object ID's to distinguish them.
      *
      * @param repos repos storing object
      * @param refObj object for which to construct name
@@ -366,7 +371,7 @@ public abstract class FarragoCatalogUtil
      * @return uniquified name
      */
     public static String uniquifyGeneratedName(
-        FarragoRepos repos, 
+        FarragoRepos repos,
         RefObject refObj,
         String name)
     {
@@ -374,8 +379,11 @@ public abstract class FarragoCatalogUtil
             return name;
         }
         String mofId = refObj.refMofId();
-        return name.substring(
-            0, repos.getIdentifierPrecision() - (mofId.length() + 1))
+        return
+            name.substring(
+                0,
+                repos.getIdentifierPrecision()
+                - (mofId.length() + 1))
             + "_"
             + mofId;
     }
@@ -396,10 +404,9 @@ public abstract class FarragoCatalogUtil
         }
         return sb.toString();
     }
-    
+
     /**
-     * Searches a collection of {@link CwmModelElement}s (or a subtype) by
-     * name.
+     * Searches a collection of {@link CwmModelElement}s (or a subtype) by name.
      *
      * @param collection the collection to search
      * @param name name of element to find
@@ -417,7 +424,7 @@ public abstract class FarragoCatalogUtil
         }
         return null;
     }
-    
+
     /**
      * Searches a collection for a CwmModelElement by name and type.
      *
@@ -427,8 +434,7 @@ public abstract class FarragoCatalogUtil
      *
      * @return CwmModelElement found, or null if not found
      */
-    public static <T extends CwmModelElement>
-    T getModelElementByNameAndType(
+    public static <T extends CwmModelElement> T getModelElementByNameAndType(
         Collection<CwmModelElement> collection,
         String name,
         Class<T> clazz)
@@ -452,12 +458,13 @@ public abstract class FarragoCatalogUtil
         String name,
         RefClass type)
     {
-        return getModelElementByNameAndType(
-            (Collection<CwmModelElement>) collection,
-            name,
-            (Class<CwmModelElement>) JmiObjUtil.getClassForRefClass(type));
+        return
+            getModelElementByNameAndType(
+                (Collection<CwmModelElement>) collection,
+                name,
+                (Class<CwmModelElement>) JmiObjUtil.getClassForRefClass(type));
     }
-    
+
     /**
      * Filters a collection for all {@link CwmModelElement}s of a given type.
      *
@@ -465,11 +472,8 @@ public abstract class FarragoCatalogUtil
      * @param outCollection receives matching objects
      * @param type class which sought objects must instantiate
      */
-    public static <
-        OutT extends CwmModelElement,
-        AskT extends OutT>
-    void filterTypedModelElements(
-        Collection<? extends CwmModelElement> inCollection,
+    public static <OutT extends CwmModelElement, AskT extends OutT> void
+    filterTypedModelElements(Collection<? extends CwmModelElement> inCollection,
         Collection<OutT> outCollection,
         Class<AskT> type)
     {
@@ -484,7 +488,6 @@ public abstract class FarragoCatalogUtil
      * Indexes a collection of model elements by name.
      *
      * @param inCollection elements to be indexed
-     *
      * @param outMap receives indexed elements; key is name, value is element
      */
     public static <T extends CwmModelElement> void indexModelElementsByName(
@@ -492,15 +495,16 @@ public abstract class FarragoCatalogUtil
         Map<String, T> outMap)
     {
         for (T element : inCollection) {
-            outMap.put(element.getName(), element);
+            outMap.put(
+                element.getName(),
+                element);
         }
     }
-    
+
     /**
      * Looks up a schema by name in a catalog.
      *
      * @param catalog CwmCatalog to search
-     *
      * @param schemaName name of schema to find
      *
      * @return schema definition, or null if not found
@@ -509,27 +513,25 @@ public abstract class FarragoCatalogUtil
         CwmCatalog catalog,
         String schemaName)
     {
-        return getModelElementByNameAndType(
-            catalog.getOwnedElement(),
-            schemaName,
-            FemLocalSchema.class);
+        return
+            getModelElementByNameAndType(
+                catalog.getOwnedElement(),
+                schemaName,
+                FemLocalSchema.class);
     }
 
     /**
-     * Determines whether a column may contain null values.  This must be used
+     * Determines whether a column may contain null values. This must be used
      * rather than directly calling CwmColumn.getIsNullable, because a column
-     * which is part of a primary key or clustered index may not contain
-     * nulls even when its definition says it can.
+     * which is part of a primary key or clustered index may not contain nulls
+     * even when its definition says it can.
      *
-     *<p>
-     *
-     * REVIEW jvs 7-July-2006: The statement above is no longer true; we now
+     * <p>REVIEW jvs 7-July-2006: The statement above is no longer true; we now
      * store the derived nullability in isNullable, and remember the original
-     * declared nullability in isDeclaredNullable.  Maybe we should deprecate
+     * declared nullability in isDeclaredNullable. Maybe we should deprecate
      * this method now.
      *
      * @param repos repos storing column definition
-     *
      * @param column the column of interest
      *
      * @return whether nulls are allowed
@@ -546,8 +548,8 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Gets the routine which implements a particular user-defined ordering,
-     * or null if the ordering does not invoke a routine.
+     * Gets the routine which implements a particular user-defined ordering, or
+     * null if the ordering does not invoke a routine.
      *
      * @param udo user-defined ordering of interest
      *
@@ -559,9 +561,9 @@ public abstract class FarragoCatalogUtil
         if (deps.isEmpty()) {
             return null;
         }
-        assert(deps.size() == 1);
+        assert (deps.size() == 1);
         CwmDependency dep = (CwmDependency) deps.iterator().next();
-        assert(dep.getSupplier().size() == 1);
+        assert (dep.getSupplier().size() == 1);
         return (FemRoutine) dep.getSupplier().iterator().next();
     }
 
@@ -577,8 +579,7 @@ public abstract class FarragoCatalogUtil
         List<String> names = new ArrayList<String>(3);
         names.add(element.getName());
         for (CwmNamespace ns = element.getNamespace(); ns != null;
-             ns = ns.getNamespace())
-        {
+            ns = ns.getNamespace()) {
             names.add(ns.getName());
         }
         Collections.reverse(names);
@@ -587,8 +588,8 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Casts a {@link FemAbstractTypedElement} to the {@link
-     * FemSqltypedElement} interface via a proxy.
+     * Casts a {@link FemAbstractTypedElement} to the {@link FemSqltypedElement}
+     * interface via a proxy.
      *
      * @param element element to cast
      *
@@ -602,30 +603,30 @@ public abstract class FarragoCatalogUtil
         System.arraycopy(interfaces, 0, newInterfaces, 1, interfaces.length);
         newInterfaces[0] = FemSqltypedElement.class;
 
-        return (FemSqltypedElement) Proxy.newProxyInstance(
-            FarragoCatalogUtil.class.getClassLoader(),
-            newInterfaces,
-            new InvocationHandler()
-            {
-                // implement InvocationHandler
-                public Object invoke(
-                    Object proxy,
-                    Method method,
-                    Object [] args)
-                    throws Throwable
-                {
-                    if (method.getName().equals("getModelElement")) {
-                        return element;
+        return
+            (FemSqltypedElement) Proxy.newProxyInstance(
+                FarragoCatalogUtil.class.getClassLoader(),
+                newInterfaces,
+                new InvocationHandler() {
+                    // implement InvocationHandler
+                    public Object invoke(
+                        Object proxy,
+                        Method method,
+                        Object [] args)
+                        throws Throwable
+                    {
+                        if (method.getName().equals("getModelElement")) {
+                            return element;
+                        }
+
+                        // delegate by name
+                        Method delegateMethod =
+                            element.getClass().getMethod(
+                                method.getName(),
+                                method.getParameterTypes());
+                        return delegateMethod.invoke(element, args);
                     }
-                    
-                    // delegate by name
-                    Method delegateMethod =
-                        element.getClass().getMethod(
-                            method.getName(),
-                            method.getParameterTypes());
-                    return delegateMethod.invoke(element, args);
-                }
-            });
+                });
     }
 
     /**
@@ -677,25 +678,24 @@ public abstract class FarragoCatalogUtil
      * Finds the FemAuthId for a specified Authorization name.
      *
      * @param repos repository storing the Authorization Id
-     *
      * @param authName the input name used for this lookup
      *
-     * @return repository element represents the authorization
-     * identifier
+     * @return repository element represents the authorization identifier
      */
     public static FemAuthId getAuthIdByName(
-        FarragoRepos repos, String authName)
+        FarragoRepos repos,
+        String authName)
     {
-        return FarragoCatalogUtil.getModelElementByName(
-            repos.allOfType(FemAuthId.class),
-            authName);
+        return
+            FarragoCatalogUtil.getModelElementByName(
+                repos.allOfType(FemAuthId.class),
+                authName);
     }
 
     /**
      * Looks up a user by name in a catalog.
      *
      * @param repos repos storing catalog
-     *
      * @param userName name of user to find
      *
      * @return user definition, or null if not found
@@ -704,15 +704,16 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         String userName)
     {
-        return FarragoCatalogUtil.getModelElementByName(
-            repos.allOfType(FemUser.class), userName);
+        return
+            FarragoCatalogUtil.getModelElementByName(
+                repos.allOfType(FemUser.class),
+                userName);
     }
 
     /**
      * Looks up a role by name in a catalog.
      *
      * @param repos repos storing catalog
-     *
      * @param roleName name of role to find
      *
      * @return role definition, or null if not found
@@ -721,8 +722,10 @@ public abstract class FarragoCatalogUtil
         FarragoRepos repos,
         String roleName)
     {
-        return FarragoCatalogUtil.getModelElementByName(
-            repos.allOfType(FemRole.class), roleName);
+        return
+            FarragoCatalogUtil.getModelElementByName(
+                repos.allOfType(FemRole.class),
+                roleName);
     }
 
     /**
@@ -732,24 +735,23 @@ public abstract class FarragoCatalogUtil
      * object returned.
      *
      * @param repos repository containing the objects
-     *
      * @param grantorName the creator of this grant
-     *
      * @param granteeName the receipient of this grant
-     *
      * @param roleName the role name of the authorization id to be granted by
      * this new grant
      *
      * @return new grant object
      */
     public static FemGrant newRoleGrant(
-        FarragoRepos repos, String grantorName, String granteeName,
+        FarragoRepos repos,
+        String grantorName,
+        String granteeName,
         String roleName)
     {
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
         FemAuthId grantedRole;
-        
+
         // create a creation grant and set its properties
         FemGrant grant;
 
@@ -758,15 +760,18 @@ public abstract class FarragoCatalogUtil
         granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
         // Find the Fem role by name
-        grantedRole = FarragoCatalogUtil.getAuthIdByName(repos, roleName); 
-        if (grantedRole == null)
-        {
+        grantedRole = FarragoCatalogUtil.getAuthIdByName(repos, roleName);
+        if (grantedRole == null) {
             // TODO: throw res.instance().newRoleNameInvalid(roleName);
         }
-        
-        grant = newElementGrant(
-            repos, grantorAuthId,  granteeAuthId, grantedRole);
-        
+
+        grant =
+            newElementGrant(
+                repos,
+                grantorAuthId,
+                granteeAuthId,
+                grantedRole);
+
         // set properties specific for a grant of a role
         grant.setAction(PrivilegedActionEnum.INHERIT_ROLE.toString());
         grant.setWithGrantOption(false);
@@ -775,57 +780,59 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a grant on a specified repos element, with AuthId's
-     * specified as strings.
+     * Creates a grant on a specified repos element, with AuthId's specified as
+     * strings.
      *
      * @param repos repository storing the objects
-     *
      * @param grantorName the creator of this grant
-     *
      * @param granteeName the recipient of this grant
-     *
-     * @param grantedObject element being granted 
+     * @param grantedObject element being granted
      *
      * @return grant a grant object
      */
     public static FemGrant newElementGrant(
-        FarragoRepos repos, String grantorName, String granteeName,
+        FarragoRepos repos,
+        String grantorName,
+        String granteeName,
         CwmModelElement grantedObject)
     {
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
-        
+
         // Find the authId by name for grantor and grantee
         grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
         granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
 
-        return newElementGrant(
-            repos, grantorAuthId,  granteeAuthId, grantedObject);
+        return
+            newElementGrant(
+                repos,
+                grantorAuthId,
+                granteeAuthId,
+                grantedObject);
     }
-    
+
     /**
-     * Create a new grant for an element, with AuthId's specified
-     * as repository objects.
+     * Create a new grant for an element, with AuthId's specified as repository
+     * objects.
      *
      * @param repos repository storing the objects
-     *
      * @param grantorAuthId the creator of this grant
-     *
      * @param granteeAuthId the receipient of this grant
-     *
      * @param grantedObject element being granted
      *
      * @return new grant object
      */
     public static FemGrant newElementGrant(
-        FarragoRepos repos, FemAuthId grantorAuthId, FemAuthId granteeAuthId,
+        FarragoRepos repos,
+        FemAuthId grantorAuthId,
+        FemAuthId granteeAuthId,
         CwmModelElement grantedObject)
     {
         // create a privilege object and set its properties
-        FemGrant grant = repos.newFemGrant();        
-        
+        FemGrant grant = repos.newFemGrant();
+
         // TODO: to grant.setHierarchyOption(hierarchyOption);
-        
+
         // associate the grant with the grantor and grantee
         grant.setGrantor(grantorAuthId);
         grant.setGrantee(granteeAuthId);
@@ -835,33 +842,31 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
-     * Creates a new grant representing ownership of an object
-     * by its creator.
+     * Creates a new grant representing ownership of an object by its creator.
      *
      * @param repos repository storing the objects
-     *
      * @param grantorName the name of the creator of the grant
-     *
      * @param granteeName the name of the grantee of the grant
-     *
      * @param grantedObject element being created
      *
      * @return new grant object
      */
     public static FemGrant newCreationGrant(
-        FarragoRepos repos, String grantorName, String granteeName,
+        FarragoRepos repos,
+        String grantorName,
+        String granteeName,
         CwmModelElement grantedObject)
     {
         FemAuthId grantorAuthId;
         FemAuthId granteeAuthId;
-        
+
         // create a creation grant and set its properties
         FemGrant grant = repos.newFemGrant();
 
         // Find the authId by name for grantor and grantee
         grantorAuthId = FarragoCatalogUtil.getAuthIdByName(repos, grantorName);
         granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos, granteeName);
-        
+
         // set the privilege name (i.e. action) and properties.
         grant.setAction(PrivilegedActionEnum.CREATION.toString());
         grant.setWithGrantOption(false);
@@ -871,11 +876,13 @@ public abstract class FarragoCatalogUtil
         grant.setGrantee(granteeAuthId);
         grant.setElement(grantedObject);
         return grant;
-    }    
+    }
 
     /**
      * Determines the allowed access for a table
+     *
      * @param table Repository table
+     *
      * @return Access type of the table
      */
     public static SqlAccessType getTableAllowedAccess(CwmNamedColumnSet table)
@@ -884,24 +891,24 @@ public abstract class FarragoCatalogUtil
         if (table instanceof FemBaseColumnSet) {
             FemBaseColumnSet cs = (FemBaseColumnSet) table;
             String accessNames = cs.getAllowedAccess();
-            if (accessNames != null)  {
+            if (accessNames != null) {
                 allowedAccess = SqlAccessType.create(accessNames);
             } else {
                 allowedAccess = SqlAccessType.ALL;
             }
         } else if (table instanceof CwmView) {
             CwmView view = (CwmView) table;
-            allowedAccess = view.isReadOnly()?
-                SqlAccessType.READ_ONLY: SqlAccessType.ALL;
+            allowedAccess =
+                view.isReadOnly() ? SqlAccessType.READ_ONLY : SqlAccessType.ALL;
         } else {
             allowedAccess = SqlAccessType.ALL;
         }
         return allowedAccess;
     }
-    
+
     /**
      * Updates the row count statistic for an abstract column set
-     * 
+     *
      * @param columnSet the column set whose row count will be updated
      * @param rowCount number of rows returned by column set
      */
@@ -912,10 +919,10 @@ public abstract class FarragoCatalogUtil
         columnSet.setAnalyzeTime(createTimestamp());
         columnSet.setRowCount(rowCount);
     }
-    
+
     /**
      * Updates the page count statistic for a local index
-     * 
+     *
      * @param index the index whose page count will be updated
      * @param pageCount number of pages on disk used by index
      */
@@ -924,10 +931,11 @@ public abstract class FarragoCatalogUtil
         Long pageCount)
     {
         index.setAnalyzeTime(createTimestamp());
+
         // FIXME: once catalog is integrated, use long value
         index.setPageCount(pageCount);
     }
-    
+
     public static void updateHistogram(
         FarragoRepos repos,
         FemAbstractColumn column,
@@ -948,10 +956,11 @@ public abstract class FarragoCatalogUtil
         histogram.setDistinctValueCount(distinctValues);
         histogram.setPercentageSampled(samplePercent);
         histogram.setBarCount(barCount);
+
         // TODO: make row count an attribute of bars
         histogram.setRowsPerBar(rowsPerBar);
         histogram.setRowsLastBar(rowsLastBar);
-        
+
         List<FemColumnHistogramBar> oldBars = histogram.getBar();
         for (FemColumnHistogramBar bar : oldBars) {
             bar.refDelete();
@@ -962,10 +971,10 @@ public abstract class FarragoCatalogUtil
             bar.setOrdinal(ordinal++);
         }
     }
-     
+
     /**
      * Creates a timestamp reflecting the current time
-     * 
+     *
      * @return the timestamp encoded as a string
      */
     public static String createTimestamp()

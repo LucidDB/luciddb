@@ -23,51 +23,43 @@ package net.sf.farrago.namespace;
 
 import java.util.*;
 
+
 /**
- * FarragoMedMetadataQuery defines a metadata query processed
- * by {@link FarragoMedNameDirectory}.  For some namespaces, it
- * may be more efficient to query different kinds of metadata simultaneously;
- * for example, a flat-file reader might return all files in a directory
- * as tables, with the header of each file providing a column list.  For
- * this reason, the interface allows more than one object type to be
- * queried together.
+ * FarragoMedMetadataQuery defines a metadata query processed by {@link
+ * FarragoMedNameDirectory}. For some namespaces, it may be more efficient to
+ * query different kinds of metadata simultaneously; for example, a flat-file
+ * reader might return all files in a directory as tables, with the header of
+ * each file providing a column list. For this reason, the interface allows more
+ * than one object type to be queried together.
  *
- *<p>
- *
- * Object types are identified using CWM class names.  The following types are
+ * <p>Object types are identified using CWM class names. The following types are
  * currently defined (see members starting with prefix "OTN_"):
  *
- *<ul>
+ * <ul>
+ * <li><em>Table</em>: any table-like object such as a base table or view
+ * <li><em>Column</em>: a column
+ * <li><em>Schema</em>: a schema (acts as a subdirectory)
+ * <li><em>Package</em>: a logical package (acts as a subdirectory)
+ * </ul>
  *
- *<li><em>Table</em>:  any table-like object such as a base table or view
+ * <p>Results from metadata queries are written via the {@link
+ * FarragoMedMetadataSink} interface. Only immediate contents of the queried
+ * directory should be returned; some results may be subdirectories which can be
+ * queried independently.
  *
- *<li><em>Column</em>: a column
- *
- *<li><em>Schema</em>: a schema (acts as a subdirectory)
- *
- *<li><em>Package</em>: a logical package (acts as a subdirectory)
- *
- *</ul>
- *
- *<p>
- *
- * Results from metadata queries are written via the {@link
- * FarragoMedMetadataSink} interface.  Only immediate contents of the queried
- * directory should be returned; some results may be subdirectories
- * which can be queried independently.
- *
- *<p>
- *
- * Note that implementation of query filtering and projection is always
- * optional.  An unsophisticated implementation is free to produce results
- * which do not match all restrictions, so consumers are responsible for
- * reapplying them to each object produced.
+ * <p>Note that implementation of query filtering and projection is always
+ * optional. An unsophisticated implementation is free to produce results which
+ * do not match all restrictions, so consumers are responsible for reapplying
+ * them to each object produced.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoMedMetadataQuery
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final String OTN_TABLE = "Table";
 
     public static final String OTN_COLUMN = "Column";
@@ -75,12 +67,14 @@ public interface FarragoMedMetadataQuery
     public static final String OTN_SCHEMA = "Schema";
 
     public static final String OTN_PACKAGE = "Package";
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Retrieves a map of filters to be applied to queried metadata.  Map keys
+     * Retrieves a map of filters to be applied to queried metadata. Map keys
      * are object type names, and values are instances of the {@link
-     * FarragoMedMetadataFilter} interface.  The conjunction of all relevant
-     * filters is used.  Metadata queries take place in the context of an
+     * FarragoMedMetadataFilter} interface. The conjunction of all relevant
+     * filters is used. Metadata queries take place in the context of an
      * instance of {@link FarragoMedNameDirectory}, which provides additional
      * filtering context.
      *
@@ -89,8 +83,8 @@ public interface FarragoMedMetadataQuery
     public Map getFilterMap();
 
     /**
-     * Retrieves a set of result object types to be returned by the
-     * query, identified by object type name.
+     * Retrieves a set of result object types to be returned by the query,
+     * identified by object type name.
      *
      * @return Set<String>
      */

@@ -22,60 +22,63 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
 
 /**
  * Visitor which checks the validity of a {@link RexNode} expression.
  *
- * <p>There are two modes of operation:<ul>
+ * <p>There are two modes of operation:
  *
- * <li>Use<code>fail=true</code> to throw an {@link AssertionError}
- *     as soon as an invalid node is detected:
- *     <blockquote><code>
- *      RexNode node;<br/>
- *      RelDataType rowType;<br/>
- *      assert new RexChecker(rowType, true).isValid(node);
- *     </code></blockquote>
+ * <ul>
+ * <li>Use<code>fail=true</code> to throw an {@link AssertionError} as soon as
+ * an invalid node is detected:
  *
- *     This mode requires that assertions are enabled.</li>
+ * <blockquote><code>RexNode node;<br/>
+ * RelDataType rowType;<br/>
+ * assert new RexChecker(rowType, true).isValid(node);</code></blockquote>
  *
+ * This mode requires that assertions are enabled.</li>
  * <li>Use <code>fail=false</code> to test for validity without throwing an
- *     error.
- *     <blockquote><code>
- *      RexNode node;<br/>
- *      RelDataType rowType;<br/>
- *      RexChecker checker = new RexChecker(rowType, false);<br/>
- *      node.accept(checker);<br/>
- *      if (!checker.valid) {<br/>
- *      &nbsp;&nbsp;&nbsp;...<br/>
- *      }</br>
- *     </code></blockquote></li>
+ * error.
  *
- * @see RexNode
+ * <blockquote><code>RexNode node;<br/>
+ * RelDataType rowType;<br/>
+ * RexChecker checker = new RexChecker(rowType, false);<br/>
+ * node.accept(checker);<br/>
+ * if (!checker.valid) {<br/>
+ * &nbsp;&nbsp;&nbsp;...<br/>
+ * }</br></code></blockquote>
+ * </li>
+ *
  * @author jhyde
- * @since May 21, 2006
  * @version $Id$
+ * @see RexNode
+ * @since May 21, 2006
  */
-public class RexChecker extends RexVisitorImpl<Boolean>
+public class RexChecker
+    extends RexVisitorImpl<Boolean>
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean fail;
     private final RelDataType inputRowType;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a RexChecker.
      *
-     * <p>If <code>fail</code> is true, the checker will throw an
-     * {@link AssertionError} if an invalid node is found and assertions are
-     * enabled.
+     * <p>If <code>fail</code> is true, the checker will throw an {@link
+     * AssertionError} if an invalid node is found and assertions are enabled.
      *
-     * <p>Otherwise, each method returns whether its part of the tree is
-     * valid.
+     * <p>Otherwise, each method returns whether its part of the tree is valid.
      *
      * @param inputRowType Input row type
-     * @param fail Whether to throw an {@link AssertionError} if an invalid
-     *    node is detected
+     * @param fail Whether to throw an {@link AssertionError} if an invalid node
+     * is detected
      */
     public RexChecker(RelDataType inputRowType, boolean fail)
     {
@@ -84,19 +87,24 @@ public class RexChecker extends RexVisitorImpl<Boolean>
         this.inputRowType = inputRowType;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public Boolean visitInputRef(RexInputRef ref)
     {
-        final RelDataTypeField[] fields = inputRowType.getFields();
+        final RelDataTypeField [] fields = inputRowType.getFields();
         final int index = ref.getIndex();
-        if (index < 0 || index >= fields.length) {
-            assert !fail : "RexInputRef index " + index +
-                " out of range 0.." + (fields.length - 1);
+        if ((index < 0) || (index >= fields.length)) {
+            assert !fail : "RexInputRef index " + index
+                + " out of range 0.." + (fields.length - 1);
             return false;
         }
-        if (!ref.getType().isStruct() &&
-            !RelOptUtil.eq(
-            "ref", ref.getType(),
-            "input", fields[index].getType(), fail)) {
+        if (!ref.getType().isStruct()
+            && !RelOptUtil.eq(
+                "ref",
+                ref.getType(),
+                "input",
+                fields[index].getType(),
+                fail)) {
             return false;
         }
         return true;

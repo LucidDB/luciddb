@@ -20,44 +20,54 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
 import java.io.*;
-import java.sql.*;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
-import openjava.mop.Toolbox;
+import java.math.*;
+
+import java.net.*;
+
+import java.nio.charset.*;
+
+import java.sql.*;
+
+import java.util.*;
+import java.util.logging.*;
+import java.util.regex.*;
+
+import openjava.mop.*;
+
 import openjava.ptree.Expression;
 import openjava.ptree.StatementList;
 
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.sql.util.SqlVisitor;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Miscellaneous utility functions.
  */
-public class Util extends Toolbox
+public class Util
+    extends Toolbox
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    /** System-dependent newline character. */
+    //~ Static fields/initializers ---------------------------------------------
+
+    /**
+     * System-dependent newline character.
+     */
     public static final String lineSeparator =
         System.getProperty("line.separator");
 
-    /** System-dependent file separator, for example, "/" or "\." */
+    /**
+     * System-dependent file separator, for example, "/" or "\."
+     */
     public static final String fileSeparator =
         System.getProperty("file.separator");
     public static final Object [] emptyObjectArray = new Object[0];
@@ -69,68 +79,16 @@ public class Util extends Toolbox
     /**
      * Regular expression for a valid java identifier which contains no
      * underscores and can therefore be returned intact by {@link #toJavaId}.
-      */
+     */
     private static final Pattern javaIdPattern =
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
 
-    //~ Inner Classes ---------------------------------------------------------
-
-    /**
-     * Exception used to interrupt a tree walk of any kind.
-     */
-    public static class FoundOne extends RuntimeException {
-        private final Object node;
-
-        public FoundOne(Object node) {
-            this.node = node;
-        }
-
-        public Object getNode() {
-            return node;
-        }
-    }
-
-    /**
-     * Describes a node, its parent and if and where in the parent a node lives.
-     * If parent is null, the offset value is not valid.
-     */
-    public static class SqlNodeDescriptor {
-        private final SqlNode node;
-        private final SqlNode parent;
-        private final Integer parentOffset;
-
-        public SqlNodeDescriptor(SqlNode node, SqlNode parent, Integer parentOffset)
-        {
-            assert(null == parent ||
-                parent instanceof SqlCall ||
-                parent instanceof SqlNodeList);
-            this.node = node;
-            this.parent = parent;
-            this.parentOffset = parentOffset;
-        }
-
-        public SqlNode getNode()
-        {
-            return node;
-        }
-
-        public SqlNode getParent()
-        {
-            return parent;
-        }
-
-        public Integer getParentOffset()
-        {
-            return parentOffset;
-        }
-    }
-
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Does nothing with its argument. Call this method when you have a value
-     * you are not interested in, but you don't want the compiler to warn
-     * that you are not using it.
+     * you are not interested in, but you don't want the compiler to warn that
+     * you are not using it.
      */
     public static final void discard(Object o)
     {
@@ -141,8 +99,8 @@ public class Util extends Toolbox
 
     /**
      * Does nothing with its argument. Call this method when you have a value
-     * you are not interested in, but you don't want the compiler to warn
-     * that you are not using it.
+     * you are not interested in, but you don't want the compiler to warn that
+     * you are not using it.
      */
     public static final void discard(int i)
     {
@@ -153,8 +111,8 @@ public class Util extends Toolbox
 
     /**
      * Does nothing with its argument. Call this method when you have a value
-     * you are not interested in, but you don't want the compiler to warn
-     * that you are not using it.
+     * you are not interested in, but you don't want the compiler to warn that
+     * you are not using it.
      */
     public static final void discard(boolean b)
     {
@@ -165,8 +123,8 @@ public class Util extends Toolbox
 
     /**
      * Does nothing with its argument. Call this method when you have a value
-     * you are not interested in, but you don't want the compiler to warn
-     * that you are not using it.
+     * you are not interested in, but you don't want the compiler to warn that
+     * you are not using it.
      */
     public static final void discard(double d)
     {
@@ -176,8 +134,8 @@ public class Util extends Toolbox
     }
 
     /**
-     * Records that an exception has been caught but will not be re-thrown.
-     * If the tracer is not null, logs the exception to the tracer.
+     * Records that an exception has been caught but will not be re-thrown. If
+     * the tracer is not null, logs the exception to the tracer.
      *
      * @param e Exception
      * @param logger If not null, logs exception to this logger
@@ -211,8 +169,8 @@ public class Util extends Toolbox
      * Returns whether two arrays are equal or are both null.
      */
     public static final boolean equal(
-        Object[] s0,
-        Object[] s1)
+        Object [] s0,
+        Object [] s1)
     {
         if (s0 == null) {
             return s1 == null;
@@ -266,8 +224,8 @@ public class Util extends Toolbox
     }
 
     /**
-     * Computes a hash code from an existing hash code and an object (which
-     * may be null).
+     * Computes a hash code from an existing hash code and an object (which may
+     * be null).
      */
     public static int hash(
         int h,
@@ -303,9 +261,7 @@ public class Util extends Toolbox
      * Returns a set of the elements which are in <code>set1</code> but not in
      * <code>set2</code>, without modifying either.
      */
-    public static <T> Set<T> minus(
-        Set<T> set1,
-        Set<T> set2)
+    public static <T> Set<T> minus(Set<T> set1, Set<T> set2)
     {
         if (set1.isEmpty()) {
             return set1;
@@ -319,9 +275,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Computes <code>nlogn(n)</code> using the natural logarithm
-     * (or <code>n</code> if <code>n<{@link Math#E}</code>,
-     * so the result is never negative.
+     * Computes <code>nlogn(n)</code> using the natural logarithm (or <code>
+     * n</code> if <code>n<{@link Math#E}</code>, so the result is never
+     * negative.
      */
     public static double nLogN(double d)
     {
@@ -330,8 +286,8 @@ public class Util extends Toolbox
 
     /**
      * Prints an object using reflection. We can handle <code>null</code>;
-     * arrays of objects and primitive values; for regular objects, we print
-     * all public fields.
+     * arrays of objects and primitive values; for regular objects, we print all
+     * public fields.
      */
     public static void print(
         PrintWriter pw,
@@ -353,10 +309,13 @@ public class Util extends Toolbox
         if (o instanceof String) {
             printJavaString(pw, (String) o, true);
         } else if ((clazz == Integer.class) || (clazz == Boolean.class)
-                || (clazz == Character.class) || (clazz == Byte.class)
-                || (clazz == Short.class) || (clazz == Long.class)
-                || (clazz == Float.class) || (clazz == Double.class)
-                || (clazz == Void.class)) {
+            || (clazz == Character.class)
+            || (clazz == Byte.class)
+            || (clazz == Short.class)
+            || (clazz == Long.class)
+            || (clazz == Float.class)
+            || (clazz == Double.class)
+            || (clazz == Void.class)) {
             pw.print(o.toString());
         } else if (clazz.isArray()) {
             // o is an array, but we can't cast to Object[] because it may be
@@ -446,9 +405,8 @@ public class Util extends Toolbox
 
     /**
      * Prints a string, enclosing in double quotes (") and escaping if
-     * necessary. For examples,
-     * <code>printDoubleQuoted(w,"x\"y",false)</code> prints
-     * <code>"x\"y"</code>.
+     * necessary. For examples, <code>printDoubleQuoted(w,"x\"y",false)</code>
+     * prints <code>"x\"y"</code>.
      */
     public static final void printJavaString(
         PrintWriter pw,
@@ -482,16 +440,17 @@ public class Util extends Toolbox
     }
 
     /**
-     * Formats a {@link BigDecimal} value to a string in scientific notation
-     * For example<br>
+     * Formats a {@link BigDecimal} value to a string in scientific notation For
+     * example<br>
+     *
      * <ul>
      * <li>A value of 0.00001234 would be formated as <code>1.234E-5</code></li>
      * <li>A value of 100000.00 would be formated as <code>1.00E5</code></li>
-     * <li>A value of 100 (scale zero) would be formated as <code>1E2</code></li>
-     * <br>
-     * If {@param bd} has a precision higher than 20, this method will truncate
-     * the output string to have a precision of 20
-     * (no rounding will be done, just a truncate).
+     * <li>A value of 100 (scale zero) would be formated as <code>
+     * 1E2</code></li><br>
+     * If <code>bd</code> has a precision higher than 20, this method will
+     * truncate the output string to have a precision of 20 (no rounding will be
+     * done, just a truncate).
      */
     public static String toScientificNotation(BigDecimal bd)
     {
@@ -575,7 +534,7 @@ public class Util extends Toolbox
 
     /**
      * Creates a file-protocol URL for the given file.
-     **/
+     */
     public static URL toURL(File file)
         throws MalformedURLException
     {
@@ -642,19 +601,21 @@ public class Util extends Toolbox
      *
      * <p>This method uses an algorithm similar to URL encoding. Valid
      * characters are unchanged; invalid characters are converted to an
-     * underscore followed by the hex code of the character; and underscores
-     * are doubled.</p>
+     * underscore followed by the hex code of the character; and underscores are
+     * doubled.</p>
      *
-     * Examples:<ul>
+     * Examples:
+     *
+     * <ul>
      * <li><code>toJavaId("foo")</code> returns <code>"foo"</code>
      * <li><code>toJavaId("foo bar")</code> returns <code>"foo_20_bar"</code>
      * <li><code>toJavaId("foo_bar")</code> returns <code>"foo__bar"</code>
-     * <li><code>toJavaId("0bar")</code> returns <code>"_40_bar"</code>
-     *     (digits are illegal as a prefix)
+     * <li><code>toJavaId("0bar")</code> returns <code>"_40_bar"</code> (digits
+     * are illegal as a prefix)
      * <li><code>toJavaId("foo0bar")</code> returns <code>"foo0bar"</code>
      * </ul>
      *
-     * @testcase {@link org.eigenbase.util.UtilTest#testToJavaId}
+     * @testcase
      */
     public static String toJavaId(
         String s,
@@ -677,9 +638,11 @@ public class Util extends Toolbox
             if (c == '_') {
                 buf.append("__");
             } else if ((c < 0x7F) /* Normal ascii character */
-                    && !Character.isISOControl(c)
-                    && ((i == 0) ? Character.isJavaIdentifierStart(c)
-                    : Character.isJavaIdentifierPart(c))) {
+                && !Character.isISOControl(c)
+                && (
+                    (i == 0) ? Character.isJavaIdentifierStart(c)
+                    : Character.isJavaIdentifierPart(c)
+                   )) {
                 buf.append(c);
             } else {
                 buf.append("_");
@@ -691,9 +654,8 @@ public class Util extends Toolbox
     }
 
     /**
-     * @deprecated Use {@link java.util.Arrays#asList} instead
-     *
-     * Converts the elements of an array into a {@link java.util.List}
+     * @deprecated Use {@link java.util.Arrays#asList} instead Converts the
+     * elements of an array into a {@link java.util.List}
      */
     public static List toList(final Object [] array)
     {
@@ -705,8 +667,8 @@ public class Util extends Toolbox
     }
 
     /**
-     * Materializes the results of a {@link java.util.Iterator} as a
-     * {@link java.util.List}.
+     * Materializes the results of a {@link java.util.Iterator} as a {@link
+     * java.util.List}.
      *
      * @param iter iterator to materialize
      *
@@ -740,7 +702,8 @@ public class Util extends Toolbox
     {
         int elementCount = v.size();
         if (a.length < elementCount) {
-            a = (Object []) Array.newInstance(
+            a =
+                (Object []) Array.newInstance(
                     a.getClass().getComponentType(),
                     elementCount);
         }
@@ -760,13 +723,14 @@ public class Util extends Toolbox
     /**
      * @return true if s==null or if s.length()==0
      */
-    public static boolean isNullOrEmpty(String s) {
-        return (null==s) || (s.length()==0);
+    public static boolean isNullOrEmpty(String s)
+    {
+        return (null == s) || (s.length() == 0);
     }
 
     /**
-     * Returns the connect string with which to connect to the 'Sales'
-     * test database. In the process, it loads the necessary drivers.
+     * Returns the connect string with which to connect to the 'Sales' test
+     * database. In the process, it loads the necessary drivers.
      */
     public static String getSalesConnectString()
     {
@@ -779,15 +743,15 @@ public class Util extends Toolbox
         if (driversLoaded) {
             return;
         }
-        String jdbcDrivers =
-            SaffronProperties.instance().testJdbcDrivers.get();
+        String jdbcDrivers = SaffronProperties.instance().testJdbcDrivers.get();
         StringTokenizer tok = new StringTokenizer(jdbcDrivers, ",");
         while (tok.hasMoreTokens()) {
             String jdbcDriver = tok.nextToken();
             try {
                 Class.forName(jdbcDriver);
             } catch (ClassNotFoundException e) {
-                System.out.println("Warning: could not find driver "
+                System.out.println(
+                    "Warning: could not find driver "
                     + jdbcDriver);
             }
         }
@@ -795,20 +759,20 @@ public class Util extends Toolbox
     }
 
     /**
-     * Returns the {@link Charset} object representing
-     * the value of {@link SaffronProperties#defaultCharset}
+     * Returns the {@link Charset} object representing the value of {@link
+     * SaffronProperties#defaultCharset}
      *
-     * @throws  java.nio.charset.IllegalCharsetNameException
-     *          If the given charset name is illegal
-     *
-     * @throws  java.nio.charset.UnsupportedCharsetException
-     *          If no support for the named charset is available
-     *          in this instance of the Java virtual machine
+     * @throws java.nio.charset.IllegalCharsetNameException If the given charset
+     * name is illegal
+     * @throws java.nio.charset.UnsupportedCharsetException If no support for
+     * the named charset is available in this instance of the Java virtual
+     * machine
      */
     public static Charset getDefaultCharset()
     {
-        return Charset.forName(
-            SaffronProperties.instance().defaultCharset.get());
+        return
+            Charset.forName(
+                SaffronProperties.instance().defaultCharset.get());
     }
 
     public static Error newInternal()
@@ -901,26 +865,29 @@ public class Util extends Toolbox
     }
 
     /**
-     * Returns a {@link java.lang.RuntimeException} indicating that a
-     * particular feature has not been implemented, but should be.
+     * Returns a {@link java.lang.RuntimeException} indicating that a particular
+     * feature has not been implemented, but should be.
      *
      * <p>If every 'hole' in our functionality uses this method, it will be
-     * easier for us to identity the holes. Throwing a
-     * {@link java.lang.UnsupportedOperationException} isn't as good, because
-     * sometimes we actually want to partially implement an API.
+     * easier for us to identity the holes. Throwing a {@link
+     * java.lang.UnsupportedOperationException} isn't as good, because sometimes
+     * we actually want to partially implement an API.
      *
      * <p>Example usage:
-     * <blockquote><pre><code>class MyVisitor extends BaseVisitor {
+     *
+     * <blockquote>
+     * <pre><code>class MyVisitor extends BaseVisitor {
      *     void accept(Foo foo) {
      *         // Exception will identify which subclass forgot to override
      *         // this method
      *         throw Util.needToImplement(this);
      *     }
-     * }</pre></blockquote>
+     * }</pre>
+     * </blockquote>
      *
-     * @param o The object which was the target of the call, or null.
-     *   Passing the object gives crucial information if a method needs to be
-     *   overridden and a subclass forgot to do so.
+     * @param o The object which was the target of the call, or null. Passing
+     * the object gives crucial information if a method needs to be overridden
+     * and a subclass forgot to do so.
      *
      * @return an {@link UnsupportedOperationException}.
      */
@@ -936,19 +903,21 @@ public class Util extends Toolbox
     /**
      * Flags a piece of code as needing to be cleaned up before you check in.
      *
-     * <p>Introduce a call to this method to indicate that a piece of code,
-     * or a javadoc comment, needs work before you check in. If you have an IDE
-     * which can easily trace references, this is an easy way to maintain a
-     * to-do list.
+     * <p>Introduce a call to this method to indicate that a piece of code, or a
+     * javadoc comment, needs work before you check in. If you have an IDE which
+     * can easily trace references, this is an easy way to maintain a to-do
+     * list.
      *
-     * <p><strong>Checked-in code must never call this method</strong>: you
-     * must remove all calls/references to this method before you check in.
+     * <p><strong>Checked-in code must never call this method</strong>: you must
+     * remove all calls/references to this method before you check in.
      *
-     * <p>The <code>argument</code> has generic type and determines the
-     * type of the result. This allows you to use the method inside an
-     * expression, for example
+     * <p>The <code>argument</code> has generic type and determines the type of
+     * the result. This allows you to use the method inside an expression, for
+     * example
      *
-     * <blockquote><pre><code>int x = Util.deprecated(0, false);</code></pre></blockquote>
+     * <blockquote>
+     * <pre><code>int x = Util.deprecated(0, false);</code></pre>
+     * </blockquote>
      *
      * but the usual usage is to pass in a descriptive string.
      *
@@ -957,7 +926,8 @@ public class Util extends Toolbox
      * <h4>Example #1: Using <code>deprecated</code> to fail if a piece of
      * supposedly dead code is reached</h4>
      *
-     * <blockquote><pre><code>void foo(int x) {
+     * <blockquote>
+     * <pre><code>void foo(int x) {
      *     if (x &lt; 0) {
      *         // If this code is executed, an error will be thrown.
      *         Util.deprecated("no longer need to handle negative numbers", true);
@@ -965,24 +935,29 @@ public class Util extends Toolbox
      *     } else {
      *         baz(x);
      *     }
-     * }</code></pre></blockquote>
+     * }</code></pre>
+     * </blockquote>
      *
      * <h4>Example #2: Using <code>deprecated</code> to comment out dead
      * code</h4>
      *
-     * <blockquote><pre>if (Util.deprecated(false, false)) {
+     * <blockquote>
+     * <pre>if (Util.deprecated(false, false)) {
      *     // This code will not be executed, but an error will not be thrown.
      *     baz();
-     * }</pre></blockquote>
+     * }</pre>
+     * </blockquote>
      *
      * @param argument Arbitrary argument to the method.
      * @param fail Whether to throw an exception if this method is called
+     *
      * @return The value of the <code>argument</code>.
      *
      * @deprecated If a piece of code calls this method, it indicates that the
-     *    code needs to be cleaned up.
+     * code needs to be cleaned up.
      */
-    public static <T> T deprecated(T argument, boolean fail) {
+    public static <T> T deprecated(T argument, boolean fail)
+    {
         if (fail) {
             throw new UnsupportedOperationException();
         }
@@ -1012,22 +987,26 @@ public class Util extends Toolbox
      * Searches recursively for a {@link SqlIdentifier}.
      *
      * @param node in which to look in
+     *
      * @return null if no Identifier was found.
      */
-    public static SqlNodeDescriptor findIdentifier(SqlNode node) {
-        BacktrackVisitor<Void> visitor = new BacktrackVisitor<Void>() {
-            public Void visit(SqlIdentifier id)
-            {
-                throw new FoundOne(id);
-            }
-        };
+    public static SqlNodeDescriptor findIdentifier(SqlNode node)
+    {
+        BacktrackVisitor<Void> visitor =
+            new BacktrackVisitor<Void>() {
+                public Void visit(SqlIdentifier id)
+                {
+                    throw new FoundOne(id);
+                }
+            };
         try {
             node.accept(visitor);
         } catch (FoundOne e) {
-            return new SqlNodeDescriptor(
-                (SqlNode) e.getNode(),
-                visitor.getCurrentParent(),
-                visitor.getCurrentOffset());
+            return
+                new SqlNodeDescriptor(
+                    (SqlNode) e.getNode(),
+                    visitor.getCurrentParent(),
+                    visitor.getCurrentOffset());
         }
         return null;
     }
@@ -1035,11 +1014,12 @@ public class Util extends Toolbox
     /**
      * Generates a unique name
      *
-     * @param names  Array of existing names
+     * @param names Array of existing names
      * @param length Number of existing names
      * @param s Suggested name
-     * @return Name which does not match any of the names in the first
-     *   <code>length</code> positions of the <code>names</code> array.
+     *
+     * @return Name which does not match any of the names in the first <code>
+     * length</code> positions of the <code>names</code> array.
      */
     public static String uniqueFieldName(
         String [] names,
@@ -1073,9 +1053,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes an InputStream, ignoring any I/O exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.
+     * Closes an InputStream, ignoring any I/O exception. This should only be
+     * used in finally blocks when it's necessary to avoid throwing an exception
+     * which might mask a real exception.
      *
      * @param stream stream to close
      */
@@ -1091,11 +1071,11 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes an OutputStream, ignoring any I/O exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.  If you want
-     * to make sure that data has been successfully flushed, do NOT use
-     * this anywhere else; use stream.close() instead.
+     * Closes an OutputStream, ignoring any I/O exception. This should only be
+     * used in finally blocks when it's necessary to avoid throwing an exception
+     * which might mask a real exception. If you want to make sure that data has
+     * been successfully flushed, do NOT use this anywhere else; use
+     * stream.close() instead.
      *
      * @param stream stream to close
      */
@@ -1111,9 +1091,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes a Reader, ignoring any I/O exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.
+     * Closes a Reader, ignoring any I/O exception. This should only be used in
+     * finally blocks when it's necessary to avoid throwing an exception which
+     * might mask a real exception.
      *
      * @param reader reader to close
      */
@@ -1129,11 +1109,11 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes a Writer, ignoring any I/O exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.  If you want
-     * to make sure that data has been successfully flushed, do NOT use
-     * this anywhere else; use writer.close() instead.
+     * Closes a Writer, ignoring any I/O exception. This should only be used in
+     * finally blocks when it's necessary to avoid throwing an exception which
+     * might mask a real exception. If you want to make sure that data has been
+     * successfully flushed, do NOT use this anywhere else; use writer.close()
+     * instead.
      *
      * @param writer writer to close
      */
@@ -1149,9 +1129,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes a Statement, ignoring any SQL exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.
+     * Closes a Statement, ignoring any SQL exception. This should only be used
+     * in finally blocks when it's necessary to avoid throwing an exception
+     * which might mask a real exception.
      *
      * @param stmt stmt to close
      */
@@ -1167,9 +1147,9 @@ public class Util extends Toolbox
     }
 
     /**
-     * Closes a Connection, ignoring any SQL exception.  This should only
-     * be used in finally blocks when it's necessary to avoid throwing
-     * an exception which might mask a real exception.
+     * Closes a Connection, ignoring any SQL exception. This should only be used
+     * in finally blocks when it's necessary to avoid throwing an exception
+     * which might mask a real exception.
      *
      * @param connection connection to close
      */
@@ -1184,20 +1164,160 @@ public class Util extends Toolbox
         }
     }
 
-    private static class BacktrackVisitor<R> extends SqlBasicVisitor<R>
+    /**
+     * Runs an external application.
+     *
+     * @param cmdarray command and arguments, see {@link ProcessBuilder}
+     * @param logger if not null, command and exit status will be logged
+     * @param appInput if not null, data will be copied to application's stdin
+     * @param appOutput if not null, data will be captured from application's
+     * stdout and stderr
+     *
+     * @return application process exit value
+     *
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public static int runApplication(
+        String [] cmdarray,
+        Logger logger,
+        Reader appInput,
+        Writer appOutput)
+        throws IOException, InterruptedException
+    {
+        StringBuffer buf = new StringBuffer();
+        for (int i = 0; i < cmdarray.length; ++i) {
+            if (i > 0) {
+                buf.append(" ");
+            }
+            buf.append('"');
+            buf.append(cmdarray[i]);
+            buf.append('"');
+        }
+        String fullcmd = buf.toString();
+        buf.setLength(0);
+
+        ProcessBuilder pb = new ProcessBuilder(cmdarray);
+        pb.redirectErrorStream(true);
+        if (logger != null) {
+            logger.info("start process: " + fullcmd);
+        }
+        Process p = pb.start();
+
+        // Setup the input/output streams to the subprocess.
+        // The buffering here is arbitrary. Javadocs strongly encourage
+        // buffering, but the size needed is very dependent on the
+        // specific application being run, the size of the input
+        // provided by the caller, and the amount of output expected.
+        // Since this method is currently used only by unit tests,
+        // large-ish fixed buffer sizes have been chosen. If this
+        // method becomes used for something in production, it might
+        // be better to have the caller provide them as arguments.
+        if (appInput != null) {
+            OutputStream out =
+                new BufferedOutputStream(
+                    p.getOutputStream(),
+                    100 * 1024);
+            int c;
+            while ((c = appInput.read()) != -1) {
+                out.write(c);
+            }
+            out.flush();
+        }
+        if (appOutput != null) {
+            InputStream in =
+                new BufferedInputStream(
+                    p.getInputStream(),
+                    100 * 1024);
+            int c;
+            while ((c = in.read()) != -1) {
+                appOutput.write(c);
+            }
+            appOutput.flush();
+            in.close();
+        }
+        p.waitFor();
+
+        int status = p.exitValue();
+        if (logger != null) {
+            logger.info("exit status=" + status + " from " + fullcmd);
+        }
+        return status;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Exception used to interrupt a tree walk of any kind.
+     */
+    public static class FoundOne
+        extends RuntimeException
+    {
+        private final Object node;
+
+        public FoundOne(Object node)
+        {
+            this.node = node;
+        }
+
+        public Object getNode()
+        {
+            return node;
+        }
+    }
+
+    /**
+     * Describes a node, its parent and if and where in the parent a node lives.
+     * If parent is null, the offset value is not valid.
+     */
+    public static class SqlNodeDescriptor
+    {
+        private final SqlNode node;
+        private final SqlNode parent;
+        private final Integer parentOffset;
+
+        public SqlNodeDescriptor(SqlNode node,
+            SqlNode parent,
+            Integer parentOffset)
+        {
+            assert ((null == parent) || (parent instanceof SqlCall)
+                    || (parent instanceof SqlNodeList));
+            this.node = node;
+            this.parent = parent;
+            this.parentOffset = parentOffset;
+        }
+
+        public SqlNode getNode()
+        {
+            return node;
+        }
+
+        public SqlNode getParent()
+        {
+            return parent;
+        }
+
+        public Integer getParentOffset()
+        {
+            return parentOffset;
+        }
+    }
+
+    private static class BacktrackVisitor<R>
+        extends SqlBasicVisitor<R>
     {
         /**
          * Used to keep track of the current SqlNode parent of a visiting node.
-         * A value of null mean no parent.
-         * NOTE: In case of extending SqlBasicVisitor, remember that
-         * parent value might not be set depending on if and how
-         * visit(SqlCall) and visit(SqlNodeList) is implemented.
+         * A value of null mean no parent. NOTE: In case of extending
+         * SqlBasicVisitor, remember that parent value might not be set
+         * depending on if and how visit(SqlCall) and visit(SqlNodeList) is
+         * implemented.
          */
         protected SqlNode currentParent = null;
 
         /**
-         *  Only valid if currentParrent is a SqlCall or SqlNodeList
-         *  Describes the offset within the parent
+         * Only valid if currentParrent is a SqlCall or SqlNodeList Describes
+         * the offset within the parent
          */
         protected int currentOffset;
 
@@ -1226,104 +1346,28 @@ public class Util extends Toolbox
 
         public R visit(final SqlCall call)
         {
-            ArgHandler<R> argHandler = new ArgHandler<R>()
-            {
-                public R result()
-                {
-                    return null;
-                }
+            ArgHandler<R> argHandler =
+                new ArgHandler<R>() {
+                    public R result()
+                    {
+                        return null;
+                    }
 
-                public R visitChild(
-                    SqlVisitor<R> visitor,
-                    SqlNode expr, int i, SqlNode operand)
-                {
-                    currentParent = call;
-                    currentOffset = i;
-                    return operand.accept(BacktrackVisitor.this);
-                }
-            };
+                    public R visitChild(SqlVisitor<R> visitor,
+                        SqlNode expr,
+                        int i,
+                        SqlNode operand)
+                    {
+                        currentParent = call;
+                        currentOffset = i;
+                        return operand.accept(BacktrackVisitor.this);
+                    }
+                };
             call.getOperator().acceptCall(this, call, false, argHandler);
             currentParent = null;
             return argHandler.result();
         }
     }
-
-    /**
-     * Runs an external application.
-     *
-     * @param cmdarray command and arguments, see {@link ProcessBuilder}
-     * @param logger if not null, command and exit status will be logged
-     * @param appInput if not null,
-     *      data will be copied to application's stdin
-     * @param appOutput if not null,
-     *      data will be captured from application's stdout and stderr
-     * @return application process exit value
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    public static int runApplication(
-        String[] cmdarray,
-        Logger logger,
-        Reader appInput,
-        Writer appOutput)
-        throws IOException, InterruptedException
-    {
-        StringBuffer buf = new StringBuffer();
-        for (int i=0; i < cmdarray.length; ++i) {
-            if (i > 0) {
-                buf.append(" ");
-            }
-            buf.append('"');
-            buf.append(cmdarray[i]);
-            buf.append('"');
-        }
-        String fullcmd = buf.toString();
-        buf.setLength(0);
-
-        ProcessBuilder pb = new ProcessBuilder(cmdarray);
-        pb.redirectErrorStream(true);
-        if (logger != null) {
-            logger.info("start process: " +fullcmd);
-        }
-        Process p = pb.start();
-
-        // Setup the input/output streams to the subprocess.
-        // The buffering here is arbitrary. Javadocs strongly encourage
-        // buffering, but the size needed is very dependent on the
-        // specific application being run, the size of the input
-        // provided by the caller, and the amount of output expected.
-        // Since this method is currently used only by unit tests, 
-        // large-ish fixed buffer sizes have been chosen. If this
-        // method becomes used for something in production, it might
-        // be better to have the caller provide them as arguments.
-        if (appInput != null) {
-            OutputStream out =
-                new BufferedOutputStream(p.getOutputStream(), 100*1024);
-            int c;
-            while ((c=appInput.read()) != -1) {
-                out.write(c);
-            }
-            out.flush();
-        }
-        if (appOutput != null) {
-            InputStream in =
-                new BufferedInputStream(p.getInputStream(), 100*1024);
-            int c;
-            while ((c = in.read()) != -1) {
-                appOutput.write(c);
-            }
-            appOutput.flush();
-            in.close();
-        }
-        p.waitFor();
-
-        int status = p.exitValue();
-        if (logger != null) {
-            logger.info("exit status=" +status +" from " +fullcmd);
-        }
-        return status;
-    }
 }
-
 
 // End Util.java

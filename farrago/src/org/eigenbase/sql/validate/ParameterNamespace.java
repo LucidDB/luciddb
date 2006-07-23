@@ -21,26 +21,35 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Namespace representing the type of a dynamic parameter.
  *
- * @see ParameterScope
  * @author jhyde
  * @version $Id$
+ * @see ParameterScope
  * @since Mar 25, 2003
  */
-class ParameterNamespace extends AbstractNamespace
+class ParameterNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RelDataType type;
+
+    //~ Constructors -----------------------------------------------------------
 
     public ParameterNamespace(SqlValidatorImpl validator, RelDataType type)
     {
         super(validator);
         this.type = type;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {
@@ -59,4 +68,3 @@ class ParameterNamespace extends AbstractNamespace
 }
 
 // End ParameterNamespace.java
-

@@ -20,42 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
+import java.util.*;
 
-import java.util.Collections;
-import java.util.Set;
+import org.eigenbase.relopt.*;
+
 
 /**
  * Rule to convert an {@link JoinRel inner join} to a {@link FilterRel filter}
  * on top of a {@link JoinRel cartesian inner join}.
  *
  * <p>One benefit of this transformation is that after it, the join condition
- * can be combined with conditions and expressions above the join. It also
- * makes the <code>FennelCartesianJoinRule</code> applicable.
+ * can be combined with conditions and expressions above the join. It also makes
+ * the <code>FennelCartesianJoinRule</code> applicable.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 3 February, 2006
  */
-public final class ExtractJoinFilterRule extends RelOptRule
+public final class ExtractJoinFilterRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * The singleton.
      */
     public static final ExtractJoinFilterRule instance =
         new ExtractJoinFilterRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
+
     private ExtractJoinFilterRule()
     {
         super(new RelOptRuleOperand(JoinRel.class, null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -72,19 +75,21 @@ public final class ExtractJoinFilterRule extends RelOptRule
         // NOTE jvs 14-Mar-2006:  See SwapJoinRule for why we
         // preserve attribute semiJoinDone here.
 
-        RelNode cartesianJoinRel = new JoinRel(
-            joinRel.getCluster(),
-            joinRel.getLeft(),
-            joinRel.getRight(),
-            joinRel.getCluster().getRexBuilder().makeLiteral(true),
-            joinRel.getJoinType(),
-            (Set<String>) Collections.EMPTY_SET,
-            joinRel.isSemiJoinDone(),
-            joinRel.isMultiJoinDone());
+        RelNode cartesianJoinRel =
+            new JoinRel(
+                joinRel.getCluster(),
+                joinRel.getLeft(),
+                joinRel.getRight(),
+                joinRel.getCluster().getRexBuilder().makeLiteral(true),
+                joinRel.getJoinType(),
+                (Set<String>) Collections.EMPTY_SET,
+                joinRel.isSemiJoinDone(),
+                joinRel.isMultiJoinDone());
 
-        RelNode filterRel = CalcRel.createFilter(
-            cartesianJoinRel,
-            joinRel.getCondition());
+        RelNode filterRel =
+            CalcRel.createFilter(
+                cartesianJoinRel,
+                joinRel.getCondition());
 
         call.transformTo(filterRel);
     }

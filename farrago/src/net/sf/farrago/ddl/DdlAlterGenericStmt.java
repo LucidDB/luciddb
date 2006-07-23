@@ -22,21 +22,22 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.cwm.core.CwmModelElement;
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionDdlValidator;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.session.*;
 
 
 /**
  * DdlAlterGenericStmt is a generic concrete extension of DdlAlterStmt.
  *
  * @author Steve Herskovitz
- * @since May 26, 2006
  * @version $Id$
+ * @since May 26, 2006
  */
-public class DdlAlterGenericStmt extends DdlAlterStmt
+public class DdlAlterGenericStmt
+    extends DdlAlterStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlAlterGenericStmt.
@@ -48,7 +49,7 @@ public class DdlAlterGenericStmt extends DdlAlterStmt
         super(alterElement);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlAlterStmt
     protected void execute(

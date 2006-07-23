@@ -21,34 +21,41 @@
 */
 package net.sf.farrago.namespace.util;
 
+import java.io.*;
+
+import java.util.*;
+import java.util.regex.*;
+
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.util.*;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.*;
 
 /**
- * MedAbstractMetadataSink is an abstract base class for implementations
- * of the {@link FarragoMedMetadataSink} interface.
+ * MedAbstractMetadataSink is an abstract base class for implementations of the
+ * {@link FarragoMedMetadataSink} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
+public abstract class MedAbstractMetadataSink
+    implements FarragoMedMetadataSink
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoMedMetadataQuery query;
     private final FarragoTypeFactory typeFactory;
     private final Map patternMap;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new sink.
      *
-     * @param query the query being processed; its filters will be
-     * implemented by this sink
-     *
+     * @param query the query being processed; its filters will be implemented
+     * by this sink
      * @param typeFactory factory for types written to this sink
      */
     protected MedAbstractMetadataSink(
@@ -60,19 +67,20 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
         patternMap = new HashMap();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Tests whether an object should be included in the query result.
      *
      * @param objectName name of object
-     *
      * @param typeName name of object type
-     *
-     * @param qualifier if true, test whether object is a valid qualifier;
-     * if false, test whether object itself should be included
+     * @param qualifier if true, test whether object is a valid qualifier; if
+     * false, test whether object itself should be included
      *
      * @return true if the inclusion test passes
      */
-    protected boolean shouldInclude(String objectName, String typeName,
+    protected boolean shouldInclude(String objectName,
+        String typeName,
         boolean qualifier)
     {
         if (!qualifier) {
@@ -80,8 +88,8 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
                 return false;
             }
         }
-        FarragoMedMetadataFilter filter = (FarragoMedMetadataFilter)
-            query.getFilterMap().get(typeName);
+        FarragoMedMetadataFilter filter =
+            (FarragoMedMetadataFilter) query.getFilterMap().get(typeName);
         if (filter == null) {
             return true;
         }
@@ -99,7 +107,7 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
         }
         return included;
     }
-    
+
     // implement FarragoMedMetadataSink
     public FarragoTypeFactory getTypeFactory()
     {
@@ -117,7 +125,7 @@ public abstract class MedAbstractMetadataSink implements FarragoMedMetadataSink
             int n = likePattern.length();
             for (int i = 0; i < n; ++i) {
                 char c = likePattern.charAt(i);
-                switch(c) {
+                switch (c) {
                 case '%':
                     regex.write(".*");
                     break;

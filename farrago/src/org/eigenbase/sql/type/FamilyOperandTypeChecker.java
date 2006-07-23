@@ -21,15 +21,16 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.resource.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.reltype.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+
+
 /**
- * Operand type-checking strategy which checks operands for inclusion
- * in type families.
+ * Operand type-checking strategy which checks operands for inclusion in type
+ * families.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -37,12 +38,19 @@ import java.util.*;
 public class FamilyOperandTypeChecker
     implements SqlSingleOperandTypeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected SqlTypeFamily [] families;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FamilyOperandTypeChecker(SqlTypeFamily [] families)
     {
         this.families = families;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement SqlSingleOperandTypeChecker
     public boolean checkSingleOperandType(
@@ -65,9 +73,10 @@ public class FamilyOperandTypeChecker
                 return false;
             }
         }
-        RelDataType type = callBinding.getValidator().deriveType(
-            callBinding.getScope(),
-            node);
+        RelDataType type =
+            callBinding.getValidator().deriveType(
+                callBinding.getScope(),
+                node);
         SqlTypeName typeName = type.getSqlTypeName();
         if (!family.getTypeNames().contains(typeName)) {
             if (throwOnFailure) {
@@ -77,7 +86,7 @@ public class FamilyOperandTypeChecker
         }
         return true;
     }
-    
+
     // implement SqlOperandTypeChecker
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
@@ -88,12 +97,14 @@ public class FamilyOperandTypeChecker
             // don't throw
             return false;
         }
-        
+
         for (int i = 0; i < callBinding.getOperandCount(); i++) {
             SqlNode operand = callBinding.getCall().operands[i];
             if (!checkSingleOperandType(
-                    callBinding, operand, i, throwOnFailure))
-            {
+                    callBinding,
+                    operand,
+                    i,
+                    throwOnFailure)) {
                 return false;
             }
         }
@@ -105,11 +116,14 @@ public class FamilyOperandTypeChecker
     {
         return new SqlOperandCountRange(families.length);
     }
-    
+
     // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        return SqlUtil.getAliasedSignature(op, opName, Arrays.asList(families));
+        return SqlUtil.getAliasedSignature(
+                op,
+                opName,
+                Arrays.asList(families));
     }
 
     // hack for FarragoCalcSystemTest

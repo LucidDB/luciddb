@@ -34,15 +34,16 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelSortRule is a rule for implementing SortRel via a Fennel
- * sort.
+ * FennelSortRule is a rule for implementing SortRel via a Fennel sort.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelSortRule extends RelOptRule
+public class FennelSortRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelSortRule object.
@@ -54,7 +55,7 @@ public class FennelSortRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -69,7 +70,8 @@ public class FennelSortRule extends RelOptRule
         RelNode relInput = sortRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                sortRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                sortRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;
@@ -77,8 +79,9 @@ public class FennelSortRule extends RelOptRule
 
         Integer [] keyProjection = new Integer[sortRel.getCollations().length];
         for (int i = 0; i < keyProjection.length; ++i) {
-            keyProjection[i] = new Integer(
-                sortRel.getCollations()[i].getFieldIndex());
+            keyProjection[i] =
+                new Integer(
+                    sortRel.getCollations()[i].getFieldIndex());
         }
 
         boolean discardDuplicates = false;
@@ -91,6 +94,5 @@ public class FennelSortRule extends RelOptRule
         call.transformTo(fennelSortRel);
     }
 }
-
 
 // End FennelSortRule.java

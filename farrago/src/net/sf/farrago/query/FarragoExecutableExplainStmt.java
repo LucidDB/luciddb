@@ -23,6 +23,7 @@
 package net.sf.farrago.query;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.runtime.*;
@@ -35,35 +36,37 @@ import org.eigenbase.reltype.*;
 
 
 /**
- * FarragoExecutableExplainStmt implements FarragoSessionExecutableStmt for
- * an EXPLAIN PLAN statement.
+ * FarragoExecutableExplainStmt implements FarragoSessionExecutableStmt for an
+ * EXPLAIN PLAN statement.
  *
- *<p>
- *
- * NOTE:  be sure to read superclass warnings before modifying this class.
- *
+ * <p>NOTE: be sure to read superclass warnings before modifying this class.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
+class FarragoExecutableExplainStmt
+    extends FarragoExecutableStmtImpl
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String explanation;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoExecutableExplainStmt(
         RelDataType dynamicParamRowType,
         String explanation)
     {
-        super(dynamicParamRowType, false, new TableAccessMap());
+        super(
+            dynamicParamRowType,
+            false,
+            new TableAccessMap());
 
         this.explanation = explanation;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionExecutableStmt
     public RelDataType getRowType()
@@ -87,6 +90,5 @@ class FarragoExecutableExplainStmt extends FarragoExecutableStmtImpl
         return FarragoUtil.getStringMemoryUsage(explanation);
     }
 }
-
 
 // End FarragoExecutableExplainStmt.java

@@ -28,17 +28,19 @@ import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * FennelStorage is the JNI interface for calling Fennel from Farrago.  Most
- * methods have package access only; other classes in this package expose
- * public wrapper methods.
+ * FennelStorage is the JNI interface for calling Fennel from Farrago. Most
+ * methods have package access only; other classes in this package expose public
+ * wrapper methods.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FennelStorage
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     static {
         Util.loadLibrary("farrago");
@@ -50,12 +52,12 @@ public class FennelStorage
 
     static final int CLOSE_DEALLOCATE = 2;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Creates a native handle for a Java object for reference by XML commands.
-     * After this, the Java object cannot be garbage collected until
-     * its owner explicitly calls closeAllocation.
+     * After this, the Java object cannot be garbage collected until its owner
+     * explicitly calls closeAllocation.
      *
      * @param obj object for which to create a handle, or null to create a
      * placeholder handle
@@ -65,7 +67,7 @@ public class FennelStorage
     static native long newObjectHandle(Object obj);
 
     /**
-     * Releases a handle obtained via newObjectHandle.  This should only be
+     * Releases a handle obtained via newObjectHandle. This should only be
      * called from FennelJavaHandle.
      *
      * @param handle the handle to delete
@@ -83,8 +85,8 @@ public class FennelStorage
         Object obj);
 
     /**
-     * @return count of handles returned by Fennel which have not
-     * yet been deleted
+     * @return count of handles returned by Fennel which have not yet been
+     * deleted
      */
     public static native int getHandleCount();
 
@@ -122,14 +124,14 @@ public class FennelStorage
         throws SQLException;
 
     /**
-     * Fetches a buffer of rows from a stream.  If unpositioned, this
-     * fetches the first rows.
+     * Fetches a buffer of rows from a stream. If unpositioned, this fetches the
+     * first rows.
      *
      * @param hStream handle to stream
      * @param byteArray output buffer receives complete tuples
      *
      * @return number of bytes fetched (at least one tuple should always be
-     *         fetched, so 0 indicates end of stream)
+     * fetched, so 0 indicates end of stream)
      */
     static native int tupleStreamFetch(
         long hStream,
@@ -137,16 +139,16 @@ public class FennelStorage
         throws SQLException;
 
     /**
-     * Fetches a buffer of rows from a stream.  Specifically, the stream must
-     * be a JavaTransformExecStream. If unpositioned, this fetches the first 
-     * rows.  Does not block if no data is available.
+     * Fetches a buffer of rows from a stream. Specifically, the stream must be
+     * a JavaTransformExecStream. If unpositioned, this fetches the first rows.
+     * Does not block if no data is available.
      *
      * @param hStream handle to stream
      * @param execStreamInputOrdinal ordinal of the input to fetch from
      * @param byteArray output buffer receives complete tuples
      *
-     * @return number of bytes fetched (0 indicates end of stream, less than
-     *         0 indicates no data currently availble)
+     * @return number of bytes fetched (0 indicates end of stream, less than 0
+     * indicates no data currently availble)
      */
     static native int tupleStreamTransformFetch(
         long hStream,
@@ -174,6 +176,5 @@ public class FennelStorage
         int action)
         throws SQLException;
 }
-
 
 // End FennelStorage.java

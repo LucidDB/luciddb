@@ -20,53 +20,54 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypePrecedenceList;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeFamily;
+import java.lang.reflect.*;
+
+import java.nio.charset.*;
+
+import java.sql.*;
+
+import java.text.*;
+
+import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
-import java.lang.reflect.Proxy;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.text.MessageFormat;
-import java.util.*;
-import java.nio.charset.Charset;
 
 /**
  * Contains utility functions related to SQL parsing, all static.
  *
  * @author jhyde
- * @since Nov 26, 2003
  * @version $Id$
+ * @since Nov 26, 2003
  */
 public abstract class SqlUtil
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * A {@link SqlDialect} useful for generating generic SQL. If you need to
-     * do something database-specific like quoting identifiers, don't rely on
-     * this dialect to do what you want.
+     * A {@link SqlDialect} useful for generating generic SQL. If you need to do
+     * something database-specific like quoting identifiers, don't rely on this
+     * dialect to do what you want.
      */
     public static final SqlDialect dummyDialect =
         new SqlDialect(dummyDatabaseMetaData("fooBar", "`"));
 
     /**
-     * A {@link SqlDialect} useful for generating SQL which can be parsed by
-     * the Eigenbase parser, but not much else.
+     * A {@link SqlDialect} useful for generating SQL which can be parsed by the
+     * Eigenbase parser, but not much else.
      */
     public static final SqlDialect eigenbaseDialect =
         new SqlDialect(dummyDatabaseMetaData("EigenbaseDummy", "\""));
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     static SqlNode andExpressions(
         SqlNode node1,
@@ -86,9 +87,10 @@ public abstract class SqlUtil
         } else {
             list.add(node2);
         }
-        return SqlStdOperatorTable.andOperator.createCall(
-            (SqlNode []) list.toArray(new SqlNode[list.size()]),
-            SqlParserPos.ZERO);
+        return
+            SqlStdOperatorTable.andOperator.createCall(
+                (SqlNode []) list.toArray(new SqlNode[list.size()]),
+                SqlParserPos.ZERO);
     }
 
     static ArrayList<SqlNode> flatten(SqlNode node)
@@ -136,7 +138,8 @@ public abstract class SqlUtil
     /**
      * Converts an SqlNode array to a SqlNodeList
      */
-    public static SqlNodeList toNodeList(SqlNode[] operands) {
+    public static SqlNodeList toNodeList(SqlNode [] operands)
+    {
         SqlNodeList ret = new SqlNodeList(SqlParserPos.ZERO);
         for (int i = 0; i < operands.length; i++) {
             SqlNode node = operands[i];
@@ -148,12 +151,14 @@ public abstract class SqlUtil
     /**
      * Returns whether a node represents the NULL value.
      *
-     * <p>Examples:<ul>
+     * <p>Examples:
+     *
+     * <ul>
      * <li>For {@link SqlLiteral} Unknown, returns false.
-     * <li>For <code>CAST(NULL AS <i>type</i>)</code>, returns true if
-     *     <code>allowCast</code> is true, false otherwise.
+     * <li>For <code>CAST(NULL AS <i>type</i>)</code>, returns true if <code>
+     * allowCast</code> is true, false otherwise.
      * <li>For <code>CAST(CAST(NULL AS <i>type</i>) AS <i>type</i>))</code>,
-     *     returns false.
+     * returns false.
      * </ul>
      */
     public static boolean isNullLiteral(
@@ -185,27 +190,31 @@ public abstract class SqlUtil
 
     /**
      * Returns whether a node represents the NULL value or a series of nested
-     * CAST(NULL as <TYPE>) calls
-     * <br>
+     * CAST(NULL as <TYPE>) calls<br>
      * For Example:<br>
      * isNull(CAST(CAST(NULL as INTEGER) AS VARCHAR(1))) returns true
      */
     public static boolean isNull(SqlNode node)
     {
-        return isNullLiteral(node, false)
-            || ((node.getKind() == SqlKind.Cast)
-            && isNull(((SqlCall) node).operands[0]));
+        return
+            isNullLiteral(node, false)
+            || (
+                (node.getKind() == SqlKind.Cast)
+                && isNull(((SqlCall) node).operands[0])
+               );
     }
 
     /**
      * Returns whether a node is a literal.
      *
-     * <p>Many constructs which require literals also accept
-     * <code>CAST(NULL AS <i>type</i>)</code>. This method does not accept
-     * casts, so you should call {@link #isNullLiteral} first.
+     * <p>Many constructs which require literals also accept <code>CAST(NULL AS
+     * <i>type</i>)</code>. This method does not accept casts, so you should
+     * call {@link #isNullLiteral} first.
      *
      * @param node The node, never null.
+     *
      * @return Whether the node is a literal
+     *
      * @pre node != null
      */
     public static boolean isLiteral(SqlNode node)
@@ -215,11 +224,13 @@ public abstract class SqlUtil
     }
 
     /**
-     * Returns whether a node is a literal chain which is used to represent
-     * a continued string literal.
+     * Returns whether a node is a literal chain which is used to represent a
+     * continued string literal.
      *
      * @param node The node, never null.
+     *
      * @return Whether the node is a literal chain
+     *
      * @pre node != null
      */
     public static boolean isLiteralChain(SqlNode node)
@@ -245,7 +256,7 @@ public abstract class SqlUtil
     public static void unparseFunctionSyntax(
         SqlOperator operator,
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         boolean emptyParens,
         SqlLiteral quantifier)
     {
@@ -265,7 +276,7 @@ public abstract class SqlUtil
         } else {
             writer.print(operator.getName());
         }
-        if (operands.length == 0 && !emptyParens) {
+        if ((operands.length == 0) && !emptyParens) {
             // For example, the "LOCALTIME" function appears as "LOCALTIME"
             // when it has 0 args, not "LOCALTIME()".
             return;
@@ -273,41 +284,47 @@ public abstract class SqlUtil
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameType.FunCall, "(", ")");
         if (null != quantifier) {
-            quantifier.unparse(writer,0,0);
+            quantifier.unparse(writer, 0, 0);
         }
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
             writer.sep(",");
-            operand.unparse(writer,0,0);
+            operand.unparse(writer, 0, 0);
         }
         writer.endList(frame);
     }
 
     public static void unparseBinarySyntax(
         SqlOperator operator,
-        SqlNode[] operands,
+        SqlNode [] operands,
         SqlWriter writer,
         int leftPrec,
         int rightPrec)
     {
         SqlBinaryOperator binop = (SqlBinaryOperator) operator;
         assert operands.length == 2;
-        final SqlWriter.Frame frame = writer.startList(
-            binop instanceof SqlSetOperator ?
-            SqlWriter.FrameType.Setop :
-            SqlWriter.FrameType.Simple);
-        operands[0].unparse(writer, leftPrec, binop.getLeftPrec());
+        final SqlWriter.Frame frame =
+            writer.startList(
+                (binop instanceof SqlSetOperator) ? SqlWriter.FrameType.Setop
+                : SqlWriter.FrameType.Simple);
+        operands[0].unparse(
+            writer,
+            leftPrec,
+            binop.getLeftPrec());
         final boolean needsSpace = binop.needsSpace();
         writer.setNeedWhitespace(needsSpace);
         writer.sep(binop.getName());
         writer.setNeedWhitespace(needsSpace);
-        operands[1].unparse(writer, binop.getRightPrec(), rightPrec);
+        operands[1].unparse(
+            writer,
+            binop.getRightPrec(),
+            rightPrec);
         writer.endList(frame);
     }
 
     /**
-     * Creates a {@link DatabaseMetaData} object good enough to create a
-     * {@link SqlDialect} object with, but not good for much else.
+     * Creates a {@link DatabaseMetaData} object good enough to create a {@link
+     * SqlDialect} object with, but not good for much else.
      *
      * @param databaseProductName Database product name
      * @param identifierQuoteString Identifier quote string
@@ -316,24 +333,27 @@ public abstract class SqlUtil
         String databaseProductName,
         String identifierQuoteString)
     {
-        return (DatabaseMetaData) Proxy.newProxyInstance(
-            null,
-            new Class [] { DatabaseMetaData.class },
-            new DatabaseMetaDataInvocationHandler(
-                databaseProductName,
-                identifierQuoteString));
+        return
+            (DatabaseMetaData) Proxy.newProxyInstance(
+                null,
+                new Class[] { DatabaseMetaData.class },
+                new DatabaseMetaDataInvocationHandler(
+                    databaseProductName,
+                    identifierQuoteString));
     }
 
     /**
      * Concatenates string literals.
      *
-     * <p>This method takes an array of arguments,
-     * since pairwise concatenation means too much string copying.
+     * <p>This method takes an array of arguments, since pairwise concatenation
+     * means too much string copying.
      *
      * @param lits an array of {@link SqlLiteral}, not empty, all of the same
-     *     class
+     * class
+     *
      * @return a new {@link SqlLiteral}, of that same class, whose value is the
-     *     string concatenation of the values of the literals
+     * string concatenation of the values of the literals
+     *
      * @throws ClassCastException if the lits are not homogeneous.
      * @throws ArrayIndexOutOfBoundsException if lits is an empty array.
      */
@@ -346,17 +366,14 @@ public abstract class SqlUtil
     }
 
     /**
-     * Looks up a (possibly overloaded) routine based on name
-     * and argument types.
+     * Looks up a (possibly overloaded) routine based on name and argument
+     * types.
      *
      * @param opTab operator table to search
-     *
      * @param funcName name of function being invoked
-     *
      * @param argTypes argument types
-     *
-     * @param category whether a function or a procedure.
-     *       (If a procedure is being invoked, the overload rules are simpler.)
+     * @param category whether a function or a procedure. (If a procedure is
+     * being invoked, the overload rules are simpler.)
      *
      * @return matching routine, or null if none found
      *
@@ -368,8 +385,12 @@ public abstract class SqlUtil
         RelDataType [] argTypes,
         SqlFunctionCategory category)
     {
-        List<SqlFunction> list = lookupSubjectRoutines(
-            opTab, funcName, argTypes, category);
+        List<SqlFunction> list =
+            lookupSubjectRoutines(
+                opTab,
+                funcName,
+                argTypes,
+                category);
         if (list.isEmpty()) {
             return null;
         } else {
@@ -379,15 +400,11 @@ public abstract class SqlUtil
     }
 
     /**
-     * Looks up all subject routines matching the given name
-     * and argument types.
+     * Looks up all subject routines matching the given name and argument types.
      *
      * @param opTab operator table to search
-     *
      * @param funcName name of function being invoked
-     *
      * @param argTypes argument types
-     *
      * @param category category of routine to look up
      *
      * @return list of matching routines
@@ -401,8 +418,11 @@ public abstract class SqlUtil
         SqlFunctionCategory category)
     {
         // start with all routines matching by name
-        List<SqlOperator> operators = opTab.lookupOperatorOverloads(
-            funcName, category, SqlSyntax.Function);
+        List<SqlOperator> operators =
+            opTab.lookupOperatorOverloads(
+                funcName,
+                category,
+                SqlSyntax.Function);
         List<SqlFunction> routines = new ArrayList<SqlFunction>();
         for (SqlOperator operator : operators) {
             if (operator instanceof SqlFunction) {
@@ -445,12 +465,9 @@ public abstract class SqlUtil
         Iterator<SqlFunction> iter = routines.iterator();
         while (iter.hasNext()) {
             SqlFunction function = (SqlFunction) iter.next();
-            SqlOperandCountRange od =
-                function.getOperandCountRange();
+            SqlOperandCountRange od = function.getOperandCountRange();
             if (!od.isVariadic()
-                && !od.getAllowedList().contains(
-                    new Integer(argTypes.length)))
-            {
+                && !od.getAllowedList().contains(new Integer(argTypes.length))) {
                 iter.remove();
             }
         }
@@ -471,7 +488,7 @@ public abstract class SqlUtil
                 // no parameter information for builtins; keep for now
                 continue;
             }
-            assert(paramTypes.length == argTypes.length);
+            assert (paramTypes.length == argTypes.length);
             boolean keep = true;
             for (int i = 0; i < paramTypes.length; ++i) {
                 RelDataTypePrecedenceList precList =
@@ -506,8 +523,10 @@ public abstract class SqlUtil
                 if (bestMatch == null) {
                     bestMatch = paramTypes[i];
                 } else {
-                    int c = precList.compareTypePrecedence(
-                        bestMatch, paramTypes[i]);
+                    int c =
+                        precList.compareTypePrecedence(
+                            bestMatch,
+                            paramTypes[i]);
                     if (c < 0) {
                         bestMatch = paramTypes[i];
                     }
@@ -522,8 +541,10 @@ public abstract class SqlUtil
                     if (paramTypes == null) {
                         c = -1;
                     } else {
-                        c = precList.compareTypePrecedence(
-                            paramTypes[i], bestMatch);
+                        c =
+                            precList.compareTypePrecedence(
+                                paramTypes[i],
+                                bestMatch);
                     }
                     if (c < 0) {
                         iter.remove();
@@ -536,7 +557,8 @@ public abstract class SqlUtil
     /**
      * Returns the <code>i</code>th select-list item of a query.
      */
-    public static SqlNode getSelectListItem(SqlNode query, int i) {
+    public static SqlNode getSelectListItem(SqlNode query, int i)
+    {
         if (query instanceof SqlSelect) {
             SqlSelect select = (SqlSelect) query;
             SqlNode from = select.getFrom();
@@ -550,6 +572,7 @@ public abstract class SqlUtil
                 return getSelectListItem(from, i);
             }
             final SqlNodeList fields = select.getSelectList();
+
             // Range check the index to avoid index out of range.  This
             // could be expanded to actually check to see if the select
             // list is a "*"
@@ -562,7 +585,8 @@ public abstract class SqlUtil
             Util.permAssert(call.operands.length > 0,
                 "VALUES must have at least one operand");
             final SqlCall row = (SqlCall) call.operands[0];
-            Util.permAssert(row.operands.length > i, "VALUES has too few columns");
+            Util.permAssert(row.operands.length > i,
+                "VALUES has too few columns");
             return row.operands[i];
         } else {
             // Unexpected type of query.
@@ -580,17 +604,24 @@ public abstract class SqlUtil
         SqlIdentifier id)
     {
         if (id.names.length == 1) {
-            List<SqlOperator> list = opTab.lookupOperatorOverloads(
-                id, null, SqlSyntax.Function);
+            List<SqlOperator> list =
+                opTab.lookupOperatorOverloads(
+                    id,
+                    null,
+                    SqlSyntax.Function);
             for (SqlOperator operator : list) {
                 if (operator.getSyntax() == SqlSyntax.FunctionId) {
                     // Even though this looks like an identifier, it is a
                     // actually a call to a function. Construct a fake
                     // call to this function, so we can use the regular
                     // operator validation.
-                    return new SqlCall(
-                        operator, SqlNode.emptyArray,
-                        id.getParserPosition(), true, null);
+                    return
+                        new SqlCall(
+                            operator,
+                            SqlNode.emptyArray,
+                            id.getParserPosition(),
+                            true,
+                            null);
                 }
             }
         }
@@ -608,29 +639,30 @@ public abstract class SqlUtil
      * Constructs an operator signature from a type list.
      *
      * @param op operator
-     *
-     * @param typeList list of types to use for operands.
-     *      Types may be represented as {@link String}, {@link SqlTypeFamily},
-     *      or any object with a valid {@link Object#toString()} method.
+     * @param typeList list of types to use for operands. Types may be
+     * represented as {@link String}, {@link SqlTypeFamily}, or any object with
+     * a valid {@link Object#toString()} method.
      *
      * @return constructed signature
      */
     public static String getOperatorSignature(
-        SqlOperator op, List<? extends Object> typeList)
+        SqlOperator op,
+        List<? extends Object> typeList)
     {
-        return getAliasedSignature(op, op.getName(), typeList);
+        return getAliasedSignature(
+                op,
+                op.getName(),
+                typeList);
     }
 
     /**
-     * Constructs an operator signature from a type list, substituting an
-     * alias for the operator name.
+     * Constructs an operator signature from a type list, substituting an alias
+     * for the operator name.
      *
      * @param op operator
-     *
      * @param opName name to use for operator
-     *
      * @param typeList list of {@link SqlTypeName} or {@link String} to use for
-     *       operands
+     * operands
      *
      * @return constructed signature
      */
@@ -649,9 +681,8 @@ public abstract class SqlUtil
                 if (i > 0) {
                     ret.append(", ");
                 }
-                ret.append("<").
-                    append(typeList.get(i).toString().toUpperCase()).
-                    append(">");
+                ret.append("<").append(
+                    typeList.get(i).toString().toUpperCase()).append(">");
             }
             ret.append(")'");
         } else {
@@ -659,8 +690,9 @@ public abstract class SqlUtil
             values[0] = opName;
             ret.append("'");
             for (int i = 0; i < typeList.size(); i++) {
-                values[i + 1] = "<" +
-                    typeList.get(i).toString().toUpperCase() + ">";
+                values[i + 1] =
+                    "<"
+                    + typeList.get(i).toString().toUpperCase() + ">";
             }
             ret.append(MessageFormat.format(template, values));
             ret.append("'");
@@ -695,12 +727,12 @@ public abstract class SqlUtil
         Throwable e)
     {
         EigenbaseContextException contextExcn =
-            line == endLine && col == endCol ?
-            EigenbaseResource.instance().ValidatorContextPoint.ex(
+            ((line == endLine) && (col == endCol))
+            ? EigenbaseResource.instance().ValidatorContextPoint.ex(
                 new Integer(line),
                 new Integer(col),
-                e) :
-            EigenbaseResource.instance().ValidatorContext.ex(
+                e)
+            : EigenbaseResource.instance().ValidatorContext.ex(
                 new Integer(line),
                 new Integer(col),
                 new Integer(endLine),
@@ -716,22 +748,25 @@ public abstract class SqlUtil
      */
     public static boolean isCallTo(SqlNode node, SqlOperator operator)
     {
-        return node instanceof SqlCall &&
-            ((SqlCall) node).getOperator() == operator;
+        return
+            (node instanceof SqlCall)
+            && (((SqlCall) node).getOperator() == operator);
     }
 
     /**
      * Creates the type of an {@link NlsString}.
      *
-     * <p>The type inherits the The NlsString's {@link Charset} and
-     * {@link SqlCollation}, if they are set, otherwise it gets the system
-     * defaults.
+     * <p>The type inherits the The NlsString's {@link Charset} and {@link
+     * SqlCollation}, if they are set, otherwise it gets the system defaults.
+     *
      * @param typeFactory Type factory
      * @param str String
+     *
      * @return Type, including collation and charset
      */
     public static RelDataType createNlsStringType(
-        RelDataTypeFactory typeFactory, NlsString str)
+        RelDataTypeFactory typeFactory,
+        NlsString str)
     {
         Charset charset = str.getCharset();
         if (null == charset) {
@@ -747,15 +782,17 @@ public abstract class SqlUtil
                 str.getValue().length());
         type =
             typeFactory.createTypeWithCharsetAndCollation(
-                type, charset, collation);
+                type,
+                charset,
+                collation);
         return type;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Handles particular {@link DatabaseMetaData} methods; invocations of
-     * other methods will fall through to the base class, {@link
+     * Handles particular {@link DatabaseMetaData} methods; invocations of other
+     * methods will fall through to the base class, {@link
      * BarfingInvocationHandler}, which will throw an error.
      */
     public static class DatabaseMetaDataInvocationHandler
@@ -784,8 +821,6 @@ public abstract class SqlUtil
             return identifierQuoteString;
         }
     }
-
 }
-
 
 // End SqlUtil.java

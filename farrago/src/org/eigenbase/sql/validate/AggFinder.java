@@ -21,25 +21,30 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Visitor which looks for an aggregate function inside a tree of
- * {@link SqlNode} objects.
+ * Visitor which looks for an aggregate function inside a tree of {@link
+ * SqlNode} objects.
  *
  * @author jhyde
- * @since Oct 28, 2004
  * @version $Id$
+ * @since Oct 28, 2004
  */
-class AggFinder extends SqlBasicVisitor<Void>
+class AggFinder
+    extends SqlBasicVisitor<Void>
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     AggFinder()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode findAgg(SqlNode node)
     {

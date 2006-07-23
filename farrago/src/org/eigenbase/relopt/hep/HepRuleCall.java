@@ -21,23 +21,30 @@
 */
 package org.eigenbase.relopt.hep;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
-import java.util.*;
 
 /**
- * HepRuleCall implements {@link RelOptRuleCall} for a {@link HepPlanner}.
- * It remembers transformation results so that the planner can choose
- * which one (if any) should replace the original expression.
+ * HepRuleCall implements {@link RelOptRuleCall} for a {@link HepPlanner}. It
+ * remembers transformation results so that the planner can choose which one (if
+ * any) should replace the original expression.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class HepRuleCall extends RelOptRuleCall
+public class HepRuleCall
+    extends RelOptRuleCall
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private List<RelNode> results;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     HepRuleCall(
         RelOptPlanner planner,
         RelOptRuleOperand operand,
@@ -47,7 +54,9 @@ public class HepRuleCall extends RelOptRuleCall
 
         results = new ArrayList<RelNode>();
     }
-        
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement RelOptRuleCall
     public void transformTo(RelNode rel)
     {
@@ -55,7 +64,7 @@ public class HepRuleCall extends RelOptRuleCall
             getRels()[0],
             rel,
             getRels()[0]);
-        
+
         results.add(rel);
     }
 

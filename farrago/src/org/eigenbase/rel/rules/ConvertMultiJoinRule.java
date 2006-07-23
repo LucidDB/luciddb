@@ -20,12 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.rules;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
+
 
 /**
  * Rule to flatten a tree of JoinRels into a single MultiJoinRel with N inputs.
@@ -33,29 +33,34 @@ import org.eigenbase.rex.*;
  * @author Zelaine Fong
  * @version $Id$
  */
-public class ConvertMultiJoinRule extends RelOptRule
+public class ConvertMultiJoinRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public ConvertMultiJoinRule()
     {
-        super(new RelOptRuleOperand(
-            JoinRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(RelNode.class, null),
-                new RelOptRuleOperand(RelNode.class, null)
-            }));
+        super(
+            new RelOptRuleOperand(
+                JoinRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(RelNode.class, null),
+            new RelOptRuleOperand(RelNode.class, null)
+                }));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
         // if JoinRel has already been converted to a MultiJoinRel,
-        // no need to convert it again     
+        // no need to convert it again
         JoinRel origJoinRel = (JoinRel) call.rels[0];
         if (origJoinRel.isMultiJoinDone()) {
             return;
         }
-       
+
         // don't attempt to optimize the join order of an outer join
         // TODO - in the future, try to
         if (origJoinRel.getJoinType() != JoinRelType.INNER) {
@@ -64,31 +69,35 @@ public class ConvertMultiJoinRule extends RelOptRule
 
         RelNode left = call.rels[1];
         RelNode right = call.rels[2];
-        
+
         // combine the children MultiJoinRel inputs into an array of inputs
         // for the new MultiJoinRel
-        RelNode newInputs[] = combineInputs(left, right);
-        
+        RelNode [] newInputs = combineInputs(left, right);
+
         // pull up the join filters from the children MultiJoinRels and
         // combine them with the join filter associated with this JoinRel to
         // form the join filter for the new MultiJoinRel
         RexNode newJoinFilter = combineJoinFilters(origJoinRel, left, right);
 
-        RelNode multiJoin = new MultiJoinRel(
-            origJoinRel.getCluster(),
-            newInputs, newJoinFilter, origJoinRel.getRowType());
-        
-        call.transformTo(multiJoin);        
+        RelNode multiJoin =
+            new MultiJoinRel(
+                origJoinRel.getCluster(),
+                newInputs,
+                newJoinFilter,
+                origJoinRel.getRowType());
+
+        call.transformTo(multiJoin);
     }
 
     /**
      * Combines the inputs into a JoinRel into an array of inputs
-     * 
+     *
      * @param left left input into join
      * @param right right input into join
+     *
      * @return combined left and right inputs in an array
      */
-    private RelNode[] combineInputs(RelNode left, RelNode right)
+    private RelNode [] combineInputs(RelNode left, RelNode right)
     {
         int nInputs;
         int nInputsOnLeft;
@@ -108,7 +117,7 @@ public class ConvertMultiJoinRule extends RelOptRule
         } else {
             nInputs += 1;
         }
-        RelNode newInputs[] = new RelNode[nInputs];
+        RelNode [] newInputs = new RelNode[nInputs];
         int i;
         if (left instanceof MultiJoinRel) {
             for (i = 0; i < left.getInputs().length; i++) {
@@ -119,31 +128,34 @@ public class ConvertMultiJoinRule extends RelOptRule
             i = 1;
         }
         if (right instanceof MultiJoinRel) {
-            for ( ; i < nInputs; i++) {
+            for (; i < nInputs; i++) {
                 newInputs[i] = rightMultiJoin.getInput(i - nInputsOnLeft);
             }
         } else {
             newInputs[i] = right;
         }
-        
+
         return newInputs;
     }
-    
+
     /**
      * Combines the join filters from the left and right inputs (if they are
-     * MultiJoinRels) with the join filter in the joinrel into a single
-     * AND'd join filter
-     * 
+     * MultiJoinRels) with the join filter in the joinrel into a single AND'd
+     * join filter
+     *
      * @param joinRel join rel
      * @param left left child of the joinrel
      * @param right right child of the joinrel
+     *
      * @return combined join filters AND'd together
      */
     private RexNode combineJoinFilters(
-        JoinRel joinRel, RelNode left, RelNode right)
+        JoinRel joinRel,
+        RelNode left,
+        RelNode right)
     {
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
-        
+
         // first need to adjust the RexInputs of the right child, since
         // those need to shift over to the right
         RexNode rightFilter = null;
@@ -153,27 +165,35 @@ public class ConvertMultiJoinRule extends RelOptRule
             if (rightFilter != null) {
                 int nFieldsOnLeft = left.getRowType().getFields().length;
                 int nFieldsOnRight = multiJoin.getRowType().getFields().length;
-                int adjustments[] = new int[nFieldsOnRight];
+                int [] adjustments = new int[nFieldsOnRight];
                 for (int i = 0; i < nFieldsOnRight; i++) {
                     adjustments[i] = nFieldsOnLeft;
                 }
-                rightFilter = rightFilter.accept(
-                    new RelOptUtil.RexInputConverter(
-                        rexBuilder, multiJoin.getRowType().getFields(),
-                        adjustments));
+                rightFilter =
+                    rightFilter.accept(
+                        new RelOptUtil.RexInputConverter(
+                            rexBuilder,
+                            multiJoin.getRowType().getFields(),
+                            adjustments));
             }
         }
-        
+
         // AND everything together
         RexNode newFilter = joinRel.getCondition();
         if (left instanceof MultiJoinRel) {
             RexNode leftFilter = ((MultiJoinRel) left).getJoinFilter();
-            newFilter = RelOptUtil.andJoinFilters(
-                rexBuilder, newFilter, leftFilter);
+            newFilter =
+                RelOptUtil.andJoinFilters(
+                    rexBuilder,
+                    newFilter,
+                    leftFilter);
         }
-        newFilter = RelOptUtil.andJoinFilters(
-            rexBuilder, newFilter, rightFilter);
-        
+        newFilter =
+            RelOptUtil.andJoinFilters(
+                rexBuilder,
+                newFilter,
+                rightFilter);
+
         return newFilter;
     }
 }

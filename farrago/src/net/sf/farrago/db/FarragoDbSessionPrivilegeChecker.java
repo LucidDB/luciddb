@@ -19,29 +19,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.db;
 
-import net.sf.farrago.fem.security.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.util.*;
-import java.util.*;
+
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import net.sf.farrago.resource.*;
+
 
 /**
- * Implements the {@link FarragoSessionPrivilegeChecker} interface
- * in the context of a {@link FarragoDbSession}.
+ * Implements the {@link FarragoSessionPrivilegeChecker} interface in the
+ * context of a {@link FarragoDbSession}.
  *
- *<p>
- *
- * An instance of this class must be created per statement i.e. it can't be
+ * <p>An instance of this class must be created per statement i.e. it can't be
  * shared between statements.
  *
  * @author Tai Tran
@@ -50,16 +50,23 @@ import net.sf.farrago.resource.*;
 public class FarragoDbSessionPrivilegeChecker
     implements FarragoSessionPrivilegeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSession session;
 
     private final Map authMap;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoDbSessionPrivilegeChecker(FarragoSession session)
     {
         this.session = session;
         authMap = new HashMap();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionPrivilegeChecker
     public void requestAccess(
         CwmModelElement obj,
@@ -104,7 +111,7 @@ public class FarragoDbSessionPrivilegeChecker
             session.getRepos().getLocalizedObjectName(action),
             session.getRepos().getLocalizedObjectName(obj));
     }
-    
+
     // implement FarragoSessionPrivilegeChecker
     public void checkAccess()
     {
@@ -115,15 +122,16 @@ public class FarragoDbSessionPrivilegeChecker
     private void inheritRoles(FemRole role, Set inheritedRoles)
     {
         String inheritAction = PrivilegedActionEnum.INHERIT_ROLE.toString();
-        
+
         Iterator grants = role.getGranteePrivilege().iterator();
         while (grants.hasNext()) {
             FemGrant grant = (FemGrant) grants.next();
             if (grant.getAction().equals(inheritAction)) {
                 FemRole inheritedRole = (FemRole) grant.getElement();
+
                 // sanity check:  DDL validation is supposed to prevent
                 // cycles
-                assert(!inheritedRoles.contains(inheritedRole));
+                assert (!inheritedRoles.contains(inheritedRole));
                 inheritedRoles.add(inheritedRole);
                 inheritRoles(inheritedRole, inheritedRoles);
             }
@@ -131,10 +139,11 @@ public class FarragoDbSessionPrivilegeChecker
     }
 
     private boolean testAccess(
-        CwmModelElement obj,  Set authSet, String action)
+        CwmModelElement obj,
+        Set authSet,
+        String action)
     {
-        SecurityPackage sp =
-            session.getRepos().getSecurityPackage();
+        SecurityPackage sp = session.getRepos().getSecurityPackage();
         Iterator grants =
             sp.getPrivilegeIsGrantedOnElement().getPrivilege(obj).iterator();
         boolean sawCreationGrant = false;
@@ -143,13 +152,12 @@ public class FarragoDbSessionPrivilegeChecker
             boolean isCreation =
                 grant.getAction().equals(
                     PrivilegedActionEnum.CREATION.toString());
-            
+
             if (isCreation) {
                 sawCreationGrant = true;
             }
             if (authSet.contains(grant.getGrantee())
-                && (grant.getAction().equals(action) || isCreation))
-            {
+                && (grant.getAction().equals(action) || isCreation)) {
                 return true;
             }
         }

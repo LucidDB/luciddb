@@ -21,12 +21,13 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Abstract implementation of {@link SqlValidatorNamespace}.
@@ -35,22 +36,31 @@ import java.util.List;
  * @version $Id$
  * @since Mar 3, 2005
  */
-abstract class AbstractNamespace implements SqlValidatorNamespace
+abstract class AbstractNamespace
+    implements SqlValidatorNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final SqlValidatorImpl validator;
+
     /**
      * Whether this scope is currently being validated. Used to check for
      * cycles.
      */
-    private SqlValidatorImpl.Status status = SqlValidatorImpl.Status.Unvalidated;
+    private SqlValidatorImpl.Status status =
+        SqlValidatorImpl.Status.Unvalidated;
+
     /**
-     * Type of the output row, which comprises the name and type of each
-     * output column. Set on validate.
+     * Type of the output row, which comprises the name and type of each output
+     * column. Set on validate.
      */
     protected RelDataType rowType;
     private Object extra;
 
     private boolean forceNullable;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an AbstractNamespace.
@@ -59,6 +69,8 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
     {
         this.validator = validator;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void lookupHints(SqlParserPos pos, List<SqlMoniker> hintList)
     {
@@ -80,17 +92,17 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
                     // REVIEW jvs 10-Oct-2005: This may not be quite right
                     // if it means that nullability will be forced in the
                     // ON clause where it doesn't belong.
-                    rowType = validator.getTypeFactory().
-                        createTypeWithNullability(
-                            rowType, true);
+                    rowType =
+                        validator.getTypeFactory().createTypeWithNullability(
+                            rowType,
+                            true);
                 }
             } finally {
                 status = SqlValidatorImpl.Status.Valid;
             }
             break;
         case SqlValidatorImpl.Status.InProgress_ordinal:
-            throw Util
-                .newInternal("todo: Cycle detected during type-checking");
+            throw Util.newInternal("todo: Cycle detected during type-checking");
         case SqlValidatorImpl.Status.Valid_ordinal:
             break;
         default:
@@ -100,10 +112,11 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
 
     /**
      * Validates this scope and returns the type of the records it returns.
-     * External users should call {@link #validate}, which uses the
-     * {@link #status} field to protect against cycles.
+     * External users should call {@link #validate}, which uses the {@link
+     * #status} field to protect against cycles.
      *
      * @return record data type, never null
+     *
      * @post return != null
      */
     protected abstract RelDataType validateImpl();
@@ -122,17 +135,22 @@ abstract class AbstractNamespace implements SqlValidatorNamespace
         this.rowType = rowType;
     }
 
-    public SqlValidatorTable getTable() {
+    public SqlValidatorTable getTable()
+    {
         return null;
     }
 
     public SqlValidatorNamespace lookupChild(
         String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut)
     {
-        return validator.lookupFieldNamespace(
-            getRowType(), name, ancestorOut, offsetOut);
+        return
+            validator.lookupFieldNamespace(
+                getRowType(),
+                name,
+                ancestorOut,
+                offsetOut);
     }
 
     public boolean fieldExists(String name)

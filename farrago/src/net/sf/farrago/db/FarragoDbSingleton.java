@@ -21,26 +21,29 @@
 */
 package net.sf.farrago.db;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Logger;
+import java.util.*;
+import java.util.logging.*;
 
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionFactory;
-import net.sf.farrago.trace.FarragoTrace;
-import net.sf.farrago.util.FarragoCompoundAllocation;
+import net.sf.farrago.session.*;
+import net.sf.farrago.trace.*;
+import net.sf.farrago.util.*;
+
 
 /**
- * FarragoDbSingleton manages a singleton instance of FarragoDatabase.  It is
+ * FarragoDbSingleton manages a singleton instance of FarragoDatabase. It is
  * reference-counted to allow it to be shared in a library environment such as
- * the directly embedded JDBC driver.  Note that all synchronization is done at
+ * the directly embedded JDBC driver. Note that all synchronization is done at
  * the class level, not the object level.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
+public abstract class FarragoDbSingleton
+    extends FarragoCompoundAllocation
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     protected static final Logger tracer = FarragoTrace.getDatabaseTracer();
 
     /**
@@ -50,24 +53,24 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
 
     // TODO jvs 14-Dec-2005:  make instance private instead of protected
     // once FarragoDatabase no longer extends FarragoDbSingleton
-    
+
     /**
      * Singleton instance, or null when nReferences == 0.
      */
     protected static FarragoDatabase instance;
 
     /**
-     * Flag indicating whether FarragoDbSingleton is already in
-     * {@link #shutdown()}, to help prevent recursive shutdown.
+     * Flag indicating whether FarragoDbSingleton is already in {@link
+     * #shutdown()}, to help prevent recursive shutdown.
      */
     private static boolean inShutdown;
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Establishes a database reference.  If this is the first reference, the
-     * database will be loaded first; otherwise, the existing database is
-     * reused with an increased reference count.
+     * Establishes a database reference. If this is the first reference, the
+     * database will be loaded first; otherwise, the existing database is reused
+     * with an increased reference count.
      *
      * @param sessionFactory factory for various database-level objects
      *
@@ -120,42 +123,43 @@ public abstract class FarragoDbSingleton extends FarragoCompoundAllocation
     }
 
     /**
-     * Retrieve a list of connected FarragoSession objects.  Each invocation
-     * produces a new List.  Altering the list has no effect on the 
-     * given FarragoDatabase.
-     * 
-     * <p>The returned FarragoSession objects may be disconnected at any
-     * time.  See {@link FarragoSession#isClosed()}.
-     * 
-     * @param db sessions are retrieved from this FarragoDatabase instance 
+     * Retrieve a list of connected FarragoSession objects. Each invocation
+     * produces a new List. Altering the list has no effect on the given
+     * FarragoDatabase.
+     *
+     * <p>The returned FarragoSession objects may be disconnected at any time.
+     * See {@link FarragoSession#isClosed()}.
+     *
+     * @param db sessions are retrieved from this FarragoDatabase instance
+     *
      * @return non-null List of FarragoSession objects
      */
     public static synchronized List<FarragoSession> getSessions(
         FarragoDatabase db)
     {
         List<FarragoSession> sessions = new ArrayList<FarragoSession>();
-        
-        for(Object allocation: db.allocations) {
+
+        for (Object allocation : db.allocations) {
             if (allocation instanceof FarragoSession) {
-                sessions.add((FarragoSession)allocation);
+                sessions.add((FarragoSession) allocation);
             }
         }
-        
+
         return sessions;
     }
 
     public static synchronized List<FarragoSession> getSessions()
     {
-        assert(instance != null);
+        assert (instance != null);
         return getSessions(instance);
     }
 
     /**
-     * Conditionally shuts down the database depending on the number
-     * of references.
+     * Conditionally shuts down the database depending on the number of
+     * references.
      *
-     * @param groundReferences threshold for shutdown; if actual number
-     * of sessions is greater than this, no shutdown takes place
+     * @param groundReferences threshold for shutdown; if actual number of
+     * sessions is greater than this, no shutdown takes place
      *
      * @return whether shutdown took place
      */

@@ -22,22 +22,23 @@
 */
 package net.sf.farrago.runtime;
 
-
 /**
- * Class for holding the number of rows returned by a DML statement.  DML
- * operators return a single scalar value of a synthetic type which matches
- * this template.
+ * Class for holding the number of rows returned by a DML statement. DML
+ * operators return a single scalar value of a synthetic type which matches this
+ * template.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FennelRowCount
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Number of rows affected by DML statement. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Number of rows affected by DML statement.
+     */
     public long ROWCOUNT;
 }
-
 
 // End FennelRowCount.java

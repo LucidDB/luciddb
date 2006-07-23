@@ -23,32 +23,37 @@
 package org.eigenbase.reltype;
 
 import java.nio.charset.*;
+
 import java.util.*;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
+
 /**
- * RelDataTypeImpl is an abstract base for implementations of
- * {@link RelDataType}.
+ * RelDataTypeImpl is an abstract base for implementations of {@link
+ * RelDataType}.
  *
- *
- * <p>
- * Identity is based upon the {@link #digest} field, which each derived
- * class should set during construction.
- * </p>
+ * <p>Identity is based upon the {@link #digest} field, which each derived class
+ * should set during construction.</p>
  *
  * @author jhyde
  * @version $Id$
  */
 public abstract class RelDataTypeImpl
-    implements RelDataType, RelDataTypeFamily
+    implements RelDataType,
+        RelDataTypeFamily
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected RelDataTypeField [] fields;
     protected List fieldList;
     protected String digest;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected RelDataTypeImpl(RelDataTypeField [] fields)
     {
@@ -59,6 +64,8 @@ public abstract class RelDataTypeImpl
             fieldList = null;
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataType
     public RelDataTypeField getField(String fieldName)
@@ -87,14 +94,14 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public List getFieldList()
     {
-        assert(isStruct());
+        assert (isStruct());
         return fieldList;
     }
-    
+
     // implement RelDataType
     public RelDataTypeField [] getFields()
     {
-        assert(isStruct());
+        assert (isStruct());
         return fields;
     }
 
@@ -164,7 +171,7 @@ public abstract class RelDataTypeImpl
     {
         return null;
     }
-    
+
     // implement RelDataType
     public int getPrecision()
     {
@@ -190,7 +197,9 @@ public abstract class RelDataTypeImpl
         if (typeName == null) {
             return null;
         }
-        return new SqlIdentifier(typeName.getName(), SqlParserPos.ZERO);
+        return new SqlIdentifier(
+                typeName.getName(),
+                SqlParserPos.ZERO);
     }
 
     // implement RelDataType
@@ -204,19 +213,17 @@ public abstract class RelDataTypeImpl
      * Generates a string representation of this type.
      *
      * @param sb StringBuffer into which to generate the string
-     *
-     * @param withDetail when true, all detail information needed to
-     * compute a unique digest (and return from getFullTypeString)
-     * should be included; when false, less verbosity is appropriate
-     * (for return from toString)
+     * @param withDetail when true, all detail information needed to compute a
+     * unique digest (and return from getFullTypeString) should be included;
+     * when false, less verbosity is appropriate (for return from toString)
      */
     protected abstract void generateTypeString(
         StringBuffer sb,
         boolean withDetail);
 
     /**
-     * Computes the digest field.  This should be called in every
-     * non-abstract subclass constructor once the type is fully defined.
+     * Computes the digest field. This should be called in every non-abstract
+     * subclass constructor once the type is fully defined.
      */
     protected void computeDigest()
     {
@@ -235,29 +242,29 @@ public abstract class RelDataTypeImpl
         generateTypeString(sb, false);
         return sb.toString();
     }
-    
+
     // implement RelDataType
     public RelDataTypePrecedenceList getPrecedenceList()
     {
         // by default, make each type have a precedence list containing
         // only other types in the same family
-        return new RelDataTypePrecedenceList() 
-            {
+        return new RelDataTypePrecedenceList() {
                 public boolean containsType(RelDataType type)
                 {
                     return getFamily() == type.getFamily();
                 }
-                
+
                 public int compareTypePrecedence(
-                    RelDataType type1, RelDataType type2)
+                    RelDataType type1,
+                    RelDataType type2)
                 {
-                    assert(containsType(type1));
-                    assert(containsType(type2));
+                    assert (containsType(type1));
+                    assert (containsType(type2));
                     return 0;
                 }
             };
     }
-    
+
     // implement RelDataType
     public RelDataTypeComparability getComparability()
     {

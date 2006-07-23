@@ -20,12 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 
 
 /**
@@ -36,12 +33,13 @@ import java.sql.SQLException;
  */
 public class Row
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     ResultSet resultSet;
     Object [] values;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public Row(ResultSet resultSet)
         throws SQLException
@@ -55,7 +53,7 @@ public class Row
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the value of a given column, similar to {@link
@@ -78,6 +76,5 @@ public class Row
         return resultSet;
     }
 }
-
 
 // End Row.java

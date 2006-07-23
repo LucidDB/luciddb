@@ -21,25 +21,32 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.resource.*;
+import java.util.*;
 
 import junit.framework.*;
 
-import java.util.*;
+import org.eigenbase.resource.*;
+
 
 /**
- * Tests generated package org.eigenbase.resource (mostly a sanity check
- * for resgen infrastructure).
+ * Tests generated package org.eigenbase.resource (mostly a sanity check for
+ * resgen infrastructure).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class EigenbaseResourceTest extends TestCase
+public class EigenbaseResourceTest
+    extends TestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public EigenbaseResourceTest(String name)
     {
         super(name);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Verifies that resource properties such as SQLSTATE are available at
@@ -47,9 +54,11 @@ public class EigenbaseResourceTest extends TestCase
      */
     public void testSqlstateProperty()
     {
-        Properties props = 
+        Properties props =
             EigenbaseResource.instance().IllegalIntervalLiteral.getProperties();
-        assertEquals("42000", props.get("SQLSTATE"));
+        assertEquals(
+            "42000",
+            props.get("SQLSTATE"));
     }
 }
 

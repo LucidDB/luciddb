@@ -22,10 +22,10 @@
 */
 package net.sf.farrago.server;
 
-import org.objectweb.rmijdbc.RJDriverServer;
-import org.objectweb.rmijdbc.RJJdbcServer;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
+import org.objectweb.rmijdbc.*;
+
 
 /**
  * The main class for Farrago's RMI/JDBC Server.
@@ -33,15 +33,21 @@ import java.rmi.RemoteException;
  * @author Tim Leung
  * @version $Id$
  */
-public class FarragoRJJdbcServer extends RJJdbcServer
+public class FarragoRJJdbcServer
+    extends RJJdbcServer
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
-     * reference prevents NoSuchObjectException during
-     * FarragoServer JUnit tests.
+     * reference prevents NoSuchObjectException during FarragoServer JUnit
+     * tests.
      */
     private static FarragoRJDriverServer driverServer;
 
-    public static void main(String[] args)
+    //~ Methods ----------------------------------------------------------------
+
+    public static void main(String [] args)
     {
         try {
             Class.forName("net.sf.farrago.server.FarragoRJDriverServer_Stub");
@@ -50,25 +56,27 @@ public class FarragoRJJdbcServer extends RJJdbcServer
             System.exit(0);
         }
 
-        verboseMode = Boolean.valueOf(
-            System.getProperty("RmiJdbc.verbose", "true")).booleanValue();
+        verboseMode =
+            Boolean.valueOf(
+                System.getProperty("RmiJdbc.verbose", "true")).booleanValue();
 
         processArgs(args);
 
         printMsg("Starting RmiJdbc Server !");
         initServer(new FarragoRJJdbcServer());
-
     }
 
-    protected RJDriverServer buildDriverServer() throws RemoteException
+    protected RJDriverServer buildDriverServer()
+        throws RemoteException
     {
         // Keeping this reference to our FarragoRJDriverServer remote object
-        // prevents NoSuchObjectException ("no such object in table")
-        // during FarragoServer JUnit tests. Without this, it seems as if RMI's
-        // distributed garbage collection would release this object's
-        // stub out from under the remote client.
+        // prevents NoSuchObjectException ("no such object in table") during
+        // FarragoServer JUnit tests. Without this, it seems as if RMI's
+        // distributed garbage collection would release this object's stub out
+        // from under the remote client.
         driverServer = new FarragoRJDriverServer(admpasswd_);
         return driverServer;
     }
 }
 
+// End FarragoRJJdbcServer.java

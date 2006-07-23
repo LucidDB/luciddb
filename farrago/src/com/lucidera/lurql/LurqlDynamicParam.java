@@ -20,25 +20,33 @@
 */
 package com.lucidera.lurql;
 
-import org.eigenbase.util.*;
-
 import java.io.*;
 
+import org.eigenbase.util.*;
+
+
 /**
- * LurqlDynamicParam represents a dynamic parameter within a LURQL
- * query.
+ * LurqlDynamicParam represents a dynamic parameter within a LURQL query.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlDynamicParam extends LurqlQueryNode
+public class LurqlDynamicParam
+    extends LurqlQueryNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final String id;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public LurqlDynamicParam(String id)
     {
         this.id = id;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getId()
     {

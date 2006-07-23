@@ -19,23 +19,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.nio.ByteBuffer;
-
-
 /**
- * A synchronization primitive which allows a producer and a consumer to use
- * the same resources without treading on each other's feet.
+ * A synchronization primitive which allows a producer and a consumer to use the
+ * same resources without treading on each other's feet.
  *
  * <p>At most one of the producer and consumer has access at a time. The
- * synchronization ensures that the call sequence is as follows:<ul>
+ * synchronization ensures that the call sequence is as follows:
  *
- * <li{@link #beginWriting()} (called by producer)
- * <li{@link #endWriting()} (called by producer)
- * <li{@link #beginReading()} (called by consumer)
- * <li{@link #endReading()} (called by consumer)
+ * <ul><li{@link #beginWriting()} (called by producer) <li{@link #endWriting()}
+ * (called by producer) <li{@link #beginReading()} (called by consumer) <li
+ * {@link #endReading()} (called by consumer)
  * </ul>
  *
  * <p>{@link ExclusivePipe} is a simple extension to this class containing a
@@ -46,6 +41,9 @@ import java.nio.ByteBuffer;
  */
 public class Interlock
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * The producer notifies <code>empty</code> every time it finishes writing.
      * The consumer waits for it.
@@ -58,17 +56,20 @@ public class Interlock
      */
     private final Semaphore full = new Semaphore(1);
 
+    //~ Constructors -----------------------------------------------------------
+
     public Interlock()
     {
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Acquires the buffer, in preparation for writing.
      *
-     * <p>The producer should call this method.
-     * After this call completes, the consumer's call to
-     * {@link #beginReading()} will block until the producer has called
-     * {@link #endWriting()}.
+     * <p>The producer should call this method. After this call completes, the
+     * consumer's call to {@link #beginReading()} will block until the producer
+     * has called {@link #endWriting()}.
      */
     public void beginWriting()
     {
@@ -78,10 +79,9 @@ public class Interlock
     /**
      * Releases the buffer after writing.
      *
-     * <p>The producer should call this method.
-     * After this call completes, the producers's call to
-     * {@link #beginWriting()} will block until the consumer has called
-     * {@link #beginReading()} followed by {@link #endReading()}.
+     * <p>The producer should call this method. After this call completes, the
+     * producers's call to {@link #beginWriting()} will block until the consumer
+     * has called {@link #beginReading()} followed by {@link #endReading()}.
      */
     public void endWriting()
     {
@@ -91,9 +91,9 @@ public class Interlock
     /**
      * Acquires the buffer, in preparation for reading.
      *
-     * <p>After this call completes, the producer's call to
-     * {@link #beginWriting()} will block until the consumer has called
-     * {@link #endReading()}.
+     * <p>After this call completes, the producer's call to {@link
+     * #beginWriting()} will block until the consumer has called {@link
+     * #endReading()}.
      */
     public void beginReading()
     {
@@ -103,15 +103,14 @@ public class Interlock
     /**
      * Releases the buffer after reading its contents.
      *
-     * <p>The consumer should call this method.
-     * After this call completes, the consumer's call to
-     * {@link #beginReading()} will block until the producer has called
-     * {@link #beginWriting()} followed by {@link #endWriting()}.
+     * <p>The consumer should call this method. After this call completes, the
+     * consumer's call to {@link #beginReading()} will block until the producer
+     * has called {@link #beginWriting()} followed by {@link #endWriting()}.
      */
     public void endReading()
     {
         full.release(); // wake up producer
-}
+    }
 }
 
 // End Interlock.java

@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.*;
@@ -34,16 +33,18 @@ import org.eigenbase.sql.type.*;
  * <code><i>exp1</i> BETWEEN <i>exp2</i> AND <i>exp3</i></code>.
  *
  * @author jhyde
- * @since Aug 8, 2004
  * @version $Id$
- **/
-public class SqlInfixOperator extends SqlSpecialOperator
+ * @since Aug 8, 2004
+ */
+public class SqlInfixOperator
+    extends SqlSpecialOperator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String [] names;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlInfixOperator(
         String [] names,
@@ -53,13 +54,18 @@ public class SqlInfixOperator extends SqlSpecialOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(names[0], kind, precedence, true, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(names[0],
+            kind,
+            precedence,
+            true,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
         assert names.length > 1;
         this.names = names;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -80,7 +86,10 @@ public class SqlInfixOperator extends SqlSpecialOperator
                 writer.keyword(names[i - 1]);
                 writer.setNeedWhitespace(needWhitespace);
             }
-            operands[i].unparse(writer, leftPrec, getLeftPrec());
+            operands[i].unparse(
+                writer,
+                leftPrec,
+                getLeftPrec());
         }
     }
 
@@ -89,6 +98,5 @@ public class SqlInfixOperator extends SqlSpecialOperator
         return true;
     }
 }
-
 
 // End SqlInfixOperator.java

@@ -21,43 +21,24 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.*;
+
 
 /**
- * Contains {@link org.eigenbase.util.Glossary#Sql2003} SQL state codes.
- * Sql Sate codes are defined in
+ * Contains {@link org.eigenbase.util.Glossary#Sql2003} SQL state codes. Sql
+ * Sate codes are defined in
+ *
  * <pre><code> &#64;sql.2003 Part 2 Section 23.1</code></pre>
  *
  * @author Wael Chatila
- * @since Mar 30, 2005
  * @version $Id$
+ * @since Mar 30, 2005
  */
-public class SqlStateCodes  extends EnumeratedValues.BasicValue
+public class SqlStateCodes
+    extends EnumeratedValues.BasicValue
 {
-    private final String stateClass;
-    private final String stateSubClass;
 
-    public SqlStateCodes(String name, int ordinal, String stateClass, String stateSubClass)
-    {
-        super(name, ordinal, null);
-        this.stateClass = stateClass;
-        this.stateSubClass = stateSubClass;
-    }
-
-    public String getStateClass()
-    {
-        return stateClass;
-    }
-
-    public String getStateSubClass()
-    {
-        return stateSubClass;
-    }
-
-    public String getState()
-    {
-        return stateClass + stateSubClass;
-    }
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final int CardinalityViolation_ORDINAL = 0;
     public static final SqlStateCodes CardinalityViolation =
@@ -76,10 +57,46 @@ public class SqlStateCodes  extends EnumeratedValues.BasicValue
             "004");
 
     public static final int NumericValueOutOfRange_ORDINAL = 2;
-    public static final SqlStateCodes NumericValueOutOfRange = 
+    public static final SqlStateCodes NumericValueOutOfRange =
         new SqlStateCodes(
             "numeric value out of range",
             NumericValueOutOfRange_ORDINAL,
             "22",
             "003");
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final String stateClass;
+    private final String stateSubClass;
+
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlStateCodes(String name,
+        int ordinal,
+        String stateClass,
+        String stateSubClass)
+    {
+        super(name, ordinal, null);
+        this.stateClass = stateClass;
+        this.stateSubClass = stateSubClass;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    public String getStateClass()
+    {
+        return stateClass;
+    }
+
+    public String getStateSubClass()
+    {
+        return stateSubClass;
+    }
+
+    public String getState()
+    {
+        return stateClass + stateSubClass;
+    }
 }
+
+// End SqlStateCodes.java

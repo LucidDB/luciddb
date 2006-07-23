@@ -22,15 +22,20 @@ package com.lucidera.jdbc;
 
 import net.sf.farrago.jdbc.engine.*;
 
+
 /**
- * LucidDbLocalDriver is a JDBC driver for the LucidDB engine for use by
- * callers running in the same JVM with the DBMS.
+ * LucidDbLocalDriver is a JDBC driver for the LucidDB engine for use by callers
+ * running in the same JVM with the DBMS.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LucidDbLocalDriver extends FarragoJdbcEngineDriver
+public class LucidDbLocalDriver
+    extends FarragoJdbcEngineDriver
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
         new LucidDbLocalDriver().register();
     }

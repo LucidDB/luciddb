@@ -23,19 +23,29 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.reltype.RelDataType;
+
 
 /**
  * A relational expression representing a set of window aggregates.
  *
- * <p>Rules:<ul>
- * <li>Created by {@link com.disruptivetech.farrago.rel.WindowedAggSplitterRule}.
+ * <p>Rules:
+ *
+ * <ul>
+ * <li>Created by {@link
+ * com.disruptivetech.farrago.rel.WindowedAggSplitterRule}.
  * <li>Triggers {@link com.disruptivetech.farrago.rel.FennelWindowRule}.
  */
-public final class WindowedAggregateRel extends SingleRel
+public final class WindowedAggregateRel
+    extends SingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     public final RexProgram program;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a WindowedAggregateRel.
@@ -43,11 +53,10 @@ public final class WindowedAggregateRel extends SingleRel
      * @param cluster
      * @param traits
      * @param child
-     * @param program Program containing an array of expressions.
-     *            The program must not have a
-     *            condition, and each expression must be
-     *            either a {@link RexLocalRef}, or a {@link RexOver} whose
-     *            arguments are all {@link RexLocalRef}.
+     * @param program Program containing an array of expressions. The program
+     * must not have a condition, and each expression must be either a {@link
+     * RexLocalRef}, or a {@link RexOver} whose arguments are all {@link
+     * RexLocalRef}.
      * @param rowType
      */
     public WindowedAggregateRel(
@@ -62,6 +71,8 @@ public final class WindowedAggregateRel extends SingleRel
         this.program = program;
         assert isValid(true);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isValid(boolean fail)
     {
@@ -80,18 +91,16 @@ public final class WindowedAggregateRel extends SingleRel
                 for (int j = 0; j < over.operands.length; j++) {
                     RexNode operand = over.operands[j];
                     if (!(operand instanceof RexLocalRef)) {
-                        assert !fail :
-                            "aggs[" + i + "].operand[" + j +
-                            "] is not a RexLocalRef";
+                        assert !fail : "aggs[" + i + "].operand[" + j
+                            + "] is not a RexLocalRef";
                         return false;
                     }
                 }
             } else if (agg instanceof RexInputRef) {
                 ;
             } else {
-                assert !fail :
-                    "aggs[" + i + "] is a " + agg.getClass() +
-                    ", expecting RexInputRef or RexOver";
+                assert !fail : "aggs[" + i + "] is a " + agg.getClass()
+                    + ", expecting RexInputRef or RexOver";
             }
         }
         return true;
@@ -106,13 +115,17 @@ public final class WindowedAggregateRel extends SingleRel
     {
         program.explainCalc(this, pw);
     }
-    
+
     public Object clone()
     {
-        return new WindowedAggregateRel(
-            getCluster(), traits, getChild(), program, rowType);
+        return
+            new WindowedAggregateRel(
+                getCluster(),
+                traits,
+                getChild(),
+                program,
+                rowType);
     }
 }
 
 // End WindowedAggregateRel.java
-

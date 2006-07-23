@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
 
 
 /**
@@ -31,30 +30,37 @@ import org.eigenbase.sql.parser.SqlParserPos;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Mar 29, 2003
  */
-public class SqlJoin extends SqlCall
+public class SqlJoin
+    extends SqlCall
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int LEFT_OPERAND = 0;
+
     /**
      * Operand says whether this is a natural join. Must be constant TRUE or
      * FALSE.
      */
     public static final int IS_NATURAL_OPERAND = 1;
+
     /**
      * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
      * JoinType}.
      */
     public static final int TYPE_OPERAND = 2;
     public static final int RIGHT_OPERAND = 3;
+
     /**
      * Value must be a {@link SqlLiteral}, one of the integer codes for {@link
      * ConditionType}.
      */
     public static final int CONDITION_TYPE_OPERAND = 4;
     public static final int CONDITION_OPERAND = 5;
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlJoin(
         SqlJoinOperator operator,
@@ -64,7 +70,7 @@ public class SqlJoin extends SqlCall
         super(operator, operands, pos);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public final SqlNode getCondition()
     {
@@ -78,8 +84,9 @@ public class SqlJoin extends SqlCall
      */
     public final SqlJoinOperator.ConditionType getConditionType()
     {
-        return (SqlJoinOperator.ConditionType)
-            SqlLiteral.symbolValue(operands[CONDITION_TYPE_OPERAND]);
+        return
+            (SqlJoinOperator.ConditionType) SqlLiteral.symbolValue(
+                operands[CONDITION_TYPE_OPERAND]);
     }
 
     /**
@@ -89,8 +96,9 @@ public class SqlJoin extends SqlCall
      */
     public final SqlJoinOperator.JoinType getJoinType()
     {
-        return (SqlJoinOperator.JoinType)
-            SqlLiteral.symbolValue(operands[TYPE_OPERAND]);
+        return
+            (SqlJoinOperator.JoinType) SqlLiteral.symbolValue(
+                operands[TYPE_OPERAND]);
     }
 
     public final SqlNode getLeft()
@@ -108,6 +116,5 @@ public class SqlJoin extends SqlCall
         return operands[RIGHT_OPERAND];
     }
 }
-
 
 // End SqlJoin.java

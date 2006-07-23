@@ -20,31 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
  * A <code>SqlDynamicParam</code> represents a dynamic parameter marker in an
- * SQL statement.  The textual order in which dynamic parameters appear
- * within an SQL statement is the only property which distinguishes them,
- * so this 0-based index is recorded as soon as the parameter is encountered.
+ * SQL statement. The textual order in which dynamic parameters appear within an
+ * SQL statement is the only property which distinguishes them, so this 0-based
+ * index is recorded as soon as the parameter is encountered.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlDynamicParam extends SqlNode
+public class SqlDynamicParam
+    extends SqlNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int index;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlDynamicParam(
         int index,
@@ -54,7 +54,7 @@ public class SqlDynamicParam extends SqlNode
         this.index = index;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode clone(SqlParserPos pos)
     {
@@ -104,6 +104,5 @@ public class SqlDynamicParam extends SqlNode
         return true;
     }
 }
-
 
 // End SqlDynamicParam.java

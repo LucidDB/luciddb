@@ -21,20 +21,21 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.session.*;
+import java.util.*;
+
 import net.sf.farrago.db.*;
 import net.sf.farrago.defimpl.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 
-import java.util.*;
 
 /**
- * FarragoTestPersonalityFactory implements the
- * {@link FarragoSessionPersonalityFactory} interface with
- * some tweaks just for testing.
+ * FarragoTestPersonalityFactory implements the {@link
+ * FarragoSessionPersonalityFactory} interface with some tweaks just for
+ * testing.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -42,6 +43,9 @@ import java.util.*;
 public class FarragoTestPersonalityFactory
     implements FarragoSessionPersonalityFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionPersonalityFactory
     public FarragoSessionPersonality newSessionPersonality(
         FarragoSession session,
@@ -50,8 +54,10 @@ public class FarragoTestPersonalityFactory
         return new FarragoTestSessionPersonality((FarragoDbSession) session);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     private static class FarragoTestSessionPersonality
-         extends FarragoDefaultSessionPersonality
+        extends FarragoDefaultSessionPersonality
     {
         protected FarragoTestSessionPersonality(FarragoDbSession session)
         {
@@ -62,11 +68,10 @@ public class FarragoTestPersonalityFactory
         public void registerRelMetadataProviders(
             ChainedRelMetadataProvider chain)
         {
-            chain.addProvider(
-                new FarragoTestRelMetadataProvider());
+            chain.addProvider(new FarragoTestRelMetadataProvider());
         }
     }
-    
+
     public static class FarragoTestRelMetadataProvider
         extends ReflectiveRelMetadataProvider
     {

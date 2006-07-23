@@ -23,27 +23,30 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.sql.*;
-import net.sf.farrago.jdbc.FarragoStatement;
-import net.sf.farrago.session.FarragoSessionStmtContext;
-import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.session.*;
+
 
 /**
- * FarragoJdbcEngineStatement implements the {@link java.sql.Statement} interface for
- * the Farrago JDBC driver, including extensions from 
- * {@link net.sf.farrago.jdbc.FarragoStatement}.
+ * FarragoJdbcEngineStatement implements the {@link java.sql.Statement}
+ * interface for the Farrago JDBC driver, including extensions from {@link
+ * net.sf.farrago.jdbc.FarragoStatement}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoJdbcEngineStatement implements FarragoStatement
+public class FarragoJdbcEngineStatement
+    implements FarragoStatement
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static final String ERRMSG_NOT_A_QUERY = "Not a query:  ";
     protected static final String ERRMSG_IS_A_QUERY =
         "Can't executeUpdate a query:  ";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Connection through which this stmt was created.
@@ -55,13 +58,12 @@ public class FarragoJdbcEngineStatement implements FarragoStatement
      */
     protected FarragoSessionStmtContext stmtContext;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcEngineStatement object.
      *
      * @param connection the connection creating this statement
-     *
      * @param stmtContext underlying FarragoSessionStmtContext
      */
     FarragoJdbcEngineStatement(
@@ -72,7 +74,7 @@ public class FarragoJdbcEngineStatement implements FarragoStatement
         this.stmtContext = stmtContext;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Statement
     public void setEscapeProcessing(boolean enable)
@@ -430,11 +432,14 @@ public class FarragoJdbcEngineStatement implements FarragoStatement
     // implement FarragoStatement
     public long getFarragoExecutingStmtId()
     {
-        if (stmtContext == null)
+        if (stmtContext == null) {
             return 0;
-        FarragoSessionExecutingStmtInfo info = stmtContext.getExecutingStmtInfo();
-        if (info == null)
+        }
+        FarragoSessionExecutingStmtInfo info =
+            stmtContext.getExecutingStmtInfo();
+        if (info == null) {
             return 0;
+        }
         return info.getId();
     }
 }

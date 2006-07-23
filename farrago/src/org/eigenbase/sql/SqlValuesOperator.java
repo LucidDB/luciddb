@@ -21,20 +21,24 @@
 */
 package org.eigenbase.sql;
 
-
-
 /**
  * The <code>VALUES</code> operator.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlValuesOperator extends SqlSpecialOperator
+public class SqlValuesOperator
+    extends SqlSpecialOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlValuesOperator()
     {
         super("VALUES", SqlKind.Values);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void unparse(
         SqlWriter writer,

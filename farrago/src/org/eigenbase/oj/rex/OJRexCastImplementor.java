@@ -20,10 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
@@ -37,17 +37,18 @@ import org.eigenbase.rex.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class OJRexCastImplementor implements OJRexImplementor
+public class OJRexCastImplementor
+    implements OJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public Expression implement(
         RexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
     {
-        OJTypeFactory typeFactory =
-            (OJTypeFactory) translator.getTypeFactory();
+        OJTypeFactory typeFactory = (OJTypeFactory) translator.getTypeFactory();
         OJClass type = typeFactory.toOJClass(
                 null,
                 call.getType());
@@ -59,6 +60,5 @@ public class OJRexCastImplementor implements OJRexImplementor
         return true;
     }
 }
-
 
 // End OJRexCastImplementor.java

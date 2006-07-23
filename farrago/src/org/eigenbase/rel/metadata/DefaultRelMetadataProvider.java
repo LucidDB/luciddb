@@ -23,42 +23,39 @@ package org.eigenbase.rel.metadata;
 
 /**
  * DefaultRelMetadataProvider supplies a default implementation of the {@link
- * RelMetadataProvider} interface.  It provides generic formulas and derivation
+ * RelMetadataProvider} interface. It provides generic formulas and derivation
  * rules for the standard logical algebra; coverage corresponds to the methods
  * declared in {@link RelMetadataQuery}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DefaultRelMetadataProvider extends ChainedRelMetadataProvider
+public class DefaultRelMetadataProvider
+    extends ChainedRelMetadataProvider
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new default provider.  This provider defines
-     * "catch-all" handlers for generic RelNodes, so it should
-     * always be given lowest priority when chaining.
+     * Creates a new default provider. This provider defines "catch-all"
+     * handlers for generic RelNodes, so it should always be given lowest
+     * priority when chaining.
      */
     public DefaultRelMetadataProvider()
     {
-        addProvider(
-            new RelMdPercentageOriginalRows());
-        
-        addProvider(
-            new RelMdColumnOrigins());
+        addProvider(new RelMdPercentageOriginalRows());
 
-        addProvider(
-            new RelMdRowCount());
+        addProvider(new RelMdColumnOrigins());
 
-        addProvider(
-            new RelMdUniqueKeys());
+        addProvider(new RelMdRowCount());
 
-        addProvider(
-            new RelMdPopulationSize());
-        
-        addProvider(
-            new RelMdDistinctRowCount());
-        
-        addProvider(
-            new RelMdSelectivity());
+        addProvider(new RelMdUniqueKeys());
+
+        addProvider(new RelMdPopulationSize());
+
+        addProvider(new RelMdDistinctRowCount());
+
+        addProvider(new RelMdSelectivity());
     }
 }
 

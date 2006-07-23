@@ -20,35 +20,41 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.logging.Level;
+import java.io.*;
 
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
+import java.util.*;
+import java.util.logging.*;
+
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.rel.convert.ConverterRel;
-import org.eigenbase.rel.convert.ConverterRule;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
+
 
 /**
  * VolcanoPlanner optimizes queries by transforming expressions selectively
  * according to a dynamic programming algorithm.
  */
-public class VolcanoPlanner extends AbstractRelOptPlanner
+public class VolcanoPlanner
+    extends AbstractRelOptPlanner
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    protected static final double CostImprovement = .5;
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RelSubset root;
 
     /**
      * If true, the planner keeps applying rules as long as they continue to
-     * reduce the cost.  If false, the planner terminates as soon as it has
-     * found any implementation, no matter how expensive.  The default is
-     * false due to unresolved bugs with various rules.
+     * reduce the cost. If false, the planner terminates as soon as it has found
+     * any implementation, no matter how expensive. The default is false due to
+     * unresolved bugs with various rules.
      */
     protected boolean ambitious;
 
@@ -56,60 +62,65 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
      * If true, and if {@link #ambitious} is true, the planner waits a finite
      * number of iterations for the cost to improve.
      *
-     * <p>The number of iterations K is equal to the number of
-     * iterations required to get the first finite plan. After the first finite
-     * plan, it continues to fire rules to try to improve it. The planner sets
-     * a target cost of the current best cost multiplied by
-     * {@link #CostImprovement}. If it does not meet that cost target within K
-     * steps, it quits, and uses the current best plan. If it meets the cost,
-     * it sets a new, lower target, and has another K iterations to meet it.
-     * And so forth.
+     * <p>The number of iterations K is equal to the number of iterations
+     * required to get the first finite plan. After the first finite plan, it
+     * continues to fire rules to try to improve it. The planner sets a target
+     * cost of the current best cost multiplied by {@link #CostImprovement}. If
+     * it does not meet that cost target within K steps, it quits, and uses the
+     * current best plan. If it meets the cost, it sets a new, lower target, and
+     * has another K iterations to meet it. And so forth.
      *
-     * <p>If false, the planner continues to fire rules until the rule queue
-     * is empty.
+     * <p>If false, the planner continues to fire rules until the rule queue is
+     * empty.
      */
     protected boolean impatient = false;
 
-    protected static final double CostImprovement = .5;
-
     /**
-     * List of all operands of all rules. Any operand can be an 'entry point'
-     * to a rule call, when a relexp is registered which matches the.
+     * List of all operands of all rules. Any operand can be an 'entry point' to
+     * a rule call, when a relexp is registered which matches the.
      */
     private final List<RelOptRuleOperand> allOperands =
         new ArrayList<RelOptRuleOperand>();
 
-    /** List of all sets. Used only for debugging. */
+    /**
+     * List of all sets. Used only for debugging.
+     */
     final List<RelSet> allSets = new ArrayList<RelSet>();
 
     /**
-     * Canonical map from {@link String digest} to the unique {@link
-     * RelNode relational expression} with that digest.
+     * Canonical map from {@link String digest} to the unique {@link RelNode
+     * relational expression} with that digest.
      */
     private final Map<String, RelNode> mapDigestToRel =
         new HashMap<String, RelNode>();
 
     /**
-     * Map each registered expression ({@link RelNode}) to its equivalence
-     * set ({@link RelSubset}).
+     * Map each registered expression ({@link RelNode}) to its equivalence set
+     * ({@link RelSubset}).
      *
-     * <p>We use an {@link IdentityHashMap} to simplify the process of
-     * merging {@link RelSet} objects. Most {@link RelNode} objects are
-     * identified by their digest, which involves the set that their child
-     * relational expressions belong to. If those children belong to the same
-     * set, we have to be careful, otherwise it gets incestuous.</p>
+     * <p>We use an {@link IdentityHashMap} to simplify the process of merging
+     * {@link RelSet} objects. Most {@link RelNode} objects are identified by
+     * their digest, which involves the set that their child relational
+     * expressions belong to. If those children belong to the same set, we have
+     * to be careful, otherwise it gets incestuous.</p>
      */
     private final IdentityHashMap<RelNode, RelSubset> mapRel2Subset =
         new IdentityHashMap<RelNode, RelSubset>();
 
-    /** List of all schemas which have been registered. */
+    /**
+     * List of all schemas which have been registered.
+     */
     private final Set<RelOptSchema> registeredSchemas =
         new HashSet<RelOptSchema>();
 
-    /** Holds rule calls waiting to be fired. */
+    /**
+     * Holds rule calls waiting to be fired.
+     */
     final RuleQueue ruleQueue = new RuleQueue(this);
 
-    /** Holds the currently registered RelTraitDefs. */
+    /**
+     * Holds the currently registered RelTraitDefs.
+     */
     private final Set<RelTraitDef> traitDefs = new HashSet<RelTraitDef>();
 
     /**
@@ -120,8 +131,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
     private int nextSetId = 0;
 
     /**
-     * Incremented every time a relational expression is registered or two
-     * sets are merged. Tells us whether anything is going on.
+     * Incremented every time a relational expression is registered or two sets
+     * are merged. Tells us whether anything is going on.
      */
     private int registerCount;
 
@@ -130,18 +141,18 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
      */
     RelOptListener listener;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a uninitialized <code>VolcanoPlanner</code>.  To fully
-     * initialize it, the caller must register the desired set of relations,
-     * rules, and calling conventions.
+     * Creates a uninitialized <code>VolcanoPlanner</code>. To fully initialize
+     * it, the caller must register the desired set of relations, rules, and
+     * calling conventions.
      */
     public VolcanoPlanner()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // REVIEW: SWZ: 3/1/2005: No one calls this.  Remove?
     // todo: pre-compute
@@ -154,8 +165,9 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
                 list.add(operand);
             }
         }
-        return (RelOptRuleOperand [])
-            list.toArray(new RelOptRuleOperand[list.size()]);
+        return
+            (RelOptRuleOperand []) list.toArray(
+                new RelOptRuleOperand[list.size()]);
     }
 
     // implement RelOptPlanner
@@ -178,7 +190,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
     }
 
     /**
-     * Find an expression's equivalence set.  If the expression is not
+     * Find an expression's equivalence set. If the expression is not
      * registered, return null.
      *
      * @pre rel != null
@@ -232,7 +244,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
         // Convert this rule's operands from a list to an array.
         rule.operands =
-            (RelOptRuleOperand []) operandsOfRule.toArray(RelOptRuleOperand.noOperands);
+            (RelOptRuleOperand []) operandsOfRule.toArray(
+                RelOptRuleOperand.noOperands);
 
         // Build each operand's solve-order.  Start with itself, then its
         // parent, up to the root, then the remaining operands in prefix
@@ -286,16 +299,19 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             // Rule was not present.
             return false;
         }
+
         // Remove description.
         unmapRuleDescription(rule);
+
         // Remove operands.
         for (Iterator<RelOptRuleOperand> operandIter = allOperands.iterator();
-             operandIter.hasNext();) {
+            operandIter.hasNext();) {
             RelOptRuleOperand operand = operandIter.next();
             if (operand.getRule().equals(rule)) {
                 operandIter.remove();
             }
         }
+
         // Remove trait mappings. (In particular, entries from conversion
         // graph.)
         if (rule instanceof ConverterRule) {
@@ -317,10 +333,10 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
     public boolean canConvert(RelTraitSet fromTraits, RelTraitSet toTraits)
     {
-        assert(fromTraits.size() >= toTraits.size());
+        assert (fromTraits.size() >= toTraits.size());
 
         boolean canConvert = true;
-        for (int i = 0; i < toTraits.size() && canConvert; i++) {
+        for (int i = 0; (i < toTraits.size()) && canConvert; i++) {
             RelTrait fromTrait = fromTraits.getTrait(i);
             RelTrait toTrait = toTraits.getTrait(i);
 
@@ -337,8 +353,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
     public RelNode changeTraits(final RelNode rel, RelTraitSet toTraits)
     {
-        assert !rel.getTraits().equals(toTraits) :
-            "pre: !rel.getTraits().equals(toTraits)";
+        assert !rel.getTraits().equals(toTraits) : "pre: !rel.getTraits().equals(toTraits)";
 
         RelNode rel2 = ensureRegistered(rel, null);
         if (rel2.getTraits().equals(toTraits)) {
@@ -361,10 +376,10 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             RelTrait toTrait = toTraits.getTrait(i);
 
             if (toTrait == null) {
-               continue;
+                continue;
             }
 
-            assert(fromTrait.getTraitDef() == toTrait.getTraitDef());
+            assert (fromTrait.getTraitDef() == toTrait.getTraitDef());
 
             if (fromTrait == toTrait) {
                 // No need to convert, it's already correct.
@@ -372,7 +387,9 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             }
 
             RelTraitSet stepTraits = RelOptUtil.clone(fromTraits);
-            stepTraits.setTrait(toTrait.getTraitDef(), toTrait);
+            stepTraits.setTrait(
+                toTrait.getTraitDef(),
+                toTrait);
 
             converter =
                 new AbstractConverter(
@@ -407,10 +424,10 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
                     firstFiniteTick = tick;
                 }
                 if (ambitious) {
-                    // Choose a more ambitious target cost, and try again.
-                    // If it took us 1000 iterations to find our first finite
-                    // plan, give ourselves another 1000 iterations to meet the
-                    // new target.
+                    // Choose a more ambitious target cost, and try again. If it
+                    // took us 1000 iterations to find our first finite plan,
+                    // give ourselves another 1000 iterations to meet the new
+                    // target.
                     targetCost = root.bestCost.multiplyBy(0.5);
                     ++splitCount;
                     if (impatient) {
@@ -482,8 +499,11 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             set = null;
         } else {
             assert RelOptUtil.equal(
-                "rel rowtype", rel.getRowType(),
-                "equivRel rowtype", equivRel.getRowType(), true);
+                    "rel rowtype",
+                    rel.getRowType(),
+                    "equivRel rowtype",
+                    equivRel.getRowType(),
+                    true);
             set = getSet(equivRel);
         }
         final RelSubset subset = registerImpl(rel, set);
@@ -519,8 +539,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         for (RelSet set : allSets) {
             if (set.equivalentSet != null) {
                 throw new AssertionError(
-                    "set [" + set +
-                    "] has been merged: it should not be in the list");
+                    "set [" + set
+                    + "] has been merged: it should not be in the list");
             }
             for (RelSubset subset : set.subsets) {
                 if (subset.set != set) {
@@ -586,9 +606,10 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
-        return new JavaRelImplementor(
-            rel.getCluster().getRexBuilder(),
-            OJRexImplementorTableImpl.instance());
+        return
+            new JavaRelImplementor(
+                rel.getCluster().getRexBuilder(),
+                OJRexImplementorTableImpl.instance());
     }
 
     /**
@@ -620,7 +641,9 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
      * Returns the subset that a relational expression belongs to.
      *
      * @param rel Relational expression
+     *
      * @return Subset it belongs to, or null if it is not registered
+     *
      * @pre rel != null
      */
     RelSubset getSubset(RelNode rel)
@@ -637,8 +660,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         RelNode rel,
         RelTraitSet traits)
     {
-        if (rel instanceof RelSubset
-                && (((RelSubset) rel).getTraits().equals(traits))) {
+        if ((rel instanceof RelSubset)
+            && (((RelSubset) rel).getTraits().equals(traits))) {
             return (RelSubset) rel;
         }
         RelSet set = getSet(rel);
@@ -649,11 +672,13 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
     }
 
     private RelNode changeTraitsUsingConverters(
-        RelNode rel, RelTraitSet toTraits, boolean allowAbstractConverters)
+        RelNode rel,
+        RelTraitSet toTraits,
+        boolean allowAbstractConverters)
     {
         final RelTraitSet fromTraits = rel.getTraits();
 
-        assert(fromTraits.size() >= toTraits.size());
+        assert (fromTraits.size() >= toTraits.size());
 
         final boolean allowInfiniteCostConverters =
             SaffronProperties.instance().allowInfiniteCostConverters.get();
@@ -664,32 +689,40 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         // will be left as is.  Finally, any null entries in toTraits are
         // ignored.
         RelNode converted = rel;
-        for (int i = 0; converted != null && i < toTraits.size(); i++) {
+        for (int i = 0; (converted != null) && (i < toTraits.size()); i++) {
             RelTrait fromTrait = fromTraits.getTrait(i);
             RelTrait toTrait = toTraits.getTrait(i);
 
             if (toTrait == null) {
-               continue;
+                continue;
             }
 
-            assert(fromTrait.getTraitDef() == toTrait.getTraitDef());
+            assert (fromTrait.getTraitDef() == toTrait.getTraitDef());
 
             if (fromTrait == toTrait) {
                 // No need to convert, it's already correct.
                 continue;
             }
 
-            rel = fromTrait.getTraitDef().convert(
-                this, converted, toTrait, allowInfiniteCostConverters);
-            if (rel == null && allowAbstractConverters) {
+            rel =
+                fromTrait.getTraitDef().convert(
+                    this,
+                    converted,
+                    toTrait,
+                    allowInfiniteCostConverters);
+            if ((rel == null) && allowAbstractConverters) {
                 RelTraitSet stepTraits =
                     RelOptUtil.clone(converted.getTraits());
-                stepTraits.setTrait(toTrait.getTraitDef(), toTrait);
+                stepTraits.setTrait(
+                    toTrait.getTraitDef(),
+                    toTrait);
 
                 rel =
                     new AbstractConverter(
-                        converted.getCluster(), converted,
-                        toTrait.getTraitDef(), stepTraits);
+                        converted.getCluster(),
+                        converted,
+                        toTrait.getTraitDef(),
+                        stepTraits);
             }
 
             converted = rel;
@@ -714,7 +747,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             while (i < set.abstractConverters.size()) {
                 AbstractConverter converter = set.abstractConverters.get(i);
                 RelNode converted =
-                    changeTraitsUsingConverters(rel,
+                    changeTraitsUsingConverters(
+                        rel,
                         converter.getTraits());
                 if (converted == null) {
                     i++; // couldn't convert this; move on to the next
@@ -750,14 +784,17 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             int j = -1;
             for (RelSubset subset : set.subsets) {
                 ++j;
-                pw.println("\t" + subset.getDescription() + ", best="
-                    + ((subset.best == null) ? "null"
-                    : ("Rel#" + subset.best.getId())) + ", importance="
+                pw.println(
+                    "\t" + subset.getDescription() + ", best="
+                    + (
+                        (subset.best == null) ? "null"
+                        : ("Rel#" + subset.best.getId())
+                      ) + ", importance="
                     + ruleQueue.getImportance(subset));
                 assert (subset.set == set);
                 for (int k = 0; k < j; k++) {
                     assert !set.subsets.get(k).getTraits().equals(
-                        subset.getTraits());
+                            subset.getTraits());
                 }
                 for (RelNode rel : subset.rels) {
                     // "\t\trel#34:JavaProject(Rel#32:JavaFilter(...), ...)"
@@ -774,7 +811,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
                             assert inputSubset.rels.size() > 0;
                             input = inputSubset.rels.get(0);
                             assert inputSubset.getTraits().equals(
-                                input.getTraits());
+                                    input.getTraits());
                             assert inputSet.rels.contains(input);
                             assert inputSet.subsets.contains(inputSubset);
                         }
@@ -793,7 +830,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         if (fixupInputs(rel)) {
             assert mapDigestToRel.remove(oldDigest) == rel;
             final String newDigest = rel.recomputeDigest();
-            tracer.finer("Rename #" + rel.getId() + " from '" + oldDigest
+            tracer.finer(
+                "Rename #" + rel.getId() + " from '" + oldDigest
                 + "' to '" + newDigest + "'");
             final RelNode equivRel = mapDigestToRel.put(newDigest, rel);
             if (equivRel != null) {
@@ -801,7 +839,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
                 // There's already an equivalent with the same name, and we
                 // just knocked it out. Put it back, and forget about 'rel'.
-                tracer.finer("After renaming rel#" + rel.getId()
+                tracer.finer(
+                    "After renaming rel#" + rel.getId()
                     + ", it is now equivalent to rel#" + equivRel.getId());
                 mapDigestToRel.put(
                     equivRel.getDigest(),
@@ -873,8 +912,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             set = set.equivalentSet;
         } while (set.equivalentSet != null);
         return set.getOrCreateSubset(
-            subset.getCluster(),
-            subset.getTraits());
+                subset.getCluster(),
+                subset.getTraits());
     }
 
     private RelSubset findBestPlan_old(
@@ -892,8 +931,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
             assert rel.getTraits().equals(subset.getTraits());
             RelOptCost minCost = targetCost;
             if (subset.bestCost.isLt(minCost)) {
-                // not enough to do better than our target -- we have to do better than
-                // the best we already have
+                // not enough to do better than our target -- we have to do
+                // better than the best we already have
                 minCost = subset.bestCost;
             }
             RelOptCost cost = optimize(rel, minCost);
@@ -909,37 +948,22 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         subset.active = false;
 
         /*
-           // also consider other subsets of the same set, if they can be
-           // converted to this convention
-           RelSet set = subset.set;
-           int found = 0;
-           for (int i = 0; i < set.subsets.size(); i++) {
-               RelSubset subset2 = (RelSubset) set.subsets.get(i);
-               if (subset2 == subset) {
-                   continue;
-               }
-               if (Converter.canConvertIndirectly(subset2.convention, subset.convention)) {
-                   if (subset2.bestCost.isInfinite()) {
-                       findBestPlan_old(subset2, subset.bestCost);
-                   }
-                   if (subset2.bestCost.isLt(subset.bestCost)) {
-                       Rel converter = Converter.create(
-                               subset.getCluster(), subset2,
-                               subset2.getConvention(), subset.getConvention());
-                       if (lookup(converter) == null) {
-                           // Converter did not previously exist. We've done
-                           // something useful.
-                           register(converter, set, Planner.RegisterFlag.MAY_BE_REGISTERED);
-                           found++;
-                       }
-                   }
-               }
-           }
-           if (found > 0) {
-               // now we have more options, recursively invoke ourselves to see
-               // if we can do better
-               findBestPlan_old(subset, subset.bestCost);
-           }
+           // also consider other subsets of the same set, if they can be //
+           converted to this convention RelSet set = subset.set; int found = 0;
+           for (int i = 0; i < set.subsets.size(); i++) {    RelSubset subset2 =
+           (RelSubset) set.subsets.get(i);    if (subset2 == subset) { continue; }
+           if (Converter.canConvertIndirectly(subset2.convention,
+           subset.convention)) {        if (subset2.bestCost.isInfinite()) {
+           findBestPlan_old(subset2, subset.bestCost);        }        if
+           (subset2.bestCost.isLt(subset.bestCost)) {            Rel converter =
+           Converter.create(                    subset.getCluster(), subset2,
+           subset2.getConvention(), subset.getConvention()); if (lookup(converter)
+           == null) {                // Converter did not previously exist. We've
+           done                // something useful. register(converter, set,
+           Planner.RegisterFlag.MAY_BE_REGISTERED);       found++;  }        } } }
+           if (found > 0) {    // now we have more options, recursively invoke
+           ourselves to see    // if we can do better findBestPlan_old(subset,
+           subset.bestCost); }
          */
         return canonize(subset);
     }
@@ -948,9 +972,9 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
      * Fires all rules matched by a relational expression.
      *
      * @param rel Relational expression which has just been created (or maybe
-     *        from the queue)
+     * from the queue)
      * @param deferred If true, each time a rule matches, just add an entry to
-     *        the queue.
+     * the queue.
      */
     void fireRules(
         RelNode rel,
@@ -1016,8 +1040,7 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
         }
         set.mergeWith(this, set2);
         if (set2 == getSet(root)) {
-            root =
-                set.getOrCreateSubset(
+            root = set.getOrCreateSubset(
                     root.getCluster(),
                     root.getTraits());
         }
@@ -1025,8 +1048,8 @@ public class VolcanoPlanner extends AbstractRelOptPlanner
 
     /**
      * By optimizing its children, finds the best implementation of relational
-     * expression <code>rel</code>.  The cost is bounded by
-     * <code>targetCost</code>.
+     * expression <code>rel</code>. The cost is bounded by <code>
+     * targetCost</code>.
      */
     private RelOptCost optimize(
         RelNode rel,
@@ -1044,9 +1067,10 @@ loop:
                 if (registerCount > beforeCount) {
                     continue loop;
                 }
-                tracer.finer("Optimize: cannot implement [" +
-                    rel.getDescription() + "] in less than [" +
-                    targetCost + "]");
+                tracer.finer(
+                    "Optimize: cannot implement ["
+                    + rel.getDescription() + "] in less than ["
+                    + targetCost + "]");
                 return makeInfiniteCost(); // no can do
             }
 
@@ -1063,9 +1087,9 @@ loop:
                     findBestPlan_old((RelSubset) inputs[j], remainingCost);
 
                 // Use RelSubset.bestCost, not Rel.getCost(), because (a) it
-                // includes children, (b) it prevents cycles during optimize, (c)
-                // it potentially prevents expensive cost calculations on deep
-                // trees.
+                // includes children, (b) it prevents cycles during optimize,
+                // (c) it potentially prevents expensive cost calculations on
+                // deep trees.
                 if (!childSubset.bestCost.isLt(remainingCost)) {
                     int beforeCount = registerCount;
                     fireRulesForSubset(childSubset);
@@ -1073,8 +1097,8 @@ loop:
                         continue loop;
                     }
                     tracer.finer(
-                        "Optimize: cannot implement2 " + rel.getDescription() +
-                        ", cost=" + childSubset.bestCost);
+                        "Optimize: cannot implement2 " + rel.getDescription()
+                        + ", cost=" + childSubset.bestCost);
                     return makeInfiniteCost(); // no can do
                 }
                 usedCost = usedCost.plus(childSubset.bestCost);
@@ -1088,12 +1112,11 @@ loop:
     /**
      * Registers a new expression <code>exp</code> and queues up rule matches.
      * If <code>set</code> is not null, makes the expression part of that
-     * equivalence set.  If an identical expression is already registered,
-     * we don't need to register this one and nor should we queue up rule
-     * matches.
+     * equivalence set. If an identical expression is already registered, we
+     * don't need to register this one and nor should we queue up rule matches.
      *
-     * @param rel relational expression to register.
-     *   Must be either a {@link RelSubset}, or an unregistered {@link RelNode}
+     * @param rel relational expression to register. Must be either a {@link
+     * RelSubset}, or an unregistered {@link RelNode}
      * @param set set that rel belongs to, or <code>null</code>
      *
      * @return the equivalence-set
@@ -1104,17 +1127,17 @@ loop:
         RelNode rel,
         RelSet set)
     {
-        assert rel instanceof RelSubset || !isRegistered(rel) :
-            "pre: rel instanceof RelSubset || !isRegistered(rel)" +
-            " : {rel=" + rel + "}";
+        assert (rel instanceof RelSubset) || !isRegistered(rel) : "pre: rel instanceof RelSubset || !isRegistered(rel)"
+            + " : {rel=" + rel + "}";
         if (rel instanceof RelSubset) {
             return registerSubset(set, (RelSubset) rel);
         }
 
         if (rel.getCluster().getPlanner() != this) {
-            throw Util.newInternal("Relational expression " + rel +
-                " belongs to a different planner than is currently being" +
-                " used.");
+            throw Util.newInternal(
+                "Relational expression " + rel
+                + " belongs to a different planner than is currently being"
+                + " used.");
         }
 
         // Now is a good time to ensure that the relational expression
@@ -1122,15 +1145,17 @@ loop:
         final RelTraitSet traits = rel.getTraits();
         final CallingConvention convention =
             (CallingConvention) traits.getTrait(0);
-        if (!convention.getInterface().isInstance(rel) &&
-            !(rel instanceof ConverterRel)) {
-            throw Util.newInternal("Relational expression " + rel
+        if (!convention.getInterface().isInstance(rel)
+            && !(rel instanceof ConverterRel)) {
+            throw Util.newInternal(
+                "Relational expression " + rel
                 + " has calling-convention " + convention
                 + " but does not implement the required interface '"
                 + convention.getInterface() + "' of that convention");
         }
         if (traits.size() != traitDefs.size()) {
-            throw Util.newInternal("Relational expression " + rel
+            throw Util.newInternal(
+                "Relational expression " + rel
                 + " does not have the correct number of traits");
         }
 
@@ -1147,14 +1172,15 @@ loop:
             return getSubset(rel);
         } else {
             assert (equivExp.getTraits().equals(traits)
-                && (equivExp.getClass() == rel.getClass()));
+                    && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
-                tracer.finer("Register: rel#" + rel.getId()
+                tracer.finer(
+                    "Register: rel#" + rel.getId()
                     + " is equivalent to " + equivExp.getDescription());
                 return registerSubset(
-                    set,
-                    getSubset(equivExp));
+                        set,
+                        getSubset(equivExp));
             }
         }
 
@@ -1163,8 +1189,9 @@ loop:
             final RelNode input = ((ConverterRel) rel).getChild();
             final RelSet childSet = getSet(input);
             if ((set != null) && (set != childSet)
-                    && (set.equivalentSet == null)) {
-                tracer.finer("Register #" + rel.getId() + " " + digest
+                && (set.equivalentSet == null)) {
+                tracer.finer(
+                    "Register #" + rel.getId() + " " + digest
                     + " (and merge sets, because it is a conversion)");
                 merge(set, childSet);
                 registerCount++;
@@ -1210,8 +1237,8 @@ loop:
         final RelNode xx = mapDigestToRel.put(digest, rel);
         assert ((xx == null) || (xx == rel));
         tracer.finer(
-            "Register " + rel.getDescription() +
-            " in " + subset.getDescription());
+            "Register " + rel.getDescription()
+            + " in " + subset.getDescription());
 
         // This relational expression may have been registered while we
         // recursively registered its children. If this is the case, we're done.
@@ -1260,12 +1287,10 @@ loop:
         RelSet set,
         RelSubset subset)
     {
-        if (set != subset.set &&
-            set != null &&
-            set.equivalentSet == null &&
-            subset.set.equivalentSet == null)
-        {
-            tracer.finer("Register #" + subset.getId() + " " + subset
+        if ((set != subset.set) && (set != null) && (set.equivalentSet == null)
+            && (subset.set.equivalentSet == null)) {
+            tracer.finer(
+                "Register #" + subset.getId() + " " + subset
                 + ", and merge sets");
             merge(set, subset.set);
             registerCount++;
@@ -1287,8 +1312,7 @@ loop:
     // implement RelOptPlanner
     public void registerMetadataProviders(ChainedRelMetadataProvider chain)
     {
-        chain.addProvider(
-            new VolcanoRelMetadataProvider());
+        chain.addProvider(new VolcanoRelMetadataProvider());
     }
 
     // implement RelOptPlanner
@@ -1301,16 +1325,16 @@ loop:
             return subset.timestamp;
         }
     }
-    
-    //~ Inner Classes ---------------------------------------------------------
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * A rule call which defers its actions. Whereas {@link RelOptRuleCall}
-     * invokes the rule when it finds a match, a
-     * <code>DeferringRuleCall</code> creates a {@link VolcanoRuleMatch}
-     * which can be invoked later.
+     * invokes the rule when it finds a match, a <code>DeferringRuleCall</code>
+     * creates a {@link VolcanoRuleMatch} which can be invoked later.
      */
-    private static class DeferringRuleCall extends VolcanoRuleCall
+    private static class DeferringRuleCall
+        extends VolcanoRuleCall
     {
         DeferringRuleCall(
             VolcanoPlanner planner,
@@ -1326,11 +1350,13 @@ loop:
         protected void onMatch()
         {
             final VolcanoRuleMatch match =
-                new VolcanoRuleMatch(volcanoPlanner, getOperand0(), rels);
+                new VolcanoRuleMatch(
+                    volcanoPlanner,
+                    getOperand0(),
+                    rels);
             volcanoPlanner.ruleQueue.addMatch(match);
         }
     }
 }
-
 
 // End VolcanoPlanner.java

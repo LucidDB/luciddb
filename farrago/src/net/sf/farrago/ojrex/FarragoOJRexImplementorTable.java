@@ -22,12 +22,9 @@
 */
 package net.sf.farrago.ojrex;
 
-import org.eigenbase.oj.rex.OJRexImplementorTable;
-import org.eigenbase.oj.rex.OJRexImplementorTableImpl;
-import org.eigenbase.sql.SqlBinaryOperator;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlPrefixOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
 
 
 /**
@@ -37,9 +34,11 @@ import org.eigenbase.sql.fun.SqlStdOperatorTable;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
+public class FarragoOJRexImplementorTable
+    extends OJRexImplementorTableImpl
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a table with all supported standard operators registered.
@@ -49,7 +48,7 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
         initStandard(opTab);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override OJRexImplementorTableImpl
     protected void initStandard(final SqlStdOperatorTable opTab)
@@ -96,7 +95,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexBuiltinImplementor(
                 FarragoOJRexBuiltinImplementor.MOD_FUNCTION));
 
-
         registerOperator(
             opTab.substringFunc,
             new FarragoOJRexBuiltinImplementor(
@@ -118,15 +116,12 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
                 FarragoOJRexBuiltinImplementor.CONCAT_OPERATOR));
 
         /*
-        registerOperator(
-            opTab.convertFunc,
-            new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
+        registerOperator( opTab.convertFunc, new FarragoOJRexBuiltinImplementor(
+         FarragoOJRexBuiltinImplementor.CONVERT_FUNCTION));
 
-        registerOperator(
-            opTab.translateFunc,
-            new FarragoOJRexBuiltinImplementor(
-                FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
+         registerOperator( opTab.translateFunc, new
+         FarragoOJRexBuiltinImplementor(
+         FarragoOJRexBuiltinImplementor.TRANSLATE_FUNCTION));
          */
 
         registerOperator(
@@ -260,8 +255,6 @@ public class FarragoOJRexImplementorTable extends OJRexImplementorTableImpl
             new FarragoOJRexUnaryExpressionImplementor(
                 ojUnaryExpressionOrdinal));
     }
-
 }
-
 
 // End FarragoOJRexImplementorTable.java

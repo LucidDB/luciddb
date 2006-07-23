@@ -20,42 +20,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.util.Date;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.*;
 
-import junit.framework.TestCase;
+import junit.framework.*;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
  * Test case for {@link TimeoutQueueIterator}.
  */
-public class TimeoutIteratorTest extends TestCase
+public class TimeoutIteratorTest
+    extends TestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Multiplier which determines how long each logical clock tick
-     * lasts, and therefore how fast the test is run. If you are getting
-     * sporadic problems, raise the value. 100 seems to be too low; 200
-     * seems to be OK on my 1.8GHz laptop.
+     * Multiplier which determines how long each logical clock tick lasts, and
+     * therefore how fast the test is run. If you are getting sporadic problems,
+     * raise the value. 100 seems to be too low; 200 seems to be OK on my 1.8GHz
+     * laptop.
      */
     private static final int tickMillis = 1000;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * Timestamp at which the test started. All timeouts are relative to
-     * this.
+     * Timestamp at which the test started. All timeouts are relative to this.
      */
     private long startTime;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public TimeoutIteratorTest(String s)
         throws Exception
@@ -63,7 +61,7 @@ public class TimeoutIteratorTest extends TestCase
         super(s);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void testTimeoutIterator()
     {
@@ -187,11 +185,13 @@ public class TimeoutIteratorTest extends TestCase
     {
         try {
             if (false) {
-                System.out.println("entering hasNext at " + new Date()
+                System.out.println(
+                    "entering hasNext at " + new Date()
                     + " with " + timeoutMillis);
             }
             boolean b = timeoutIter.hasNext(timeoutMillis);
-            fail("hasNext() returned " + b + " and did not time out at "
+            fail(
+                "hasNext() returned " + b + " and did not time out at "
                 + new Date());
         } catch (QueueIterator.TimeoutException e) {
             // success -- we timed out
@@ -230,7 +230,7 @@ public class TimeoutIteratorTest extends TestCase
         return endTime - System.currentTimeMillis();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Iterator which returns an element from an array on a regular basis.
@@ -240,7 +240,8 @@ public class TimeoutIteratorTest extends TestCase
      * object. If you call a method too early, the method waits until the
      * appropriate time.
      */
-    private static class TickIterator implements Iterator
+    private static class TickIterator
+        implements Iterator
     {
         private final boolean verbose;
         private final long startTime;
@@ -263,13 +264,15 @@ public class TimeoutIteratorTest extends TestCase
             waitUntil(tick);
             if (current < values.length) {
                 if (verbose) {
-                    System.out.println(new Date() + " (tick " + tick
+                    System.out.println(
+                        new Date() + " (tick " + tick
                         + ") hasNext returns true");
                 }
                 return true;
             } else {
                 if (verbose) {
-                    System.out.println(new Date() + " (tick " + tick
+                    System.out.println(
+                        new Date() + " (tick " + tick
                         + ") hasNext returns false");
                 }
                 return false;
@@ -295,7 +298,8 @@ public class TimeoutIteratorTest extends TestCase
             waitUntil(tick);
             Object value = values[current];
             if (verbose) {
-                System.out.println(new Date() + " (tick " + tick + ") return "
+                System.out.println(
+                    new Date() + " (tick " + tick + ") return "
                     + value);
             }
             ++current;
@@ -311,7 +315,9 @@ public class TimeoutIteratorTest extends TestCase
         {
             String [] values = { "a", "b", "c" };
             TickIterator tickIterator =
-                new TickIterator(values, true,
+                new TickIterator(
+                    values,
+                    true,
                     System.currentTimeMillis());
             while (tickIterator.hasNext()) {
                 Util.discard(tickIterator.next());
@@ -319,6 +325,5 @@ public class TimeoutIteratorTest extends TestCase
         }
     }
 }
-
 
 // End TimeoutIteratorTest.java

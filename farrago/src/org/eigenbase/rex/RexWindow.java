@@ -22,10 +22,10 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.sql.SqlNode;
+import java.io.*;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import org.eigenbase.sql.*;
+
 
 /**
  * Specification of the window of rows over which a {@link RexOver} windowed
@@ -39,22 +39,27 @@ import java.io.StringWriter;
  */
 public class RexWindow
 {
-    public final RexNode[] partitionKeys;
-    public final RexNode[] orderKeys;
+
+    //~ Instance fields --------------------------------------------------------
+
+    public final RexNode [] partitionKeys;
+    public final RexNode [] orderKeys;
     private final SqlNode lowerBound;
     private final SqlNode upperBound;
     private final boolean physical;
     private final String digest;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a window.
      *
-     * <p>If you need to create a window from outside this package, use
-     * {@link RexBuilder#makeOver}.
+     * <p>If you need to create a window from outside this package, use {@link
+     * RexBuilder#makeOver}.
      */
     RexWindow(
-        RexNode[] partitionKeys,
-        RexNode[] orderKeys,
+        RexNode [] partitionKeys,
+        RexNode [] orderKeys,
         SqlNode lowerBound,
         SqlNode upperBound,
         boolean physical)
@@ -71,6 +76,8 @@ public class RexWindow
             assert orderKeys.length > 0 : "logical window requires sort key";
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String toString()
     {
@@ -146,18 +153,20 @@ public class RexWindow
         return sw.toString();
     }
 
-    public SqlNode getLowerBound() {
+    public SqlNode getLowerBound()
+    {
         return lowerBound;
     }
 
-    public SqlNode getUpperBound() {
+    public SqlNode getUpperBound()
+    {
         return upperBound;
     }
 
-    public boolean isRows() {
+    public boolean isRows()
+    {
         return physical;
     }
-
 }
 
 // End RexWindow.java

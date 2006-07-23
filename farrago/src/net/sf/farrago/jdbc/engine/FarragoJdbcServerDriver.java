@@ -28,30 +28,31 @@ import net.sf.farrago.session.*;
 
 
 /**
- * FarragoJdbcServerDriver defines the interface which must be implemented
- * by JDBC drivers which can be used to implement {@link FarragoServer}.
+ * FarragoJdbcServerDriver defines the interface which must be implemented by
+ * JDBC drivers which can be used to implement {@link FarragoServer}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoJdbcServerDriver extends Driver
+public interface FarragoJdbcServerDriver
+    extends Driver
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Creates a new FarragoSessionFactory which will govern the behavior
-     * of connections established through this driver.
+     * Creates a new FarragoSessionFactory which will govern the behavior of
+     * connections established through this driver.
      *
      * @return new factory
      */
     public FarragoSessionFactory newSessionFactory();
 
     /**
-     * @return the base JDBC URL for this driver;
-     * subclassing drivers can override this to customize the URL scheme
+     * @return the base JDBC URL for this driver; subclassing drivers can
+     * override this to customize the URL scheme
      */
     public String getBaseUrl();
 }
-
 
 // End FarragoJdbcServerDriver.java

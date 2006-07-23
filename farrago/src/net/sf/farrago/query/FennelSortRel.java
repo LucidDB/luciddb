@@ -41,9 +41,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelSortRel extends FennelSingleRel
+public class FennelSortRel
+    extends FennelSingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * 0-based ordinals of fields on which to sort, from most significant to
@@ -51,10 +53,12 @@ public class FennelSortRel extends FennelSingleRel
      */
     private final Integer [] keyProjection;
 
-    /** Whether to discard tuples with duplicate keys. */
+    /**
+     * Whether to discard tuples with duplicate keys.
+     */
     private final boolean discardDuplicates;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelSortRel object.
@@ -77,14 +81,15 @@ public class FennelSortRel extends FennelSingleRel
         this.discardDuplicates = discardDuplicates;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override Rel
     public boolean isDistinct()
     {
         // sort results are distinct if duplicates are discarded AND
         // the sort key is the whole tuple
-        return discardDuplicates
+        return
+            discardDuplicates
             && (keyProjection.length == getRowType().getFieldList().size());
     }
 
@@ -96,11 +101,12 @@ public class FennelSortRel extends FennelSingleRel
     // implement Cloneable
     public Object clone()
     {
-        FennelSortRel clone = new FennelSortRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            keyProjection,
-            discardDuplicates);
+        FennelSortRel clone =
+            new FennelSortRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                keyProjection,
+                discardDuplicates);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -128,10 +134,11 @@ public class FennelSortRel extends FennelSingleRel
         // TODO:  the real thing
         double rowCount = RelMetadataQuery.getRowCount(this);
         double bytesPerRow = 1;
-        return planner.makeCost(
-            rowCount,
-            Util.nLogN(rowCount),
-            rowCount * bytesPerRow);
+        return
+            planner.makeCost(
+                rowCount,
+                Util.nLogN(rowCount),
+                rowCount * bytesPerRow);
     }
 
     // override RelNode
@@ -139,10 +146,10 @@ public class FennelSortRel extends FennelSingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "key", "discardDuplicates" },
-            new Object [] {
+            new String[] { "child", "key", "discardDuplicates" },
+            new Object[] {
                 Arrays.asList(keyProjection),
-                Boolean.valueOf(discardDuplicates)
+            Boolean.valueOf(discardDuplicates)
             });
     }
 
@@ -150,11 +157,11 @@ public class FennelSortRel extends FennelSingleRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         final FarragoRepos repos = FennelRelUtil.getRepos(this);
-        FemSortingStreamDef sortingStream =
-            repos.newFemSortingStreamDef();
+        FemSortingStreamDef sortingStream = repos.newFemSortingStreamDef();
 
-        sortingStream.setDistinctness(discardDuplicates
-            ? DistinctnessEnum.DUP_DISCARD : DistinctnessEnum.DUP_ALLOW);
+        sortingStream.setDistinctness(
+            discardDuplicates ? DistinctnessEnum.DUP_DISCARD
+            : DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(
             FennelRelUtil.createTupleProjection(
                 repos,
@@ -176,6 +183,5 @@ public class FennelSortRel extends FennelSingleRel
         return collations;
     }
 }
-
 
 // End FennelSortRel.java

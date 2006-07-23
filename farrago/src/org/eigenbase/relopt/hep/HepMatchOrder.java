@@ -22,14 +22,13 @@
 package org.eigenbase.relopt.hep;
 
 /**
- * HepMatchOrder specifies the order of graph traversal when looking
- * for rule matches.
+ * HepMatchOrder specifies the order of graph traversal when looking for rule
+ * matches.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum HepMatchOrder
-{
+public enum HepMatchOrder {
     /**
      * Match in arbitrary order.  This is the default because it is the most
      * efficient, and most rules don't care about order.
@@ -49,4 +48,12 @@ public enum HepMatchOrder
     TOP_DOWN
 }
 
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
+// End HepMatchOrder.java
 // End HepMatchOrder.java

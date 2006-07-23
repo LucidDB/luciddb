@@ -27,16 +27,20 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FtrsTableModificationRule is a rule for converting an abstract {@link
- * FarragoIndexBuilderRule} into a corresponding
- * {@link FtrsIndexBuilderRel}.
+ * FarragoIndexBuilderRule} into a corresponding {@link FtrsIndexBuilderRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FtrsIndexBuilderRule extends RelOptRule
+public class FtrsIndexBuilderRule
+    extends RelOptRule
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FtrsIndexBuilderRule object.
      */
@@ -46,6 +50,8 @@ public class FtrsIndexBuilderRule extends RelOptRule
                 FarragoIndexBuilderRel.class,
                 null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -66,7 +72,8 @@ public class FtrsIndexBuilderRule extends RelOptRule
         RelNode inputRel = builderRel.getChild();
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                call.rels[0].getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 inputRel);
         if (fennelInput == null) {
             return;

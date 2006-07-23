@@ -21,37 +21,42 @@
 */
 package org.eigenbase.rel;
 
-import org.eigenbase.rex.*;
+import java.util.*;
+
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
-import java.util.*;
 
 /**
- * <code>ValuesRelBase</code> is an abstract base class for implementations
- * of {@link ValuesRel}.
+ * <code>ValuesRelBase</code> is an abstract base class for implementations of
+ * {@link ValuesRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class ValuesRelBase extends AbstractRelNode
+public abstract class ValuesRelBase
+    extends AbstractRelNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final List<List<RexLiteral>> tuples;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new ValuesRelBase.  Note that tuples passed in become owned
-     * by this rel (without a deep copy), so caller must not modify them after
-     * this call, otherwise bad things will happen.
+     * Creates a new ValuesRelBase. Note that tuples passed in become owned by
+     * this rel (without a deep copy), so caller must not modify them after this
+     * call, otherwise bad things will happen.
      *
      * @param cluster .
-     *
      * @param rowType row type for tuples produced by this rel
-     *
      * @param tuples 2-dimensional array of tuple values to be produced; outer
-     * list contains tuples; each inner list is one tuple; all tuples must be
-     * of same length, conforming to rowType
+     * list contains tuples; each inner list is one tuple; all tuples must be of
+     * same length, conforming to rowType
      */
     protected ValuesRelBase(
         RelOptCluster cluster,
@@ -62,8 +67,10 @@ public abstract class ValuesRelBase extends AbstractRelNode
         super(cluster, traits);
         this.rowType = rowType;
         this.tuples = tuples;
-        assert(assertRowType());
+        assert (assertRowType());
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return rows of literals represented by this rel
@@ -74,25 +81,24 @@ public abstract class ValuesRelBase extends AbstractRelNode
     }
 
     /**
-     * @return true if all tuples match rowType; otherwise, assert
-     * on mismatch
+     * @return true if all tuples match rowType; otherwise, assert on mismatch
      */
     private boolean assertRowType()
     {
         for (List<RexLiteral> tuple : tuples) {
             RelDataTypeField [] fields = rowType.getFields();
-            assert(tuple.size() == fields.length);
+            assert (tuple.size() == fields.length);
             int i = 0;
             for (RexLiteral literal : tuple) {
                 RelDataType fieldType = fields[i++].getType();
+
                 // TODO jvs 19-Feb-2006: strengthen this a bit.  For example,
                 // overflow, rounding, and truncation must already have been
                 // dealt with.
                 if (!RexLiteral.isNullLiteral(literal)) {
-                    assert(
-                        SqlTypeUtil.canAssignFrom(
-                            fieldType,
-                            literal.getType()));
+                    assert (SqlTypeUtil.canAssignFrom(
+                                fieldType,
+                                literal.getType()));
                 }
             }
         }
@@ -116,12 +122,13 @@ public abstract class ValuesRelBase extends AbstractRelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = RelMetadataQuery.getRowCount(this);
+
         // Assume CPU is negligible since values are precomputed.
         double dCpu = 1;
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
     }
-    
+
     // implement RelNode
     public double getRows()
     {
@@ -137,14 +144,14 @@ public abstract class ValuesRelBase extends AbstractRelNode
         List renderList = new ArrayList();
         for (List<RexLiteral> tuple : tuples) {
             String s = tuple.toString();
-            assert(s.startsWith("["));
-            assert(s.endsWith("]"));
+            assert (s.startsWith("["));
+            assert (s.endsWith("]"));
             renderList.add("{ " + s.substring(1, s.length() - 1) + " }");
         }
         pw.explain(
             this,
-            new String [] { "tuples" },
-            new Object [] { renderList });
+            new String[] { "tuples" },
+            new Object[] { renderList });
     }
 }
 

@@ -22,9 +22,8 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.CompositeOperandTypeChecker;
-import org.eigenbase.sql.type.SqlOperandTypeChecker;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * The <code>OVERLAY</code> function.
@@ -32,23 +31,33 @@ import org.eigenbase.sql.type.SqlTypeStrategies;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlOverlayFunction extends SqlFunction
+public class SqlOverlayFunction
+    extends SqlFunction
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final SqlOperandTypeChecker otcCustom =
         new CompositeOperandTypeChecker(
             CompositeOperandTypeChecker.OR,
             new SqlOperandTypeChecker[] {
                 SqlTypeStrategies.otcStringX2Int,
-                SqlTypeStrategies.otcStringX2IntX2
+            SqlTypeStrategies.otcStringX2IntX2
             });
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlOverlayFunction()
     {
-        super("OVERLAY", SqlKind.Function,
+        super("OVERLAY",
+            SqlKind.Function,
             SqlTypeStrategies.rtiNullableVaryingDyadicStringSumPrecision,
-            null, otcCustom,
+            null,
+            otcCustom,
             SqlFunctionCategory.String);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void unparse(
         SqlWriter writer,

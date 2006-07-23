@@ -22,17 +22,25 @@
 package org.eigenbase.rex;
 
 /**
- * Default implementation of {@link RexVisitor}, which visits each node
- * but does nothing while it's there.
+ * Default implementation of {@link RexVisitor}, which visits each node but does
+ * nothing while it's there.
  */
-public class RexVisitorImpl<R> implements RexVisitor<R>
+public class RexVisitorImpl<R>
+    implements RexVisitor<R>
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final boolean deep;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected RexVisitorImpl(boolean deep)
     {
         this.deep = deep;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public R visitInputRef(RexInputRef inputRef)
     {
@@ -108,14 +116,14 @@ public class RexVisitorImpl<R> implements RexVisitor<R>
      * <p>Visits an array of expressions, returning the logical 'and' of their
      * results.
      *
-     * <p>If any of them returns false, returns false immediately;
-     * if they all return true, returns true.
+     * <p>If any of them returns false, returns false immediately; if they all
+     * return true, returns true.
      *
      * @see #visitArrayOr
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayAnd(
-        RexVisitor<Boolean> visitor, RexNode[] exprs)
+    public static boolean visitArrayAnd(RexVisitor<Boolean> visitor,
+        RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {
             RexNode expr = exprs[i];
@@ -131,14 +139,14 @@ public class RexVisitorImpl<R> implements RexVisitor<R>
      * <p>Visits an array of expressions, returning the logical 'or' of their
      * results.
      *
-     * <p>If any of them returns true, returns true immediately;
-     * if they all return false, returns false.
+     * <p>If any of them returns true, returns true immediately; if they all
+     * return false, returns false.
      *
      * @see #visitArrayAnd
      * @see RexShuttle#visitArray
      */
-    public static boolean visitArrayOr(
-        RexVisitor<Boolean> visitor, RexNode[] exprs)
+    public static boolean visitArrayOr(RexVisitor<Boolean> visitor,
+        RexNode [] exprs)
     {
         for (int i = 0; i < exprs.length; i++) {
             RexNode expr = exprs[i];

@@ -20,11 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
 import java.lang.reflect.*;
+
 import java.nio.*;
+
 import java.util.*;
 
 
@@ -36,7 +37,8 @@ import java.util.*;
  */
 public abstract class ReflectUtil
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static Map primitiveToBoxingMap;
     private static Map primitiveToByteBufferReadMethod;
@@ -91,7 +93,7 @@ public abstract class ReflectUtil
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Uses reflection to find the correct java.nio.ByteBuffer "absolute get"
@@ -124,8 +126,8 @@ public abstract class ReflectUtil
     /**
      * Gets the Java boxing class for a primitive class.
      *
-     * @param primitiveClass representative class for primitive
-     * (e.g. java.lang.Integer.TYPE)
+     * @param primitiveClass representative class for primitive (e.g.
+     * java.lang.Integer.TYPE)
      *
      * @return corresponding boxing Class (e.g. java.lang.Integer)
      */
@@ -136,10 +138,11 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Gets the name of a class with no package qualifiers; if it's an
-     * inner class, it will still be qualified by the containing class (X$Y).
+     * Gets the name of a class with no package qualifiers; if it's an inner
+     * class, it will still be qualified by the containing class (X$Y).
      *
      * @param c the class of interest
+     *
      * @return the unqualified name
      */
     public static String getUnqualifiedClassName(Class c)
@@ -153,13 +156,11 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Composes a string representing a human-readable method name
-     * (with neither exception nor return type information).
+     * Composes a string representing a human-readable method name (with neither
+     * exception nor return type information).
      *
      * @param declaringClass class on which method is defined
-     *
      * @param methodName simple name of method without signature
-     *
      * @param paramTypes method parameter types
      *
      * @return unmangled method name
@@ -185,8 +186,8 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Composes a string representing a human-readable method name
-     * (with neither exception nor return type information).
+     * Composes a string representing a human-readable method name (with neither
+     * exception nor return type information).
      *
      * @param method method whose name is to be generated
      *
@@ -195,31 +196,28 @@ public abstract class ReflectUtil
     public static String getUnmangledMethodName(
         Method method)
     {
-        return getUnmangledMethodName(
-            method.getDeclaringClass(),
-            method.getName(),
-            method.getParameterTypes());
+        return
+            getUnmangledMethodName(
+                method.getDeclaringClass(),
+                method.getName(),
+                method.getParameterTypes());
     }
 
     /**
-     * Implements the {@link Glossary#VisitorPattern} via reflection.  The
-     * basic technique is taken from <a
-     * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html"> a
-     * Javaworld article</a>.  For an example of how to use it, see {@link
-     * ReflectVisitorTest}.  Visit method lookup follows the same rules as if
+     * Implements the {@link Glossary#VisitorPattern} via reflection. The basic
+     * technique is taken from <a
+     * href="http://www.javaworld.com/javaworld/javatips/jw-javatip98.html">a
+     * Javaworld article</a>. For an example of how to use it, see {@link
+     * ReflectVisitorTest}. Visit method lookup follows the same rules as if
      * compile-time resolution for VisitorClass.visit(VisiteeClass) were
-     * performed.  An ambiguous match due to multiple interface inheritance
-     * results in an IllegalArgumentException.  A non-match is indicated by
+     * performed. An ambiguous match due to multiple interface inheritance
+     * results in an IllegalArgumentException. A non-match is indicated by
      * returning false.
      *
      * @param visitor object whose visit method is to be invoked
-     *
      * @param visitee object to be passed as a parameter to the visit method
-     *
-     * @param hierarchyRoot if non-null, visitor method will only
-     * be invoked if it takes a parameter whose type is a subtype of
-     * hierarchyRoot
-     *
+     * @param hierarchyRoot if non-null, visitor method will only be invoked if
+     * it takes a parameter whose type is a subtype of hierarchyRoot
      * @param visitMethodName name of visit method, e.g. "visit"
      *
      * @return true if a matching visit method was found and invoked
@@ -232,8 +230,11 @@ public abstract class ReflectUtil
     {
         Class visitorClass = visitor.getClass();
         Class visiteeClass = visitee.getClass();
-        Method method = lookupVisitMethod(
-            visitorClass, visiteeClass, visitMethodName);
+        Method method =
+            lookupVisitMethod(
+                visitorClass,
+                visiteeClass,
+                visitMethodName);
         if (method == null) {
             return false;
         }
@@ -244,9 +245,11 @@ public abstract class ReflectUtil
                 return false;
             }
         }
-        
+
         try {
-            method.invoke(visitor, new Object[] { visitee });
+            method.invoke(
+                visitor,
+                new Object[] { visitee });
         } catch (IllegalAccessException ex) {
             throw Util.newInternal(ex);
         } catch (InvocationTargetException ex) {
@@ -269,10 +272,8 @@ public abstract class ReflectUtil
      * Looks up a visit method.
      *
      * @param visitorClass class of object whose visit method is to be invoked
-     *
      * @param visiteeClass class of object to be passed as a parameter to the
      * visit method
-     *
      * @param visitMethodName name of visit method
      *
      * @return method found, or null if none found
@@ -282,22 +283,22 @@ public abstract class ReflectUtil
         Class visiteeClass,
         String visitMethodName)
     {
-        return lookupVisitMethod(
-            visitorClass, visiteeClass, visitMethodName,
-            Collections.EMPTY_LIST);
+        return
+            lookupVisitMethod(
+                visitorClass,
+                visiteeClass,
+                visitMethodName,
+                Collections.EMPTY_LIST);
     }
-    
+
     /**
-     * Looks up a visit method taking additional parameters beyond
-     * the overloaded visitee type.
+     * Looks up a visit method taking additional parameters beyond the
+     * overloaded visitee type.
      *
      * @param visitorClass class of object whose visit method is to be invoked
-     *
      * @param visiteeClass class of object to be passed as a parameter to the
      * visit method
-     *
      * @param visitMethodName name of visit method
-     *
      * @param additionalParameterTypes list of additional parameter types
      *
      * @return method found, or null if none found
@@ -316,10 +317,11 @@ public abstract class ReflectUtil
         for (Class paramType : additionalParameterTypes) {
             paramTypes[iParam++] = paramType;
         }
-    
+
         try {
             return visitorClass.getMethod(
-                visitMethodName, paramTypes);
+                    visitMethodName,
+                    paramTypes);
         } catch (NoSuchMethodException ex) {
             // not found:  carry on with lookup
         }
@@ -328,16 +330,22 @@ public abstract class ReflectUtil
 
         Class superClass = visiteeClass.getSuperclass();
         if (superClass != null) {
-            candidateMethod = lookupVisitMethod(
-                visitorClass, superClass, visitMethodName,
-                additionalParameterTypes);
+            candidateMethod =
+                lookupVisitMethod(
+                    visitorClass,
+                    superClass,
+                    visitMethodName,
+                    additionalParameterTypes);
         }
 
         Class [] interfaces = visiteeClass.getInterfaces();
         for (int i = 0; i < interfaces.length; ++i) {
-            Method method = lookupVisitMethod(
-                visitorClass, interfaces[i], visitMethodName,
-                additionalParameterTypes);
+            Method method =
+                lookupVisitMethod(
+                    visitorClass,
+                    interfaces[i],
+                    visitMethodName,
+                    additionalParameterTypes);
             if (method != null) {
                 if (candidateMethod != null) {
                     if (!method.equals(candidateMethod)) {
@@ -367,8 +375,8 @@ public abstract class ReflectUtil
     }
 
     /**
-     * Looks up a class by name.  This is like Class.forName,
-     * except that it handles primitive type names.
+     * Looks up a class by name. This is like Class.forName, except that it
+     * handles primitive type names.
      *
      * @param name fully-qualified name of class to look up
      *
@@ -400,6 +408,5 @@ public abstract class ReflectUtil
         }
     }
 }
-
 
 // End ReflectUtil.java

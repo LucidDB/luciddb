@@ -23,15 +23,15 @@ package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
- * Strategy to infer the type of an operator call from the type of the
- * operands by using a series of {@link SqlReturnTypeInference} rules in a
- * given order. If a rule fails to find a return type (by returning NULL),
- * next rule is tried until there are no more rules in which case NULL will
- * be returned.
+ * Strategy to infer the type of an operator call from the type of the operands
+ * by using a series of {@link SqlReturnTypeInference} rules in a given order.
+ * If a rule fails to find a return type (by returning NULL), next rule is tried
+ * until there are no more rules in which case NULL will be returned.
  *
  * @author Wael Chatila
  * @version $Id$
@@ -39,7 +39,12 @@ import org.eigenbase.sql.validate.*;
 public class SqlReturnTypeInferenceChain
     implements SqlReturnTypeInference
 {
-    private final SqlReturnTypeInference[] rules;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final SqlReturnTypeInference [] rules;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a FallbackCascade from an array of rules
@@ -49,7 +54,7 @@ public class SqlReturnTypeInferenceChain
      * @pre rules.length > 0
      */
     public SqlReturnTypeInferenceChain(
-        SqlReturnTypeInference[] rules)
+        SqlReturnTypeInference [] rules)
     {
         Util.pre(null != rules, "null!=rules");
         Util.pre(rules.length > 0, "rules.length>0");
@@ -69,6 +74,8 @@ public class SqlReturnTypeInferenceChain
         this(new SqlReturnTypeInference[] { rule1, rule2 });
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
@@ -76,7 +83,7 @@ public class SqlReturnTypeInferenceChain
         for (int i = 0; i < rules.length; i++) {
             SqlReturnTypeInference rule = rules[i];
             ret = rule.inferReturnType(opBinding);
-            if (null!=ret) {
+            if (null != ret) {
                 break;
             }
         }

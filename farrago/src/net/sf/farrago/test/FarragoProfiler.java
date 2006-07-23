@@ -21,10 +21,12 @@
 */
 package net.sf.farrago.test;
 
+import java.sql.*;
+
+import java.util.*;
+
 import net.sf.farrago.jdbc.engine.*;
 
-import java.sql.*;
-import java.util.*;
 
 /**
  * This class is intended for use with a profiler.
@@ -34,6 +36,9 @@ import java.util.*;
  */
 public class FarragoProfiler
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Provides an entry point for profiling the SQL engine.
      *
@@ -55,18 +60,18 @@ public class FarragoProfiler
         Properties info = new Properties();
         info.put("user", "sa");
         Connection connection = driver.connect(
-            "jdbc:farrago:",
-            info);
+                "jdbc:farrago:",
+                info);
 
         Statement stmt = connection.createStatement();
 
         // disable stmt caching since we want to profile both
         // preparation and execution
         stmt.execute("alter system set \"codeCacheMaxBytes\"=min");
-        
+
         // run query without profiling first in order to prime the system
         runQuery(stmt);
-        
+
         // tell the profiler about this dummy entry point
         runProfiledQuery(stmt);
 
@@ -82,8 +87,9 @@ public class FarragoProfiler
     private static void runQuery(Statement stmt)
         throws SQLException
     {
-        ResultSet rs = stmt.executeQuery(
-            "select count(*) from sys_boot.jdbc_metadata.columns_view");
+        ResultSet rs =
+            stmt.executeQuery(
+                "select count(*) from sys_boot.jdbc_metadata.columns_view");
         rs.next();
         int n = rs.getInt(1);
         rs.close();

@@ -23,32 +23,40 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Definition of the "FLOOR" builtin SQL function.
  *
  * @author jack
- * @since May 28, 2004
  * @version $Id$
- **/
-public class SqlFloorFunction extends SqlFunction
+ * @since May 28, 2004
+ */
+public class SqlFloorFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlFloorFunction()
     {
-        super("FLOOR", SqlKind.Function,
+        super("FLOOR",
+            SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcNumeric,
             SqlFunctionCategory.Numeric);
-
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
     {
-        SqlNode node = (SqlNode)call.operands[0];
+        SqlNode node = (SqlNode) call.operands[0];
         return scope.isMonotonic(node);
     }
-
 }
+
+// End SqlFloorFunction.java

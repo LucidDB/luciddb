@@ -22,32 +22,40 @@
 */
 package net.sf.farrago.runtime;
 
-import java.nio.ByteBuffer;
-import org.eigenbase.runtime.TupleIter;
+import java.nio.*;
+
+import org.eigenbase.runtime.*;
+
 
 /**
- * FennelAbstractTupleIter implements the {@link TupleIter} interface
- * by unmarshalling Fennel tuples from a buffer.
+ * FennelAbstractTupleIter implements the {@link TupleIter} interface by
+ * unmarshalling Fennel tuples from a buffer.
  *
  * <p>FennelAbstractTupleIter only deals with raw byte buffers; it is the
- * responsibility of the contained {@link FennelTupleReader} object to
- * unmarshal individual fields.
+ * responsibility of the contained {@link FennelTupleReader} object to unmarshal
+ * individual fields.
  *
  * <p>Neither does it actually populate the source buffer. This is the
  * responsibility of the {@link #populateBuffer()} method, which must be
- * implemented by the subclass. The subclass may optionally override the
- * {@link #requestData()} method to tell the producer that it is safe to
- * start producing more data.
+ * implemented by the subclass. The subclass may optionally override the {@link
+ * #requestData()} method to tell the producer that it is safe to start
+ * producing more data.
  *
  * @author John V. Sichi, Stephan Zuercher
  * @version $Id$
  */
-public abstract class FennelAbstractTupleIter implements TupleIter
+public abstract class FennelAbstractTupleIter
+    implements TupleIter
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final FennelTupleReader tupleReader;
     protected ByteBuffer byteBuffer;
     protected byte [] bufferAsArray;
     private boolean endOfData;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelAbstractTupleIter object.
@@ -60,24 +68,31 @@ public abstract class FennelAbstractTupleIter implements TupleIter
         this.endOfData = false;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * For subclasses that trace, returns a terse description of the status.
+     *
      * @param prefix prepended to the results
      */
     protected String getStatus(String prefix)
     {
         StringBuffer sb = new StringBuffer(prefix);
-        if (prefix.length() > 0) sb.append(" ");
+        if (prefix.length() > 0) {
+            sb.append(" ");
+        }
         if (byteBuffer == null) {
             sb.append("buf: null");
         } else {
-            sb.append("buf: ").append(Integer.toHexString(byteBuffer.hashCode()));
+            sb.append("buf: ").append(
+                Integer.toHexString(byteBuffer.hashCode()));
             sb.append(" (").append(byteBuffer).append(")");
-        } 
-        if (endOfData) sb.append(" EOD");
+        }
+        if (endOfData) {
+            sb.append(" EOD");
+        }
         return sb.toString();
     }
-
 
     // implement TupleIter
     public void restart()
@@ -128,7 +143,7 @@ public abstract class FennelAbstractTupleIter implements TupleIter
             requestData();
         }
         return obj;
-    }        
+    }
 
     // override to trace the buffer state after unmarshal(), but before refill
     protected void traceNext(Object val)
@@ -136,24 +151,22 @@ public abstract class FennelAbstractTupleIter implements TupleIter
     }
 
     /**
-     * Populates the buffer with a new batch of data, and returns the
-     * size in bytes.  The buffer position is set to the start.  The
-     * call may block until the buffer is filled or it may return an
-     * indication that there is no data currently available.  A
-     * subclass can implement this to fill the buffer itself, or it
-     * can work by allowing an outside object to fill the buffer.
+     * Populates the buffer with a new batch of data, and returns the size in
+     * bytes. The buffer position is set to the start. The call may block until
+     * the buffer is filled or it may return an indication that there is no data
+     * currently available. A subclass can implement this to fill the buffer
+     * itself, or it can work by allowing an outside object to fill the buffer.
      *
-     * @return The number of bytes now in the buffer. 0 means end of stream. 
-     *         Less than 0 means no data currently available.
+     * @return The number of bytes now in the buffer. 0 means end of stream.
+     * Less than 0 means no data currently available.
      */
     protected abstract int populateBuffer();
 
-
     /**
-     * This method is called when the contents of the buffer have been
-     * consumed. A subclass may use this method to tell the producer that it
-     * can start producing. The default implementation does nothing.
-     * The method should not block.
+     * This method is called when the contents of the buffer have been consumed.
+     * A subclass may use this method to tell the producer that it can start
+     * producing. The default implementation does nothing. The method should not
+     * block.
      */
     protected void requestData()
     {

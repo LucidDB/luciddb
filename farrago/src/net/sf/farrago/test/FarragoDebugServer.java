@@ -23,15 +23,19 @@ package net.sf.farrago.test;
 
 import net.sf.farrago.server.*;
 
+
 /**
- * FarragoDebugServer's only purpose is to provide an entry point
- * from which FarragoServer can be debugged via an IDE such as Eclipse.
+ * FarragoDebugServer's only purpose is to provide an entry point from which
+ * FarragoServer can be debugged via an IDE such as Eclipse.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoDebugServer
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Provides an entry point for debugging FarragoServer.
      *
@@ -43,7 +47,7 @@ public class FarragoDebugServer
         // Trick to invoke FarragoTestCase's static initializer to get default
         // settings for environment variables.
         FarragoQueryTest unused = new FarragoQueryTest("unused");
-        
+
         FarragoVjdbcServer.main(new String[0]);
     }
 }

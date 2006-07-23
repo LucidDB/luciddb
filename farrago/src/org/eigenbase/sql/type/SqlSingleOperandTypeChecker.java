@@ -24,39 +24,39 @@ package org.eigenbase.sql.type;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 
+
 /**
- * SqlSingleOperandTypeChecker is an extension of
- * {@link SqlOperandTypeChecker} for implementations which are cabable
- * of checking the type of a single operand in isolation.  This isn't
- * meaningful for all type-checking rules (e.g. SameOperandTypeChecker
- * requires two operands to have matching types, so checking one in
- * isolation is meaningless).
+ * SqlSingleOperandTypeChecker is an extension of {@link SqlOperandTypeChecker}
+ * for implementations which are cabable of checking the type of a single
+ * operand in isolation. This isn't meaningful for all type-checking rules (e.g.
+ * SameOperandTypeChecker requires two operands to have matching types, so
+ * checking one in isolation is meaningless).
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public interface SqlSingleOperandTypeChecker extends SqlOperandTypeChecker
+public interface SqlSingleOperandTypeChecker
+    extends SqlOperandTypeChecker
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Checks the type of a single operand against a particular ordinal
-     * position within a formal operator signature.  Note that the actual
-     * ordinal position of the operand being checked may be
-     * <em>different</em> from the position of the formal operand.
-     * For example, when validating the actual call C(X, Y, Z), the strategy
-     * for validating the operand Z might involve checking its type
-     * against the formal signature OP(W).  In this case, iFormalOperand
+     * Checks the type of a single operand against a particular ordinal position
+     * within a formal operator signature. Note that the actual ordinal position
+     * of the operand being checked may be <em>different</em> from the position
+     * of the formal operand. For example, when validating the actual call C(X,
+     * Y, Z), the strategy for validating the operand Z might involve checking
+     * its type against the formal signature OP(W). In this case, iFormalOperand
      * would be zero, even though the position of Z within call C is two.
      *
      * @param call description of the call being checked; this is only provided
-     * for context when throwing an exception; the implementation should
-     * <em>NOT</em> examine the operands of the call as part of the check
-     *
+     * for context when throwing an exception; the implementation should <em>
+     * NOT</em> examine the operands of the call as part of the check
      * @param operand the actual operand to be checked
-     *
      * @param iFormalOperand the 0-based formal operand ordinal
-     *
-     * @param throwOnFailure whether to throw an exception if check
-     * fails (otherwise returns false in that case)
+     * @param throwOnFailure whether to throw an exception if check fails
+     * (otherwise returns false in that case)
      *
      * @return whether check succeeded
      */

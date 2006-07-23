@@ -23,25 +23,29 @@ package org.eigenbase.relopt;
 
 /**
  * RelOptCostImpl provides a default implementation for the {@link RelOptCost}
- * interface.  It it defined in terms of a single scalar quantity; somewhat
- * arbitrarily, it returns this scalar for rows processed and zero
- * for both CPU and I/O.
+ * interface. It it defined in terms of a single scalar quantity; somewhat
+ * arbitrarily, it returns this scalar for rows processed and zero for both CPU
+ * and I/O.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RelOptCostImpl implements RelOptCost
+public class RelOptCostImpl
+    implements RelOptCost
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final double value;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public RelOptCostImpl(double value)
     {
         this.value = value;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptCost
     public double getRows()
@@ -54,7 +58,7 @@ public class RelOptCostImpl implements RelOptCost
     {
         return 0;
     }
-    
+
     // implement RelOptCost
     public double getCpu()
     {
@@ -102,7 +106,7 @@ public class RelOptCostImpl implements RelOptCost
     {
         return new RelOptCostImpl(getRows() * factor);
     }
-    
+
     // implement RelOptCost
     public String toString()
     {

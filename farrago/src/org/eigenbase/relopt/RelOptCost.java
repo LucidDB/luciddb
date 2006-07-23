@@ -20,28 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-
 /**
- * RelOptCost defines an interface for optimizer cost in terms of number of
- * rows processed, CPU cost, and I/O cost.  Optimizer implementations may use
- * all of this information, or selectively ignore portions of it.  The specific
- * units for all of these quantities are rather vague; most relational
- * expressions provide a default cost calculation, but optimizers can override
- * this by plugging in their own cost models with well-defined meanings for
- * each unit.  Optimizers which supply their own cost models may also extend
- * this interface with additional cost metrics such as memory usage.
+ * RelOptCost defines an interface for optimizer cost in terms of number of rows
+ * processed, CPU cost, and I/O cost. Optimizer implementations may use all of
+ * this information, or selectively ignore portions of it. The specific units
+ * for all of these quantities are rather vague; most relational expressions
+ * provide a default cost calculation, but optimizers can override this by
+ * plugging in their own cost models with well-defined meanings for each unit.
+ * Optimizers which supply their own cost models may also extend this interface
+ * with additional cost metrics such as memory usage.
  */
 public interface RelOptCost
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * @return number of rows processed; this should not be confused
-     * with the row count produced by a relational expression
-     * ({@link RelNode.getRows})
+     * @return number of rows processed; this should not be confused with the
+     * row count produced by a relational expression ({@link RelNode.getRows})
      */
     public double getRows();
 
@@ -58,8 +56,8 @@ public interface RelOptCost
     /**
      * @return true iff this cost represents an expression that hasn't actually
      * been implemented (e.g. a pure relational algebra expression) or can't
-     * actually be implemented, e.g. a transfer of data between two
-     * disconnected sites
+     * actually be implemented, e.g. a transfer of data between two disconnected
+     * sites
      */
     public boolean isInfinite();
 
@@ -100,7 +98,7 @@ public interface RelOptCost
      * @return sum of this and other cost
      */
     public RelOptCost plus(RelOptCost cost);
-    
+
     /**
      * Subtracts another cost from this.
      *
@@ -120,11 +118,10 @@ public interface RelOptCost
     public RelOptCost multiplyBy(double factor);
 
     /**
-     * Forces implementations to override {@link Object#toString} and
-     * provide a good cost rendering to use during tracing.
+     * Forces implementations to override {@link Object#toString} and provide a
+     * good cost rendering to use during tracing.
      */
     public String toString();
 }
-
 
 // End RelOptCost.java

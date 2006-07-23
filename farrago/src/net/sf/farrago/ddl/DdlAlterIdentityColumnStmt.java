@@ -30,25 +30,34 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.reltype.*;
 
+
 /**
- * Statement for altering an identity column. This statement is one form
- * of an alter table statement and is possible because only one table
- * action is performed at a time.
+ * Statement for altering an identity column. This statement is one form of an
+ * alter table statement and is possible because only one table action is
+ * performed at a time.
  *
  * @author John Pham
  * @version $Id$
  */
-public class DdlAlterIdentityColumnStmt extends DdlAlterStmt
+public class DdlAlterIdentityColumnStmt
+    extends DdlAlterStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoSequenceOptions options;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public DdlAlterIdentityColumnStmt(
-        CwmColumn column, 
+        CwmColumn column,
         FarragoSequenceOptions options)
     {
         super(column);
         this.options = options;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected void execute(
         FarragoSessionDdlValidator ddlValidator,
@@ -57,17 +66,17 @@ public class DdlAlterIdentityColumnStmt extends DdlAlterStmt
         CwmColumn column = (CwmColumn) getModelElement();
         FemSequenceGenerator sequence = null;
         if (column instanceof FemStoredColumn) {
-            sequence = ((FemStoredColumn)column).getSequence();
+            sequence = ((FemStoredColumn) column).getSequence();
         }
         if (sequence == null) {
-            FarragoResource.instance()
-            .ValidatorAlterIdentityFailed.ex(column.getName());
+            FarragoResource.instance().ValidatorAlterIdentityFailed.ex(
+                column.getName());
         }
-        RelDataType dataType = 
+        RelDataType dataType =
             ddlValidator.getTypeFactory().createCwmElementType(
-                (FemAbstractTypedElement)column);
+                (FemAbstractTypedElement) column);
 
-        FarragoSequenceAccessor accessor = 
+        FarragoSequenceAccessor accessor =
             session.getRepos().getSequenceAccessor(sequence.refMofId());
         accessor.alterSequence(options, dataType);
     }

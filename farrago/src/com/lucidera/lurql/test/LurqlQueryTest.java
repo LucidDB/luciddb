@@ -23,36 +23,44 @@ package com.lucidera.lurql.test;
 import com.lucidera.lurql.*;
 import com.lucidera.lurql.parser.*;
 
-import org.eigenbase.jmi.*;
+import java.io.*;
+
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+import junit.framework.*;
 
 import net.sf.farrago.test.*;
 import net.sf.farrago.util.*;
 
-import junit.framework.*;
+import org.eigenbase.jmi.*;
 
-import java.util.*;
-import java.io.*;
-
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
 
 /**
  * LurqlQueryTest is a JUnit harness for executing tests which are implemented
  * by running a script of LURQL queries and diffing the output against a
- * reference file containing the expected results.  By default, MOF serves as
+ * reference file containing the expected results. By default, MOF serves as
  * both the metamodel and the model to be queried; this can be changed within a
- * script.  The script format is fairly limited; see the .lurql files in the
- * test suite for details (TODO: link).
+ * script. The script format is fairly limited; see the .lurql files in the test
+ * suite for details (TODO: link).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlQueryTest extends FarragoSqlTest
+public class LurqlQueryTest
+    extends FarragoSqlTest
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private JmiModelView modelView;
 
     private Map args;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public LurqlQueryTest(String testName)
         throws Exception
     {
@@ -60,20 +68,23 @@ public class LurqlQueryTest extends FarragoSqlTest
 
         args = new HashMap();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement TestCase
     public static Test suite()
         throws Exception
     {
-        return gatherSuite(
-            FarragoProperties.instance().testFilesetUnitlurql.get(true),
-            new FarragoSqlTestFactory() {
-                public FarragoTestCase createSqlTest(String testName)
-                    throws Exception
-                {
-                    return new LurqlQueryTest(testName);
-                }
-            });
+        return
+            gatherSuite(
+                FarragoProperties.instance().testFilesetUnitlurql.get(true),
+                new FarragoSqlTestFactory() {
+                    public FarragoTestCase createSqlTest(String testName)
+                        throws Exception
+                    {
+                        return new LurqlQueryTest(testName);
+                    }
+                });
     }
 
     // override FarragoSqlTest
@@ -84,13 +95,12 @@ public class LurqlQueryTest extends FarragoSqlTest
         addDiffMask("\\$Id.*\\$");
 
         modelView = loadModelView("MOF");
-        
-        assert(getName().endsWith(".lurql"));
+
+        assert (getName().endsWith(".lurql"));
         File fileSansExt =
             new File(getName().substring(0, getName().length() - 6));
-        OutputStream outputStream =
-            openTestLogOutputStream(fileSansExt);
-        
+        OutputStream outputStream = openTestLogOutputStream(fileSansExt);
+
         FileReader reader = new FileReader(getName());
         Writer writer = new OutputStreamWriter(outputStream);
         PrintWriter pw = new PrintWriter(writer);
@@ -107,7 +117,10 @@ public class LurqlQueryTest extends FarragoSqlTest
             if (action != null) {
                 if ((line == null) || (line.trim().equals(""))) {
                     try {
-                        executeAction(action, sb.toString(), pw);
+                        executeAction(
+                            action,
+                            sb.toString(),
+                            pw);
                     } finally {
                         pw.println("****");
                         pw.println();
@@ -133,7 +146,7 @@ public class LurqlQueryTest extends FarragoSqlTest
         pw.close();
         reader.close();
         writer.close();
-        
+
         diffTestLog();
     }
 
@@ -146,7 +159,8 @@ public class LurqlQueryTest extends FarragoSqlTest
 
     private void executeAction(
         String action,
-        String queryString, PrintWriter pw)
+        String queryString,
+        PrintWriter pw)
         throws Exception
     {
         boolean explain = false;
@@ -159,14 +173,16 @@ public class LurqlQueryTest extends FarragoSqlTest
             return;
         } else if (action.startsWith("PARAM_VALUE ")) {
             String paramName = action.substring(12);
-            args.put(paramName, queryString.trim());
+            args.put(
+                paramName,
+                queryString.trim());
             pw.println(action);
             pw.println(queryString);
             return;
         } else if (action.startsWith("PARAM_VALUES ")) {
             String paramName = action.substring(13);
-            LineNumberReader lineReader = new LineNumberReader(
-                new StringReader(queryString));
+            LineNumberReader lineReader =
+                new LineNumberReader(new StringReader(queryString));
             Set set = new HashSet();
             for (;;) {
                 String s = lineReader.readLine();
@@ -190,8 +206,7 @@ public class LurqlQueryTest extends FarragoSqlTest
             throw new IllegalArgumentException(action);
         }
 
-        LurqlParser parser =
-            new LurqlParser(new StringReader(queryString));
+        LurqlParser parser = new LurqlParser(new StringReader(queryString));
         LurqlQuery query;
         try {
             query = parser.LurqlQuery();
@@ -209,8 +224,8 @@ public class LurqlQueryTest extends FarragoSqlTest
             LurqlPlan plan;
             try {
                 plan = new LurqlPlan(
-                    modelView,
-                    query);
+                        modelView,
+                        query);
             } catch (Throwable ex) {
                 pw.println("PREPARATION ERROR:  " + ex.getMessage());
                 pw.println();
@@ -235,7 +250,9 @@ public class LurqlQueryTest extends FarragoSqlTest
             if (execute) {
                 LurqlReflectiveExecutor executor =
                     new LurqlReflectiveExecutor(
-                        repos.getMdrRepos(), plan, connection,
+                        repos.getMdrRepos(),
+                        plan,
+                        connection,
                         args);
                 Set set;
                 try {
