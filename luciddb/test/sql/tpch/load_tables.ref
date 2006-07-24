@@ -1,0 +1,10 @@
+0: jdbc:luciddb:> insert into tpch.nation select * from tpch."nation";
+0: jdbc:luciddb:> insert into tpch.region select * from tpch."region";
+0: jdbc:luciddb:> insert into tpch.part select * from tpch."part";
+0: jdbc:luciddb:> insert into tpch.supplier select * from tpch."supplier";
+0: jdbc:luciddb:> insert into tpch.customer select * from tpch."customer";
+0: jdbc:luciddb:> insert into tpch.partsupp select * from tpch."partsupp";
+0: jdbc:luciddb:> insert into tpch.orders select * from tpch."orders";
+0: jdbc:luciddb:> insert into tpch.lineitem select * from tpch."lineitem";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

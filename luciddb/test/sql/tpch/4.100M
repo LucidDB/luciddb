@@ -1,0 +1,30 @@
+0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
+0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT O_ORDERPRIORITY, COUNT(*) AS ORDER_COUNT
+. . . . . . . . > FROM ORDERS,
+. . . . . . . . >      (SELECT L_ORDERKEY
+. . . . . . . . >       FROM LINEITEM
+. . . . . . . . >       WHERE L_COMMITDATE < L_RECEIPTDATE
+. . . . . . . . >       GROUP BY L_ORDERKEY) AS TEMP
+. . . . . . . . > WHERE
+. . . . . . . . >     O_ORDERDATE >= DATE'1993-07-01' AND
+. . . . . . . . >     O_ORDERDATE < DATE'1993-10-01' AND
+. . . . . . . . >     O_ORDERKEY = TEMP.L_ORDERKEY
+. . . . . . . . > GROUP BY O_ORDERPRIORITY
+. . . . . . . . > ORDER BY O_ORDERPRIORITY;
++------------------+--------------+
+| O_ORDERPRIORITY  | ORDER_COUNT  |
++------------------+--------------+
+| 1-URGENT         | 999          |
+| 2-HIGH           | 997          |
+| 3-MEDIUM         | 1031         |
+| 4-NOT SPECIFIED  | 989          |
+| 5-LOW            | 1077         |
++------------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

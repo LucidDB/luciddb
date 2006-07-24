@@ -1,0 +1,205 @@
+0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
+0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch'; 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT NATION, YYEAR, SUM(AMOUNT) AS SUM_PROFIT
+. . . . . . . . > FROM (SELECT N_NAME AS NATION,  
+. . . . . . . . >       SUBSTRING(CAST(O_ORDERDATE AS VARCHAR(10)) FROM 1 FOR 4) AS YYEAR,
+. . . . . . . . >       L_EXTENDEDPRICE * (1 - L_DISCOUNT) - PS_SUPPLYCOST * L_QUANTITY AS AMOUNT
+. . . . . . . . >         FROM PART, SUPPLIER, LINEITEM, PARTSUPP, ORDERS, NATION
+. . . . . . . . >         WHERE S_SUPPKEY = L_SUPPKEY
+. . . . . . . . >                AND PS_SUPPKEY = L_SUPPKEY
+. . . . . . . . >                AND PS_PARTKEY = L_PARTKEY
+. . . . . . . . >                AND P_PARTKEY = L_PARTKEY
+. . . . . . . . >                AND O_ORDERKEY = L_ORDERKEY
+. . . . . . . . >                AND S_NATIONKEY = N_NATIONKEY
+. . . . . . . . >                AND P_NAME LIKE '%green%'
+. . . . . . . . >       ) AS PROFIT
+. . . . . . . . > GROUP BY NATION, YYEAR
+. . . . . . . . > ORDER BY NATION, YYEAR;
++-----------------+--------+---------------+
+|     NATION      | YYEAR  |  SUM_PROFIT   |
++-----------------+--------+---------------+
+| ALGERIA         | 1992   | 3453838.6906  |
+| ALGERIA         | 1993   | 3628134.7118  |
+| ALGERIA         | 1994   | 4642813.9269  |
+| ALGERIA         | 1995   | 4159170.6827  |
+| ALGERIA         | 1996   | 4193307.2158  |
+| ALGERIA         | 1997   | 3885259.7471  |
+| ALGERIA         | 1998   | 2334804.6272  |
+| ARGENTINA       | 1992   | 5524142.5796  |
+| ARGENTINA       | 1993   | 4470542.5163  |
+| ARGENTINA       | 1994   | 4923899.5412  |
+| ARGENTINA       | 1995   | 4727943.3539  |
+| ARGENTINA       | 1996   | 5276848.2215  |
+| ARGENTINA       | 1997   | 4648199.7641  |
+| ARGENTINA       | 1998   | 3173981.1186  |
+| BRAZIL          | 1992   | 4959774.4759  |
+| BRAZIL          | 1993   | 4472655.3163  |
+| BRAZIL          | 1994   | 4896763.5462  |
+| BRAZIL          | 1995   | 4387372.9096  |
+| BRAZIL          | 1996   | 3983958.4410  |
+| BRAZIL          | 1997   | 4878641.4023  |
+| BRAZIL          | 1998   | 2911598.8317  |
+| CANADA          | 1992   | 3835964.2674  |
+| CANADA          | 1993   | 4266243.8728  |
+| CANADA          | 1994   | 4501802.9361  |
+| CANADA          | 1995   | 4063813.1386  |
+| CANADA          | 1996   | 4565035.6652  |
+| CANADA          | 1997   | 4118638.3834  |
+| CANADA          | 1998   | 2146176.0263  |
+| CHINA           | 1992   | 5987677.4399  |
+| CHINA           | 1993   | 5527533.7977  |
+| CHINA           | 1994   | 5511176.4672  |
+| CHINA           | 1995   | 5033427.9982  |
+| CHINA           | 1996   | 4690830.9226  |
+| CHINA           | 1997   | 5291435.7362  |
+| CHINA           | 1998   | 3823710.2193  |
+| EGYPT           | 1992   | 3754984.2993  |
+| EGYPT           | 1993   | 3263045.2066  |
+| EGYPT           | 1994   | 3718840.1900  |
+| EGYPT           | 1995   | 3733451.8102  |
+| EGYPT           | 1996   | 3466147.6678  |
+| EGYPT           | 1997   | 3403441.8670  |
+| EGYPT           | 1998   | 2710656.7715  |
+| ETHIOPIA        | 1992   | 3008456.3086  |
+| ETHIOPIA        | 1993   | 3839054.3424  |
+| ETHIOPIA        | 1994   | 3481852.1562  |
+| ETHIOPIA        | 1995   | 3904984.2836  |
+| ETHIOPIA        | 1996   | 3903689.1015  |
+| ETHIOPIA        | 1997   | 3812593.3567  |
+| ETHIOPIA        | 1998   | 2188237.7958  |
+| FRANCE          | 1992   | 3929485.1186  |
+| FRANCE          | 1993   | 3571657.2228  |
+| FRANCE          | 1994   | 4283922.1867  |
+| FRANCE          | 1995   | 3996272.6409  |
+| FRANCE          | 1996   | 3480736.0380  |
+| FRANCE          | 1997   | 3694964.8025  |
+| FRANCE          | 1998   | 2464293.6369  |
+| GERMANY         | 1992   | 4290518.8908  |
+| GERMANY         | 1993   | 4974059.2104  |
+| GERMANY         | 1994   | 4577119.3658  |
+| GERMANY         | 1995   | 5357465.8836  |
+| GERMANY         | 1996   | 5503484.7632  |
+| GERMANY         | 1997   | 4332584.9672  |
+| GERMANY         | 1998   | 2598298.2859  |
+| INDIA           | 1992   | 6259624.4519  |
+| INDIA           | 1993   | 5956832.2786  |
+| INDIA           | 1994   | 5169814.5455  |
+| INDIA           | 1995   | 5581694.8712  |
+| INDIA           | 1996   | 5350521.7451  |
+| INDIA           | 1997   | 4983026.2772  |
+| INDIA           | 1998   | 3028140.3474  |
+| INDONESIA       | 1992   | 4990739.1713  |
+| INDONESIA       | 1993   | 5881981.0629  |
+| INDONESIA       | 1994   | 4526371.2701  |
+| INDONESIA       | 1995   | 5732849.8095  |
+| INDONESIA       | 1996   | 5117704.5996  |
+| INDONESIA       | 1997   | 5256834.5213  |
+| INDONESIA       | 1998   | 3097820.3739  |
+| IRAN            | 1992   | 4053528.7777  |
+| IRAN            | 1993   | 3559442.0449  |
+| IRAN            | 1994   | 3856752.0524  |
+| IRAN            | 1995   | 4821497.6591  |
+| IRAN            | 1996   | 3287758.1120  |
+| IRAN            | 1997   | 4010995.0455  |
+| IRAN            | 1998   | 2925257.4101  |
+| IRAQ            | 1992   | 4869457.9659  |
+| IRAQ            | 1993   | 4200878.8069  |
+| IRAQ            | 1994   | 4796227.8409  |
+| IRAQ            | 1995   | 4520682.4519  |
+| IRAQ            | 1996   | 5312900.3756  |
+| IRAQ            | 1997   | 3975747.5738  |
+| IRAQ            | 1998   | 3102618.3345  |
+| JAPAN           | 1992   | 4322476.0803  |
+| JAPAN           | 1993   | 4435418.3150  |
+| JAPAN           | 1994   | 4935914.3674  |
+| JAPAN           | 1995   | 4927063.0320  |
+| JAPAN           | 1996   | 4135542.9587  |
+| JAPAN           | 1997   | 4477745.8052  |
+| JAPAN           | 1998   | 2339726.7838  |
+| JORDAN          | 1992   | 3966412.5973  |
++-----------------+--------+---------------+
+|     NATION      | YYEAR  |  SUM_PROFIT   |
++-----------------+--------+---------------+
+| JORDAN          | 1993   | 3207880.5465  |
+| JORDAN          | 1994   | 3805813.6657  |
+| JORDAN          | 1995   | 3579013.5085  |
+| JORDAN          | 1996   | 3908157.1106  |
+| JORDAN          | 1997   | 3508535.0485  |
+| JORDAN          | 1998   | 2007399.7199  |
+| KENYA           | 1992   | 4510320.6602  |
+| KENYA           | 1993   | 4499529.5822  |
+| KENYA           | 1994   | 4415671.4693  |
+| KENYA           | 1995   | 4061309.3868  |
+| KENYA           | 1996   | 4645142.6283  |
+| KENYA           | 1997   | 4206387.2451  |
+| KENYA           | 1998   | 2417275.5655  |
+| MOROCCO         | 1992   | 5142250.6195  |
+| MOROCCO         | 1993   | 4871828.3571  |
+| MOROCCO         | 1994   | 5271996.1049  |
+| MOROCCO         | 1995   | 4935239.3541  |
+| MOROCCO         | 1996   | 4681071.2820  |
+| MOROCCO         | 1997   | 5928013.2696  |
+| MOROCCO         | 1998   | 3232917.5302  |
+| MOZAMBIQUE      | 1992   | 3277737.3834  |
+| MOZAMBIQUE      | 1993   | 3307516.6102  |
+| MOZAMBIQUE      | 1994   | 3110810.2989  |
+| MOZAMBIQUE      | 1995   | 3747475.6924  |
+| MOZAMBIQUE      | 1996   | 3327905.6512  |
+| MOZAMBIQUE      | 1997   | 3205623.7004  |
+| MOZAMBIQUE      | 1998   | 2372212.5958  |
+| PERU            | 1992   | 4340937.7138  |
+| PERU            | 1993   | 4709012.6408  |
+| PERU            | 1994   | 4541797.2390  |
+| PERU            | 1995   | 4895733.2940  |
+| PERU            | 1996   | 4733669.4983  |
+| PERU            | 1997   | 4719633.6548  |
+| PERU            | 1998   | 3022309.3970  |
+| ROMANIA         | 1992   | 4152768.3918  |
+| ROMANIA         | 1993   | 3432414.1183  |
+| ROMANIA         | 1994   | 4095923.6228  |
+| ROMANIA         | 1995   | 3737265.2724  |
+| ROMANIA         | 1996   | 4043932.6095  |
+| ROMANIA         | 1997   | 4454840.4370  |
+| ROMANIA         | 1998   | 2302574.7337  |
+| RUSSIA          | 1992   | 5972528.1244  |
+| RUSSIA          | 1993   | 4832729.3003  |
+| RUSSIA          | 1994   | 4818362.6439  |
+| RUSSIA          | 1995   | 5535351.7042  |
+| RUSSIA          | 1996   | 5278541.0493  |
+| RUSSIA          | 1997   | 5319848.7365  |
+| RUSSIA          | 1998   | 2260313.4470  |
+| SAUDI ARABIA    | 1992   | 6374109.2030  |
+| SAUDI ARABIA    | 1993   | 5839176.9620  |
+| SAUDI ARABIA    | 1994   | 6195196.5564  |
+| SAUDI ARABIA    | 1995   | 5822905.0084  |
+| SAUDI ARABIA    | 1996   | 6243394.2754  |
+| SAUDI ARABIA    | 1997   | 6209427.7839  |
+| SAUDI ARABIA    | 1998   | 3639541.3310  |
+| UNITED KINGDOM  | 1992   | 4144028.8436  |
+| UNITED KINGDOM  | 1993   | 4301488.2757  |
+| UNITED KINGDOM  | 1994   | 5004719.1735  |
+| UNITED KINGDOM  | 1995   | 4340786.3356  |
+| UNITED KINGDOM  | 1996   | 4485681.5616  |
+| UNITED KINGDOM  | 1997   | 3894498.1662  |
+| UNITED KINGDOM  | 1998   | 2725579.8229  |
+| UNITED STATES   | 1992   | 4150010.7122  |
+| UNITED STATES   | 1993   | 4625599.2641  |
+| UNITED STATES   | 1994   | 4760965.6212  |
+| UNITED STATES   | 1995   | 3865113.4219  |
+| UNITED STATES   | 1996   | 4027883.5733  |
+| UNITED STATES   | 1997   | 4185003.2361  |
+| UNITED STATES   | 1998   | 2447142.1988  |
+| VIETNAM         | 1992   | 4677932.5519  |
+| VIETNAM         | 1993   | 5107641.8431  |
+| VIETNAM         | 1994   | 4300784.5815  |
+| VIETNAM         | 1995   | 4390665.2652  |
+| VIETNAM         | 1996   | 4280349.7361  |
+| VIETNAM         | 1997   | 4711368.1285  |
+| VIETNAM         | 1998   | 2599871.9581  |
++-----------------+--------+---------------+
+0: jdbc:luciddb:> --ORDER BY NATION, YEAR DESC;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

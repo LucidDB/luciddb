@@ -1,0 +1,38 @@
+0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
+0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- COULD NOT CAST TO FLOAT
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT YYEAR, CAST(SUM(CASE WHEN NATION = 'BRAZIL'
+. . . . . . . . >                                THEN VOLUME
+. . . . . . . . >                                ELSE 0
+. . . . . . . . >                       END) AS DECIMAL(19,4))*1.0000 / 
+. . . . . . . . >              CAST(SUM(VOLUME) AS DECIMAL(19,4)) AS MKT_SHARE
+. . . . . . . . > FROM (SELECT
+. . . . . . . . >         SUBSTRING (CAST(O_ORDERDATE AS CHAR(10)) FROM 1 FOR 4) AS YYEAR,
+. . . . . . . . >         L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS VOLUME,
+. . . . . . . . >         N2.N_NAME AS NATION
+. . . . . . . . >     FROM PART, SUPPLIER, LINEITEM, ORDERS, CUSTOMER, NATION N1, NATION N2,
+. . . . . . . . >          REGION
+. . . . . . . . >     WHERE P_PARTKEY = L_PARTKEY
+. . . . . . . . >         AND S_SUPPKEY = L_SUPPKEY
+. . . . . . . . >         AND L_ORDERKEY = O_ORDERKEY
+. . . . . . . . >         AND O_CUSTKEY = C_CUSTKEY
+. . . . . . . . >         AND C_NATIONKEY = N1.N_NATIONKEY
+. . . . . . . . >         AND N1.N_REGIONKEY = R_REGIONKEY
+. . . . . . . . >         AND R_NAME = 'AMERICA'
+. . . . . . . . >         AND S_NATIONKEY = N2.N_NATIONKEY
+. . . . . . . . >         AND O_ORDERDATE BETWEEN DATE'1995-01-01' AND DATE'1996-12-31'
+. . . . . . . . >         AND P_TYPE = 'ECONOMY ANODIZED STEEL') AS ALL_NATIONS
+. . . . . . . . > GROUP BY YYEAR
+. . . . . . . . > ORDER BY YYEAR;
++--------+------------+
+| YYEAR  | MKT_SHARE  |
++--------+------------+
+| 1995   | 0.0286     |
+| 1996   | 0.0183     |
++--------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

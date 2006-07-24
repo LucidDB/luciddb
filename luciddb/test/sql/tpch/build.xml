@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+// $Id$
+// LucidDB is a DBMS optimized for business intelligence.
+// Copyright (C) 2005-2005 LucidEra, Inc.
+// Copyright (C) 2005-2005 The Eigenbase Project
+//
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU General Public License as published by the Free
+// Software Foundation; either version 2 of the License, or (at your option)
+// any later version approved by The Eigenbase Project.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+-->
+
+<project name="tpch" basedir="." default="test">
+  <dirname property="tpch.dir" file="${ant.file.tpch}" />
+
+  <property name="open.dir" location="${tpch.dir}/../../../.."/>
+  <fail unless="open.dir" />
+
+  <property environment="env" />
+  <property file="run.properties"/>
+
+  <!-- override Farrago -->
+  <property name="project.catalog.dir" location="${open.dir}/luciddb/catalog" />
+  <property name="project.trace.propfile" location="${open.dir}/luciddb/trace/LucidDbTrace.properties" />
+  <property name="project.testlog.dir" location="${open.dir}/luciddb/testlog" />
+  <import file="${open.dir}/farrago/buildMacros.xml" />
+
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${tpch.dir}/gen" />
+
+  <!-- directory where blackhawk output should go -->
+  <property name="bh.log.basedir" value="${tpch.dir}/testlog" />
+
+  <!-- directory of flat files -->
+  <property name="ffsource.dir" value="${open.dir}/thirdparty/tpch/data"/>
+  <property name="ff.copy.dir" value="${tpch.dir}/ff-copy"/>
+
+  <!-- classpath for running tests via ant -->
+  <path id="test.classpath">
+    <pathelement path="${open.dir}/luciddb/classes"/>
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement path="${ant.classpath}"/>
+    <pathelement path="${blackhawk.run.classpath}"/>
+  </path>
+  <property name="test.classpath" refid="test.classpath"/>
+
+  <target name="gen-sql">
+    <!-- copy over sql.tmpl and template reference files -->
+    <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
+      <fileset dir="${tpch.dir}">
+        <include name="*.${datasize.param}"/>
+        <include name="*.tmpl"/>
+      </fileset>
+      <compositemapper>
+        <globmapper from="*.${datasize.param}" to="*.ref"/>
+        <globmapper from="*.tmpl" to="*"/>
+      </compositemapper>
+      <filterset>
+        <filter token="FFDIR" value="${ff.copy.dir}/${datasize.param}"/>
+        <filter token="DIR" value="${gensql.dir}/${datasize.param}"/>
+      </filterset>
+    </copy>
+
+    <!-- copy over other sql and ref files -->
+    <copy todir="${gensql.dir}/${datasize.param}" overwrite="true">
+      <fileset dir="${tpch.dir}">
+        <include name="*.sql"/>
+        <include name="*.ref"/>
+      </fileset>
+    </copy>
+
+  </target>
+
+  <target name="gen-all-sql">
+    <available file="${gensql.dir}" type="dir" property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <foreach list="100M" param="datasize.param" target="gen-sql"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
+    <blackhawk.fork
+      basedir="${tpch.dir}"
+      testscript="${testfile}"
+      classpathref="test.classpath"/>
+  </target>
+
+  <target name="create-db">
+    <condition property="db.created">
+      <and>
+        <available file="${ffsource.dir}/datasize" type="file"/>
+        <isfileselected file="${ffsource.dir}/datasize">
+          <contains text="${datasize}" casesensitive="no"/>
+        </isfileselected>
+      </and>
+    </condition>
+
+    <if>
+      <istrue value="${db.created}"/>
+      <then/>
+      <else>
+        <exec executable="${thirdparty.dir}/tpch/createdb" 
+          dir="${thirdparty.dir}/tpch">
+          <arg line="${datasize}"/>
+        </exec>
+      </else>
+    </if>
+
+    <sync todir="${ff.copy.dir}/${datasize}" verbose="true">
+      <fileset dir="${ffsource.dir}"/>
+    </sync>
+  </target>
+
+  <target name="clean">
+    <delete dir="${bh.log.basedir}"/>
+    <delete dir="${gensql.dir}"/>
+  </target>
+
+  <target name="clean-ff" depends="clean">
+    <delete dir="${ff.copy.dir}"/>
+  </target>
+
+</project>

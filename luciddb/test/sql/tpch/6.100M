@@ -1,0 +1,20 @@
+0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
+0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT SUM(L_EXTENDEDPRICE * L_DISCOUNT) AS REVENUE
+. . . . . . . . > FROM LINEITEM
+. . . . . . . . > WHERE
+. . . . . . . . >     L_SHIPDATE >= DATE '1994-01-01' AND
+. . . . . . . . >     L_SHIPDATE < date '1995-01-01' AND
+. . . . . . . . >     L_DISCOUNT BETWEEN .06 - 0.01 AND .06 + 0.01 AND
+. . . . . . . . >     L_QUANTITY <  24;
++----------------+
+|    REVENUE     |
++----------------+
+| 11803420.2534  |
++----------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
