@@ -106,13 +106,14 @@ ant createReleaseDir
 # derive staging sub-directories
 RELEASE_DIR=`echo $TMP_DIR/*`
 LIB_DIR=$RELEASE_DIR/lib
+PLUGIN_DIR=$RELEASE_DIR/plugin
 INSTALL_DIR=$RELEASE_DIR/install
 CATALOG_DIR=$RELEASE_DIR/catalog
 BIN_DIR=$RELEASE_DIR/bin
 
 # create staging sub-directories
 mkdir $LIB_DIR
-mkdir $LIB_DIR/plugin
+mkdir $PLUGIN_DIR
 mkdir $LIB_DIR/mdrlibs
 mkdir $LIB_DIR/fennel
 mkdir $INSTALL_DIR
@@ -149,15 +150,17 @@ cp vjdbc/lib/vjdbc_server.jar $LIB_DIR
 cp vjdbc/lib/commons-logging.jar $LIB_DIR
 cp vjdbc/lib/commons-pool-1.2.jar $LIB_DIR
 cp vjdbc/lib/commons-dbcp-1.2.1.jar $LIB_DIR
-rm -f $LIB_DIR/fennel/*debug*
 cp stlport/README $LIB_DIR/fennel/stlport.README.txt
+# get rid of this dangling symlink; it causes trouble for cp
+rm -f stlport/lib/libstlport_gcc_debug.so
 if $dist_fennel; then
     cp -d stlport/lib/$SO_3P_PATTERN $LIB_DIR/fennel
     cp -d boost/lib/$SO_3P_PATTERN $LIB_DIR/fennel
 fi
 
 if $remove_debug; then
-	rm -f $LIB_DIR/fennel/*gdp*
+    rm -f $LIB_DIR/fennel/*debug*
+    rm -f $LIB_DIR/fennel/*gdp*
 fi
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
@@ -199,7 +202,7 @@ if [ -e dist/README ]; then
     cp dist/README $RELEASE_DIR
 fi
 cp dist/farrago.jar $LIB_DIR
-cp dist/plugin/*.jar $LIB_DIR/plugin
+cp dist/plugin/*.jar $PLUGIN_DIR
 
 # copy other farrago artifacts
 if [ $cygwin = "true" ]; then

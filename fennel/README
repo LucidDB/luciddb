@@ -1,4 +1,4 @@
-Fennel Source Release 0.5.0
+Fennel Source Release 0.6.0pre1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -21,9 +21,10 @@ This source release is intended for use by developers who want to
 build, test, use, and possibly modify Fennel without having to access
 the Eigenbase source control system.  Fennel has been under
 development for quite some time and (depending on application
-requirements) may be suitable for production use.
+requirements) may be suitable for production use.  But no warranty
+is expressed or implied.
 
-However, developers should be aware that all interfaces (API's, SPI's,
+Developers should be aware that all interfaces (API's, SPI's,
 and class libraries) are still in a fluid state and subject to
 frequent review and change.  As interfaces solidify, they will be
 officially frozen in future releases.
@@ -31,17 +32,10 @@ officially frozen in future releases.
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 1999-2005 The Eigenbase Project and others
+Copyright (C) 1999-2006 The Eigenbase Project and others
 
 This distribution of Fennel is licensed under the GNU General Public
 License; see file COPYING for details.
-
-------------------------------------------------------------
-ACKNOWLEDGEMENTS
-
-The project is currently hosted on Sourceforge
-
-http://sourceforge.net/projects/fennel
 
 ----------------------------------------------------------------------
 DIRECTORY STRUCTURE

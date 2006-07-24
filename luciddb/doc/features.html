@@ -31,7 +31,7 @@ greater cache effectiveness</td>
 <td>Intelligent indexing</td> <td>Automatically adapts to either
 bitmap or btree representation depending on data distribution (even
 using both in the same index for different portions of the table),
-yielding optimal data compression, reduced I/O, and direct evaluation
+yielding optimal data compression, reduced I/O, and fast evaluation
 of boolean expressions</td>
 </tr>
 
@@ -59,11 +59,11 @@ which disk blocks are needed to satisfy a query</td>
 </tr>
 
 <tr>
-<td>INSERT/UPSERT as bulk load</td> 
-<td>Tables can be loaded directly from external sources via SQL; no
-separate bulk loader utility is required (for performance, loads are
-never logged at the row-level, yet are fully recoverable); the SQL:2003
-MERGE statement provides upsert capability</td>
+<td>INSERT/UPSERT as bulk load</td> <td>Tables can be loaded directly
+from external sources via SQL; no separate bulk loader utility is
+required (for performance, loads are never logged at the row-level,
+yet are fully recoverable via page-level undo); the SQL:2003 MERGE
+statement provides standard upsert capability</td>
 </tr>
 
 <tr>
@@ -127,7 +127,7 @@ the <a target="_top" href="http://mondrian.sf.net">Mondrian</a> OLAP engine</td>
 a J2EE application server (just like <a target="_top"
 href="http://www.hsqldb.org">hsqldb</a> or <a target="_top"
 href="http://db.apache.org/derby">Derby</a>); usage of Java as
-the primary extensibility mechanism makes it easy to integrate
+the primary extensibility mechanism makes it a snap to integrate
 with the many enterprise API's available
 </tr>
 
