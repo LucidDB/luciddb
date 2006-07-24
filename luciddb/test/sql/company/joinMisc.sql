@@ -12,10 +12,10 @@ where EMP.DEPTNO + 10 = DEPT.DEPTNO - 10
 order by EMP.EMPNO;
 --order by EMPNO;
 
---select EMP.LNAME, DEPT.DNAME
---from EMP, DEPT
---where substring(EMP.LNAME,2,1)=substring(DEPT.DNAME,2,1)
---order by EMP.EMPNO, DEPT.DNAME;
+select EMP.LNAME, DEPT.DNAME
+from EMP, DEPT
+where substring(EMP.LNAME,2,1)=substring(DEPT.DNAME,2,1)
+order by EMP.EMPNO, DEPT.DNAME;
 
 -- one side functions only
 select EMP.LNAME, DEPT.DNAME

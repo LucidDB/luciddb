@@ -135,6 +135,35 @@ public abstract class DdlHandler
         if (attribute.getIsNullable() == null) {
             attribute.setIsNullable(NullableTypeEnum.COLUMN_NULLABLE);
         }
+        if (!attribute.getIsNullable().equals(
+                NullableTypeEnum.COLUMN_NO_NULLS))
+        {
+            if (attribute instanceof FemStoredColumn) {
+                // Store the original user declaration, since we might override
+                // isNullable with derived information (for example, columns in
+                // the primary key never allow nulls).  This is so that if a
+                // ALTER TABLE later changes something (e.g. DROP PRIMARY KEY),
+                // we'll know whether the user actually declared a NOT NULL
+                // constraint or not.
+                FemStoredColumn col = (FemStoredColumn) attribute;
+                col.setDeclaredNullable(true);
+                
+                // Now, compute the derived nullability and overwrite
+                // isNullable with that.  Note that local data wrappers
+                // may also do more of this later; for example, FTRS
+                // marks all columns in the clustered index as
+                // NOT NULL.
+                CwmClassifier owner = col.getOwner();
+                FemPrimaryKeyConstraint primaryKey =
+                    FarragoCatalogUtil.getPrimaryKey(owner);
+                if (primaryKey != null) {
+                    if (primaryKey.getFeature().contains(col)) {
+                        col.setIsNullable(
+                            NullableTypeEnum.COLUMN_NO_NULLS);
+                    }
+                }
+            }
+        }
 
         validateTypedElement(attribute, attribute.getOwner());
 

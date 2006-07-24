@@ -389,6 +389,52 @@ Such a recursive query can be diagrammed as a cyclic graph:
 
 <img src="lurqlDiagrams/recursion.gif">
 
+<h2>Existence Filters</h2>
+
+So far we have seen how LURQL can navigate complex models, but the
+filtering performed during navigation has been very localized.  LURQL
+supports an <code>exists</code> clause for filtering based on the
+existence of related objects.
+
+<p>
+
+Suppose we'd like to find all schemas which contain tables named 'EMPS':
+
+<pre><code>
+select s
+from class Schema as s where exists (
+    follow association ElementOwnership destination class Table 
+    where name='EMPS'
+);
+
+EXECUTION RESULT:
+LocalSchema: SALES
+</code></pre>
+
+By default, exists tests whether results are found for any node in the
+subquery (which can contain any kind of LURQL construct, including
+union and recursion).  For more selective existence tests, it is
+possible to make the decision based on a select list.  Suppose we'd
+like to find tables with columns of type BOOLEAN:
+
+<pre><code>
+select t
+from class Table as t where exists d in (
+    follow association ClassifierFeature then (
+        follow destination class SQLDataType as d
+        where name='BOOLEAN'
+    )
+);
+
+EXECUTION RESULT:
+LocalTable: EMPS
+LocalTable: TEMPS
+</code></pre>
+
+If multiple variables are specified in the select list, then the
+existence test passes if any of them return at least one
+result. (Union rather than intersection.)
+
 <h2>SQL Integration</h2>
 
 At times it can be useful to complement LURQL with SQL.  When properly
@@ -459,6 +505,8 @@ where &lt;filter&gt; [ and &lt;filter&gt; ... ]
 &lt;id&gt; in '[' &lt;sql-query-text&gt; ']'
 |
 &lt;id&gt; in &lt;dynamic-param&gt;
+|
+exists [ &lt;select-list&gt; in ] &lt;path-spec&gt;
 
 &lt;value&gt; ::=
 &lt;literal&gt;

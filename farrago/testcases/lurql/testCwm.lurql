@@ -77,3 +77,19 @@ from class Column where mofId in
 then (
     follow destination class SQLDataType as dt
 );
+
+EXECUTE
+select s
+from class Schema as s where exists (
+    follow association ElementOwnership destination class Table 
+    where name='EMPS'
+);
+
+EXECUTE
+select t
+from class Table as t where exists d in (
+    follow association ClassifierFeature then (
+        follow destination class SQLDataType as d
+        where name='BOOLEAN'
+    )
+);

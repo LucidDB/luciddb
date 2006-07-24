@@ -23,41 +23,38 @@
 +--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple cols
-0: jdbc:luciddb:> -- select LNAME, EMPNO from EMP order by LNAME,SEX;
-0: jdbc:luciddb:> -- select LNAME, EMPNO from EMP order by SEX,LNAME;
-0: jdbc:luciddb:> -- select LNAME, SEX, EMPNO from EMP order by SEX,EMPNO,LNAME;
-0: jdbc:luciddb:> select LNAME, EMPNO, SEX from EMP order by LNAME,SEX;
-+-----------+--------+------+
-|   LNAME   | EMPNO  | SEX  |
-+-----------+--------+------+
-| Andrews   | 102    | F    |
-| Brown     | 101    | M    |
-| Bush      | 100    | M    |
-| Fratz     | 104    | M    |
-| Guy       | 105    | M    |
-| Jones     | 110    | F    |
-| Nife      | 109    | M    |
-| Reynolds  | 108    | F    |
-| Roy       | 106    | M    |
-| Webber    | 103    | M    |
-| Williams  | 107    | M    |
-+-----------+--------+------+
-0: jdbc:luciddb:> select LNAME, EMPNO, SEX from EMP order by SEX,LNAME;
-+-----------+--------+------+
-|   LNAME   | EMPNO  | SEX  |
-+-----------+--------+------+
-| Andrews   | 102    | F    |
-| Jones     | 110    | F    |
-| Reynolds  | 108    | F    |
-| Brown     | 101    | M    |
-| Bush      | 100    | M    |
-| Fratz     | 104    | M    |
-| Guy       | 105    | M    |
-| Nife      | 109    | M    |
-| Roy       | 106    | M    |
-| Webber    | 103    | M    |
-| Williams  | 107    | M    |
-+-----------+--------+------+
+0: jdbc:luciddb:> select LNAME, EMPNO from EMP order by LNAME,SEX;
++-----------+--------+
+|   LNAME   | EMPNO  |
++-----------+--------+
+| Andrews   | 102    |
+| Brown     | 101    |
+| Bush      | 100    |
+| Fratz     | 104    |
+| Guy       | 105    |
+| Jones     | 110    |
+| Nife      | 109    |
+| Reynolds  | 108    |
+| Roy       | 106    |
+| Webber    | 103    |
+| Williams  | 107    |
++-----------+--------+
+0: jdbc:luciddb:> select LNAME, EMPNO from EMP order by SEX,LNAME;
++-----------+--------+
+|   LNAME   | EMPNO  |
++-----------+--------+
+| Andrews   | 102    |
+| Jones     | 110    |
+| Reynolds  | 108    |
+| Brown     | 101    |
+| Bush      | 100    |
+| Fratz     | 104    |
+| Guy       | 105    |
+| Nife      | 109    |
+| Roy       | 106    |
+| Webber    | 103    |
+| Williams  | 107    |
++-----------+--------+
 0: jdbc:luciddb:> select LNAME, SEX, EMPNO from EMP order by SEX,EMPNO,LNAME;
 +-----------+------+--------+
 |   LNAME   | SEX  | EMPNO  |
@@ -76,9 +73,54 @@
 +-----------+------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- ASC/DESC
-0: jdbc:luciddb:> --select LNAME, EMPNO from EMP order by LNAME ASC , LOCID;
-0: jdbc:luciddb:> --select LNAME, EMPNO from EMP order by MANAGER,LOCID DESC;
-0: jdbc:luciddb:> --select LNAME, SEX, EMPNO from EMP order by MANAGER DESC,LNAME DESC;
+0: jdbc:luciddb:> select LNAME, EMPNO from EMP order by LNAME ASC , LOCID;
++-----------+--------+
+|   LNAME   | EMPNO  |
++-----------+--------+
+| Andrews   | 102    |
+| Brown     | 101    |
+| Bush      | 100    |
+| Fratz     | 104    |
+| Guy       | 105    |
+| Jones     | 110    |
+| Nife      | 109    |
+| Reynolds  | 108    |
+| Roy       | 106    |
+| Webber    | 103    |
+| Williams  | 107    |
++-----------+--------+
+0: jdbc:luciddb:> select LNAME, EMPNO from EMP order by MANAGER,LOCID DESC;
++-----------+--------+
+|   LNAME   | EMPNO  |
++-----------+--------+
+| Bush      | 100    |
+| Brown     | 101    |
+| Nife      | 109    |
+| Fratz     | 104    |
+| Jones     | 110    |
+| Roy       | 106    |
+| Webber    | 103    |
+| Guy       | 105    |
+| Williams  | 107    |
+| Reynolds  | 108    |
+| Andrews   | 102    |
++-----------+--------+
+0: jdbc:luciddb:> select LNAME, SEX, EMPNO from EMP order by MANAGER DESC,LNAME DESC;
++-----------+------+--------+
+|   LNAME   | SEX  | EMPNO  |
++-----------+------+--------+
+| Reynolds  | F    | 108    |
+| Andrews   | F    | 102    |
+| Williams  | M    | 107    |
+| Webber    | M    | 103    |
+| Roy       | M    | 106    |
+| Guy       | M    | 105    |
+| Jones     | F    | 110    |
+| Nife      | M    | 109    |
+| Fratz     | M    | 104    |
+| Brown     | M    | 101    |
+| Bush      | M    | 100    |
++-----------+------+--------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- numeric descriptors of columns in select list
 0: jdbc:luciddb:> select LNAME, SEX from EMP order by 1,2;
@@ -278,11 +320,26 @@
 | hello   | Williams  | 10          |
 +---------+-----------+-------------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- select empno, floor(empno/2),
-0: jdbc:luciddb:> --   case when empno<105 then empno
-0: jdbc:luciddb:> --     else empno/2 end
-0: jdbc:luciddb:> -- from emp
-0: jdbc:luciddb:> -- order by 3 DESC, 1 ASC
+0: jdbc:luciddb:> select empno, floor(empno/2),
+. . . . . . . . >   case when empno<105 then empno
+. . . . . . . . >     else empno/2 end
+. . . . . . . . > from emp
+. . . . . . . . > order by 3 DESC, 1 ASC;
++--------+---------+------------------+
+| EMPNO  | EXPR$1  |      EXPR$2      |
++--------+---------+------------------+
+| 104    | 52      | 104.00000000000  |
+| 103    | 51      | 103.00000000000  |
+| 102    | 51      | 102.00000000000  |
+| 101    | 50      | 101.00000000000  |
+| 100    | 50      | 100.00000000000  |
+| 110    | 55      | 55.00000000000   |
+| 109    | 54      | 54.50000000000   |
+| 108    | 54      | 54.00000000000   |
+| 107    | 53      | 53.50000000000   |
+| 106    | 53      | 53.00000000000   |
+| 105    | 52      | 52.50000000000   |
++--------+---------+------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

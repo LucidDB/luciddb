@@ -2,7 +2,7 @@
 
 # Find all non-leaf Classes.
 PARSE RESULT:
-select "s" 
+select "s"
 from
 class "Class" as "e"
 then (
@@ -30,7 +30,7 @@ Class: TypedElement
 # Find all Classes which have grandchildren.  Instead of specifying the
 # association and direction, test navigation via end instead.
 PARSE RESULT:
-select "g" 
+select "g"
 from
 class "Class" as "e"
 then (
@@ -59,7 +59,7 @@ Class: TypedElement
 
 # Find all Classes which are direct descendants of 'BehavioralFeature'
 PARSE RESULT:
-select "d" 
+select "d"
 from
 class "Class" as "b"
 where
@@ -81,7 +81,7 @@ Class: Operation
 
 # Find all non-inherited Attributes of Class 'Import' in Package 'Model'
 PARSE RESULT:
-select "a" 
+select "a"
 from
 class "Package" as "p"
 where
@@ -111,7 +111,7 @@ Attribute: visibility
 # Find all Attributes of Class 'Import' in Package 'Model', including
 # those inherited from its superclass (ModelElement)
 PARSE RESULT:
-select "a" 
+select "a"
 from
 class "Package" as "p"
 where
@@ -149,7 +149,7 @@ Attribute: visibility
 # Find all Classes with non-inherited attributes named
 # 'annotation' or 'visibility'.
 PARSE RESULT:
-select "c" 
+select "c"
 from
 (
     class "Attribute" as "a1"
@@ -178,9 +178,78 @@ Class: ModelElement
 
 ****
 
+# Same as previous one, but using exists instead
+PARSE RESULT:
+select "c"
+from
+class "Class" as "c"
+where
+    exists * in (
+        follow composite forward destination class "Attribute"
+        where
+            "name" = 'annotation'
+        union
+        follow composite forward destination class "Attribute"
+        where
+            "name" = 'visibility'
+    );
+
+EXPLANATION:
+anon_2 { Class }
+anon_2:container->Contains->anon_3:containedElement { Attribute }
+anon_2:container->Contains->anon_4:containedElement { Attribute }
+anon_3 { Attribute } where "name" = 'annotation'
+anon_4 { Attribute } where "name" = 'visibility'
+c_1 { Class }
+c_1->exists->anon_2
+
+EXECUTION RESULT:
+Class: Feature
+Class: GeneralizableElement
+Class: Import
+Class: ModelElement
+
+****
+
+# Test exists with projection:  only get classes which have descendants
+# with an attribute named 'annotation'; we're verifying
+# that the existence of the descendants themselves is ignored
+PARSE RESULT:
+select "c"
+from
+class "Class" as "c"
+where
+    exists "a" in (
+        follow association "Generalizes" forward
+        then (
+            follow composite forward destination class "Attribute" as "a"
+            where
+                "name" = 'annotation'
+        )
+    );
+
+EXPLANATION:
+a_4 { Attribute } where "name" = 'annotation'
+anon_2 { Class }
+anon_2:subtype->Generalizes->anon_3:supertype
+anon_3 { GeneralizableElement }
+anon_3:container->Contains->a_4:containedElement { Attribute }
+c_1 { Class }
+c_1->exists[a]->anon_2
+
+EXECUTION RESULT:
+Class: Constraint
+Class: Feature
+Class: Import
+Class: Namespace
+Class: Tag
+Class: TypedElement
+
+****
+
 # Verify that target classes are subsumed
 PARSE RESULT:
-select "e" 
+select "e"
 from
 class "ModelElement"
 then (
@@ -205,7 +274,7 @@ e_2 { ModelElement }
 
 # Verify that target classes are filtered by applicability
 PARSE RESULT:
-select "t" 
+select "t"
 from
 class "ModelElement"
 then (
@@ -232,7 +301,7 @@ t_2 { Tag } where "tagId" = '1'
 
 # Test a follow that doesn't go anywhere
 PARSE RESULT:
-select * 
+select *
 from
 class "Exception"
 then (

@@ -2,7 +2,7 @@
 
 # Test a static recursion that doesn't go very far
 PARSE RESULT:
-select * 
+select *
 from
 class "Operation"
 then (
@@ -20,7 +20,7 @@ anon_2 { Exception }
 
 # Test a simple dynamic recursion
 PARSE RESULT:
-select * 
+select *
 from
 class "Class"
 where
@@ -49,7 +49,7 @@ Class: Namespace
 
 # Test a bigger dynamic recursion
 PARSE RESULT:
-select * 
+select *
 from
 class "Class"
 where
@@ -94,7 +94,7 @@ Class: TypedElement
 
 # Test recursion with THEN
 PARSE RESULT:
-select "a" 
+select "a"
 from
 class "Class"
 where

@@ -30,64 +30,24 @@ import org.eigenbase.jmi.*;
 import org._3pq.jgrapht.edge.*;
 
 /**
- * LurqlPlanEdge is an edge in a LURQL plan graph.
+ * LurqlPlanEdge is a follow edge in a LURQL plan graph.  (TODO:  factor
+ * out subclass.)
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class LurqlPlanEdge extends DirectedEdge
 {
-    public static final LurqlPlanEdge [] EMPTY_ARRAY = new LurqlPlanEdge[0];
-    
-    /**
-     * The model edge representing the association to be traversed.
-     */
-    private final JmiAssocEdge assocEdge;
-
-    /**
-     * The end number (0 or 1) of the origin of the traversal.
-     */
-    private final int iOriginEnd;
-
-    /**
-     * If non-null, traverse to only those destination objects which
-     * instantiate the given class.
-     */
-    private final JmiClassVertex destinationTypeFilter;
-
     /**
      * String representation of this edge.
      */
-    private final String stringRep;
+    protected String stringRep;
 
     LurqlPlanEdge(
         LurqlPlanVertex source,
-        LurqlPlanVertex target,
-        JmiAssocEdge assocEdge,
-        int iOriginEnd,
-        JmiClassVertex destinationTypeFilter)
+        LurqlPlanVertex target)
     {
         super(source, target);
-        this.assocEdge = assocEdge;
-        this.iOriginEnd = iOriginEnd;
-        this.destinationTypeFilter = destinationTypeFilter;
-        
-        StringBuffer sb = new StringBuffer();
-        sb.append(getPlanSource().getName());
-        sb.append(":");
-        sb.append(getOriginEnd().getName());
-        sb.append("->");
-        sb.append(getAssocEdge().getMofAssoc().getName());
-        sb.append("->");
-        sb.append(getPlanTarget().getName());
-        sb.append(":");
-        sb.append(getDestinationEnd().getName());
-        if (destinationTypeFilter != null) {
-            sb.append(" { ");
-            sb.append(destinationTypeFilter);
-            sb.append(" }");
-        }
-        stringRep = sb.toString();
     }
 
     public LurqlPlanVertex getPlanSource()
@@ -98,26 +58,6 @@ public class LurqlPlanEdge extends DirectedEdge
     public LurqlPlanVertex getPlanTarget()
     {
         return (LurqlPlanVertex) getTarget();
-    }
-
-    public JmiAssocEdge getAssocEdge()
-    {
-        return assocEdge;
-    }
-
-    public JmiClassVertex getDestinationTypeFilter()
-    {
-        return destinationTypeFilter;
-    }
-
-    public AssociationEnd getOriginEnd()
-    {
-        return assocEdge.getEnd(iOriginEnd);
-    }
-
-    public AssociationEnd getDestinationEnd()
-    {
-        return assocEdge.getEnd(1 - iOriginEnd);
     }
     
     public String toString()

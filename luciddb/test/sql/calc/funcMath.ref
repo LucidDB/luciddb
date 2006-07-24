@@ -103,9 +103,10 @@ Error: java.lang.ArithmeticException: / by zero (state=,code=0)
 +---------+---------+
 | -2      | 2       |
 +---------+---------+
-0: jdbc:luciddb:> -- buggy; JIRA FRG-150 filed
-0: jdbc:luciddb:> --select mod(2.256,5) from boris1
-0: jdbc:luciddb:> --;
+0: jdbc:luciddb:> -- JIRA FRG-150
+0: jdbc:luciddb:> select mod(2.256,5) from boris1
+. . . . . . . . > ;
+Error: Argument to function 'MOD' must have a scale of 0 (state=,code=0)
 0: jdbc:luciddb:> select mod(n2,n3) from boris1
 . . . . . . . . > ;
 +---------+

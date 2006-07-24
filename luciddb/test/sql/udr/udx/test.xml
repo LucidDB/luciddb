@@ -41,6 +41,8 @@
       </test>
 
       <test name="cursorTests">
+        <!-- TODO: FRG-141, test also commented out in file so locking -->
+        <!-- problem doesn't endure -->
         <test-metadata>
           <knownFailure value="true"/>
         </test-metadata>

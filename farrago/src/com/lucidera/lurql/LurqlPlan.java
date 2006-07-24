@@ -69,11 +69,11 @@ public class LurqlPlan
     {
         this.modelView = modelView;
         this.query = query;
-        aliasToBranchMap = new HashMap();
-        recVars = new HashSet();
+        aliasToBranchMap = new LinkedHashMap();
+        recVars = new LinkedHashSet();
         graph = new DirectedMultigraph();
         idGen = 0;
-        paramMap = new HashMap();
+        paramMap = new LinkedHashMap();
         
         prepareQuery();
     }
@@ -117,13 +117,11 @@ public class LurqlPlan
                 (LurqlPathSpec) query.getRoot(),
                 new ArrayList());
         }
-        
-        if ((query.getSelectList().size() == 1)
-            && (query.getSelectList().get(0).equals("*")))
-        {
+
+        if (isStar(query.getSelectList())) {
             projectSet = null;
         } else {
-            projectSet = new HashSet(query.getSelectList());
+            projectSet = new LinkedHashSet(query.getSelectList());
             List list = new ArrayList(query.getSelectList());
             list.removeAll(aliasToBranchMap.keySet());
             if (!list.isEmpty()) {
@@ -133,6 +131,12 @@ public class LurqlPlan
         }
 
         // TODO:  pruneQuery()?
+    }
+
+    private boolean isStar(List selectList)
+    {
+        return ((selectList.size() == 1)
+            && (selectList.get(0).equals("*")));
     }
 
     public DirectedGraph getGraph()
@@ -511,7 +515,7 @@ public class LurqlPlan
                 }
             }
             
-            LurqlPlanEdge edge = new LurqlPlanEdge(
+            LurqlPlanFollowEdge edge = new LurqlPlanFollowEdge(
                 sourceVertex,
                 targetVertex,
                 assocEdge,
@@ -570,9 +574,18 @@ public class LurqlPlan
     private void addFilters(LurqlPlanVertex planVertex, List filters)
         throws JmiQueryException
     {
+        filters = new ArrayList(filters);
         Iterator iter = filters.iterator();
         while (iter.hasNext()) {
             LurqlFilter filter = (LurqlFilter) iter.next();
+            LurqlExists exists = filter.getExists();
+            if (exists != null) {
+                prepareExists(planVertex, exists);
+                // don't need exists filter at runtime; edge added
+                // by prepareExists will represent it instead
+                iter.remove();
+                continue;
+            }
             if (!filter.hasDynamicParams()) {
                 continue;
             }
@@ -590,6 +603,55 @@ public class LurqlPlan
         }
         
         planVertex.addFilters(filters);
+    }
+
+    private void prepareExists(
+        LurqlPlanVertex planVertex, LurqlExists exists)
+        throws JmiQueryException
+    {
+        // Create a new "root" only reachable explicitly from filtering
+        // on planVertex.  We'll give it an empty set of object ID's
+        // now, and bind to each real object ID at execution time.
+        LurqlRoot dummyRoot = new LurqlRoot(
+            null, null, Collections.emptyList(), null);
+        LurqlPlanVertex existsRoot = newPlanVertex(
+            dummyRoot, new HashSet());
+
+        // Copy class set from original planVertex.
+        for (Object obj : planVertex.getClassVertexSet()) {
+            JmiClassVertex classVertex = (JmiClassVertex) obj;
+            existsRoot.addClassVertex(classVertex);
+        }
+
+        // Prepare exists subgraph reachable from class set.
+        List parentVertexList = new ArrayList();
+        parentVertexList.add(existsRoot);
+        preparePathSpec(
+            parentVertexList,
+            exists.getPathSpec(),
+            new ArrayList());
+
+        Set projectSet = null;
+
+        // Validate that all variables referenced by exists select list
+        // were defined.  TODO jvs 6-July-2006:  Should also validate
+        // that they were not defined outside of exists.
+        if (!isStar(exists.getSelectList())) {
+            projectSet = new LinkedHashSet(exists.getSelectList());
+            List list = new ArrayList(exists.getSelectList());
+            list.removeAll(aliasToBranchMap.keySet());
+            if (!list.isEmpty()) {
+                throw newException(
+                    "unknown alias reference in exists:  " + list);
+            }
+        }
+        // Collect subgraph nodes.
+        DirectedGraph subgraph = existsRoot.createReachableSubgraph(false);
+        
+        // Attach new vertex with a non-follow edge
+        LurqlPlanExistsEdge edge = new LurqlPlanExistsEdge(
+            planVertex, existsRoot, subgraph, projectSet);
+        graph.addEdge(edge);
     }
 
     private void addParam(LurqlDynamicParam param, Class paramType)

@@ -631,81 +631,81 @@ Error: Cast function cannot convert value of type INTEGER to type VARBINARY(10) 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t9
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS bigint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS char(21)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS date) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS decimal) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS double) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS float) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS integer) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t9, CAST (t9 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS numeric(8,4)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS numeric(6,2)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS real) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS smallint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS time) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS timestamp) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS tinyint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t9, CAST (t9 AS varchar(23)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 9: Unknown identifier 'T9' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 9: Column 'T9' not found in any table (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t10
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS bigint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS bit) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS boolean) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS char(21)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS date) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS decimal) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS double) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS float) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS integer) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS long varbinary) FROM CST.alltypes;
 0: jdbc:luciddb:> -- SELECT t10, CAST (t10 AS long varchar) FROM CST.alltypes;
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS numeric(8,4)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS numeric(6,2)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS real) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS smallint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS time) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS timestamp) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS tinyint) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS varbinary(10)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> SELECT t10, CAST (t10 AS varchar(23)) FROM CST.alltypes;
-Error: From line 1, column 8 to line 1, column 10: Unknown identifier 'T10' (state=,code=0)
+Error: From line 1, column 8 to line 1, column 10: Column 'T10' not found in any table (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- t11_1
 0: jdbc:luciddb:> SELECT t11_1, CAST (t11_1 AS bigint) FROM CST.alltypes;
@@ -818,18 +818,21 @@ Error: Cast function cannot convert value of type DECIMAL(6, 2) to type DATE (st
 +--------+---------+
 | 45.30  | 45      |
 +--------+---------+
+0: jdbc:luciddb:> -- set numberFormat since floating point differs based on VM
+0: jdbc:luciddb:> !set numberFormat 0.0000
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS double) FROM CST.alltypes;
-+--------+---------+
-| T11_2  | EXPR$1  |
-+--------+---------+
-| 45.30  | 45.3    |
-+--------+---------+
++----------+----------+
+|  T11_2   |  EXPR$1  |
++----------+----------+
+| 45.3000  | 45.3000  |
++----------+----------+
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS float) FROM CST.alltypes;
-+--------+---------+
-| T11_2  | EXPR$1  |
-+--------+---------+
-| 45.30  | 45.3    |
-+--------+---------+
++----------+----------+
+|  T11_2   |  EXPR$1  |
++----------+----------+
+| 45.3000  | 45.3000  |
++----------+----------+
+0: jdbc:luciddb:> !set numberFormat default
 0: jdbc:luciddb:> SELECT t11_2, CAST (t11_2 AS integer) FROM CST.alltypes;
 +--------+---------+
 | T11_2  | EXPR$1  |

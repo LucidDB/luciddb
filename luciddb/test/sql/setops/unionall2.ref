@@ -1,0 +1,241 @@
+0: jdbc:luciddb:> set schema 'stkmkt';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- find the total commission paid by each customer for the whole year
+0: jdbc:luciddb:> select t1.account account, t2.acct_name account_name, sum(commission) 
+. . . . . . . . > from fyfull t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > order by t1.account, t2.acct_name
+. . . . . . . . > ;
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1        | Investor1     | 8760.0     |
+| 2        | Investor2     | 1113.75    |
+| 3        | Investor3     | 4863.75    |
+| 4        | Investor4     | 7182.5     |
+| 5        | Investor5     | 2272.5     |
+| 7        | Investor7     | 2272.5     |
+| 8        | Investor8     | 907.5      |
+| 9        | Investor9     | 5748.75    |
+| 10       | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- find the total commission paid by each customer for the whole year
+0: jdbc:luciddb:> -- by UNION ALLing over half-year transactions.
+0: jdbc:luciddb:> select account, account_name, sum(sumcomm) from
+. . . . . . . . > (
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cy_firsthalf t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cy_secondhalf t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > )
+. . . . . . . . > group by account, account_name
+. . . . . . . . > order by account, account_name
+. . . . . . . . > ;
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1        | Investor1     | 8760.0     |
+| 2        | Investor2     | 1113.75    |
+| 3        | Investor3     | 4863.75    |
+| 4        | Investor4     | 7182.5     |
+| 5        | Investor5     | 2272.5     |
+| 7        | Investor7     | 2272.5     |
+| 8        | Investor8     | 907.5      |
+| 9        | Investor9     | 5748.75    |
+| 10       | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
+0: jdbc:luciddb:> --by UNION ALLing over qtrly transactions.
+0: jdbc:luciddb:> select account, account_name, sum(sumcomm) from
+. . . . . . . . > (
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cyqtr1 t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cyqtr2 t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cyqtr3 t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from cyqtr4 t1, accounts t2
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > )
+. . . . . . . . > group by account, account_name
+. . . . . . . . > order by account, account_name
+. . . . . . . . > ;
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1        | Investor1     | 8760.0     |
+| 2        | Investor2     | 1113.75    |
+| 3        | Investor3     | 4863.75    |
+| 4        | Investor4     | 7182.5     |
+| 5        | Investor5     | 2272.5     |
+| 7        | Investor7     | 2272.5     |
+| 8        | Investor8     | 907.5      |
+| 9        | Investor9     | 5748.75    |
+| 10       | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --do the above queries using from-list subqueries
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> select t1.account account, t2.acct_name account_name, sum(commission) 
+. . . . . . . . > from accounts t2, (select * from fy_firsthalf UNION ALL select * from fy_secondhalf) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by account, account_name
+. . . . . . . . > order by account, account_name
+. . . . . . . . > ;
+Error: From line 6, column 19 to line 6, column 30: Column 'ACCOUNT_NAME' not found in any table (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select t1.account account, t2.acct_name account_name, sum(commission) 
+. . . . . . . . > from accounts t2, (select * from fyqtr1 UNION ALL select * from fyqtr2 UNION ALL                   select * from fyqtr3 UNION ALL select * from fyqtr4)  t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > order by t1.account, t2.acct_name
+. . . . . . . . > ;
++----------+---------------+--------------------+
+| ACCOUNT  | ACCOUNT_NAME  |       EXPR$2       |
++----------+---------------+--------------------+
+| 1        | Investor1     | 8760.000000000002  |
+| 2        | Investor2     | 1113.75            |
+| 3        | Investor3     | 4863.75            |
+| 4        | Investor4     | 7182.5             |
+| 5        | Investor5     | 2272.5             |
+| 7        | Investor7     | 2272.5             |
+| 8        | Investor8     | 907.5              |
+| 9        | Investor9     | 5748.75            |
+| 10       | Investor10    | 2417.1875          |
++----------+---------------+--------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
+0: jdbc:luciddb:> --by UNION ALLing over half-yearly transactions.
+0: jdbc:luciddb:> select account, account_name, sum(sumcomm) from
+. . . . . . . . > (
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from fyqtr1 UNION ALL select * from fyqtr2 ) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from fyqtr3 UNION ALL select * from fyqtr4) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > )
+. . . . . . . . > group by account, account_name
+. . . . . . . . > order by account, account_name
+. . . . . . . . > ;
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1        | Investor1     | 8760.0     |
+| 2        | Investor2     | 1113.75    |
+| 3        | Investor3     | 4863.75    |
+| 4        | Investor4     | 7182.5     |
+| 5        | Investor5     | 2272.5     |
+| 7        | Investor7     | 2272.5     |
+| 8        | Investor8     | 907.5      |
+| 9        | Investor9     | 5748.75    |
+| 10       | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> --find the total commission paid by each customer for the whole year
+0: jdbc:luciddb:> --by UNION ALLing over qtrly transactions.
+0: jdbc:luciddb:> select account, account_name, sum(sumcomm) from
+. . . . . . . . > (
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from jantran UNION ALL 
+. . . . . . . . >                    select * from febtran UNION ALL 
+. . . . . . . . >                    select * from martran) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from aprtran UNION ALL 
+. . . . . . . . >                    select * from maytran UNION ALL 
+. . . . . . . . >                    select * from juntran) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from jultran UNION ALL 
+. . . . . . . . >                    select * from augtran UNION ALL 
+. . . . . . . . >                    select * from septran) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > UNION ALL
+. . . . . . . . > select t1.account account, t2.acct_name account_name, sum(commission) sumcomm
+. . . . . . . . > from accounts t2, (select * from octtran UNION ALL 
+. . . . . . . . >                    select * from novtran UNION ALL 
+. . . . . . . . >                    select * from dectran) t1
+. . . . . . . . > where 
+. . . . . . . . > t1.account = t2.acct_no and
+. . . . . . . . > t1.purchase_time is not null
+. . . . . . . . > group by t1.account, t2.acct_name
+. . . . . . . . > )
+. . . . . . . . > group by account, account_name
+. . . . . . . . > order by account, account_name
+. . . . . . . . > ;
++----------+---------------+------------+
+| ACCOUNT  | ACCOUNT_NAME  |   EXPR$2   |
++----------+---------------+------------+
+| 1        | Investor1     | 8760.0     |
+| 2        | Investor2     | 1113.75    |
+| 3        | Investor3     | 4863.75    |
+| 4        | Investor4     | 7182.5     |
+| 5        | Investor5     | 2272.5     |
+| 7        | Investor7     | 2272.5     |
+| 8        | Investor8     | 907.5      |
+| 9        | Investor9     | 5748.75    |
+| 10       | Investor10    | 2417.1875  |
++----------+---------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

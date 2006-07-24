@@ -950,6 +950,109 @@ public abstract class RelOptUtil
         nonEquiList.add(condition);
     }
 
+    /**
+     * Adding projection to the inputs of a join to produce the required join keys.
+     * 
+     * @param inputRels inputs to a join
+     * @param leftJoinKeys 
+     * @param rightJoinKeys
+     * @param leftKeys on return this contains the join key positions from the
+     *                 new project rel on the LHS.
+     * @param rightKeys on return this contains the join key positions from the
+     *                 new project rel on the RHS.
+     * @param outputProj on return this contains the positions of the original
+     *                   join output in the (to be formed by caller) LhxJoinRel.
+     *                   Caller needs to be responsible for adding projection
+     *                   on the new join output.
+     */
+    public static void projectJoinInputs(
+        RelNode[] inputRels,
+        List<RexNode> leftJoinKeys,
+        List<RexNode> rightJoinKeys,
+        List<Integer> leftKeys,
+        List<Integer> rightKeys,            
+        List<Integer> outputProj)
+    {
+        RelNode leftRel  = inputRels[0];
+        RelNode rightRel = inputRels[1];
+        RexBuilder rexBuilder = leftRel.getCluster().getRexBuilder();
+        
+        int origLeftInputSize = leftRel.getRowType().getFieldCount();
+        int origRightInputSize = rightRel.getRowType().getFieldCount();
+        
+        List<RexNode> newLeftFields = new ArrayList<RexNode>();
+        List<String>  newLeftFieldNames = new ArrayList<String>();
+
+        List<RexNode> newRightFields = new ArrayList<RexNode>();
+        List<String>  newRightFieldNames = new ArrayList<String>();
+        int leftKeyCount = leftJoinKeys.size();
+        int rightKeyCount = rightJoinKeys.size();
+        int i;
+        
+        for (i = 0; i < origLeftInputSize; i ++) {
+            newLeftFields.add(rexBuilder.makeInputRef(
+                leftRel.getRowType().getFields()[i].getType(), i));
+            newLeftFieldNames.add(
+                leftRel.getRowType().getFields()[i].getName());
+            outputProj.add(i);
+        }
+            
+        int newLeftKeyCount = 0;
+        for (i = 0; i < leftKeyCount; i ++) {
+            RexNode leftKey = leftJoinKeys.get(i);
+                
+            if (leftKey instanceof RexInputRef) {
+                // already added to the projected left fields
+                // only need to remember the index in the join key list
+                leftKeys.add(((RexInputRef)leftKey).getIndex());
+            } else {
+                newLeftFields.add(leftKey);
+                newLeftFieldNames.add(leftKey.toString());
+                leftKeys.add(origLeftInputSize + newLeftKeyCount);
+                newLeftKeyCount ++;
+            }
+        }
+            
+        int leftFieldCount = origLeftInputSize + newLeftKeyCount;
+        for (i = 0; i < origRightInputSize; i ++) {
+            newRightFields.add(rexBuilder.makeInputRef(
+                rightRel.getRowType().getFields()[i].getType(), i));
+            newRightFieldNames.add(
+                rightRel.getRowType().getFields()[i].getName());
+            outputProj.add(i + leftFieldCount);
+        }
+                
+        int newRightKeyCount = 0;
+        for (i = 0; i < rightKeyCount; i ++) {
+            RexNode rightKey = rightJoinKeys.get(i);
+
+            if (rightKey instanceof RexInputRef) {
+                // already added to the projected left fields
+                // only need to remember the index in the join key list
+                rightKeys.add(((RexInputRef)rightKey).getIndex());
+            } else {
+                newRightFields.add(rightKey);
+                newRightFieldNames.add(rightKey.toString());
+                rightKeys.add(origRightInputSize + newRightKeyCount);
+                newRightKeyCount ++;
+            }
+        }
+
+        // added project if need to produce new keys than the origianl input fields
+        if (newLeftKeyCount > 0) {
+            leftRel =
+                CalcRel.createProject(leftRel, newLeftFields, newLeftFieldNames);
+        }
+            
+        if (newRightKeyCount > 0) {
+            rightRel =
+                CalcRel.createProject(rightRel, newRightFields, newRightFieldNames);
+        }
+            
+        inputRels[0] = leftRel;
+        inputRels[1] = rightRel;
+    }
+    
     public static void registerAbstractRels(RelOptPlanner planner)
     {
         AggregateRel.register(planner);

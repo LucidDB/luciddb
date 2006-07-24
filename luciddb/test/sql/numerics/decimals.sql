@@ -157,7 +157,10 @@ select * from dTable2 order by 1;
 
 select floor(d) from dTable2 order by 1;
 select ceil(d) from dTable2 order by 1;
+-- floating point changes depending on VM so set numberFormat
+!set numberFormat 0.000000000000E0
 select exp(d) from dTable2 order by 1;
+!set numberFormat default
 select ln(abs(d)) from dTable2 order by 1;
 select mod(cast (d as decimal(10,0)), 99999999999999) from dTable2 order by 1;
 -- round

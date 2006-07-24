@@ -23,11 +23,10 @@
       </test>
 
       <test name="funcMath" requiresSuccess="cretables">
-        <!-- functions not supported -->
-        <!-- trunc, to_number, to_char
-        -->
-        <!-- buggy mod() filed JIRA FRG-150 -->
         <!-- some tests not included -->
+        <!-- functions not supported -->
+        <!-- trunc, to_number, to_char -->
+        <!-- FRG-150 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcMath.sql"/>
       </test>
 
@@ -208,7 +207,6 @@
       </test>
 
       <test name="bug10248" requiresSuccess="cretables">
-        <!-- IN not supported yet, commented out -->
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug10248.sql"/>
       </test>
 
@@ -270,6 +268,9 @@
      
       <test name="varbinary" requiresSuccess="cretables">
         <!-- unresolved issue: JIRA FRG-147 FRG-148 -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>   
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/varbinary.sql"/>
       </test>
 

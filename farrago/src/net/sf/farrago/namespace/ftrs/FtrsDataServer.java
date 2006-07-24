@@ -27,6 +27,8 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.session.*;
@@ -130,6 +132,17 @@ class FtrsDataServer extends MedAbstractFennelDataServer
                 // key's index clustered.
                 generatedPrimaryKeyIndex.setClustered(true);
             }
+        }
+
+        // Mark all columns in the clustered index as NOT NULL.
+        FemLocalIndex clusteredIndex = FarragoCatalogUtil.getClusteredIndex(
+            repos, table);
+        assert(clusteredIndex != null);
+        for (Object obj : clusteredIndex.getIndexedFeature()) {
+            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) obj;
+            FemStoredColumn col = (FemStoredColumn) indexedFeature.getFeature();
+            col.setIsNullable(
+                NullableTypeEnum.COLUMN_NO_NULLS);
         }
     }
 

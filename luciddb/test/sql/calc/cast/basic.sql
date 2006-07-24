@@ -309,8 +309,11 @@ SELECT t11_2, CAST (t11_2 AS boolean) FROM CST.alltypes;
 SELECT t11_2, CAST (t11_2 AS char(21)) FROM CST.alltypes;
 SELECT t11_2, CAST (t11_2 AS date) FROM CST.alltypes;
 SELECT t11_2, CAST (t11_2 AS decimal) FROM CST.alltypes;
+-- set numberFormat since floating point differs based on VM
+!set numberFormat 0.0000
 SELECT t11_2, CAST (t11_2 AS double) FROM CST.alltypes;
 SELECT t11_2, CAST (t11_2 AS float) FROM CST.alltypes;
+!set numberFormat default
 SELECT t11_2, CAST (t11_2 AS integer) FROM CST.alltypes;
 -- SELECT t11_2, CAST (t11_2 AS long varbinary) FROM CST.alltypes;
 -- SELECT t11_2, CAST (t11_2 AS long varchar) FROM CST.alltypes;

@@ -8,11 +8,9 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
 . . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.types_nonexplicit;
-Error: At line 1, column 26: Cannot assign to target field 'C_DATE' of type DATE from source field 'c_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO types
 . . . . . . . . > SELECT * FROM @name_prefix@_is_schema."types";
-Error: At line 1, column 26: Cannot assign to target field 'C_DATE' of type DATE from source field 'c_date' of type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- binary type table
 0: jdbc:luciddb:> INSERT INTO blobtypes
@@ -32,7 +30,7 @@ Error: java.lang.AssertionError: Type is unsupported for flat files: BINARY (sta
 +---------+
 | EXPR$0  |
 +---------+
-| 5       |
+| 15      |
 +---------+
 0: jdbc:luciddb:> select count(*) from blobtypes;
 +---------+

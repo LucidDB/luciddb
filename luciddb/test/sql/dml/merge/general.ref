@@ -1,0 +1,176 @@
+0: jdbc:luciddb:> set schema 'mergetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1 (n1 integer, n2 integer);
+0: jdbc:luciddb:> insert into t1 values (1,10), (2,20), (3,30);
+0: jdbc:luciddb:> create table t2 (m1 integer, m2 integer);
+0: jdbc:luciddb:> insert into t2 values (1,100), (2,200), (4,400);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- positive tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- insert column list ommitted
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
+. . . . . . . . > when matched then update set n2=m2
+. . . . . . . . > when not matched then insert values (m1, pow(m2,2));
+0: jdbc:luciddb:> select * from t1;
++-----+---------+
+| N1  |   N2    |
++-----+---------+
+| 3   | 30      |
+| 1   | 100     |
+| 2   | 200     |
+| 4   | 160000  |
++-----+---------+
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,10), (2,20), (3,30);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- one when clause ommitted
+0: jdbc:luciddb:> merge into t1
+. . . . . . . . > using t2 on n1 = m1
+. . . . . . . . > when matched then update set n2=m2;
+0: jdbc:luciddb:> select * from t1;
++-----+------+
+| N1  |  N2  |
++-----+------+
+| 3   | 30   |
+| 1   | 100  |
+| 2   | 200  |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1
+. . . . . . . . > using t2 on n1 = m1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (n1,n2) values (m1,m2);
+0: jdbc:luciddb:> select * from t1;
++-----+------+
+| N1  |  N2  |
++-----+------+
+| 3   | 30   |
+| 1   | 100  |
+| 2   | 200  |
+| 4   | 400  |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- merge on self
+0: jdbc:luciddb:> merge into t1 as tr
+. . . . . . . . > using t1 as rf on tr.n1=rf.n1
+. . . . . . . . > when matched then update set n1 = tr.n1 + 10;
+0: jdbc:luciddb:> select * from t1;
++-----+------+
+| N1  |  N2  |
++-----+------+
+| 13  | 30   |
+| 11  | 100  |
+| 12  | 200  |
+| 14  | 400  |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 as tr
+. . . . . . . . > using t1 as rf on tr.n1=rf.n1
+. . . . . . . . > when matched then update set n1=rf.n1 - 10;
+0: jdbc:luciddb:> select * from t1;
++-----+------+
+| N1  |  N2  |
++-----+------+
+| 3   | 30   |
+| 1   | 100  |
+| 2   | 200  |
+| 4   | 400  |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 as tr
+. . . . . . . . > using (select * from t1 rf1, t1 rf2 where rf1.n1=rf2.n1) as rf
+. . . . . . . . > on rf.n1=tr.n1
+. . . . . . . . > when matched then update set n2=rf.n2 + 1;
+0: jdbc:luciddb:> select * from t1;
++-----+------+
+| N1  |  N2  |
++-----+------+
+| 3   | 31   |
+| 1   | 101  |
+| 2   | 201  |
+| 4   | 401  |
++-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- negative tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- both when clauses ommitted
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "<EOF>" at line 1, column 33.
+Was expecting one of:
+    "WHEN" ...
+    "." ...
+    "(" ...
+    "IN" ...
+    "NOT" ...
+    "BETWEEN" ...
+    "LIKE" ...
+    "SIMILAR" ...
+    "=" ...
+    ">" ...
+    "<" ...
+    "<=" ...
+    ">=" ...
+    "<>" ...
+    "+" ...
+    "-" ...
+    "*" ...
+    "/" ...
+    "||" ...
+    "AND" ...
+    "OR" ...
+    "IS" ...
+    "MEMBER" ...
+    "SUBMULTISET" ...
+    "MULTISET" ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- more than 1 matched / not matched
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
+. . . . . . . . > when matched then update set n2=m2
+. . . . . . . . > when matched then update set n2=n2+1;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "matched" at line 3, column 6.
+Was expecting:
+    "NOT" ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
+. . . . . . . . > when not matched then insert (n1,n2) values (m1,m2)
+. . . . . . . . > when not matched then insert (n1,n2) values (m1,m2);
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "when" at line 3, column 1.
+Was expecting one of:
+    <EOF> 
+    ")" ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- repeated insert column name  >>> JIRA FRG-156 filed
+0: jdbc:luciddb:> --merge into t1 using t2 on n1 = m1
+0: jdbc:luciddb:> --when matched then update set n2=m2
+0: jdbc:luciddb:> --when not matched then insert (n1,n1,n1) values (101,102,103);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- diff number of insert values
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
+. . . . . . . . > when matched then update set n2=m2
+. . . . . . . . > when not matched then insert (n1,n2) values (101,102,103);
+Error: Number of INSERT target columns (2) does not equal number of source items (3) (state=,code=0)
+0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
+. . . . . . . . > when matched then update set n2=m2
+. . . . . . . . > when not matched then insert (n1,n2) values (101);
+Error: Number of INSERT target columns (2) does not equal number of source items (1) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- should throw exception due to multiple matches
+0: jdbc:luciddb:> -- not yet handled
+0: jdbc:luciddb:> --merge into t1 as tr
+0: jdbc:luciddb:> --using (select n1 as n1, n2 as n2 from t1 union all
+0: jdbc:luciddb:> --       select m1 as n1, m2 as n2 from t2) as rf
+0: jdbc:luciddb:> --on rf.n1 = tr.n1
+0: jdbc:luciddb:> --when matched then update set n2 = tr.n2 
+0: jdbc:luciddb:> --when not matched then insert (n1,n2) values (rf.n1, rf.n2 + 2);
+0: jdbc:luciddb:> --select * from t1;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clean up
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> !quit

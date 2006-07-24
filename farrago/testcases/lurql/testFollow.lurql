@@ -61,6 +61,32 @@ from (
     follow composite backward destination class "Class" as c
 );
 
+# Same as previous one, but using exists instead
+EXPLAIN AND EXECUTE
+select c
+from class "Class" as c
+where exists (
+    follow composite forward destination class Attribute
+    where name='annotation'
+    union
+    follow composite forward destination class Attribute
+    where name='visibility'
+);
+
+# Test exists with projection:  only get classes which have descendants
+# with an attribute named 'annotation'; we're verifying
+# that the existence of the descendants themselves is ignored
+EXPLAIN AND EXECUTE
+select c
+from class "Class" as c
+where exists a in (
+    follow association Generalizes forward then (
+        follow composite forward
+        destination class Attribute as a
+        where name='annotation'
+    )
+);
+
 # Verify that target classes are subsumed
 EXPLAIN
 select e

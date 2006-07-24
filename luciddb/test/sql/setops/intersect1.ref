@@ -1,0 +1,208 @@
+0: jdbc:luciddb:> set schema 'stkmkt';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- test INTERSECT
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clients who traded in first quarter
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from cyqtr1 t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1,2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 1        | Investor1     |
+| 2        | Investor2     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 4        | Investor4     |
+| 4        | Investor4     |
+| 5        | Investor5     |
+| 5        | Investor5     |
+| 7        | Investor7     |
+| 7        | Investor7     |
+| 8        | Investor8     |
+| 9        | Investor9     |
+| 10       | Investor10    |
+| 10       | Investor10    |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in second quarter
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from cyqtr2 t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 1        | Investor1     |
+| 1        | Investor1     |
+| 2        | Investor2     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 4        | Investor4     |
+| 7        | Investor7     |
+| 7        | Investor7     |
+| 8        | Investor8     |
+| 9        | Investor9     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in first and second quarter
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from cyqtr1 t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > INTERSECT
+. . . . . . . . > select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from cyqtr2 t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 1        | Investor1     |
+| 2        | Investor2     |
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 7        | Investor7     |
+| 8        | Investor8     |
+| 9        | Investor9     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in first and second quarter
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from accounts t2, (select * from jantran UNION ALL
+. . . . . . . . >                    select * from febtran UNION ALL
+. . . . . . . . >                    select * from martran ) t1
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > INTERSECT
+. . . . . . . . > select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from accounts t2, (select * from aprtran UNION ALL
+. . . . . . . . >                    select * from maytran UNION ALL
+. . . . . . . . >                    select * from juntran) t1
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 1        | Investor1     |
+| 2        | Investor2     |
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 7        | Investor7     |
+| 8        | Investor8     |
+| 9        | Investor9     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clients who traded in jan
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from jantran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 1        | Investor1     |
+| 2        | Investor2     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 5        | Investor5     |
+| 7        | Investor7     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in feb
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from febtran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 7        | Investor7     |
+| 8        | Investor8     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in mar
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from martran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 5        | Investor5     |
+| 9        | Investor9     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in apr
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from (select * from aprtran ) t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 2        | Investor2     |
+| 7        | Investor7     |
+| 7        | Investor7     |
++----------+---------------+
+0: jdbc:luciddb:> -- clients who traded in jan, feb, mar but not in apr 
+0: jdbc:luciddb:> select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from jantran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > INTERSECT
+. . . . . . . . > select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from febtran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > INTERSECT
+. . . . . . . . > select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from martran t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > EXCEPT
+. . . . . . . . > select t1.account account, 
+. . . . . . . . >        t2.acct_name account_name
+. . . . . . . . > from (select * from aprtran ) t1, accounts t2
+. . . . . . . . > where t1.account = t2.acct_no
+. . . . . . . . > order by 1, 2
+. . . . . . . . > ;
++----------+---------------+
+| ACCOUNT  | ACCOUNT_NAME  |
++----------+---------------+
+| 3        | Investor3     |
+| 4        | Investor4     |
+| 10       | Investor10    |
++----------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

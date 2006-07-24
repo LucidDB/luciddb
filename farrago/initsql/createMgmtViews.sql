@@ -413,17 +413,6 @@ create view dba_stored_tables_internal2 as
     g."action" = 'CREATION'
 ;
 
--- TODO: temporarily using parameter style to check if routine is a udx
-
-create function is_udx(param_style varchar(1024))
-returns boolean
-contains sql
-deterministic
-return case
-when param_style='RPS_JAVA_FARRAGO' then true
-else false
-end;
-
 create view dba_routines_internal1 as
   select
     s.object_catalog as catalog_name,
@@ -434,7 +423,7 @@ create view dba_routines_internal1 as
     r."type" as routine_type,
     cast(r."creationTimestamp" as timestamp) as creation_timestamp,
     cast(r."modificationTimestamp" as timestamp) as last_modified_timestamp,
-    is_udx(r."parameterStyle") as is_table_function,
+    r."isUdx" as is_table_function,
     r."parameterStyle" as parameter_style,
     r."deterministic" as is_deterministic,
     r."dataAccess" as data_access,

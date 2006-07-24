@@ -1,0 +1,82 @@
+<project name="bh" default="dml-merge">
+  <target name="dml-merge">
+    <test-suite name="dml-merge">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="dml-merge"/>
+          </test-suite-call>
+        </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/dml/merge" target="copy-csv"/>
+      </init-hook>
+
+      <!-- Create schema, tables, and download data -->
+
+      <test name="create">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/createTables.sql"/>
+      </test>
+  
+      <test name="download" requiresSuccess="create">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/download.sql"/>
+      </test>
+
+      <test name="general" requiresSuccess="download">
+        <!-- TODO: FRG-156 filed, tests commented out -->
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/general.sql"/>
+      </test>
+
+      <test name="autoIncCol" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/tblWithAutoIncr.sql"/>
+      </test>
+
+      <test name="joinRef" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/joinRef.sql"/>
+      </test>
+
+<!-- view is read-only -->
+<!--
+      <test name="view" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/targetView.sql"/>
+      </test>
+-->
+
+      <test name="nullTest" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/nullTest.sql"/>
+      </test>
+
+      <test name="udxRef" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/udxRef.sql"/>
+      </test>
+
+      <test name="updateWithFunc" requiresSuccess="download">
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/updateWithFunc.sql"/>
+      </test>
+
+      <test name="searchFilter" requiresSuccess="download">
+        <!-- TODO: (no jira) pending on design of outer join -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/searchFilter.sql"/>
+      </test>
+
+      <test name="setops" requiresSuccess="download">
+        <!-- TODO: FRG-163 -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/setOps.sql"/>
+      </test>
+
+      <cleanup-hook>
+          <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="dml-merge"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

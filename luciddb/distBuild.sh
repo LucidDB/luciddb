@@ -27,6 +27,7 @@ without_farrago_build=false
 without_init_build=false
 INIT_BUILD_FLAGS=""
 luciddb_dir=$(cd $(dirname $0); pwd)
+FARRAGO_DIST_FLAGS=""
 
 # extended globbing for case statement
 shopt -sq extglob
@@ -38,6 +39,8 @@ while [ -n "$1" ]; do
             INIT_BUILD_FLAGS="${INIT_BUILD_FLAGS} $1";;
         --without-init-build|--skip-init-build)
             without_init_build=true;;
+        --with?(out)-debug) 
+            FARRAGO_DIST_FLAGS="${FARRAGO_DIST_FLAGS} $1";;
         --*) INIT_BUILD_FLAGS="${INIT_BUILD_FLAGS} $1";;
 
         *) usage; exit -1;;
@@ -63,7 +66,7 @@ if $without_farrago_build ; then
     echo "Skip Farrago Packaging ..."
 else
     cd ${luciddb_dir}/../farrago
-    ./distBuild.sh --without-init-build
+    /bin/bash -x ./distBuild.sh --without-init-build ${FARRAGO_DIST_FLAGS}
 fi
 
 # get the thirdparty ant

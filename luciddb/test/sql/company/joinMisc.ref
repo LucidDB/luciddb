@@ -22,10 +22,18 @@
 +----------+--------------+--------+
 0: jdbc:luciddb:> --order by EMPNO;
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select EMP.LNAME, DEPT.DNAME
-0: jdbc:luciddb:> --from EMP, DEPT
-0: jdbc:luciddb:> --where substring(EMP.LNAME,2,1)=substring(DEPT.DNAME,2,1)
-0: jdbc:luciddb:> --order by EMP.EMPNO, DEPT.DNAME;
+0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME
+. . . . . . . . > from EMP, DEPT
+. . . . . . . . > where substring(EMP.LNAME,2,1)=substring(DEPT.DNAME,2,1)
+. . . . . . . . > order by EMP.EMPNO, DEPT.DNAME;
++-----------+--------------+
+|   LNAME   |    DNAME     |
++-----------+--------------+
+| Bush      | Support      |
+| Webber    | Development  |
+| Guy       | Support      |
+| Reynolds  | Development  |
++-----------+--------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- one side functions only
 0: jdbc:luciddb:> select EMP.LNAME, DEPT.DNAME

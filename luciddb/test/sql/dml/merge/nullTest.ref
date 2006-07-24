@@ -1,0 +1,130 @@
+0: jdbc:luciddb:> set schema 'mergetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table t1 (n1 integer, n2 integer, n3 integer);
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (null,3,30);
+0: jdbc:luciddb:> create table t2 (m1 integer, m2 integer, m3 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- ref table has no rows
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+-----+
+| N1  | N2  | N3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+|     | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- target table has no rows
+0: jdbc:luciddb:> merge into t2 using t1 on n1=m1
+. . . . . . . . > when matched then update set m3=0
+. . . . . . . . > when not matched then insert (m1,m2,m3) values (n1,n2,n3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t2;
++-----+-----+-----+
+| M1  | M2  | M3  |
++-----+-----+-----+
+| 1   | 1   | 10  |
+| 2   | 2   | 20  |
+|     | 3   | 30  |
++-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into t2 values (1,1,100), (2,2,200), (3,3,300), (null,4,400);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+|     | 3   | 30   |
+| 1   | 1   | 0    |
+| 2   | 2   | 0    |
+| 3   | 3   | 300  |
+|     | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,null,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 1   | 0    |
+| 2   | 2   | 0    |
+| 3   |     | 0    |
+|     | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (1,1,10), (null,2,20), (3,null,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=m2
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+|     | 2   | 20   |
+| 3   |     | 30   |
+| 1   | 1   | 0    |
+| 2   | 2   | 200  |
+| 3   | 3   | 300  |
+|     | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (null,1,10), (null,2,20), (null,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t1;
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+|     | 1   | 10   |
+|     | 2   | 20   |
+|     | 3   | 30   |
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 300  |
+|     | 4   | 400  |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> insert into t1 values (null,1,10), (null,2,20), (null,3,30);
+0: jdbc:luciddb:> delete from t2 where m1 is null;
+0: jdbc:luciddb:> merge into t2 using t1 on n1=m1
+. . . . . . . . > when matched then update set m3=0
+. . . . . . . . > when not matched then insert (m1,m2,m3) values (n1,n2,n3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from t2;
++-----+-----+------+
+| M1  | M2  |  M3  |
++-----+-----+------+
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 300  |
+|     | 1   | 10   |
+|     | 2   | 20   |
+|     | 3   | 30   |
++-----+-----+------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table t1;
+0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

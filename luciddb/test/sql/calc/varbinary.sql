@@ -14,10 +14,13 @@ insert into foo values (1, X'1bad3cad')
 ;
 insert into foo values (2, X'1bad2bad3bad')
 ;
---bug JIRA-147 values not truncated before inserting to table
+--bug FRG-147 values not truncated before inserting to table
 --insert into foo values (3, X'1bad2bad3bad4bad')
 --;
 --end bug
+-- FRG-148 (bad imput to varbinary passes parser)
+insert into foo values(3, X'X');
+
 select * from foo
 ;
 -- not supported?

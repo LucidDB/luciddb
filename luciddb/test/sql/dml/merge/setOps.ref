@@ -1,0 +1,195 @@
+---------------------------------------------------------------------------------
+FRG-163 unresolved
+---------------------------------------------------------------------------------
+0: jdbc:luciddb:> set schema 'mergetest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Create and populate tables
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table EMPTEMP1 (
+. . . . . . . . >   EMPNO integer not null,
+. . . . . . . . >   FNAME varchar(15),
+. . . . . . . . >   LNAME varchar(15),
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   DNAME varchar(15),
+. . . . . . . . >   MANAGER integer,
+. . . . . . . . >   MFNAME varchar(15),
+. . . . . . . . >   MLNAME varchar(15),
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   CITY varchar(8),
+. . . . . . . . >   SAL decimal(10, 2),
+. . . . . . . . >   COMMISION decimal(10, 2),
+. . . . . . . . >   HOBBY varchar(25)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table EMPTEMP2 (
+. . . . . . . . >   EMPNO integer not null,
+. . . . . . . . >   FNAME varchar(15),
+. . . . . . . . >   LNAME varchar(15),
+. . . . . . . . >   SEX char(1),
+. . . . . . . . >   DEPTNO integer,
+. . . . . . . . >   DNAME varchar(15),
+. . . . . . . . >   MANAGER integer,
+. . . . . . . . >   MFNAME varchar(15),
+. . . . . . . . >   MLNAME varchar(15),
+. . . . . . . . >   LOCID char(2),
+. . . . . . . . >   CITY varchar(8),
+. . . . . . . . >   SAL decimal(10, 2),
+. . . . . . . . >   COMMISION decimal(10, 2),
+. . . . . . . . >   HOBBY varchar(25)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into emptemp1(EMPNO, FNAME, LNAME, SEX, DEPTNO, MANAGER, LOCID, SAL, 
+. . . . . . . . >   COMMISION, HOBBY) 
+. . . . . . . . >   select * from emp where empno<=105;
+0: jdbc:luciddb:> insert into emptemp2 select * from emptemp1;
+0: jdbc:luciddb:> insert into emptemp1 (empno, locid, sal) values (201, 'FM', 40000);
+0: jdbc:luciddb:> insert into emptemp1 (empno, locid, sal) values (202, 'NW', 60000);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- update 101~105, insert 106~110,201,202
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using (select * from emp UNION 
+. . . . . . . . >        select EMPNO, FNAME, LNAME, SEX, DEPTNO, MANAGER, LOCID, SAL, 
+. . . . . . . . >               COMMISION, HOBBY from emptemp1) as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal) values (rf.empno, rf.locid, rf.sal + 2);
+Error: java.lang.AssertionError: Internal error: Type 'RecordType(INTEGER EMPNO, VARCHAR(15) FNAME, VARCHAR(15) LNAME, CHAR(1) SEX, INTEGER DEPTNO, INTEGER MANAGER, CHAR(2) LOCID, DECIMAL(10, 2) SAL, DECIMAL(10, 2) COMMISION, VARCHAR(25) HOBBY)' has no field 'DNAME' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
+| 100     |
+| 101     |
+| 102     |
+| 103     |
+| 104     |
+| 105     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- update 101~105
+0: jdbc:luciddb:> delete from emptemp2;
+0: jdbc:luciddb:> insert into emptemp2
+. . . . . . . . >   select * from emp where empno<=105;
+Error: Number of INSERT target columns (14) does not equal number of source items (10) (state=,code=0)
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using (select * from emp INTERSECT 
+. . . . . . . . >        select EMPNO, FNAME, LNAME, SEX, DEPTNO, MANAGER, LOCID, SAL, 
+. . . . . . . . >               COMMISION, HOBBY from emptemp1) as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal) values (rf.empno, rf.locid, rf.sal + 2);
+Error: java.lang.AssertionError: Internal error: Type 'RecordType(INTEGER EMPNO, VARCHAR(15) FNAME, VARCHAR(15) LNAME, CHAR(1) SEX, INTEGER DEPTNO, INTEGER MANAGER, CHAR(2) LOCID, DECIMAL(10, 2) SAL, DECIMAL(10, 2) COMMISION, VARCHAR(25) HOBBY)' has no field 'DNAME' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert 201,202
+0: jdbc:luciddb:> delete from emptemp2;
+0: jdbc:luciddb:> insert into emptemp2
+. . . . . . . . >   select * from emp where empno<=105;
+Error: Number of INSERT target columns (14) does not equal number of source items (10) (state=,code=0)
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using (select EMPNO, FNAME, LNAME, SEX, DEPTNO, MANAGER, LOCID, SAL, 
+. . . . . . . . >               COMMISION, HOBBY from emptemp1 
+. . . . . . . . >        EXCEPT select * from emp) as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal) values (rf.empno, rf.locid, rf.sal + 2);
+Error: java.lang.AssertionError: Internal error: Type 'RecordType(INTEGER EMPNO, VARCHAR(15) FNAME, VARCHAR(15) LNAME, CHAR(1) SEX, INTEGER DEPTNO, INTEGER MANAGER, CHAR(2) LOCID, DECIMAL(10, 2) SAL, DECIMAL(10, 2) COMMISION, VARCHAR(25) HOBBY)' has no field 'DNAME' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- insert or update those having locid='HQ' and sex= 'M' using intersect
+0: jdbc:luciddb:> delete from emptemp2;
+0: jdbc:luciddb:> insert into emptemp2
+. . . . . . . . >   select * from emp where empno<=105;
+Error: Number of INSERT target columns (14) does not equal number of source items (10) (state=,code=0)
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using
+. . . . . . . . >   (select * from emp where locid='HQ' intersect
+. . . . . . . . >    select * from emp where sex='M') as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal + 2) from emptemp2;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "+" at line 9, column 29.
+Was expecting one of:
+    ")" ...
+    "," ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- same query using AND filter
+0: jdbc:luciddb:> delete from emptemp2;
+0: jdbc:luciddb:> insert into emptemp2
+. . . . . . . . >   select * from emp where empno<=105;
+Error: Number of INSERT target columns (14) does not equal number of source items (10) (state=,code=0)
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using (select * from emp where locid='HQ' and sex='M') as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal + 2) from emptemp2;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "+" at line 7, column 29.
+Was expecting one of:
+    ")" ...
+    "," ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- same query using except
+0: jdbc:luciddb:> delete from emptemp2;
+0: jdbc:luciddb:> insert into emptemp2
+. . . . . . . . >   select * from emp where empno<=105;
+Error: Number of INSERT target columns (14) does not equal number of source items (10) (state=,code=0)
+0: jdbc:luciddb:> merge into emptemp2 as tr
+. . . . . . . . > using
+. . . . . . . . >   (select * from emp where locid='HQ' except
+. . . . . . . . >    select * from emp where sex='F') as rf
+. . . . . . . . > on rf.empno = tr.empno
+. . . . . . . . > when matched then
+. . . . . . . . >   update set sal = tr.sal + 1
+. . . . . . . . > when not matched then
+. . . . . . . . >   insert (empno, locid, sal + 2) from emptemp2;
+Error: org.eigenbase.sql.parser.SqlParseException: Encountered "+" at line 9, column 29.
+Was expecting one of:
+    ")" ...
+    "," ... (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select (empno, locid, sal) from emptemp2;
++---------+
+| EXPR$0  |
++---------+
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- clean up
+0: jdbc:luciddb:> drop table emptemp1;
+0: jdbc:luciddb:> drop table emptemp2;
+0: jdbc:luciddb:> !quit

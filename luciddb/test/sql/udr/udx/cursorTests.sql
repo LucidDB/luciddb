@@ -151,11 +151,12 @@ parameter style system defined java
 modifies sql data
 external name 'class com.lucidera.luciddb.test.udr.CreateTableAsSelectUdx.execute';
 
-select * from table(
-  create_table_as_select(
-    'CT', 
-    'MYTABLE', 
-    cursor(select * from farrago_params)
-));
+-- TODO: FRG-141, commented out so we don't have lock problems
+-- select * from table(
+--   create_table_as_select(
+--     'CT', 
+--     'MYTABLE', 
+--     cursor(select * from farrago_params)
+-- ));
 
-select * from ct.mytable order by 1;
+-- select * from ct.mytable order by 1;
