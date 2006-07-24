@@ -135,9 +135,15 @@ public class FarragoDefaultSessionPersonality
     {
         return new FarragoParser();
     }
-    
+
+
     // implement FarragoSessionPersonality
+    // NOTE: We don't use stmtContext here, and we don't pass it on to the preparing
+    // statement, because that doesn't need to be aware of its context. However,
+    // custom personalities may have a use for it, which is why it is provided in the
+    // interface.
     public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);

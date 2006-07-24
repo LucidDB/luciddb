@@ -649,10 +649,11 @@ public class FarragoDatabase extends FarragoDbSingleton
      * Prepares an SQL expression; uses a cached implementation if
      * available, otherwise caches the one generated here.
      *
+     * @param stmtContext embracing stmt context
+     *
      * @param stmtValidator generic stmt validator
      *
      * @param sqlNode the parsed form of the statement
-     *
      * @param owner the FarragoAllocationOwner which will be responsible for
      * the returned stmt
      *
@@ -661,6 +662,7 @@ public class FarragoDatabase extends FarragoDbSingleton
      * @return statement implementation, or null when analyzedSql is non-null
      */
     public FarragoSessionExecutableStmt prepareStmt(
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode,
         FarragoAllocationOwner owner,
@@ -668,7 +670,7 @@ public class FarragoDatabase extends FarragoDbSingleton
     {
         final FarragoSessionPreparingStmt stmt =
             stmtValidator.getSession().getPersonality().newPreparingStmt(
-                stmtValidator);
+                stmtContext, stmtValidator);
         return prepareStmtImpl(stmt, sqlNode, owner, analyzedSql);
     }
 

@@ -29,6 +29,7 @@ import org.eigenbase.jmi.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.resource.EigenbaseResource;
 
 import java.util.*;
 
@@ -101,11 +102,13 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      * Creates a new preparing statement tied to this session and its underlying
      * database.  Used to construct and implement an internal query plan.
      *
+     * @param stmtContext embracing stmt context, if any; otherwise, null.
      * @param stmtValidator generic stmt validator
      *
      * @return a new {@link FarragoSessionPreparingStmt}.
      */
     public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator);
 
     /**

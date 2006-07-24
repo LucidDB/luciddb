@@ -78,8 +78,8 @@ public abstract class FarragoReentrantStmt
         FarragoSessionStmtValidator stmtValidator =
             session.newStmtValidator();
         try {
-            preparingStmt = 
-                session.getPersonality().newPreparingStmt(stmtValidator);
+            preparingStmt = session.getPersonality().
+                newPreparingStmt(stmtContext, stmtValidator);
             preparingStmt.preImplement();
             executeImpl();
         } catch (Throwable ex) {

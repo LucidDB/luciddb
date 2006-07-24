@@ -828,9 +828,9 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             stmtValidator.setTimingTracer(timingTracer);
             FarragoSessionExecutableStmt stmt = null;
             try {
-                stmt =
-                    prepareImpl(sql, owner, isExecDirect, analyzedSql,
-                        stmtValidator, reposTxnContext, pRollback);
+                stmt = prepareImpl(
+                    sql, owner, isExecDirect, analyzedSql,
+                    stmtContext, stmtValidator, reposTxnContext, pRollback);
                 // NOTE jvs 17-Mar-2006:  We have to do this here
                 // rather than in FarragoDbStmtContext.finishPrepare
                 // to ensure that's there's no window in between
@@ -861,6 +861,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoAllocationOwner owner,
         boolean isExecDirect,
         FarragoSessionAnalyzedSql analyzedSql,
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator,
         FarragoReposTxnContext reposTxnContext,
         boolean [] pRollback)
@@ -891,7 +892,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
-                    stmtValidator, sqlNode, owner, analyzedSql);
+                    stmtContext, stmtValidator, sqlNode, owner, analyzedSql);
             if (isExecDirect
                 && (stmt.getDynamicParamRowType().getFieldList().size() > 0))
             {

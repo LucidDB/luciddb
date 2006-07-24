@@ -88,8 +88,9 @@ public class Rex2CalcPlanTest extends FarragoTestCase
         TestContext testContext = getTestContext();
         testContext.stmtValidator =
             farragoConn.getSession().newStmtValidator();
-        testContext.stmt = (FarragoPreparingStmt) farragoConn.getSession()
-            .getPersonality().newPreparingStmt(testContext.stmtValidator);
+        testContext.stmt = (FarragoPreparingStmt)
+            farragoConn.getSession().getPersonality().
+            newPreparingStmt(null, testContext.stmtValidator);
     }
 
     protected void tearDown()
