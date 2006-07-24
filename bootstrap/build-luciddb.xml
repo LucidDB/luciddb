@@ -49,12 +49,8 @@
 
 	<!-- continuous intregration targets -->
 	<target name="integration-build-and-test"
-	        depends="integration-test"
+	        depends="integration-build"
 	        description="Build and test the Luciddb project and its dependencies in a clean tree"/>
-
-	<target name="integration-test" depends="integration-build">
-		<!-- clean build runs tests automagically -->
-	</target>
 
 	<target name="integration-build"
 	        depends="integration-copy,integration-farrago,integration-fennel,integration-thirdparty">
