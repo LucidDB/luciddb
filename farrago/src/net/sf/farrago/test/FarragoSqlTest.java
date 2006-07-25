@@ -28,17 +28,20 @@ import junit.framework.*;
 
 import net.sf.farrago.util.*;
 
+
 /**
  * FarragoSqlTest is a JUnit harness for executing tests which are implemented
- * by running an SQL script and diffing the output against a reference
- * file containing the expected results.
+ * by running an SQL script and diffing the output against a reference file
+ * containing the expected results.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSqlTest extends FarragoTestCase
+public class FarragoSqlTest
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoSqlTest(String testName)
         throws Exception
@@ -46,20 +49,21 @@ public class FarragoSqlTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Test suite()
         throws Exception
     {
-        return gatherSuite(
-            FarragoProperties.instance().testFilesetUnitsql.get(true),
-            new FarragoSqlTestFactory() {
-                public FarragoTestCase createSqlTest(String testName)
-                    throws Exception
-                {
-                    return new FarragoSqlTest(testName);
-                }
-            });
+        return
+            gatherSuite(
+                FarragoProperties.instance().testFilesetUnitsql.get(true),
+                new FarragoSqlTestFactory() {
+                    public FarragoTestCase createSqlTest(String testName)
+                        throws Exception
+                    {
+                        return new FarragoSqlTest(testName);
+                    }
+                });
     }
 
     protected static Test gatherSuite(
@@ -95,7 +99,8 @@ public class FarragoSqlTest extends FarragoTestCase
         Runtime rt = Runtime.getRuntime();
         rt.gc();
         rt.gc();
-        tracer.info("Java heap in use after gc = "
+        tracer.info(
+            "Java heap in use after gc = "
             + (rt.totalMemory() - rt.freeMemory()));
     }
 
@@ -127,7 +132,7 @@ public class FarragoSqlTest extends FarragoTestCase
         runSqlLineTest(getName());
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     public interface FarragoSqlTestFactory
     {
@@ -135,6 +140,5 @@ public class FarragoSqlTest extends FarragoTestCase
             throws Exception;
     }
 }
-
 
 // End FarragoSqlTest.java

@@ -21,17 +21,17 @@
 */
 package net.sf.farrago.session;
 
-import org.eigenbase.util.*;
-import org.eigenbase.oj.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.util.*;
+
 import org.eigenbase.jmi.*;
+import org.eigenbase.oj.rex.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.resgen.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 import org.eigenbase.resource.EigenbaseResource;
 
-import java.util.*;
 
 /**
  * FarragoSessionPersonality defines the SPI for plugging in custom
@@ -40,8 +40,12 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
+public interface FarragoSessionPersonality
+    extends FarragoStreamFactoryProvider
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Gets the SQL operator table to use for validating a statement.
      *
@@ -54,32 +58,32 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
         FarragoSessionPreparingStmt preparingStmt);
 
     /**
-     * Gets the implementation table to use for compiling a statement that
-     * uses a Java calculator.
+     * Gets the implementation table to use for compiling a statement that uses
+     * a Java calculator.
      *
      * @param preparingStmt statement being prepared
      *
-     * @return table of implementations corresponding to result
-     * of {@link #getSqlOperatorTable(FarragoSessionPreparingStmt)}
+     * @return table of implementations corresponding to result of {@link
+     * #getSqlOperatorTable(FarragoSessionPreparingStmt)}
      */
     public OJRexImplementorTable getOJRexImplementorTable(
         FarragoSessionPreparingStmt preparingStmt);
 
     /**
-     * Gets the component associated with the given Class object from
-     * the personality.  If the personality does not support (or
-     * recognize) the component type, it returns null.  The returned
-     * instance is guaranteed to be of type <code>C</code> or a
-     * subclass.
+     * Gets the component associated with the given Class object from the
+     * personality. If the personality does not support (or recognize) the
+     * component type, it returns null. The returned instance is guaranteed to
+     * be of type <code>C</code> or a subclass.
      *
      * @param componentInterface the interface desired
+     *
      * @return an implementation of <code>componentInterface</code> or null
      */
     public <C> C newComponentImpl(Class<C> componentInterface);
 
     /**
-     * Gets the name of the local data server to use for tables when none
-     * is specified by CREATE TABLE.
+     * Gets the name of the local data server to use for tables when none is
+     * specified by CREATE TABLE.
      *
      * @param stmtValidator validator for statement being prepared
      *
@@ -87,7 +91,7 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      */
     public String getDefaultLocalDataServerName(
         FarragoSessionStmtValidator stmtValidator);
-    
+
     /**
      * Creates a new SQL parser.
      *
@@ -100,7 +104,7 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
 
     /**
      * Creates a new preparing statement tied to this session and its underlying
-     * database.  Used to construct and implement an internal query plan.
+     * database. Used to construct and implement an internal query plan.
      *
      * @param stmtContext embracing stmt context, if any; otherwise, null.
      * @param stmtValidator generic stmt validator
@@ -125,7 +129,6 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      * See {@link FarragoSessionModelExtension#defineDdlHandlers}.
      *
      * @param ddlValidator validator which will invoke handlers
-     *
      * @param handlerList receives handler objects in order in which they should
      * be tried
      */
@@ -145,7 +148,6 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      * Creates a new planner.
      *
      * @param stmt stmt on whose behalf planner will operate
-     *
      * @param init whether to initialize default rules in new planner
      *
      * @return new planner
@@ -166,15 +168,15 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      *
      * @param stmt stmt on whose behalf planner will operate
      *
-     * @return runtime context class, which must implement
-     * {@link FarragoSessionRuntimeContext}
+     * @return runtime context class, which must implement {@link
+     * FarragoSessionRuntimeContext}
      */
     public Class getRuntimeContextClass(
         FarragoSessionPreparingStmt stmt);
 
     /**
-     * Creates a new runtime context.  The object returned must be
-     * assignable to the result of getRuntimeContextClass().
+     * Creates a new runtime context. The object returned must be assignable to
+     * the result of getRuntimeContextClass().
      *
      * @param params context initialization parameters
      *
@@ -182,12 +184,12 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
      */
     public FarragoSessionRuntimeContext newRuntimeContext(
         FarragoSessionRuntimeParams params);
-    
+
     // TODO jvs 6-Apr-2005:  get rid of this once Aspen stops using it
     public void validate(
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode);
-    
+
     /**
      * Creates a new processor for JMI queries.
      *
@@ -211,8 +213,8 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
     /**
      * Tests whether a feature is supported in this personality.
      *
-     * @param feature {@link EigenbaseResource} resource definition
-     * representing the feature to be tested
+     * @param feature {@link EigenbaseResource} resource definition representing
+     * the feature to be tested
      *
      * @return true iff feature is supported
      */
@@ -221,9 +223,9 @@ public interface FarragoSessionPersonality extends FarragoStreamFactoryProvider
     /**
      * Gives this personality a chance to register one or more {@link
      * RelMetadataProvider}s in the chain which will be used to answer
-     * relational expression metadata queries during optimization.
-     * Personalities which define their own relational expressions will
-     * generally need to supply corresponding metadata providers.
+     * relational expression metadata queries during optimization. Personalities
+     * which define their own relational expressions will generally need to
+     * supply corresponding metadata providers.
      *
      * @param chain receives personality's custom providers, if any
      */

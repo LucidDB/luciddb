@@ -22,21 +22,22 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
- * DdlTxnStmt is a base for all statements which operate on a
- * savepoint (e.g. RELEASE SAVEPOINT).
+ * DdlTxnStmt is a base for all statements which operate on a savepoint (e.g.
+ * RELEASE SAVEPOINT).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlSavepointTxnStmt extends DdlTxnStmt
+public abstract class DdlSavepointTxnStmt
+    extends DdlTxnStmt
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String savepointName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlSavepointTxnStmt.
@@ -48,7 +49,7 @@ public abstract class DdlSavepointTxnStmt extends DdlTxnStmt
         this.savepointName = savepointName;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return name of savepoint operated on by this statement
@@ -58,6 +59,5 @@ public abstract class DdlSavepointTxnStmt extends DdlTxnStmt
         return savepointName;
     }
 }
-
 
 // End DdlSavepointTxnStmt.java

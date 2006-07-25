@@ -20,65 +20,87 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.jdbc.param;
 
-import java.io.Serializable;
-import java.sql.ParameterMetaData;
+import java.io.*;
+
+import java.sql.*;
+
 
 /**
- * This defines the per parameter field metadata required by the
- * client-side driver to implement the JDBC ParameterMetaData API.
+ * This defines the per parameter field metadata required by the client-side
+ * driver to implement the JDBC ParameterMetaData API.
  *
  * @author Angel Chang
  * @version $Id$
  * @see net.sf.farrago.jdbc.engine.FarragoParamFieldMetaDataFactory
  */
-public class FarragoParamFieldMetaData implements Serializable
+public class FarragoParamFieldMetaData
+    implements Serializable
 {
-    /** SerialVersionUID created with JDK 1.5 serialver tool. */
-    private static final long serialVersionUID = 5042520840301805755L;
 
-    /** SQL paramMetaData of this field. */
-    public int     type;
-
-    /** SQL className. */
-    public String  className;
-
-    /** SQL typename of this field. */
-    public String  typeName;
-    
-    /** precision of this field. */
-    public int     precision;
-
-    /** scale of this field. */
-    public int     scale;
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * indicates whether this parameter field is nullable. One of
-     * {{@link java.sql.ParameterMetaData#parameterNoNulls},
-     * {@link java.sql.ParameterMetaData#parameterNullable},
-     * {@link java.sql.ParameterMetaData#parameterNullableUnknown}}.
+     * SerialVersionUID created with JDK 1.5 serialver tool.
      */
-    public int     nullable = ParameterMetaData.parameterNullableUnknown;
+    private static final long serialVersionUID = 5042520840301805755L;
 
-    /** indicates whether this field is signed. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * SQL paramMetaData of this field.
+     */
+    public int type;
+
+    /**
+     * SQL className.
+     */
+    public String className;
+
+    /**
+     * SQL typename of this field.
+     */
+    public String typeName;
+
+    /**
+     * precision of this field.
+     */
+    public int precision;
+
+    /**
+     * scale of this field.
+     */
+    public int scale;
+
+    /**
+     * indicates whether this parameter field is nullable. One of {{@link
+     * java.sql.ParameterMetaData#parameterNoNulls}, {@link
+     * java.sql.ParameterMetaData#parameterNullable}, {@link
+     * java.sql.ParameterMetaData#parameterNullableUnknown}}.
+     */
+    public int nullable = ParameterMetaData.parameterNullableUnknown;
+
+    /**
+     * indicates whether this field is signed.
+     */
     public boolean signed;
 
     /**
-     * indicate the parameter mode.  One of
-     * {{@link java.sql.ParameterMetaData#parameterModeUnknown},
-     * {@link java.sql.ParameterMetaData#parameterModeIn},
-     * {@link java.sql.ParameterMetaData#parameterModeOut},
-     * {@link java.sql.ParameterMetaData#parameterModeInOut}.
+     * indicate the parameter mode. One of {{@link
+     * java.sql.ParameterMetaData#parameterModeUnknown}, {@link
+     * java.sql.ParameterMetaData#parameterModeIn}, {@link
+     * java.sql.ParameterMetaData#parameterModeOut}, {@link
+     * java.sql.ParameterMetaData#parameterModeInOut}.
      */
     public int mode = ParameterMetaData.parameterModeUnknown;
 
     /**
-     * String describing the parameter type
-     * Usually of the form: typeName (precision, scale) 
+     * String describing the parameter type Usually of the form: typeName
+     * (precision, scale)
      */
     public String paramTypeStr;
-};
+}
+;
 
 // End FarragoParamFieldMetaData.java

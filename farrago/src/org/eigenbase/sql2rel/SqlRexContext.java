@@ -22,27 +22,30 @@
 */
 package org.eigenbase.sql2rel;
 
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexRangeRef;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Contains the context necessary for a {@link SqlRexConvertlet} to convert a
  * {@link SqlNode} expression into a {@link RexNode}.
  *
  * @author jhyde
- * @since 2005/8/3
  * @version $Id$
+ * @since 2005/8/3
  */
 public interface SqlRexContext
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Converts an expression from {@link SqlNode} to {@link RexNode} format.
      *
      * @param expr Expression to translate
+     *
      * @return Converted expression
      */
     RexNode convertExpression(SqlNode expr);
@@ -53,10 +56,11 @@ public interface SqlRexContext
     RexBuilder getRexBuilder();
 
     /**
-     * Returns the expression used to access a given IN or EXISTS
-     * {@link SqlSelect sub-query}.
+     * Returns the expression used to access a given IN or EXISTS {@link
+     * SqlSelect sub-query}.
      *
      * @param call IN or EXISTS expression
+     *
      * @return Expression used to access current row of sub-query
      */
     RexRangeRef getSubqueryExpr(SqlCall call);
@@ -67,8 +71,8 @@ public interface SqlRexContext
     RelDataTypeFactory getTypeFactory();
 
     /**
-     * Returns the factory which supplies default values for INSERT, UPDATE,
-     * and NEW.
+     * Returns the factory which supplies default values for INSERT, UPDATE, and
+     * NEW.
      */
     DefaultValueFactory getDefaultValueFactory();
 

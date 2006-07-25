@@ -22,29 +22,30 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlRollbackStmt represents a ROLLBACK statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlRollbackStmt extends DdlSavepointTxnStmt
+public class DdlRollbackStmt
+    extends DdlSavepointTxnStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlRollbackStmt.
      *
-     * @param savepointName name of savepoint to which to rollback,
-     * or null to rollback entire txn
+     * @param savepointName name of savepoint to which to rollback, or null to
+     * rollback entire txn
      */
     public DdlRollbackStmt(String savepointName)
     {
         super(savepointName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -52,6 +53,5 @@ public class DdlRollbackStmt extends DdlSavepointTxnStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlRollbackStmt.java

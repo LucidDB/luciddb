@@ -22,22 +22,24 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.sql.*;
-import java.util.*;
 import java.math.*;
+
+import java.sql.*;
+
+import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.query.*;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -49,16 +51,18 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockColumnSet extends MedAbstractColumnSet
+class MedMockColumnSet
+    extends MedAbstractColumnSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedMockDataServer server;
     final long nRows;
     final String executorImpl;
     final String udxSpecificName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMockColumnSet(
         MedMockDataServer server,
@@ -75,7 +79,7 @@ class MedMockColumnSet extends MedAbstractColumnSet
         this.udxSpecificName = udxSpecificName;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public double getRowCount()
@@ -92,9 +96,9 @@ class MedMockColumnSet extends MedAbstractColumnSet
             // Use Fennel ExecStream.
             return new MedMockFennelRel(this, cluster, connection);
         }
-        
-        assert(executorImpl.equals(MedMockDataServer.PROPVAL_JAVA));
-        
+
+        assert (executorImpl.equals(MedMockDataServer.PROPVAL_JAVA));
+
         if (udxSpecificName == null) {
             // Use boring Java iterator.
             return new MedMockIterRel(this, cluster, connection);
@@ -103,16 +107,16 @@ class MedMockColumnSet extends MedAbstractColumnSet
         // Otherwise, use the UDX supplied by the user.  All we have to do is
         // construct the arguments.
         RexBuilder rexBuilder = cluster.getRexBuilder();
-        RexNode arg = rexBuilder.makeExactLiteral(
-            new BigDecimal(nRows));
+        RexNode arg = rexBuilder.makeExactLiteral(new BigDecimal(nRows));
 
         // Call to super handles the rest.
-        return toUdxRel(
-            cluster,
-            connection,
-            udxSpecificName,
-            server.getServerMofId(),
-            new RexNode [] { arg });
+        return
+            toUdxRel(
+                cluster,
+                connection,
+                udxSpecificName,
+                server.getServerMofId(),
+                new RexNode[] { arg });
     }
 }
 

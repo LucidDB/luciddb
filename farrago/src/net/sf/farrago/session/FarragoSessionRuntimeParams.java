@@ -30,23 +30,24 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 
+
 /**
- * FarragoSessionRuntimeParams bundles together the large number
- * of constructor parameters needed to instantiate
- * {@link FarragoSessionRuntimeContext}.
+ * FarragoSessionRuntimeParams bundles together the large number of constructor
+ * parameters needed to instantiate {@link FarragoSessionRuntimeContext}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoSessionRuntimeParams
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Controlling session.
      */
     public FarragoSession session;
-    
+
     /**
      * Repos storing object definitions.
      */
@@ -58,8 +59,8 @@ public class FarragoSessionRuntimeParams
     public FarragoObjectCache codeCache;
 
     /**
-     * Txn-private cache for Fennel tuple streams, or null if streams don't
-     * need to be pinned by txn.
+     * Txn-private cache for Fennel tuple streams, or null if streams don't need
+     * to be pinned by txn.
      */
     public Map txnCodeCache;
 
@@ -103,6 +104,5 @@ public class FarragoSessionRuntimeParams
      */
     public Map<String, RelDataType> resultSetTypeMap;
 }
-
 
 // End FarragoSessionRuntimeParams.java

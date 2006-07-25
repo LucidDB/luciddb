@@ -40,14 +40,16 @@ import org.eigenbase.util.*;
  * @version $Id$
  */
 public abstract class FennelDoubleRel
-    extends AbstractRelNode implements FennelRel
+    extends AbstractRelNode
+    implements FennelRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected RelNode left;
     protected RelNode right;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelDoubleRel object.
@@ -61,17 +63,19 @@ public abstract class FennelDoubleRel
         RelNode left,
         RelNode right)
     {
-        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
+        super(
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
         this.left = left;
         this.right = right;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public RelNode [] getInputs()
     {
-        return new RelNode [] { left, right };
+        return new RelNode[] { left, right };
     }
 
     // implement RelNode
@@ -103,10 +107,11 @@ public abstract class FennelDoubleRel
         Expression expr1 = (Expression) implementor.visitChild(this, 0, left);
         Expression expr2 = (Expression) implementor.visitChild(this, 1, right);
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
-        return new MethodCall(
-            stmt.getConnectionVariable(),
-            "dummyPair",
-            new ExpressionList(expr1, expr2));
+        return
+            new MethodCall(
+                stmt.getConnectionVariable(),
+                "dummyPair",
+                new ExpressionList(expr1, expr2));
     }
 
     // implement RelNode
@@ -114,16 +119,17 @@ public abstract class FennelDoubleRel
     {
         RelDataType leftType = left.getRowType();
         RelDataType rightType = right.getRowType();
-        return getCluster().getTypeFactory().createJoinType(
-            new RelDataType [] { leftType, rightType });
+        return
+            getCluster().getTypeFactory().createJoinType(
+                new RelDataType[] { leftType, rightType });
     }
 
     /**
-     * NOTE:  this method is intentionally private because interactions
-     * between FennelRels must be mediated by FarragoRelImplementor.
+     * NOTE: this method is intentionally private because interactions between
+     * FennelRels must be mediated by FarragoRelImplementor.
      *
-     * @return this rel's left input, which must already have been
-     * converted to a FennelRel
+     * @return this rel's left input, which must already have been converted to
+     * a FennelRel
      */
     private FennelRel getFennelLeftInput()
     {
@@ -131,11 +137,11 @@ public abstract class FennelDoubleRel
     }
 
     /**
-     * NOTE:  this method is intentionally private because interactions
-     * between FennelRels must be mediated by FarragoRelImplementor.
+     * NOTE: this method is intentionally private because interactions between
+     * FennelRels must be mediated by FarragoRelImplementor.
      *
-     * @return this rel's right input, which must already have been
-     * converted to a FennelRel
+     * @return this rel's right input, which must already have been converted to
+     * a FennelRel
      */
     private FennelRel getFennelRightInput()
     {
@@ -148,6 +154,5 @@ public abstract class FennelDoubleRel
         return RelFieldCollation.emptyCollationArray;
     }
 }
-
 
 // End FennelDoubleRel.java

@@ -20,13 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlSyntax;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -36,29 +33,31 @@ import org.eigenbase.sql.SqlSyntax;
  * <p>Operators may be binary, unary, functions, special syntactic constructs
  * like <code>CASE ... WHEN ... END</code>, or even internally generated
  * constructs like implicit type conversions. The syntax of the operator is
- * really irrelevant, because row-expressions (unlike
- * {@link org.eigenbase.sql.SqlNode SQL expressions}) do not directly represent
- * a piece of source code.</p>
+ * really irrelevant, because row-expressions (unlike {@link
+ * org.eigenbase.sql.SqlNode SQL expressions}) do not directly represent a piece
+ * of source code.</p>
  *
- * <p>It's not often necessary to sub-class this class. The smarts should be
- * in the operator, rather than the call. Any extra information about the call
- * can often be encoded as extra arguments. (These don't need to be hidden,
- * because no one is going to be generating source code from this tree.)</p>
+ * <p>It's not often necessary to sub-class this class. The smarts should be in
+ * the operator, rather than the call. Any extra information about the call can
+ * often be encoded as extra arguments. (These don't need to be hidden, because
+ * no one is going to be generating source code from this tree.)</p>
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
- **/
-public class RexCall extends RexNode
+ * @since Nov 24, 2003
+ */
+public class RexCall
+    extends RexNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlOperator op;
     public final RexNode [] operands;
     private final RelDataType type;
     private final RexKind kind;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected RexCall(
         RelDataType type,
@@ -76,11 +75,11 @@ public class RexCall extends RexNode
         this.digest = computeDigest(true);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns the {@link RexKind} corresponding to a {@link SqlKind}.
-     * Fails if there is none.
+     * Returns the {@link RexKind} corresponding to a {@link SqlKind}. Fails if
+     * there is none.
      *
      * @post return != null
      */
@@ -163,8 +162,8 @@ public class RexCall extends RexNode
     protected String computeDigest(boolean withType)
     {
         StringBuffer sb = new StringBuffer(op.getName());
-        if (operands.length == 0
-            && op.getSyntax() == SqlSyntax.FunctionId) {
+        if ((operands.length == 0)
+            && (op.getSyntax() == SqlSyntax.FunctionId)) {
             // Don't print params for empty arg list. For example, we want
             // "SYSTEM_USER", not "SYSTEM_USER()".
         } else {
@@ -180,6 +179,7 @@ public class RexCall extends RexNode
         }
         if (withType) {
             sb.append(":");
+
             // NOTE jvs 16-Jan-2005:  for digests, it is very important
             // to use the full type string.
             sb.append(type.getFullTypeString());
@@ -192,8 +192,9 @@ public class RexCall extends RexNode
         // REVIEW jvs 16-Jan-2005: For CAST and NEW, the type is really an
         // operand and needs to be printed out.  But special-casing it here is
         // ugly.
-        return computeDigest(
-            isA(RexKind.Cast) || isA(RexKind.NewSpecification));
+        return
+            computeDigest(
+                isA(RexKind.Cast) || isA(RexKind.NewSpecification));
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -209,9 +210,9 @@ public class RexCall extends RexNode
     public Object clone()
     {
         return new RexCall(
-            type,
-            op,
-            RexUtil.clone(operands));
+                type,
+                op,
+                RexUtil.clone(operands));
     }
 
     public RexKind getKind()
@@ -234,13 +235,13 @@ public class RexCall extends RexNode
      *
      * @param type Return type
      * @param operands Operands to call
+     *
      * @return New call
      */
-    public RexCall clone(RelDataType type, RexNode[] operands)
+    public RexCall clone(RelDataType type, RexNode [] operands)
     {
         return new RexCall(type, op, operands);
     }
 }
-
 
 // End RexCall.java

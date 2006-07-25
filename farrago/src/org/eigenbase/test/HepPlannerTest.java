@@ -21,26 +21,32 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.relopt.hep.*;
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.hep.*;
+
 
 /**
- * HepPlannerTest is a unit test for {@link HepPlanner}.  See
- * {@link RelOptRulesTest} for an explanation of how to add tests;
- * the tests in this class are targeted at exercising the planner, and
- * use specific rules for convenience only, whereas the tests in that
- * class are targeted at exercising specific rules, and use the
- * planner for convenience only.  Hence the split.
+ * HepPlannerTest is a unit test for {@link HepPlanner}. See {@link
+ * RelOptRulesTest} for an explanation of how to add tests; the tests in this
+ * class are targeted at exercising the planner, and use specific rules for
+ * convenience only, whereas the tests in that class are targeted at exercising
+ * specific rules, and use the planner for convenience only. Hence the split.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class HepPlannerTest extends RelOptTestBase
+public class HepPlannerTest
+    extends RelOptTestBase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String unionTree =
         "(select name from dept union select ename from emp)"
         + " union (select ename from bonus)";
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     protected DiffRepository getDiffRepos()
     {
         return DiffRepository.lookup(HepPlannerTest.class);
@@ -50,22 +56,22 @@ public class HepPlannerTest extends RelOptTestBase
         throws Exception
     {
         // Verify that an entire class of rules can be applied.
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleClass(CoerceInputsRule.class);
 
         HepPlanner planner = new HepPlanner(
-            programBuilder.createProgram());
+                programBuilder.createProgram());
 
         planner.addRule(new CoerceInputsRule(UnionRel.class, false));
         planner.addRule(new CoerceInputsRule(IntersectRel.class, false));
-        
+
         checkPlanning(
             planner,
             "(select name from dept union select ename from emp)"
             + " intersect (select fname from customer.contact)");
     }
-    
+
     public void testRuleDescription()
         throws Exception
     {
@@ -73,9 +79,9 @@ public class HepPlannerTest extends RelOptTestBase
 
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleByDescription("FilterToCalcRule");
-        
+
         HepPlanner planner = new HepPlanner(
-            programBuilder.createProgram());
+                programBuilder.createProgram());
 
         planner.addRule(FilterToCalcRule.instance);
 
@@ -83,37 +89,37 @@ public class HepPlannerTest extends RelOptTestBase
             planner,
             "select name from sales.dept where deptno=12");
     }
-    
+
     public void testMatchLimitOneTopDown()
         throws Exception
     {
         // Verify that only the top union gets rewritten.
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchOrder(HepMatchOrder.TOP_DOWN);
         programBuilder.addMatchLimit(1);
         programBuilder.addRuleInstance(new UnionToDistinctRule());
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             unionTree);
     }
-    
+
     public void testMatchLimitOneBottomUp()
         throws Exception
     {
         // Verify that only the bottom union gets rewritten.
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(1);
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         programBuilder.addRuleInstance(new UnionToDistinctRule());
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             unionTree);
     }
-    
+
     public void testMatchUntilFixpoint()
         throws Exception
     {
@@ -122,12 +128,12 @@ public class HepPlannerTest extends RelOptTestBase
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addMatchLimit(HepProgram.MATCH_UNTIL_FIXPOINT);
         programBuilder.addRuleInstance(new UnionToDistinctRule());
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             unionTree);
     }
-    
+
     public void testReplaceCommonSubexpression()
         throws Exception
     {
@@ -137,7 +143,7 @@ public class HepPlannerTest extends RelOptTestBase
         // is to make sure the planner can deal with
         // rewriting something used as a common subexpression
         // twice by the same parent (the join in this case).
-        
+
         checkPlanning(
             new RemoveTrivialProjectRule(),
             "select d1.deptno from (select * from dept) d1,"
@@ -156,10 +162,10 @@ public class HepPlannerTest extends RelOptTestBase
         subprogramBuilder.addMatchLimit(1);
         subprogramBuilder.addRuleInstance(ProjectToCalcRule.instance);
         subprogramBuilder.addRuleInstance(MergeCalcRule.instance);
-        
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addSubprogram(subprogramBuilder.createProgram());
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             "select upper(ename) from (select lower(ename) as ename from emp)");
@@ -177,7 +183,7 @@ public class HepPlannerTest extends RelOptTestBase
         programBuilder.addRuleInstance(ProjectToCalcRule.instance);
         programBuilder.addRuleInstance(FilterToCalcRule.instance);
         programBuilder.addGroupEnd();
-        
+
         checkPlanning(
             programBuilder.createProgram(),
             "select upper(name) from dept where deptno=20");

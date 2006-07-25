@@ -28,8 +28,8 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.namespace.impl.*;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -43,15 +43,18 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRel 
+class FtrsTableModificationRel
     extends MedAbstractFennelTableModRel
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Refinement for TableModificationRel.table. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Refinement for TableModificationRel.table.
+     */
     final FtrsTable ftrsTable;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsTableModificationRel object.
@@ -71,25 +74,33 @@ class FtrsTableModificationRel
         Operation operation,
         List<String> updateColumnList)
     {
-        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
-            ftrsTable, connection, child, operation, updateColumnList, true);
+        super(
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            ftrsTable,
+            connection,
+            child,
+            operation,
+            updateColumnList,
+            true);
         this.ftrsTable = ftrsTable;
-        assert ftrsTable.getPreparingStmt() ==
-            FennelRelUtil.getPreparingStmt(this);
+        assert ftrsTable.getPreparingStmt()
+            == FennelRelUtil.getPreparingStmt(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
     public Object clone()
     {
-        FtrsTableModificationRel clone = new FtrsTableModificationRel(
-            getCluster(),
-            ftrsTable,
-            getConnection(),
-            RelOptUtil.clone(getChild()),
-            getOperation(),
-            getUpdateColumnList());
+        FtrsTableModificationRel clone =
+            new FtrsTableModificationRel(
+                getCluster(),
+                ftrsTable,
+                getConnection(),
+                RelOptUtil.clone(getChild()),
+                getOperation(),
+                getUpdateColumnList());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -111,7 +122,8 @@ class FtrsTableModificationRel
             String columnName = getUpdateColumnList().get(i);
             CwmColumn column =
                 FarragoCatalogUtil.getModelElementByName(
-                    columns, columnName);
+                    columns,
+                    columnName);
             list.add(column);
         }
         return list;
@@ -153,17 +165,17 @@ class FtrsTableModificationRel
 
         // We need to be careful about the order in which we write to indexes.
         // This is required because secondary indexes rely on the clustering
-        // key's uniqueness for discriminating entries, e.g. during rollback.
-        // So when the clustering key is declared as unique, we should insert
-        // into it first.  If a uniqueness violation is detected, we will abort
-        // the insertion and the other indexes will be left untouched.
-        // However, when the clustering key is not unique (except by virtue of
-        // its appended primary key fields), then we should insert into the
-        // primary key index first instead.  If that passes, the combination of
-        // the clustering key with the primary key is guaranteed to be unique
-        // also.  For updates, there is another consideration:  indexes which
-        // are updated in place cannot be rolled back individually, so
-        // they must come last (after any possible constraint violations).
+        // key's uniqueness for discriminating entries, e.g. during rollback. So
+        // when the clustering key is declared as unique, we should insert into
+        // it first.  If a uniqueness violation is detected, we will abort the
+        // insertion and the other indexes will be left untouched. However, when
+        // the clustering key is not unique (except by virtue of its appended
+        // primary key fields), then we should insert into the primary key index
+        // first instead.  If that passes, the combination of the clustering key
+        // with the primary key is guaranteed to be unique also.  For updates,
+        // there is another consideration:  indexes which are updated in place
+        // cannot be rolled back individually, so they must come last (after any
+        // possible constraint violations).
         FemLocalIndex clusteredIndex =
             FarragoCatalogUtil.getClusteredIndex(repos, table);
         boolean clusteredFirst = clusteredIndex.isUnique();
@@ -173,8 +185,8 @@ class FtrsTableModificationRel
 
         FtrsIndexGuide indexGuide = ftrsTable.getIndexGuide();
 
-        for (FemLocalIndex index :
-            FarragoCatalogUtil.getTableIndexes(repos, table)) {
+        for (FemLocalIndex index
+            : FarragoCatalogUtil.getTableIndexes(repos, table)) {
             boolean updateInPlace = false;
 
             if (updateCwmColumnList != null) {
@@ -188,7 +200,8 @@ class FtrsTableModificationRel
                     }
                 }
 
-                List<? extends Object> distinctKeyList = indexGuide.getDistinctKeyColList(index);
+                List<? extends Object> distinctKeyList =
+                    indexGuide.getDistinctKeyColList(index);
                 if (!distinctKeyList.removeAll(updateCwmColumnList)) {
                     // distinct key is not being changed, so it's safe to
                     // attempt update-in-place
@@ -234,17 +247,17 @@ class FtrsTableModificationRel
         for (FemIndexWriterDef indexWriter : secondList) {
             tableWriterDef.getIndexWriter().add(indexWriter);
         }
-        
+
         // Set up buffering if required.
         // We only need a buffer if the target table is also a source.
-        if (inputNeedBuffer()) { 
+        if (inputNeedBuffer()) {
             FemBufferingTupleStreamDef buffer = newInputBuffer(repos);
             implementor.addDataFlowFromProducerToConsumer(
                 input,
                 buffer);
             input = buffer;
         }
-        
+
         implementor.addDataFlowFromProducerToConsumer(
             input,
             tableWriterDef);
@@ -252,6 +265,5 @@ class FtrsTableModificationRel
         return tableWriterDef;
     }
 }
-
 
 // End FtrsTableModificationRel.java

@@ -22,18 +22,31 @@
 */
 package org.eigenbase.test;
 
-import junit.framework.TestCase;
-import org.eigenbase.runtime.ExclusivePipe;
+import java.nio.*;
 
-import java.nio.ByteBuffer;
+import junit.framework.*;
+
+import org.eigenbase.runtime.*;
+
 
 /**
  * Testcase for {@link org.eigenbase.runtime.ExclusivePipe}.
  */
-public class ExclusivePipeTest extends TestCase
+public class ExclusivePipeTest
+    extends TestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final int BUF_BYTES = 10;
     private static final int timeoutMillis = Integer.MAX_VALUE;
+
+    private static final String [] words =
+        {
+            "the", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "dog",
+        };
+
+    //~ Methods ----------------------------------------------------------------
 
     public void test()
     {
@@ -63,29 +76,32 @@ public class ExclusivePipeTest extends TestCase
         assertTrue("consumer blocked", consumer.succeeded);
     }
 
-    private static final String[] words = {
-        "the", "quick", "brown", "fox", "jumped", "over", "the", "lazy", "dog",
-    };
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Producer thread writes a list of words into a pipe.
      */
-    private static class Producer extends Thread {
+    private static class Producer
+        extends Thread
+    {
         private final ExclusivePipe pipe;
         private boolean succeeded;
         private Throwable thrown;
 
-        Producer(ExclusivePipe pipe) {
+        Producer(ExclusivePipe pipe)
+        {
             this.pipe = pipe;
         }
 
-        public void run() {
+        public void run()
+        {
             try {
                 ByteBuffer buf = pipe.getBuffer();
                 for (int i = 0; i < words.length; i++) {
                     String word = words[i];
-                    byte[] bytes = word.getBytes();
+                    byte [] bytes = word.getBytes();
                     pipe.beginWriting();
+
                     // Store the string as a 1-byte length followed by n bytes.
                     // Can't handle strings longer than 255 but hey, this is
                     // only a test!
@@ -105,17 +121,21 @@ public class ExclusivePipeTest extends TestCase
      * Consumer thread reads words from a pipe, comparing with the list of
      * expected words, until it has read all of the words it expects to see.
      */
-    private static class Consumer extends Thread {
+    private static class Consumer
+        extends Thread
+    {
         private final ExclusivePipe pipe;
-        private final byte[] bytes = new byte[BUF_BYTES];
+        private final byte [] bytes = new byte[BUF_BYTES];
         private boolean succeeded;
         private Throwable thrown;
 
-        Consumer(ExclusivePipe pipe) {
+        Consumer(ExclusivePipe pipe)
+        {
             this.pipe = pipe;
         }
 
-        public void run() {
+        public void run()
+        {
             try {
                 ByteBuffer buf = pipe.getBuffer();
                 for (int i = 0; i < words.length; i++) {
@@ -135,3 +155,5 @@ public class ExclusivePipeTest extends TestCase
         }
     }
 }
+
+// End ExclusivePipeTest.java

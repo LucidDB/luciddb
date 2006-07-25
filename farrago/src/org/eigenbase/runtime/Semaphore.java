@@ -20,24 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.util.Date;
+import java.util.*;
 
 
 /**
  * A counting semaphore. Conceptually, a semaphore maintains a set of permits.
  * Each {@link #acquire()} blocks if necessary until a permit is available, and
- * then takes it. Each {@link #release()} adds a permit, potentially releasing
- * a blocking acquirer. However, no actual permit objects are used; the
- * Semaphore just keeps a count of the number available and acts accordingly.
+ * then takes it. Each {@link #release()} adds a permit, potentially releasing a
+ * blocking acquirer. However, no actual permit objects are used; the Semaphore
+ * just keeps a count of the number available and acts accordingly.
  *
  * <p>Semaphores are often used to restrict the number of threads than can
  * access some (physical or logical) resource.
  *
- * <p>Note that JDK 1.5 contains
- * <a href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/concurrent/Semaphore.html">
+ * <p>Note that JDK 1.5 contains <a
+ * href="http://java.sun.com/j2se/1.5.0/docs/api/java/util/concurrent/Semaphore.html">
  * a Semaphore class</a>. We should obsolete this class when we upgrade.
  *
  * @author jhyde
@@ -45,15 +44,16 @@ import java.util.Date;
  */
 public class Semaphore
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final boolean verbose = false;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private int count;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Semaphore with the given number of permits.
@@ -63,7 +63,7 @@ public class Semaphore
         this.count = count;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Acquires a permit from this semaphore, blocking until one is available.
@@ -96,7 +96,8 @@ public class Semaphore
         long endTime = enterTime + timeoutMillisec;
         long currentTime = enterTime;
         if (verbose) {
-            System.out.println("tryAcquire: enter=" + (enterTime % 100000)
+            System.out.println(
+                "tryAcquire: enter=" + (enterTime % 100000)
                 + ", timeout=" + timeoutMillisec + ", count=" + count
                 + ", this=" + this + ", date=" + new Date());
         }
@@ -116,7 +117,8 @@ public class Semaphore
         }
 
         if (verbose) {
-            System.out.println("enter=" + (enterTime % 100000) + ", now="
+            System.out.println(
+                "enter=" + (enterTime % 100000) + ", now="
                 + (currentTime % 100000) + ", end=" + (endTime % 100000)
                 + ", timeout=" + timeoutMillisec + ", remain="
                 + (endTime - currentTime) + ", count=" + count + ", this="
@@ -152,6 +154,5 @@ public class Semaphore
         notify();
     }
 }
-
 
 // End Semaphore.java

@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.rules;
 
 import java.util.*;
@@ -30,43 +29,52 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
+
 /**
- * PushProjectPastFilterRule implements the rule for pushing a projection past
- * a filter.
+ * PushProjectPastFilterRule implements the rule for pushing a projection past a
+ * filter.
  *
- * <p>REVIEW (jhyde, 2006/5/18): Rules of this kind, dealing in
- * {@link ProjectRel}s and {@link FilterRel}s, are deprecated. We should write
- * rules which deal with calcs, which are effectively projects and filters
- * fused together. It is still possible to ask a calc whether it is a pure
- * project or a pure filter, or to split a calc into its pure project and
- * filter parts, if desired. An added advantage is the corpus of code in
- * {@link RexProgram} for performing typical operations on {@link RexNode}
- * expressions, in particular common sub-expression elimination.
+ * <p>REVIEW (jhyde, 2006/5/18): Rules of this kind, dealing in {@link
+ * ProjectRel}s and {@link FilterRel}s, are deprecated. We should write rules
+ * which deal with calcs, which are effectively projects and filters fused
+ * together. It is still possible to ask a calc whether it is a pure project or
+ * a pure filter, or to split a calc into its pure project and filter parts, if
+ * desired. An added advantage is the corpus of code in {@link RexProgram} for
+ * performing typical operations on {@link RexNode} expressions, in particular
+ * common sub-expression elimination.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class PushProjectPastFilterRule extends RelOptRule
+public class PushProjectPastFilterRule
+    extends RelOptRule
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Expressions that should be preserved in the projection
      */
     private Set<SqlOperator> preserveExprs;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     //  ~ Constructors ---------------------------------------------------------
-    
+
     public PushProjectPastFilterRule()
     {
-        super(new RelOptRuleOperand(
-            ProjectRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(FilterRel.class, null)
-            }));
+        super(
+            new RelOptRuleOperand(
+                ProjectRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(FilterRel.class, null)
+                }));
         this.preserveExprs = Collections.EMPTY_SET;
     }
 
     public PushProjectPastFilterRule(
-        RelOptRuleOperand rule, Set<SqlOperator> preserveExprs,
+        RelOptRuleOperand rule,
+        Set<SqlOperator> preserveExprs,
         String id)
     {
         super(rule);
@@ -74,7 +82,7 @@ public class PushProjectPastFilterRule extends RelOptRule
         description = "PushProjectPastFilterRule: " + id;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
@@ -92,11 +100,12 @@ public class PushProjectPastFilterRule extends RelOptRule
         RelNode rel = filterRel.getChild();
         RexNode origFilter = filterRel.getCondition();
 
-        if (origProj != null &&
-            RexOver.containsOver(origProj.getProjectExps(), null))
-        {
-            // Cannot push project through filter if project contains a
-            // windowed aggregate -- it will affect row counts. Abort this rule
+        if ((origProj != null)
+            && RexOver.containsOver(
+                origProj.getProjectExps(),
+                null)) {
+            // Cannot push project through filter if project contains a windowed
+            // aggregate -- it will affect row counts. Abort this rule
             // invocation; pushdown will be considered after the windowed
             // aggregate has been implemented. It's OK if the filter contains a
             // windowed aggregate.
@@ -104,9 +113,14 @@ public class PushProjectPastFilterRule extends RelOptRule
         }
 
         PushProjector pushProjector = new PushProjector();
-        ProjectRel topProject = pushProjector.convertProject(
-            origProj, origFilter, rel, preserveExprs, null);
-        
+        ProjectRel topProject =
+            pushProjector.convertProject(
+                origProj,
+                origFilter,
+                rel,
+                preserveExprs,
+                null);
+
         if (topProject != null) {
             call.transformTo(topProject);
         }

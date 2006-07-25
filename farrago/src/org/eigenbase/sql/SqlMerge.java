@@ -20,23 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import java.util.*;
 
-import java.util.Iterator;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
- * A <code>SqlMerge</code> is a node of a parse tree which represents
- * a MERGE statement.
+ * A <code>SqlMerge</code> is a node of a parse tree which represents a MERGE
+ * statement.
  */
-public class SqlMerge extends SqlCall
+public class SqlMerge
+    extends SqlCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int TARGET_TABLE_OPERAND = 0;
@@ -48,7 +48,7 @@ public class SqlMerge extends SqlCall
     public static final int ALIAS_OPERAND = 6;
     public static final int OPERAND_COUNT = 7;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlMerge(
         SqlSpecialOperator operator,
@@ -60,7 +60,10 @@ public class SqlMerge extends SqlCall
         SqlIdentifier alias,
         SqlParserPos pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], pos);
+        super(
+            operator,
+            new SqlNode[OPERAND_COUNT],
+            pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[CONDITION_OPERAND] = condition;
         operands[SOURCE_TABLEREF_OPERAND] = source;
@@ -69,7 +72,7 @@ public class SqlMerge extends SqlCall
         operands[ALIAS_OPERAND] = alias;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the identifier for the target table of the merge
@@ -94,7 +97,7 @@ public class SqlMerge extends SqlCall
     {
         return (SqlNode) operands[SOURCE_TABLEREF_OPERAND];
     }
-    
+
     public void setSourceTableRef(SqlNode tableRef)
     {
         operands[SOURCE_TABLEREF_OPERAND] = tableRef;
@@ -117,14 +120,13 @@ public class SqlMerge extends SqlCall
     }
 
     /**
-     * @return the condition expression to determine whether to
-     * update or insert
+     * @return the condition expression to determine whether to update or insert
      */
     public SqlCall getCondition()
     {
         return (SqlCall) operands[CONDITION_OPERAND];
     }
-    
+
     /**
      * Gets the source SELECT expression for the data to be updated/inserted.
      * Returns null before the statement has been expanded by
@@ -146,7 +148,9 @@ public class SqlMerge extends SqlCall
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameType.Select, "MERGE INTO", "");
         getTargetTable().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
         if (getAlias() != null) {
             writer.keyword("AS");
             getAlias().unparse(
@@ -158,20 +162,24 @@ public class SqlMerge extends SqlCall
         writer.newlineAndIndent();
         writer.keyword("USING");
         getSourceTableRef().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
-        
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
+
         writer.newlineAndIndent();
         writer.keyword("ON");
         getCondition().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
 
         SqlUpdate updateCall = (SqlUpdate) getUpdateCall();
         if (updateCall != null) {
             writer.newlineAndIndent();
             writer.keyword("WHEN MATCHED THEN UPDATE");
             final SqlWriter.Frame setFrame =
-            writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
-        
+                writer.startList(SqlWriter.FrameType.UpdateSetList, "SET", "");
+
             Iterator targetColumnIter =
                 updateCall.getTargetColumnList().getList().iterator();
             Iterator sourceExpressionIter =
@@ -180,12 +188,14 @@ public class SqlMerge extends SqlCall
                 writer.sep(",");
                 SqlIdentifier id = (SqlIdentifier) targetColumnIter.next();
                 id.unparse(
-                    writer, getOperator().getLeftPrec(),
+                    writer,
+                    getOperator().getLeftPrec(),
                     getOperator().getRightPrec());
                 writer.keyword("=");
                 SqlNode sourceExp = (SqlNode) sourceExpressionIter.next();
                 sourceExp.unparse(
-                    writer, getOperator().getLeftPrec(),
+                    writer,
+                    getOperator().getLeftPrec(),
                     getOperator().getRightPrec());
             }
             writer.endList(setFrame);
@@ -197,11 +207,13 @@ public class SqlMerge extends SqlCall
             writer.keyword("WHEN NOT MATCHED THEN INSERT");
             if (insertCall.getTargetColumnList() != null) {
                 insertCall.getTargetColumnList().unparse(
-                    writer, getOperator().getLeftPrec(),
+                    writer,
+                    getOperator().getLeftPrec(),
                     getOperator().getRightPrec());
             }
             insertCall.getSource().unparse(
-                writer, getOperator().getLeftPrec(),
+                writer,
+                getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
 
             writer.endList(frame);
@@ -213,6 +225,5 @@ public class SqlMerge extends SqlCall
         validator.validateMerge(this);
     }
 }
-
 
 // End SqlMerge.java

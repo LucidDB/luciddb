@@ -20,11 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
 
 /**
@@ -32,89 +30,134 @@ import org.eigenbase.util.Util;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since June 28, 2004
  */
-public abstract class SqlSyntax extends EnumeratedValues.BasicValue
+public abstract class SqlSyntax
+    extends EnumeratedValues.BasicValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final int Function_ordinal = 0;
 
-    /** Function syntax, as in "Foo(x, y)". */
+    /**
+     * Function syntax, as in "Foo(x, y)".
+     */
     public static final SqlSyntax Function =
         new SqlSyntax("Function", Function_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                SqlUtil.unparseFunctionSyntax(operator, writer, operands,
-                    true, null);
+                SqlUtil.unparseFunctionSyntax(operator,
+                    writer,
+                    operands,
+                    true,
+                    null);
             }
         };
     public static final int Binary_ordinal = 1;
 
-    /** Binary operator syntax, as in "x + y". */
+    /**
+     * Binary operator syntax, as in "x + y".
+     */
     public static final SqlSyntax Binary =
         new SqlSyntax("Binary", Binary_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                SqlUtil.unparseBinarySyntax(operator, operands, writer,
-                    leftPrec, rightPrec);
+                SqlUtil.unparseBinarySyntax(operator,
+                    operands,
+                    writer,
+                    leftPrec,
+                    rightPrec);
             }
         };
     public static final int Prefix_ordinal = 2;
 
-    /** Prefix unary operator syntax, as in "- x". */
+    /**
+     * Prefix unary operator syntax, as in "- x".
+     */
     public static final SqlSyntax Prefix =
         new SqlSyntax("Prefix", Prefix_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                assert(operands.length == 1);
+                assert (operands.length == 1);
                 writer.keyword(operator.getName());
-                operands[0].unparse(writer, operator.getLeftPrec(),
+                operands[0].unparse(
+                    writer,
+                    operator.getLeftPrec(),
                     operator.getRightPrec());
             }
         };
     public static final int Postfix_ordinal = 3;
 
-    /** Postfix unary operator syntax, as in "x ++". */
+    /**
+     * Postfix unary operator syntax, as in "x ++".
+     */
     public static final SqlSyntax Postfix =
         new SqlSyntax("Postfix", Postfix_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                assert(operands.length == 1);
-                operands[0].unparse(writer, operator.getLeftPrec(),
+                assert (operands.length == 1);
+                operands[0].unparse(
+                    writer,
+                    operator.getLeftPrec(),
                     operator.getRightPrec());
                 writer.keyword(operator.getName());
             }
         };
     public static final int Special_ordinal = 4;
 
-    /** Special syntax, such as that of the SQL CASE operator,
-     * "CASE x WHEN 1 THEN 2 ELSE 3 END". */
+    /**
+     * Special syntax, such as that of the SQL CASE operator, "CASE x WHEN 1
+     * THEN 2 ELSE 3 END".
+     */
     public static final SqlSyntax Special =
         new SqlSyntax("Special", Special_ordinal) {
-                public void unparse(SqlWriter writer, SqlOperator operator,
-                    SqlNode[] operands, int leftPrec, int rightPrec)
-                {
-                    // You probably need to override the operator's unparse
-                    // method.
-                    throw Util.needToImplement(this);
-                }
-            };
-    public static final int FunctionId_ordinal = 5;
-    /** Function syntax which takes no parentheses if there are no arguments,
-     * for example "CURRENTTIME". */
-    public static final SqlSyntax FunctionId =
-        new SqlSyntax("FunctionId",FunctionId_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                SqlUtil.unparseFunctionSyntax(operator,writer,operands,
-                    false, null);
+                // You probably need to override the operator's unparse
+                // method.
+                throw Util.needToImplement(this);
+            }
+        };
+    public static final int FunctionId_ordinal = 5;
+
+    /**
+     * Function syntax which takes no parentheses if there are no arguments, for
+     * example "CURRENTTIME".
+     */
+    public static final SqlSyntax FunctionId =
+        new SqlSyntax("FunctionId", FunctionId_ordinal) {
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
+            {
+                SqlUtil.unparseFunctionSyntax(operator,
+                    writer,
+                    operands,
+                    false,
+                    null);
             }
         };
     public static final int Internal_ordinal = 6;
@@ -124,19 +167,24 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
      */
     public static final SqlSyntax Internal =
         new SqlSyntax("Internal", Internal_ordinal) {
-            public void unparse(SqlWriter writer, SqlOperator operator,
-                SqlNode[] operands, int leftPrec, int rightPrec)
+            public void unparse(SqlWriter writer,
+                SqlOperator operator,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
             {
-                throw Util.newInternal("Internal operator '" + operator +
-                    "' cannot be un-parsed");
+                throw Util.newInternal(
+                    "Internal operator '" + operator
+                    + "' cannot be un-parsed");
             }
         };
     public static final EnumeratedValues enumeration =
-        new EnumeratedValues(new SqlSyntax [] {
-            Function, Binary, Prefix, Postfix, Special, FunctionId, Internal
-        });
+        new EnumeratedValues(
+            new SqlSyntax[] {
+                Function, Binary, Prefix, Postfix, Special, FunctionId, Internal
+            });
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private SqlSyntax(
         String name,
@@ -145,7 +193,7 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
         super(name, ordinal, null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Looks up a syntax from its ordinal.
@@ -169,10 +217,9 @@ public abstract class SqlSyntax extends EnumeratedValues.BasicValue
     public abstract void unparse(
         SqlWriter writer,
         SqlOperator operator,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec);
 }
-
 
 // End SqlSyntax.java

@@ -41,15 +41,16 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlSetSystemParamStmt extends DdlSetParamStmt
+public class DdlSetSystemParamStmt
+    extends DdlSetParamStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlSetSystemParamStmt.
      *
      * @param paramName name of parameter to set
-     *
      * @param paramValue new value for parameter
      */
     public DdlSetSystemParamStmt(
@@ -59,23 +60,26 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
         super(paramName, paramValue);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
         super.preValidate(ddlValidator);
 
-         FemFarragoConfig farragoConfig =
-             ddlValidator.getRepos().getCurrentConfig();
-         
-         preValidate(
-             ddlValidator, farragoConfig, farragoConfig.getFennelConfig());
+        FemFarragoConfig farragoConfig =
+            ddlValidator.getRepos().getCurrentConfig();
+
+        preValidate(
+            ddlValidator,
+            farragoConfig,
+            farragoConfig.getFennelConfig());
     }
 
     // implement DdlSetParamStmt
     protected void handleInvalidName(
-        FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
+        FarragoSessionDdlValidator ddlValidator,
+        InvalidNameException thrown)
     {
         throw FarragoResource.instance().ValidatorUnknownSysParam.ex(
             ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
@@ -83,7 +87,8 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 
     // implement DdlSetParamStmt
     protected void handleReflectionException(
-        FarragoSessionDdlValidator ddlValidator, Exception thrown)
+        FarragoSessionDdlValidator ddlValidator,
+        Exception thrown)
     {
         throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
             getParamValue().toString(),
@@ -92,7 +97,8 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 
     // implement DdlSetParamStmt
     protected void handleImmutableParameter(
-        FarragoSessionDdlValidator ddlValidator, InvalidNameException thrown)
+        FarragoSessionDdlValidator ddlValidator,
+        InvalidNameException thrown)
     {
         throw FarragoResource.instance().ValidatorImmutableSysParam.ex(
             ddlValidator.getRepos().getLocalizedObjectName(getParamName()));
@@ -100,10 +106,12 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
 
     // implement DdlSetParamStmt
     protected void handleTypeMismatch(
-        FarragoSessionDdlValidator ddlValidator, TypeMismatchException thrown)
+        FarragoSessionDdlValidator ddlValidator,
+        TypeMismatchException thrown)
     {
         throw FarragoResource.instance().ValidatorSysParamTypeMismatch.ex(
-            getParamValue().toString(), getParamName());
+            getParamValue().toString(),
+            getParamName());
     }
 
     // implement DdlStmt
@@ -112,6 +120,5 @@ public class DdlSetSystemParamStmt extends DdlSetParamStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlSetSystemParam.java

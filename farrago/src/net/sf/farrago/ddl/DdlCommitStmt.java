@@ -22,16 +22,17 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlCommitStmt represents a COMMIT statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlCommitStmt extends DdlTxnStmt
+public class DdlCommitStmt
+    extends DdlTxnStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlCommitStmt.
@@ -40,7 +41,7 @@ public class DdlCommitStmt extends DdlTxnStmt
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -48,6 +49,5 @@ public class DdlCommitStmt extends DdlTxnStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlCommitStmt.java

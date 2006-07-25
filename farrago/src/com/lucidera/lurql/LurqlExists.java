@@ -20,8 +20,10 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
+
 
 /**
  * LurqlExists represents an exists clause within a LURQL query.
@@ -29,17 +31,25 @@ import java.io.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlExists extends LurqlQueryNode
+public class LurqlExists
+    extends LurqlQueryNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final List selectList;
-    
+
     private final LurqlPathSpec pathSpec;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlExists(List selectList, LurqlPathSpec pathSpec)
     {
         this.selectList = selectList;
         this.pathSpec = pathSpec;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public List getSelectList()
     {

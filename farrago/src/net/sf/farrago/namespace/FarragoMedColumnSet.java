@@ -23,22 +23,22 @@
 package net.sf.farrago.namespace;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.sql.validate.SqlValidatorTable;
+import org.eigenbase.sql.validate.*;
 
 
 /**
  * FarragoMedColumnSet defines an interface for all relation-like objects
- * accessible by Farrago.  Instances of FarragoMedColumnSet are not
- * necessarily described in Farrago's catalog.  However, when they are, they
- * are described by instances of CwmNamedColumnSet.
+ * accessible by Farrago. Instances of FarragoMedColumnSet are not necessarily
+ * described in Farrago's catalog. However, when they are, they are described by
+ * instances of CwmNamedColumnSet.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoMedColumnSet extends RelOptTable,
-    SqlValidatorTable
+public interface FarragoMedColumnSet
+    extends RelOptTable,
+        SqlValidatorTable
 {
 }
-
 
 // End FarragoMedColumnSet.java

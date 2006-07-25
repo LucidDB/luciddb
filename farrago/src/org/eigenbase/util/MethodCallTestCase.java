@@ -20,39 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import junit.framework.*;
 
 
 /**
  * A <code>MethodCallTestCase</code> is a {@link TestCase} which invokes a
  * method on an object. You can use this class to expose methods of a
- * non-TestCase class as unit tests; {@link #addTestMethods} does this for
- * all <code>public</code>, non-<code>static</code>, <code>void</code>
- * methods whose names start with "test", and have one .
+ * non-TestCase class as unit tests; {@link #addTestMethods} does this for all
+ * <code>public</code>, non-<code>static</code>, <code>void</code> methods whose
+ * names start with "test", and have one .
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Mar 19, 2003
  */
-public class MethodCallTestCase extends TestCase
+public class MethodCallTestCase
+    extends TestCase
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final Dispatcher dispatcher;
     private final Method method;
     private final Object o;
     private final Object [] args;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MethodCallTestCase(
         String name,
@@ -62,33 +59,23 @@ public class MethodCallTestCase extends TestCase
     {
         super(name);
         this.o = o;
-        this.args = new Object [] { this };
+        this.args = new Object[] { this };
         this.method = method;
         this.dispatcher = dispatcher;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns whether a method can be called as a test case; it must:
      *
      * <ol>
-     * <li>
-     * be <code>public</code>
-     * </li>
-     * <li>
-     * be non-<code>static</code>
-     * </li>
-     * <li>
-     * return <code>void</code>
-     * </li>
-     * <li>
-     * begin with <code>test</code>
-     * </li>
-     * <li>
-     * have precisely one parameter of type {@link TestCase} (or a class
-     * derived from it)
-     * </li>
+     * <li>be <code>public</code></li>
+     * <li>be non-<code>static</code></li>
+     * <li>return <code>void</code></li>
+     * <li>begin with <code>test</code></li>
+     * <li>have precisely one parameter of type {@link TestCase} (or a class
+     * derived from it)</li>
      * </ol>
      */
     public static boolean isSuitable(Method method)
@@ -142,12 +129,12 @@ public class MethodCallTestCase extends TestCase
         Util.discard(dispatcher.call(method, o, args));
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * A class implementing <code>Dispatcher</code> calls a method from within
-     * its own security context. It exists to allow a {@link
-     * MethodCallTestCase} to call non-public methods.
+     * its own security context. It exists to allow a {@link MethodCallTestCase}
+     * to call non-public methods.
      */
     public interface Dispatcher
     {
@@ -155,11 +142,10 @@ public class MethodCallTestCase extends TestCase
             Method method,
             Object o,
             Object [] args)
-            throws IllegalAccessException, 
-                IllegalArgumentException, 
+            throws IllegalAccessException,
+                IllegalArgumentException,
                 InvocationTargetException;
     }
 }
-
 
 // End MethodCallTestCase.java

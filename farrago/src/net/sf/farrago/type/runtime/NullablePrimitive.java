@@ -27,22 +27,24 @@ import java.math.*;
 import net.sf.farrago.resource.*;
 
 import org.eigenbase.util.*;
-import org.eigenbase.util14.NumberUtil;
+import org.eigenbase.util14.*;
 
 
 /**
  * NullablePrimitive is the abstract superclass for implementations of
- * NullableValue corresponding to Java primitives.  These holder classes are
- * declared as static inner classes of NullablePrimitive with names taken
- * from the standard holder classes in java.lang.
+ * NullableValue corresponding to Java primitives. These holder classes are
+ * declared as static inner classes of NullablePrimitive with names taken from
+ * the standard holder classes in java.lang.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class NullablePrimitive implements NullableValue,
-    AssignableValue
+public abstract class NullablePrimitive
+    implements NullableValue,
+        AssignableValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
      * Name of field storing value.
@@ -60,12 +62,14 @@ public abstract class NullablePrimitive implements NullableValue,
     private static final Integer INT_ONE = new Integer(1);
     private static final Integer INT_ZERO = new Integer(0);
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Whether this value is null. */
+    /**
+     * Whether this value is null.
+     */
     public boolean isNull;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement NullableValue
     public void setNull(boolean isNull)
@@ -133,15 +137,18 @@ public abstract class NullablePrimitive implements NullableValue,
      */
     protected abstract void setNumber(Number number);
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Nullable wrapper for boolean.
      */
-    public static final class NullableBoolean extends NullablePrimitive
+    public static final class NullableBoolean
+        extends NullablePrimitive
         implements BitReference
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public boolean value;
 
         // implement AssignableValue for String
@@ -154,18 +161,14 @@ public abstract class NullablePrimitive implements NullableValue,
                 s = s.trim();
                 if (s.equalsIgnoreCase(TRUE_LITERAL)) {
                     value = true;
-                }
-                else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
+                } else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
                     value = false;
-                }
-                else if (s.equalsIgnoreCase(UNKNOWN_LITERAL)) {
+                } else if (s.equalsIgnoreCase(UNKNOWN_LITERAL)) {
                     setNull(true);
-                }
-                else {
+                } else {
                     super.assignFrom(obj);
                 }
-            }
-            else {
+            } else {
                 super.assignFrom(obj);
             }
         }
@@ -189,16 +192,15 @@ public abstract class NullablePrimitive implements NullableValue,
         }
 
         /**
-         * Implements cast from string to non-nullable boolean
-         * Invoked by generated code
+         * Implements cast from string to non-nullable boolean Invoked by
+         * generated code
          */
         public static final boolean convertString(String s)
         {
             s = s.trim();
             if (s.equalsIgnoreCase(TRUE_LITERAL)) {
                 return true;
-            }
-            else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
+            } else if (s.equalsIgnoreCase(FALSE_LITERAL)) {
                 return false;
             } else {
                 throw FarragoResource.instance().AssignFromFailed.ex(
@@ -213,15 +215,15 @@ public abstract class NullablePrimitive implements NullableValue,
          * Invoked by generated code.
          *
          * @param n0 null indictator for arg0
-         *
          * @param v0 truth value of arg0 when !n0
-         *
          * @param n1 null indicator for arg1
-         *
          * @param v1 truth value of arg1 when !n1
          */
         public final void assignFromAnd3VL(
-            boolean n0, boolean v0, boolean n1, boolean v1)
+            boolean n0,
+            boolean v0,
+            boolean n1,
+            boolean v1)
         {
             if (n0 && n1) {
                 // (UNKNOWN AND UNKNOWN) == UNKNOWN
@@ -252,19 +254,19 @@ public abstract class NullablePrimitive implements NullableValue,
         }
 
         /**
-         * Implements the three-valued-logic version of the OR operator.
-         * Invoked by generated code.
+         * Implements the three-valued-logic version of the OR operator. Invoked
+         * by generated code.
          *
          * @param n0 null indictator for arg0
-         *
          * @param v0 truth value of arg0 when !n0
-         *
          * @param n1 null indicator for arg1
-         *
          * @param v1 truth value of arg1 when !n1
          */
         public final void assignFromOr3VL(
-            boolean n0, boolean v0, boolean n1, boolean v1)
+            boolean n0,
+            boolean v0,
+            boolean n1,
+            boolean v1)
         {
             if (n0 && n1) {
                 // (UNKNOWN OR UNKNOWN) == UNKNOWN
@@ -298,9 +300,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for byte.
      */
-    public static final class NullableByte extends NullablePrimitive
+    public static final class NullableByte
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public byte value;
 
         // implement NullablePrimitive
@@ -313,9 +318,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for double.
      */
-    public static final class NullableDouble extends NullablePrimitive
+    public static final class NullableDouble
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public double value;
 
         // implement NullablePrimitive
@@ -328,9 +336,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for float.
      */
-    public static final class NullableFloat extends NullablePrimitive
+    public static final class NullableFloat
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public float value;
 
         // implement NullablePrimitive
@@ -343,9 +354,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for int.
      */
-    public static final class NullableInteger extends NullablePrimitive
+    public static final class NullableInteger
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public int value;
 
         // implement NullablePrimitive
@@ -358,9 +372,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for long.
      */
-    public static class NullableLong extends NullablePrimitive
+    public static class NullableLong
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public long value;
 
         // implement NullablePrimitive
@@ -373,9 +390,12 @@ public abstract class NullablePrimitive implements NullableValue,
     /**
      * Nullable wrapper for short.
      */
-    public static final class NullableShort extends NullablePrimitive
+    public static final class NullableShort
+        extends NullablePrimitive
     {
-        /** Wrapped primitive */
+        /**
+         * Wrapped primitive
+         */
         public short value;
 
         // implement NullablePrimitive
@@ -385,6 +405,5 @@ public abstract class NullablePrimitive implements NullableValue,
         }
     }
 }
-
 
 // End NullablePrimitive.java

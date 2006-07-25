@@ -21,59 +21,67 @@
 */
 package org.eigenbase.relopt;
 
+import java.util.*;
+import java.util.logging.*;
+import java.util.regex.*;
+
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
-import org.eigenbase.oj.rel.*;
 
-import java.util.*;
-import java.util.regex.*;
-import java.util.logging.*;
 
 /**
- * AbstractRelOptPlanner is an abstract base for implementations
- * of the {@link RelOptPlanner} interface.
+ * AbstractRelOptPlanner is an abstract base for implementations of the {@link
+ * RelOptPlanner} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class AbstractRelOptPlanner implements RelOptPlanner
+public abstract class AbstractRelOptPlanner
+    implements RelOptPlanner
 {
-    //~ Constants -------------------------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * Regular expression for integer.
      */
     private static final Pattern IntegerPattern = Pattern.compile("[0-9]+");
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * Maps rule description to rule, just to ensure that rules' descriptions
      * are unique.
      */
     private final Map<String, RelOptRule> mapDescToRule;
-    
+
     private MulticastRelOptListener listener;
 
     private Pattern ruleDescExclusionFilter;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected AbstractRelOptPlanner()
     {
         mapDescToRule = new HashMap<String, RelOptRule>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected void mapRuleDescription(RelOptRule rule)
     {
         // Check that there isn't a rule with the same description,
         // also validating description string.
-        
+
         final String description = rule.toString();
         assert description != null;
-        assert description.indexOf("$") < 0 :
-            "Rule's description should not contain '$': " + description;
-        assert !IntegerPattern.matcher(description).matches() :
-            "Rule's description should not be an integer: " +
-            rule.getClass().getName() + ", " + description;
-        
-        RelOptRule existingRule =
-            mapDescToRule.put(description, rule);
+        assert description.indexOf("$") < 0 : "Rule's description should not contain '$': "
+            + description;
+        assert !IntegerPattern.matcher(description).matches() : "Rule's description should not be an integer: "
+            + rule.getClass().getName() + ", " + description;
+
+        RelOptRule existingRule = mapDescToRule.put(description, rule);
         if (existingRule != null) {
             if (existingRule == rule) {
                 throw new AssertionError(
@@ -82,12 +90,13 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
                 // This rule has the same description as one previously
                 // registered, yet it is not equal. You may need to fix the
                 // rule's equals and hashCode methods.
-                throw new AssertionError("Rule's description should be unique; "
+                throw new AssertionError(
+                    "Rule's description should be unique; "
                     + "existing rule=" + existingRule + "; new rule=" + rule);
             }
         }
     }
-    
+
     protected void unmapRuleDescription(RelOptRule rule)
     {
         String description = rule.toString();
@@ -119,13 +128,13 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
         }
         return ruleDescExclusionFilter.matcher(rule.toString()).matches();
     }
-    
+
     // implement RelOptPlanner
     public RelOptPlanner chooseDelegate()
     {
         return this;
     }
-    
+
     // implement RelOptPlanner
     public void registerSchema(RelOptSchema schema)
     {
@@ -136,7 +145,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     {
         return 0;
     }
-    
+
     // implement RelOptPlanner
     public RelOptCost makeCost(
         double dRows,
@@ -169,13 +178,13 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     {
         return new RelOptCostImpl(0.0);
     }
-    
+
     // implement RelOptPlanner
     public RelOptCost getCost(RelNode rel)
     {
         return RelMetadataQuery.getCumulativeCost(rel);
     }
-    
+
     // implement RelOptPlanner
     public void addListener(RelOptListener newListener)
     {
@@ -184,18 +193,18 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
         }
         listener.addListener(newListener);
     }
-    
+
     // implement RelOptPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return null;
     }
-    
+
     // implement RelOptPlanner
     public void registerMetadataProviders(ChainedRelMetadataProvider chain)
     {
     }
-    
+
     // implement RelOptPlanner
     public boolean addRelTraitDef(RelTraitDef relTraitDef)
     {
@@ -212,14 +221,16 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     {
         if (isRuleExcluded(ruleCall.getRule())) {
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Rule [" + ruleCall.getRule() + "] not fired"
+                tracer.fine(
+                    "Rule [" + ruleCall.getRule() + "] not fired"
                     + " due to exclusion filter");
             }
             return;
         }
-            
+
         if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine("Apply rule [" + ruleCall.getRule() + "] to ["
+            tracer.fine(
+                "Apply rule [" + ruleCall.getRule() + "] to ["
                 + RelOptUtil.toString(ruleCall.getRels()) + "]");
         }
 
@@ -232,9 +243,9 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
                     true);
             listener.ruleAttempted(event);
         }
-        
+
         ruleCall.getRule().onMatch(ruleCall);
-            
+
         if (listener != null) {
             RelOptListener.RuleAttemptedEvent event =
                 new RelOptListener.RuleAttemptedEvent(
@@ -251,9 +262,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
      * transformation is applied.
      *
      * @param ruleCall description of rule call
-     *
      * @param newRel result of transformation
-     *
      * @param before true before registration of new rel; false after
      */
     protected void notifyTransformation(
@@ -262,11 +271,12 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
         boolean before)
     {
         if (before && tracer.isLoggable(Level.FINE)) {
-            tracer.fine("Rule " + ruleCall.getRule() + " arguments "
+            tracer.fine(
+                "Rule " + ruleCall.getRule() + " arguments "
                 + RelOptUtil.toString(ruleCall.getRels()) + " produced "
                 + newRel);
         }
-        
+
         if (listener != null) {
             RelOptListener.RuleProductionEvent event =
                 new RelOptListener.RuleProductionEvent(
@@ -279,8 +289,8 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     }
 
     /**
-     * Takes care of tracing and listener notification when a rel
-     * is chosen as part of the final plan.
+     * Takes care of tracing and listener notification when a rel is chosen as
+     * part of the final plan.
      *
      * @param rel chosen rel
      */
@@ -289,7 +299,7 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine("For final plan, using " + rel);
         }
-        
+
         if (listener != null) {
             RelOptListener.RelChosenEvent event =
                 new RelOptListener.RelChosenEvent(
@@ -300,8 +310,8 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
     }
 
     /**
-     * Takes care of tracing and listener notification when a rel
-     * equivalence is detected.
+     * Takes care of tracing and listener notification when a rel equivalence is
+     * detected.
      *
      * @param rel chosen rel
      */
@@ -320,10 +330,9 @@ public abstract class AbstractRelOptPlanner implements RelOptPlanner
             listener.relEquivalenceFound(event);
         }
     }
-    
+
     /**
-     * Takes care of tracing and listener notification when a rel
-     * is discarded
+     * Takes care of tracing and listener notification when a rel is discarded
      *
      * @param rel discarded rel
      */

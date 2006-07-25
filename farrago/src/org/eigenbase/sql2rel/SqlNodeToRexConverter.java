@@ -22,18 +22,18 @@
 */
 package org.eigenbase.sql2rel;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.sql.SqlIntervalQualifier;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Converts expressions from {@link SqlNode} to {@link RexNode}.
  */
 public interface SqlNodeToRexConverter
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Converts a {@link SqlCall} to a {@link RexNode} expression.
      */
@@ -42,20 +42,20 @@ public interface SqlNodeToRexConverter
         SqlCall call);
 
     /**
-     * Converts a {@link SqlLiteral SQL literal} to
-     * a {@link RexLiteral REX literal}.
+     * Converts a {@link SqlLiteral SQL literal} to a {@link RexLiteral REX
+     * literal}.
      *
      * <p>The result is {@link RexNode}, not {@link RexLiteral} because if the
-     * literal is NULL (or the boolean Unknown value), we make a
-     * <code>CAST(NULL AS type)</code> expression.
+     * literal is NULL (or the boolean Unknown value), we make a <code>CAST(NULL
+     * AS type)</code> expression.
      */
     RexNode convertLiteral(
         SqlRexContext cx,
         SqlLiteral literal);
-    
+
     /**
-     * Converts a {@link SqlIntervalQualifier SQL Interval Qualifier} to
-     * a {@link RexLiteral REX literal}.
+     * Converts a {@link SqlIntervalQualifier SQL Interval Qualifier} to a
+     * {@link RexLiteral REX literal}.
      */
     RexLiteral convertInterval(
         SqlRexContext cx,

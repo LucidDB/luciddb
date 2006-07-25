@@ -20,33 +20,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
 /**
- * RelTrait represents the manifestation of a relational expression
- * trait within a trait definition.  For example, a 
- * {@link CallingConvention#JAVA} is a trait of the
- * {@link CallingConventionTraitDef} trait definition.
+ * RelTrait represents the manifestation of a relational expression trait within
+ * a trait definition. For example, a {@link CallingConvention#JAVA} is a trait
+ * of the {@link CallingConventionTraitDef} trait definition.
  *
- * <p>
- * <a name="EqualsHashCodeNote"><u>Note about equals() and hashCode()</u></a>
- * <br>If all instances of RelTrait for a paritcular RelTraitDef are defined
- * in an enumeration class and no new RelTraits can be introduced at runtime,
- * you need not override {@link #hashCode()} and {@link #equals(Object)}.
- * If, however, new RelTrait instances are generated at runtime (e.g. based
- * on state external to the planner), you must implement {@link #hashCode()}
- * and {@link #equals(Object)} for proper 
- * {@link RelTraitDef#canonize canonization} of your RelTrait objects.
+ * <p><a name="EqualsHashCodeNote"><u>Note about equals() and hashCode()</u></a>
+ * <br>
+ * If all instances of RelTrait for a paritcular RelTraitDef are defined in an
+ * enumeration class and no new RelTraits can be introduced at runtime, you need
+ * not override {@link #hashCode()} and {@link #equals(Object)}. If, however,
+ * new RelTrait instances are generated at runtime (e.g. based on state external
+ * to the planner), you must implement {@link #hashCode()} and {@link
+ * #equals(Object)} for proper {@link RelTraitDef#canonize canonization} of your
+ * RelTrait objects.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
 public interface RelTrait
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the RelTraitDef that defines this RelTrait.
-     * 
+     *
      * @return the RelTraitDef that defines this RelTrait
      */
     abstract RelTraitDef getTraitDef();
@@ -62,8 +63,10 @@ public interface RelTrait
     abstract boolean equals(Object o);
 
     /**
-     * Returns a succinct name for this trait.  The planner may use this
-     * String to describe the trait.
+     * Returns a succinct name for this trait. The planner may use this String
+     * to describe the trait.
      */
     abstract String toString();
 }
+
+// End RelTrait.java

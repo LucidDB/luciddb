@@ -20,36 +20,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * A <code>SqlCall</code> is a call to an {@link SqlOperator operator}.
- * (Operators can be used to describe any syntactic construct, so in
- * practice, every non-leaf node in a SQL parse tree is a
- * <code>SqlCall</code> of some kind.)
+ * (Operators can be used to describe any syntactic construct, so in practice,
+ * every non-leaf node in a SQL parse tree is a <code>SqlCall</code> of some
+ * kind.)
  */
-public class SqlCall extends SqlNode
+public class SqlCall
+    extends SqlNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private SqlOperator operator;
     public final SqlNode [] operands;
     private final SqlLiteral functionQuantifier;
     private final boolean expanded;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlCall(
         SqlOperator operator,
@@ -73,7 +71,7 @@ public class SqlCall extends SqlNode
         this.functionQuantifier = functionQualifier;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isA(SqlKind kind)
     {
@@ -121,8 +119,8 @@ public class SqlCall extends SqlNode
     public SqlNode clone(SqlParserPos pos)
     {
         return operator.createCall(
-            SqlNode.cloneArray(operands),
-            pos);
+                SqlNode.cloneArray(operands),
+                pos);
     }
 
     public void unparse(
@@ -130,9 +128,9 @@ public class SqlCall extends SqlNode
         int leftPrec,
         int rightPrec)
     {
-        if (leftPrec > operator.getLeftPrec() ||
-            (operator.getRightPrec() <= rightPrec && rightPrec != 0) ||
-            (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression))) {
+        if ((leftPrec > operator.getLeftPrec())
+            || ((operator.getRightPrec() <= rightPrec) && (rightPrec != 0))
+            || (writer.isAlwaysUseParentheses() && isA(SqlKind.Expression))) {
             final SqlWriter.Frame frame = writer.startList("(", ")");
             operator.unparse(writer, operands, 0, 0);
             writer.endList(frame);
@@ -159,7 +157,7 @@ public class SqlCall extends SqlNode
         SqlParserPos pos,
         List<SqlMoniker> hintList)
     {
-        final SqlNode[] operands = getOperands();
+        final SqlNode [] operands = getOperands();
         for (int i = 0; i < operands.length; i++) {
             if (operands[i] instanceof SqlIdentifier) {
                 SqlIdentifier id = (SqlIdentifier) operands[i];
@@ -185,6 +183,7 @@ public class SqlCall extends SqlNode
             return false;
         }
         SqlCall that = (SqlCall) node;
+
         // Compare operators by name, not identity, because they may not
         // have been resolved yet.
         if (!this.operator.getName().equals(that.operator.getName())) {
@@ -233,6 +232,7 @@ public class SqlCall extends SqlNode
      * Tests whether operator name matches supplied value.
      *
      * @param name Test string
+     *
      * @return whether operator name matches parameter
      */
     public boolean isName(String name)
@@ -247,11 +247,11 @@ public class SqlCall extends SqlNode
      */
     public boolean isCountStar()
     {
-        if (operator.isName("COUNT") && operands.length == 1) {
+        if (operator.isName("COUNT") && (operands.length == 1)) {
             final SqlNode parm = operands[0];
             if (parm instanceof SqlIdentifier) {
                 SqlIdentifier id = (SqlIdentifier) parm;
-                if (id.isStar() && id.names.length == 1) {
+                if (id.isStar() && (id.names.length == 1)) {
                     return true;
                 }
             }
@@ -265,6 +265,5 @@ public class SqlCall extends SqlNode
         return functionQuantifier;
     }
 }
-
 
 // End SqlCall.java

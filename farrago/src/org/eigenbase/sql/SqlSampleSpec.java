@@ -19,30 +19,34 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
-
-import org.eigenbase.sql.parser.SqlParserPos;
 
 /**
  * Specification of a SQL sample.
  *
  * <p>For example, the query
  *
- * <blockquote><pre>SELECT *
- * FROM emp TABLESAMPLE SUBSTITUTE('medium')</pre></blockquote>
+ * <blockquote>
+ * <pre>SELECT *
+ * FROM emp TABLESAMPLE SUBSTITUTE('medium')</pre>
+ * </blockquote>
  *
  * declares a sample which is created using {@link #createNamed}.</p>
  *
- * <p>A sample is not a {@link SqlNode}. To include it in a parse tree,
- * wrap it as a literal, viz:
- * {@link SqlLiteral#createSample(SqlSampleSpec, SqlParserPos)}.
+ * <p>A sample is not a {@link SqlNode}. To include it in a parse tree, wrap it
+ * as a literal, viz: {@link SqlLiteral#createSample(SqlSampleSpec,
+ * SqlParserPos)}.
  */
 public abstract class SqlSampleSpec
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlSampleSpec()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Creates a sample which substitutes one relation for another.
@@ -52,7 +56,10 @@ public abstract class SqlSampleSpec
         return new SqlSubstitutionSampleSpec(name);
     }
 
-    public static class SqlSubstitutionSampleSpec extends SqlSampleSpec
+    //~ Inner Classes ----------------------------------------------------------
+
+    public static class SqlSubstitutionSampleSpec
+        extends SqlSampleSpec
     {
         private final String name;
 
@@ -68,9 +75,10 @@ public abstract class SqlSampleSpec
 
         public String toString()
         {
-            return "SUBSTITUTE(" +
-                SqlUtil.eigenbaseDialect.quoteStringLiteral(name) +
-                ")";
+            return
+                "SUBSTITUTE("
+                + SqlUtil.eigenbaseDialect.quoteStringLiteral(name)
+                + ")";
         }
     }
 }

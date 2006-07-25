@@ -23,9 +23,10 @@
 package net.sf.farrago.db;
 
 import java.sql.*;
+
 import java.util.*;
-import java.util.regex.*;
 import java.util.logging.*;
+import java.util.regex.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
@@ -33,54 +34,61 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fennel.*;
+import net.sf.farrago.plugin.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.plugin.*;
 
+import org.eigenbase.jmi.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.resgen.*;
 import org.eigenbase.resource.*;
-import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
-import org.eigenbase.jmi.*;
 
 
 /**
- * FarragoDbSession implements the {@link
- * net.sf.farrago.session.FarragoSession} interface as a connection to a {@link
- * FarragoDatabase} instance.  It manages private authorization and transaction
- * context.
+ * FarragoDbSession implements the {@link net.sf.farrago.session.FarragoSession}
+ * interface as a connection to a {@link FarragoDatabase} instance. It manages
+ * private authorization and transaction context.
  *
  * @author John V. Sichi
  * @version $Id: //open/dev/farrago/src/net/sf/farrago/db/FarragoDbSession.java#27
  */
-public class FarragoDbSession extends FarragoCompoundAllocation
+public class FarragoDbSession
+    extends FarragoCompoundAllocation
     implements FarragoSession,
         Cloneable
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
         FarragoTrace.getDatabaseSessionTracer();
-    
+
     private static final Logger sqlTimingTracer =
         EigenbaseTrace.getSqlTimingTracer();
 
     public static final String MDR_USER_NAME = "MDR";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Default personality for this session. */
+    /**
+     * Default personality for this session.
+     */
     private FarragoSessionPersonality defaultPersonality;
 
-    /** Current personality for this session. */
+    /**
+     * Current personality for this session.
+     */
     private FarragoSessionPersonality personality;
-    
-    /** Fennel transaction context for this session */
+
+    /**
+     * Fennel transaction context for this session
+     */
     private FennelTxnContext fennelTxnContext;
 
     /**
@@ -88,17 +96,25 @@ public class FarragoDbSession extends FarragoCompoundAllocation
      */
     private FarragoSessionTxnId txnId;
 
-    /** Qualifiers to assume for unqualified object references */
+    /**
+     * Qualifiers to assume for unqualified object references
+     */
     private FarragoSessionVariables sessionVariables;
 
-    /** Database accessed by this session */
+    /**
+     * Database accessed by this session
+     */
     private FarragoDatabase database;
 
-    /** Repos accessed by this session */
+    /**
+     * Repos accessed by this session
+     */
     private FarragoRepos repos;
     private String url;
 
-    /** Was this session produced by cloning? */
+    /**
+     * Was this session produced by cloning?
+     */
     private boolean isClone;
     private boolean isAutoCommit;
     private boolean shutDownRequested;
@@ -106,8 +122,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private boolean wasKilled;
 
     /**
-     * List of savepoints established within current transaction which have
-     * not been released or rolled back; order is from earliest to latest.
+     * List of savepoints established within current transaction which have not
+     * been released or rolled back; order is from earliest to latest.
      */
     private List savepointList;
 
@@ -132,22 +148,20 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private Map txnCodeCache;
     private DatabaseMetaData dbMetaData;
     protected FarragoSessionFactory sessionFactory;
-    
+
     private FarragoSessionPrivilegeMap privilegeMap;
 
     private FarragoDbSessionInfo sessionInfo;
 
     private Pattern optRuleDescExclusionFilter;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoDbSession object.
      *
      * @param url URL used to connect (same as JDBC)
-     *
      * @param info properties for this session
-     *
      * @param sessionFactory factory which created this session
      */
     public FarragoDbSession(
@@ -171,6 +185,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     private void init(Properties info)
     {
         sessionVariables = new FarragoSessionVariables();
@@ -179,28 +195,31 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         sessionVariables.sessionUserName = sessionUser;
         sessionVariables.currentUserName = sessionUser;
         sessionVariables.currentRoleName = "";
-        sessionVariables.systemUserName = info.getProperty(
-            "clientUserName",
-            System.getProperty("user.name"));
-        sessionVariables.systemUserFullName = info.getProperty(
-            "clientUserFullName");
+        sessionVariables.systemUserName =
+            info.getProperty(
+                "clientUserName",
+                System.getProperty("user.name"));
+        sessionVariables.systemUserFullName =
+            info.getProperty(
+                "clientUserFullName");
         sessionVariables.schemaSearchPath = Collections.emptyList();
         sessionVariables.sessionName = info.getProperty("sessionName");
         sessionVariables.programName = info.getProperty("clientProgramName");
         sessionVariables.processId = 0L;
         String processStr = info.getProperty("clientProcessId");
-        if (processStr != null && processStr.length() > 0) {
+        if ((processStr != null) && (processStr.length() > 0)) {
             try {
                 sessionVariables.processId = Long.parseLong(processStr);
             } catch (NumberFormatException e) {
                 tracer.warning(
-                    "processId=\"" +processStr +"\" error: " +e.getMessage());
+                    "processId=\"" + processStr + "\" error: "
+                    + e.getMessage());
                 Util.swallow(e, tracer);
             }
         }
 
         FemUser femUser = null;
-        
+
         if (MDR_USER_NAME.equals(sessionVariables.sessionUserName)) {
             // This is a reentrant session from MDR.
             repos = database.getSystemRepos();
@@ -249,26 +268,24 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         savepointList = new ArrayList();
 
         sessionIndexMap = new FarragoDbSessionIndexMap(this, database, repos);
-        
+
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
         sessionInfo = new FarragoDbSessionInfo(this, database);
     }
-
-    //~ Methods ---------------------------------------------------------------
 
     // implement FarragoSession
     public FarragoSessionFactory getSessionFactory()
     {
         return sessionFactory;
     }
-    
+
     // implement FarragoSession
     public FarragoSessionPersonality getPersonality()
     {
         return personality;
     }
-    
+
     // implement FarragoSession
     public void setDatabaseMetaData(DatabaseMetaData dbMetaData)
     {
@@ -280,7 +297,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         this.connectionSource = source;
     }
-    
+
     // implement FarragoSession
     public DatabaseMetaData getDatabaseMetaData()
     {
@@ -292,7 +309,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         return connectionSource;
     }
-    
+
     // implement FarragoSession
     public String getUrl()
     {
@@ -312,7 +329,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     }
 
     // implement FarragoSession
-    public FarragoSessionInfo getSessionInfo() {
+    public FarragoSessionInfo getSessionInfo()
+    {
         return sessionInfo;
     }
 
@@ -320,9 +338,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     public FarragoSessionStmtContext newStmtContext(
         FarragoSessionStmtParamDefFactory paramDefFactory)
     {
-        FarragoDbStmtContext stmtContext = 
+        FarragoDbStmtContext stmtContext =
             new FarragoDbStmtContext(
-                this, paramDefFactory, database.getDdlLockManager());
+                this,
+                paramDefFactory,
+                database.getDdlLockManager());
         addAllocation(stmtContext);
         return stmtContext;
     }
@@ -330,14 +350,15 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     // implement FarragoSession
     public FarragoSessionStmtValidator newStmtValidator()
     {
-        return new FarragoStmtValidator(
-            getRepos(),
-            getDatabase().getFennelDbHandle(),
-            this,
-            getDatabase().getCodeCache(),
-            getDatabase().getDataWrapperCache(),
-            getSessionIndexMap(),
-            getDatabase().getDdlLockManager());
+        return
+            new FarragoStmtValidator(
+                getRepos(),
+                getDatabase().getFennelDbHandle(),
+                this,
+                getDatabase().getCodeCache(),
+                getDatabase().getDataWrapperCache(),
+                getSessionIndexMap(),
+                getDatabase().getDdlLockManager());
     }
 
     // implement FarragoSession
@@ -365,7 +386,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
         return privilegeMap;
     }
-    
+
     // implement FarragoSession
     public FarragoSession cloneSession(
         FarragoSessionVariables inheritedVariables)
@@ -412,7 +433,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     {
         return isClosed() && wasKilled;
     }
-    
+
     // implement FarragoSession
     public boolean isTxnInProgress()
     {
@@ -434,13 +455,13 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
         return txnId;
     }
-    
+
     // implement FarragoSession
     public FarragoSessionTxnMgr getTxnMgr()
     {
         return database.getTxnMgr();
     }
-    
+
     // implement FarragoSession
     public void setAutoCommit(boolean autoCommit)
     {
@@ -490,12 +511,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         closeAllocation();
         wasKilled = true;
     }
-    
+
     // implement FarragoAllocation
     public void closeAllocation()
     {
-        synchronized(FarragoDbSingleton.class) {
-            synchronized(this) {
+        synchronized (FarragoDbSingleton.class) {
+            synchronized (this) {
                 super.closeAllocation();
                 if (isClone || isClosed()) {
                     return;
@@ -559,23 +580,29 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         RelDataType paramRowType,
         boolean optimize)
     {
-        FarragoSessionAnalyzedSql analyzedSql =
-            getAnalysisBlock(typeFactory);
+        FarragoSessionAnalyzedSql analyzedSql = getAnalysisBlock(typeFactory);
         analyzedSql.optimized = optimize;
         analyzedSql.paramRowType = paramRowType;
-        FarragoSessionExecutableStmt stmt = prepare(
-            null, sql, null, false, analyzedSql);
+        FarragoSessionExecutableStmt stmt =
+            prepare(
+                null,
+                sql,
+                null,
+                false,
+                analyzedSql);
         assert (stmt == null);
         if (typeFactory != null) {
             // Have to copy types into the caller's factory since
             // analysis uses a private factory.
             if (analyzedSql.paramRowType != null) {
-                analyzedSql.paramRowType = typeFactory.copyType(
-                    analyzedSql.paramRowType);
+                analyzedSql.paramRowType =
+                    typeFactory.copyType(
+                        analyzedSql.paramRowType);
             }
             if (analyzedSql.resultType != null) {
-                analyzedSql.resultType = typeFactory.copyType(
-                    analyzedSql.resultType);
+                analyzedSql.resultType =
+                    typeFactory.copyType(
+                        analyzedSql.resultType);
             }
         }
         return analyzedSql;
@@ -669,8 +696,10 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
             JmiQueryProcessor queryProcessor =
                 getPersonality().newJmiQueryProcessor("LURQL");
-            JmiPreparedQuery query = queryProcessor.prepare(
-                getRepos().getModelView(), lurql);
+            JmiPreparedQuery query =
+                queryProcessor.prepare(
+                    getRepos().getModelView(),
+                    lurql);
             return query.execute(connection, argMap);
         } catch (JmiQueryException ex) {
             throw FarragoResource.instance().SessionInternalQueryFailed.ex(ex);
@@ -678,7 +707,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             Util.squelchConnection(connection);
         }
     }
-    
+
     // implement FarragoSession
     public void setOptRuleDescExclusionFilter(Pattern exclusionFilter)
     {
@@ -709,11 +738,14 @@ public class FarragoDbSession extends FarragoCompoundAllocation
     private FarragoSessionSavepoint newSavepointImpl(String name)
     {
         if (isAutoCommit) {
-            throw FarragoResource.instance().SessionNoSavepointInAutocommit.ex();
+            throw FarragoResource.instance().SessionNoSavepointInAutocommit
+            .ex();
         }
         FennelSvptHandle fennelSvptHandle = fennelTxnContext.newSavepoint();
         FarragoDbSavepoint newSavepoint =
-            new FarragoDbSavepoint(nextSavepointId++, name, fennelSvptHandle,
+            new FarragoDbSavepoint(nextSavepointId++,
+                name,
+                fennelSvptHandle,
                 this);
         savepointList.add(newSavepoint);
         return newSavepoint;
@@ -737,7 +769,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                     new Integer(savepoint.getId()));
             } else {
                 throw FarragoResource.instance().SessionInvalidSavepointName.ex(
-                        repos.getLocalizedObjectName(savepoint.getName()));
+                    repos.getLocalizedObjectName(savepoint.getName()));
             }
         }
         return iSavepoint;
@@ -755,7 +787,8 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
         if (throwIfNotFound) {
-            throw FarragoResource.instance().SessionInvalidSavepointName.ex(name);
+            throw FarragoResource.instance().SessionInvalidSavepointName.ex(
+                name);
         }
         return -1;
     }
@@ -789,7 +822,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 
-    
     protected FarragoSessionExecutableStmt prepare(
         FarragoDbStmtContextBase stmtContext,
         String sql,
@@ -823,14 +855,20 @@ public class FarragoDbSession extends FarragoCompoundAllocation
 
             boolean [] pRollback = new boolean[1];
             pRollback[0] = true;
-            FarragoSessionStmtValidator stmtValidator =
-                newStmtValidator();
+            FarragoSessionStmtValidator stmtValidator = newStmtValidator();
             stmtValidator.setTimingTracer(timingTracer);
             FarragoSessionExecutableStmt stmt = null;
             try {
-                stmt = prepareImpl(
-                    sql, owner, isExecDirect, analyzedSql,
-                    stmtContext, stmtValidator, reposTxnContext, pRollback);
+                stmt =
+                    prepareImpl(sql,
+                        owner,
+                        isExecDirect,
+                        analyzedSql,
+                        stmtContext,
+                        stmtValidator,
+                        reposTxnContext,
+                        pRollback);
+
                 // NOTE jvs 17-Mar-2006:  We have to do this here
                 // rather than in FarragoDbStmtContext.finishPrepare
                 // to ensure that's there's no window in between
@@ -879,8 +917,12 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             expectStatement = false;
         }
 
-        Object parsedObj = parser.parseSqlText(
-            stmtValidator, ddlValidator, sql, expectStatement);
+        Object parsedObj =
+            parser.parseSqlText(
+                stmtValidator,
+                ddlValidator,
+                sql,
+                expectStatement);
 
         stmtValidator.getTimingTracer().traceTime("end parse");
 
@@ -892,13 +934,16 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
-                    stmtContext, stmtValidator, sqlNode, owner, analyzedSql);
+                    stmtContext,
+                    stmtValidator,
+                    sqlNode,
+                    owner,
+                    analyzedSql);
             if (isExecDirect
-                && (stmt.getDynamicParamRowType().getFieldList().size() > 0))
-            {
+                && (stmt.getDynamicParamRowType().getFieldList().size() > 0)) {
                 owner.closeAllocation();
-                throw FarragoResource.instance().
-                    SessionNoExecuteImmediateParameters.ex(sql);
+                throw FarragoResource.instance()
+                .SessionNoExecuteImmediateParameters.ex(sql);
             }
             return stmt;
         }
@@ -906,9 +951,9 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         FarragoSessionDdlStmt ddlStmt = (FarragoSessionDdlStmt) parsedObj;
 
         validateDdl(ddlValidator, reposTxnContext, ddlStmt);
-        
+
         stmtValidator.getTimingTracer().traceTime("end DDL validation");
-        
+
         if (!isExecDirect) {
             return null;
         }
@@ -916,7 +961,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         executeDdl(ddlValidator, reposTxnContext, ddlStmt);
 
         stmtValidator.getTimingTracer().traceTime("end DDL execution");
-        
+
         pRollback[0] = false;
         return null;
     }
@@ -933,7 +978,7 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         tracer.fine("validating DDL");
         ddlValidator.validate(ddlStmt);
     }
-    
+
     private void executeDdl(
         FarragoSessionDdlValidator ddlValidator,
         FarragoReposTxnContext reposTxnContext,
@@ -971,7 +1016,6 @@ public class FarragoDbSession extends FarragoCompoundAllocation
                     }
                 }
             }
-            
         } finally {
             shutDownRequested = false;
             catalogDumpRequested = false;
@@ -980,10 +1024,11 @@ public class FarragoDbSession extends FarragoCompoundAllocation
             }
         }
     }
-    
-    //~ Inner Classes ---------------------------------------------------------
 
-    private class DdlExecutionVisitor extends DdlVisitor
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class DdlExecutionVisitor
+        extends DdlVisitor
     {
         // implement DdlVisitor
         public void visit(DdlCommitStmt stmt)
@@ -1062,9 +1107,10 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         // implement DdlVisitor
         public void visit(DdlSetSessionImplementationStmt stmt)
         {
-            personality = stmt.newPersonality(
-                FarragoDbSession.this,
-                defaultPersonality);
+            personality =
+                stmt.newPersonality(
+                    FarragoDbSession.this,
+                    defaultPersonality);
         }
 
         // implement DdlVisitor
@@ -1078,6 +1124,5 @@ public class FarragoDbSession extends FarragoCompoundAllocation
         }
     }
 }
-
 
 // End FarragoDbSession.java

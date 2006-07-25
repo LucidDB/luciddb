@@ -22,17 +22,27 @@
 */
 package net.sf.farrago.jdbc;
 
-import java.sql.SQLException;
+import java.sql.*;
+
 
 /**
- * Extends the usual {@link java.sql.Statement} interface
- * with farrago features, viz exposes the farrago statement identifier.
- * 
+ * Extends the usual {@link java.sql.Statement} interface with farrago features,
+ * viz exposes the farrago statement identifier.
+ *
  * @author mberkowitz
  * @version $Id$
- **/
-public interface FarragoStatement extends java.sql.Statement
+ */
+public interface FarragoStatement
+    extends java.sql.Statement
 {
-    /** @return a non-zero identifier, unique for each executing statement */
-    long getFarragoExecutingStmtId() throws SQLException;
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return a non-zero identifier, unique for each executing statement
+     */
+    long getFarragoExecutingStmtId()
+        throws SQLException;
 }
+
+// End FarragoStatement.java

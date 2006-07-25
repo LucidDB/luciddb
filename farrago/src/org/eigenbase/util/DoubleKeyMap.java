@@ -20,16 +20,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.util.HashMap;
+import java.util.*;
 
 
 /**
- * Implements a double key hash table.
- * Use this class when you have two keys mapping to a value. For example.
- * <blockquote><pre><code>
+ * Implements a double key hash table. Use this class when you have two keys
+ * mapping to a value. For example.
+ *
+ * <blockquote>
+ * <pre><code>
  * DoubleKeyMap areaCodeMap = new DoubleKeyMap();
  * areaCodeMap.put("San Francisco", "CA", "415");
  * areaCodeMap.put("Berkeley", "CA", "510");
@@ -37,19 +38,22 @@ import java.util.HashMap;
  * ...
  * Object obj = areaCodeMap.get("San Francisco", "CA");
  * System.out.println(obj); //outputs "415"
- * </code></pre></blockquote>
+ * </code></pre>
+ * </blockquote>
+ *
  * @author Wael Chatila
- * @since Jul 27, 2004
  * @version $Id$
+ * @since Jul 27, 2004
  */
 public class DoubleKeyMap
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private HashMap root;
     private boolean enforceUniquness;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public DoubleKeyMap()
     {
@@ -57,7 +61,7 @@ public class DoubleKeyMap
         enforceUniquness = false;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Enables or disables uniqueness checking.
@@ -69,13 +73,18 @@ public class DoubleKeyMap
 
     /**
      * Inserts a value into the hashmap with keys key0 and key1
-     * <blockquote><pre><code>
+     *
+     * <blockquote>
+     * <pre><code>
      * DoubleKeyMap areaCodeMap = new DoubleKeyMap();
-     * </code></pre></blockquote>
+     * </code></pre>
+     * </blockquote>
+     *
+     * @throws RuntimeException if key pair is already defined when {@link
+     * #enforceUniquness} is set to true
+     *
      * @pre null != key0
      * @pre null != key1
-     * @throws RuntimeException if key pair is already defined when
-     *         {@link #enforceUniquness} is set to true
      */
     public void put(
         Object key0,
@@ -91,32 +100,42 @@ public class DoubleKeyMap
         }
 
         if (enforceUniquness && key0Hash.containsKey(key1)) {
-            throw new RuntimeException("The key-pair <" + key0.toString()
+            throw new RuntimeException(
+                "The key-pair <" + key0.toString()
                 + ", " + key1.toString() + "> is already defined");
         }
         key0Hash.put(key1, value);
     }
 
     /**
-     * Defines a set of key pairs at once. All pairs will
-     * be created with the same value. For Example
-     * <blockquote><pre><code>
+     * Defines a set of key pairs at once. All pairs will be created with the
+     * same value. For Example
+     *
+     * <blockquote>
+     * <pre><code>
      * Object[] 408SantaClaraCountyCities = new Object[]{"San Jose", "Sunnyvale",...};
      * DoubleKeyMap areaCodeMap = new DoubleKeyMap();
      * areaCodeMap.put(408SantaClaraCountyCitites, "CA", "408");
-     * </code></pre></blockquote>
+     * </code></pre>
+     * </blockquote>
+     *
      * is equivalent to
-     * <blockquote><pre><code>
+     *
+     * <blockquote>
+     * <pre><code>
      * DoubleKeyMap areaCodeMap = new DoubleKeyMap();
      * areaCodeMap.put("San Jose", "CA", "408");
      * areaCodeMap.put("Sunnyvale", "CA", "408");
      * ...
-     * </code></pre></blockquote>
+     * </code></pre>
+     * </blockquote>
+     *
+     * @throws RuntimeException if key pairs are already defined when {@link
+     * #enforceUniquness} is set to true
+     *
      * @pre null != key0s
      * @pre null != key1
      * @pre null != keys0[i] for all 0<= i <= keys0.length
-     * @throws RuntimeException if key pairs are already defined when
-     *         {@link #enforceUniquness} is set to true
      */
     public void put(
         Object [] keys0,
@@ -131,15 +150,16 @@ public class DoubleKeyMap
     }
 
     /**
-     * Defines a set of key pairs at once. All pairs will
-     * be created with the same value.
-     * @see {@link #put(java.lang.Object[], java.lang.Object, java.lang.Object)}
+     * Defines a set of key pairs at once. All pairs will be created with the
+     * same value.
      *
+     * @throws RuntimeException if key pairs are already defined when {@link
+     * #enforceUniquness} is set to true
+     *
+     * @see {@link #put(java.lang.Object[], java.lang.Object, java.lang.Object)}
      * @pre null != key0
      * @pre null != key1s
      * @pre null != keys1[i] for all 0<= i <= keys1.length
-     * @throws RuntimeException if key pairs are already defined when
-     *         {@link #enforceUniquness} is set to true
      */
     public void put(
         Object key0,
@@ -154,30 +174,39 @@ public class DoubleKeyMap
     }
 
     /**
-     * Defines a set of key pairs at once. All pairs will
-     * be created with the same value. For Example
-     * <blockquote><pre><code>
+     * Defines a set of key pairs at once. All pairs will be created with the
+     * same value. For Example
+     *
+     * <blockquote>
+     * <pre><code>
      * Object[] a = new Object[]{objA0, objA1};
      * Object[] b = new Object[]{objB0, objB1, objB2};
      * Object v = "value";
      * DoubleKeyMap dblMap = new DoubleKeyMap();
      * dblMap.put(a, b, v);
-     * </code></pre></blockquote>
+     * </code></pre>
+     * </blockquote>
+     *
      * is equivalent to
-     * <blockquote><pre><code>
+     *
+     * <blockquote>
+     * <pre><code>
      * dblMap.put(objA0, objB0, v);
      * dblMap.put(objA0, objB1, v);
      * dblMap.put(objA0, objB2, v);
      * dblMap.put(objA1, objB0, v);
      * dblMap.put(objA1, objB1, v);
      * dblMap.put(objA1, objB2, v);
-     * </code></pre></blockquote>
+     * </code></pre>
+     * </blockquote>
+     *
+     * @throws RuntimeException if key pairs are already defined when {@link
+     * #enforceUniquness} is set to true
+     *
      * @pre null != key0s
      * @pre null != key1s
      * @pre null != keys0[i] for all 0<= i <= keys0.length
      * @pre null != keys1[i] for all 0<= i <= keys1.length
-     * @throws RuntimeException if key pairs are already defined when
-     *         {@link #enforceUniquness} is set to true
      */
     public void put(
         Object [] keys0,
@@ -193,10 +222,11 @@ public class DoubleKeyMap
     }
 
     /**
-     * @pre null != key0
-     * @pre null != key1
      * @return Returns the value inserted with the key pair (key0, key1).
      * Returns null if key pair not defined or the value was inserted with null
+     *
+     * @pre null != key0
+     * @pre null != key1
      */
     public Object get(
         Object key0,
@@ -210,3 +240,5 @@ public class DoubleKeyMap
         return key0Hash.get(key1);
     }
 }
+
+// End DoubleKeyMap.java

@@ -27,27 +27,29 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlStmt represents the output of DDL statement parsing.  Most DDL statements
- * update the catalog directly as they are parsed.  DdlStmt does not duplicate
+ * DdlStmt represents the output of DDL statement parsing. Most DDL statements
+ * update the catalog directly as they are parsed. DdlStmt does not duplicate
  * the information written to the catalog; it only references and annotates it.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlStmt implements FarragoSessionDdlStmt
+public abstract class DdlStmt
+    implements FarragoSessionDdlStmt
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final CwmModelElement modelElement;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected DdlStmt(CwmModelElement modelElement)
     {
         this.modelElement = modelElement;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionDdlStmt
     public CwmModelElement getModelElement()
@@ -92,6 +94,5 @@ public abstract class DdlStmt implements FarragoSessionDdlStmt
      */
     public abstract void visit(DdlVisitor visitor);
 }
-
 
 // End DdlStmt.java

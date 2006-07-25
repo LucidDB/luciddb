@@ -20,40 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
 import java.util.*;
 
-import org.eigenbase.test.EigenbaseTestCase;
+import org.eigenbase.test.*;
 
 
 /**
  * <code>BufferedIterator</code> converts a regular iterator into one which
  * implements {@link Iterable} (and {@link Enumeration} for good measure).
  *
- * <p>
- * <i>Implementation note</i>: The first time you read from it, it duplicates
+ * <p><i>Implementation note</i>: The first time you read from it, it duplicates
  * objects into a list. The next time, it creates an iterator from that list.
- * The implementation handles infinite iterators gracefully: it copies
- * objects onto the replay list only when they are requested for the first
- * time.
- * </p>
+ * The implementation handles infinite iterators gracefully: it copies objects
+ * onto the replay list only when they are requested for the first time.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 26 April, 2002
  */
-public class BufferedIterator implements Iterator, Iterable, Enumeration
+public class BufferedIterator
+    implements Iterator,
+        Iterable,
+        Enumeration
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private Clonerator clonerator;
     private Iterator iterator;
     private List list;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public BufferedIterator(Iterator iterator)
     {
@@ -62,7 +61,7 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
         this.iterator = clonerator;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement Enumeration
     public boolean hasMoreElements()
@@ -119,13 +118,14 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
             // read later stuff from the clonerator.
             iterator =
                 new CompoundIterator(
-                    new Iterator [] { list.iterator(), clonerator });
+                    new Iterator[] { list.iterator(), clonerator });
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    public static class Test extends EigenbaseTestCase
+    public static class Test
+        extends EigenbaseTestCase
     {
         public Test(String s)
             throws Exception
@@ -137,7 +137,7 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
         // test BufferedIterator
         public void testBufferedIterator()
         {
-            String [] abc = new String [] { "a", "b", "c" };
+            String [] abc = new String[] { "a", "b", "c" };
             Iterator source = makeIterator(abc);
             BufferedIterator iterator = new BufferedIterator(source);
             assertTrue(iterator.hasNext());
@@ -160,7 +160,7 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
         // test Clonerator
         public void testClonerator()
         {
-            String [] ab = new String [] { "a", "b" };
+            String [] ab = new String[] { "a", "b" };
             Iterator source = makeIterator(ab);
             List list = new ArrayList();
             Clonerator clonerator = new Clonerator(source, list);
@@ -172,7 +172,8 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
     /**
      * Reads from an iterator, duplicating elements into a list as it does so.
      */
-    private static class Clonerator implements Iterator
+    private static class Clonerator
+        implements Iterator
     {
         Iterator iterator;
         List list;
@@ -203,6 +204,5 @@ public class BufferedIterator implements Iterator, Iterable, Enumeration
         }
     }
 }
-
 
 // End BufferedIterator.java

@@ -22,40 +22,41 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
+
 import java.sql.*;
+
 import java.util.*;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.util.logging.*;
 
 import junit.framework.*;
 
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.jdbc.client.*;
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.server.*;
-import net.sf.farrago.test.jdbc.FarragoEngineDriverTest;
-import net.sf.farrago.resource.FarragoResource;
-import org.eigenbase.util14.ConnectStringParser;
-import org.eigenbase.util.Util;
+
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
- * FarragoServerTest tests Farrago client/server connections via RmiJdbc.  It
- * does not inherit from FarragoTestCase since that pulls in an embedded
- * engine.
+ * FarragoServerTest tests Farrago client/server connections via RmiJdbc. It
+ * does not inherit from FarragoTestCase since that pulls in an embedded engine.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoServerTest extends TestCase
+public class FarragoServerTest
+    extends TestCase
 {
-    //~ Instance fields -------------------------------------------------------
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoAbstractServer server;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Initializes a new FarragoServerTest.
@@ -68,7 +69,7 @@ public class FarragoServerTest extends TestCase
         super(testCaseName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected void setUp()
         throws Exception
@@ -86,7 +87,7 @@ public class FarragoServerTest extends TestCase
     {
         return new FarragoJdbcClientDriver();
     }
-    
+
     public void testServer()
         throws Exception
     {
@@ -97,11 +98,14 @@ public class FarragoServerTest extends TestCase
         // NOTE: can't call DriverManager.getConnection here, because that
         // would deadlock
         FarragoAbstractJdbcDriver clientDriver = newClientDriver();
+
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
         String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
-        Connection connection = clientDriver.connect(uri, new Properties());
+        Connection connection = clientDriver.connect(
+                uri,
+                new Properties());
         boolean stopped;
         try {
             connection.createStatement().execute("set schema 'sales'");
@@ -122,23 +126,27 @@ public class FarragoServerTest extends TestCase
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
         FarragoAbstractJdbcDriver clientDriver = newClientDriver();
+
         // N.B. it is better practice to put the login credentials in the
         // Properties object rather than on the URL, but this is a convenient
         // test of the client driver's connect string processing.
         String uri = clientDriver.getUrlPrefix() + "localhost;user=sa";
-        Connection connection = clientDriver.connect(uri, new Properties());
+        Connection connection = clientDriver.connect(
+                uri,
+                new Properties());
         connection.createStatement().execute("set schema 'sales'");
         killServer();
     }
 
     /**
-     * Tests client driver connection URI parameters.
-     * The underlying connect-string processing is tested by
-     * {@link FarragoEngineDriverTest#testConnectStrings} using the engine driver.
-     * This method adds tests of client connections and
-     * parameter precedence with the client driver.
+     * Tests client driver connection URI parameters. The underlying
+     * connect-string processing is tested by {@link
+     * FarragoEngineDriverTest#testConnectStrings} using the engine driver. This
+     * method adds tests of client connections and parameter precedence with the
+     * client driver.
      */
-    public void testConnectionParams() throws Throwable
+    public void testConnectionParams()
+        throws Throwable
     {
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
@@ -155,21 +163,26 @@ public class FarragoServerTest extends TestCase
             fail("Farrago connect without user credentials");
         } catch (SQLException e) {
             FarragoJdbcTest.assertExceptionMatches(
-                e, ".*Login failed.*");
+                e,
+                ".*Login failed.*");
         }
         Properties auth = new Properties();
         auth.setProperty("user", "sa");
         auth.setProperty("password", "");
-        String loginUri = uri +";" +ConnectStringParser.getParamString(auth);
+        String loginUri = uri + ";" + ConnectStringParser.getParamString(auth);
         conn = clientDriver.connect(loginUri, empty);
         assertNotNull("null connection", conn);
-        assertEquals("empty props changed", 0, empty.size());
+        assertEquals(
+            "empty props changed",
+            0,
+            empty.size());
         conn.close();
 
         // test that parameter precedence works
         Properties unauth = new Properties();
         unauth.setProperty("user", "unauthorized user");
         unauth.setProperty("password", "invalid password");
+
         // connect will fail unless loginUri attributes take precedence
         try {
             conn = clientDriver.connect(uri, unauth);
@@ -186,25 +199,31 @@ public class FarragoServerTest extends TestCase
         assertTrue(stopped);
     }
 
-    /** Tests error message when a 2nd server is started. */
-    public void testTwoServers() throws Exception
+    /**
+     * Tests error message when a 2nd server is started.
+     */
+    public void testTwoServers()
+        throws Exception
     {
         server = newServer();
         FarragoJdbcEngineDriver serverDriver = new FarragoJdbcEngineDriver();
         server.start(serverDriver);
 
         // try to start another server with sqllineEngine script
-        String[] cmd = {"./sqllineEngine"};
+        String [] cmd = { "./sqllineEngine" };
         StringReader appInput = new StringReader("!quit\n");
         StringWriter appOutput = new StringWriter();
         Logger logger = Logger.getAnonymousLogger();
         int status = Util.runApplication(cmd, logger, appInput, appOutput);
         StringBuffer buf = appOutput.getBuffer();
-        if (buf.length() > 0 && logger != null) {    // dump command output
+        if ((buf.length() > 0) && (logger != null)) { // dump command output
+
             // make output visible at default logging level if test failed
-            Level level = status == 0? Level.FINE : Level.INFO;
+            Level level = (status == 0) ? Level.FINE : Level.INFO;
             logger.log(level, "***** command output *****");
-            logger.log(level, buf.toString());
+            logger.log(
+                level,
+                buf.toString());
             logger.log(level, "***** end of output *****");
         }
         assertEquals("sqllineEngine status", 0, status);
@@ -245,6 +264,5 @@ public class FarragoServerTest extends TestCase
         }
     }
 }
-
 
 // End FarragoServerTest.java

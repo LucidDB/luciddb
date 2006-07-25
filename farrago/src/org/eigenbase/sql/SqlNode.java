@@ -20,38 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.pretty.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
  * A <code>SqlNode</code> is a SQL parse tree. It may be an {@link SqlOperator
- * operator}, {@link SqlLiteral literal}, {@link SqlIdentifier identifier},
- * and so forth.
+ * operator}, {@link SqlLiteral literal}, {@link SqlIdentifier identifier}, and
+ * so forth.
  *
  * @author jhyde
  * @version $Id$
  * @since Dec 12, 2003
  */
-public abstract class SqlNode implements Cloneable
+public abstract class SqlNode
+    implements Cloneable
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    public static final SqlNode [] emptyArray = new SqlNode[0];
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlParserPos pos;
 
-    public static final SqlNode[] emptyArray = new SqlNode[0];
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a node.
@@ -64,7 +65,7 @@ public abstract class SqlNode implements Cloneable
         this.pos = pos;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
@@ -97,8 +98,8 @@ public abstract class SqlNode implements Cloneable
     }
 
     /**
-     * Returns the type of node this is, or {@link org.eigenbase.sql.SqlKind#Other} if it's
-     * nothing special.
+     * Returns the type of node this is, or {@link
+     * org.eigenbase.sql.SqlKind#Other} if it's nothing special.
      *
      * @return a {@link SqlKind} value, never null
      */
@@ -127,11 +128,14 @@ public abstract class SqlNode implements Cloneable
     /**
      * Returns the SQL text of the tree of which this <code>SqlNode</code> is
      * the root.
-     * @param dialect
-     * @param forceParens wraps all expressions in parentheses; good for parse test,
-     *   but false by default.
      *
-     * <p>Typical return values are:<ul>
+     * @param dialect
+     * @param forceParens wraps all expressions in parentheses; good for parse
+     * test, but false by default.
+     *
+     * <p>Typical return values are:
+     *
+     * <ul>
      * <li>'It''s a bird!'</li>
      * <li>NULL</li>
      * <li>12.3</li>
@@ -156,15 +160,14 @@ public abstract class SqlNode implements Cloneable
         return toSqlString(dialect, false);
     }
 
-
     /**
      * Writes a SQL representation of this node to a writer.
      *
-     * <p>The <code>leftPrec</code> and <code>rightPrec</code> parameters
-     * give us enough context to decide whether we need to enclose the
-     * expression in parentheses. For example, we need parentheses around
-     * "2 + 3" if preceded by "5 *". This is because the precedence of the "*"
-     * operator is greater than the precedence of the "+" operator.
+     * <p>The <code>leftPrec</code> and <code>rightPrec</code> parameters give
+     * us enough context to decide whether we need to enclose the expression in
+     * parentheses. For example, we need parentheses around "2 + 3" if preceded
+     * by "5 *". This is because the precedence of the "*" operator is greater
+     * than the precedence of the "+" operator.
      *
      * <p>The algorithm handles left- and right-associative operators by giving
      * them slightly different left- and right-precedence.
@@ -176,7 +179,7 @@ public abstract class SqlNode implements Cloneable
      *
      * @param writer Target writer
      * @param leftPrec The precedence of the {@link SqlNode} immediately
-     *   preceding this node in a depth-first scan of the parse tree
+     * preceding this node in a depth-first scan of the parse tree
      * @param rightPrec The precedence of the {@link SqlNode} immediately
      */
     public abstract void unparse(
@@ -192,10 +195,9 @@ public abstract class SqlNode implements Cloneable
     /**
      * Validates this node.
      *
-     * <p>The typical implementation of this method will make a callback to
-     * the validator appropriate to the node type and context. The validator
-     * has methods such as {@link SqlValidator#validateLiteral} for these
-     * purposes.
+     * <p>The typical implementation of this method will make a callback to the
+     * validator appropriate to the node type and context. The validator has
+     * methods such as {@link SqlValidator#validateLiteral} for these purposes.
      *
      * @param scope Validator
      */
@@ -204,14 +206,14 @@ public abstract class SqlNode implements Cloneable
         SqlValidatorScope scope);
 
     /**
-     * Lists all the valid alternatives for this node if the parse position
-     * of the node matches that of pos.  Only implemented now for
-     * SqlCall and SqlOperator.
+     * Lists all the valid alternatives for this node if the parse position of
+     * the node matches that of pos. Only implemented now for SqlCall and
+     * SqlOperator.
      *
      * @param validator Validator
      * @param scope Validation scope
-     * @param pos SqlParserPos indicating the cursor position at which
-     * competion hints are requested for
+     * @param pos SqlParserPos indicating the cursor position at which competion
+     * hints are requested for
      * @param hintList list of valid options
      */
     public void findValidOptions(
@@ -224,8 +226,8 @@ public abstract class SqlNode implements Cloneable
     }
 
     /**
-     * Populates a list of all the valid alternatives for this node.
-     * Only implemented now for {@link SqlIdentifier}.
+     * Populates a list of all the valid alternatives for this node. Only
+     * implemented now for {@link SqlIdentifier}.
      *
      * @param validator Validator
      * @param scope Validation scope
@@ -242,8 +244,8 @@ public abstract class SqlNode implements Cloneable
     /**
      * Validates this node in an expression context.
      *
-     * <p>Usually, this method does much the same as {@link #validate},
-     * but a {@link SqlIdentifier} can occur in expression and non-expression
+     * <p>Usually, this method does much the same as {@link #validate}, but a
+     * {@link SqlIdentifier} can occur in expression and non-expression
      * contexts.
      */
     public void validateExpr(
@@ -257,9 +259,9 @@ public abstract class SqlNode implements Cloneable
     /**
      * Accepts a generic visitor.
      *
-     * <p>Implementations of this method in subtypes
-     * simply call the appropriate <code>visit</code> method on the
-     * {@link org.eigenbase.sql.util.SqlVisitor visitor object}.
+     * <p>Implementations of this method in subtypes simply call the appropriate
+     * <code>visit</code> method on the {@link org.eigenbase.sql.util.SqlVisitor
+     * visitor object}.
      *
      * <p>The type parameter <code>R</code> must be consistent with the type
      * parameter of the visitor.
@@ -268,26 +270,29 @@ public abstract class SqlNode implements Cloneable
 
     /**
      * Returns whether this node is structurally equivalent to another node.
-     * Some examples:<ul>
+     * Some examples:
      *
+     * <ul>
      * <li>1 + 2 is structurally equivalent to 1 + 2</li>
-     * <li>1 + 2 + 3 is structurally equivalent to (1 + 2) + 3, but not to
-     *     1 + (2 + 3), because the '+' operator is left-associative</li>
+     * <li>1 + 2 + 3 is structurally equivalent to (1 + 2) + 3, but not to 1 +
+     * (2 + 3), because the '+' operator is left-associative</li>
      * </ul>
      */
     public abstract boolean equalsDeep(SqlNode node, boolean fail);
 
     /**
-     * Returns whether two nodes are equal (using {@link #equalsDeep(SqlNode,boolean)})
-     * or are both null.
+     * Returns whether two nodes are equal (using {@link
+     * #equalsDeep(SqlNode,boolean)}) or are both null.
      *
      * @param node1 First expression
      * @param node2 Second expression
      * @param fail Whether to throw {@link AssertionError} if expressions are
-     *             not equal
+     * not equal
      */
     public static boolean equalDeep(
-        SqlNode node1, SqlNode node2, boolean fail)
+        SqlNode node1,
+        SqlNode node2,
+        boolean fail)
     {
         if (node1 == null) {
             return node2 == null;
@@ -310,6 +315,5 @@ public abstract class SqlNode implements Cloneable
         return false;
     }
 }
-
 
 // End SqlNode.java

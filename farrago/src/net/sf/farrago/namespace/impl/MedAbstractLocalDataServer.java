@@ -22,29 +22,32 @@
 */
 package net.sf.farrago.namespace.impl;
 
-import java.util.*;
 import java.sql.*;
 
+import java.util.*;
+
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 
-import net.sf.farrago.fem.med.*;
 
 /**
- * MedAbstractLocalDataServer is an abstract base class for
- * implementations of the {@link FarragoMedLocalDataServer} interface.
+ * MedAbstractLocalDataServer is an abstract base class for implementations of
+ * the {@link FarragoMedLocalDataServer} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
+public abstract class MedAbstractLocalDataServer
+    extends MedAbstractDataServer
     implements FarragoMedLocalDataServer
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FennelDbHandle fennelDbHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected MedAbstractLocalDataServer(
         String serverMofId,
@@ -53,7 +56,7 @@ public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
         super(serverMofId, props);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the Fennel database handle to use for accessing local storage
@@ -75,7 +78,7 @@ public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
     {
         this.fennelDbHandle = fennelDbHandle;
     }
-    
+
     // implement FarragoMedLocalDataServer
     public void validateTableDefinition(
         FemLocalTable table,
@@ -85,6 +88,5 @@ public abstract class MedAbstractLocalDataServer extends MedAbstractDataServer
         // by default, no special validation rules
     }
 }
-
 
 // End MedAbstractLocalDataServer.java

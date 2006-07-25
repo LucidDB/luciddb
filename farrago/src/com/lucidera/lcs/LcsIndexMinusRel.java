@@ -27,39 +27,43 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * LcsIndexMinusRel is a relation for "subtracting" the 2nd through Nth inputs
- * from the first input.  The input to this relation must be more than one.
+ * from the first input. The input to this relation must be more than one.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-class LcsIndexMinusRel extends LcsIndexBitOpRel
+class LcsIndexMinusRel
+    extends LcsIndexBitOpRel
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public LcsIndexMinusRel(
         RelOptCluster cluster,
-        RelNode[] inputs,
+        RelNode [] inputs,
         LcsTable lcsTable,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId)
     {
         super(cluster, inputs, lcsTable, startRidParamId, rowLimitParamId);
     }
-    
-    //~ Methods ---------------------------------------------------------------
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public Object clone()
     {
-        return new LcsIndexMinusRel(
-            getCluster(),
-            RelOptUtil.clone(getInputs()),
-            lcsTable,
-            startRidParamId,
-            rowLimitParamId);
+        return
+            new LcsIndexMinusRel(
+                getCluster(),
+                RelOptUtil.clone(getInputs()),
+                lcsTable,
+                startRidParamId,
+                rowLimitParamId);
     }
-    
+
     // implement RelNode
     public double getRows()
     {
@@ -68,18 +72,18 @@ class LcsIndexMinusRel extends LcsIndexBitOpRel
         double anchorRows = RelMetadataQuery.getRowCount(inputs[0]);
         return anchorRows / inputs.length;
     }
-    
+
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmMinusStreamDef minusStream = 
+        FemLbmMinusStreamDef minusStream =
             lcsTable.getIndexGuide().newBitmapMinus(
                 implementor.translateParamId(startRidParamId),
                 implementor.translateParamId(rowLimitParamId),
                 inputs[0]);
-        
+
         setBitOpChildStreams(implementor, minusStream);
-        
-        return minusStream;     
+
+        return minusStream;
     }
 }
 

@@ -37,20 +37,22 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoOJRexTruthTestImplementor extends FarragoOJRexImplementor
+public class FarragoOJRexTruthTestImplementor
+    extends FarragoOJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private boolean isTrue;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexTruthTestImplementor(boolean isTrue)
     {
         this.isTrue = isTrue;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -64,15 +66,16 @@ public class FarragoOJRexTruthTestImplementor extends FarragoOJRexImplementor
                 new FieldAccess(operand, NullablePrimitive.VALUE_FIELD_NAME);
             nonNull = maybeNegate(nonNull);
 
-            return new BinaryExpression(
-                new UnaryExpression(
-                    UnaryExpression.NOT,
-                    new MethodCall(
-                        operand,
-                        NullableValue.NULL_IND_ACCESSOR_NAME,
-                        new ExpressionList())),
-                BinaryExpression.LOGICAL_AND,
-                nonNull);
+            return
+                new BinaryExpression(
+                    new UnaryExpression(
+                        UnaryExpression.NOT,
+                        new MethodCall(
+                            operand,
+                            NullableValue.NULL_IND_ACCESSOR_NAME,
+                            new ExpressionList())),
+                    BinaryExpression.LOGICAL_AND,
+                    nonNull);
         } else {
             return maybeNegate(operand);
         }
@@ -87,6 +90,5 @@ public class FarragoOJRexTruthTestImplementor extends FarragoOJRexImplementor
         }
     }
 }
-
 
 // End FarragoOJRexTruthTestImplementor.java

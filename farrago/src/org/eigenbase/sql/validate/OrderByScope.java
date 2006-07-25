@@ -21,18 +21,18 @@
 */
 package org.eigenbase.sql.validate;
 
-import static org.eigenbase.sql.validate.SqlValidatorUtil.lookupField;
-import org.eigenbase.sql.*;
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
- * Represents the name-resolution context for expressions in an ORDER BY
- * clause.
+ * Represents the name-resolution context for expressions in an ORDER BY clause.
  *
- * <p>In some dialects of SQL, the ORDER BY clause can reference column
- * aliases in the SELECT clause. For example, the query
+ * <p>In some dialects of SQL, the ORDER BY clause can reference column aliases
+ * in the SELECT clause. For example, the query
  *
  * <blockquote><code>SELECT empno AS x<br/>
  * FROM emp<br/>
@@ -44,10 +44,16 @@ import java.util.List;
  * @version $Id$
  * @since Mar 25, 2003
  */
-public class OrderByScope extends DelegatingScope
+public class OrderByScope
+    extends DelegatingScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlNodeList orderList;
     private final SqlSelect select;
+
+    //~ Constructors -----------------------------------------------------------
 
     OrderByScope(
         SqlValidatorScope parent,
@@ -59,13 +65,16 @@ public class OrderByScope extends DelegatingScope
         this.select = select;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode getNode()
     {
         return orderList;
     }
 
     public void findAllColumnNames(
-        String parentObjName, List<SqlMoniker> result)
+        String parentObjName,
+        List<SqlMoniker> result)
     {
         final SqlValidatorNamespace ns = validator.getNamespace(select);
         addColumnNames(ns, result);
@@ -74,13 +83,13 @@ public class OrderByScope extends DelegatingScope
     public SqlIdentifier fullyQualify(SqlIdentifier identifier)
     {
         // If it's a simple identifier, look for an alias.
-        if (identifier.isSimple() &&
-            validator.getCompatible().isSortByAlias())
-        {
+        if (identifier.isSimple()
+            && validator.getCompatible().isSortByAlias()) {
             String name = identifier.names[0];
-            final SqlValidatorNamespace selectNs = validator.getNamespace(select);
+            final SqlValidatorNamespace selectNs =
+                validator.getNamespace(select);
             final RelDataType rowType = selectNs.getRowType();
-            if (lookupField(rowType, name) >= 0) {
+            if (SqlValidatorUtil.lookupField(rowType, name) >= 0) {
                 return identifier;
             }
         }
@@ -110,4 +119,3 @@ public class OrderByScope extends DelegatingScope
 }
 
 // End OrderByScope.java
-

@@ -21,30 +21,39 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.SqlBinaryOperator;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * An operator which performs set operations on multisets, such as
- * "MULTISET UNION ALL".
+ * An operator which performs set operations on multisets, such as "MULTISET
+ * UNION ALL".
  *
- * <p>Not to be confused with {@link SqlMultisetValueConstructor} or
- * {@link SqlMultisetQueryConstructor}.
+ * <p>Not to be confused with {@link SqlMultisetValueConstructor} or {@link
+ * SqlMultisetQueryConstructor}.
  *
- * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a
- * hidden operand. Then we can obsolete this class.
+ * <p>todo: Represent the ALL keyword to MULTISET UNION ALL etc. as a hidden
+ * operand. Then we can obsolete this class.
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlMultisetSetOperator extends SqlBinaryOperator
+public class SqlMultisetSetOperator
+    extends SqlBinaryOperator
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean all;
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlMultisetSetOperator(String name, int prec, boolean all)
     {
-        super(name, SqlKind.Other, prec, true,
+        super(name,
+            SqlKind.Other,
+            prec,
+            true,
             SqlTypeStrategies.rtiNullableMultiset,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMultisetX2);

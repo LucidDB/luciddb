@@ -20,49 +20,53 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.javac;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.StringTokenizer;
+import java.util.*;
+
 
 /**
  * A <code>JavaCompilerArgs</code> holds the arguments for a {@link
  * JavaCompiler}.
  *
- * <p> Specific implementations of {@link JavaCompiler} may override
- * <code>set<i>Argument</i></code> methods to store arguments in a different
- * fashion, or may throw {@link UnsupportedOperationException} to indicate that
- * the compiler does not support that argument.
+ * <p>Specific implementations of {@link JavaCompiler} may override <code>
+ * set<i>Argument</i></code> methods to store arguments in a different fashion,
+ * or may throw {@link UnsupportedOperationException} to indicate that the
+ * compiler does not support that argument.
  *
  * @author jhyde
- * @since Jun 2, 2002
  * @version $Id$
+ * @since Jun 2, 2002
  */
 public class JavaCompilerArgs
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     ArrayList argsList = new ArrayList();
     ArrayList fileNameList = new ArrayList();
 
     ClassLoader classLoader;
 
+    //~ Constructors -----------------------------------------------------------
+
     public JavaCompilerArgs()
     {
         classLoader = getClass().getClassLoader();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public void clear()
     {
         fileNameList.clear();
     }
-    
+
     /**
      * Sets the arguments by parsing a standard java argument string.
      *
-     * <p>A typical such string is
-     * <code>"-classpath <i>classpath</i> -d <i>dir</i> -verbose
-     * [<i>file</i>...]"</code>
+     * <p>A typical such string is <code>"-classpath <i>classpath</i> -d <i>
+     * dir</i> -verbose [<i>file</i>...]"</code>
      */
     public void setString(String args)
     {
@@ -71,17 +75,15 @@ public class JavaCompilerArgs
         while (tok.hasMoreTokens()) {
             list.add(tok.nextToken());
         }
-        setStringArray((String[]) list.toArray(new String[list.size()]));
+        setStringArray((String []) list.toArray(new String[list.size()]));
     }
-    
+
     /**
-     * Sets the arguments by parsing a standard java argument string.
-     *
-     * A typical such string is
-     * <code>"-classpath <i>classpath</i> -d <i>dir</i> -verbose
+     * Sets the arguments by parsing a standard java argument string. A typical
+     * such string is <code>"-classpath <i>classpath</i> -d <i>dir</i> -verbose
      * [<i>file</i>...]"</code>
      */
-    public void setStringArray(String[] args)
+    public void setStringArray(String [] args)
     {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -100,53 +102,53 @@ public class JavaCompilerArgs
             }
         }
     }
-    
-    public String[] getStringArray()
+
+    public String [] getStringArray()
     {
         for (Iterator fileNames = fileNameList.iterator();
-                fileNames.hasNext();) {
+            fileNames.hasNext();) {
             String fileName = (String) fileNames.next();
             argsList.add(fileName);
         }
-        return (String[]) argsList.toArray(new String[0]);
+        return (String []) argsList.toArray(new String[0]);
     }
-    
+
     public void addFile(String fileName)
     {
         fileNameList.add(fileName);
     }
-    
-    public String[] getFileNames()
+
+    public String [] getFileNames()
     {
-        return (String[]) fileNameList.toArray(new String[0]);
+        return (String []) fileNameList.toArray(new String[0]);
     }
-    
+
     public void setVerbose(boolean verbose)
     {
         if (verbose) {
             argsList.add("-verbose");
         }
     }
-    
+
     public void setDestdir(String destdir)
     {
         argsList.add("-d");
         argsList.add(destdir);
     }
-    
+
     public void setClasspath(String classpath)
     {
         argsList.add("-classpath");
         argsList.add(classpath);
     }
-    
+
     public void setDebugInfo(int i)
     {
         if (i > 0) {
             argsList.add("-g=" + i);
         }
     }
-    
+
     /**
      * Sets the source code (that is, the full java program, generally starting
      * with something like "package com.foo.bar;") and the file name.
@@ -154,14 +156,14 @@ public class JavaCompilerArgs
      * <p>This method is optional. It only works if the compiler supports
      * in-memory compilation. If this compiler does not return in-memory
      * compilation (which the base class does not), {@link #supportsSetSource}
-     * returns false, and this method throws
-     * {@link UnsupportedOperationException}.
+     * returns false, and this method throws {@link
+     * UnsupportedOperationException}.
      */
     public void setSource(String source, String fileName)
     {
         throw new UnsupportedOperationException();
     }
-    
+
     /**
      * Returns whether {@link #setSource} will work.
      */
@@ -169,7 +171,7 @@ public class JavaCompilerArgs
     {
         return false;
     }
-    
+
     public void setFullClassName(String fullClassName)
     {
         // NOTE jvs 28-June-2004: I added this in order to support Janino's

@@ -34,9 +34,11 @@ import net.sf.farrago.fem.fennel.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelCmdExecutorImpl implements FennelCmdExecutor
+public class FennelCmdExecutorImpl
+    implements FennelCmdExecutor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FennelCmdExecutor
     public long executeJavaCmd(FemCmd cmd)
@@ -45,6 +47,5 @@ public class FennelCmdExecutorImpl implements FennelCmdExecutor
         return FennelStorage.executeJavaCmd(cmd);
     }
 }
-
 
 // End FennelCmdExecutorImpl.java

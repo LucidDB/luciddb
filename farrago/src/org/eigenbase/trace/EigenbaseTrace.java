@@ -20,19 +20,17 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.trace;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.oj.stmt.OJPreparingStmt;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.oj.util.OJClassMap;
-import org.eigenbase.util.property.Property;
-import org.eigenbase.runtime.CompoundIterator;
-import org.eigenbase.jmi.JmiChangeSet;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.oj.stmt.*;
+import org.eigenbase.oj.util.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.property.*;
+
 
 /**
  * Contains all of the {@link java.util.logging.Logger tracers} used within
@@ -40,46 +38,48 @@ import org.eigenbase.jmi.JmiChangeSet;
  *
  * <h3>Note to developers</h3>
  *
- * <p>Please ensure that every tracer used in org.eigenbase is
- * added to this class as a <em>public static final</em> member called
- * <code><i>component</i>Tracer</code>. For example,
- * {@link #getPlannerTracer} is the tracer used by all classes which take part
- * in the query planning process.
+ * <p>Please ensure that every tracer used in org.eigenbase is added to this
+ * class as a <em>public static final</em> member called <code>
+ * <i>component</i>Tracer</code>. For example, {@link #getPlannerTracer} is the
+ * tracer used by all classes which take part in the query planning process.
  *
  * <p>The javadoc in this file is the primary source of information on what
- * tracers are available, so the javadoc against each tracer member must be
- * an up-to-date description of what that tracer does. Be sure to describe what
+ * tracers are available, so the javadoc against each tracer member must be an
+ * up-to-date description of what that tracer does. Be sure to describe what
  * {@link Level tracing level} is required to obtain each category of tracing.
  *
  * <p>In the class where the tracer is used, create a <em>private</em> (or
- * perhaps <em>protected</em>) <em>static final</em> member called
- * <code>tracer</code>.
+ * perhaps <em>protected</em>) <em>static final</em> member called <code>
+ * tracer</code>.
  *
  * @author jhyde
- * @since May 24, 2004
  * @version $Id$
- **/
+ * @since May 24, 2004
+ */
 public abstract class EigenbaseTrace
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * The "org.eigenbase.sql.parser" tracer reports parser events in
-     * {@link org.eigenbase.sql.parser.SqlParser} and
-     * other classes (at level {@link Level#FINE} or higher).
+     * The "org.eigenbase.sql.parser" tracer reports parser events in {@link
+     * org.eigenbase.sql.parser.SqlParser} and other classes (at level {@link
+     * Level#FINE} or higher).
      */
     public static final Logger parserTracer = getParserTracer();
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * The "org.eigenbase.relopt.RelOptPlanner" tracer prints the query
      * optimization process.
      *
-     * <p>Levels:<ul>
+     * <p>Levels:
+     *
+     * <ul>
      * <li>{@link Level#FINE} prints rules as they fire;
      * <li>{@link Level#FINER} prints and validates the whole expression pool
-     *     and rule queue as each rule fires;
+     * and rule queue as each rule fires;
      * <li>{@link Level#FINEST} prints finer details like rule importances.
      * </ul>
      */
@@ -98,8 +98,8 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.oj.rel.JavaRelImplementor" tracer reports
-     * when expressions are bound to variables ({@link Level#FINE})
+     * The "org.eigenbase.oj.rel.JavaRelImplementor" tracer reports when
+     * expressions are bound to variables ({@link Level#FINE})
      */
     public static Logger getRelImplementorTracer()
     {
@@ -107,8 +107,8 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The tracer "org.eigenbase.sql.timing"
-     * traces timing for various stages of query processing.
+     * The tracer "org.eigenbase.sql.timing" traces timing for various stages of
+     * query processing.
      *
      * @see {@link EigenbaseTimingTracer}
      */
@@ -118,26 +118,24 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.sql.parser" tracer reports
-     * parse events.
+     * The "org.eigenbase.sql.parser" tracer reports parse events.
      */
     public static Logger getParserTracer()
     {
         return Logger.getLogger("org.eigenbase.sql.parser");
     }
-    
+
     /**
-     * The "org.eigenbase.jmi.JmiChangeSet" tracer reports
-     * JmiChangeSet events.
+     * The "org.eigenbase.jmi.JmiChangeSet" tracer reports JmiChangeSet events.
      */
     public static Logger getJmiChangeSetTracer()
     {
         return Logger.getLogger("org.eigenbase.jmi.JmiChangeSet");
     }
-    
+
     /**
-     * The "org.eigenbase.oj.util.OJClassMap" tracer reports
-     * when synthetic classes are created ({@link Level#FINE})
+     * The "org.eigenbase.oj.util.OJClassMap" tracer reports when synthetic
+     * classes are created ({@link Level#FINE})
      */
     public static Logger getClassMapTracer()
     {
@@ -145,8 +143,8 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.util.property.Property" tracer reports errors
-     * related to all manner of properties.
+     * The "org.eigenbase.util.property.Property" tracer reports errors related
+     * to all manner of properties.
      */
     public static Logger getPropertyTracer()
     {
@@ -154,8 +152,10 @@ public abstract class EigenbaseTrace
     }
 
     /**
-     * The "org.eigenbase.runtime.CompoundIterator" tracer traces
-     * {@link CompoundIterator}:<ul>
+     * The "org.eigenbase.runtime.CompoundIterator" tracer traces {@link
+     * CompoundIterator}:
+     *
+     * <ul>
      * <li>{@link Level#FINE} shows the transition to the next child Iterator.
      * <li>{@link Level#FINER} shows every element.
      * </ul>
@@ -165,6 +165,5 @@ public abstract class EigenbaseTrace
         return Logger.getLogger(CompoundIterator.class.getName());
     }
 }
-
 
 // End EigenbaseTrace.java

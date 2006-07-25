@@ -20,56 +20,63 @@
 */
 package com.lucidera.farrago.namespace.flatfile;
 
+import com.disruptivetech.farrago.calc.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
-import com.disruptivetech.farrago.calc.*;
 
 /**
- * Constructs a Calculator program for translating text
- * from a flat file into typed data. It is assumed that the text
- * has already been processed for quoting and escape characters.
- * 
+ * Constructs a Calculator program for translating text from a flat file into
+ * typed data. It is assumed that the text has already been processed for
+ * quoting and escape characters.
+ *
  * @author jpham
  * @version $Id$
  */
-public class FlatFileProgramWriter 
+public class FlatFileProgramWriter
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int FLAT_FILE_MAX_NON_CHAR_VALUE_LEN = 255;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     RexBuilder rexBuilder;
     RelDataTypeFactory typeFactory;
     RelNode rel;
 
+    //~ Constructors -----------------------------------------------------------
+
     public FlatFileProgramWriter(
-        RelNode rel) 
+        RelNode rel)
     {
         this.rel = rel;
         rexBuilder = rel.getCluster().getRexBuilder();
-        typeFactory = rexBuilder.getTypeFactory(); 
+        typeFactory = rexBuilder.getTypeFactory();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Given the description of the expected data types,
-     * generates a program for converting text into typed data.
+     * Given the description of the expected data types, generates a program for
+     * converting text into typed data.
      *
-     * <p>
-     * 
-     * First this method infers the description of text columns
-     * required to read the exptected data values. Then it
-     * constructs the casts necessary to perform data conversion.
-     * Date conversions may require special functions.
+     * <p>First this method infers the description of text columns required to
+     * read the exptected data values. Then it constructs the casts necessary to
+     * perform data conversion. Date conversions may require special functions.
      */
-    public RexProgram getProgram(RelDataType rowType) 
+    public RexProgram getProgram(RelDataType rowType)
     {
-        assert(rowType.isStruct());
-        RelDataTypeField[] targetTypes = rowType.getFields();
+        assert (rowType.isStruct());
+        RelDataTypeField [] targetTypes = rowType.getFields();
 
         // infer source text types
-        RelDataType[] sourceTypes = new RelDataType[targetTypes.length];
-        String[] sourceNames = new String[targetTypes.length];
+        RelDataType [] sourceTypes = new RelDataType[targetTypes.length];
+        String [] sourceNames = new String[targetTypes.length];
         for (int i = 0; i < targetTypes.length; i++) {
             RelDataType targetType = targetTypes[i].getType();
             sourceTypes[i] = getTextType(targetType);
@@ -77,12 +84,13 @@ public class FlatFileProgramWriter
         }
         RelDataType inputRowType =
             typeFactory.createStructType(sourceTypes, sourceNames);
-        
+
         // construct rex program
         RexProgramBuilder programBuilder =
             new RexProgramBuilder(inputRowType, rexBuilder);
         for (int i = 0; i < targetTypes.length; i++) {
             RelDataType targetType = targetTypes[i].getType();
+
             // TODO: call dedicated functions for conversion of dates
             programBuilder.addProject(
                 rexBuilder.makeCast(
@@ -95,23 +103,24 @@ public class FlatFileProgramWriter
     }
 
     /**
-     * Relies on a {@link RexToCalcTranslator} to convert a 
-     * Rex program into a Fennel calculator program.
+     * Relies on a {@link RexToCalcTranslator} to convert a Rex program into a
+     * Fennel calculator program.
      */
-    protected String toFennelProgram(RexProgram program) 
+    protected String toFennelProgram(RexProgram program)
     {
         // translate to a fennel calc program
         RexToCalcTranslator translator =
             new RexToCalcTranslator(rexBuilder, rel);
         return translator.generateProgram(
-            program.getInputRowType(), program);
+                program.getInputRowType(),
+                program);
     }
 
     /**
-     * Converts a SQL type into a type that can be used by
-     * a Fennel FlatFileExecStream to read files.
+     * Converts a SQL type into a type that can be used by a Fennel
+     * FlatFileExecStream to read files.
      */
-    private RelDataType getTextType(RelDataType sqlType) 
+    private RelDataType getTextType(RelDataType sqlType)
     {
         int length = FLAT_FILE_MAX_NON_CHAR_VALUE_LEN;
         switch (sqlType.getSqlTypeName().getOrdinal()) {
@@ -142,11 +151,12 @@ public class FlatFileProgramWriter
         case SqlTypeName.Symbol_ordinal:
         case SqlTypeName.Varbinary_ordinal:
         default:
+
             // unsupported for flat files
-            assert(false) : "Type is unsupported for flat files: " +
-                sqlType.getSqlTypeName();
+            assert (false) : "Type is unsupported for flat files: "
+                + sqlType.getSqlTypeName();
         }
-        RelDataType type = 
+        RelDataType type =
             typeFactory.createSqlType(SqlTypeName.Varchar, length);
         return typeFactory.createTypeWithNullability(type, true);
     }

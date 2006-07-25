@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.rules;
 
 import java.util.*;
@@ -28,24 +27,29 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * Rule to add a semijoin into a joinrel.  Transformation is as follows:
+ * Rule to add a semijoin into a joinrel. Transformation is as follows:
  *
  * <p>JoinRel(X, Y) -> JoinRel(SemiJoinRel(X, Y), Y)
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class AddRedundantSemiJoinRule extends RelOptRule
+public class AddRedundantSemiJoinRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public AddRedundantSemiJoinRule()
     {
         super(new RelOptRuleOperand(
                 JoinRel.class,
                 null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -59,7 +63,7 @@ public class AddRedundantSemiJoinRule extends RelOptRule
         if (origJoinRel.getJoinType() != JoinRelType.INNER) {
             return;
         }
-        
+
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
@@ -72,28 +76,29 @@ public class AddRedundantSemiJoinRule extends RelOptRule
         if (leftKeys.size() == 0) {
             return;
         }
-        
-        RelNode semiJoin = new SemiJoinRel(
-            origJoinRel.getCluster(),
-            origJoinRel.getLeft(),
-            origJoinRel.getRight(),
-            origJoinRel.getCondition(),
-            leftKeys,
-            rightKeys);
-       
-        RelNode newJoinRel = new JoinRel(
-            origJoinRel.getCluster(),
-            semiJoin,
-            origJoinRel.getRight(),
-            origJoinRel.getCondition(),
-            JoinRelType.INNER,
-            Collections.EMPTY_SET,
-            true,
-            origJoinRel.isMultiJoinDone());
+
+        RelNode semiJoin =
+            new SemiJoinRel(
+                origJoinRel.getCluster(),
+                origJoinRel.getLeft(),
+                origJoinRel.getRight(),
+                origJoinRel.getCondition(),
+                leftKeys,
+                rightKeys);
+
+        RelNode newJoinRel =
+            new JoinRel(
+                origJoinRel.getCluster(),
+                semiJoin,
+                origJoinRel.getRight(),
+                origJoinRel.getCondition(),
+                JoinRelType.INNER,
+                Collections.EMPTY_SET,
+                true,
+                origJoinRel.isMultiJoinDone());
 
         call.transformTo(newJoinRel);
     }
-
 }
 
 // End AddRedundantSemiJoinRule.java

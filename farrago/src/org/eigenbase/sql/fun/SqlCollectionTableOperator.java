@@ -22,40 +22,54 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.sql.SqlFunctionalOperator;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.SqlTypeStrategies;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * SqlCollectionTableOperator is the "table function derived table" operator. 
- * It converts a table-valued function into a relation,
- * e.g. "<code>SELECT * FROM TABLE(ramp(5))</code>".
+ * SqlCollectionTableOperator is the "table function derived table" operator. It
+ * converts a table-valued function into a relation, e.g. "<code>SELECT * FROM
+ * TABLE(ramp(5))</code>".
  *
- * <p>This operator has function syntax (with one argument), whereas
- * {@link SqlStdOperatorTable#explicitTableOperator} is a prefix operator.
- * 
+ * <p>This operator has function syntax (with one argument), whereas {@link
+ * SqlStdOperatorTable#explicitTableOperator} is a prefix operator.
+ *
  * @author jhyde, stephan
  */
-public class SqlCollectionTableOperator extends SqlFunctionalOperator
+public class SqlCollectionTableOperator
+    extends SqlFunctionalOperator
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int MODALITY_RELATIONAL = 1;
     public static final int MODALITY_STREAM = 2;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int modality;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlCollectionTableOperator(String name, int modality)
     {
-        super(name, SqlKind.CollectionTable,
-            200, true,
+        super(name,
+            SqlKind.CollectionTable,
+            200,
+            true,
             SqlTypeStrategies.rtiFirstArgType,
             null,
             SqlTypeStrategies.otcAny);
-        
+
         this.modality = modality;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public int getModality()
     {
         return modality;
     }
 }
+
+// End SqlCollectionTableOperator.java

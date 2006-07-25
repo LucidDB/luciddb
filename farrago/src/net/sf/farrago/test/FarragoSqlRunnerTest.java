@@ -22,36 +22,45 @@
 */
 package net.sf.farrago.test;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.sql.SQLException;
+import java.io.*;
 
-import org.eigenbase.util.Util;
+import java.sql.*;
 
-import net.sf.farrago.util.SqlRunner;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.util.*;
 
 
 /**
  * Rudimentary JUnit tests for the SqlRunner class.
+ *
  * @author chard
  * @version $Id$
  */
-public class FarragoSqlRunnerTest extends FarragoTestCase
+public class FarragoSqlRunnerTest
+    extends FarragoTestCase
 {
-    private String serverUrl = "jdbc:farrago:";
-    private String testScript = "unitsql/runner/easy.sql";
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String userName = "sa";
     private static final String password = null;
 
+    //~ Instance fields --------------------------------------------------------
+
+    private String serverUrl = "jdbc:farrago:";
+    private String testScript = "unitsql/runner/easy.sql";
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoSqlRunnerTest(String testName)
-    throws Exception
+        throws Exception
     {
         super(testName);
         serverUrl = newJdbcEngineDriver().getBaseUrl();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // Negative tests
 
@@ -63,71 +72,97 @@ public class FarragoSqlRunnerTest extends FarragoTestCase
             assertNotNull(e.getMessage());
         }
     }
-    
+
     public void testNullUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript, null, userName, password);
+            SqlRunner.instance().runScript(testScript,
+                null,
+                userName,
+                password);
         } catch (Throwable e) {
             assertNotNull(e.getMessage());
         }
     }
-    
+
     public void testNullUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript, serverUrl, null, password);
+            SqlRunner.instance().runScript(testScript,
+                serverUrl,
+                null,
+                password);
         } catch (Throwable e) {
             assertNotNull(e.getMessage());
         }
     }
-    
+
     public void testInvalidPath()
     {
         try {
-            SqlRunner.instance().runScript("foo.sql", serverUrl, userName, password);
+            SqlRunner.instance().runScript("foo.sql",
+                serverUrl,
+                userName,
+                password);
         } catch (SQLException e) {
             assertNotNull(e.getMessage());
         }
     }
-    
+
     public void testInvalidUrl()
     {
         try {
-            SqlRunner.instance().runScript(testScript, "jdbc:notfarrago",
-                userName, password);
+            SqlRunner.instance().runScript(testScript,
+                "jdbc:notfarrago",
+                userName,
+                password);
         } catch (SQLException e) {
             assertNotNull(e.getMessage());
         }
     }
-    
+
     public void testInvalidUser()
     {
         try {
-            SqlRunner.instance().runScript(testScript, serverUrl, "bozo", "clown");
+            SqlRunner.instance().runScript(testScript,
+                serverUrl,
+                "bozo",
+                "clown");
         } catch (SQLException e) {
             assertNotNull(e.getMessage());
         }
     }
-    
+
     // Positive tests
-    
+
     public void testScript()
-    throws SQLException
+        throws SQLException
     {
-        SqlRunner.instance().runScript(testScript, serverUrl,
-            userName, password);
+        SqlRunner.instance().runScript(testScript,
+            serverUrl,
+            userName,
+            password);
     }
-    
-    public void testScriptWithRedirect() throws IOException, SQLException
+
+    public void testScriptWithRedirect()
+        throws IOException, SQLException
     {
         addDiffMask("\\$Id.*\\$");
-        String scriptBase = testScript.substring(0, testScript.lastIndexOf('.'));
+        String scriptBase =
+            testScript.substring(
+                0,
+                testScript.lastIndexOf('.'));
         File f = new File(scriptBase);
         PrintStream stream = new PrintStream(openTestLogOutputStream(f));
-        SqlRunner.instance().runScript(testScript, serverUrl, userName,
-            password, stream, null);
+        SqlRunner.instance().runScript(testScript,
+            serverUrl,
+            userName,
+            password,
+            stream,
+            null);
         assertTrue(!Util.isNullOrEmpty(stream.toString()));
         diffTestLog();
     }
 }
+
+// End FarragoSqlRunnerTest.java

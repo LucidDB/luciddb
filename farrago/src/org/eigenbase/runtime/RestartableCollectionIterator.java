@@ -24,36 +24,42 @@ package org.eigenbase.runtime;
 
 import java.util.*;
 
+
 /**
- * <code>RestartableCollectionIterator</code> implements the
- * {@link RestartableIterator} interface in terms of an underlying
- * {@link Collection}.
+ * <code>RestartableCollectionIterator</code> implements the {@link
+ * RestartableIterator} interface in terms of an underlying {@link Collection}.
  *
- *<p>
- *
- * TODO jvs 21-Mar-2006: This class is no longer used except by Saffron,
- * so we should move it to Saffron.
+ * <p>TODO jvs 21-Mar-2006: This class is no longer used except by Saffron, so
+ * we should move it to Saffron.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RestartableCollectionIterator implements RestartableIterator
+public class RestartableCollectionIterator
+    implements RestartableIterator
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Collection collection;
     private Iterator iterator;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public RestartableCollectionIterator(Collection collection)
     {
         this.collection = collection;
         iterator = collection.iterator();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement Iterator
     public Object next()
     {
         return iterator.next();
     }
-    
+
     // implement Iterator
     public boolean hasNext()
     {
@@ -65,7 +71,7 @@ public class RestartableCollectionIterator implements RestartableIterator
     {
         iterator.remove();
     }
-    
+
     // implement RestartableIterator
     public void restart()
     {

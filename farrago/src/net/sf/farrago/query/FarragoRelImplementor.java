@@ -25,14 +25,15 @@ package net.sf.farrago.query;
 import java.util.*;
 import java.util.List;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.fennel.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.fennel.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -43,6 +44,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
+
 /**
  * FarragoRelImplementor refines {@link JavaRelImplementor} with some Farrago
  * specifics.
@@ -50,10 +52,13 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRelImplementor extends JavaRelImplementor
-    implements FennelRelImplementor, FarragoOJRexRelImplementor
+public class FarragoRelImplementor
+    extends JavaRelImplementor
+    implements FennelRelImplementor,
+        FarragoOJRexRelImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     FarragoPreparingStmt preparingStmt;
     OJClass ojAssignableValue;
@@ -68,13 +73,13 @@ public class FarragoRelImplementor extends JavaRelImplementor
     private List<RelScope> scopeStack;
     private int nextTransformId;
 
-    /** 
-     * List of ClassDeclarations representing generated Java code not
-     * directly linked to the plan's root rel node. 
+    /**
+     * List of ClassDeclarations representing generated Java code not directly
+     * linked to the plan's root rel node.
      */
     private List<ClassDeclaration> transformDeclarations;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoRelImplementor(
         final FarragoPreparingStmt preparingStmt,
@@ -83,7 +88,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         super(
             rexBuilder,
             new UdfAwareOJRexImplementorTable(
-                preparingStmt.getSession().getPersonality().getOJRexImplementorTable(
+                preparingStmt.getSession().getPersonality()
+                .getOJRexImplementorTable(
                     preparingStmt)));
 
         this.preparingStmt = preparingStmt;
@@ -93,6 +99,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         streamDefSet = new HashSet<FemExecutionStreamDef>();
         scopeStack = new LinkedList<RelScope>();
         nextRelParamId = 1;
+
         // REVIEW jvs 22-Mar-2006:  does this match how user-level
         // dynamic params get mapped into Fennel?
         nextDynamicParamId =
@@ -101,11 +108,11 @@ public class FarragoRelImplementor extends JavaRelImplementor
         transformDeclarations = new ArrayList<ClassDeclaration>();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Sets the MOFID of the foreign server associated with the
-     * expression being implemented.
+     * Sets the MOFID of the foreign server associated with the expression being
+     * implemented.
      *
      * @param serverMofId MOFID to set, or null to clear
      */
@@ -130,17 +137,17 @@ public class FarragoRelImplementor extends JavaRelImplementor
     {
         return new FennelRelParamId(nextRelParamId++);
     }
-    
+
     public FennelDynamicParamId translateParamId(
         FennelRelParamId relParamId)
     {
-        assert(!scopeStack.isEmpty());
-        
+        assert (!scopeStack.isEmpty());
+
         // FennelDynamicParamid == 0 represents an unused parameter
         if (relParamId == null) {
             return new FennelDynamicParamId(0);
         }
-        
+
         // Check for an existing translation.
         for (RelScope scope : scopeStack) {
             FennelDynamicParamId dynamicParamId =
@@ -161,7 +168,9 @@ public class FarragoRelImplementor extends JavaRelImplementor
     // implement FennelRelImplementor
     public FemExecutionStreamDef visitFennelChild(FennelRel rel)
     {
-        scopeStack.add(0, new RelScope());
+        scopeStack.add(
+            0,
+            new RelScope());
         FemExecutionStreamDef streamDef = toStreamDefImpl(rel);
         scopeStack.remove(0);
         registerRelStreamDef(streamDef, rel, null);
@@ -169,13 +178,14 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     /**
-     * Converts a {@link FennelRel} to a {@link FemExecutionStreamDef},
-     * and prints context if anything goes wrong.
+     * Converts a {@link FennelRel} to a {@link FemExecutionStreamDef}, and
+     * prints context if anything goes wrong.
      *
      * <p>This method is final: derived classes should not add extra
      * functionality.
      *
      * @param rel Relational expression
+     *
      * @return Plan
      */
     protected final FemExecutionStreamDef toStreamDefImpl(FennelRel rel)
@@ -185,15 +195,14 @@ public class FarragoRelImplementor extends JavaRelImplementor
         } catch (Throwable e) {
             throw Util.newInternal(
                 e,
-                "Error occurred while translating relational expression " +
-                rel + " to a plan");
+                "Error occurred while translating relational expression "
+                + rel + " to a plan");
         }
     }
 
     /**
      * Override method to deal with the possibility that we are being called
-     * from a {@link FennelRel} via our {@link FennelRelImplementor}
-     * interface.
+     * from a {@link FennelRel} via our {@link FennelRelImplementor} interface.
      */
     public Object visitChildInternal(RelNode child)
     {
@@ -212,17 +221,17 @@ public class FarragoRelImplementor extends JavaRelImplementor
     {
         return Collections.unmodifiableList(transformDeclarations);
     }
-    
+
     public void addTransform(ClassDeclaration transform)
     {
         transformDeclarations.add(transform);
     }
-    
+
     public int allocateTransform()
     {
         return nextTransformId++;
     }
-    
+
     public FarragoPreparingStmt getPreparingStmt()
     {
         return preparingStmt;
@@ -249,13 +258,15 @@ public class FarragoRelImplementor extends JavaRelImplementor
         producer.getOutputFlow().add(flow);
         consumer.getInputFlow().add(flow);
     }
-    
-    protected FemTupleDescriptor computeStreamDefOutputDesc(RelDataType rowType)
+
+    protected FemTupleDescriptor computeStreamDefOutputDesc(
+        RelDataType rowType)
     {
-        return FennelRelUtil.createTupleDescriptorFromRowType(
-            preparingStmt.getRepos(),
-            preparingStmt.getTypeFactory(),
-            rowType);
+        return
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                preparingStmt.getRepos(),
+                preparingStmt.getTypeFactory(),
+                rowType);
     }
 
     private void registerStreamDef(
@@ -277,6 +288,7 @@ public class FarragoRelImplementor extends JavaRelImplementor
         if (streamDef.getOutputDesc() == null) {
             streamDef.setOutputDesc(computeStreamDefOutputDesc(rowType));
         }
+
         // recursively ensure all inputs have also been registered
         for (Object obj : streamDef.getInputFlow()) {
             FemExecStreamDataFlow flow = (FemExecStreamDataFlow) obj;
@@ -286,11 +298,10 @@ public class FarragoRelImplementor extends JavaRelImplementor
     }
 
     /**
-     * Constructs a globally unique name for an execution stream.  This name is
+     * Constructs a globally unique name for an execution stream. This name is
      * used to label and find C++ ExecStreams.
      *
      * @param streamDef stream definition
-     *
      * @param rel rel which generated stream definition, or null if none
      *
      * @return global name for stream
@@ -328,10 +339,15 @@ public class FarragoRelImplementor extends JavaRelImplementor
         // this translator is not usable for actual code generation, but
         // it's sufficient for use in TranslationTester, which is
         // currently the only caller
-        return new FarragoRexToOJTranslator(
-            preparingStmt.getRepos(),
-            this, rel, implementorTable,
-            null, null, null);
+        return
+            new FarragoRexToOJTranslator(
+                preparingStmt.getRepos(),
+                this,
+                rel,
+                implementorTable,
+                null,
+                null,
+                null);
     }
 
     // override JavaRelImplementor
@@ -340,10 +356,15 @@ public class FarragoRelImplementor extends JavaRelImplementor
         StatementList stmtList,
         MemberDeclarationList memberList)
     {
-        return new FarragoRexToOJTranslator(
-            preparingStmt.getRepos(),
-            this, rel, implementorTable,
-            stmtList, memberList, null);
+        return
+            new FarragoRexToOJTranslator(
+                preparingStmt.getRepos(),
+                this,
+                rel,
+                implementorTable,
+                stmtList,
+                memberList,
+                null);
     }
 
     // override JavaRelImplementor
@@ -353,6 +374,8 @@ public class FarragoRelImplementor extends JavaRelImplementor
         preparingStmt.prepareForCompilation();
         return exp;
     }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * An operator implementor table which knows about UDF's.

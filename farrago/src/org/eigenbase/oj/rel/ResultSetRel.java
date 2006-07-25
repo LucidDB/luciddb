@@ -20,21 +20,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
-
 /**
- * A relational expression which implements this interface has a
- * {@link org.eigenbase.relopt.CallingConvention#RESULT_SET} calling convention.
+ * A relational expression which implements this interface has a {@link
+ * org.eigenbase.relopt.CallingConvention#RESULT_SET} calling convention.
  *
  * @author jhyde
- * @since May 24, 2004
  * @version $Id$
- **/
-public interface ResultSetRel extends JavaRel
+ * @since May 24, 2004
+ */
+public interface ResultSetRel
+    extends JavaRel
 {
 }
-
 
 // End ResultSetRel.java

@@ -21,6 +21,8 @@
 */
 package org.eigenbase.rel.rules;
 
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -29,29 +31,35 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
- * Rule to reduce aggregates to simpler forms.  Currently only AVG(x) to
+ * Rule to reduce aggregates to simpler forms. Currently only AVG(x) to
  * SUM(x)/COUNT(x), but eventually will handle others such as STDDEV.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ReduceAggregatesRule extends RelOptRule
+public class ReduceAggregatesRule
+    extends RelOptRule
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     /**
      * The singleton.
      */
     public static final ReduceAggregatesRule instance =
         new ReduceAggregatesRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
+
     private ReduceAggregatesRule()
     {
         super(new RelOptRuleOperand(AggregateRel.class, null));
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public void onMatch(RelOptRuleCall ruleCall)
     {
         AggregateRel oldAggRel = (AggregateRel) ruleCall.rels[0];
@@ -82,16 +90,16 @@ public class ReduceAggregatesRule extends RelOptRule
         RelDataTypeFactory typeFactory =
             oldAggRel.getCluster().getTypeFactory();
         RexBuilder rexBuilder = oldAggRel.getCluster().getRexBuilder();
-        
+
         AggregateRel.Call [] oldCalls = oldAggRel.getAggCalls();
         int nGroups = oldAggRel.getGroupCount();
-            
+
         // + 1 for COUNT; we'll replace AVG with SUM to make
         // projection arithmetic easier
         AggregateRel.Call [] newCalls =
             new AggregateRel.Call[oldCalls.length + 1];
 
-        assert(avgCall.getArgs().length == 1);
+        assert (avgCall.getArgs().length == 1);
         int iAvgInput = avgCall.getArgs()[0];
 
         List<RexNode> projList = new ArrayList<RexNode>();
@@ -110,25 +118,32 @@ public class ReduceAggregatesRule extends RelOptRule
         for (int i = 0; i < newCalls.length; ++i) {
             if (i == iOldCall) {
                 // replace original AVG with SUM
-                RelDataType avgInputType = getFieldType(
-                    oldAggRel.getChild(), iAvgInput);
-                RelDataType sumType = typeFactory.createTypeWithNullability(
-                    avgInputType,
-                    true);
+                RelDataType avgInputType =
+                    getFieldType(
+                        oldAggRel.getChild(),
+                        iAvgInput);
+                RelDataType sumType =
+                    typeFactory.createTypeWithNullability(
+                        avgInputType,
+                        true);
                 SqlSumAggFunction sumAgg = new SqlSumAggFunction(sumType);
-                newCalls[i] = new AggregateRel.Call(
-                    sumAgg,
-                    avgCall.isDistinct(),
-                    avgCall.getArgs(),
-                    sumType);
+                newCalls[i] =
+                    new AggregateRel.Call(
+                        sumAgg,
+                        avgCall.isDistinct(),
+                        avgCall.getArgs(),
+                        sumType);
+
                 // NOTE:  these references are with respect to the output
                 // of newAggRel
                 RexNode numeratorRef =
                     rexBuilder.makeInputRef(
-                        sumType, nGroups + i);
+                        sumType,
+                        nGroups + i);
                 RexNode denominatorRef =
                     rexBuilder.makeInputRef(
-                        countType, nGroups + oldCalls.length);
+                        countType,
+                        nGroups + oldCalls.length);
                 projList.add(
                     rexBuilder.makeCast(
                         avgCall.getType(),
@@ -138,11 +153,12 @@ public class ReduceAggregatesRule extends RelOptRule
                             denominatorRef)));
             } else if (i == oldCalls.length) {
                 // at end:  append new COUNT
-                newCalls[i] = new AggregateRel.Call(
-                    countAgg,
-                    avgCall.isDistinct(),
-                    avgCall.getArgs(),
-                    countType);
+                newCalls[i] =
+                    new AggregateRel.Call(
+                        countAgg,
+                        avgCall.isDistinct(),
+                        avgCall.getArgs(),
+                        countType);
             } else {
                 // anything else:  preserve original call
                 newCalls[i] = oldCalls[i];
@@ -152,26 +168,25 @@ public class ReduceAggregatesRule extends RelOptRule
                         i + nGroups));
             }
         }
-        
+
         AggregateRel newAggRel =
             new AggregateRel(
                 oldAggRel.getCluster(),
                 oldAggRel.getChild(),
                 nGroups,
                 newCalls);
-        
+
         RelNode projectRel = CalcRel.createProject(
-            newAggRel,
-            projList,
-            null);
-            
+                newAggRel,
+                projList,
+                null);
+
         ruleCall.transformTo(projectRel);
     }
 
     private RelDataType getFieldType(RelNode relNode, int i)
     {
-        RelDataTypeField inputField =
-            relNode.getRowType().getFields()[i];
+        RelDataTypeField inputField = relNode.getRowType().getFields()[i];
         return inputField.getType();
     }
 }

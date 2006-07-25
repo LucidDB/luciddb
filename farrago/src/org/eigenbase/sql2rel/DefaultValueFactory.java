@@ -20,11 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql2rel;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 
@@ -32,21 +31,20 @@ import org.eigenbase.sql.*;
 /**
  * DefaultValueFactory supplies default values for INSERT, UPDATE, and NEW.
  *
- *<p>
- *
- * TODO jvs 26-Feb-2005:  rename this to InitializerExpressionFactory, since
- * it is in the process of being generalized to handle constructor
- * invocations and eventually generated columns.
+ * <p>TODO jvs 26-Feb-2005: rename this to InitializerExpressionFactory, since
+ * it is in the process of being generalized to handle constructor invocations
+ * and eventually generated columns.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface DefaultValueFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Whether a column is always generated. If a column is always generated, 
+     * Whether a column is always generated. If a column is always generated,
      * then non-generated values cannot be inserted into the column.
      */
     public boolean isGeneratedAlways(
@@ -58,7 +56,6 @@ public interface DefaultValueFactory
      * particular column.
      *
      * @param table the table containing the column
-     *
      * @param iColumn the 0-based offset of the column in the table
      *
      * @return default value expression
@@ -72,15 +69,11 @@ public interface DefaultValueFactory
      * particular attribute of a structured type.
      *
      * @param type the structured type
-     *
      * @param constructor the constructor invoked to initialize the type
-     *
      * @param the 0-based offset of the attribute in the type
+     * @param constructorArgs arguments passed to the constructor invocation
      *
-     * @param constructorArgs arguments passed to the constructor
-     * invocation
-     *
-     * @retunr default value expression
+     * @return default value expression
      */
     public RexNode newAttributeInitializer(
         RelDataType type,
@@ -88,6 +81,5 @@ public interface DefaultValueFactory
         int iAttribute,
         RexNode [] constructorArgs);
 }
-
 
 // End DefaultValueFactory.java

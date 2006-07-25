@@ -27,15 +27,17 @@ import java.util.*;
 
 /**
  * A very slow, generic comparator for two objects with valid toString()
- * methods.  It implements SQL character comparison semantics (rtrim before
+ * methods. It implements SQL character comparison semantics (rtrim before
  * compare).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class CharStringComparator implements Comparator
+public class CharStringComparator
+    implements Comparator
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public static final int compareCharStrings(
         Object o1,
@@ -69,6 +71,5 @@ public class CharStringComparator implements Comparator
         return "";
     }
 }
-
 
 // End CharStringComparator.java

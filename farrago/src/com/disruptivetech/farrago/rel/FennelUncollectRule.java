@@ -20,29 +20,34 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UncollectRel;
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
- * FennelUncollectRule is a rule to implement a call with the
- * {@link org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}
+ * FennelUncollectRule is a rule to implement a call with the {@link
+ * org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}
  *
- * @author Wael Chatila 
- * @since Dec 12, 2004
+ * @author Wael Chatila
  * @version $Id$
+ * @since Dec 12, 2004
  */
-public class FennelUncollectRule extends RelOptRule
+public class FennelUncollectRule
+    extends RelOptRule
 {
-    public FennelUncollectRule() {
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FennelUncollectRule()
+    {
         super(new RelOptRuleOperand(
                 UncollectRel.class,
                 null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -50,7 +55,8 @@ public class FennelUncollectRule extends RelOptRule
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
-    public void onMatch(RelOptRuleCall call) {
+    public void onMatch(RelOptRuleCall call)
+    {
         UncollectRel uncollectRel = (UncollectRel) call.rels[0];
         RelNode relInput = uncollectRel.getChild();
         RelNode fennelInput =
@@ -63,7 +69,11 @@ public class FennelUncollectRule extends RelOptRule
         }
 
         FennelPullUncollectRel fennelUncollectRel =
-            new FennelPullUncollectRel(uncollectRel.getCluster(), fennelInput);
+            new FennelPullUncollectRel(
+                uncollectRel.getCluster(),
+                fennelInput);
         call.transformTo(fennelUncollectRel);
     }
 }
+
+// End FennelUncollectRule.java

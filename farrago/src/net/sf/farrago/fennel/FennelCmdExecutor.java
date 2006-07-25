@@ -28,18 +28,19 @@ import net.sf.farrago.fem.fennel.*;
 
 
 /**
- * FennelCmdExecutor defines a mechanism for extending and modifying the
- * command set understood by Fennel.   {@link FennelCmdExecutorImpl}
- * provides a default implementation.  Extensions can be created by
- * writing a JNI DLL which links with Farrago's JNI DLL and provides
- * an alternative for {@link FennelStorage#executeJavaCmd}.
+ * FennelCmdExecutor defines a mechanism for extending and modifying the command
+ * set understood by Fennel. {@link FennelCmdExecutorImpl} provides a default
+ * implementation. Extensions can be created by writing a JNI DLL which links
+ * with Farrago's JNI DLL and provides an alternative for {@link
+ * FennelStorage#executeJavaCmd}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FennelCmdExecutor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Executes one FemCmd.
@@ -51,6 +52,5 @@ public interface FennelCmdExecutor
     public long executeJavaCmd(FemCmd cmd)
         throws SQLException;
 }
-
 
 // End FennelCmdExecutor.java

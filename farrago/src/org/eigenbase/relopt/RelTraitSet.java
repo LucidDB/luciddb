@@ -20,12 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.Arrays;
+import org.eigenbase.util.*;
+
 
 /**
  * RelTraitSet represents an ordered set of {@link RelTrait}s.
@@ -35,50 +35,59 @@ import java.util.Arrays;
  */
 public class RelTraitSet
 {
-    private RelTrait[] traits;
+
+    //~ Instance fields --------------------------------------------------------
+
+    private RelTrait [] traits;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a RelTraitSet with the given set of RelTraits.
      *
      * @param traits
      */
-    public RelTraitSet(RelTrait[] traits)
+    public RelTraitSet(RelTrait [] traits)
     {
         this.traits = new RelTrait[traits.length];
 
-        for(int i = 0; i < traits.length; i++) {
+        for (int i = 0; i < traits.length; i++) {
             this.traits[i] = canonize(traits[i]);
         }
     }
 
     /**
-     * Constructs a RelTraitSet with a single RelTrait.  Equivalent to calling
-     * {@link #RelTraitSet(RelTrait[])} with a value of
-     * <code>new RelTrait[] { trait }</code>.
+     * Constructs a RelTraitSet with a single RelTrait. Equivalent to calling
+     * {@link #RelTraitSet(RelTrait[])} with a value of <code>new RelTrait[] {
+     * trait }</code>.
      */
     public RelTraitSet(RelTrait trait)
     {
         this(new RelTrait[] { trait });
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Retrieves a RelTrait from the set.
      *
      * @param index 0-based index into ordered RelTraitSet
+     *
      * @return the RelTrait
-     * @throws ArrayIndexOutOfBoundsException if index greater than or equal
-     *             to {@link #size()} or less than 0.
+     *
+     * @throws ArrayIndexOutOfBoundsException if index greater than or equal to
+     * {@link #size()} or less than 0.
      */
     public RelTrait getTrait(int index)
     {
         return traits[index];
     }
 
-
     /**
      * Retrieves a RelTrait of the given type from the set.
      *
      * @param traitDef the type of RelTrit to retrieve
+     *
      * @return the RelTrait, or null if not found
      */
     public RelTrait getTrait(RelTraitDef traitDef)
@@ -92,21 +101,20 @@ public class RelTraitSet
     }
 
     /**
-     * Replaces an existing RelTrait in the set.  This method <b>must
-     * not</b> be used to modify the traits of a 
-     * {@link org.eigenbase.rel.RelNode} that has already been
-     * registered with a {@link RelOptPlanner}.
+     * Replaces an existing RelTrait in the set. This method <b>must not</b> be
+     * used to modify the traits of a {@link org.eigenbase.rel.RelNode} that has
+     * already been registered with a {@link RelOptPlanner}.
      *
      * @param index 0-based index into ordered RelTraitSet
      * @param trait the new RelTrait
+     *
      * @return the old RelTrait at the index
      */
     public RelTrait setTrait(int index, RelTrait trait)
     {
         RelTrait oldTrait = traits[index];
 
-        assert(oldTrait.getTraitDef() == trait.getTraitDef()):
-            "RelTrait has different RelTraitDef than replacement";
+        assert (oldTrait.getTraitDef() == trait.getTraitDef()) : "RelTrait has different RelTraitDef than replacement";
 
         traits[index] = canonize(trait);
 
@@ -114,18 +122,17 @@ public class RelTraitSet
     }
 
     /**
-     * Replaces an existing RelTrait in the set.  This method <b>must
-     * not</b> be used to modify the traits of a 
-     * {@link org.eigenbase.rel.RelNode} that has already been
-     * registered with a {@link RelOptPlanner}.
+     * Replaces an existing RelTrait in the set. This method <b>must not</b> be
+     * used to modify the traits of a {@link org.eigenbase.rel.RelNode} that has
+     * already been registered with a {@link RelOptPlanner}.
      *
      * @param traitDef the type of RelTrait to replace
-     * @return trait the new RelTrait
+     *
      * @return the RelTrait at the index
      */
     public RelTrait setTrait(RelTraitDef traitDef, RelTrait trait)
     {
-        assert(trait.getTraitDef() == traitDef);
+        assert (trait.getTraitDef() == traitDef);
 
         int index = findIndex(traitDef);
         Util.permAssert(index >= 0, "Could not find RelTraitDef");
@@ -134,18 +141,17 @@ public class RelTraitSet
     }
 
     /**
-     * Adds a new RelTrait to the set.  This method <b>must
-     * not</b> be used to modify the traits of a 
-     * {@link org.eigenbase.rel.RelNode} that has already been
-     * registered with a {@link RelOptPlanner}.
+     * Adds a new RelTrait to the set. This method <b>must not</b> be used to
+     * modify the traits of a {@link org.eigenbase.rel.RelNode} that has already
+     * been registered with a {@link RelOptPlanner}.
      *
      * @param trait the new RelTrait
      */
     public void addTrait(RelTrait trait)
     {
         int len = traits.length;
-        RelTrait[] newTraits = new RelTrait[len + 1];
-        for(int i = 0; i < traits.length; i++) {
+        RelTrait [] newTraits = new RelTrait[len + 1];
+        for (int i = 0; i < traits.length; i++) {
             newTraits[i] = traits[i];
         }
 
@@ -164,7 +170,6 @@ public class RelTraitSet
         return traits.length;
     }
 
-
     private RelTrait canonize(RelTrait trait)
     {
         if (trait == null) {
@@ -178,36 +183,41 @@ public class RelTraitSet
      * Compares two RelTraitSet objects for equality.
      *
      * @param obj another RelTraitSet
+     *
      * @return true if traits are equal and in the same order, false otherwise
+     *
      * @throws ClassCastException if <code>obj</code> is not a RelTraitSet.
      */
     public boolean equals(Object obj)
     {
-        RelTraitSet other = (RelTraitSet)obj;
+        RelTraitSet other = (RelTraitSet) obj;
 
         return Arrays.equals(traits, other.traits);
     }
 
     /**
-     * Compares two RelTraitSet objects to see if they match for the purposes
-     * of firing a rule.  A null RelTrait within a RelTraitSet indicates a
-     * wildcard: any RelTrait in the other RelTraitSet will match.  If one
-     * RelTraitSet is smaller than the other, comparison stops when the last
-     * RelTrait from the smaller set has been examined and the remaining
-     * RelTraits in the larger set are assumed to match.
+     * Compares two RelTraitSet objects to see if they match for the purposes of
+     * firing a rule. A null RelTrait within a RelTraitSet indicates a wildcard:
+     * any RelTrait in the other RelTraitSet will match. If one RelTraitSet is
+     * smaller than the other, comparison stops when the last RelTrait from the
+     * smaller set has been examined and the remaining RelTraits in the larger
+     * set are assumed to match.
      *
      * @param that another RelTraitSet
+     *
      * @return true if the RelTraitSets match, false otherwise
      */
     public boolean matches(RelTraitSet that)
     {
-        final int n = Math.min(this.size(), that.size());
+        final int n = Math.min(
+                this.size(),
+                that.size());
 
-        for(int i = 0; i < n; i++) {
+        for (int i = 0; i < n; i++) {
             RelTrait thisTrait = this.traits[i];
             RelTrait thatTrait = that.traits[i];
 
-            if (thisTrait == null || thatTrait == null) {
+            if ((thisTrait == null) || (thatTrait == null)) {
                 continue;
             }
 
@@ -220,13 +230,13 @@ public class RelTraitSet
     }
 
     /**
-     * Outputs the traits of this set as a String.  Traits are output in
-     * the String in order, separated by periods.
+     * Outputs the traits of this set as a String. Traits are output in the
+     * String in order, separated by periods.
      */
     public String toString()
     {
         StringBuffer s = new StringBuffer();
-        for(int i = 0; i < traits.length; i++) {
+        for (int i = 0; i < traits.length; i++) {
             if (i > 0) {
                 s.append('.');
             }
@@ -242,9 +252,9 @@ public class RelTraitSet
 
     private int findIndex(RelTraitDef traitDef)
     {
-        for(int i = 0; i < traits.length; i++) {
+        for (int i = 0; i < traits.length; i++) {
             RelTrait trait = traits[i];
-            if (trait != null && trait.getTraitDef() == traitDef) {
+            if ((trait != null) && (trait.getTraitDef() == traitDef)) {
                 return i;
             }
         }
@@ -252,3 +262,5 @@ public class RelTraitSet
         return -1;
     }
 }
+
+// End RelTraitSet.java

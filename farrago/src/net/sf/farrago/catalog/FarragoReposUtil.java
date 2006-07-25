@@ -22,19 +22,26 @@
 package net.sf.farrago.catalog;
 
 import java.io.*;
-import java.util.*;
+
 import java.net.*;
+
+import java.util.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+import javax.jmi.xmi.*;
+
+import net.sf.farrago.*;
+import net.sf.farrago.util.*;
+
 import org.eigenbase.util.*;
-import org.netbeans.api.xmi.*;
+
 import org.netbeans.api.mdr.*;
+import org.netbeans.api.xmi.*;
 import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.*;
 import org.netbeans.mdr.storagemodel.*;
-import net.sf.farrago.*;
-import net.sf.farrago.util.*;
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
-import javax.jmi.xmi.*;
+
 
 /**
  * Static utilities for manipulating the Farrago repository.
@@ -44,14 +51,15 @@ import javax.jmi.xmi.*;
  */
 public abstract class FarragoReposUtil
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Exports a submodel, generating qualified references by name
-     * to objects outside of the submodel.
+     * Exports a submodel, generating qualified references by name to objects
+     * outside of the submodel.
      *
      * @param mdrRepos MDR repository containing submodel to export
-     *
      * @param outputFile file into which XMI should be written
-     *
      * @param subPackageName name of package containing submodel to be exported
      */
     public static void exportSubModel(
@@ -62,7 +70,7 @@ public abstract class FarragoReposUtil
     {
         XMIWriter xmiWriter = XMIWriterFactory.getDefault().createXMIWriter();
         ExportRefProvider refProvider = new ExportRefProvider(
-            subPackageName);
+                subPackageName);
         xmiWriter.getConfiguration().setReferenceProvider(refProvider);
         FileOutputStream outStream = new FileOutputStream(outputFile);
         try {
@@ -85,8 +93,10 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         XMIReader xmiReader = XMIReaderFactory.getDefault().createXMIReader();
-        ImportRefResolver refResolver = new ImportRefResolver(
-            (Namespace) mdrRepos.getExtent("FarragoCatalog").refMetaObject());
+        ImportRefResolver refResolver =
+            new ImportRefResolver(
+                (Namespace) mdrRepos.getExtent("FarragoCatalog")
+                .refMetaObject());
         xmiReader.getConfiguration().setReferenceResolver(refResolver);
         boolean rollback = false;
         try {
@@ -108,10 +118,8 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         File catalogDir = FarragoProperties.instance().getCatalogDir();
-        File metamodelDump = 
-            new File(catalogDir, "FarragoMetamodelDump.xmi");
-        File catalogDump = 
-            new File(catalogDir, "FarragoCatalogDump.xmi");
+        File metamodelDump = new File(catalogDir, "FarragoMetamodelDump.xmi");
+        File catalogDump = new File(catalogDir, "FarragoCatalogDump.xmi");
 
         FarragoModelLoader modelLoader = new FarragoModelLoader();
         boolean success = false;
@@ -147,11 +155,9 @@ public abstract class FarragoReposUtil
         throws Exception
     {
         File catalogDir = FarragoProperties.instance().getCatalogDir();
-        File metamodelDump = 
-            new File(catalogDir, "FarragoMetamodelDump.xmi");
-        File catalogDump = 
-            new File(catalogDir, "FarragoCatalogDump.xmi");
-            
+        File metamodelDump = new File(catalogDir, "FarragoMetamodelDump.xmi");
+        File catalogDump = new File(catalogDir, "FarragoCatalogDump.xmi");
+
         FarragoModelLoader modelLoader = new FarragoModelLoader();
         modelLoader = new FarragoModelLoader();
         try {
@@ -160,22 +166,21 @@ public abstract class FarragoReposUtil
             // import metamodel
             importExtent(
                 modelLoader.getMdrRepos(),
-                metamodelDump, 
+                metamodelDump,
                 "FarragoMetamodel",
                 null,
                 null);
-            
+
             // import catalog
             importExtent(
                 modelLoader.getMdrRepos(),
-                catalogDump, 
+                catalogDump,
                 "FarragoCatalog",
                 "FarragoMetamodel",
                 "Farrago");
 
             metamodelDump.delete();
             catalogDump.delete();
-            
         } finally {
             modelLoader.close();
         }
@@ -206,9 +211,9 @@ public abstract class FarragoReposUtil
             // grotty internals for dropping physical repos storage
             String mofIdString = farragoPackage.refMofId();
             MOFID mofId = MOFID.fromString(mofIdString);
-        
-            NBMDRepositoryImpl reposImpl = (NBMDRepositoryImpl)
-                modelLoader.getMdrRepos();
+
+            NBMDRepositoryImpl reposImpl =
+                (NBMDRepositoryImpl) modelLoader.getMdrRepos();
             Storage storage =
                 reposImpl.getMdrStorage().getStorageByMofId(mofId);
             storage.close();
@@ -217,7 +222,7 @@ public abstract class FarragoReposUtil
             modelLoader.close();
         }
     }
-    
+
     private static void importExtent(
         MDRepository mdrRepos,
         File file,
@@ -228,8 +233,8 @@ public abstract class FarragoReposUtil
     {
         RefPackage extent;
         if (metaPackageExtentName != null) {
-            ModelPackage modelPackage = (ModelPackage)
-                mdrRepos.getExtent(metaPackageExtentName);
+            ModelPackage modelPackage =
+                (ModelPackage) mdrRepos.getExtent(metaPackageExtentName);
             MofPackage metaPackage = null;
             Iterator iter =
                 modelPackage.getMofPackage().refAllOfClass().iterator();
@@ -249,7 +254,9 @@ public abstract class FarragoReposUtil
         try {
             mdrRepos.beginTrans(true);
             rollback = true;
-            xmiReader.read(file.toURL().toString(), extent);
+            xmiReader.read(
+                file.toURL().toString(),
+                extent);
             rollback = false;
             mdrRepos.endTrans();
         } finally {
@@ -258,13 +265,64 @@ public abstract class FarragoReposUtil
             }
         }
     }
-    
-    private static class ExportRefProvider implements XMIReferenceProvider 
+
+    private static void mainExportSubModel(String [] args)
+        throws Exception
+    {
+        assert (args.length == 3);
+        File file = new File(args[1]);
+        String subPackageName = args[2];
+        FarragoModelLoader modelLoader = new FarragoModelLoader();
+        try {
+            modelLoader.loadModel("FarragoCatalog", false);
+            exportSubModel(
+                modelLoader.getMdrRepos(),
+                file,
+                subPackageName);
+        } finally {
+            modelLoader.close();
+        }
+    }
+
+    private static void mainImportSubModel(String [] args)
+        throws Exception
+    {
+        assert (args.length == 2);
+        File file = new File(args[1]);
+        FarragoModelLoader modelLoader = new FarragoModelLoader();
+        try {
+            modelLoader.loadModel("FarragoCatalog", false);
+            importSubModel(
+                modelLoader.getMdrRepos(),
+                file.toURL());
+        } finally {
+            modelLoader.close();
+        }
+    }
+
+    public static void main(String [] args)
+        throws Exception
+    {
+        // TODO:  proper arg checking
+        assert (args.length > 0);
+        if (args[0].equals("exportSubModel")) {
+            mainExportSubModel(args);
+        } else if (args[0].equals("importSubModel")) {
+            mainImportSubModel(args);
+        } else {
+            throw new IllegalArgumentException(args[0]);
+        }
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ExportRefProvider
+        implements XMIReferenceProvider
     {
         private final String subPackageName;
 
         boolean subPackageFound;
-        
+
         ExportRefProvider(
             String subPackageName)
         {
@@ -287,8 +345,10 @@ public abstract class FarragoReposUtil
                 nameList.add(name);
                 if (subPackageName.equals(name)) {
                     subPackageFound = true;
-                    return new XMIReferenceProvider.XMIReference(
-                        "SUBMODEL", Long.toString(JmiUtil.getObjectId(obj)));
+                    return
+                        new XMIReferenceProvider.XMIReference(
+                            "SUBMODEL",
+                            Long.toString(JmiUtil.getObjectId(obj)));
                 }
                 parent = (RefObject) parent.refImmediateComposite();
             } while (parent != null);
@@ -301,12 +361,15 @@ public abstract class FarragoReposUtil
                     sb.append('/');
                 }
             }
-            return new XMIReferenceProvider.XMIReference(
-                "REPOS", sb.toString());
+            return
+                new XMIReferenceProvider.XMIReference(
+                    "REPOS",
+                    sb.toString());
         }
     }
 
-    private static class ImportRefResolver implements XMIReferenceResolver
+    private static class ImportRefResolver
+        implements XMIReferenceResolver
     {
         private final Namespace root;
 
@@ -314,10 +377,12 @@ public abstract class FarragoReposUtil
         {
             this.root = root;
         }
-        
+
         // implement XMIReferenceResolver
         public void register(
-            String systemId, String xmiId, RefObject object)
+            String systemId,
+            String xmiId,
+            RefObject object)
         {
             // don't care
         }
@@ -334,13 +399,12 @@ public abstract class FarragoReposUtil
             while (iter.hasNext()) {
                 String href = iter.next().toString();
                 int nameStart = href.indexOf('#') + 1;
-                assert(nameStart != 0);
+                assert (nameStart != 0);
                 String [] names = href.substring(nameStart).split("/");
-                assert(
-                    names[0].equals(root.getName()));
+                assert (names[0].equals(root.getName()));
                 Namespace ns = root;
                 try {
-                    for (int i = 1; i < names.length - 1; ++i) {
+                    for (int i = 1; i < (names.length - 1); ++i) {
                         ns = (Namespace) ns.lookupElement(names[i]);
                     }
                     ModelElement element;
@@ -354,54 +418,6 @@ public abstract class FarragoReposUtil
                     throw Util.newInternal(ex);
                 }
             }
-        }
-    }
-
-    private static void mainExportSubModel(String [] args)
-        throws Exception
-    {
-        assert(args.length == 3);
-        File file = new File(args[1]);
-        String subPackageName = args[2];
-        FarragoModelLoader modelLoader = new FarragoModelLoader();
-        try {
-            modelLoader.loadModel("FarragoCatalog", false);
-            exportSubModel(
-                modelLoader.getMdrRepos(),
-                file,
-                subPackageName);
-        } finally {
-            modelLoader.close();
-        }
-    }
-
-    private static void mainImportSubModel(String [] args)
-        throws Exception
-    {
-        assert(args.length == 2);
-        File file = new File(args[1]);
-        FarragoModelLoader modelLoader = new FarragoModelLoader();
-        try {
-            modelLoader.loadModel("FarragoCatalog", false);
-            importSubModel(
-                modelLoader.getMdrRepos(),
-                file.toURL());
-        } finally {
-            modelLoader.close();
-        }
-    }
-
-    public static void main(String [] args)
-        throws Exception
-    {
-        // TODO:  proper arg checking
-        assert(args.length > 0);
-        if (args[0].equals("exportSubModel")) {
-            mainExportSubModel(args);
-        } else if (args[0].equals("importSubModel")) {
-            mainImportSubModel(args);
-        } else {
-            throw new IllegalArgumentException(args[0]);
         }
     }
 }

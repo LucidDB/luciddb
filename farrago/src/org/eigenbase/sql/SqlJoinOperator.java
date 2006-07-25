@@ -20,37 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
- * <code>SqlJoinOperator</code> describes the syntax of the SQL
- * <code>JOIN</code> operator. Since there is only one such operator, this
- * class is almost certainly a singleton.
+ * <code>SqlJoinOperator</code> describes the syntax of the SQL <code>
+ * JOIN</code> operator. Since there is only one such operator, this class is
+ * almost certainly a singleton.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Mar 19, 2003
  */
-public class SqlJoinOperator extends SqlOperator
+public class SqlJoinOperator
+    extends SqlOperator
 {
-    private static final SqlWriter.FrameType UsingFrameType = SqlWriter.FrameType.create("USING");
-    //~ Static fields/initializers --------------------------------------------
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final SqlWriter.FrameType UsingFrameType =
+        SqlWriter.FrameType.create("USING");
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlJoinOperator()
     {
         super("JOIN", SqlKind.Join, 16, true, null, null, null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -64,14 +66,22 @@ public class SqlJoinOperator extends SqlOperator
     {
         assert functionQualifier == null;
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
-        final SqlLiteral isNatural = (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
+        final SqlLiteral isNatural =
+            (SqlLiteral) operands[SqlJoin.IS_NATURAL_OPERAND];
         assert (isNatural.getTypeName() == SqlTypeName.Boolean);
         assert operands[SqlJoin.CONDITION_TYPE_OPERAND] != null : "precondition: operands[CONDITION_TYPE_OPERAND] != null";
-        assert operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral
-            && SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]) instanceof ConditionType;
+        assert (operands[SqlJoin.CONDITION_TYPE_OPERAND] instanceof SqlLiteral)
+            && (
+                SqlLiteral.symbolValue(
+                    operands[SqlJoin.CONDITION_TYPE_OPERAND])
+                instanceof ConditionType
+               );
         assert operands[SqlJoin.TYPE_OPERAND] != null : "precondition: operands[TYPE_OPERAND] != null";
-        assert operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral
-            && SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND]) instanceof JoinType;
+        assert (operands[SqlJoin.TYPE_OPERAND] instanceof SqlLiteral)
+            && (
+                SqlLiteral.symbolValue(operands[SqlJoin.TYPE_OPERAND])
+                instanceof JoinType
+               );
         return new SqlJoin(this, operands, pos);
     }
 
@@ -84,11 +94,12 @@ public class SqlJoinOperator extends SqlOperator
         SqlNode condition,
         SqlParserPos pos)
     {
-        return createCall(
-            new SqlNode [] {
-                left, isNatural, joinType, right, conditionType, condition
-            },
-            pos);
+        return
+            createCall(
+                new SqlNode[] {
+                    left, isNatural, joinType, right, conditionType, condition
+                },
+                pos);
     }
 
     public void unparse(
@@ -98,14 +109,18 @@ public class SqlJoinOperator extends SqlOperator
         int rightPrec)
     {
         final SqlNode left = operands[SqlJoin.LEFT_OPERAND];
+
         // REVIEW jvs 16-June-2006:  I commented out this and
         // corresponding endList below because it is redundant
         // with enclosing FROM frame pushed by SqlSelectOperator.
         /*
         final SqlWriter.Frame frame0 =
-            writer.startList(SqlWriter.FrameType.FromList, "", "");
-        */
-        left.unparse(writer, leftPrec, getLeftPrec());
+         writer.startList(SqlWriter.FrameType.FromList, "", "");
+         */
+        left.unparse(
+            writer,
+            leftPrec,
+            getLeftPrec());
         String natural = "";
         if (SqlLiteral.booleanValue(operands[SqlJoin.IS_NATURAL_OPERAND])) {
             natural = "NATURAL ";
@@ -135,13 +150,18 @@ public class SqlJoinOperator extends SqlOperator
             throw joinType.unexpected();
         }
         final SqlNode right = operands[SqlJoin.RIGHT_OPERAND];
-        right.unparse(writer, getRightPrec(), rightPrec);
+        right.unparse(
+            writer,
+            getRightPrec(),
+            rightPrec);
         final SqlNode condition = operands[SqlJoin.CONDITION_OPERAND];
         if (condition != null) {
-            final SqlJoinOperator.ConditionType conditionType = (ConditionType)
-                SqlLiteral.symbolValue(operands[SqlJoin.CONDITION_TYPE_OPERAND]);
+            final SqlJoinOperator.ConditionType conditionType =
+                (ConditionType) SqlLiteral.symbolValue(
+                    operands[SqlJoin.CONDITION_TYPE_OPERAND]);
             switch (conditionType.getOrdinal()) {
             case ConditionType.Using_ORDINAL:
+
                 // No need for an extra pair of parens -- the condition is a
                 // list. The result is something like "USING (deptno, gender)".
                 writer.keyword("USING");
@@ -161,31 +181,38 @@ public class SqlJoinOperator extends SqlOperator
         }
         /*
         writer.endList(frame0);
-        */
+         */
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Enumerates the types of condition in a join expression.
      */
-    public static class ConditionType extends EnumeratedValues.BasicValue
+    public static class ConditionType
+        extends EnumeratedValues.BasicValue
     {
         public static final int None_ORDINAL = 0;
 
-        /** Join clause has no condition, for example "FROM EMP, DEPT" */
+        /**
+         * Join clause has no condition, for example "FROM EMP, DEPT"
+         */
         public static final ConditionType None =
             new ConditionType("None", None_ORDINAL);
         public static final int On_ORDINAL = 1;
 
-        /** Join clause has an ON condition, for example
-         * "FROM EMP JOIN DEPT ON EMP.DEPTNO = DEPT.DEPTNO" */
+        /**
+         * Join clause has an ON condition, for example "FROM EMP JOIN DEPT ON
+         * EMP.DEPTNO = DEPT.DEPTNO"
+         */
         public static final ConditionType On =
             new ConditionType("On", On_ORDINAL);
         public static final int Using_ORDINAL = 2;
 
-        /** Join clause has a USING condition, for example
-         * "FROM EMP JOIN DEPT USING (DEPTNO)" */
+        /**
+         * Join clause has a USING condition, for example "FROM EMP JOIN DEPT
+         * USING (DEPTNO)"
+         */
         public static final ConditionType Using =
             new ConditionType("Using", Using_ORDINAL);
 
@@ -193,7 +220,7 @@ public class SqlJoinOperator extends SqlOperator
          * List of all allowable {@link SqlJoinOperator.ConditionType} values.
          */
         public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new ConditionType [] { None, On, Using });
+            new EnumeratedValues(new ConditionType[] { None, On, Using });
 
         private ConditionType(
             String name,
@@ -222,37 +249,49 @@ public class SqlJoinOperator extends SqlOperator
     /**
      * Enumerates the types of join.
      */
-    public static class JoinType extends EnumeratedValues.BasicValue
+    public static class JoinType
+        extends EnumeratedValues.BasicValue
     {
         public static final int Inner_ORDINAL = 0;
 
-        /** Inner join. */
+        /**
+         * Inner join.
+         */
         public static final JoinType Inner =
             new JoinType("Inner", Inner_ORDINAL);
         public static final int Full_ORDINAL = 1;
 
-        /** Full outer join. */
+        /**
+         * Full outer join.
+         */
         public static final JoinType Full = new JoinType("Full", Full_ORDINAL);
         public static final int Cross_ORDINAL = 2;
 
-        /** Cross join (also known as Cartesian product). */
+        /**
+         * Cross join (also known as Cartesian product).
+         */
         public static final JoinType Cross =
             new JoinType("Cross", Cross_ORDINAL);
         public static final int Left_ORDINAL = 3;
 
-        /** Left outer join. */
+        /**
+         * Left outer join.
+         */
         public static final JoinType Left = new JoinType("Left", Left_ORDINAL);
         public static final int Right_ORDINAL = 4;
 
-        /** Right outer join. */
+        /**
+         * Right outer join.
+         */
         public static final JoinType Right =
             new JoinType("Right", Right_ORDINAL);
         public static final int Comma_ORDINAL = 5;
 
-        /** Comma join: the good old-fashioned SQL <code>FROM</code> clause,
-         * where table expressions are specified with commas between them,
-         * and join conditions are specified in the <code>WHERE</code>
-         * clause. */
+        /**
+         * Comma join: the good old-fashioned SQL <code>FROM</code> clause,
+         * where table expressions are specified with commas between them, and
+         * join conditions are specified in the <code>WHERE</code> clause.
+         */
         public static final JoinType Comma =
             new JoinType("Comma", Comma_ORDINAL);
 
@@ -260,7 +299,8 @@ public class SqlJoinOperator extends SqlOperator
          * List of all allowable {@link SqlJoinOperator.JoinType} values.
          */
         public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new JoinType [] {
+            new EnumeratedValues(
+                new JoinType[] {
                     Inner, Full, Cross, Left, Right, Comma
                 });
 
@@ -288,6 +328,5 @@ public class SqlJoinOperator extends SqlOperator
         }
     }
 }
-
 
 // End SqlJoinOperator.java

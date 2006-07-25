@@ -22,34 +22,37 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.type.FarragoTypeFactory;
-import openjava.ptree.*;
-import openjava.mop.OJClass;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.rel.RelFieldCollation;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-
 import java.util.ArrayList;
 
+import net.sf.farrago.type.*;
+
+import openjava.mop.*;
+
+import openjava.ptree.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
+
 /**
- * Abstract base class for relational expressions which implement 
- * {@link FennelRel} and have variable numbers of inputs.
+ * Abstract base class for relational expressions which implement {@link
+ * FennelRel} and have variable numbers of inputs.
  *
  * @author Jack Frost
- * @since Feb 4, 2005
  * @version $Id$
+ * @since Feb 4, 2005
  */
-public abstract class FennelMultipleRel 
-    extends AbstractRelNode implements FennelRel
+public abstract class FennelMultipleRel
+    extends AbstractRelNode
+    implements FennelRel
 {
-    //~ Instance fields -------------------------------------------------------
 
-    protected RelNode[] inputs;
+    //~ Instance fields --------------------------------------------------------
 
-    //~ Constructors ----------------------------------------------------------
+    protected RelNode [] inputs;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelMultipleRel object.
@@ -59,9 +62,11 @@ public abstract class FennelMultipleRel
      */
     protected FennelMultipleRel(
         RelOptCluster cluster,
-        RelNode[] inputs)
+        RelNode [] inputs)
     {
-        super(cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
+        super(
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION));
         this.inputs = inputs;
         assert inputs != null;
         for (int i = 0; i < inputs.length; i++) {
@@ -69,7 +74,7 @@ public abstract class FennelMultipleRel
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public RelNode [] getInputs()
@@ -98,21 +103,22 @@ public abstract class FennelMultipleRel
 
         for (int i = 0; i < inputs.length; i++) {
             RelNode input = inputs[i];
-            Expression expr = 
+            Expression expr =
                 (Expression) implementor.visitChild(this, i, input);
             expressionList.add(expr);
         }
 
         FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
 
-        return new MethodCall(
-            stmt.getConnectionVariable(),
-            "dummyArray",
-            new ExpressionList(
-                new ArrayAllocationExpression(
-                    OJClass.forClass(Object.class),
-                    new ExpressionList(null),
-                    new ArrayInitializer(expressionList))));
+        return
+            new MethodCall(
+                stmt.getConnectionVariable(),
+                "dummyArray",
+                new ExpressionList(
+                    new ArrayAllocationExpression(
+                        OJClass.forClass(Object.class),
+                        new ExpressionList(null),
+                        new ArrayInitializer(expressionList))));
     }
 
     // implement RelNode
@@ -124,8 +130,8 @@ public abstract class FennelMultipleRel
             RelDataType inputType = input.getRowType();
             typeList.add(inputType);
         }
-        final RelDataType[] types = 
-            (RelDataType[]) typeList.toArray(new RelDataType[typeList.size()]);
+        final RelDataType [] types =
+            (RelDataType []) typeList.toArray(new RelDataType[typeList.size()]);
         return getCluster().getTypeFactory().createJoinType(types);
     }
 

@@ -20,29 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.validate.*;
+
 
 /**
- * SqlSetOperator represents a relational set theory operator
- * (UNION, INTERSECT, MINUS).  These are binary operators, but with
- * an extra boolean attribute tacked on for whether to remove duplicates
- * (e.g. UNION ALL does not remove duplicates).
+ * SqlSetOperator represents a relational set theory operator (UNION, INTERSECT,
+ * MINUS). These are binary operators, but with an extra boolean attribute
+ * tacked on for whether to remove duplicates (e.g. UNION ALL does not remove
+ * duplicates).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlSetOperator extends SqlBinaryOperator
+public class SqlSetOperator
+    extends SqlBinaryOperator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final boolean all;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlSetOperator(
         String name,
@@ -50,7 +51,10 @@ public class SqlSetOperator extends SqlBinaryOperator
         int prec,
         boolean all)
     {
-        super(name, kind, prec, true,
+        super(name,
+            kind,
+            prec,
+            true,
             SqlTypeStrategies.rtiLeastRestrictive,
             null,
             SqlTypeStrategies.otcSetop);
@@ -67,10 +71,17 @@ public class SqlSetOperator extends SqlBinaryOperator
         SqlOperandTypeChecker operandTypeChecker)
     {
         super(
-            name, kind, prec, true, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+            name,
+            kind,
+            prec,
+            true,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
         this.all = all;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isAll()
     {
@@ -91,6 +102,5 @@ public class SqlSetOperator extends SqlBinaryOperator
         validator.validateQuery(call);
     }
 }
-
 
 // End SqlSetOperator.java

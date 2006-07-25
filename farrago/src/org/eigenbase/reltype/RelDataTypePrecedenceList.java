@@ -23,16 +23,18 @@
 package org.eigenbase.reltype;
 
 /**
- * RelDataTypePrecedenceList defines a type precedence list
- * for a particular type.
- *
- * @sql.99 Part 2 Section 9.5
+ * RelDataTypePrecedenceList defines a type precedence list for a particular
+ * type.
  *
  * @author John V. Sichi
  * @version $Id$
+ * @sql.99 Part 2 Section 9.5
  */
 public interface RelDataTypePrecedenceList
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Determines whether a type appears in this precedence list.
      *
@@ -46,7 +48,6 @@ public interface RelDataTypePrecedenceList
      * Compares the precedence of two types.
      *
      * @param type1 first type to compare
-     *
      * @param type2 second type to compare
      *
      * @return positive if type1 has higher precedence; negative if type2 has

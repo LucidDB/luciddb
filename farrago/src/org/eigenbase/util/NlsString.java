@@ -20,34 +20,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
+import java.nio.charset.*;
 
-import org.eigenbase.sql.SqlCollation;
+import org.eigenbase.sql.*;
 
 
 /**
- * A string, optionally with {@link Charset character set} and
- * {@link SqlCollation}. It is immutable.
+ * A string, optionally with {@link Charset character set} and {@link
+ * SqlCollation}. It is immutable.
  *
  * @author jhyde
- * @since May 28, 2004
  * @version $Id$
- **/
-public class NlsString implements Comparable<NlsString>
+ * @since May 28, 2004
+ */
+public class NlsString
+    implements Comparable<NlsString>
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final String charsetName;
     private final String value;
     private final Charset charset;
     private final SqlCollation collation;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a string in a specfied character set.
@@ -56,14 +55,11 @@ public class NlsString implements Comparable<NlsString>
      * @param charsetName Name of the character set, may be null
      * @param collation Collation, may be null
      *
+     * @throws IllegalCharsetNameException If the given charset name is illegal
+     * @throws UnsupportedCharsetException If no support for the named charset
+     * is available in this instance of the Java virtual machine
+     *
      * @pre theString != null
-     *
-     * @throws  IllegalCharsetNameException
-     *          If the given charset name is illegal
-     *
-     * @throws  UnsupportedCharsetException
-     *          If no support for the named charset is available
-     *          in this instance of the Java virtual machine
      */
     public NlsString(
         String value,
@@ -83,9 +79,9 @@ public class NlsString implements Comparable<NlsString>
         this.value = value;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
-    public Object clone() 
+    public Object clone()
     {
         return new NlsString(value, charsetName, collation);
     }
@@ -104,9 +100,10 @@ public class NlsString implements Comparable<NlsString>
             return false;
         }
         NlsString that = (NlsString) obj;
-        return Util.equal(value, that.value) &&
-            Util.equal(charsetName, that.charsetName) &&
-            Util.equal(collation, that.collation);
+        return
+            Util.equal(value, that.value)
+            && Util.equal(charsetName, that.charsetName)
+            && Util.equal(collation, that.collation);
     }
 
     // implement Comparable
@@ -139,11 +136,12 @@ public class NlsString implements Comparable<NlsString>
     }
 
     /**
-     * Returns the string quoted for SQL, for example
-     * <code>_ISO-8859-1'is it a plane? no it''s superman!'</code>.
+     * Returns the string quoted for SQL, for example <code>_ISO-8859-1'is it a
+     * plane? no it''s superman!'</code>.
      *
      * @param prefix if true, prefix the character set name
      * @param suffix if true, suffix the collation clause
+     *
      * @return the quoted string
      */
     public String asSql(
@@ -158,6 +156,7 @@ public class NlsString implements Comparable<NlsString>
         ret.append("'");
         ret.append(Util.replace(value, "'", "''"));
         ret.append("'");
+
         // NOTE jvs 3-Feb-2005:  see FRG-78 for why this should go away
         if (false) {
             if (suffix && (null != collation)) {
@@ -169,8 +168,8 @@ public class NlsString implements Comparable<NlsString>
     }
 
     /**
-     * Returns the string quoted for SQL, for example
-     * <code>_ISO-8859-1'is it a plane? no it''s superman!'</code>.
+     * Returns the string quoted for SQL, for example <code>_ISO-8859-1'is it a
+     * plane? no it''s superman!'</code>.
      */
     public String toString()
     {
@@ -178,10 +177,10 @@ public class NlsString implements Comparable<NlsString>
     }
 
     /**
-     * Concatenates some {@link NlsString} objects.
-     * The result has the charset and collation of the first element.
-     * The other elements must have matching (or null) charset and collation.
-     * Concatenates all at once, not pairwise, to avoid string copies.
+     * Concatenates some {@link NlsString} objects. The result has the charset
+     * and collation of the first element. The other elements must have matching
+     * (or null) charset and collation. Concatenates all at once, not pairwise,
+     * to avoid string copies.
      *
      * @param args array of {@link NlsString} to be concatenated
      */
@@ -197,12 +196,16 @@ public class NlsString implements Comparable<NlsString>
         // sum string lengths and validate
         for (int i = 1; i < args.length; i++) {
             length += args[i].value.length();
-            if (!((args[i].charsetName == null)
-                    || args[i].charsetName.equals(charSetName))) {
+            if (!(
+                    (args[i].charsetName == null)
+                    || args[i].charsetName.equals(charSetName)
+                 )) {
                 throw new IllegalArgumentException("mismatched charsets");
             }
-            if (!((args[i].collation == null)
-                    || args[i].collation.equals(collation))) {
+            if (!(
+                    (args[i].collation == null)
+                    || args[i].collation.equals(collation)
+                 )) {
                 throw new IllegalArgumentException("mismatched collations");
             }
         }
@@ -212,11 +215,10 @@ public class NlsString implements Comparable<NlsString>
             sb.append(args[i].value);
         }
         return new NlsString(
-            sb.toString(),
-            charSetName,
-            collation);
+                sb.toString(),
+                charSetName,
+                collation);
     }
 }
-
 
 // End NlsString.java

@@ -20,10 +20,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -32,19 +31,20 @@ import org.eigenbase.reltype.RelDataType;
  * @author John V. Sichi
  * @version $Id$
  */
-public class RexDynamicParam extends RexVariable
+public class RexDynamicParam
+    extends RexVariable
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int index;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a dynamic parameter.
      *
      * @param type inferred type of parameter
-     *
      * @param index 0-based index of dynamic parameter in statement
      */
     public RexDynamicParam(
@@ -55,7 +55,7 @@ public class RexDynamicParam extends RexVariable
         this.index = index;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
@@ -77,6 +77,5 @@ public class RexDynamicParam extends RexVariable
         return visitor.visitDynamicParam(this);
     }
 }
-
 
 // End RexDynamicParam.java

@@ -20,36 +20,38 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
 import java.io.*;
-import java.math.BigDecimal;
 
-import junit.framework.TestCase;
-import junit.framework.Test;
-import junit.framework.TestSuite;
-import junit.textui.TestRunner;
+import java.math.*;
+
+import junit.framework.*;
+
+import junit.textui.*;
 
 import org.eigenbase.runtime.*;
+
 
 /**
  * Unit test for {@link Util} and other classes in this package.
  *
  * @author jhyde
- * @since Jul 12, 2004
  * @version $Id$
- **/
-public class UtilTest extends TestCase
+ * @since Jul 12, 2004
+ */
+public class UtilTest
+    extends TestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public UtilTest(String name)
     {
         super(name);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static Test suite()
         throws Exception
@@ -163,19 +165,19 @@ public class UtilTest extends TestCase
         // Try some funny non-ASCII charsets
         assertEquals(
             "ID$0$_f6__cb__c4__ca__ae__c1__f9__cb_",
-            Util.toJavaId("\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb", 0));
+            Util.toJavaId("\u00f6\u00cb\u00c4\u00ca\u00ae\u00c1\u00f9\u00cb",
+                0));
         assertEquals(
             "ID$0$_f6cb__c4ca__aec1__f9cb_",
             Util.toJavaId("\uf6cb\uc4ca\uaec1\uf9cb", 0));
-        byte [] bytes1 =
-        { 3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
+        byte [] bytes1 = { 3, 12, 54, 23, 33, 23, 45, 21, 127, -34, -92, -113 };
         assertEquals(
             "ID$0$_3__c_6_17__21__17__2d__15__7f__6cd9__fffd_",
             Util.toJavaId(
                 new String(bytes1, "EUC-JP"),
                 0));
         byte [] bytes2 =
-        { 64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
+            { 64, 32, 43, -45, -23, 0, 43, 54, 119, -32, -56, -34 };
         assertEquals(
             "ID$0$_30c__3617__2117__2d15__7fde__a48f_",
             Util.toJavaId(
@@ -202,12 +204,13 @@ public class UtilTest extends TestCase
     public void testSerializeEnumeratedValues()
         throws IOException, ClassNotFoundException
     {
-        UnserializableEnum unser = (UnserializableEnum)
-            serializeAndDeserialize(UnserializableEnum.Foo);
+        UnserializableEnum unser =
+            (UnserializableEnum) serializeAndDeserialize(
+                UnserializableEnum.Foo);
         assertFalse(unser == UnserializableEnum.Foo);
 
-        SerializableEnum ser = (SerializableEnum)
-            serializeAndDeserialize(SerializableEnum.Foo);
+        SerializableEnum ser =
+            (SerializableEnum) serializeAndDeserialize(SerializableEnum.Foo);
         assertTrue(ser == SerializableEnum.Foo);
     }
 
@@ -220,51 +223,12 @@ public class UtilTest extends TestCase
         out.writeObject(e1);
         out.flush();
 
-        ByteArrayInputStream bin =
-            new ByteArrayInputStream(bout.toByteArray());
+        ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
         ObjectInputStream in = new ObjectInputStream(bin);
 
         Object o = in.readObject();
         return o;
     }
-
-    /**
-     * Enumeration which extends BasicValue does NOT serialize correctly.
-     */
-    private static class UnserializableEnum
-        extends EnumeratedValues.BasicValue
-    {
-        public UnserializableEnum(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-        public static final UnserializableEnum Foo = new UnserializableEnum("foo", 1);
-        public static final UnserializableEnum Bar = new UnserializableEnum("bar", 2);
-    }
-
-    /**
-     * Enumeration which serializes correctly.
-     */
-    private static class SerializableEnum
-        extends EnumeratedValues.SerializableValue
-    {
-        public SerializableEnum(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-        public static final SerializableEnum Foo = new SerializableEnum("foo", 1);
-        public static final SerializableEnum Bar = new SerializableEnum("bar", 2);
-
-        protected Object readResolve() throws ObjectStreamException
-        {
-            switch (_ordinal) {
-            case 1: return Foo;
-            case 2: return Bar;
-            default: throw new IllegalArgumentException();
-            }
-        }
-    }
-
 
     /**
      * Unit-test for {@link BitString}.
@@ -399,7 +363,55 @@ public class UtilTest extends TestCase
     {
         TestRunner.run(suite());
     }
-}
 
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Enumeration which extends BasicValue does NOT serialize correctly.
+     */
+    private static class UnserializableEnum
+        extends EnumeratedValues.BasicValue
+    {
+        public static final UnserializableEnum Foo =
+            new UnserializableEnum("foo", 1);
+        public static final UnserializableEnum Bar =
+            new UnserializableEnum("bar", 2);
+
+        public UnserializableEnum(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+    }
+
+    /**
+     * Enumeration which serializes correctly.
+     */
+    private static class SerializableEnum
+        extends EnumeratedValues.SerializableValue
+    {
+        public static final SerializableEnum Foo =
+            new SerializableEnum("foo", 1);
+        public static final SerializableEnum Bar =
+            new SerializableEnum("bar", 2);
+
+        public SerializableEnum(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+
+        protected Object readResolve()
+            throws ObjectStreamException
+        {
+            switch (_ordinal) {
+            case 1:
+                return Foo;
+            case 2:
+                return Bar;
+            default:
+                throw new IllegalArgumentException();
+            }
+        }
+    }
+}
 
 // End UtilTest.java

@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.fennel;
 
-
 /**
  * FennelJavaStreamMap is needed when a Fennel TupleStream's definition includes
  * calls to JavaTupleStreams.
@@ -32,13 +31,13 @@ package net.sf.farrago.fennel;
  */
 public interface FennelJavaStreamMap
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Looks up the handle of a JavaTupleStream by its ID.  This is called by
-     * native code when a TupleStream is opened.  The ID is a placeholder in
-     * the TupleStream definition; each open may result in a different handle.
-     *
+     * Looks up the handle of a JavaTupleStream by its ID. This is called by
+     * native code when a TupleStream is opened. The ID is a placeholder in the
+     * TupleStream definition; each open may result in a different handle.
      *
      * @param streamId ID of stream to find
      *
@@ -47,13 +46,12 @@ public interface FennelJavaStreamMap
     public long getJavaStreamHandle(int streamId);
 
     /**
-     * Looks up the root PageId of an index.  This is called by
-     * native code when a TupleStream accessing a temporary BTree is opened.
+     * Looks up the root PageId of an index. This is called by native code when
+     * a TupleStream accessing a temporary BTree is opened.
      *
      * @param pageOwnerId the identifier for the index
      */
     public long getIndexRoot(long pageOwnerId);
 }
-
 
 // End FennelJavaStreamMap.java

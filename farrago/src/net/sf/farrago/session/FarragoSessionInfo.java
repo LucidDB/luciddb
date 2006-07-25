@@ -22,12 +22,13 @@
 */
 package net.sf.farrago.session;
 
-import java.util.List;
+import java.util.*;
 
 
 public interface FarragoSessionInfo
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the session itself.
@@ -36,21 +37,26 @@ public interface FarragoSessionInfo
 
     /**
      * Returns unique identifier for this session.
+     *
      * @return unique session identifier
      */
     long getId();
 
-
     /**
      * Returns a list of identifiers of currently running statements.
+     *
      * @return List of unique statement identifiers
      */
     List<Long> getExecutingStmtIds();
 
     /**
      * Given a statement identifier, return an object containing its details.
+     *
      * @param id Unique identifier of a statement
+     *
      * @return FarragoSessionExecutingStmtInfo containing statement details
      */
     FarragoSessionExecutingStmtInfo getExecutingStmtInfo(Long id);
 }
+
+// End FarragoSessionInfo.java

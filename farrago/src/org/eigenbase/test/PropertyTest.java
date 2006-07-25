@@ -20,34 +20,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.test;
+
+import junit.framework.*;
 
 import org.eigenbase.util.property.*;
 
-import junit.framework.Assert;
-import junit.framework.TestCase;
 
 /**
- * Unit test for properties system ({@link TriggerableProperties},
- * {@link IntegerProperty} and the like).
+ * Unit test for properties system ({@link TriggerableProperties}, {@link
+ * IntegerProperty} and the like).
  *
  * @author jhyde
- * @since July 6, 2005
  * @version $Id$
+ * @since July 6, 2005
  */
-public class PropertyTest extends TestCase
+public class PropertyTest
+    extends TestCase
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public void testInt()
     {
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals(5, props.intProp.get());
-        Assert.assertEquals(789, props.intProp.get(789));
+        Assert.assertEquals(
+            5,
+            props.intProp.get());
+        Assert.assertEquals(
+            789,
+            props.intProp.get(789));
 
         int prev = props.intProp.set(8);
-        Assert.assertEquals(8, props.intProp.get());
+        Assert.assertEquals(
+            8,
+            props.intProp.get());
         Assert.assertEquals(5, prev);
 
         prev = props.intProp.set(0);
@@ -59,13 +68,21 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // As above, on property with no default value.
-        Assert.assertEquals(0, props.intPropNoDefault.get());
-        Assert.assertEquals(17, props.intPropNoDefault.get(17));
+        Assert.assertEquals(
+            0,
+            props.intPropNoDefault.get());
+        Assert.assertEquals(
+            17,
+            props.intPropNoDefault.get(17));
 
         int prev = props.intPropNoDefault.set(-56);
         Assert.assertEquals(0, prev);
-        Assert.assertEquals(-56, props.intPropNoDefault.get());
-        Assert.assertEquals(-56, props.intPropNoDefault.get(17));
+        Assert.assertEquals(
+            -56,
+            props.intPropNoDefault.get());
+        Assert.assertEquals(
+            -56,
+            props.intPropNoDefault.get(17));
 
         // Second time set returns the previous value.
         prev = props.intPropNoDefault.set(12345);
@@ -85,33 +102,55 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // Default value.
-        assertEquals(10, props.intPropLimit.get());
-        
+        assertEquals(
+            10,
+            props.intPropLimit.get());
+
         // Specified default value w/limit
-        assertEquals(11, props.intPropLimit.get(11));
-        assertEquals(50, props.intPropLimit.get(51));
-        assertEquals(5, props.intPropLimit.get(4));
-        assertEquals(50, props.intPropLimit.get(Integer.MAX_VALUE));
-        assertEquals(5, props.intPropLimit.get(Integer.MIN_VALUE));
+        assertEquals(
+            11,
+            props.intPropLimit.get(11));
+        assertEquals(
+            50,
+            props.intPropLimit.get(51));
+        assertEquals(
+            5,
+            props.intPropLimit.get(4));
+        assertEquals(
+            50,
+            props.intPropLimit.get(Integer.MAX_VALUE));
+        assertEquals(
+            5,
+            props.intPropLimit.get(Integer.MIN_VALUE));
 
         int prev = props.intPropLimit.set(8);
-        assertEquals(8, props.intPropLimit.get());
+        assertEquals(
+            8,
+            props.intPropLimit.get());
         assertEquals(10, prev);
-        
+
         prev = props.intPropLimit.set(100);
-        assertEquals(50, props.intPropLimit.get());
+        assertEquals(
+            50,
+            props.intPropLimit.get());
         assertEquals(8, prev);
-    
+
         prev = props.intPropLimit.set(-100);
-        assertEquals(5, props.intPropLimit.get());
+        assertEquals(
+            5,
+            props.intPropLimit.get());
         assertEquals(50, prev);
 
         // set string isn't limited until read
         props.intPropLimit.setString("99");
-        assertEquals(50, props.intPropLimit.get());
+        assertEquals(
+            50,
+            props.intPropLimit.get());
 
         props.intPropLimit.setString("-2");
-        assertEquals(5, props.intPropLimit.get());
+        assertEquals(
+            5,
+            props.intPropLimit.get());
 
         // Setting null is not OK.
         try {
@@ -121,25 +160,37 @@ public class PropertyTest extends TestCase
             // expected
         }
     }
-    
+
     public void testIntLimitNoDefault()
     {
         final MyProperties props = new MyProperties();
 
-        assertEquals(0, props.intPropLimitNoDefault.get());
-        assertEquals(1, props.intPropLimitNoDefault2.get());
+        assertEquals(
+            0,
+            props.intPropLimitNoDefault.get());
+        assertEquals(
+            1,
+            props.intPropLimitNoDefault2.get());
 
         // prev is "no value" == 0; set value is limited
         int prev = props.intPropLimitNoDefault.set(-100);
         assertEquals(0, prev);
-        assertEquals(-5, props.intPropLimitNoDefault.get());
-        assertEquals(-5, props.intPropLimitNoDefault.get(0));
-        
+        assertEquals(
+            -5,
+            props.intPropLimitNoDefault.get());
+        assertEquals(
+            -5,
+            props.intPropLimitNoDefault.get(0));
+
         // prev is "no value" == 1; set value is limited
         prev = props.intPropLimitNoDefault2.set(100);
         assertEquals(1, prev);
-        assertEquals(2, props.intPropLimitNoDefault2.get());
-        assertEquals(2, props.intPropLimitNoDefault2.get(1));
+        assertEquals(
+            2,
+            props.intPropLimitNoDefault2.get());
+        assertEquals(
+            2,
+            props.intPropLimitNoDefault2.get(1));
 
         prev = props.intPropLimitNoDefault.set(2);
         assertEquals(-5, prev);
@@ -151,19 +202,24 @@ public class PropertyTest extends TestCase
         } catch (NullPointerException e) {
             // expected
         }
-
     }
-    
+
     public void testDouble()
     {
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals(-3.14, props.doubleProp.get());
-        Assert.assertEquals(.789, props.doubleProp.get(.789));
+        Assert.assertEquals(
+            -3.14,
+            props.doubleProp.get());
+        Assert.assertEquals(
+            .789,
+            props.doubleProp.get(.789));
 
         double prev = props.doubleProp.set(.8);
-        Assert.assertEquals(.8, props.doubleProp.get());
+        Assert.assertEquals(
+            .8,
+            props.doubleProp.get());
         Assert.assertEquals(-3.14, prev);
 
         prev = props.doubleProp.set(.0);
@@ -175,13 +231,21 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // As above, on property with no default value.
-        Assert.assertEquals(.0, props.doublePropNoDefault.get());
-        Assert.assertEquals(.17, props.doublePropNoDefault.get(.17));
+        Assert.assertEquals(
+            .0,
+            props.doublePropNoDefault.get());
+        Assert.assertEquals(
+            .17,
+            props.doublePropNoDefault.get(.17));
 
         double prev = props.doublePropNoDefault.set(-.56);
         Assert.assertEquals(.0, prev);
-        Assert.assertEquals(-.56, props.doublePropNoDefault.get());
-        Assert.assertEquals(-.56, props.doublePropNoDefault.get(.17));
+        Assert.assertEquals(
+            -.56,
+            props.doublePropNoDefault.get());
+        Assert.assertEquals(
+            -.56,
+            props.doublePropNoDefault.get(.17));
 
         // Second time set returns the previous value.
         prev = props.doublePropNoDefault.set(.12345);
@@ -201,33 +265,55 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // Default value.
-        assertEquals(Math.E, props.doublePropLimit.get());
-        
+        assertEquals(
+            Math.E,
+            props.doublePropLimit.get());
+
         // Specified default value w/limit
-        assertEquals(1.1, props.doublePropLimit.get(1.1));
-        assertEquals(Math.PI, props.doublePropLimit.get(5.1));
-        assertEquals(-Math.PI, props.doublePropLimit.get(-4.0));
-        assertEquals(Math.PI, props.doublePropLimit.get(Double.MAX_VALUE));
-        assertEquals(-Math.PI, props.doublePropLimit.get(-Double.MAX_VALUE));
+        assertEquals(
+            1.1,
+            props.doublePropLimit.get(1.1));
+        assertEquals(
+            Math.PI,
+            props.doublePropLimit.get(5.1));
+        assertEquals(
+            -Math.PI,
+            props.doublePropLimit.get(-4.0));
+        assertEquals(
+            Math.PI,
+            props.doublePropLimit.get(Double.MAX_VALUE));
+        assertEquals(
+            -Math.PI,
+            props.doublePropLimit.get(-Double.MAX_VALUE));
 
         double prev = props.doublePropLimit.set(2.5);
-        assertEquals(2.5, props.doublePropLimit.get());
+        assertEquals(
+            2.5,
+            props.doublePropLimit.get());
         assertEquals(Math.E, prev);
-        
+
         prev = props.doublePropLimit.set(10.0);
-        assertEquals(Math.PI, props.doublePropLimit.get());
+        assertEquals(
+            Math.PI,
+            props.doublePropLimit.get());
         assertEquals(2.5, prev);
-    
+
         prev = props.doublePropLimit.set(-10.0);
-        assertEquals(-Math.PI, props.doublePropLimit.get());
+        assertEquals(
+            -Math.PI,
+            props.doublePropLimit.get());
         assertEquals(Math.PI, prev);
 
         // set string isn't limited until read
         props.doublePropLimit.setString("99.0");
-        assertEquals(Math.PI, props.doublePropLimit.get());
+        assertEquals(
+            Math.PI,
+            props.doublePropLimit.get());
 
         props.doublePropLimit.setString("-20.2");
-        assertEquals(-Math.PI, props.doublePropLimit.get());
+        assertEquals(
+            -Math.PI,
+            props.doublePropLimit.get());
 
         // Setting null is not OK.
         try {
@@ -237,25 +323,37 @@ public class PropertyTest extends TestCase
             // expected
         }
     }
-    
+
     public void testDoubleLimitNoDefault()
     {
         final MyProperties props = new MyProperties();
 
-        assertEquals(0.0, props.doublePropLimitNoDefault.get());
-        assertEquals(1.0, props.doublePropLimitNoDefault2.get());
+        assertEquals(
+            0.0,
+            props.doublePropLimitNoDefault.get());
+        assertEquals(
+            1.0,
+            props.doublePropLimitNoDefault2.get());
 
         // prev is "no value" == 0.0; set value is limited
         double prev = props.doublePropLimitNoDefault.set(-100.0);
         assertEquals(0.0, prev);
-        assertEquals(-1.0, props.doublePropLimitNoDefault.get());
-        assertEquals(-1.0, props.doublePropLimitNoDefault.get(0));
-        
+        assertEquals(
+            -1.0,
+            props.doublePropLimitNoDefault.get());
+        assertEquals(
+            -1.0,
+            props.doublePropLimitNoDefault.get(0));
+
         // prev is "no value" == 1.0; set value is limited
         prev = props.doublePropLimitNoDefault2.set(100);
         assertEquals(1.0, prev);
-        assertEquals(10.0, props.doublePropLimitNoDefault2.get());
-        assertEquals(10.0, props.doublePropLimitNoDefault2.get(1.1));
+        assertEquals(
+            10.0,
+            props.doublePropLimitNoDefault2.get());
+        assertEquals(
+            10.0,
+            props.doublePropLimitNoDefault2.get(1.1));
 
         prev = props.doublePropLimitNoDefault.set(-0.5);
         assertEquals(-1.0, prev);
@@ -268,18 +366,24 @@ public class PropertyTest extends TestCase
             // expected
         }
     }
-    
+
     public void testString()
     {
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals("foo", props.stringProp.get());
-        Assert.assertEquals("xxxxx", props.stringProp.get("xxxxx"));
+        Assert.assertEquals(
+            "foo",
+            props.stringProp.get());
+        Assert.assertEquals(
+            "xxxxx",
+            props.stringProp.get("xxxxx"));
 
         // First time set returns the default value.
         String prev = props.stringProp.set("bar");
-        Assert.assertEquals("bar", props.stringProp.get());
+        Assert.assertEquals(
+            "bar",
+            props.stringProp.get());
         Assert.assertEquals("foo", prev);
 
         // Second time set returns the previous value.
@@ -300,13 +404,21 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // As above, on property with no default value.
-        Assert.assertEquals(null, props.stringPropNoDefault.get());
-        Assert.assertEquals("xx", props.stringPropNoDefault.get("xx"));
+        Assert.assertEquals(
+            null,
+            props.stringPropNoDefault.get());
+        Assert.assertEquals(
+            "xx",
+            props.stringPropNoDefault.get("xx"));
 
         String prev = props.stringPropNoDefault.set("paul");
         Assert.assertEquals(null, prev);
-        Assert.assertEquals("paul", props.stringPropNoDefault.get());
-        Assert.assertEquals("paul", props.stringPropNoDefault.get("xx"));
+        Assert.assertEquals(
+            "paul",
+            props.stringPropNoDefault.get());
+        Assert.assertEquals(
+            "paul",
+            props.stringPropNoDefault.get("xx"));
 
         // Second time set returns the previous value.
         prev = props.stringPropNoDefault.set("ringo");
@@ -319,7 +431,6 @@ public class PropertyTest extends TestCase
         } catch (NullPointerException e) {
             // ok
         }
-
     }
 
     public void testBoolean()
@@ -327,12 +438,18 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // Default value.
-        Assert.assertEquals(true, props.booleanProp.get());
-        Assert.assertEquals(false, props.booleanProp.get(false));
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get(false));
 
         // First time set returns the default value.
         boolean prev = props.booleanProp.set(false);
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         Assert.assertEquals(true, prev);
 
         // Second time set returns the previous value.
@@ -341,35 +458,61 @@ public class PropertyTest extends TestCase
 
         // Various values all mean true.
         String prevString = props.booleanProp.setString("1");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("true");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("TRUE");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("yes");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("Yes");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
 
         // Leading and trailing spaces are ignored.
         prevString = props.booleanProp.setString("  yes  ");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("false   ");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("true ");
-        Assert.assertEquals(true, props.booleanProp.get());
+        Assert.assertEquals(
+            true,
+            props.booleanProp.get());
 
         // All other values mean false.
         prevString = props.booleanProp.setString("");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("no");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("wombat");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("0");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
         prevString = props.booleanProp.setString("false");
-        Assert.assertEquals(false, props.booleanProp.get());
+        Assert.assertEquals(
+            false,
+            props.booleanProp.get());
 
         // Setting null is not OK.
         try {
@@ -385,14 +528,24 @@ public class PropertyTest extends TestCase
         final MyProperties props = new MyProperties();
 
         // As above, on property with no default value.
-        Assert.assertEquals(false, props.booleanPropNoDefault.get());
-        Assert.assertEquals(true, props.booleanPropNoDefault.get(true));
-        Assert.assertEquals(false, props.booleanPropNoDefault.get(false));
+        Assert.assertEquals(
+            false,
+            props.booleanPropNoDefault.get());
+        Assert.assertEquals(
+            true,
+            props.booleanPropNoDefault.get(true));
+        Assert.assertEquals(
+            false,
+            props.booleanPropNoDefault.get(false));
 
         boolean prev = props.booleanPropNoDefault.set(true);
         Assert.assertEquals(false, prev);
-        Assert.assertEquals(true, props.booleanPropNoDefault.get());
-        Assert.assertEquals(true, props.booleanPropNoDefault.get(false));
+        Assert.assertEquals(
+            true,
+            props.booleanPropNoDefault.get());
+        Assert.assertEquals(
+            true,
+            props.booleanPropNoDefault.get(false));
 
         // Second time set returns the previous value.
         prev = props.booleanPropNoDefault.set(false);
@@ -405,33 +558,36 @@ public class PropertyTest extends TestCase
         } catch (NullPointerException e) {
             // ok
         }
-
     }
 
     public void testTrigger()
     {
         final MyProperties props = new MyProperties();
-        final int[] ints = {0};
-        final Trigger trigger = new Trigger() {
-            public boolean isPersistent() {
-                return false;
-            }
-
-            public int phase() {
-                return 0;
-            }
-
-            public void execute(Property property, String value)
-                throws VetoRT {
-                int intValue = Integer.parseInt(value);
-                if (intValue > 10) {
-                    ints[0] = intValue;
+        final int [] ints = { 0 };
+        final Trigger trigger =
+            new Trigger() {
+                public boolean isPersistent()
+                {
+                    return false;
                 }
-                if (intValue > 100) {
-                    throw new VetoRT("too big");
+
+                public int phase()
+                {
+                    return 0;
                 }
-            }
-        };
+
+                public void execute(Property property, String value)
+                    throws VetoRT
+                {
+                    int intValue = Integer.parseInt(value);
+                    if (intValue > 10) {
+                        ints[0] = intValue;
+                    }
+                    if (intValue > 100) {
+                        throw new VetoRT("too big");
+                    }
+                }
+            };
         props.intProp.addTrigger(trigger);
         props.intProp.set(5);
         assertEquals(0, ints[0]); // unchanged
@@ -441,15 +597,13 @@ public class PropertyTest extends TestCase
             props.intProp.set(120);
             fail("expecting exception");
         } catch (Trigger.VetoRT e) {
-            assertEquals("too big", e.getMessage());
+            assertEquals(
+                "too big",
+                e.getMessage());
         }
-        Assert.assertEquals(15, props.intProp.get()); // change was rolled back
-    }
-
-    private static class State
-    {
-        boolean triggerCalled;
-        String triggerValue;
+        Assert.assertEquals(
+            15,
+            props.intProp.get()); // change was rolled back
     }
 
     /**
@@ -459,14 +613,14 @@ public class PropertyTest extends TestCase
     {
         final MyProperties props = new MyProperties();
 
-        String path= "test.mondrian.properties.change.value";
+        String path = "test.mondrian.properties.change.value";
         BooleanProperty boolProp = new BooleanProperty(
-            props,
-            path,
-            false);
+                props,
+                path,
+                false);
 
         assertTrue("Check property value NOT false",
-            (! boolProp.get()));
+            (!boolProp.get()));
 
         // set via the 'set' method
         final boolean prevBoolean = boolProp.set(true);
@@ -480,29 +634,35 @@ public class PropertyTest extends TestCase
         assertTrue("Check property value is null",
             (v != null));
         assertTrue("Check property value is true",
-            (! Boolean.valueOf(v).booleanValue()));
+            (!Boolean.valueOf(v).booleanValue()));
 
         final State state = new State();
         state.triggerCalled = false;
         state.triggerValue = null;
 
-        final Trigger trigger = new Trigger() {
-            public boolean isPersistent() {
-                return false;
-            }
-            public int phase() {
-                return Trigger.PRIMARY_PHASE;
-            }
-            public void execute(Property property, String value) {
-                state.triggerCalled = true;
-                state.triggerValue = value;
-            }
-        };
+        final Trigger trigger =
+            new Trigger() {
+                public boolean isPersistent()
+                {
+                    return false;
+                }
+
+                public int phase()
+                {
+                    return Trigger.PRIMARY_PHASE;
+                }
+
+                public void execute(Property property, String value)
+                {
+                    state.triggerCalled = true;
+                    state.triggerValue = value;
+                }
+            };
         boolProp.addTrigger(trigger);
 
         String falseStr = "false";
         props.setProperty(path, falseStr);
-        assertTrue("Check trigger was called", ! state.triggerCalled);
+        assertTrue("Check trigger was called", !state.triggerCalled);
 
         String trueStr = "true";
         props.setProperty(path, trueStr);
@@ -511,20 +671,9 @@ public class PropertyTest extends TestCase
             state.triggerCalled);
         assertTrue("Check trigger value was null",
             (state.triggerValue != null));
-        assertTrue("Check trigger value is NOT correct",
+        assertTrue(
+            "Check trigger value is NOT correct",
             state.triggerValue.equals(trueStr));
-
-    }
-
-    private static class State2
-    {
-        int callCounter;
-        int primaryOne;
-        int primaryTwo;
-        int secondaryOne;
-        int secondaryTwo;
-        int tertiaryOne;
-        int tertiaryTwo;
     }
 
     /**
@@ -533,11 +682,11 @@ public class PropertyTest extends TestCase
     public void testTriggerCallOrder()
     {
         final MyProperties props = new MyProperties();
-        String path= "test.mondrian.properties.call.order";
+        String path = "test.mondrian.properties.call.order";
         BooleanProperty boolProp = new BooleanProperty(
-            props,
-            path,
-            false);
+                props,
+                path,
+                false);
 
         final State2 state = new State2();
         state.callCounter = 0;
@@ -549,18 +698,23 @@ public class PropertyTest extends TestCase
         assertTrue("Check property value is null",
             (v != null));
         assertTrue("Check property value is true",
-            (! Boolean.valueOf(v).booleanValue()));
+            (!Boolean.valueOf(v).booleanValue()));
 
         // primaryOne
         Trigger primaryOneTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.PRIMARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.primaryOne = state.callCounter++;
                 }
             };
@@ -569,13 +723,18 @@ public class PropertyTest extends TestCase
         // secondaryOne
         Trigger secondaryOneTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.SECONDARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.secondaryOne = state.callCounter++;
                 }
             };
@@ -584,13 +743,18 @@ public class PropertyTest extends TestCase
         // tertiaryOne
         Trigger tertiaryOneTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.TERTIARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.tertiaryOne = state.callCounter++;
                 }
             };
@@ -599,13 +763,18 @@ public class PropertyTest extends TestCase
         // tertiaryTwo
         Trigger tertiaryTwoTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.TERTIARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.tertiaryTwo = state.callCounter++;
                 }
             };
@@ -614,13 +783,18 @@ public class PropertyTest extends TestCase
         // secondaryTwo
         Trigger secondaryTwoTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.SECONDARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.secondaryTwo = state.callCounter++;
                 }
             };
@@ -629,13 +803,18 @@ public class PropertyTest extends TestCase
         // primaryTwo
         Trigger primaryTwoTrigger =
             new Trigger() {
-                public boolean isPersistent() {
+                public boolean isPersistent()
+                {
                     return false;
                 }
-                public int phase() {
+
+                public int phase()
+                {
                     return Trigger.PRIMARY_PHASE;
                 }
-                public void execute(Property property, String value) {
+
+                public void execute(Property property, String value)
+                {
                     state.primaryTwo = state.callCounter++;
                 }
             };
@@ -650,9 +829,9 @@ public class PropertyTest extends TestCase
         props.setProperty(path, trueStr);
 
         assertTrue("Check trigger was NOT called",
-            (state.callCounter != 0 ));
+            (state.callCounter != 0));
         assertTrue("Check triggers was NOT called correct number of times",
-            (state.callCounter == 6 ));
+            (state.callCounter == 6));
 
         // now make sure that primary are called before secondary which are
         // before tertiary
@@ -684,8 +863,6 @@ public class PropertyTest extends TestCase
         assertTrue("Check secondaryTwo > tertiaryTwo",
             (state.secondaryTwo < state.tertiaryTwo));
 
-
-
         // remove some of the triggers
         boolProp.removeTrigger(primaryTwoTrigger);
         boolProp.removeTrigger(secondaryTwoTrigger);
@@ -702,9 +879,9 @@ public class PropertyTest extends TestCase
 
         props.setProperty(path, falseStr);
         assertTrue("Check trigger was NOT called",
-            (state.callCounter != 0 ));
+            (state.callCounter != 0));
         assertTrue("Check triggers was NOT called correct number of times",
-            (state.callCounter == 3 ));
+            (state.callCounter == 3));
 
         // now make sure that primary are called before secondary which are
         // before tertiary
@@ -715,27 +892,20 @@ public class PropertyTest extends TestCase
 
         assertTrue("Check secondaryOne > tertiaryOne",
             (state.secondaryOne < state.tertiaryOne));
-
-    }
-
-    private static class State3
-    {
-        int callCounter;
-        boolean triggerCalled;
-        String triggerValue;
     }
 
     /**
      * Checks that one can veto a property change.
      */
-    public void testVetoChangeValue() throws Exception
+    public void testVetoChangeValue()
+        throws Exception
     {
         final MyProperties props = new MyProperties();
-        String path= "test.mondrian.properties.veto.change.value";
+        String path = "test.mondrian.properties.veto.change.value";
         IntegerProperty intProp = new IntegerProperty(
-            props,
-            path,
-            -1);
+                props,
+                path,
+                -1);
 
         assertTrue("Check property value NOT false",
             (intProp.get() == -1));
@@ -755,41 +925,52 @@ public class PropertyTest extends TestCase
 
         // Add a trigger. Keep it on the stack to prevent it from being
         // garbage-collected.
-        final Trigger trigger1 = new Trigger() {
-            public boolean isPersistent() {
-                return false;
-            }
-            public int phase() {
-                return Trigger.PRIMARY_PHASE;
-            }
-            public void execute(Property property, String value) {
-                state.triggerCalled = true;
-                state.triggerValue = value;
-            }
-        };
+        final Trigger trigger1 =
+            new Trigger() {
+                public boolean isPersistent()
+                {
+                    return false;
+                }
+
+                public int phase()
+                {
+                    return Trigger.PRIMARY_PHASE;
+                }
+
+                public void execute(Property property, String value)
+                {
+                    state.triggerCalled = true;
+                    state.triggerValue = value;
+                }
+            };
         intProp.addTrigger(trigger1);
 
-        final Trigger trigger2 = new Trigger() {
-            public boolean isPersistent() {
-                return false;
-            }
-            public int phase() {
-                return Trigger.SECONDARY_PHASE;
-            }
-            public void execute(Property property, String value)
-                throws VetoRT {
-
-                // even numbers are rejected
-                state.callCounter++;
-                int ival = Integer.decode(value).intValue();
-                if ((ival % 2) == 0) {
-                    // throw on even
-                    throw new VetoRT("have a nice day");
-                } else {
-                    // ok
+        final Trigger trigger2 =
+            new Trigger() {
+                public boolean isPersistent()
+                {
+                    return false;
                 }
-            }
-        };
+
+                public int phase()
+                {
+                    return Trigger.SECONDARY_PHASE;
+                }
+
+                public void execute(Property property, String value)
+                    throws VetoRT
+                {
+                    // even numbers are rejected
+                    state.callCounter++;
+                    int ival = Integer.decode(value).intValue();
+                    if ((ival % 2) == 0) {
+                        // throw on even
+                        throw new VetoRT("have a nice day");
+                    } else {
+                        // ok
+                    }
+                }
+            };
         intProp.addTrigger(trigger2);
 
         for (int i = 0; i < 10; i++) {
@@ -800,35 +981,37 @@ public class PropertyTest extends TestCase
             boolean isEven = ((i % 2) == 0);
 
             try {
-                props.setProperty(path,
+                props.setProperty(
+                    path,
                     Integer.toString(i));
             } catch (Trigger.VetoRT ex) {
                 // Trigger rejects even numbers so if even its ok
-                if (! isEven) {
-                    fail("Did not reject even number: " +i);
+                if (!isEven) {
+                    fail("Did not reject even number: " + i);
                 }
                 int val = Integer.decode(state.triggerValue).intValue();
 
                 // the property value was reset to the previous value of "i"
                 // so we add "1" to it to get the current value.
-                assertTrue("Even counter not value plus one", (i == val+1));
+                assertTrue("Even counter not value plus one", (i == (val + 1)));
                 continue;
             }
+
             // should only be here if odd
             if (isEven) {
-                fail("Did not pass odd number: " +i);
+                fail("Did not pass odd number: " + i);
             }
             int val = Integer.decode(state.triggerValue).intValue();
 
             assertTrue("Odd counter not value", (i == val));
         }
-
     }
 
     /**
      * Runs {@link #testVetoChangeValue} many times, to test concurrency.
      */
-    public void testVetoChangeValueManyTimes() throws Exception
+    public void testVetoChangeValueManyTimes()
+        throws Exception
     {
         if (System.getProperty("java.vm.name").startsWith("BEA JRockit(R)")) {
             System.out.println("Not running for JRockit (FRG-100)");
@@ -839,20 +1022,50 @@ public class PropertyTest extends TestCase
         }
     }
 
-    private static class MyProperties extends TriggerableProperties
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class State
     {
-        public final IntegerProperty intProp = new IntegerProperty(
-            this, "props.int", 5);
+        boolean triggerCalled;
+        String triggerValue;
+    }
+
+    private static class State2
+    {
+        int callCounter;
+        int primaryOne;
+        int primaryTwo;
+        int secondaryOne;
+        int secondaryTwo;
+        int tertiaryOne;
+        int tertiaryTwo;
+    }
+
+    private static class State3
+    {
+        int callCounter;
+        boolean triggerCalled;
+        String triggerValue;
+    }
+
+    private static class MyProperties
+        extends TriggerableProperties
+    {
+        public final IntegerProperty intProp =
+            new IntegerProperty(
+                this,
+                "props.int",
+                5);
 
         public final IntegerProperty intPropNoDefault =
             new IntegerProperty(this, "props.int.nodefault");
 
-        public final IntegerProperty intPropLimit=
+        public final IntegerProperty intPropLimit =
             new IntegerProperty(this, "props.int.limit", 10, 5, 50);
 
         public final IntegerProperty intPropLimitNoDefault =
             new IntegerProperty(this, "props.int.limit.nodefault", -5, 5);
-        
+
         public final IntegerProperty intPropLimitNoDefault2 =
             new IntegerProperty(this, "props.int.limit.nodefault2", 1, 2);
 
@@ -867,18 +1080,28 @@ public class PropertyTest extends TestCase
 
         public final DoubleProperty doublePropNoDefault =
             new DoubleProperty(this, "props.double.nodefault");
-        
+
         public final DoubleProperty doublePropLimit =
             new DoubleProperty(
-                this, "props.double.limit", Math.E, -Math.PI, Math.PI);
+                this,
+                "props.double.limit",
+                Math.E,
+                -Math.PI,
+                Math.PI);
 
         public final DoubleProperty doublePropLimitNoDefault =
             new DoubleProperty(
-                this, "props.double.limit.nodefault", -1.0, 1.0);
-        
+                this,
+                "props.double.limit.nodefault",
+                -1.0,
+                1.0);
+
         public final DoubleProperty doublePropLimitNoDefault2 =
             new DoubleProperty(
-                this, "props.double.limit.nodefault2", 1.0, 10.0);
+                this,
+                "props.double.limit.nodefault2",
+                1.0,
+                10.0);
 
         public final BooleanProperty booleanProp =
             new BooleanProperty(this, "props.boolean", true);

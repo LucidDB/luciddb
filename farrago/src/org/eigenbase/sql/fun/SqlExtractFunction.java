@@ -22,26 +22,36 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
- * The SQL <code>EXTRACT</code> operator.  Extracts a specified field value
- * from a DATETIME or an INTERVAL.  E.g.<br> <code>EXTRACT(HOUR FROM
- * INTERVAL '364 23:59:59')</code> returns <code>23</code>
+ * The SQL <code>EXTRACT</code> operator. Extracts a specified field value from
+ * a DATETIME or an INTERVAL. E.g.<br>
+ * <code>EXTRACT(HOUR FROM INTERVAL '364 23:59:59')</code> returns <code>
+ * 23</code>
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlExtractFunction extends SqlFunction
+public class SqlExtractFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlExtractFunction()
     {
-        super("EXTRACT", SqlKind.Function,
-            SqlTypeStrategies.rtiNullableDouble, null,
+        super("EXTRACT",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableDouble,
+            null,
             SqlTypeStrategies.otcIntervalSameX2,
             SqlFunctionCategory.System);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getSignatureTemplate(int operandsCount)
     {
@@ -51,7 +61,7 @@ public class SqlExtractFunction extends SqlFunction
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {

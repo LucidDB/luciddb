@@ -20,27 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 
 
 /**
  * A row-expression which references a field.
  *
  * @author jhyde
- * @since Nov 24, 2003
  * @version $Id$
- **/
-public abstract class RexVariable extends RexNode
+ * @since Nov 24, 2003
+ */
+public abstract class RexVariable
+    extends RexNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final String name;
     protected final RelDataType type;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected RexVariable(
         String name,
@@ -53,7 +54,7 @@ public abstract class RexVariable extends RexNode
         this.type = type;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType getType()
     {
@@ -68,6 +69,5 @@ public abstract class RexVariable extends RexNode
         return name;
     }
 }
-
 
 // End RexVariable.java

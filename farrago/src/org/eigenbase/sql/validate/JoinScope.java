@@ -21,27 +21,32 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlJoin;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlWindow;
+import org.eigenbase.sql.*;
+
 
 /**
- * The name-resolution context for expression inside a JOIN clause.
- * The objects visible are the joined table expressions, and those
- * inherited from the parent scope.
+ * The name-resolution context for expression inside a JOIN clause. The objects
+ * visible are the joined table expressions, and those inherited from the parent
+ * scope.
  *
- * <p>Consider "SELECT * FROM (A JOIN B ON {exp1}) JOIN C ON {exp2}".
- * {exp1} is resolved in the join scope for "A JOIN B", which contains A
- * and B but not C.</p>
+ * <p>Consider "SELECT * FROM (A JOIN B ON {exp1}) JOIN C ON {exp2}". {exp1} is
+ * resolved in the join scope for "A JOIN B", which contains A and B but not
+ * C.</p>
  *
  * @author jhyde
  * @version $Id$
  * @since Mar 25, 2003
  */
-class JoinScope extends ListScope
+class JoinScope
+    extends ListScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlValidatorScope usingScope;
     private final SqlJoin join;
+
+    //~ Constructors -----------------------------------------------------------
 
     JoinScope(
         SqlValidatorScope parent,
@@ -53,14 +58,17 @@ class JoinScope extends ListScope
         this.join = join;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode getNode()
     {
         return join;
     }
 
-    public void addChild(SqlValidatorNamespace ns, String alias) {
+    public void addChild(SqlValidatorNamespace ns, String alias)
+    {
         super.addChild(ns, alias);
-        if (usingScope != null && usingScope != parent) {
+        if ((usingScope != null) && (usingScope != parent)) {
             // We're looking at a join within a join. Recursively add this
             // child to its parent scope too. Example:
             //
@@ -87,4 +95,3 @@ class JoinScope extends ListScope
 }
 
 // End JoinScope.java
-

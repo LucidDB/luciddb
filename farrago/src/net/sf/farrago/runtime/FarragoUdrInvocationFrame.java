@@ -21,9 +21,10 @@
 */
 package net.sf.farrago.runtime;
 
+import java.sql.*;
+
 import net.sf.farrago.session.*;
 
-import java.sql.*;
 
 /**
  * FarragoUdrInvocationFrame represents one entry on the routine invocation
@@ -34,6 +35,9 @@ import java.sql.*;
  */
 class FarragoUdrInvocationFrame
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     FarragoRuntimeContext context;
 
     FarragoSessionUdrContext udrContext;

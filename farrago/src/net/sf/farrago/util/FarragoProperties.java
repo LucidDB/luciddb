@@ -23,6 +23,7 @@
 package net.sf.farrago.util;
 
 import java.io.*;
+
 import java.util.*;
 import java.util.regex.*;
 
@@ -31,28 +32,30 @@ import org.eigenbase.util.property.*;
 
 
 /**
- * Provides the properties which control limited aspects of Farrago behavior.
- * In most cases, Farrago behavior should be controlled by defining
- * configuration parameters in the catalog, NOT by defining properties here.
- * Java properties should only be used for controlling bootstrap behavior
- * (before the catalog becomes available) or internals which don't belong as
- * parameters (e.g. tweaks for controlling test behavior).  As a gentle hint to
- * keep properties to a minimum, we intentionally make it difficult to set
- * them.  How?  By not defining a master Farrago .properties file.  Instead,
- * runtime and build scripts set just the properties they need on the
- * command line.
+ * Provides the properties which control limited aspects of Farrago behavior. In
+ * most cases, Farrago behavior should be controlled by defining configuration
+ * parameters in the catalog, NOT by defining properties here. Java properties
+ * should only be used for controlling bootstrap behavior (before the catalog
+ * becomes available) or internals which don't belong as parameters (e.g. tweaks
+ * for controlling test behavior). As a gentle hint to keep properties to a
+ * minimum, we intentionally make it difficult to set them. How? By not defining
+ * a master Farrago .properties file. Instead, runtime and build scripts set
+ * just the properties they need on the command line.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoProperties extends Properties
+public class FarragoProperties
+    extends Properties
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static FarragoProperties instance;
-    private static final String PROPERTY_EXPANSION_PATTERN = "\\$\\{\\w+(\\.\\w+)*\\}";
+    private static final String PROPERTY_EXPANSION_PATTERN =
+        "\\$\\{\\w+(\\.\\w+)*\\}";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * The string property "java.util.logging.config.file" is the path to the
@@ -70,16 +73,16 @@ public class FarragoProperties extends Properties
 
     /**
      * The optional string property "net.sf.farrago.catalog" is the path to the
-     * Farrago repository directory.  See also {@link #getCatalogDir}
+     * Farrago repository directory. See also {@link #getCatalogDir}
      */
     public final StringProperty catalogDir =
         new StringProperty(this, "net.sf.farrago.catalog", null);
 
     /**
      * The optional string property
-     * "net.sf.farrago.defaultSessionFactoryLibraryName" is the name
-     * of the plugin library to use for the default session factory.
-     * Defaults to {@link net.sf.farrago.defimpl.FarragoDefaultSessionFactory}.
+     * "net.sf.farrago.defaultSessionFactoryLibraryName" is the name of the
+     * plugin library to use for the default session factory. Defaults to {@link
+     * net.sf.farrago.defimpl.FarragoDefaultSessionFactory}.
      */
     public final StringProperty defaultSessionFactoryLibraryName =
         new StringProperty(
@@ -89,7 +92,7 @@ public class FarragoProperties extends Properties
 
     /**
      * The string property "net.sf.farrago.test.jdbcDriverClass" specifies the
-     * fully qualified name of the JDBC driver to use during testing.  If not
+     * fully qualified name of the JDBC driver to use during testing. If not
      * specified, {@link net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver} is
      * used.
      */
@@ -124,15 +127,14 @@ public class FarragoProperties extends Properties
     public final StringProperty testFilesetUnitlurql =
         new StringProperty(this, "com.lucidera.fileset.unitlurql", null);
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private FarragoProperties()
     {
         super(System.getProperties());
     }
 
-
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the {@link org.eigenbase.util.Glossary#SingletonPattern
@@ -159,8 +161,8 @@ public class FarragoProperties extends Properties
     }
 
     /**
-     * @return the directory containing the Farrago repos files; equivalent
-     * to {@link #catalogDir} if set, otherwise the "catalog" subdirectory of
+     * @return the directory containing the Farrago repos files; equivalent to
+     * {@link #catalogDir} if set, otherwise the "catalog" subdirectory of
      * {@link #homeDir}
      */
     public File getCatalogDir()
@@ -180,39 +182,39 @@ public class FarragoProperties extends Properties
     // catalogDir, etc.  Also, the definition of a property name
     // should probably be expanded to include more punctuation and/or
     // non-ASCII letters.
-    
+
     // UPDATE: RLN: 6/9/2006: Added support for expanding any named
     // property in this object. Property names now allow periods as we
     // normally use them (e.g., foo.bar), but disallows leading, trailing,
     // multiple, etc.
 
     /**
-     * Expands properties embedded in the given String.  Property
-     * names are encoded as in Ant: <code>${propertyName}</code>.
-     * Property names must match the {@link Pattern} \w character
-     * class (<code>[a-zA-z_0-9]</code>); groups of characters may be
-     * separated by periods (such as <code>net.sf.farrago.home</code>).
-     * <p>References to unknown or undefined
-     * properties are not modified (e.g., the expansion of
-     * <code>"${UNKNOWN}"</code> is <code>"${UNKNOWN}"</code>).
+     * Expands properties embedded in the given String. Property names are
+     * encoded as in Ant: <code>${propertyName}</code>. Property names must
+     * match the {@link Pattern} \w character class (<code>[a-zA-z_0-9]</code>);
+     * groups of characters may be separated by periods (such as <code>
+     * net.sf.farrago.home</code>).
+     *
+     * <p>References to unknown or undefined properties are not modified (e.g.,
+     * the expansion of <code>"${UNKNOWN}"</code> is <code>"${UNKNOWN}"</code>).
      *
      * <p>Currently, two special properties are supported:
      *
-     *<ul>
-     *<li><code>${FARRAGO_HOME}</code>:  replaced with the value
-     * of {@link #homeDir}.
-     *<li><code>${FARRAGO_CATALOG_DIR}</code>:  replaced with the value
-     * of {@link #getCatalogDir()}.
-     *</ul>
+     * <ul>
+     * <li><code>${FARRAGO_HOME}</code>: replaced with the value of {@link
+     * #homeDir}.
+     * <li><code>${FARRAGO_CATALOG_DIR}</code>: replaced with the value of
+     * {@link #getCatalogDir()}.
+     * </ul>
      *
-     * <p>All other tokens are used as keys to property values in this
-     * object.
+     * <p>All other tokens are used as keys to property values in this object.
      *
-     * @param value a value that may or may not contain property names
-     *              to be expanded.
-     * @return the <code>value</code> parameter with its property
-     *         references expanded -- returns <code>value</code> if no
-     *         known property references are found
+     * @param value a value that may or may not contain property names to be
+     * expanded.
+     *
+     * @return the <code>value</code> parameter with its property references
+     * expanded -- returns <code>value</code> if no known property references
+     * are found
      */
     public String expandProperties(String value)
     {
@@ -236,7 +238,7 @@ public class FarragoProperties extends Properties
             } else {
                 replacement = getProperty(propertyName);
             }
-            
+
             if (replacement != null) {
                 if (result == null) {
                     result = new StringBuffer(value);
@@ -254,6 +256,5 @@ public class FarragoProperties extends Properties
         return value;
     }
 }
-
 
 // End FarragoProperties.java

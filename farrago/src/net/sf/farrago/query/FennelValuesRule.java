@@ -25,21 +25,30 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * FennelValuesRule provides an implementation for {@link ValuesRel}
- * in terms of {@link FennelValuesRel}.
+ * FennelValuesRule provides an implementation for {@link ValuesRel} in terms of
+ * {@link FennelValuesRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelValuesRule extends ConverterRule
+public class FennelValuesRule
+    extends ConverterRule
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public FennelValuesRule()
     {
         super(
-            ValuesRel.class, CallingConvention.NONE,
-            FennelRel.FENNEL_EXEC_CONVENTION, "FennelValuesRule");
+            ValuesRel.class,
+            CallingConvention.NONE,
+            FennelRel.FENNEL_EXEC_CONVENTION,
+            "FennelValuesRule");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement ConverterRule
     public RelNode convert(RelNode rel)

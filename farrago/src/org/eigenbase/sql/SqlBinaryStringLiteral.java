@@ -21,21 +21,26 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.util.BitString;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * A binary (or hexadecimal) string literal.
  *
- * <p>The {@link #value} field is a {@link BitString} and
- * {@link #typeName} is {@link SqlTypeName#Binary}.
+ * <p>The {@link #value} field is a {@link BitString} and {@link #typeName} is
+ * {@link SqlTypeName#Binary}.
  *
  * @author wael
  * @version $Id$
  */
-public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
+public class SqlBinaryStringLiteral
+    extends SqlAbstractStringLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlBinaryStringLiteral(
         BitString val,
         SqlParserPos pos)
@@ -43,7 +48,11 @@ public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
         super(val, SqlTypeName.Binary, pos);
     }
 
-    /** @return the underlying BitString */
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * @return the underlying BitString
+     */
     public BitString getBitString()
     {
         return (BitString) value;
@@ -69,9 +78,10 @@ public class SqlBinaryStringLiteral extends SqlAbstractStringLiteral
         for (int i = 0; i < lits.length; i++) {
             args[i] = ((SqlBinaryStringLiteral) lits[i]).getBitString();
         }
-        return new SqlBinaryStringLiteral(
-            BitString.concat(args),
-            lits[0].getParserPosition());
+        return
+            new SqlBinaryStringLiteral(
+                BitString.concat(args),
+                lits[0].getParserPosition());
     }
 }
 

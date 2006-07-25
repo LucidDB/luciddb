@@ -20,18 +20,20 @@
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
+import java.lang.ref.*;
+
 import java.util.*;
-import java.lang.ref.WeakReference;
 
 
 /**
  * Definition and accessor for a property.
  *
  * <p>For example:
- * <blockquote><code><pre>
+ *
+ * <blockquote><code>
+ * <pre>
  * class MyProperties extends Properties {
  *     public final IntegerProperty DebugLevel =
  *         new IntegerProperty(this, "com.acme.debugLevel", 10);
@@ -41,31 +43,32 @@ import java.lang.ref.WeakReference;
  * System.out.println(props.DebugLevel.get()); // prints "10", the default
  * props.DebugLevel.set(20);
  * System.out.println(props.DebugLevel.get()); // prints "20"
- * </pre></code></blockquote>
+ * </pre>
+ * </code></blockquote>
  *
  * @author jhyde
- * @since May 4, 2004
  * @version $Id$
- **/
+ * @since May 4, 2004
+ */
 public abstract class Property
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final Properties properties;
     private final String path;
     private final String defaultValue;
     private final TriggerList triggerList = new TriggerList();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Property and associates it with an underlying properties
      * object.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      */
     protected Property(
@@ -81,7 +84,7 @@ public abstract class Property
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return this property's name (typically a dotted path)
@@ -127,7 +130,8 @@ public abstract class Property
     /**
      * Adds a trigger to this property.
      */
-    public void addTrigger(Trigger trigger) {
+    public void addTrigger(Trigger trigger)
+    {
         triggerList.add(trigger);
     }
 
@@ -142,17 +146,18 @@ public abstract class Property
     /**
      * Called when a property's value has just changed.
      *
-     * <p>If one of the triggers on the property throws a
-     * {@link org.eigenbase.util.property.Trigger.VetoRT} exception, this
-     * method passes it on.
+     * <p>If one of the triggers on the property throws a {@link
+     * org.eigenbase.util.property.Trigger.VetoRT} exception, this method passes
+     * it on.
      *
      * @param oldValue Previous value of the property
      * @param value New value of the property
      *
-     * @throws org.eigenbase.util.property.Trigger.VetoRT if one of the
-     *   triggers threw a VetoRT
+     * @throws org.eigenbase.util.property.Trigger.VetoRT if one of the triggers
+     * threw a VetoRT
      */
-    public void onChange(String oldValue, String value) {
+    public void onChange(String oldValue, String value)
+    {
         if (TriggerableProperties.equals(oldValue, value)) {
             return;
         }
@@ -189,7 +194,8 @@ public abstract class Property
     /**
      * Returns the boolean value of this property.
      */
-    public boolean booleanValue() {
+    public boolean booleanValue()
+    {
         final String value = getInternal(null, false);
         if (value == null) {
             return false;
@@ -198,44 +204,46 @@ public abstract class Property
     }
 
     /**
-     * Converts a string to a boolean.<p/>
+     * Converts a string to a boolean.
      *
-     * Note that {@link Boolean#parseBoolean(String)} is similar,
-     * but only exists from JDK 1.5 onwards,
-     * and only accepts 'true'.
+     * <p/>Note that {@link Boolean#parseBoolean(String)} is similar, but only
+     * exists from JDK 1.5 onwards, and only accepts 'true'.
      *
      * @return true if the string is "1" or "true" or "yes", ignoring case and
-     *   any leading or trailing spaces
+     * any leading or trailing spaces
      */
     protected static boolean toBoolean(final String value)
     {
         String trimmedLowerValue = value.toLowerCase().trim();
-        return trimmedLowerValue.equals("1") ||
-                trimmedLowerValue.equals("true") ||
-                trimmedLowerValue.equals("yes");
+        return
+            trimmedLowerValue.equals("1")
+            || trimmedLowerValue.equals("true")
+            || trimmedLowerValue.equals("yes");
     }
 
     /**
-     * Returns the value of the property as a string,
-     * or null if the property is not set.
+     * Returns the value of the property as a string, or null if the property is
+     * not set.
      */
     public String stringValue()
     {
         return getInternal(null, false);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * A trigger list a list of triggers associated with a given property.<p/>
+     * A trigger list a list of triggers associated with a given property.
      *
-     * A trigger list is associated with a property key, and
-     * contains zero or more {@link Trigger} objects.<p/>
+     * <p/>A trigger list is associated with a property key, and contains zero
+     * or more {@link Trigger} objects.
      *
-     * Each {@link Trigger} is stored in a {@link WeakReference} so that when
-     * the Trigger is only reachable via weak references the Trigger
-     * will be be collected and the contents of the WeakReference
-     * will be set to null.
+     * <p/>Each {@link Trigger} is stored in a {@link WeakReference} so that when
+     * the Trigger is only reachable via weak references the Trigger will be be
+     * collected and the contents of the WeakReference will be set to null.
      */
-    private static class TriggerList extends ArrayList
+    private static class TriggerList
+        extends ArrayList
     {
         /**
          * Adds a Trigger, wrapping it in a WeakReference.
@@ -245,11 +253,12 @@ public abstract class Property
         void add(final Trigger trigger)
         {
             // this is the object to add to list
-            Object o = (trigger.isPersistent())
-                        ? trigger : (Object) new WeakReference(trigger);
+            Object o =
+                (trigger.isPersistent()) ? trigger
+                : (Object) new WeakReference(trigger);
 
             // Add a Trigger in the correct group of phases in the list
-            for (ListIterator it = listIterator(); it.hasNext(); ) {
+            for (ListIterator it = listIterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -269,15 +278,15 @@ public abstract class Property
         }
 
         /**
-         * Removes the given Trigger.<p/>
+         * Removes the given Trigger.
          *
-         * In addition, removes any {@link WeakReference} that is empty.
+         * <p/>In addition, removes any {@link WeakReference} that is empty.
          *
          * @param trigger
          */
         void remove(final Trigger trigger)
         {
-            for (Iterator it = iterator(); it.hasNext(); ) {
+            for (Iterator it = iterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -290,14 +299,15 @@ public abstract class Property
 
         /**
          * Executes every {@link Trigger} in this {@link TriggerList}, passing
-         * in the property key whose change was the casue.<p/>
+         * in the property key whose change was the casue.
          *
-         * In addition, removes any {@link WeakReference} that is empty.
+         * <p/>In addition, removes any {@link WeakReference} that is empty.
          *
          * @param property The property whose change caused this property to
-         *   fire
+         * fire
          */
-        void execute(Property property, String value) throws Trigger.VetoRT
+        void execute(Property property, String value)
+            throws Trigger.VetoRT
         {
             // Make a copy so that if during the execution of a trigger a
             // Trigger is added or removed, we do not get a concurrent
@@ -305,7 +315,7 @@ public abstract class Property
             // a clone) so that we can remove any WeakReference whose
             // content has become null.
             List l = new ArrayList();
-            for (Iterator it = iterator(); it.hasNext(); ) {
+            for (Iterator it = iterator(); it.hasNext();) {
                 Trigger t = convert(it.next());
 
                 if (t == null) {
@@ -315,7 +325,7 @@ public abstract class Property
                 }
             }
 
-            for (Iterator it = l.iterator(); it.hasNext(); ) {
+            for (Iterator it = l.iterator(); it.hasNext();) {
                 Trigger t = (Trigger) it.next();
                 t.execute(property, value);
             }

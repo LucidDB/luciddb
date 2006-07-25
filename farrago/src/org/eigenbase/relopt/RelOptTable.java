@@ -20,33 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.RelCollation;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.reltype.*;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.rel.*;
+import org.eigenbase.reltype.*;
 
 
 /**
- * Represents a relational dataset in a {@link RelOptSchema}.
- * It has methods to describe and implement itself.
+ * Represents a relational dataset in a {@link RelOptSchema}. It has methods to
+ * describe and implement itself.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 10 November, 2001
  */
 public interface RelOptTable
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Obtains an identifier for this table.  The identifier must be unique
-     * with respect to the Connection producing this table.
+     * Obtains an identifier for this table. The identifier must be unique with
+     * respect to the Connection producing this table.
      *
      * @return qualified name
      */
@@ -72,14 +69,15 @@ public interface RelOptTable
      *
      * <p>The {@link org.eigenbase.relopt.RelOptPlanner planner} calls this
      * method to convert a table into an initial relational expression,
-     * generally something abstract, such as a
-     * {@link org.eigenbase.rel.TableAccessRel}, then optimizes this expression
-     * by applying {@link org.eigenbase.relopt.RelOptRule rules} to transform it
+     * generally something abstract, such as a {@link
+     * org.eigenbase.rel.TableAccessRel}, then optimizes this expression by
+     * applying {@link org.eigenbase.relopt.RelOptRule rules} to transform it
      * into more efficient access methods for this table.</p>
      *
      * @param cluster the cluster the relational expression will belong to
-     * @param connection the parse tree of the expression which evaluates
-     *        to a connection object
+     * @param connection the parse tree of the expression which evaluates to a
+     * connection object
+     *
      * @pre cluster != null
      * @pre connection != null
      */
@@ -88,14 +86,13 @@ public interface RelOptTable
         RelOptConnection connection);
 
     /**
-     * Returns a description of the physical ordering (or orderings) of the
-     * rows returned from this table.
+     * Returns a description of the physical ordering (or orderings) of the rows
+     * returned from this table.
      *
+     * @see RelNode#getCollationList()
      * @post return != null
-     * @see RelNode#getCollationList() 
      */
     public List<RelCollation> getCollationList();
 }
-
 
 // End RelOptTable.java

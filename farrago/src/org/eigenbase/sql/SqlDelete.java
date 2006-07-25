@@ -20,21 +20,21 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
- * A <code>SqlDelete</code> is a node of a parse tree which represents
- * a DELETE statement.
+ * A <code>SqlDelete</code> is a node of a parse tree which represents a DELETE
+ * statement.
  */
-public class SqlDelete extends SqlCall
+public class SqlDelete
+    extends SqlCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // constants representing operand positions
     public static final int TARGET_TABLE_OPERAND = 0;
@@ -43,7 +43,7 @@ public class SqlDelete extends SqlCall
     public static final int ALIAS_OPERAND = 3;
     public static final int OPERAND_COUNT = 4;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public SqlDelete(
         SqlSpecialOperator operator,
@@ -52,13 +52,16 @@ public class SqlDelete extends SqlCall
         SqlIdentifier alias,
         SqlParserPos pos)
     {
-        super(operator, new SqlNode[OPERAND_COUNT], pos);
+        super(
+            operator,
+            new SqlNode[OPERAND_COUNT],
+            pos);
         operands[TARGET_TABLE_OPERAND] = targetTable;
         operands[CONDITION_OPERAND] = condition;
         operands[ALIAS_OPERAND] = alias;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the identifier for the target table of the deletion
@@ -88,9 +91,9 @@ public class SqlDelete extends SqlCall
     }
 
     /**
-     * Gets the source SELECT expression for the data to be deleted.  This
-     * returns null before the condition has been expanded
-     * by SqlValidator.performUnconditionRewrites.
+     * Gets the source SELECT expression for the data to be deleted. This
+     * returns null before the condition has been expanded by
+     * SqlValidator.performUnconditionRewrites.
      *
      * @return the source SELECT for the data to be inserted
      */
@@ -108,17 +111,21 @@ public class SqlDelete extends SqlCall
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameType.Select, "DELETE FROM", "");
         getTargetTable().unparse(
-            writer, getOperator().getLeftPrec(), getOperator().getRightPrec());
+            writer,
+            getOperator().getLeftPrec(),
+            getOperator().getRightPrec());
         if (getAlias() != null) {
             writer.keyword("AS");
             getAlias().unparse(
-                writer, getOperator().getLeftPrec(),
+                writer,
+                getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
         if (getCondition() != null) {
             writer.sep("WHERE");
             getCondition().unparse(
-                writer, getOperator().getLeftPrec(),
+                writer,
+                getOperator().getLeftPrec(),
                 getOperator().getRightPrec());
         }
         writer.endList(frame);
@@ -129,6 +136,5 @@ public class SqlDelete extends SqlCall
         validator.validateDelete(this);
     }
 }
-
 
 // End SqlDelete.java

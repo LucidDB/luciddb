@@ -21,15 +21,19 @@
 */
 package org.eigenbase.jmi.mem;
 
-import org.eigenbase.util.*;
-import org.eigenbase.jmi.*;
-
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
 import java.io.*;
+
 import java.lang.reflect.*;
+
 import java.util.*;
 import java.util.concurrent.atomic.*;
+
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
+
 
 /**
  * JmiMemFactory creates objects for use in an in-memory repository
@@ -37,17 +41,21 @@ import java.util.concurrent.atomic.*;
  *
  * @author Julian Hyde
  * @author John V. Sichi
- *
  * @version $Id$
  */
 public abstract class JmiMemFactory
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final AtomicInteger nextId;
     private final RefPackageImpl rootPackageImpl;
     private final Map<String, Relationship> relationshipMap;
     private final Map<Class, RefObject> metaMap;
     private final Map<RefObject, RefPackage> pluginPackageMap;
     private final Map<Class, RefClass> classMap;
+
+    //~ Constructors -----------------------------------------------------------
 
     public JmiMemFactory()
     {
@@ -56,22 +64,23 @@ public abstract class JmiMemFactory
         metaMap = new HashMap<Class, RefObject>();
         pluginPackageMap = new HashMap<RefObject, RefPackage>();
         classMap = new HashMap<Class, RefClass>();
-        
+
         this.rootPackageImpl = newRootPackage();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public RefPackage getRootPackage()
     {
         return (RefPackage) rootPackageImpl.wrap();
     }
 
     /**
-     * Associates the MOFID of a persistent object with an in-memory
-     * object.  This is useful when the in-memory object is being
-     * manipulated as a shadow of the persistent object.
+     * Associates the MOFID of a persistent object with an in-memory object.
+     * This is useful when the in-memory object is being manipulated as a shadow
+     * of the persistent object.
      *
      * @param obj in-memory object
-     *
      * @param persistentMofId MOFID of persistent object to set
      */
     public void setPersistentMofId(RefBaseObject obj, String persistentMofId)
@@ -96,9 +105,8 @@ public abstract class JmiMemFactory
 
     /**
      * Creates a new package explicitly (rather than reflectively), locating it
-     * as a child of the root package.  This is required for plugin
-     * sub-packages, which don't have corresponding accessor methods on the
-     * root package.
+     * as a child of the root package. This is required for plugin sub-packages,
+     * which don't have corresponding accessor methods on the root package.
      *
      * @param ifacePackage interface corresponding to RefPackage
      *
@@ -119,11 +127,10 @@ public abstract class JmiMemFactory
     }
 
     /**
-     * Notifies subclasses that a new object has been created with the
-     * given MOFID.
+     * Notifies subclasses that a new object has been created with the given
+     * MOFID.
      *
      * @param refObj new object
-     *
      * @param mofId MOFID assigned
      */
     protected void mapMofId(RefBaseObject refObj, String mofId)
@@ -138,8 +145,8 @@ public abstract class JmiMemFactory
     }
 
     /**
-     * Creates the right kind of implementation class to implement the
-     * given interface.
+     * Creates the right kind of implementation class to implement the given
+     * interface.
      */
     protected ElementImpl createImpl(Class clazz, boolean preemptive)
     {
@@ -158,32 +165,35 @@ public abstract class JmiMemFactory
         }
     }
 
-    protected static Method[] sortMethods(Method[] methods)
+    protected static Method [] sortMethods(Method [] methods)
     {
-        Method[] sortedMethods = (Method[])methods.clone();
-        Arrays.sort(sortedMethods, new Comparator() {
-            public int compare(Object o1, Object o2)
-            {
-                Method m1 = (Method)o1;
-                Method m2 = (Method)o2;
+        Method [] sortedMethods = (Method []) methods.clone();
+        Arrays.sort(
+            sortedMethods,
+            new Comparator() {
+                public int compare(Object o1, Object o2)
+                {
+                    Method m1 = (Method) o1;
+                    Method m2 = (Method) o2;
 
-                return m1.getName().compareTo(m2.getName());
-            }
-        });
+                    return m1.getName().compareTo(m2.getName());
+                }
+            });
 
         return sortedMethods;
     }
 
     /**
      * Looks up a relationship.
-     * 
+     *
      * @param fromClass Name class the relationship is from
      * @param fromClass Name of the relationship
+     *
      * @return Name of backward relationship, or null if not found
-     */ 
+     */
     private Relationship lookupRelationship(Class fromClass, String fromName)
     {
-        Relationship relationship = 
+        Relationship relationship =
             relationshipMap.get(fromClass.getName() + ":" + fromName);
         if (relationship != null) {
             return relationship;
@@ -197,7 +207,7 @@ public abstract class JmiMemFactory
                 return relationship;
             }
         }
-        
+
         return null;
     }
 
@@ -213,7 +223,12 @@ public abstract class JmiMemFactory
         boolean toMany)
     {
         createRelationship(
-            fromClass, fromName, fromMany, toClass, toName, toMany,
+            fromClass,
+            fromName,
+            fromMany,
+            toClass,
+            toName,
+            toMany,
             false);
     }
 
@@ -221,9 +236,8 @@ public abstract class JmiMemFactory
      * Defines a meta-object.
      *
      * @param iface Java interface to associate with meta-object
-     *
-     * @param metaObject meta-object to return for refMetaObject()
-     * from instances of iface
+     * @param metaObject meta-object to return for refMetaObject() from
+     * instances of iface
      */
     public void defineMetaObject(Class iface, RefObject metaObject)
     {
@@ -242,10 +256,15 @@ public abstract class JmiMemFactory
         boolean toMany,
         boolean composite)
     {
-        Relationship relationship1 = new Relationship(
-            fromClass, fromName, fromMany);
+        Relationship relationship1 =
+            new Relationship(
+                fromClass,
+                fromName,
+                fromMany);
         Relationship relationship2 = new Relationship(
-            toClass, toName, toMany);
+                toClass,
+                toName,
+                toMany);
         relationship1.inverse = relationship2;
         relationship2.inverse = relationship1;
         if (composite) {
@@ -260,14 +279,6 @@ public abstract class JmiMemFactory
             relationship2);
     }
 
-    /**
-     * Implemented by proxy objects, this interface makes the proxy handler
-     * object accessible.
-     */
-    interface Element {
-        ElementImpl impl();
-    }
-
     protected String parseGetter(String methodName)
     {
         if (methodName.startsWith("get")) {
@@ -279,22 +290,35 @@ public abstract class JmiMemFactory
         }
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     /**
-     * Implementation of a {@link RefBaseObject} via an
-     * {@link InvocationHandler} interface.<p>
+     * Implemented by proxy objects, this interface makes the proxy handler
+     * object accessible.
+     */
+    interface Element
+    {
+        ElementImpl impl();
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Implementation of a {@link RefBaseObject} via an {@link
+     * InvocationHandler} interface.
      *
-     * Attributes are held in a {@link TreeMap}. (Not a {@link HashMap},
-     * because we want the attributes to be returned in a predictable
-     * order.)<p>
+     * <p>Attributes are held in a {@link TreeMap}. (Not a {@link HashMap},
+     * because we want the attributes to be returned in a predictable order.)
      *
-     * The current implementation is not very efficient. Every time a method
+     * <p>The current implementation is not very efficient. Every time a method
      * is called, the proxy has to figure out what kind of method this is
      * (relationship accesor, property setter, et cetera) and do the right
-     * thing. It would be more efficient, and perhaps cleaner, to create a
-     * <dfn>handler map</dfn>: one handler per method. The handler map behaves
-     * the same way as a vtable. It is initialiazed once per class, and all
-     * that needs to be done when creating an instance is to store the handler
-     * map.<p>
+     * thing. It would be more efficient, and perhaps cleaner, to create a <dfn>
+     * handler map</dfn>: one handler per method. The handler map behaves the
+     * same way as a vtable. It is initialiazed once per class, and all that
+     * needs to be done when creating an instance is to store the handler map.
+     *
+     * <p>
      */
     protected class ElementImpl
         extends TreeMap<String, Object>
@@ -309,28 +333,33 @@ public abstract class JmiMemFactory
         {
             this.clazz = clazz;
             this.id = nextId.getAndIncrement();
-            Method[] methods = clazz.getMethods();
+            Method [] methods = clazz.getMethods();
+
             // Initialize all collections.
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();
                 Class methodReturn = method.getReturnType();
                 String attrName = parseGetter(methodName);
+
                 // TODO jvs 31-Jan-2006: Handle 1-to-1 associations like
                 // FarragoConfiguresFennel.  There's no collection
                 // involved, but a bidirectional link is still required.
-                if ((attrName != null) &&
-                    method.getParameterTypes().length == 0) {
+                if ((attrName != null)
+                    && (method.getParameterTypes().length == 0)) {
                     if (Collection.class.isAssignableFrom(methodReturn)) {
                         initCollection(attrName);
                     }
                 }
             }
-            proxy = Proxy.newProxyInstance(
-                getClass().getClassLoader(),
-                new Class[] {clazz, Element.class},
-                this);
-            mapMofId((RefBaseObject) proxy, proxyRefMofId());
+            proxy =
+                Proxy.newProxyInstance(
+                    getClass().getClassLoader(),
+                    new Class[] { clazz, Element.class },
+                    this);
+            mapMofId(
+                (RefBaseObject) proxy,
+                proxyRefMofId());
         }
 
         private void initCollection(final String collectionName)
@@ -338,16 +367,25 @@ public abstract class JmiMemFactory
             Relationship relationship =
                 lookupRelationship(clazz, collectionName);
             if (relationship == null) {
-                put(collectionName, new ArrayList());
+                put(
+                    collectionName,
+                    new ArrayList());
             } else if (relationship.inverse.many) {
-                put(collectionName, new ManyList(this, relationship));
+                put(
+                    collectionName,
+                    new ManyList(this, relationship));
             } else {
-                put(collectionName, new OneWayList(this, relationship));
+                put(
+                    collectionName,
+                    new OneWayList(this, relationship));
             }
         }
 
         public Object invoke(
-            Object proxy, Method method, Object[] args) throws Throwable
+            Object proxy,
+            Method method,
+            Object [] args)
+            throws Throwable
         {
             String methodName = method.getName();
             if (method.getDeclaringClass() == Object.class) {
@@ -378,12 +416,21 @@ public abstract class JmiMemFactory
                 return proxyImpl();
             } else if (parseGetter(methodName) != null) {
                 assert args == null;
-                return proxyGet(parseGetter(methodName), method, args);
+                return proxyGet(
+                        parseGetter(methodName),
+                        method,
+                        args);
             } else if (methodName.startsWith("set")) {
-                return proxySet(methodName.substring(3), method, args);
+                return proxySet(
+                        methodName.substring(3),
+                        method,
+                        args);
             } else if (methodName.startsWith("create")) {
-                return proxyCreate(methodName.substring(6), args,
-                    method.getReturnType());
+                return
+                    proxyCreate(
+                        methodName.substring(6),
+                        args,
+                        method.getReturnType());
             } else if (methodName.equals("refClass") && (args == null)) {
                 return classMap.get(clazz);
             } else if (methodName.equals("refImmediateComposite")) {
@@ -398,7 +445,7 @@ public abstract class JmiMemFactory
                 return filterChildren(RefAssociation.class);
             } else if (methodName.equals("refMetaObject")) {
                 Object obj = metaMap.get(clazz);
-                assert(obj != null) : clazz;
+                assert (obj != null) : clazz;
                 return obj;
             } else if (methodName.equals("refGetEnum")) {
                 return proxyRefGetEnum(args[0], (String) args[1]);
@@ -426,17 +473,16 @@ public abstract class JmiMemFactory
                 // reference on at least one side).
                 return Collections.EMPTY_SET;
             } else if (methodName.equals("refLinkExists")) {
-                return proxyRefLinkExists(
-                    (RefObject) args[0],
-                    (RefObject) args[1]);
+                return
+                    proxyRefLinkExists((RefObject) args[0],
+                        (RefObject) args[1]);
             } else if (methodName.equals("refAddLink")) {
-                return proxyRefAddLink(
-                    (RefObject) args[0],
-                    (RefObject) args[1]);
+                return
+                    proxyRefAddLink((RefObject) args[0], (RefObject) args[1]);
             } else if (methodName.equals("refRemoveLink")) {
-                return proxyRefRemoveLink(
-                    (RefObject) args[0],
-                    (RefObject) args[1]);
+                return
+                    proxyRefRemoveLink((RefObject) args[0],
+                        (RefObject) args[1]);
             } else if (methodName.equals("refCreateInstance")) {
                 return proxyRefCreateInstance((List) args[0]);
             } else {
@@ -451,31 +497,38 @@ public abstract class JmiMemFactory
 
         protected Object proxyCreate(
             String attrName,
-            Object[] args,
+            Object [] args,
             Class createClass)
         {
             throw new UnsupportedOperationException();
         }
 
         protected Object proxySet(
-            String attrName, Method method, Object [] args)
+            String attrName,
+            Method method,
+            Object [] args)
         {
             assert args.length == 1;
             Class attrClass = method.getParameterTypes()[0];
             final Object o = args[0];
-            return proxySet(
-                attrName,
-                o,
-                RefBaseObject.class.isAssignableFrom(attrClass));
+            return
+                proxySet(
+                    attrName,
+                    o,
+                    RefBaseObject.class.isAssignableFrom(attrClass));
         }
 
         protected Object proxySet(
-            String attrName, Object value, boolean needRelationshipCheck)
+            String attrName,
+            Object value,
+            boolean needRelationshipCheck)
         {
             if (needRelationshipCheck) {
-                final Relationship relationship = lookupRelationship(
-                    clazz, attrName);
-                
+                final Relationship relationship =
+                    lookupRelationship(
+                        clazz,
+                        attrName);
+
                 if (relationship != null) {
                     Object oldVal = get(attrName);
                     if (oldVal != null) {
@@ -483,8 +536,8 @@ public abstract class JmiMemFactory
                         ElementImpl oldPartner = ((Element) oldVal).impl();
                         if (relationship.inverse.many) {
                             OneWayList inverseCollection =
-                                (OneWayList)
-                                oldPartner.get(relationship.inverse.name);
+                                (OneWayList) oldPartner.get(
+                                    relationship.inverse.name);
                             inverseCollection.remove(proxy);
                         } else {
                             oldPartner.put(
@@ -492,15 +545,15 @@ public abstract class JmiMemFactory
                                 null);
                         }
                     }
-                    
+
                     if (value != null) {
                         // Add the object at the other end.
                         final ElementImpl elementImpl =
                             ((Element) value).impl();
                         if (relationship.inverse.many) {
                             OneWayList inverseCollection =
-                                (OneWayList)
-                                elementImpl.get(relationship.inverse.name);
+                                (OneWayList) elementImpl.get(
+                                    relationship.inverse.name);
                             inverseCollection.add(proxy);
                         } else {
                             elementImpl.put(
@@ -514,12 +567,14 @@ public abstract class JmiMemFactory
         }
 
         protected Object proxyGet(
-            String attrName, Method method, Object[] args)
+            String attrName,
+            Method method,
+            Object [] args)
         {
             Class attrClass = method.getReturnType();
             assert args == null;
             Object o = get(attrName);
-            if (o == null && attrClass.isPrimitive()) {
+            if ((o == null) && attrClass.isPrimitive()) {
                 // Primitive values cannot be null. So, provide a value.
                 if (attrClass == int.class) {
                     return new Integer(0);
@@ -579,9 +634,9 @@ public abstract class JmiMemFactory
         {
             String accessorName = getAccessorName(moniker);
             Object result = proxySet(
-                parseGetter(accessorName),
-                value,
-                true);
+                    parseGetter(accessorName),
+                    value,
+                    true);
             return result;
         }
 
@@ -631,8 +686,8 @@ public abstract class JmiMemFactory
             }
             ResolvedReference rr = resolveReference(firstEnd, secondEnd);
             if (rr.multiValued) {
-                Collection c = (Collection)
-                    rr.referencingEnd.refGetValue(rr.ref);
+                Collection c =
+                    (Collection) rr.referencingEnd.refGetValue(rr.ref);
                 c.add(rr.referencedEnd);
             } else {
                 rr.referencingEnd.refSetValue(rr.ref, rr.referencedEnd);
@@ -649,8 +704,8 @@ public abstract class JmiMemFactory
             }
             ResolvedReference rr = resolveReference(firstEnd, secondEnd);
             if (rr.multiValued) {
-                Collection c = (Collection)
-                    rr.referencingEnd.refGetValue(rr.ref);
+                Collection c =
+                    (Collection) rr.referencingEnd.refGetValue(rr.ref);
                 c.remove(rr.referencedEnd);
             } else {
                 rr.referencingEnd.refSetValue(rr.ref, null);
@@ -658,14 +713,6 @@ public abstract class JmiMemFactory
             return Boolean.TRUE;
         }
 
-        private class ResolvedReference
-        {
-            Reference ref;
-            RefObject referencingEnd;
-            RefObject referencedEnd;
-            boolean multiValued;
-        }
-        
         private ResolvedReference resolveReference(
             RefObject firstEnd,
             RefObject secondEnd)
@@ -682,7 +729,6 @@ public abstract class JmiMemFactory
             // the "many" side, because that's a little bit more efficient
             // in some uses.
             for (;;) {
-
                 // Try secondEnd references firstEnd.
                 rr.referencingEnd = secondEnd;
                 rr.referencedEnd = firstEnd;
@@ -706,7 +752,7 @@ public abstract class JmiMemFactory
                     break;
                 }
             }
-            
+
             throw Util.newInternal(
                 "unresolved reference for association "
                 + clazz + " with firstEnd = " + firstEnd
@@ -717,8 +763,8 @@ public abstract class JmiMemFactory
             ResolvedReference rr,
             AssociationEnd referencedEnd)
         {
-            for (Reference featureRef :
-                JmiObjUtil.getFeatures(
+            for (Reference featureRef
+                : JmiObjUtil.getFeatures(
                     rr.referencingEnd.refClass(),
                     Reference.class,
                     rr.multiValued)) {
@@ -729,11 +775,11 @@ public abstract class JmiMemFactory
             }
             return false;
         }
-        
+
         protected Object proxyRefCreateInstance(List args)
         {
             Class createClass = null;
-            Method[] methods = clazz.getMethods();
+            Method [] methods = clazz.getMethods();
             for (int i = 0; i < methods.length; ++i) {
                 if (!methods[i].getName().startsWith("create")) {
                     continue;
@@ -741,17 +787,17 @@ public abstract class JmiMemFactory
                 createClass = methods[i].getReturnType();
                 break;
             }
-            assert(createClass != null);
+            assert (createClass != null);
             ElementImpl impl = createImpl(createClass, false);
 
-            Iterator featureIter = JmiObjUtil.getFeatures(
-                (RefClass) wrap(),
-                Attribute.class,
-                true).iterator();
+            Iterator featureIter =
+                JmiObjUtil.getFeatures((RefClass) wrap(),
+                    Attribute.class,
+                    true).iterator();
 
             for (Object arg : args) {
-                StructuralFeature feature = (StructuralFeature)
-                    featureIter.next();
+                StructuralFeature feature =
+                    (StructuralFeature) featureIter.next();
                 impl.proxySet(
                     parseGetter(JmiObjUtil.getAccessorName(feature)),
                     arg,
@@ -784,13 +830,22 @@ public abstract class JmiMemFactory
         {
             return proxy;
         }
+
+        private class ResolvedReference
+        {
+            Reference ref;
+            RefObject referencingEnd;
+            RefObject referencedEnd;
+            boolean multiValued;
+        }
     }
 
     /**
      * Specialized handler for implementing a {@link RefClass} via a dynamic
      * proxy.
      */
-    protected class RefClassImpl extends ElementImpl
+    protected class RefClassImpl
+        extends ElementImpl
     {
         RefClassImpl(Class clazz)
         {
@@ -798,13 +853,12 @@ public abstract class JmiMemFactory
 
             // For the default factory method, which returns a class,
             // associate that class with this refClass.
-            Method[] methods = sortMethods(clazz.getMethods());
+            Method [] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();
                 if (methodName.startsWith("create")
-                    && method.getParameterTypes().length == 0)
-                {
+                    && (method.getParameterTypes().length == 0)) {
                     Class instanceClass = method.getReturnType();
                     classMap.put(instanceClass, (RefClass) wrap());
                 }
@@ -812,7 +866,9 @@ public abstract class JmiMemFactory
         }
 
         protected Object proxyCreate(
-            String attrName, Object[] args, Class createClass)
+            String attrName,
+            Object [] args,
+            Class createClass)
         {
             assert args == null;
             return createImpl(createClass, false).wrap();
@@ -823,7 +879,8 @@ public abstract class JmiMemFactory
      * Specialized handler for implementing a {@link RefAssociation} via a
      * dynamic proxy.
      */
-    protected class RefAssociationImpl extends ElementImpl
+    protected class RefAssociationImpl
+        extends ElementImpl
     {
         RefAssociationImpl(Class clazz)
         {
@@ -835,24 +892,29 @@ public abstract class JmiMemFactory
      * Specialized handler for implementing a {@link RefPackage} via a dynamic
      * proxy.
      */
-    protected class RefPackageImpl extends ElementImpl
+    protected class RefPackageImpl
+        extends ElementImpl
     {
         public RefPackageImpl(Class clazz)
         {
             super(clazz);
+
             // For each method which returns a class, create an attribute.
-            Method[] methods = sortMethods(clazz.getMethods());
+            Method [] methods = sortMethods(clazz.getMethods());
             for (int i = 0; i < methods.length; i++) {
                 Method method = methods[i];
                 String methodName = method.getName();
                 String attrName = parseGetter(methodName);
-                if ((attrName != null) &&
-                    method.getParameterTypes().length == 0) {
+                if ((attrName != null)
+                    && (method.getParameterTypes().length == 0)) {
                     Class attributeClass = method.getReturnType();
+
                     // Attribute is class, package, or association.
                     ElementImpl el = createImpl(attributeClass, true);
                     if (el != null) {
-                        put(attrName, el.wrap());
+                        put(
+                            attrName,
+                            el.wrap());
                     }
                 }
             }
@@ -861,30 +923,31 @@ public abstract class JmiMemFactory
 
     /**
      * Definition of a relationship.
-     */ 
+     */
     static class Relationship
     {
         final Class clazz;
         final String name;
         final boolean many;
-        
+
         Relationship inverse;
         boolean compositeParent;
         boolean compositeChild;
 
         Relationship(Class clazz, String name, boolean many)
         {
-            super();    
+            super();
             this.clazz = clazz;
             this.name = name;
             this.many = many;
         }
     }
-    
+
     /**
      * List which holds instances of a many-to-one relationship.
      */
-    private static class OneWayList extends ArrayList
+    private static class OneWayList
+        extends ArrayList
     {
         private final ElementImpl element;
         private final Relationship relationship;
@@ -913,14 +976,15 @@ public abstract class JmiMemFactory
     }
 
     /**
-     * List which holds instances of a bi-directional relationship.<p/>
-     * 
-     * When an instance of the relationship is created, by calling 
-     * {@link #add(Object)} to the collection at one end, this collection
-     * automatically finds the corresponding collection at the other end
-     * and calls {@link #addInternal(ElementImpl)}. 
-     */ 
-    private static class ManyList extends ArrayList
+     * List which holds instances of a bi-directional relationship.
+     *
+     * <p/>When an instance of the relationship is created, by calling {@link
+     * #add(Object)} to the collection at one end, this collection automatically
+     * finds the corresponding collection at the other end and calls {@link
+     * #addInternal(ElementImpl)}.
+     */
+    private static class ManyList
+        extends ArrayList
     {
         private final ElementImpl element;
         private final Relationship relationship;

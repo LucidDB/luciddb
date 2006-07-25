@@ -21,31 +21,37 @@
 */
 package net.sf.farrago.runtime;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.*;
 
-import org.eigenbase.runtime.TupleIter;
+import org.eigenbase.runtime.*;
+
 
 /**
- * FarragoTransformImpl provides a base class for generated implementations
- * of {@link FarragoTransform}.
+ * FarragoTransformImpl provides a base class for generated implementations of
+ * {@link FarragoTransform}.
  *
  * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
-public abstract class FarragoTransformImpl implements FarragoTransform
+public abstract class FarragoTransformImpl
+    implements FarragoTransform
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FennelTupleWriter tupleWriter;
     private TupleIter tupleIter;
     private Object next;
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Initialze this FarragoTransformImpl.  Generated FarragoTransform
+     * Initialze this FarragoTransformImpl. Generated FarragoTransform
      * implementations should pass their generated FennelTupleWriter and
      * TupleIter implementations here.
-     * 
+     *
      * @param tupleWriter FennelTupleWriter that can marshal this transform's
-     *                    output tuple format.
+     * output tuple format.
      * @param tupleIter TupleIter that performs this transform's work
      */
     protected void init(FennelTupleWriter tupleWriter, TupleIter tupleIter)
@@ -54,42 +60,41 @@ public abstract class FarragoTransformImpl implements FarragoTransform
         this.tupleIter = tupleIter;
         this.next = null;
     }
-    
+
     /**
-     * Execute this transform.  Execution continues until the underlying
-     * {@link #tupleIter} returns END_OF_DATA or UNDERFLOW or until the
-     * underlying {@link #tupleWriter} can no longer marshal tuples into
-     * the output buffer.
-     * 
-     * @return number of bytes marshaled into outputBuffer; 0 on END_OF_DATA;
-     *         -1 on UNDERFLOW
+     * Execute this transform. Execution continues until the underlying {@link
+     * #tupleIter} returns END_OF_DATA or UNDERFLOW or until the underlying
+     * {@link #tupleWriter} can no longer marshal tuples into the output buffer.
+     *
+     * @return number of bytes marshaled into outputBuffer; 0 on END_OF_DATA; -1
+     * on UNDERFLOW
      */
     public int execute(ByteBuffer outputBuffer)
     {
         if (next == null) {
             // Nothing fetched but unmarshaled.
             Object o = tupleIter.fetchNext();
-            
+
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 return 0;
             } else if (o == TupleIter.NoDataReason.UNDERFLOW) {
                 return -1;
             }
-            
+
             next = o;
         }
-        
+
         outputBuffer.order(ByteOrder.nativeOrder());
         outputBuffer.clear();
-        
-        for(;;) {
+
+        for (;;) {
             if (!tupleWriter.marshalTuple(outputBuffer, next)) {
-                // Not enough room to marshal the tuple.  We assume that
-                // the buffer is large enough for at least one tuple, otherwise
-                // this method may incorrectly return 0 (end of stream). 
+                // Not enough room to marshal the tuple.  We assume that the
+                // buffer is large enough for at least one tuple, otherwise this
+                // method may incorrectly return 0 (end of stream).
                 break;
             }
-            
+
             Object o = tupleIter.fetchNext();
             if (o == TupleIter.NoDataReason.END_OF_DATA) {
                 // Will return 0 on next call to this method -- we've already
@@ -101,14 +106,14 @@ public abstract class FarragoTransformImpl implements FarragoTransform
                 next = null;
                 break;
             }
-            
+
             next = o;
         }
-        
+
         outputBuffer.flip();
         return outputBuffer.limit();
     }
-    
+
     /**
      * Restart the underlying {@link #tupleIter}.
      */

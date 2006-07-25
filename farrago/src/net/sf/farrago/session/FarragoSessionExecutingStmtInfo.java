@@ -22,15 +22,17 @@
 */
 package net.sf.farrago.session;
 
-import java.util.List;
+import java.util.*;
 
 
 /**
- * FarragoSessionExecuctingStmtInfo contains information about executing statements.
+ * FarragoSessionExecuctingStmtInfo contains information about executing
+ * statements.
  */
 public interface FarragoSessionExecutingStmtInfo
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return the executing statement itself, as a FarragoSessionStmtContext
@@ -39,31 +41,38 @@ public interface FarragoSessionExecutingStmtInfo
 
     /**
      * Returns the unique identifier for this executing statement.
+     *
      * @return Unique statement ID
      */
     long getId();
 
     /**
      * Returns the SQL statement being executed.
+     *
      * @return SQL statement
      */
     String getSql();
 
     /**
      * Returns any dynamic parameters used to execute this statement.
+     *
      * @return List of dynamic parameters to the statement
      */
     List<Object> getParameters();
 
     /**
      * Returns time the statement began executing, in ms.
+     *
      * @return Start time in ms
      */
     long getStartTime();
 
     /**
      * Returns an array of catalog object mofIds in use by this statement.
+     *
      * @return List of catalog object mofIds
      */
     List<String> getObjectsInUse();
 }
+
+// End FarragoSessionExecutingStmtInfo.java

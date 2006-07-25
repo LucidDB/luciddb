@@ -20,32 +20,31 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.sql.*;
+
+import java.util.*;
+
 
 /**
  * A <code>ResultSetIterator</code> is an adapter which converts a {@link
  * ResultSet} to a {@link Iterator}.
  *
- *<p>
- *
- * NOTE jvs 21-Mar-2006: This class is no longer used except by Saffron, but is
- * generally useful.  Should probably be moved to a utility package.
+ * <p>NOTE jvs 21-Mar-2006: This class is no longer used except by Saffron, but
+ * is generally useful. Should probably be moved to a utility package.
  */
-public class ResultSetIterator implements RestartableIterator
+public class ResultSetIterator
+    implements RestartableIterator
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected ResultSet resultSet;
     private Object row;
     private boolean endOfStream;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public ResultSetIterator(ResultSet resultSet)
     {
@@ -56,7 +55,7 @@ public class ResultSetIterator implements RestartableIterator
         endOfStream = false;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean hasNext()
     {
@@ -100,8 +99,8 @@ public class ResultSetIterator implements RestartableIterator
 
     /**
      * Creates an object representing the current row of the result set. The
-     * default implementation of this method returns a {@link Row}, but
-     * derived classes may override this.
+     * default implementation of this method returns a {@link Row}, but derived
+     * classes may override this.
      */
     protected Object makeRow()
         throws SQLException
@@ -128,6 +127,5 @@ public class ResultSetIterator implements RestartableIterator
         }
     }
 }
-
 
 // End ResultSetIterator.java

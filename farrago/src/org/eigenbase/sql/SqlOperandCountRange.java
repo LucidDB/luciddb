@@ -21,9 +21,10 @@
 */
 package org.eigenbase.sql;
 
+import java.util.*;
+
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * A class that describes how many operands an operator can take.
@@ -33,34 +34,37 @@ import java.util.*;
  */
 public class SqlOperandCountRange
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     // common usage instances
     public static final SqlOperandCountRange Variadic =
         new SqlOperandCountRange();
-    public static final SqlOperandCountRange Zero =
-        new SqlOperandCountRange(0);
+    public static final SqlOperandCountRange Zero = new SqlOperandCountRange(0);
     public static final SqlOperandCountRange ZeroOrOne =
         new SqlOperandCountRange(0, 1);
-    public static final SqlOperandCountRange One =
-        new SqlOperandCountRange(1);
+    public static final SqlOperandCountRange One = new SqlOperandCountRange(1);
     public static final SqlOperandCountRange OneOrTwo =
         new SqlOperandCountRange(1, 2);
-    public static final SqlOperandCountRange Two =
-        new SqlOperandCountRange(2);
+    public static final SqlOperandCountRange Two = new SqlOperandCountRange(2);
     public static final SqlOperandCountRange TwoOrThree =
         new SqlOperandCountRange(2, 3);
     public static final SqlOperandCountRange Three =
         new SqlOperandCountRange(3);
     public static final SqlOperandCountRange ThreeOrFour =
         new SqlOperandCountRange(3, 4);
-    public static final SqlOperandCountRange Four =
-        new SqlOperandCountRange(4);
+    public static final SqlOperandCountRange Four = new SqlOperandCountRange(4);
+
+    //~ Instance fields --------------------------------------------------------
 
     private List<Integer> possibleList;
     private boolean isVariadic;
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * This constructor should only be called internally from this class
-     * and only when creating a variadic count descriptor
+     * This constructor should only be called internally from this class and
+     * only when creating a variadic count descriptor
      */
     private SqlOperandCountRange()
     {
@@ -68,14 +72,14 @@ public class SqlOperandCountRange
         isVariadic = true;
     }
 
-    private SqlOperandCountRange(Integer[] possibleCounts)
+    private SqlOperandCountRange(Integer [] possibleCounts)
     {
         this(Arrays.asList(possibleCounts));
     }
 
     public SqlOperandCountRange(int count)
     {
-        this(new Integer[]{ new Integer(count) });
+        this(new Integer[] { new Integer(count) });
     }
 
     public SqlOperandCountRange(List<Integer> list)
@@ -88,7 +92,7 @@ public class SqlOperandCountRange
         int count1,
         int count2)
     {
-        this(new Integer[]{ new Integer(count1), new Integer(count2) });
+        this(new Integer[] { new Integer(count1), new Integer(count2) });
     }
 
     public SqlOperandCountRange(
@@ -99,17 +103,19 @@ public class SqlOperandCountRange
         this(
             new Integer[] {
                 new Integer(count1),
-                new Integer(count2),
-                new Integer(count3)
+            new Integer(count2),
+            new Integer(count3)
             });
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns a list of allowed operand counts for a non-variadic operator.
      *
-     * @pre !isVariadic()
-     *
      * @return unmodifiable list of Integer
+     *
+     * @pre !isVariadic()
      */
     public List<Integer> getAllowedList()
     {

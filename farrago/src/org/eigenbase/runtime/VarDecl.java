@@ -20,24 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
-
 
 /**
  * An array of <code>VarDecl</code>s is returned from the <code>dummy()</code>
- * method which is generated to implement a variable declaration, or a list
- * of statements which contain variable declarations.
+ * method which is generated to implement a variable declaration, or a list of
+ * statements which contain variable declarations.
  */
 public class VarDecl
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     public Class clazz;
     public Object value;
     public String name;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public VarDecl(
         String name,
@@ -49,6 +48,5 @@ public class VarDecl
         this.value = value;
     }
 }
-
 
 // End VarDecl.java

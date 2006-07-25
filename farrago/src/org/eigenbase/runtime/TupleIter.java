@@ -21,27 +21,28 @@
 */
 package org.eigenbase.runtime;
 
-import org.eigenbase.util.ClosableAllocation;
+import org.eigenbase.util.*;
+
 
 /**
- * TupleIter provides an Iterator-like interface for reading
- * tuple data.
+ * TupleIter provides an Iterator-like interface for reading tuple data.
  *
- * <p>TupleIter replaces the combination of {@link java.util.Iterator}
- * and {@link org.eigenbase.runtime.RestartableIterator}.
-
- * <p>Note that calling
- * {@link ClosableAllocation#closeAllocation() closeAllocation()}
- * closes this iterator, allowing it to release its resources.  No
- * further calls to {@link #fetchNext()} or {@link #restart()} may be
- * made once the iterator is closed.
+ * <p>TupleIter replaces the combination of {@link java.util.Iterator} and
+ * {@link org.eigenbase.runtime.RestartableIterator}.
+ *
+ * <p>Note that calling {@link ClosableAllocation#closeAllocation()
+ * closeAllocation()} closes this iterator, allowing it to release its
+ * resources. No further calls to {@link #fetchNext()} or {@link #restart()} may
+ * be made once the iterator is closed.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public interface TupleIter extends ClosableAllocation
+public interface TupleIter
+    extends ClosableAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final TupleIter EMPTY_ITERATOR =
         new TupleIter() {
@@ -59,55 +60,57 @@ public interface TupleIter extends ClosableAllocation
             }
         };
 
+
+    //~ Enums ------------------------------------------------------------------
+
     /**
-     * NoDataReason provides a reason why no data was returned by a
-     * call to {@link #fetchNext()}.
+     * NoDataReason provides a reason why no data was returned by a call to
+     * {@link #fetchNext()}.
      */
-    public enum NoDataReason
-    {
+    public enum NoDataReason {
         /**
          * End of data.  No more data will be returned unless the
          * iterator is reset by a call to {@link TupleIter#restart()}.
          */
         END_OF_DATA,
- 
+
         /**
          * Data underflow. No more data will be returned until the
          * underlying data source provides more input rows.
          */
         UNDERFLOW,
     }
- 
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Returns the next element in the iteration.  This method returns
-     * the next value in the iteration, if there is one.  If not, it
-     * returns a value from the {@link NoDataReason} enumeration
-     * indicating why no data was returned.
+     * Returns the next element in the iteration. This method returns the next
+     * value in the iteration, if there is one. If not, it returns a value from
+     * the {@link NoDataReason} enumeration indicating why no data was returned.
      *
-     * <p>If this method returns {@link NoDataReason#END_OF_DATA}, no
-     * further data will be returned by this iterator unless
-     * {@link #restart()} is called.
+     * <p>If this method returns {@link NoDataReason#END_OF_DATA}, no further
+     * data will be returned by this iterator unless {@link #restart()} is
+     * called.
      *
-     * <p>If this method returns {@link NoDataReason#UNDERFLOW}, no
-     * data is currently available, but may be come available in the
-     * future.  It is possible for consecutive calls to return
-     * UNDERFLOW and then END_OF_DATA.
+     * <p>If this method returns {@link NoDataReason#UNDERFLOW}, no data is
+     * currently available, but may be come available in the future. It is
+     * possible for consecutive calls to return UNDERFLOW and then END_OF_DATA.
      *
-     * <p>The object returned by this method may be re-used for each
-     * subsequent call to <code>fetchNext()</code>.  In other words,
-     * callers must either make certain that the returned value is no
-     * longer needed or is copied before any subsequent calls to
-     * <code>fetchNext()</code>.
+     * <p>The object returned by this method may be re-used for each subsequent
+     * call to <code>fetchNext()</code>. In other words, callers must either
+     * make certain that the returned value is no longer needed or is copied
+     * before any subsequent calls to <code>fetchNext()</code>.
      *
-     * @return the next element in the iteration, or an instance of
-     *         {@link NoDataReason}.
+     * @return the next element in the iteration, or an instance of {@link
+     * NoDataReason}.
      */
     public Object fetchNext();
- 
+
     /**
-     * Restarts this iterator, so that a subsequent call to
-     * {@link #fetchNext()} returns the first element in the collection
-     * being iterated.
+     * Restarts this iterator, so that a subsequent call to {@link #fetchNext()}
+     * returns the first element in the collection being iterated.
      */
     public void restart();
 }
+
+// End TupleIter.java

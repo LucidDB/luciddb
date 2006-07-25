@@ -22,29 +22,32 @@
 package org.eigenbase.jmi;
 
 /**
- * JmiDeletionRule tells JmiChangeSet how to handle deletion with
- * respect to particular associations.
+ * JmiDeletionRule tells JmiChangeSet how to handle deletion with respect to
+ * particular associations.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JmiDeletionRule
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Class superInterface;
-    
+
     private final String endName;
-    
+
     private final JmiDeletionAction action;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new JmiDeletionRule.
      *
      * @param endName the end to which this rule applies
-     *
      * @param superInterface a filter on the instance of the end to which the
      * rule applies; if null, the rule applies to any object; otherwise, the
      * object must be an instance of this class
-     *
      * @param action what to do when this rule applies
      */
     public JmiDeletionRule(
@@ -57,11 +60,13 @@ public class JmiDeletionRule
         this.action = action;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public String getEndName()
     {
         return endName;
     }
-    
+
     public Class getSuperInterface()
     {
         return superInterface;

@@ -21,21 +21,27 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+
 
 /**
- * Extends {@link SqlValidator} to allow discovery of useful data such as
- * fully qualified names of sql objects, alternative valid sql objects that 
- * can be used in the SQL statement (dubbed as hints) 
+ * Extends {@link SqlValidator} to allow discovery of useful data such as fully
+ * qualified names of sql objects, alternative valid sql objects that can be
+ * used in the SQL statement (dubbed as hints)
  *
  * @author tleung
- * @since Jul 7, 2005
  * @version $Id$
+ * @since Jul 7, 2005
  */
-public interface SqlValidatorWithHints extends SqlValidator
+public interface SqlValidatorWithHints
+    extends SqlValidator
 {
-    public SqlMoniker[] lookupHints(SqlNode topNode, SqlParserPos pos);
+
+    //~ Methods ----------------------------------------------------------------
+
+    public SqlMoniker [] lookupHints(SqlNode topNode, SqlParserPos pos);
+
     public SqlMoniker lookupQualifiedName(SqlNode topNode, SqlParserPos pos);
 }
 

@@ -20,21 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
  * A postfix unary operator.
  */
-public class SqlPostfixOperator extends SqlOperator
+public class SqlPostfixOperator
+    extends SqlOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlPostfixOperator(
         String name,
@@ -44,11 +45,17 @@ public class SqlPostfixOperator extends SqlOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, leftPrec(prec, true), rightPrec(0, true),
-            returnTypeInference, operandTypeInference, operandTypeChecker);
+        super(
+            name,
+            kind,
+            leftPrec(prec, true),
+            rightPrec(0, true),
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -61,7 +68,9 @@ public class SqlPostfixOperator extends SqlOperator
         return "{1} {0}";
     }
 
-    protected RelDataType adjustType(SqlValidator validator, SqlCall call, RelDataType type)
+    protected RelDataType adjustType(SqlValidator validator,
+        SqlCall call,
+        RelDataType type)
     {
         if (SqlTypeUtil.inCharFamily(type)) {
             // Determine coercibility and resulting collation name of
@@ -74,10 +83,10 @@ public class SqlPostfixOperator extends SqlOperator
             }
             if (SqlTypeUtil.inCharFamily(operandType)) {
                 SqlCollation collation = operandType.getCollation();
-                assert null != collation :
-                    "An implicit or explicit collation should have been set";
-                type = validator.getTypeFactory().
-                    createTypeWithCharsetAndCollation(
+                assert null != collation : "An implicit or explicit collation should have been set";
+                type =
+                    validator.getTypeFactory()
+                    .createTypeWithCharsetAndCollation(
                         type,
                         type.getCharset(),
                         new SqlCollation(
@@ -88,6 +97,5 @@ public class SqlPostfixOperator extends SqlOperator
         return type;
     }
 }
-
 
 // End SqlPostfixOperator.java

@@ -25,6 +25,7 @@ import java.util.*;
 
 import javax.jmi.reflect.*;
 
+
 /**
  * JmiDependencyTransform defines a transformation for use in constructing a
  * {@link JmiDependencyGraph}.
@@ -34,15 +35,16 @@ import javax.jmi.reflect.*;
  */
 public interface JmiDependencyTransform
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Searches a collection of candidate objects, returning only those which
-     * are reachable via links corresponding to mapped incoming model edges
-     * to a target object.
+     * are reachable via links corresponding to mapped incoming model edges to a
+     * target object.
      *
      * @param target object to which incoming links are to be found
-     *
      * @param candidates candidate source objects
-     *
      * @param mapping mapping filter for links
      *
      * @return matching candidates
@@ -59,9 +61,9 @@ public interface JmiDependencyTransform
     public boolean shouldProduceSelfLoops();
 
     /**
-     * @return true if MOFID should be used to break ties in ordering;
-     * this provides stability during diff-based testing, but
-     * adds processing overhead
+     * @return true if MOFID should be used to break ties in ordering; this
+     * provides stability during diff-based testing, but adds processing
+     * overhead
      */
     public boolean shouldSortByMofId();
 }

@@ -22,16 +22,17 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
  * DdlReleaseSavepointStmt represents a RELEASE SAVEPOINT statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlReleaseSavepointStmt extends DdlSavepointTxnStmt
+public class DdlReleaseSavepointStmt
+    extends DdlSavepointTxnStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlReleaseSavepointStmt.
@@ -43,7 +44,7 @@ public class DdlReleaseSavepointStmt extends DdlSavepointTxnStmt
         super(savepointName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -51,6 +52,5 @@ public class DdlReleaseSavepointStmt extends DdlSavepointTxnStmt
         visitor.visit(this);
     }
 }
-
 
 // End DdlReleaseSavepointStmt.java

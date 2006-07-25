@@ -22,26 +22,25 @@
 */
 package net.sf.farrago.ddl.gen;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 
 /**
- * Working set for DdlGenerator.  Maintains list of DDL statement lines.
+ * Working set for DdlGenerator. Maintains list of DDL statement lines.
  *
  * @author Jason Ouellette
  * @version $Id$
  */
 public class GeneratedDdlStmt
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private List<String> ddl = new ArrayList<String>();
     private boolean replace = true;
     private String newName;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public GeneratedDdlStmt()
     {
@@ -58,7 +57,7 @@ public class GeneratedDdlStmt
         this.newName = newName;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void clear()
     {
@@ -100,3 +99,5 @@ public class GeneratedDdlStmt
         return sb.toString();
     }
 }
+
+// End GeneratedDdlStmt.java

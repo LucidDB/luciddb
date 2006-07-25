@@ -37,22 +37,24 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorException;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
 
 
 /**
- * FarragoSessionDdlValidator represents an object capable of validating
- * a DDL statement.
+ * FarragoSessionDdlValidator represents an object capable of validating a DDL
+ * statement.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionDdlValidator extends FarragoAllocation
+public interface FarragoSessionDdlValidator
+    extends FarragoAllocation
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return generic stmt validator
@@ -70,8 +72,7 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public FennelDbHandle getFennelDbHandle();
 
     /**
-     * @return type factory to be used for any type-checking during
-     * validation
+     * @return type factory to be used for any type-checking during validation
      */
     public FarragoTypeFactory getTypeFactory();
 
@@ -138,9 +139,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public boolean isCreatedObject(RefObject refObject);
 
     /**
-     * Finds the parse position for an object affected by DDL.  Not all objects
-     * have parse positions (e.g. when a table is dropped, referencing views
-     * are implicitly affected).
+     * Finds the parse position for an object affected by DDL. Not all objects
+     * have parse positions (e.g. when a table is dropped, referencing views are
+     * implicitly affected).
      *
      * @param obj the affected object
      *
@@ -153,7 +154,6 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * Sets the parser offset for the body of a given object.
      *
      * @param obj object being defined
-     *
      * @param pos parser offset
      */
     public void setParserOffset(RefObject obj, SqlParserPos pos);
@@ -168,20 +168,19 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public SqlParserPos getParserOffset(RefObject obj);
 
     /**
-     * Associates an SQL definition with a catalog object.  This is called
-     * from the parser; later, this information is retrieved during validation
-     * via {@link #getSqlDefinition}.
+     * Associates an SQL definition with a catalog object. This is called from
+     * the parser; later, this information is retrieved during validation via
+     * {@link #getSqlDefinition}.
      *
      * @param obj object being defined
-     *
      * @param sqlNode SQL definition
      */
     public void setSqlDefinition(RefObject obj, SqlNode sqlNode);
 
     /**
-     * Retrieves an SQL definition previously associated with a catalog
-     * object via {@link #setSqlDefinition}.  As a side effect, also
-     * restores parser context for this object if available.
+     * Retrieves an SQL definition previously associated with a catalog object
+     * via {@link #setSqlDefinition}. As a side effect, also restores parser
+     * context for this object if available.
      *
      * @param obj object being validated
      *
@@ -190,11 +189,10 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public SqlNode getSqlDefinition(RefObject obj);
 
     /**
-     * Sets the name of a new object being defined, and adds the object to
-     * the correct schema.
+     * Sets the name of a new object being defined, and adds the object to the
+     * correct schema.
      *
      * @param schemaElement the object being named
-     *
      * @param qualifiedName the (possibly) qualified name of the object
      */
     public void setSchemaObjectName(
@@ -202,8 +200,8 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         SqlIdentifier qualifiedName);
 
     /**
-     * Executes storage management commands for any model elements
-     * encountered during validation.
+     * Executes storage management commands for any model elements encountered
+     * during validation.
      */
     public void executeStorage();
 
@@ -215,8 +213,8 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     public void scheduleTruncation(CwmModelElement modelElement);
 
     /**
-     * Validates all scheduled operations.  Validation may cause other objects
-     * to be changed, so the process continues until a fixpoint is reached.
+     * Validates all scheduled operations. Validation may cause other objects to
+     * be changed, so the process continues until a fixpoint is reached.
      *
      * @param ddlStmt DDL statement to be validated
      */
@@ -227,9 +225,9 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * names, throwing an appropriate exception if not.
      *
      * @param container namespace object for use in error message
-     *@param collection Collection of CwmModelElements representing namespace
-     *        contents
-     *@param includeType if true, include type in name; if false, ignore
+     * @param collection Collection of CwmModelElements representing namespace
+     * contents
+     * @param includeType if true, include type in name; if false, ignore
      */
     public void validateUniqueNames(
         CwmModelElement container,
@@ -240,17 +238,15 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * validate the names provided in a VIEW's explicit column list.
      *
      * @param collection Collection of CwmModelElements representing the
-     *        explicity named columns
+     * explicity named columns
      */
     public void validateViewColumnList(Collection collection);
 
     /**
      * Creates a new dependency.
      *
-     * @param client element which depends on others; we require
-     * this to be a {@link CwmNamespace} so that it can own the
-     * {@link CwmDependency} created
-     *
+     * @param client element which depends on others; we require this to be a
+     * {@link CwmNamespace} so that it can own the {@link CwmDependency} created
      * @param suppliers collection of elements on which client depends
      *
      * @return new dependency
@@ -260,16 +256,16 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
         Collection<T> suppliers);
 
     /**
-     * Discards a data wrapper or server from the shared cache
-     * (called when it is dropped).
+     * Discards a data wrapper or server from the shared cache (called when it
+     * is dropped).
      *
      * @param wrapper definition of wrapper to discard
      */
     public void discardDataWrapper(CwmModelElement wrapper);
 
     /**
-     * Sets the context for a compound CREATE SCHEMA statement to be used
-     * by all object definitions in the new schema.
+     * Sets the context for a compound CREATE SCHEMA statement to be used by all
+     * object definitions in the new schema.
      *
      * @param schema new schema being created
      */
@@ -278,9 +274,8 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
     /**
      * Wraps a validation error with position information.
      *
-     * @param refObj object whose definition should be used for
-     * position information
-     *
+     * @param refObj object whose definition should be used for position
+     * information
      * @param ex exception to be wrapped
      *
      * @return wrapping exception
@@ -293,43 +288,41 @@ public interface FarragoSessionDdlValidator extends FarragoAllocation
      * Adds a {@link FarragoSessionDdlDropRule}.
      *
      * @param refAssoc model association to which the rule relates
-     *
      * @param dropRule rule to add
      */
     public void defineDropRule(
         RefAssociation refAssoc,
         FarragoSessionDdlDropRule dropRule);
-    
+
     /**
-     * Called after revalidation (validation of dependencies
-     * during a CREATE OR REPLACE) is successful (ex is null),
-     * or upon failure (ex is not null).
-     * 
-     * @param element object impacted by replacement
+     * Called after revalidation (validation of dependencies during a CREATE OR
+     * REPLACE) is successful (ex is null), or upon failure (ex is not null).
      *
+     * @param element object impacted by replacement
      * @param ex exception to be handled, may be null
      */
     public void setRevalidationResult(CwmModelElement element,
-            EigenbaseException ex);    
+        EigenbaseException ex);
 
     /**
      * Returns immediate dependencies of an of element.
+     *
      * @param rootElement Starting element for dependency search
+     *
      * @return Set of CwmModelElement, immediate dependencies of rootElement
      */
     public Set<CwmModelElement> getDependencies(CwmModelElement rootElement);
 
     /**
-     * Modifies the analyzed SQL for a view definition, to take into account
-     * any system columns which a personality may need to have in the view.
-     * In particular, makes sure that the analyzed SQL returns the same number
-     * and type of columns as the view definition.
+     * Modifies the analyzed SQL for a view definition, to take into account any
+     * system columns which a personality may need to have in the view. In
+     * particular, makes sure that the analyzed SQL returns the same number and
+     * type of columns as the view definition.
      *
      * @param view View definition
      * @param analyzedSql Analyzed SQL for the view definition
      */
     void fixupView(FemLocalView view, FarragoSessionAnalyzedSql analyzedSql);
 }
-
 
 // End FarragoSessionDdlValidator.java

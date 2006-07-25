@@ -18,42 +18,46 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.sql.advise;
 
-import java.io.IOException;
-import java.io.StreamTokenizer;
-import java.io.StringReader;
+import java.io.*;
+
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.regex.*;
+
 
 /**
  * A simple parser that takes an incomplete and turn it into a syntactically
- * correct statement.  It is used in the SQL editor user-interface.
+ * correct statement. It is used in the SQL editor user-interface.
  *
  * @author tleung
- * @since Jan 31, 2004
  * @version $Id$
- **/
+ * @since Jan 31, 2004
+ */
 public class SqlSimpleParser
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    // Flags indicating precision/scale combinations
+    //~ Static fields/initializers ---------------------------------------------
 
-    //~ Instance fields -------------------------------------------------------
-    private final String hintToken;
     private final static String subqueryRegex = "\\$subquery\\$";
-    
+
     // patterns are made static, to amortize cost of compiling regexps
     static Pattern psq = Pattern.compile(subqueryRegex);
-    static Pattern pparen = Pattern.compile("\\([^()]*(SELECT)+[^()]*\\)",
-        Pattern.CASE_INSENSITIVE);
-    static Pattern pparensq = Pattern.compile("\\([^()]*(SELECT)+[^()]*"+subqueryRegex+"$\\)", Pattern.CASE_INSENSITIVE);
+    static Pattern pparen =
+        Pattern.compile("\\([^()]*(SELECT)+[^()]*\\)",
+            Pattern.CASE_INSENSITIVE);
+    static Pattern pparensq =
+        Pattern.compile("\\([^()]*(SELECT)+[^()]*" + subqueryRegex + "$\\)",
+            Pattern.CASE_INSENSITIVE);
+
+    //~ Instance fields --------------------------------------------------------
+
+    // Flags indicating precision/scale combinations
+    private final String hintToken;
     final LinkedHashSet keywords;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a SqlSimpleParser
      */
@@ -72,7 +76,7 @@ public class SqlSimpleParser
         keywords.add("");
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Turns a partially completed or syntatically incorrect sql statement into
@@ -83,7 +87,6 @@ public class SqlSimpleParser
      * completion hints need to be retrieved.
      *
      * @return a completed, valid (and possibly simplified SQL statement
-     *
      */
     public String simplifySql(String sql, int cursor)
     {
@@ -105,14 +108,12 @@ public class SqlSimpleParser
      * @param sql A partial or syntatically incorrect sql statement
      *
      * @return a completed, valid (and possibly simplified) SQL statement
-     *
      */
     public String simplifySql(String sql)
     {
         // if there are subqueries, extract them and push them into a stack
         Stack subqueries = new Stack();
         stackSubqueries(sql, subqueries);
-
 
         // retrieve the top level query from the stack and go down the stack
         // to handle each subquery one by one
@@ -123,17 +124,18 @@ public class SqlSimpleParser
         String result = handleSubQuery(topLevelQuery, subqueries);
 
         // remove the enclosing parentheses from the top level query
-        return result.substring(1, result.length()-1);
+        return result.substring(1, result.length() - 1);
     }
 
     private String handleUnion(String sql)
     {
-        String[] parts = sql.split("(?i)UNION( )+(ALL)?");
+        String [] parts = sql.split("(?i)UNION( )+(ALL)?");
         for (int i = 0; i < parts.length; i++) {
             if (parts[i].indexOf(hintToken) >= 0) {
                 return parts[i];
             }
         }
+
         // no hint token found
         return sql;
     }
@@ -143,8 +145,10 @@ public class SqlSimpleParser
         subquery = handleUnion(subquery);
         List tokenList = tokenizeSubquery(subquery);
         HashMap buckets = bucketByKeyword(tokenList);
+
         //printBuckets(buckets);
         simplifyBuckets(buckets);
+
         //printBuckets(buckets);
         String simplesq = createNewSql(buckets);
 
@@ -184,7 +188,7 @@ public class SqlSimpleParser
             List entries = (List) buckets.get(keyword);
             if (entries != null) {
                 sql.append(keyword).append(" ").append(
-                    createNewSqlClause((List)buckets.get(keyword)));
+                    createNewSqlClause((List) buckets.get(keyword)));
             }
         }
         return sql.toString();
@@ -207,20 +211,22 @@ public class SqlSimpleParser
         if (msq.find()) {
             found = true;
             String matched = msq.group();
-            // remove the enclosing parentheses 
-            matched = matched.substring(1, matched.length()-1);
+
+            // remove the enclosing parentheses
+            matched = matched.substring(1, matched.length() - 1);
             stack.push(matched);
-            if (matched.indexOf(hintToken) >=0 ) {
+            if (matched.indexOf(hintToken) >= 0) {
                 return;
             }
             remained = msq.replaceFirst(subqueryRegex);
         } else if (m.find()) {
             found = true;
             String matched = m.group();
-            // remove the enclosing parentheses 
-            matched = matched.substring(1, matched.length()-1);
+
+            // remove the enclosing parentheses
+            matched = matched.substring(1, matched.length() - 1);
             stack.push(matched);
-            if (matched.indexOf(hintToken) >=0 ) {
+            if (matched.indexOf(hintToken) >= 0) {
                 return;
             }
             remained = m.replaceFirst(subqueryRegex);
@@ -263,6 +269,7 @@ public class SqlSimpleParser
                 tokenList.add(Double.toString(st.nval));
                 break;
             default:
+
                 // Was just a regular character.
                 break;
             }
@@ -290,7 +297,7 @@ public class SqlSimpleParser
                 curList = new ArrayList();
             } else {
                 if (curToken.equals("")) {
-                    // this token does not follow any keyword 
+                    // this token does not follow any keyword
                     // this may not be a subquery, probably just an identifier
                     nokwList.add(token);
                 } else {
@@ -306,7 +313,7 @@ public class SqlSimpleParser
     {
         Iterator keywords = buckets.keySet().iterator();
         while (keywords.hasNext()) {
-            String keyword  = (String) keywords.next();
+            String keyword = (String) keywords.next();
             ArrayList entries = (ArrayList) buckets.get(keyword);
             System.out.println("keyword = " + keyword);
             System.out.println(entries);
@@ -320,15 +327,18 @@ public class SqlSimpleParser
 
         Iterator keywords = buckets.keySet().iterator();
         while (keywords.hasNext()) {
-            String keyword  = (String) keywords.next();
+            String keyword = (String) keywords.next();
             ArrayList entries = (ArrayList) buckets.get(keyword);
             SqlKw sqlkw = makeSqlKw(keyword, entries);
             List valEntries = sqlkw.validate();
             if (valEntries == null) {
                 toRemove.add(keyword);
             }
-            buckets.put(keyword, sqlkw.validate());
+            buckets.put(
+                keyword,
+                sqlkw.validate());
         }
+
         // remove keywords with an empty clause
         Iterator i = toRemove.iterator();
         while (i.hasNext()) {
@@ -341,15 +351,17 @@ public class SqlSimpleParser
     private void initializeSyntax(StreamTokenizer st)
     {
         st.resetSyntax();
-        st.whitespaceChars(0,32);
+        st.whitespaceChars(0, 32);
         st.wordChars(48, 122);
         st.ordinaryChars(33, 43);
         st.ordinaryChars(45, 45);
         st.ordinaryChars(58, 64);
         st.ordinaryChars(91, 96);
         st.ordinaryChars(123, 127);
+
         // we use $ for our specialized token => hence considered word character
         st.wordChars(36, 36);
+
         // " ' ( ) , . * = are considered word characters for a SQL statement
         st.wordChars(34, 34);
         st.wordChars(39, 42);
@@ -359,7 +371,8 @@ public class SqlSimpleParser
         st.wordChars(95, 95);
     }
 
-    private SqlKw makeSqlKw(String keyword, List entries) {  
+    private SqlKw makeSqlKw(String keyword, List entries)
+    {
         if (keyword.equals("on")) {
             return new SqlKwOn(entries);
         } else if (keyword.equals("select")) {
@@ -373,16 +386,21 @@ public class SqlSimpleParser
         } else {
             return new SqlKw(entries);
         }
-    } 
+    }
 
-    class SqlKw {
+    //~ Inner Classes ----------------------------------------------------------
+
+    class SqlKw
+    {
         protected List entries;
 
-        SqlKw(List entries) {
+        SqlKw(List entries)
+        {
             this.entries = entries;
         }
 
-        List validate() {
+        List validate()
+        {
             if (entries.isEmpty()) {
                 return null;
             } else {
@@ -391,15 +409,18 @@ public class SqlSimpleParser
         }
     }
 
-    class SqlKwOn extends SqlKw {
-        
+    class SqlKwOn
+        extends SqlKw
+    {
         private String dummyOp = "dummy";
 
-        SqlKwOn(List entries) {
+        SqlKwOn(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             if (entries.isEmpty()) {
                 return null;
             }
@@ -410,12 +431,13 @@ public class SqlSimpleParser
                 onClause.append(entry);
             }
             String [] operands = onClause.toString().split("=");
-                
+
             if (operands.length >= 2) {
                 validEntries.add(operands[0]);
                 validEntries.add("=");
                 validEntries.add(operands[1]);
-                // if there're more operands the input SQL is invalid 
+
+                // if there're more operands the input SQL is invalid
                 // anyway for having more than 1 '=' in 'on' clause
                 // in that case we'll strip off the extra operands
                 return validEntries;
@@ -423,6 +445,7 @@ public class SqlSimpleParser
                 validEntries.add(operands[0]);
                 validEntries.add("=");
                 validEntries.add(dummyOp);
+
                 // if there's only 1 operand, put 'dummy' as the other one
                 return validEntries;
             } else {
@@ -434,20 +457,23 @@ public class SqlSimpleParser
             }
         }
     }
-    
-    class SqlKwList extends SqlKw {
-        
-        SqlKwList(List entries) {
+
+    class SqlKwList
+        extends SqlKw
+    {
+        SqlKwList(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             ArrayList validEntries = new ArrayList();
             StringBuffer selectClause = new StringBuffer();
             for (int i = 0; i < entries.size(); i++) {
                 String entry = (String) entries.get(i);
                 selectClause.append(entry);
-                if (i < entries.size()-1) {
+                if (i < (entries.size() - 1)) {
                     selectClause.append(" ");
                 }
             }
@@ -455,25 +481,29 @@ public class SqlSimpleParser
             for (int i = 0; i < selectList.length; i++) {
                 // remove leading and trailing space
                 String entry = selectList[i].trim();
+
                 // remove leading and trailing '.'
-                entry = entry.replaceFirst("^\\.","");
-                entry = entry.replaceFirst("\\.$","");
+                entry = entry.replaceFirst("^\\.", "");
+                entry = entry.replaceFirst("\\.$", "");
                 validEntries.add(entry);
-                if (i < selectList.length-1) {
+                if (i < (selectList.length - 1)) {
                     validEntries.add(",");
                 }
             }
             return validEntries;
         }
     }
-                
-    class SqlKwSelect extends SqlKwList {
-        
-        SqlKwSelect(List entries) {
+
+    class SqlKwSelect
+        extends SqlKwList
+    {
+        SqlKwSelect(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             if (entries.isEmpty()) {
                 entries.add("*");
                 return entries;
@@ -482,14 +512,17 @@ public class SqlSimpleParser
             }
         }
     }
-    
-    class SqlKwFrom extends SqlKwList {
-        
-        SqlKwFrom(List entries) {
+
+    class SqlKwFrom
+        extends SqlKwList
+    {
+        SqlKwFrom(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             if (entries.isEmpty()) {
                 return null;
             } else {
@@ -497,25 +530,28 @@ public class SqlSimpleParser
             }
         }
     }
-    
-    class SqlKwGroupOrder extends SqlKwList {
-        
-        SqlKwGroupOrder(List entries) {
+
+    class SqlKwGroupOrder
+        extends SqlKwList
+    {
+        SqlKwGroupOrder(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             if (entries.isEmpty()) {
                 return null;
-            } else if (entries.size() == 1 && 
-                ((String)entries.get(0)).trim().equals("by")) {
-                // a 'group' or 'order' keyword followed by 'by' but no 
+            } else if ((entries.size() == 1)
+                && ((String) entries.get(0)).trim().equals("by")) {
+                // a 'group' or 'order' keyword followed by 'by' but no
                 // actual Sql Identifier
                 return null;
             } else {
                 Iterator i = entries.iterator();
                 while (i.hasNext()) {
-                    if (((String)i.next()).indexOf(hintToken) >= 0) {
+                    if (((String) i.next()).indexOf(hintToken) >= 0) {
                         return super.validate();
                     }
                 }
@@ -523,17 +559,20 @@ public class SqlSimpleParser
             }
         }
     }
-    
-    class SqlKwWhere extends SqlKwList {
-        
-        SqlKwWhere(List entries) {
+
+    class SqlKwWhere
+        extends SqlKwList
+    {
+        SqlKwWhere(List entries)
+        {
             super(entries);
         }
 
-        List validate() {
+        List validate()
+        {
             Iterator i = entries.iterator();
             while (i.hasNext()) {
-                if (((String)i.next()).indexOf(hintToken) >= 0) {
+                if (((String) i.next()).indexOf(hintToken) >= 0) {
                     return super.validate();
                 }
             }
@@ -541,6 +580,5 @@ public class SqlSimpleParser
         }
     }
 }
-
 
 // End SqlSimpleParser.java

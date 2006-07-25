@@ -34,16 +34,18 @@ import org.eigenbase.util.*;
 
 
 /**
- * FennelDistinctSortRule is a rule for implementing DISTINCT via a Fennel
- * sort.  A DISTINCT is recognized as an Aggregate with no AggCalls and the
- * same number of outputs as inputs.
+ * FennelDistinctSortRule is a rule for implementing DISTINCT via a Fennel sort.
+ * A DISTINCT is recognized as an Aggregate with no AggCalls and the same number
+ * of outputs as inputs.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelDistinctSortRule extends RelOptRule
+public class FennelDistinctSortRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelDistinctSortRule object.
@@ -55,7 +57,7 @@ public class FennelDistinctSortRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -78,7 +80,8 @@ public class FennelDistinctSortRule extends RelOptRule
 
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                agg.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                agg.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 relInput);
         if (fennelInput == null) {
             return;
@@ -97,6 +100,5 @@ public class FennelDistinctSortRule extends RelOptRule
         call.transformTo(sort);
     }
 }
-
 
 // End FennelDistinctSortRule.java

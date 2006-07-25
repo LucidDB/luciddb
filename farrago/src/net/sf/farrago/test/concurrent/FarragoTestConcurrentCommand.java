@@ -21,7 +21,6 @@
 */
 package net.sf.farrago.test.concurrent;
 
-
 /**
  * FarragoTestConcurrentCommand represents a command, sequentially executed by
  * {@link FarragoTestConcurrentCommandExecutor}, during a concurrency test
@@ -35,63 +34,65 @@ package net.sf.farrago.test.concurrent;
  */
 public interface FarragoTestConcurrentCommand
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Executes this command.  The
-     * FarragoTestConcurrentCommandExecutor provides access to a JDBC
-     * connection and previously prepared statements.
+     * Executes this command. The FarragoTestConcurrentCommandExecutor provides
+     * access to a JDBC connection and previously prepared statements.
      *
-     * @param exec the FarragoTestConcurrentCommandExecutor firing
-     *             this command.
+     * @param exec the FarragoTestConcurrentCommandExecutor firing this command.
+     *
+     * @throws Exception to indicate a test failure
+     *
      * @see FarragoTestConcurrentCommandExecutor#getStatement()
      * @see FarragoTestConcurrentCommandExecutor#setStatement(java.sql.Statement)
-     * @throws Exception to indicate a test failure
      */
     void execute(FarragoTestConcurrentCommandExecutor exec)
         throws Exception;
 
     /**
-     * Marks a command to show that it is expected to fail, and
-     * indicates how.  Used for negative tests.  Normally when a
-     * command fails the embracing test fails (see {@link
+     * Marks a command to show that it is expected to fail, and indicates how.
+     * Used for negative tests. Normally when a command fails the embracing test
+     * fails (see {@link
      * FarragoTestConcurrentTestCase#executeTest(FarragoTestConcurrentCommandGenerator,
-     * boolean)}).  But when a marked command fails, the error is
-     * caught and inspected: if it matches the expected error, the
-     * test continues.  However if it does not match, if another kind
-     * of exception is thrown, or if no exception is caught, then the
-     * test fails.
-     *
-     * Assumes the error is indicated by a java.sql.SQLException.
-     * Optionally checks for the expected error condition by matching
-     * the error message against a regular expression. (Scans the list
-     * of chained SQLExceptions).
+     * boolean)}). But when a marked command fails, the error is caught and
+     * inspected: if it matches the expected error, the test continues. However
+     * if it does not match, if another kind of exception is thrown, or if no
+     * exception is caught, then the test fails. Assumes the error is indicated
+     * by a java.sql.SQLException. Optionally checks for the expected error
+     * condition by matching the error message against a regular expression.
+     * (Scans the list of chained SQLExceptions).
      *
      * @param comment a brief description of the expected error
-     * @param pattern null, or a regular expression that matches the
-     *                expected error message.
+     * @param pattern null, or a regular expression that matches the expected
+     * error message.
      */
     FarragoTestConcurrentCommand markToFail(
         String comment,
         String pattern);
 
     /**
-     * Returns true if the command should fail.  This allows special error
+     * Returns true if the command should fail. This allows special error
      * handling for expected failures that don't have patterns.
+     *
      * @return true if command is expected to fail
      */
     boolean isFailureExpected();
-    
+
     /**
      * Set this command to expect a patternless failure.
      */
     FarragoTestConcurrentCommand markToFail();
-    
-    //~ Inner Classes ---------------------------------------------------------
 
-    /** Indicates that a command should have failed, but instead succeeded,
-     * which is a test error */
-    public static class ShouldHaveFailedException extends RuntimeException
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * Indicates that a command should have failed, but instead succeeded, which
+     * is a test error
+     */
+    public static class ShouldHaveFailedException
+        extends RuntimeException
     {
         private final String description;
 
@@ -106,3 +107,5 @@ public interface FarragoTestConcurrentCommand
         }
     }
 }
+
+// End FarragoTestConcurrentCommand.java

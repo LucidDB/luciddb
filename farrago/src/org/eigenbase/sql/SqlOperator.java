@@ -20,57 +20,54 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.util.SqlBasicVisitor;
+import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
- * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT
- * a node in a SQL parse tree). It includes functions, operators such as '=',
- * and syntactic constructs such as 'case' statements.  Operators may represent
+ * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
+ * node in a SQL parse tree). It includes functions, operators such as '=', and
+ * syntactic constructs such as 'case' statements. Operators may represent
  * query-level expressions (e.g. {@link SqlSelectOperator} or row-level
  * expressions (e.g. {@link org.eigenbase.sql.fun.SqlBetweenOperator}.
  *
- *<p>
+ * <p>Operators have <em>formal operands</em>, meaning ordered (and optionally
+ * named) placeholders for the values they operate on. For example, the division
+ * operator takes two operands; the first is the numerator and the second is the
+ * denominator. In the context of subclass {@link SqlFunction}, formal operands
+ * are referred to as <em>parameters</em>.
  *
- * Operators have <em>formal operands</em>, meaning ordered (and optionally
- * named) placeholders for the values they operate on.  For example, the
- * division operator takes two operands; the first is the numerator and the
- * second is the denominator.  In the context of subclass {@link SqlFunction},
- * formal operands are referred to as <em>parameters</em>.
- *
- *<p>
- *
- * When an operator is instantiated via a {@link SqlCall}, it is supplied with
- * <em>actual operands</em>.  For example, in the expression <code>3 /
+ * <p>When an operator is instantiated via a {@link SqlCall}, it is supplied
+ * with <em>actual operands</em>. For example, in the expression <code>3 /
  * 5</code>, the literal expression <code>3</code> is the actual operand
  * corresponding to the numerator, and <code>5</code> is the actual operand
- * corresponding to the denominator.  In the context of SqlFunction, actual
+ * corresponding to the denominator. In the context of SqlFunction, actual
  * operands are referred to as <em>arguments</em>
  *
- *<p>
- *
- * In many cases, the formal/actual distinction is clear from context, in
+ * <p>In many cases, the formal/actual distinction is clear from context, in
  * which case we drop these qualifiers.
  */
 public abstract class SqlOperator
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String NL = System.getProperty("line.separator");
 
-    //~ Instance fields -------------------------------------------------------
+    /**
+     * Maximum precedence.
+     */
+    protected static final int MaxPrec = 200;
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
      * The name of the operator/function. Ex. "OVERLAY" or "TRIM"
@@ -78,8 +75,8 @@ public abstract class SqlOperator
     private final String name;
 
     /**
-     * See {@link SqlKind}. It's possible to have a name that doesn't match
-     * the kind
+     * See {@link SqlKind}. It's possible to have a name that doesn't match the
+     * kind
      */
     private final SqlKind kind;
 
@@ -97,19 +94,22 @@ public abstract class SqlOperator
      */
     private final int rightPrec;
 
-    /** used to infer the return type of a call to this operator */
+    /**
+     * used to infer the return type of a call to this operator
+     */
     private final SqlReturnTypeInference returnTypeInference;
 
-    /** used to infer types of unknown operands */
+    /**
+     * used to infer types of unknown operands
+     */
     private final SqlOperandTypeInference operandTypeInference;
 
-    /** used to validate operand types */
+    /**
+     * used to validate operand types
+     */
     private final SqlOperandTypeChecker operandTypeChecker;
 
-    /** Maximum precedence. */
-    protected static final int MaxPrec = 200;
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an operator.
@@ -148,15 +148,20 @@ public abstract class SqlOperator
         SqlOperandTypeChecker operandTypeChecker)
     {
         this(
-            name, kind, leftPrec(prec, leftAssoc), rightPrec(prec, leftAssoc),
-            returnTypeInference, operandTypeInference, operandTypeChecker);
+            name,
+            kind,
+            leftPrec(prec, leftAssoc),
+            rightPrec(prec, leftAssoc),
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected static int leftPrec(int prec, boolean leftAssoc)
     {
-        assert prec % 2 == 0;
+        assert (prec % 2) == 0;
         if (!leftAssoc) {
             ++prec;
         }
@@ -165,23 +170,23 @@ public abstract class SqlOperator
 
     protected static int rightPrec(int prec, boolean leftAssoc)
     {
-        assert prec % 2 == 0;
+        assert (prec % 2) == 0;
         if (leftAssoc) {
             ++prec;
         }
         return prec;
     }
-    
+
     public SqlOperandTypeChecker getOperandTypeChecker()
     {
         return operandTypeChecker;
     }
 
     /**
-     * Returns a constraint on the number of operands expected by
-     * this operator.  Subclasses may override this method;
-     * when they don't, the range is derived from the
-     * {@link SqlOperandTypeChecker} associated with this operator.
+     * Returns a constraint on the number of operands expected by this operator.
+     * Subclasses may override this method; when they don't, the range is
+     * derived from the {@link SqlOperandTypeChecker} associated with this
+     * operator.
      *
      * @return acceptable range
      */
@@ -232,21 +237,23 @@ public abstract class SqlOperator
      * Runs a series of tests to verify that this operator validates and
      * executes correctly.
      *
-     * <p>The specific implementation should call the various
-     * <code>checkXxx</code> methods in the {@link SqlTester} interface. The
-     * test harness may call the test method several times with different
+     * <p>The specific implementation should call the various <code>
+     * checkXxx</code> methods in the {@link SqlTester} interface. The test
+     * harness may call the test method several times with different
      * implementations of {@link SqlTester} -- perhaps one which uses the
      * farrago calculator, and another which implements operators by generating
      * Java code.
      *
      * <p>The default implementation does nothing.
      *
-     * <p>An example test function for the sin operator:
+     * <p>An example test function for the sin operator: <blockqoute>
      *
-     * <blockqoute><pre><code>void test(SqlTester tester) {
+     * <pre><code>void test(SqlTester tester) {
      *     tester.checkScalar("sin(0)", "0");
      *     tester.checkScalar("sin(1.5707)", "1");
-     * }</code></pre></blockqoute>
+     * }</code></pre>
+     *
+     * </blockqoute>
      *
      * @param tester The tester to use.
      */
@@ -257,13 +264,13 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with an array of operands.
      *
-     * <p>The position of the resulting call is the union of the
-     * <code>pos</code> and the positions of all of the operands.
+     * <p>The position of the resulting call is the union of the <code>
+     * pos</code> and the positions of all of the operands.
      *
      * @param operands array of operands
      * @param pos parser position of the identifier of the call
      * @param functionQualifier function qualifier (e.g. "DISTINCT"), may be
-     *      null
+     * null
      */
     public SqlCall createCall(
         SqlNode [] operands,
@@ -277,8 +284,8 @@ public abstract class SqlOperator
     /**
      * Creates a call to this operand with an array of operands.
      *
-     * <p>The position of the resulting call is the union of the
-     * <code>pos</code> and the positions of all of the operands.
+     * <p>The position of the resulting call is the union of the <code>
+     * pos</code> and the positions of all of the operands.
      */
     public final SqlCall createCall(
         SqlNode [] operands,
@@ -303,8 +310,8 @@ public abstract class SqlOperator
         SqlParserPos pos)
     {
         return createCall(
-            new SqlNode [] { operand },
-            pos);
+                new SqlNode[] { operand },
+                pos);
     }
 
     /**
@@ -316,8 +323,8 @@ public abstract class SqlOperator
         SqlParserPos pos)
     {
         return createCall(
-            new SqlNode [] { operand1, operand2 },
-            pos);
+                new SqlNode[] { operand1, operand2 },
+                pos);
     }
 
     /**
@@ -330,17 +337,17 @@ public abstract class SqlOperator
         SqlParserPos pos)
     {
         return createCall(
-            new SqlNode [] { operand1, operand2, operand3 },
-            pos);
+                new SqlNode[] { operand1, operand2, operand3 },
+                pos);
     }
 
     /**
-     * Rewrites a call to this operator.  Some operators are implemented as
-     * trivial rewrites (e.g. NULLIF becomes CASE).  However, we don't do this
-     * at createCall time because we want to preserve the original SQL syntax
-     * as much as possible; instead, we do this before the call is validated
-     * (so the trivial operator doesn't need its own implementation of type
-     * derivation methods).  The default implementation is to just return the
+     * Rewrites a call to this operator. Some operators are implemented as
+     * trivial rewrites (e.g. NULLIF becomes CASE). However, we don't do this at
+     * createCall time because we want to preserve the original SQL syntax as
+     * much as possible; instead, we do this before the call is validated (so
+     * the trivial operator doesn't need its own implementation of type
+     * derivation methods). The default implementation is to just return the
      * original call without any rewrite.
      *
      * @param validator
@@ -358,8 +365,8 @@ public abstract class SqlOperator
      * including parentheses if the operators on either side are of greater
      * precedence.
      *
-     * <p>The default implementation of this method delegates to
-     * {@link SqlSyntax#unparse}.
+     * <p>The default implementation of this method delegates to {@link
+     * SqlSyntax#unparse}.
      */
     public void unparse(
         SqlWriter writer,
@@ -369,7 +376,6 @@ public abstract class SqlOperator
     {
         getSyntax().unparse(writer, this, operands, leftPrec, rightPrec);
     }
-
 
     // REVIEW jvs 9-June-2006: See http://issues.eigenbase.org/browse/FRG-149
     // for why this method exists.
@@ -381,7 +387,7 @@ public abstract class SqlOperator
             clause.unparse(writer, 0, 0);
         }
     }
-    
+
     // override Object
     public boolean equals(Object obj)
     {
@@ -392,7 +398,8 @@ public abstract class SqlOperator
         return name.equals(other.name) && kind.equals(other.kind);
     }
 
-    public boolean isName(String testName) {
+    public boolean isName(String testName)
+    {
         return name.equals(testName);
     }
 
@@ -406,24 +413,23 @@ public abstract class SqlOperator
      * Validates a call to this operator.
      *
      * <p>This method should not perform type-derivation or perform validation
-     * related related to types. That is done later, by
-     * {@link #deriveType(SqlValidator, SqlValidatorScope, SqlCall)}.
-     * This method should focus on structural validation.
+     * related related to types. That is done later, by {@link
+     * #deriveType(SqlValidator, SqlValidatorScope, SqlCall)}. This method
+     * should focus on structural validation.
      *
-     * <p>A typical implementation of this method first validates the
-     * operands, then performs some operator-specific logic.
-     * The default implementation just validates the operands.
+     * <p>A typical implementation of this method first validates the operands,
+     * then performs some operator-specific logic. The default implementation
+     * just validates the operands.
      *
-     * <p>This method is the default implementation of
-     * {@link SqlCall#validate}; but note that some sub-classes of
-     * {@link SqlCall} never call this method.
+     * <p>This method is the default implementation of {@link SqlCall#validate};
+     * but note that some sub-classes of {@link SqlCall} never call this method.
      *
      * @param call the call to this operator
      * @param validator the active validator
      * @param scope validator scope
-     * @param operandScope validator scope in which to validate operands to
-     * this call; usually equal to scope, but not always because some
-     * operators introduce new scopes
+     * @param operandScope validator scope in which to validate operands to this
+     * call; usually equal to scope, but not always because some operators
+     * introduce new scopes
      *
      * @see SqlNode#validateExpr(SqlValidator, SqlValidatorScope)
      * @see #deriveType(SqlValidator, SqlValidatorScope, SqlCall)
@@ -435,20 +441,18 @@ public abstract class SqlOperator
         SqlValidatorScope operandScope)
     {
         assert call.getOperator() == this;
-        final SqlNode[] operands = call.getOperands();
+        final SqlNode [] operands = call.getOperands();
         for (int i = 0; i < operands.length; i++) {
             operands[i].validateExpr(validator, operandScope);
         }
     }
 
     /**
-     * Validates the operands of a call, inferring the return type in
-     * the process.
+     * Validates the operands of a call, inferring the return type in the
+     * process.
      *
      * @param validator active validator
-     *
      * @param scope validation scope
-     *
      * @param call call to be validated
      *
      * @return inferred type
@@ -464,8 +468,7 @@ public abstract class SqlOperator
         // Check the number of operands
         checkOperandCount(validator, operandTypeChecker, call);
 
-        SqlCallBinding opBinding =
-            new SqlCallBinding(validator, scope, call);
+        SqlCallBinding opBinding = new SqlCallBinding(validator, scope, call);
 
         checkOperandTypes(
             opBinding,
@@ -478,14 +481,12 @@ public abstract class SqlOperator
     }
 
     /**
-     * Receives notification that validation of a call to this operator
-     * is beginning.  Subclasses can supply custom behavior;
-     * default implementation does nothing.
+     * Receives notification that validation of a call to this operator is
+     * beginning. Subclasses can supply custom behavior; default implementation
+     * does nothing.
      *
      * @param validator invoking validator
-     *
      * @param scope validation scope
-     *
      * @param call the call being validated
      */
     protected void preValidateCall(
@@ -496,14 +497,13 @@ public abstract class SqlOperator
     }
 
     /**
-     * Infers the return type of an invocation of this operator; only
-     * called after the number and types of operands have already been
-     * validated.  Subclasses must either override this method or
-     * supply an instance of {@link SqlReturnTypeInference} to
-     * the constructor.
+     * Infers the return type of an invocation of this operator; only called
+     * after the number and types of operands have already been validated.
+     * Subclasses must either override this method or supply an instance of
+     * {@link SqlReturnTypeInference} to the constructor.
      *
-     * @param opBinding description of invocation (not necessarily
-     * a {@link SqlCall})
+     * @param opBinding description of invocation (not necessarily a {@link
+     * SqlCall})
      *
      * @return inferred return type
      */
@@ -523,12 +523,13 @@ public abstract class SqlOperator
      * Derives the type of a call to this operator.
      *
      * <p>This method is an intrinsic part of the validation process so, unlike
-     * {@link #inferReturnType}, specific operators would not typically
-     * override this method.
+     * {@link #inferReturnType}, specific operators would not typically override
+     * this method.
      *
      * @param validator Validator
      * @param scope Scope of validation
      * @param call Call to this operator
+     *
      * @return Type of call
      */
     public RelDataType deriveType(
@@ -536,7 +537,7 @@ public abstract class SqlOperator
         SqlValidatorScope scope,
         SqlCall call)
     {
-        final SqlNode[] operands = call.operands;
+        final SqlNode [] operands = call.operands;
         for (int i = 0; i < operands.length; ++i) {
             RelDataType nodeType = validator.deriveType(scope, operands[i]);
             assert nodeType != null;
@@ -552,8 +553,8 @@ public abstract class SqlOperator
     }
 
     /**
-     * Validates and determines coercibility and resulting collation
-     * name of binary operator if needed.
+     * Validates and determines coercibility and resulting collation name of
+     * binary operator if needed.
      */
     protected RelDataType adjustType(
         SqlValidator validator,
@@ -569,24 +570,24 @@ public abstract class SqlOperator
      */
     public final RelDataType inferReturnType(
         RelDataTypeFactory typeFactory,
-        RelDataType[] operandTypes)
+        RelDataType [] operandTypes)
     {
-        return inferReturnType(
-            new ExplicitOperatorBinding(
-                typeFactory,
-                this,
-                operandTypes));
+        return
+            inferReturnType(
+                new ExplicitOperatorBinding(
+                    typeFactory,
+                    this,
+                    operandTypes));
     }
 
     /**
      * Checks that the operand values in a {@link SqlCall} to this operator are
-     * valid.  Subclasses must either override this method or supply an
-     * instance of {@link SqlOperandTypeChecker} to the constructor.
+     * valid. Subclasses must either override this method or supply an instance
+     * of {@link SqlOperandTypeChecker} to the constructor.
      *
      * @param callBinding description of call
-     *
-     * @param throwOnFailure whether to throw an exception if check
-     * fails (otherwise returns false in that case)
+     * @param throwOnFailure whether to throw an exception if check fails
+     * (otherwise returns false in that case)
      *
      * @return whether check succeeded
      */
@@ -601,9 +602,10 @@ public abstract class SqlOperator
             throw Util.needToImplement(this);
         }
 
-        return operandTypeChecker.checkOperandTypes(
-            callBinding,
-            throwOnFailure);
+        return
+            operandTypeChecker.checkOperandTypes(
+                callBinding,
+                throwOnFailure);
     }
 
     protected void checkOperandCount(
@@ -611,8 +613,7 @@ public abstract class SqlOperator
         SqlOperandTypeChecker argType,
         SqlCall call)
     {
-        SqlOperandCountRange od =
-            call.getOperator().getOperandCountRange();
+        SqlOperandCountRange od = call.getOperator().getOperandCountRange();
         if (od.isVariadic()) {
             return;
         }
@@ -624,7 +625,8 @@ public abstract class SqlOperator
                         call.getOperator().getName(),
                         od.getAllowedList().get(0)));
             } else {
-                throw validator.newValidationError(call,
+                throw validator.newValidationError(
+                    call,
                     EigenbaseResource.instance().WrongNumOfArguments.ex());
             }
         }
@@ -632,14 +634,14 @@ public abstract class SqlOperator
 
     /**
      * Returns a template describing how the operator signature is to be built.
-     * E.g for the binary + operator the template looks like "{1} {0} {2}"
-     * {0} is the operator, subsequent numbers are operands.
+     * E.g for the binary + operator the template looks like "{1} {0} {2}" {0}
+     * is the operator, subsequent numbers are operands.
      *
      * @param operandsCount is used with functions that can take a variable
      * number of operands
      *
-     * @return signature template, or null to indicate that a default
-     * template will suffice
+     * @return signature template, or null to indicate that a default template
+     * will suffice
      */
     public String getSignatureTemplate(final int operandsCount)
     {
@@ -662,8 +664,7 @@ public abstract class SqlOperator
      */
     public String getAllowedSignatures(String opNameToUse)
     {
-        assert (operandTypeChecker != null)
-            : "If you see this, assign operandTypeChecker a value "
+        assert (operandTypeChecker != null) : "If you see this, assign operandTypeChecker a value "
             + "or override this function";
         return
             operandTypeChecker.getAllowedSignatures(this, opNameToUse).trim();
@@ -675,9 +676,9 @@ public abstract class SqlOperator
     }
 
     /**
-     * Returns whether this operator is an aggregate function.
-     * By default, subclass type is used (an instance of SqlAggFunction
-     * is assumed to be an aggregator; anything else is not).
+     * Returns whether this operator is an aggregate function. By default,
+     * subclass type is used (an instance of SqlAggFunction is assumed to be an
+     * aggregator; anything else is not).
      *
      * @return whether this operator is an aggregator
      */
@@ -687,15 +688,15 @@ public abstract class SqlOperator
     }
 
     /**
-     * Accepts a {@link SqlVisitor}, visiting each operand of a call.
-     * Returns null.
+     * Accepts a {@link SqlVisitor}, visiting each operand of a call. Returns
+     * null.
      *
      * @param visitor Visitor
      * @param call Call to visit
      */
     public <R> R acceptCall(SqlVisitor<R> visitor, SqlCall call)
     {
-        SqlNode[] operands = call.operands;
+        SqlNode [] operands = call.operands;
         for (int i = 0; i < operands.length; i++) {
             SqlNode operand = operands[i];
             if (operand == null) {
@@ -707,32 +708,30 @@ public abstract class SqlOperator
     }
 
     /**
-     * Accepts a {@link SqlVisitor}, directing an
-     * {@link SqlBasicVisitor.ArgHandler} to visit operand of a call.
-     *
-     * The argument handler allows fine control about how
-     * the operands are visited, and how the results are combined.
+     * Accepts a {@link SqlVisitor}, directing an {@link
+     * SqlBasicVisitor.ArgHandler} to visit operand of a call. The argument
+     * handler allows fine control about how the operands are visited, and how
+     * the results are combined.
      *
      * @param visitor Visitor
      * @param call Call to visit
      * @param onlyExpressions If true, ignores operands which are not
-     *   expressions. For example, in the call to the <code>AS</code> operator
+     * expressions. For example, in the call to the <code>AS</code> operator
      * @param argHandler Called for each operand
      */
-    public <R> void acceptCall(
-        SqlVisitor<R> visitor,
+    public <R> void acceptCall(SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
     {
-        SqlNode[] operands = call.operands;
+        SqlNode [] operands = call.operands;
         for (int i = 0; i < operands.length; i++) {
             argHandler.visitChild(visitor, call, i, operands[i]);
         }
     }
 
     /**
-     * Method to check if call to this function is monotonic.  Default
+     * Method to check if call to this function is monotonic. Default
      * implementation is to return false.
      */
     public boolean isMonotonic(SqlCall call, SqlValidatorScope scope)
@@ -741,24 +740,22 @@ public abstract class SqlOperator
     }
 
     /**
-     * @return true iff a call to this operator is guaranteed to always
-     * return the same result given the same operands; true is
-     * assumed by default
+     * @return true iff a call to this operator is guaranteed to always return
+     * the same result given the same operands; true is assumed by default
      */
     public boolean isDeterministic()
     {
         return true;
     }
-    
+
     /**
-     * Method to check if call requires expansion when it has decimal 
-     * operands. The default implementation is to return true.
+     * Method to check if call requires expansion when it has decimal operands.
+     * The default implementation is to return true.
      */
     public boolean requiresDecimalExpansion()
     {
         return true;
     }
 }
-
 
 // End SqlOperator.java

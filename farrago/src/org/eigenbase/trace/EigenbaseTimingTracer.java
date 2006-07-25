@@ -21,33 +21,40 @@
 */
 package org.eigenbase.trace;
 
-import java.util.logging.*;
-
 import java.text.*;
 
+import java.util.logging.*;
+
+
 /**
- * EigenbaseTimingTracer provides a mechanism for tracing the timing of
- * a call sequence at nanosecond resolution.
+ * EigenbaseTimingTracer provides a mechanism for tracing the timing of a call
+ * sequence at nanosecond resolution.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class EigenbaseTimingTracer
 {
-    private final Logger logger;
-    
-    private long lastNanoTime;
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final DecimalFormat decimalFormat =
         new DecimalFormat("###,###,###,###,###");
 
+    //~ Instance fields --------------------------------------------------------
+
+    private final Logger logger;
+
+    private long lastNanoTime;
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new timing tracer, publishing an initial event
-     * (at elapsed time 0).
+     * Creates a new timing tracer, publishing an initial event (at elapsed time
+     * 0).
      *
-     * @param logger logger on which to log timing events;
-     * level FINE will be used
-     *
+     * @param logger logger on which to log timing events; level FINE will be
+     * used
      * @param startEvent event to trace as start of timing
      */
     public EigenbaseTimingTracer(
@@ -63,6 +70,8 @@ public class EigenbaseTimingTracer
         lastNanoTime = System.nanoTime();
         logger.fine(startEvent + ":  elapsed nanos=0");
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Publishes an event with the time elapsed since the previous event.

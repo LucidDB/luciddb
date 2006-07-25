@@ -23,6 +23,7 @@
 package net.sf.farrago.fennel;
 
 import java.sql.*;
+
 import java.util.logging.*;
 
 import net.sf.farrago.*;
@@ -37,19 +38,21 @@ import net.sf.farrago.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FennelStreamGraph implements FarragoAllocation
+public class FennelStreamGraph
+    implements FarragoAllocation
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer =
         FarragoTrace.getFennelStreamGraphTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final FennelDbHandle fennelDbHandle;
     private long streamGraphHandle;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FennelStreamGraph(
         FennelDbHandle fennelDbHandle,
@@ -59,20 +62,20 @@ public class FennelStreamGraph implements FarragoAllocation
         this.streamGraphHandle = streamGraphHandle.getLongHandle();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Finds a particular stream within the graph.
      *
      * @param metadataFactory factory for creating Fem instances
-     *
      * @param streamName name of stream to find
-     *
      * @param isInput
+     *
      * @return handle to stream
      */
     public FennelStreamHandle findStream(FarragoMetadataFactory metadataFactory,
-                                         String streamName, boolean isInput)
+        String streamName,
+        boolean isInput)
     {
         FemCmdCreateStreamHandle cmd =
             metadataFactory.newFemCmdCreateStreamHandle();
@@ -105,7 +108,8 @@ public class FennelStreamGraph implements FarragoAllocation
     private void traceGraphHandle(String operation)
     {
         if (tracer.isLoggable(Level.FINE)) {
-            tracer.fine(operation + " streamGraphHandle = "
+            tracer.fine(
+                operation + " streamGraphHandle = "
                 + Long.toHexString(streamGraphHandle));
         }
     }
@@ -115,7 +119,8 @@ public class FennelStreamGraph implements FarragoAllocation
         FennelStreamHandle streamHandle)
     {
         if (tracer.isLoggable(Level.FINER)) {
-            tracer.fine(operation + " streamHandle = "
+            tracer.fine(
+                operation + " streamHandle = "
                 + Long.toHexString(streamHandle.getLongHandle()));
         }
     }
@@ -126,8 +131,10 @@ public class FennelStreamGraph implements FarragoAllocation
         int execStreamInputOrdinal)
     {
         if (tracer.isLoggable(Level.FINER)) {
-            tracer.fine(operation
-                + " streamHandle = " + Long.toHexString(streamHandle.getLongHandle())
+            tracer.fine(
+                operation
+                + " streamHandle = "
+                + Long.toHexString(streamHandle.getLongHandle())
                 + " input ordinal = " + execStreamInputOrdinal);
         }
     }
@@ -135,9 +142,8 @@ public class FennelStreamGraph implements FarragoAllocation
     /**
      * Opens a prepared stream graph.
      *
-     * @param fennelTxnContext transaction context in which stream graph
-     * should participate
-     *
+     * @param fennelTxnContext transaction context in which stream graph should
+     * participate
      * @param javaStreamMap optional FennelJavaStreamMap
      */
     public void open(
@@ -156,15 +162,14 @@ public class FennelStreamGraph implements FarragoAllocation
     }
 
     /**
-     * Fetches a buffer of rows from a stream.  If unpositioned, this
-     * fetches the first rows.
+     * Fetches a buffer of rows from a stream. If unpositioned, this fetches the
+     * first rows.
      *
      * @param streamHandle handle to stream from which to fetch
-     *
      * @param byteArray output buffer receives complete tuples
      *
      * @return number of bytes fetched (at least one tuple should always be
-     *         fetched if any are available, so 0 indicates end of stream)
+     * fetched if any are available, so 0 indicates end of stream)
      */
     public int fetch(
         FennelStreamHandle streamHandle,
@@ -172,26 +177,25 @@ public class FennelStreamGraph implements FarragoAllocation
     {
         traceStreamHandle("fetch", streamHandle);
         try {
-            return FennelStorage.tupleStreamFetch(
-                streamHandle.getLongHandle(),
-                byteArray);
+            return
+                FennelStorage.tupleStreamFetch(
+                    streamHandle.getLongHandle(),
+                    byteArray);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }
     }
-    
+
     /**
-     * Fetches a buffer of rows from a stream.  If unpositioned, this
-     * fetches the first rows.
+     * Fetches a buffer of rows from a stream. If unpositioned, this fetches the
+     * first rows.
      *
-     * @param streamHandle handle to JavaTransformExecStream from which to 
-     *                     fetch
+     * @param streamHandle handle to JavaTransformExecStream from which to fetch
      * @param execStreamInputOrdinal ordinal of the stream's input
-     *
      * @param byteArray output buffer receives complete tuples
      *
-     * @return number of bytes fetched (0 indicates end of stream, less than
-     *         0 indicates no data currently available)
+     * @return number of bytes fetched (0 indicates end of stream, less than 0
+     * indicates no data currently available)
      */
     public int transformFetch(
         FennelStreamHandle streamHandle,
@@ -199,12 +203,15 @@ public class FennelStreamGraph implements FarragoAllocation
         byte [] byteArray)
     {
         traceStreamHandle(
-            "transformFetch", streamHandle, execStreamInputOrdinal);
+            "transformFetch",
+            streamHandle,
+            execStreamInputOrdinal);
         try {
-            return FennelStorage.tupleStreamTransformFetch(
-                streamHandle.getLongHandle(),
-                execStreamInputOrdinal,
-                byteArray);
+            return
+                FennelStorage.tupleStreamTransformFetch(
+                    streamHandle.getLongHandle(),
+                    execStreamInputOrdinal,
+                    byteArray);
         } catch (SQLException ex) {
             throw fennelDbHandle.handleNativeException(ex);
         }
@@ -282,6 +289,5 @@ public class FennelStreamGraph implements FarragoAllocation
         }
     }
 }
-
 
 // End FennelStreamGraph.java

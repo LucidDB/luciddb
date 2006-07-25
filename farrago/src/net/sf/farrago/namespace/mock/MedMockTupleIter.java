@@ -22,7 +22,8 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import org.eigenbase.runtime.TupleIter;
+import org.eigenbase.runtime.*;
+
 
 /**
  * MedMockTupleIter generates mock data.
@@ -30,21 +31,22 @@ import org.eigenbase.runtime.TupleIter;
  * @author Stephan Zuercher (adapted from MedMockIterator)
  * @version $Id$
  */
-public class MedMockTupleIter implements TupleIter
+public class MedMockTupleIter
+    implements TupleIter
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private Object obj;
     private long nRows;
     private long nRowsInit;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructor.
      *
      * @param obj the single object which is returned over and over
-     *
      * @param nRows number of rows to generate
      */
     public MedMockTupleIter(
@@ -56,7 +58,7 @@ public class MedMockTupleIter implements TupleIter
         this.nRows = nRows;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement TupleIter
     public Object fetchNext()
@@ -65,7 +67,7 @@ public class MedMockTupleIter implements TupleIter
             --nRows;
             return obj;
         }
-        
+
         return NoDataReason.END_OF_DATA;
     }
 
@@ -74,12 +76,11 @@ public class MedMockTupleIter implements TupleIter
     {
         nRows = nRowsInit;
     }
-    
+
     // implement TupleIter
     public void closeAllocation()
     {
     }
 }
-
 
 // End MedMockTupleIter.java

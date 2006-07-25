@@ -21,33 +21,41 @@
 */
 package org.eigenbase.sql.type;
 
+import java.util.*;
+
+import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
- * Parameter type-checking strategy
- * type must be a literal (whether null is allowede is determined by
- * the constructor).
- * <code>CAST(NULL as ...)</code> is considered to be a NULL literal but not
- * <code>CAST(CAST(NULL as ...) AS ...)</code>
+ * Parameter type-checking strategy type must be a literal (whether null is
+ * allowede is determined by the constructor). <code>CAST(NULL as ...)</code> is
+ * considered to be a NULL literal but not <code>CAST(CAST(NULL as ...) AS
+ * ...)</code>
  *
  * @author Wael Chatila
  * @version $Id$
  */
-public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
+public class LiteralOperandTypeChecker
+    implements SqlSingleOperandTypeChecker
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private boolean allowNull;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public LiteralOperandTypeChecker(boolean allowNull)
     {
         this.allowNull = allowNull;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public boolean checkSingleOperandType(
         SqlCallBinding callBinding,
         SqlNode node,
@@ -81,9 +89,12 @@ public class LiteralOperandTypeChecker implements SqlSingleOperandTypeChecker
         SqlCallBinding callBinding,
         boolean throwOnFailure)
     {
-        return checkSingleOperandType(
-            callBinding,
-            callBinding.getCall().operands[0], 0, throwOnFailure);
+        return
+            checkSingleOperandType(
+                callBinding,
+                callBinding.getCall().operands[0],
+                0,
+                throwOnFailure);
     }
 
     public SqlOperandCountRange getOperandCountRange()

@@ -20,52 +20,44 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.util;
 
-import java.math.BigDecimal;
 import java.util.List;
 
-import openjava.mop.Environment;
-import openjava.mop.OJClass;
+import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.rex.RexBuilder;
-import org.eigenbase.rex.RexKind;
-import org.eigenbase.rex.RexLiteral;
-import org.eigenbase.rex.RexNode;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.NlsString;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.util.*;
 
 
 /**
  * Extends {@link RexBuilder} to builds row-expressions including those
  * involving Java code.
  *
- * @see JavaRowExpression
- *
  * @author jhyde
- * @since Nov 23, 2003
  * @version $Id$
- **/
-public class JavaRexBuilder extends RexBuilder
+ * @see JavaRowExpression
+ * @since Nov 23, 2003
+ */
+public class JavaRexBuilder
+    extends RexBuilder
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     OJTranslator translator = new OJTranslator();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public JavaRexBuilder(RelDataTypeFactory typeFactory)
     {
         super(typeFactory);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RexNode makeFieldAccess(
         RexNode exp,
@@ -74,7 +66,9 @@ public class JavaRexBuilder extends RexBuilder
         if (exp instanceof JavaRowExpression) {
             JavaRowExpression jexp = (JavaRowExpression) exp;
             final FieldAccess fieldAccess =
-                new FieldAccess(jexp.getExpression(), fieldName);
+                new FieldAccess(
+                    jexp.getExpression(),
+                    fieldName);
             return makeJava(jexp.env, fieldAccess);
         } else {
             return super.makeFieldAccess(exp, fieldName);
@@ -83,9 +77,11 @@ public class JavaRexBuilder extends RexBuilder
 
     /**
      * Creates a call to a Java method.
-     * @param exp        Target of the method
+     *
+     * @param exp Target of the method
      * @param methodName Name of the method
-     * @param args       Argument expressions; null means no arguments
+     * @param args Argument expressions; null means no arguments
+     *
      * @return Method call
      */
     public RexNode createMethodCall(
@@ -97,8 +93,8 @@ public class JavaRexBuilder extends RexBuilder
         ExpressionList ojArgs = translator.toJava(args);
         Expression ojExp = translator.toJava(exp);
         return makeJava(
-            env,
-            new MethodCall(ojExp, methodName, ojArgs));
+                env,
+                new MethodCall(ojExp, methodName, ojArgs));
     }
 
     public RexNode makeJava(
@@ -132,13 +128,15 @@ public class JavaRexBuilder extends RexBuilder
             JavaRowExpression java = (JavaRowExpression) exp;
             final OJClass ojClass = OJUtil.typeToOJClass(type, typeFactory);
             final CastExpression castExpr =
-                new CastExpression(ojClass, java.getExpression());
+                new CastExpression(
+                    ojClass,
+                    java.getExpression());
             return new JavaRowExpression(java.env, type, castExpr);
         }
         return super.makeCast(type, exp);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     private static class OJTranslator
     {
@@ -153,6 +151,5 @@ public class JavaRexBuilder extends RexBuilder
         }
     }
 }
-
 
 // End JavaRexBuilder.java

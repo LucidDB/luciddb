@@ -23,50 +23,46 @@
 package net.sf.farrago.namespace;
 
 import java.sql.*;
+
 import java.util.*;
 
+import net.sf.farrago.jdbc.*;
 import net.sf.farrago.plugin.*;
-import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
+
 
 /**
  * FarragoMedDataWrapper defines an interface for accessing foreign or local
- * data.  It is a non-standard replacement for the standard SQL/MED internal
+ * data. It is a non-standard replacement for the standard SQL/MED internal
  * interface.
  *
- *<p>
- *
- * Implementations of FarragoMedDataWrapper must provide a public default
- * constructor in order to be loaded via the CREATE {FOREIGN|LOCAL} DATA
- * WRAPPER statement.  FarragoMedDataWrapper extends FarragoAllocation; when
- * closeAllocation is called, all resources (such as connections) used to
- * access the data should be released.
+ * <p>Implementations of FarragoMedDataWrapper must provide a public default
+ * constructor in order to be loaded via the CREATE {FOREIGN|LOCAL} DATA WRAPPER
+ * statement. FarragoMedDataWrapper extends FarragoAllocation; when
+ * closeAllocation is called, all resources (such as connections) used to access
+ * the data should be released.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface FarragoMedDataWrapper
-    extends FarragoPlugin, FarragoMedDataWrapperInfo
+    extends FarragoPlugin,
+        FarragoMedDataWrapperInfo
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Creates an instance of this wrapper for a particular server.
-     * This supports the SQL/MED CREATE SERVER statement.  The
-     * TYPE and VERSION attributes are rolled in with the other
-     * properties.  As much validation as possible should
-     * be performed, including establishing connections
-     * if appropriate.
+     * Creates an instance of this wrapper for a particular server. This
+     * supports the SQL/MED CREATE SERVER statement. The TYPE and VERSION
+     * attributes are rolled in with the other properties. As much validation as
+     * possible should be performed, including establishing connections if
+     * appropriate.
      *
-     *<p>
+     * <p>If this wrapper returns false from the isForeign method, then returned
+     * server instances must implement the FarragoMedLocalDataServer interface.
      *
-     * If this wrapper returns false from the isForeign method, then
-     * returned server instances must implement the FarragoMedLocalDataServer
-     * interface.
-     *
-     * @param serverMofId MOFID of server definition in repository;
-     * this can be used for accessing the server definition from
-     * generated code
-     *
+     * @param serverMofId MOFID of server definition in repository; this can be
+     * used for accessing the server definition from generated code
      * @param props server properties
      *
      * @return new server instance
@@ -86,8 +82,6 @@ public interface FarragoMedDataWrapper
      * @return true only if server sharing is supported
      */
     public boolean supportsServerSharing();
-
 }
-
 
 // End FarragoMedDataWrapper.java

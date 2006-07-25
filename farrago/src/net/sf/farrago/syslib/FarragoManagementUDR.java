@@ -22,43 +22,36 @@
 */
 package net.sf.farrago.syslib;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.sql.*;
 
-import net.sf.farrago.catalog.FarragoModelLoader;
-import net.sf.farrago.db.FarragoDatabase;
-import net.sf.farrago.db.FarragoDbSession;
-import net.sf.farrago.runtime.FarragoUdrRuntime;
-import net.sf.farrago.session.FarragoSession;
-import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
-import net.sf.farrago.session.FarragoSessionInfo;
-import net.sf.farrago.session.FarragoSessionVariables;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
 
 import org.eigenbase.util.*;
 
 
 /**
- * FarragoManagementUDR is a set of user-defined routines providing
- * access to information about the running state of Farrago,
- * intended for management purposes - such as a list of currently
- * executing statements.  The UDRs are used to create views in
- * initsql/createMgmtViews.sql.
+ * FarragoManagementUDR is a set of user-defined routines providing access to
+ * information about the running state of Farrago, intended for management
+ * purposes - such as a list of currently executing statements. The UDRs are
+ * used to create views in initsql/createMgmtViews.sql.
  *
  * @author Jason Ouellette
  * @version $Id$
  */
 public abstract class FarragoManagementUDR
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     static final String STORAGEFACTORY_PROP_NAME =
         "org.netbeans.mdr.storagemodel.StorageFactoryClassName";
     static final String [] STORAGE_PROP_NAMES =
-        new String [] {
+        new String[] {
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.driverClassName",
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.url",
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.userName",
@@ -66,7 +59,7 @@ public abstract class FarragoManagementUDR
             "MDRStorageProperty.org.netbeans.mdr.persistence.jdbcimpl.schemaName"
         };
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Populates a table of information on currently executing statements.
@@ -108,6 +101,7 @@ public abstract class FarragoManagementUDR
      * Populates a table of catalog objects in use by active statements.
      *
      * @param resultInserter
+     *
      * @throws SQLException
      */
     public static void objectsInUse(PreparedStatement resultInserter)
@@ -142,6 +136,7 @@ public abstract class FarragoManagementUDR
      * Populates a table of currently active sessions.
      *
      * @param resultInserter
+     *
      * @throws SQLException
      */
     public static void sessions(PreparedStatement resultInserter)
@@ -184,8 +179,8 @@ public abstract class FarragoManagementUDR
     }
 
     /**
-     * Sleeps for a given number of milliseconds (checking
-     * for query cancellation every second).
+     * Sleeps for a given number of milliseconds (checking for query
+     * cancellation every second).
      *
      * @param millis number of milliseconds to sleep
      *
@@ -211,6 +206,7 @@ public abstract class FarragoManagementUDR
      * Populates a table of properties of the current repository connection.
      *
      * @param resultInserter
+     *
      * @throws SQLException
      */
     public static void repositoryProperties(PreparedStatement resultInserter)
@@ -239,3 +235,5 @@ public abstract class FarragoManagementUDR
         }
     }
 }
+
+// End FarragoManagementUDR.java

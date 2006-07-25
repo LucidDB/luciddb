@@ -34,10 +34,12 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoParameterMetaData extends FarragoJdbcMetaDataImpl
+public class FarragoParameterMetaData
+    extends FarragoJdbcMetaDataImpl
     implements ParameterMetaData
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoParameterMetaData object.
@@ -49,7 +51,7 @@ public class FarragoParameterMetaData extends FarragoJdbcMetaDataImpl
         super(rowType);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement ParameterMetaData
     public String getParameterClassName(int param)
@@ -114,6 +116,5 @@ public class FarragoParameterMetaData extends FarragoJdbcMetaDataImpl
         return isFieldSigned(param);
     }
 }
-
 
 // End FarragoParameterMetaData.java

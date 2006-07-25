@@ -23,24 +23,32 @@ package org.eigenbase.sarg;
 
 import org.eigenbase.rex.*;
 
+
 /**
- * SargBinding represents the binding of a {@link SargExpr} to
- * a particular {@link RexInputRef}.
+ * SargBinding represents the binding of a {@link SargExpr} to a particular
+ * {@link RexInputRef}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class SargBinding
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SargExpr expr;
 
     private final RexInputRef inputRef;
 
-    public SargBinding(SargExpr expr,RexInputRef inputRef)
+    //~ Constructors -----------------------------------------------------------
+
+    public SargBinding(SargExpr expr, RexInputRef inputRef)
     {
         this.expr = expr;
         this.inputRef = inputRef;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SargExpr getExpr()
     {

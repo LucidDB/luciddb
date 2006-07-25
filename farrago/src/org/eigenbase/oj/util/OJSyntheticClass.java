@@ -20,59 +20,64 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.util;
 
+import java.util.Enumeration;
+
 import openjava.mop.*;
+
 import openjava.ptree.*;
 import openjava.ptree.util.*;
 
 import org.eigenbase.util.*;
 
-import java.util.Enumeration;
 
 /**
  * An <code>OJSyntheticClass</code> is a {@link OJClass class declaration} for
  * intermediate results in expressions. It is created implicitly while
  * expressions are being compiled.
  *
- * <p> Two synthetic classes are identical if their attributes are of the same
+ * <p>Two synthetic classes are identical if their attributes are of the same
  * number, type, and order.
  *
- * <p> Synthetic classes are created in two ways: {@link
+ * <p>Synthetic classes are created in two ways: {@link
  * OJClassMap#createProject(OJClass, OJClass[], String[])} creates the type of a
  * select clause, and {@link OJClassMap#createJoin(OJClass, OJClass[])} creates
  * the type of a join. The semantics are slightly different: projection classes
  * have field names, but join classes do not; two join classes with the same
- * member types are equivalent, but two distinct projection classes may have
- * the same set of attributes.
- **/
-public class OJSyntheticClass extends OJClass
+ * member types are equivalent, but two distinct projection classes may have the
+ * same set of attributes.
+ */
+public class OJSyntheticClass
+    extends OJClass
 {
 
-    /* -- Data Members -- */
-
-    String description; // for debug
-    OJClass[] classes;
-    ClassDeclaration decl;
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final String JOIN_CLASS_PREFIX = "Oj_";
     public static final String PROJECT_CLASS_PREFIX = "Ojp_";
     public static final String FIELD_PREFIX = "$f";
 
-    /* -- Methods -- */
+    //~ Instance fields --------------------------------------------------------
 
-    public String toString()
-    {
-        return super.toString() + " " + description;
-    }
+    /* -- Data Members -- */
+
+    String description; // for debug
+    OJClass [] classes;
+    ClassDeclaration decl;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Called only from {@link OJClassMap} methods.
      */
     OJSyntheticClass(
-        Environment env, OJClass declarer, OJClass[] classes,
-        String[] fieldNames, ClassDeclaration decl, String description,
+        Environment env,
+        OJClass declarer,
+        OJClass [] classes,
+        String [] fieldNames,
+        ClassDeclaration decl,
+        String description,
         boolean defineValueConstructor)
     {
         super(env, declarer, decl);
@@ -81,10 +86,15 @@ public class OJSyntheticClass extends OJClass
         this.description = description;
 
         // default constructor
-        ConstructorDeclaration constructor = new ConstructorDeclaration(
-            new ModifierList(ModifierList.PUBLIC),
-            decl.getName(), null, null, new StatementList());
+        ConstructorDeclaration constructor =
+            new ConstructorDeclaration(
+                new ModifierList(ModifierList.PUBLIC),
+                decl.getName(),
+                null,
+                null,
+                new StatementList());
         decl.getBody().add(constructor);
+
         // create value constructor (unless it is the same as the default
         // constructor, or we've been asked not to)
         if ((classes.length > 0) && defineValueConstructor) {
@@ -93,7 +103,9 @@ public class OJSyntheticClass extends OJClass
             for (int i = 0; i < classes.length; i++) {
                 String varName = fieldNames[i];
                 parameterList.add(
-                    new Parameter(TypeName.forOJClass(classes[i]), varName));
+                    new Parameter(
+                        TypeName.forOJClass(classes[i]),
+                        varName));
                 statementList.add(
                     new ExpressionStatement(
                         new AssignmentExpression(
@@ -103,18 +115,32 @@ public class OJSyntheticClass extends OJClass
                             AssignmentExpression.EQUALS,
                             new Variable(varName))));
             }
-            ConstructorDeclaration constructor2 = new ConstructorDeclaration(
-                new ModifierList(ModifierList.PUBLIC),
-                decl.getName(), parameterList, null, statementList);
+            ConstructorDeclaration constructor2 =
+                new ConstructorDeclaration(
+                    new ModifierList(ModifierList.PUBLIC),
+                    decl.getName(),
+                    parameterList,
+                    null,
+                    statementList);
             decl.getBody().add(constructor2);
         }
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /* -- Methods -- */
+
+    public String toString()
+    {
+        return super.toString() + " " + description;
     }
 
     // override Object
     public boolean equals(Object o)
     {
-        return o instanceof OJSyntheticClass &&
-            this.description.equals(((OJSyntheticClass) o).description);
+        return
+            (o instanceof OJSyntheticClass)
+            && this.description.equals(((OJSyntheticClass) o).description);
     }
 
     // override Object
@@ -125,11 +151,12 @@ public class OJSyntheticClass extends OJClass
 
     /**
      * Adds declarations of a set of classes <code>classes</code> as inner
-     * classes of a class declaration <code>outerClassDecl</code>.
-     * Declarations which are already present are not added again.
-     **/
+     * classes of a class declaration <code>outerClassDecl</code>. Declarations
+     * which are already present are not added again.
+     */
     public static void addMembers(
-        ClassDeclaration outerClassDecl, OJClass[] classes)
+        ClassDeclaration outerClassDecl,
+        OJClass [] classes)
     {
         MemberDeclarationList memberDecls = outerClassDecl.getBody();
 outer:
@@ -138,7 +165,7 @@ outer:
                 ClassDeclaration innerClassDecl =
                     ((OJSyntheticClass) classes[i]).decl;
                 for (Enumeration existingDecls = memberDecls.elements();
-                     existingDecls.hasMoreElements();) {
+                    existingDecls.hasMoreElements();) {
                     if (existingDecls.nextElement() == innerClassDecl) {
                         continue outer;
                     }
@@ -150,11 +177,14 @@ outer:
 
     /**
      * Creates a method in a class.
-     **/
+     */
     public static void addMethod(
         ClassDeclaration classDecl,
-        StatementList statementList, String name, String[] parameterNames,
-        OJClass[] parameterTypes, OJClass returnType)
+        StatementList statementList,
+        String name,
+        String [] parameterNames,
+        OJClass [] parameterTypes,
+        OJClass returnType)
     {
         ParameterList parameterList = new ParameterList();
         if (parameterNames.length != parameterTypes.length) {
@@ -169,13 +199,16 @@ outer:
                     TypeName.forOJClass(parameterTypes[i]),
                     parameterNames[i]));
         }
-        MethodDeclaration methodDecl = new MethodDeclaration(
-            new ModifierList(ModifierList.STATIC | ModifierList.PUBLIC),
-            TypeName.forOJClass(returnType),
-            name,
-            parameterList,
-            new TypeName[] {TypeName.forOJClass(OJUtil.clazzSQLException)},
-            statementList);
+        MethodDeclaration methodDecl =
+            new MethodDeclaration(
+                new ModifierList(ModifierList.STATIC | ModifierList.PUBLIC),
+                TypeName.forOJClass(returnType),
+                name,
+                parameterList,
+                new TypeName[] {
+                    TypeName.forOJClass(OJUtil.clazzSQLException)
+                },
+                statementList);
         MethodDeclaration oldMethodDecl = null;
         MemberDeclarationList body = classDecl.getBody();
         for (int i = 0, count = body.size(); i < count; i++) {
@@ -183,8 +216,9 @@ outer:
             if (memberDecl instanceof MethodDeclaration) {
                 MethodDeclaration existingMethodDecl =
                     (MethodDeclaration) memberDecl;
-                if (existingMethodDecl.getName().equals(name) &&
-                    existingMethodDecl.getParameters().equals(parameterList)) {
+                if (existingMethodDecl.getName().equals(name)
+                    && existingMethodDecl.getParameters().equals(
+                        parameterList)) {
                     oldMethodDecl = existingMethodDecl;
                 }
             }
@@ -196,16 +230,17 @@ outer:
                 oldMethodDecl.replace(methodDecl);
             } catch (ParseTreeException e) {
                 throw Util.newInternal(
-                    e, "while replacing method " + oldMethodDecl);
+                    e,
+                    "while replacing method " + oldMethodDecl);
             }
         }
     }
 
     /**
-     * Converts a field name back to an ordinal.  For example,
-     * <code>getOrdinal("$f2")</code> returns 2.  If fieldName is not valid,
-     * throws an error if "fail" is true, otherwise returns -1.
-     **/
+     * Converts a field name back to an ordinal. For example, <code>
+     * getOrdinal("$f2")</code> returns 2. If fieldName is not valid, throws an
+     * error if "fail" is true, otherwise returns -1.
+     */
     public static int getOrdinal(String fieldName, boolean fail)
     {
         if (fieldName.startsWith(FIELD_PREFIX)) {
@@ -232,7 +267,7 @@ outer:
     public static boolean isJoinClass(OJClass clazz)
     {
         final String name = clazz.getName(); // null for the "null class"
-        return name != null && name.indexOf(JOIN_CLASS_PREFIX) >= 0;
+        return (name != null) && (name.indexOf(JOIN_CLASS_PREFIX) >= 0);
     }
 }
 

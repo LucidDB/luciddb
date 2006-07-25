@@ -18,43 +18,48 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package com.disruptivetech.farrago.rel;
 
 import com.disruptivetech.farrago.calc.*;
 
-import net.sf.farrago.query.*;
+import java.util.*;
+
 import net.sf.farrago.fem.fennel.*;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FennelCalcRel is the relational expression corresponding to a Calc
  * implemented inside of Fennel.
  *
- * <p>Rules:<ul>
- * <li>{@link FennelCalcRule} creates this from a
- *     {@link org.eigenbase.rel.CalcRel}</li>
- * </ul></p>
+ * <p>Rules:
+ *
+ * <ul>
+ * <li>{@link FennelCalcRule} creates this from a {@link
+ * org.eigenbase.rel.CalcRel}</li>
+ * </ul>
+ * </p>
  *
  * @author jhyde
- * @since Apr 8, 2004
  * @version $Id$
+ * @since Apr 8, 2004
  */
-public class FennelCalcRel extends FennelSingleRel
+public class FennelCalcRel
+    extends FennelSingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final RexProgram program;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelCalcRel object.
@@ -63,7 +68,7 @@ public class FennelCalcRel extends FennelSingleRel
      * @param child rel producing rows to be Calced
      * @param rowType Row type
      * @param program Set of common expressions, projections, and optional
-     *   filter, to be calculated by the calculator
+     * filter, to be calculated by the calculator
      */
     public FennelCalcRel(
         RelOptCluster cluster,
@@ -71,35 +76,44 @@ public class FennelCalcRel extends FennelSingleRel
         RelDataType rowType,
         RexProgram program)
     {
-        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
+        super(
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            child);
         Util.pre(rowType != null, "rowType != null");
         Util.pre(program != null, "program != null");
         this.program = program;
         this.rowType = rowType;
         assert program.isValid(true);
         assert RelOptUtil.equal(
-            "program's input type", program.getInputRowType(),
-            "child's output type", child.getRowType(), true);
+                "program's input type",
+                program.getInputRowType(),
+                "child's output type",
+                child.getRowType(),
+                true);
         assert RelOptUtil.equal( // TODO: use stronger 'eq'
-            "program's output type", program.getOutputRowType(),
-            "fennelCalcRel's output rowtype", rowType,
-            true);
+
+            "program's output type",
+                program.getOutputRowType(),
+                "fennelCalcRel's output rowtype",
+                rowType,
+                true);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
     public Object clone()
     {
-        FennelCalcRel clone = new FennelCalcRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            rowType,
-            program);
+        FennelCalcRel clone =
+            new FennelCalcRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                rowType,
+                program);
         clone.inheritTraitsFrom(this);
         return clone;
     }
-
 
     /**
      * @return Program
@@ -116,8 +130,10 @@ public class FennelCalcRel extends FennelSingleRel
 
     public double getRows()
     {
-        return FilterRel.estimateFilteredRows(
-            getChild(), program.getCondition());
+        return
+            FilterRel.estimateFilteredRows(
+                getChild(),
+                program.getCondition());
     }
 
     // implement RelNode
@@ -130,9 +146,11 @@ public class FennelCalcRel extends FennelSingleRel
         // we have proper costing, and giving preference to Java since it's
         // currently more reliable)
         int exprCount = program.getExprCount();
-        return planner.makeCost(
-            RelMetadataQuery.getRowCount(this),
-            RelMetadataQuery.getRowCount(getChild()) * exprCount * 2, 0);
+        return
+            planner.makeCost(
+                RelMetadataQuery.getRowCount(this),
+                RelMetadataQuery.getRowCount(getChild()) * exprCount * 2,
+                0);
     }
 
     public boolean isDistinct()
@@ -156,7 +174,7 @@ public class FennelCalcRel extends FennelSingleRel
         //
         //   select y from (select x, y from t order by x, y)
         // is not ordered
-        RelFieldCollation[] childCollation =
+        RelFieldCollation [] childCollation =
             ((FennelRel) getChild()).getCollations();
         int nChildFields = getChild().getRowType().getFieldCount();
         List<RelFieldCollation> retList = new ArrayList<RelFieldCollation>();
@@ -166,15 +184,15 @@ public class FennelCalcRel extends FennelSingleRel
                 break;
             }
             int projIdx = projList.get(i).getIndex();
-            if (projIdx >= nChildFields ||
-                projIdx != childCollation[i].getFieldIndex())
-            {
+            if ((projIdx >= nChildFields)
+                || (projIdx != childCollation[i].getFieldIndex())) {
                 break;
             }
             retList.add(new RelFieldCollation(i));
         }
-        return (RelFieldCollation[]) retList.toArray(
-            new RelFieldCollation[retList.size()]);
+        return
+            (RelFieldCollation []) retList.toArray(
+                new RelFieldCollation[retList.size()]);
     }
 
     // implement FennelRel
@@ -184,20 +202,21 @@ public class FennelCalcRel extends FennelSingleRel
             implementor.getRepos().newFemCalcTupleStreamDef();
 
         implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
+            implementor.visitFennelChild((FennelRel) getChild()),
             calcStream);
-        
+
         calcStream.setFilter(program.getCondition() != null);
         final RexToCalcTranslator translator =
             new RexToCalcTranslator(
-                getCluster().getRexBuilder(), this);
-        final String program = translator.generateProgram(
-            getChild().getRowType(),
-            getProgram());
+                getCluster().getRexBuilder(),
+                this);
+        final String program =
+            translator.generateProgram(
+                getChild().getRowType(),
+                getProgram());
         calcStream.setProgram(program);
         return calcStream;
     }
 }
-
 
 // End FennelCalcRel.java

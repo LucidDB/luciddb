@@ -21,18 +21,17 @@
 */
 package net.sf.farrago.ddl;
 
-import net.sf.farrago.fem.security.*;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.*;
-
-import net.sf.farrago.session.*;
-import net.sf.farrago.catalog.*;
-import net.sf.farrago.util.*;
 import net.sf.farrago.resource.*;
-
-import java.util.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
@@ -41,30 +40,32 @@ import org.eigenbase.util.*;
 
 /**
  * DdlGrantPrivStmt represents a DDL GRANT privileges statement.
- * 
  *
  * @author Quoc Tai Tran
  * @version $Id$
  */
-public class DdlGrantPrivStmt extends DdlGrantStmt
+public class DdlGrantPrivStmt
+    extends DdlGrantStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private CwmModelElement grantedObject;
     private List privList;
     private boolean hierarchyOption;
     private SqlIdentifier grantor;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlGrantPrivStmt.
-     *
      */
     public DdlGrantPrivStmt()
     {
         super();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -75,28 +76,30 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
     // implement FarragoSessionDdlStmt
     public void preValidate(FarragoSessionDdlValidator ddlValidator)
     {
-        FarragoRepos repos =  ddlValidator.getRepos();
+        FarragoRepos repos = ddlValidator.getRepos();
 
         FemAuthId grantorAuthId = determineGrantor(ddlValidator);
 
-        // TODO: 
+        // TODO:
         // Generate a lurql query to ensure that the grantor
         // (a) Has GRANT OPTION on all the privileges specified in this
         // grant. or
-        // (b) Is the owner of the object? 
+        // (b) Is the owner of the object?
         // All at once at this point before we proceed with granting.
 
-        // Initialize the privilege lookup table. 
+        // Initialize the privilege lookup table.
         validatePrivileges(ddlValidator);
-        
+
         Iterator iter = granteeList.iterator();
-        while(iter.hasNext()) {
+        while (iter.hasNext()) {
             // process the next grantee
             SqlIdentifier id = (SqlIdentifier) iter.next();
 
             // Find the repository element id for the grantee
-            FemAuthId granteeAuthId = FarragoCatalogUtil.getAuthIdByName(repos,
-                id.getSimple());
+            FemAuthId granteeAuthId =
+                FarragoCatalogUtil.getAuthIdByName(
+                    repos,
+                    id.getSimple());
 
             // For each privilege in the list, we instantiate a repository
             // element. Note that this makes it easier to revoke the privs on
@@ -104,10 +107,10 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
             Iterator iterPriv = privList.iterator();
             while (iterPriv.hasNext()) {
                 SqlIdentifier privId = (SqlIdentifier) iterPriv.next();
-                
+
                 // Create a privilege object and set its properties.
                 FemGrant grant = repos.newFemGrant();
-                
+
                 // Set the privilege name (i.e. action) and properties.
                 grant.setAction(privId.getSimple());
                 grant.setWithGrantOption(grantOption);
@@ -122,7 +125,7 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
             }
         }
     }
-    
+
     public void setPrivList(List privList)
     {
         this.privList = privList;
@@ -157,7 +160,8 @@ public class DdlGrantPrivStmt extends DdlGrantStmt
                 // REVIEW jvs 13-Aug-2005:  maybe report all illegal
                 // privileges at once instead of just the first one?
                 throw FarragoResource.instance().ValidatorInvalidGrant.ex(
-                    privId.getSimple(), grantedObject.getName());
+                    privId.getSimple(),
+                    grantedObject.getName());
             }
         }
     }

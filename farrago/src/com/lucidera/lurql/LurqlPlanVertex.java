@@ -20,18 +20,20 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
 
-import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
+import java.util.*;
 
 import javax.jmi.model.*;
 
 import org._3pq.jgrapht.*;
+import org._3pq.jgrapht.event.*;
 import org._3pq.jgrapht.graph.*;
 import org._3pq.jgrapht.traverse.*;
-import org._3pq.jgrapht.event.*;
+
+import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
+
 
 /**
  * LurqlPlanVertex is a vertex in a LURQL plan graph.
@@ -41,25 +43,27 @@ import org._3pq.jgrapht.event.*;
  */
 public class LurqlPlanVertex
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Containing plan.
      */
     private final LurqlPlan plan;
-    
+
     /**
      * Name for this vertex (unique with respect to containing plan).
      */
     private final String name;
 
     /**
-     * The alias assigned to this vertex in the parsed query, 
-     * or null if none.
+     * The alias assigned to this vertex in the parsed query, or null if none.
      */
     private final String var;
 
     /**
-     * Set of JmiClassVertex references corresponding to
-     * classes which need to be queried at this point in the plan.
+     * Set of JmiClassVertex references corresponding to classes which need to
+     * be queried at this point in the plan.
      */
     private Set classVertexSet;
 
@@ -68,7 +72,9 @@ public class LurqlPlanVertex
      */
     private Set unmodifiableClassVertexSet;
 
-    /** All filters that apply at the given node */
+    /**
+     * All filters that apply at the given node
+     */
     private final List filters;
 
     /**
@@ -82,15 +88,15 @@ public class LurqlPlanVertex
     private final Set rootObjectIds;
 
     /**
-     * If non-null, the root of a recursive cycle.  We avoid creating an
-     * explicit graph edge to represent the cycle; instead, we use this
-     * "weak edge" and keep the graph structure acyclic.
+     * If non-null, the root of a recursive cycle. We avoid creating an explicit
+     * graph edge to represent the cycle; instead, we use this "weak edge" and
+     * keep the graph structure acyclic.
      */
     private LurqlPlanVertex recursionRoot;
 
     /**
-     * If non-null, a subgraph of vertices which should be executed
-     * cyclically to implement dynamic recursion.
+     * If non-null, a subgraph of vertices which should be executed cyclically
+     * to implement dynamic recursion.
      */
     private DirectedGraph recursionSubgraph;
 
@@ -98,14 +104,19 @@ public class LurqlPlanVertex
      * True if this vertex participates in a recursion execution cycle.
      */
     private boolean recursive;
-        
+
     /**
      * String representation of this vertex.
      */
     private String stringRep;
 
+    //~ Constructors -----------------------------------------------------------
+
     public LurqlPlanVertex(
-        LurqlPlan plan, String name, String alias, Set rootObjectIds)
+        LurqlPlan plan,
+        String name,
+        String alias,
+        Set rootObjectIds)
     {
         this.plan = plan;
         this.name = name;
@@ -115,9 +126,10 @@ public class LurqlPlanVertex
         unmodifiableClassVertexSet =
             Collections.unmodifiableSet(classVertexSet);
         filters = new ArrayList();
-        unmodifiableFilters =
-            Collections.unmodifiableList(filters);
+        unmodifiableFilters = Collections.unmodifiableList(filters);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getName()
     {
@@ -147,14 +159,14 @@ public class LurqlPlanVertex
     void setRecursionRoot(LurqlPlanVertex recursionRoot)
     {
         this.recursionRoot = recursionRoot;
-        
+
         // identify subgraph involved in recursion
         recursionRoot.recursionSubgraph =
             recursionRoot.createReachableSubgraph(true);
 
         // should have traversed this vertex above
-        assert(recursive);
-        
+        assert (recursive);
+
         // REVIEW jvs 16-May-2005:  rethink freeze
         stringRep = computeStringRep();
     }
@@ -162,18 +174,16 @@ public class LurqlPlanVertex
     DirectedGraph createReachableSubgraph(final boolean setRecursive)
     {
         final DirectedGraph subgraph = new DirectedMultigraph();
-        
+
         // TODO jvs 16-May-2005:  submit to JGraphT
         DepthFirstIterator iter = new DepthFirstIterator(
-            plan.getGraph(),
-            this);
-        iter.addTraversalListener(
-            new TraversalListenerAdapter()
-            {
+                plan.getGraph(),
+                this);
+        iter.addTraversalListener(new TraversalListenerAdapter() {
                 public void edgeTraversed(EdgeTraversalEvent e)
                 {
                     GraphHelper.addEdgeWithVertices(
-                        subgraph, 
+                        subgraph,
                         e.getEdge());
                 }
 
@@ -185,11 +195,11 @@ public class LurqlPlanVertex
                     }
                 }
             });
-        
+
         while (iter.hasNext()) {
             iter.next();
         }
-        
+
         return subgraph;
     }
 
@@ -209,7 +219,9 @@ public class LurqlPlanVertex
         sb.append(" { ");
         List list = new ArrayList(classVertexSet);
         list.addAll(rootObjectIds);
-        Collections.sort(list, new StringRepresentationComparator());
+        Collections.sort(
+            list,
+            new StringRepresentationComparator());
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             JmiClassVertex classVertex = (JmiClassVertex) iter.next();
@@ -231,7 +243,7 @@ public class LurqlPlanVertex
             }
         }
         if (recursionRoot != null) {
-            sb.append (" recursively to ");
+            sb.append(" recursively to ");
             sb.append(recursionRoot.getName());
         }
         return sb.toString();

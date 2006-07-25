@@ -10,32 +10,32 @@
 // under the terms of the GNU General Public License as published by the Free
 // Software Foundation; either version 2 of the License, or (at your option)
 // any later version approved by The Eigenbase Project.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.session.*;
+import java.util.*;
+
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.behavioral.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.cwm.behavioral.*;
-
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * FarragoUserDefinedRoutineLookup implements the {@link SqlOperatorTable}
@@ -44,14 +44,20 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
+public class FarragoUserDefinedRoutineLookup
+    implements SqlOperatorTable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSessionStmtValidator stmtValidator;
-    
+
     private final FarragoPreparingStmt preparingStmt;
 
     private final FemRoutine validatingRoutine;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoUserDefinedRoutineLookup(
         FarragoSessionStmtValidator stmtValidator,
         FarragoPreparingStmt preparingStmt,
@@ -62,6 +68,8 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         this.validatingRoutine = validatingRoutine;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement SqlOperatorTable
     public List<SqlOperator> lookupOperatorOverloads(
         SqlIdentifier opName,
@@ -70,10 +78,9 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     {
         if ((preparingStmt != null) && preparingStmt.isExpandingDefinition()) {
             // While expanding view and function bodies, an unqualified name is
-            // assumed to be a builtin, because we explicitly qualify
-            // everything else when the definition is stored.  We could
-            // qualify the builtins with INFORMATION_SCHEMA, but we
-            // currently don't.
+            // assumed to be a builtin, because we explicitly qualify everything
+            // else when the definition is stored.  We could qualify the
+            // builtins with INFORMATION_SCHEMA, but we currently don't.
             if (opName.names.length == 1) {
                 return Collections.emptyList();
             }
@@ -88,14 +95,15 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             }
             return overloads;
         }
-        
+
         if (syntax != SqlSyntax.Function) {
             return Collections.emptyList();
         }
-        
-        List<FemRoutine> list = stmtValidator.findRoutineOverloads(
-            opName,
-            null);
+
+        List<FemRoutine> list =
+            stmtValidator.findRoutineOverloads(
+                opName,
+                null);
         List<SqlOperator> overloads = new ArrayList<SqlOperator>();
         for (FemRoutine femRoutine : list) {
             if (category == SqlFunctionCategory.UserDefinedFunction) {
@@ -125,7 +133,7 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
         }
         return overloads;
     }
-    
+
     // implement SqlOperatorTable
     public List<SqlOperator> getOperatorList()
     {
@@ -134,8 +142,8 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
     }
 
     /**
-     * Converts the validated catalog definition of a routine into
-     * SqlFunction representation.
+     * Converts the validated catalog definition of a routine into SqlFunction
+     * representation.
      *
      * @param femRoutine catalog definition
      *
@@ -155,10 +163,9 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
             // even though technically it returns a MULTISET of ROW
             returnType = typeFactory.createStructTypeFromClassifier(femRoutine);
         }
-        
+
         for (int i = 0; paramIter.hasNext(); ++i) {
-            FemRoutineParameter param = (FemRoutineParameter)
-                paramIter.next();
+            FemRoutineParameter param = (FemRoutineParameter) paramIter.next();
 
             // REVIEW jvs 8-Jan-2006:  this is here to avoid problems
             // with the bogus return type on table functions; get
@@ -168,9 +175,9 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
                     continue;
                 }
             }
-            
+
             RelDataType type = typeFactory.createCwmElementType(param);
-            
+
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 returnType = type;
             } else {
@@ -188,16 +195,19 @@ public class FarragoUserDefinedRoutineLookup implements SqlOperatorTable
 
         if (FarragoCatalogUtil.isRoutineConstructor(femRoutine)) {
             // constructors always return NOT NULL
-            returnType = typeFactory.createTypeWithNullability(
-                returnType, false);
+            returnType =
+                typeFactory.createTypeWithNullability(
+                    returnType,
+                    false);
         }
-        
-        return new FarragoUserDefinedRoutine(
-            stmtValidator,
-            preparingStmt,
-            femRoutine,
-            returnType,
-            paramTypes);
+
+        return
+            new FarragoUserDefinedRoutine(
+                stmtValidator,
+                preparingStmt,
+                femRoutine,
+                returnType,
+                paramTypes);
     }
 }
 

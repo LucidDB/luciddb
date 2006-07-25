@@ -19,9 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.runtime;
-
 
 /**
  * <code>Dummy</code> is the default context for code calling {@link
@@ -29,12 +27,10 @@ package org.eigenbase.runtime;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 22 September, 2001
  */
 public class Dummy
 {
 }
-
 
 // End Dummy.java

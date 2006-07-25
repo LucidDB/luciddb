@@ -20,46 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConventionTraitDef;
-import org.eigenbase.util.Util;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.util.*;
 
 
 /**
- * <code>NoneConverter</code> converts a plan from <code>inConvention</code>
- * to {@link org.eigenbase.relopt.CallingConvention#NONE_ORDINAL}.
+ * <code>NoneConverter</code> converts a plan from <code>inConvention</code> to
+ * {@link org.eigenbase.relopt.CallingConvention#NONE_ORDINAL}.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 15 February, 2002
  */
-public class NoneConverterRel extends ConverterRel
+public class NoneConverterRel
+    extends ConverterRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public NoneConverterRel(
         RelOptCluster cluster,
         RelNode child)
     {
         super(
-            cluster, CallingConventionTraitDef.instance,
-            new RelTraitSet(CallingConvention.NONE), child);
+            cluster,
+            CallingConventionTraitDef.instance,
+            new RelTraitSet(CallingConvention.NONE),
+            child);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
         NoneConverterRel clone = new NoneConverterRel(
-            getCluster(), getChild());
+                getCluster(),
+                getChild());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -70,6 +69,5 @@ public class NoneConverterRel extends ConverterRel
         Util.discard(planner);
     }
 }
-
 
 // End NoneConverterRel.java

@@ -20,10 +20,10 @@
 */
 package com.lucidera.lcs;
 
-import net.sf.farrago.cwm.keysindexes.CwmIndexedFeature;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+
 
 /**
  * LcsCompositeStreamDef is a composite Fem stream definition.
@@ -37,8 +37,13 @@ import net.sf.farrago.fem.med.*;
  */
 class LcsCompositeStreamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FemExecutionStreamDef consumer;
     private FemExecutionStreamDef producer;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LcsCompositeStreamDef(
         FemExecutionStreamDef consumer,
@@ -47,12 +52,14 @@ class LcsCompositeStreamDef
         this.consumer = consumer;
         this.producer = producer;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public FemExecutionStreamDef getConsumer()
     {
         return consumer;
     }
-    
+
     public FemExecutionStreamDef getProducer()
     {
         return producer;

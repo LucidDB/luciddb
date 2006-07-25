@@ -20,21 +20,22 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import java.util.List;
+import java.util.*;
 
-import org.eigenbase.util.Util;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
 
 
 /**
  * Generic operator for nodes with special syntax.
  */
-public class SqlSpecialOperator extends SqlOperator
+public class SqlSpecialOperator
+    extends SqlOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlSpecialOperator(
         String name,
@@ -60,11 +61,16 @@ public class SqlSpecialOperator extends SqlOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, prec, leftAssoc, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(name,
+            kind,
+            prec,
+            leftAssoc,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -86,10 +92,11 @@ public class SqlSpecialOperator extends SqlOperator
      * precedence and associativity. Returns the ordinal of the node which
      * replaced the expression.
      *
-     * <p>The default implementation throws
-     * {@link UnsupportedOperationException}.
-     * @param ordinal indicating the ordinal of the current operator
-     * in the list on which a possible reduction can be made
+     * <p>The default implementation throws {@link
+     * UnsupportedOperationException}.
+     *
+     * @param ordinal indicating the ordinal of the current operator in the list
+     * on which a possible reduction can be made
      */
     public int reduceExpr(
         int ordinal,
@@ -98,6 +105,5 @@ public class SqlSpecialOperator extends SqlOperator
         throw Util.needToImplement(this);
     }
 }
-
 
 // End SqlExplainOperator.java

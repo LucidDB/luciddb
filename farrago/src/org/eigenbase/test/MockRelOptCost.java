@@ -23,15 +23,20 @@ package org.eigenbase.test;
 
 import org.eigenbase.relopt.*;
 
+
 /**
- * MockRelOptCost is a mock implementation of the {@link RelOptCost}
- * interface.  TODO:  constructors for various scenarios
+ * MockRelOptCost is a mock implementation of the {@link RelOptCost} interface.
+ * TODO: constructors for various scenarios
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MockRelOptCost implements RelOptCost
+public class MockRelOptCost
+    implements RelOptCost
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public double getCpu()
     {
         return 0;
@@ -56,7 +61,7 @@ public class MockRelOptCost implements RelOptCost
     {
         return false;
     }
-    
+
     public double getRows()
     {
         return 0;

@@ -33,20 +33,21 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoTimerAllocation implements FarragoAllocation
+public class FarragoTimerAllocation
+    implements FarragoAllocation
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private Timer timer;
     private final Object shutdownSynch = new Integer(0);
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoTimerAllocation.
      *
      * @param owner the owner for the timer
-     *
      * @param timer the timer to be cancelled when this allocation is closed
      */
     public FarragoTimerAllocation(
@@ -57,7 +58,7 @@ public class FarragoTimerAllocation implements FarragoAllocation
         owner.addAllocation(this);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoAllocation
     public void closeAllocation()
@@ -69,9 +70,9 @@ public class FarragoTimerAllocation implements FarragoAllocation
         // We want synchronous cancellation as soon as possible.  Timer
         // guarantees that if timer.cancel is called from within a task
         // scheduled by timer, then timer will not execute any more tasks after
-        // that one.  So, we schedule a private cancellation task, using
-        // delay=0 to request immediate execution.  If there is already a task
-        // in progress, it will complete first.
+        // that one.  So, we schedule a private cancellation task, using delay=0
+        // to request immediate execution.  If there is already a task in
+        // progress, it will complete first.
         synchronized (shutdownSynch) {
             timer.schedule(
                 new CancelTask(),
@@ -86,12 +87,13 @@ public class FarragoTimerAllocation implements FarragoAllocation
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Helper class implementing synchronous cancellation.
      */
-    private class CancelTask extends TimerTask
+    private class CancelTask
+        extends TimerTask
     {
         // implement Runnable
         public void run()
@@ -104,6 +106,5 @@ public class FarragoTimerAllocation implements FarragoAllocation
         }
     }
 }
-
 
 // End FarragoTimerAllocation.java

@@ -21,23 +21,30 @@
 */
 package org.eigenbase.jmi.mem;
 
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
 import org.eigenbase.jmi.*;
 import org.eigenbase.util.*;
 
-import javax.jmi.reflect.*;
-import javax.jmi.model.*;
 
 /**
- * JmiModeledMemFactory augments {@link JmiMemFactory} with information
- * from an underlying metamodel.
+ * JmiModeledMemFactory augments {@link JmiMemFactory} with information from an
+ * underlying metamodel.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class JmiModeledMemFactory extends JmiMemFactory
+public abstract class JmiModeledMemFactory
+    extends JmiMemFactory
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final JmiModelGraph modelGraph;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public JmiModeledMemFactory(
         JmiModelGraph modelGraph)
     {
@@ -50,6 +57,8 @@ public abstract class JmiModeledMemFactory extends JmiMemFactory
             throw Util.newInternal(ex);
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     private void definePackages()
         throws ClassNotFoundException
@@ -82,7 +91,7 @@ public abstract class JmiModeledMemFactory extends JmiMemFactory
             JmiClassVertex vertex = (JmiClassVertex) vertexObj;
             Class ifaceClass =
                 JmiObjUtil.getJavaInterfaceForRefClass(vertex.getRefClass());
-            Class ifaceObj = 
+            Class ifaceObj =
                 JmiObjUtil.getJavaInterfaceForRefObject(vertex.getRefClass());
             defineMetaObject(
                 ifaceClass,
@@ -103,10 +112,13 @@ public abstract class JmiModeledMemFactory extends JmiMemFactory
             Class ifaceAssoc =
                 JmiObjUtil.getJavaInterfaceForRefAssoc(
                     edge.getRefAssoc());
-            defineMetaObject(ifaceAssoc, edge.getMofAssoc());
-            
-            Class sourceInterface = JmiObjUtil.getJavaInterfaceForRefObject(
-                ((JmiClassVertex) edge.getSource()).getRefClass());
+            defineMetaObject(
+                ifaceAssoc,
+                edge.getMofAssoc());
+
+            Class sourceInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    ((JmiClassVertex) edge.getSource()).getRefClass());
             String targetAccessorName =
                 JmiObjUtil.getAccessorName(edge.getTargetEnd());
             Class [] ec = (Class []) null;
@@ -121,10 +133,11 @@ public abstract class JmiModeledMemFactory extends JmiMemFactory
             String targetAttrName = parseGetter(targetAccessorName);
             boolean targetMany =
                 (edge.getTargetEnd().getMultiplicity().getUpper() != 1);
-                
-            Class targetInterface = JmiObjUtil.getJavaInterfaceForRefObject(
-                ((JmiClassVertex) edge.getTarget()).getRefClass());
-            String sourceAccessorName = 
+
+            Class targetInterface =
+                JmiObjUtil.getJavaInterfaceForRefObject(
+                    ((JmiClassVertex) edge.getTarget()).getRefClass());
+            String sourceAccessorName =
                 JmiObjUtil.getAccessorName(edge.getSourceEnd());
             try {
                 targetInterface.getMethod(sourceAccessorName, ec);
@@ -139,7 +152,7 @@ public abstract class JmiModeledMemFactory extends JmiMemFactory
             boolean isComposite =
                 edge.getSourceEnd().getAggregation()
                 == AggregationKindEnum.COMPOSITE;
-            
+
             createRelationship(
                 sourceInterface,
                 targetAttrName,

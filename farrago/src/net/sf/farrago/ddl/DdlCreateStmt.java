@@ -22,13 +22,14 @@
 */
 package net.sf.farrago.ddl;
 
+import java.util.*;
+
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.session.*;
 
-import java.util.*;
-
 import org.eigenbase.sql.*;
+
 
 /**
  * DdlCreateStmt represents a DDL CREATE statement of any kind.
@@ -36,34 +37,40 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlCreateStmt extends DdlStmt
+public class DdlCreateStmt
+    extends DdlStmt
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     DdlReplaceOptions replaceOptions;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlCreateStmt.
      *
      * @param createdElement top-level element created by this stmt
      */
-    public DdlCreateStmt(CwmModelElement createdElement, DdlReplaceOptions replaceOptions)
+    public DdlCreateStmt(CwmModelElement createdElement,
+        DdlReplaceOptions replaceOptions)
     {
         super(createdElement);
         this.replaceOptions = replaceOptions;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
     {
         visitor.visit(this);
     }
-    
-    public DdlReplaceOptions getReplaceOptions() { return replaceOptions; }
-    
-}
 
+    public DdlReplaceOptions getReplaceOptions()
+    {
+        return replaceOptions;
+    }
+}
 
 // End DdlCreateStmt.java

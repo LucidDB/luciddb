@@ -22,23 +22,52 @@
 package net.sf.farrago.server;
 
 import java.io.*;
+
 import java.util.*;
 
 import net.sf.farrago.jdbc.engine.*;
 
+
 /**
- * FarragoRmiJdbcServer is a wrapper which configures an RmiJdbc server
- * to listen for connections on behalf of a Farrago DBMS engine.
+ * FarragoRmiJdbcServer is a wrapper which configures an RmiJdbc server to
+ * listen for connections on behalf of a Farrago DBMS engine.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRmiJdbcServer extends FarragoAbstractServer
+public class FarragoRmiJdbcServer
+    extends FarragoAbstractServer
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Defines the main entry point for the Farrago server.  Customized servers
+     * Creates a new FarragoRmiJdbcServer instance, with console output to
+     * System.out. This constructor can be used to embed a FarragoRmiJdbcServer
+     * inside of another container such as a J2EE app server.
+     */
+    public FarragoRmiJdbcServer()
+    {
+        super();
+    }
+
+    /**
+     * Creates a new FarragoRmiJdbcServer instance, with redirected console
+     * output. This constructor can be used to embed a FarragoServer inside of
+     * another container such as a J2EE app server.
+     *
+     * @param pw receives console output
+     */
+    public FarragoRmiJdbcServer(PrintWriter pw)
+        throws Exception
+    {
+        super(pw);
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Defines the main entry point for the Farrago server. Customized servers
      * can provide their own which call start() with an extended implementation
      * of {@link net.sf.farrago.jdbc.engine.FarragoJdbcServerDriver}.
      *
@@ -50,29 +79,6 @@ public class FarragoRmiJdbcServer extends FarragoAbstractServer
         FarragoRmiJdbcServer server = new FarragoRmiJdbcServer();
         server.start(new FarragoJdbcEngineDriver());
         server.runConsole();
-    }
-
-    /**
-     * Creates a new FarragoRmiJdbcServer instance, with console output to
-     * System.out.  This constructor can be used to embed a FarragoRmiJdbcServer
-     * inside of another container such as a J2EE app server.
-     */
-    public FarragoRmiJdbcServer()
-    {
-        super();
-    }
-
-    /**
-     * Creates a new FarragoRmiJdbcServer instance, with redirected console
-     * output.  This constructor can be used to embed a FarragoServer inside of
-     * another container such as a J2EE app server.
-     *
-     * @param pw receives console output
-     */
-    public FarragoRmiJdbcServer(PrintWriter pw)
-        throws Exception
-    {
-        super(pw);
     }
 
     // implement FarragoAbstractServer

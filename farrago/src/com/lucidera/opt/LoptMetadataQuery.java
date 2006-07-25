@@ -24,36 +24,41 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rex.*;
 
+
 /**
- * LoptMetadataQuery defines the relational expression metadata queries
- * which are custom to LucidDB's optimizer.
+ * LoptMetadataQuery defines the relational expression metadata queries which
+ * are custom to LucidDB's optimizer.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class LoptMetadataQuery extends RelMetadataQuery
+public abstract class LoptMetadataQuery
+    extends RelMetadataQuery
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Estimates the cost of executing a relational expression, including the
      * cost of its inputs, given a set of filters which will be applied to its
-     * output.  The default implementation assumes that the filters cannot be
+     * output. The default implementation assumes that the filters cannot be
      * used to reduce the processing cost, and will be evaluated above by a
      * calculator; so the result is the number of rows produced by rel plus the
-     * cumulative cost of its inputs.  For expressions such as row scans,
-     * more efficient filter processing may be possible.
+     * cumulative cost of its inputs. For expressions such as row scans, more
+     * efficient filter processing may be possible.
      *
      * @param rel the relational expression
-     *
      * @param filters filters to be applied
      *
-     * @return estimated cost, or null if no reliable estimate can
-     * be determined
+     * @return estimated cost, or null if no reliable estimate can be determined
      */
     public static Double getCostWithFilters(RelNode rel, RexNode filters)
     {
         return
             (Double) rel.getCluster().getMetadataProvider().getRelMetadata(
-                rel, "getCostWithFilters", new Object[] { filters });
+                rel,
+                "getCostWithFilters",
+                new Object[] { filters });
     }
 }
 

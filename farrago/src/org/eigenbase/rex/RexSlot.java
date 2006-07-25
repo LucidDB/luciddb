@@ -20,27 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
 
 
 /**
  * Abstract base class for {@link RexInputRef} and {@link RexLocalRef}.
  *
  * @author jhyde
- * @since Oct 25, 2005
  * @version $Id$
+ * @since Oct 25, 2005
  */
-public abstract class RexSlot extends RexVariable
+public abstract class RexSlot
+    extends RexVariable
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final int index;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a slot.
@@ -62,16 +63,16 @@ public abstract class RexSlot extends RexVariable
         this.index = index;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public int getIndex()
     {
         return index;
     }
 
-    protected static String[] makeArray(int length, String prefix)
+    protected static String [] makeArray(int length, String prefix)
     {
-        final String[] a = new String[length];
+        final String [] a = new String[length];
         for (int i = 0; i < a.length; i++) {
             a[i] = prefix + i;
         }

@@ -24,20 +24,19 @@ package net.sf.farrago.util;
 
 import org.eigenbase.jmi.*;
 
+
 /**
  * Static JMI utilities.
  *
- *<p>
- *
- * TODO jvs 16-Nov-2005:  delete this class once all callers
- * been changed to call JmiObjUtil instead.
+ * <p>TODO jvs 16-Nov-2005: delete this class once all callers been changed to
+ * call JmiObjUtil instead.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class JmiUtil extends JmiObjUtil
+public abstract class JmiUtil
+    extends JmiObjUtil
 {
 }
-
 
 // End JmiUtil.java

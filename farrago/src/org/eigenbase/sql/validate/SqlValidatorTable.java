@@ -21,21 +21,23 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlAccessType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
- * Supplies a {@link SqlValidator} with the
- * metadata for a table.
- *
- * @see SqlValidatorCatalogReader
+ * Supplies a {@link SqlValidator} with the metadata for a table.
  *
  * @author jhyde
  * @version $Id$
+ * @see SqlValidatorCatalogReader
  * @since Mar 25, 2003
  */
 public interface SqlValidatorTable
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     RelDataType getRowType();
 
     String [] getQualifiedName();

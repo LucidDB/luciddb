@@ -23,8 +23,10 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.math.*;
+
 import java.sql.*;
 import java.sql.Date;
+
 import java.util.Calendar;
 
 import net.sf.farrago.session.*;
@@ -41,15 +43,14 @@ import net.sf.farrago.type.*;
 public class FarragoJdbcEnginePreparedNonDdl
     extends FarragoJdbcEnginePreparedStatement
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcEnginePreparedNonDdl object.
      *
      * @param connection the connection creating this statement
-     *
      * @param stmtContext the underyling prepared FarragoSessionStmtContext
-     *
      * @param sql the text of the SQL statement
      */
     FarragoJdbcEnginePreparedNonDdl(
@@ -60,7 +61,7 @@ public class FarragoJdbcEnginePreparedNonDdl
         super(connection, stmtContext, sql);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement PreparedStatement
     public boolean execute()
@@ -118,8 +119,9 @@ public class FarragoJdbcEnginePreparedNonDdl
             throw new SQLException(ERRMSG_NOT_A_QUERY + sql);
         }
         try {
-            return new FarragoResultSetMetaData(
-                stmtContext.getPreparedRowType());
+            return
+                new FarragoResultSetMetaData(
+                    stmtContext.getPreparedRowType());
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -130,8 +132,9 @@ public class FarragoJdbcEnginePreparedNonDdl
         throws SQLException
     {
         try {
-            return new FarragoParameterMetaData(
-                stmtContext.getPreparedParamType());
+            return
+                new FarragoParameterMetaData(
+                    stmtContext.getPreparedParamType());
         } catch (Throwable ex) {
             throw FarragoJdbcEngineDriver.newSqlException(ex);
         }
@@ -293,7 +296,10 @@ public class FarragoJdbcEnginePreparedNonDdl
         Date x)
         throws SQLException
     {
-        setDate(parameterIndex, x, Calendar.getInstance());
+        setDate(
+            parameterIndex,
+            x,
+            Calendar.getInstance());
     }
 
     // implement PreparedStatement
@@ -312,7 +318,10 @@ public class FarragoJdbcEnginePreparedNonDdl
         Time x)
         throws SQLException
     {
-        setTime(parameterIndex, x, Calendar.getInstance());
+        setTime(
+            parameterIndex,
+            x,
+            Calendar.getInstance());
     }
 
     // implement PreparedStatement
@@ -331,7 +340,10 @@ public class FarragoJdbcEnginePreparedNonDdl
         Timestamp x)
         throws SQLException
     {
-        setTimestamp(parameterIndex, x, Calendar.getInstance());
+        setTimestamp(
+            parameterIndex,
+            x,
+            Calendar.getInstance());
     }
 
     // implement PreparedStatement
@@ -351,12 +363,14 @@ public class FarragoJdbcEnginePreparedNonDdl
         throws SQLException
     {
         if (x instanceof java.util.Date) {
-            setDynamicParam(parameterIndex, x, Calendar.getInstance());
+            setDynamicParam(
+                parameterIndex,
+                x,
+                Calendar.getInstance());
         } else {
             setDynamicParam(parameterIndex, x);
         }
     }
 }
-
 
 // End FarragoJdbcEnginePreparedNonDdl.java

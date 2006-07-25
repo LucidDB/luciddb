@@ -21,76 +21,81 @@
 */
 package net.sf.farrago.runtime;
 
-import java.nio.ByteBuffer;
+import java.nio.*;
+
 
 /**
- * A piece of generated code must implement this interface if it is to
- * be callable from a Fennel JavaTransformExecStream wrapper.
+ * A piece of generated code must implement this interface if it is to be
+ * callable from a Fennel JavaTransformExecStream wrapper.
  *
  * @author Julian Hyde, Stephan Zuercher
  * @version $Id$
  */
 public interface FarragoTransform
 {
-    /**
-     * Binds all inputs and initializes the transform.
-     * 
-     * <p>This method is typically generated.  It is called by Fennel's
-     * JavaTransformExecStream.
-     * 
-     * @param connection the FarragoRuntimeContext associated with the query
-     *                   this transform is participating in.
-     * @param farragoTransformStreamName the globally unique name of the
-     *                                   ExecStream invoking this method
-     * @param inputBindings bindings between the transforms input streamIds
-     *                      and the ordinal assigned to them in the stream
-     *                      graph
-     */
-    void init(
-        FarragoRuntimeContext connection, 
-        String farragoTransformStreamName, 
-        InputBinding[] inputBindings);
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Does a quantum of work.  Called by Fennel's JavaTransformExecStream.
-     * 
-     * @return bytes marshalled into outputBuffer; 0 means end of stream, 
-     *         less than 0 indicates an input underflow
+     * Binds all inputs and initializes the transform.
+     *
+     * <p>This method is typically generated. It is called by Fennel's
+     * JavaTransformExecStream.
+     *
+     * @param connection the FarragoRuntimeContext associated with the query
+     * this transform is participating in.
+     * @param farragoTransformStreamName the globally unique name of the
+     * ExecStream invoking this method
+     * @param inputBindings bindings between the transforms input streamIds and
+     * the ordinal assigned to them in the stream graph
+     */
+    void init(
+        FarragoRuntimeContext connection,
+        String farragoTransformStreamName,
+        InputBinding [] inputBindings);
+
+    /**
+     * Does a quantum of work. Called by Fennel's JavaTransformExecStream.
+     *
+     * @return bytes marshalled into outputBuffer; 0 means end of stream, less
+     * than 0 indicates an input underflow
      */
     int execute(ByteBuffer outputBuffer);
-    
+
     /**
      * Restarts this transform's underlying TupleIter(s).
      */
     void restart();
-    
+
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * InputBinding binds a JavaTransformExecStream input's streamId to the 
-     * ordinal assigned to that input by the stream graph. InputBinding 
-     * objects are instantiated via JNI during initialization of 
+     * InputBinding binds a JavaTransformExecStream input's streamId to the
+     * ordinal assigned to that input by the stream graph. InputBinding objects
+     * are instantiated via JNI during initialization of
      * JavaTransformExecStream.
      */
     public static class InputBinding
     {
         private final String inputStreamName;
         private final int ordinal;
-        
+
         public InputBinding(String inputStreamName, int ordinal)
         {
             this.inputStreamName = inputStreamName;
             this.ordinal = ordinal;
         }
-        
+
         public String getInputStreamName()
         {
             return inputStreamName;
         }
-        
+
         public int getOrdinal()
         {
             return ordinal;
         }
-    }    
+    }
 }
 
 // End FarragoTransform.java

@@ -21,46 +21,43 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.validate.SqlValidatorTable;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlNodeList;
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+
 
 /**
  * A namespace describes the relation returned by a section of a SQL query.
  *
- * <p>For example, in the query
- * <code>SELECT emp.deptno, age FROM emp, dept</code>,
- * the FROM clause forms a namespace consisting of two tables EMP and
- * DEPT, and a row type consisting of the combined columns of those
- * tables.
+ * <p>For example, in the query <code>SELECT emp.deptno, age FROM emp,
+ * dept</code>, the FROM clause forms a namespace consisting of two tables EMP
+ * and DEPT, and a row type consisting of the combined columns of those tables.
  *
- * <p>Other examples of namespaces include a table in the from list
- * (the namespace contains the constituent columns) and a subquery
- * (the namespace contains the columns in the SELECT clause of the
- * subquery).
- *
- * @see SqlValidator
- * @see SqlValidatorScope
+ * <p>Other examples of namespaces include a table in the from list (the
+ * namespace contains the constituent columns) and a subquery (the namespace
+ * contains the columns in the SELECT clause of the subquery).
  *
  * @author jhyde
  * @version $Id$
+ * @see SqlValidator
+ * @see SqlValidatorScope
  * @since Mar 25, 2003
  */
 public interface SqlValidatorNamespace
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the underlying table, or null if there is none.
      */
     SqlValidatorTable getTable();
 
     /**
-     * Returns a list of names of output columns. If the scope's type has
-     * not yet been derived, derives it. Never returns null.
+     * Returns a list of names of output columns. If the scope's type has not
+     * yet been derived, derives it. Never returns null.
      *
      * @post return != null
      */
@@ -88,7 +85,9 @@ public interface SqlValidatorNamespace
 
     SqlNode getNode();
 
-    SqlValidatorNamespace lookupChild(String name, SqlValidatorScope [] ancestorOut, int [] offsetOut);
+    SqlValidatorNamespace lookupChild(String name,
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut);
 
     boolean fieldExists(String name);
 
@@ -103,10 +102,10 @@ public interface SqlValidatorNamespace
     void setExtra(Object o);
 
     /**
-     * Returns a list of expressions which are monotonic in this namespace.
-     * For example, if the namespace represents a relation ordered by
-     * a column called "TIMESTAMP", then the list would contain a
-     * {@link org.eigenbase.sql.SqlIdentifier} called "TIMESTAMP".
+     * Returns a list of expressions which are monotonic in this namespace. For
+     * example, if the namespace represents a relation ordered by a column
+     * called "TIMESTAMP", then the list would contain a {@link
+     * org.eigenbase.sql.SqlIdentifier} called "TIMESTAMP".
      */
     SqlNodeList getMonotonicExprs();
 
@@ -116,11 +115,10 @@ public interface SqlValidatorNamespace
     boolean isMonotonic(String columnName);
 
     /**
-     * Makes all fields in this namespace nullable (typically because
-     * it is on the outer side of an outer join.
+     * Makes all fields in this namespace nullable (typically because it is on
+     * the outer side of an outer join.
      */
     void makeNullable();
 }
 
 // End SqlValidatorNamespace.java
-

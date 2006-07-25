@@ -35,71 +35,88 @@ import org.eigenbase.sarg.*;
 import org.eigenbase.stat.*;
 import org.eigenbase.util14.*;
 
+
 /**
  * MedAbstractColumnMetadata is a base class that provides common logic for
- * implementing certain metadata queries that relate to columns.  Other 
- * classes should derive from this class to provide implementations specific
- * to different data wrappers.
- * 
+ * implementing certain metadata queries that relate to columns. Other classes
+ * should derive from this class to provide implementations specific to
+ * different data wrappers.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
 public abstract class MedAbstractColumnMetadata
-{   
+{
+
+    //~ Methods ----------------------------------------------------------------
+
     public Set<BitSet> getUniqueKeys(
-        RelNode rel, FarragoRepos repos)
-    {      
+        RelNode rel,
+        FarragoRepos repos)
+    {
         // this method only handles table level relnodes
         if (rel.getTable() == null) {
             return null;
         }
-        
+
         MedAbstractColumnSet table = (MedAbstractColumnSet) rel.getTable();
         if (table.getCwmColumnSet() == null) {
             return null;
         }
-        
+
         Set<BitSet> retSet = new HashSet<BitSet>();
-        
+
         // first retrieve the columns from the primary key
         FemPrimaryKeyConstraint primKey =
             FarragoCatalogUtil.getPrimaryKey(table.getCwmColumnSet());
         if (primKey != null) {
-            addKeyCols(rel, repos, primKey.getFeature(), false, retSet);
+            addKeyCols(
+                rel,
+                repos,
+                primKey.getFeature(),
+                false,
+                retSet);
         }
-        
+
         // then, loop through each unique constraint, looking for unique
         // constraints where all columns in the constraint are non-null
-        List<FemUniqueKeyConstraint> uniqueConstraints = 
+        List<FemUniqueKeyConstraint> uniqueConstraints =
             FarragoCatalogUtil.getUniqueKeyConstraints(
                 table.getCwmColumnSet());
         for (FemUniqueKeyConstraint uniqueConstraint : uniqueConstraints) {
-            addKeyCols(rel, repos, uniqueConstraint.getFeature(), true, retSet);
+            addKeyCols(
+                rel,
+                repos,
+                uniqueConstraint.getFeature(),
+                true,
+                retSet);
         }
-        
+
         return retSet;
     }
-    
+
     /**
-     * Forms bitmaps representing the columns in a constraint and adds them
-     * to a set
-     * 
+     * Forms bitmaps representing the columns in a constraint and adds them to a
+     * set
+     *
      * @param rel RelNode that the constraint belongs to
      * @param repos repository
      * @param keyCols list of columns that make up a constraint
-     * @param checkNulls if true, don't add the columns of the constraint if
-     * the columns allow nulls
+     * @param checkNulls if true, don't add the columns of the constraint if the
+     * columns allow nulls
      * @param keyList the set where the bitmaps will be added
      */
     private void addKeyCols(
-        RelNode rel, FarragoRepos repos, List<FemAbstractColumn> keyCols,
-        boolean checkNulls, Set<BitSet> keyList)
+        RelNode rel,
+        FarragoRepos repos,
+        List<FemAbstractColumn> keyCols,
+        boolean checkNulls,
+        Set<BitSet> keyList)
     {
         BitSet colMask = new BitSet();
-        for (FemAbstractColumn keyCol : keyCols) {          
-            if (checkNulls &&
-                FarragoCatalogUtil.isColumnNullable(repos, keyCol))
-            {
+        for (FemAbstractColumn keyCol : keyCols) {
+            if (checkNulls
+                && FarragoCatalogUtil.isColumnNullable(repos, keyCol)) {
                 return;
             }
             int fieldNo = mapColumnToField(rel, keyCol);
@@ -122,17 +139,18 @@ public abstract class MedAbstractColumnMetadata
      * accessed by the RelNode
      */
     protected abstract int mapColumnToField(
-        RelNode rel, FemAbstractColumn keyCol);
-    
+        RelNode rel,
+        FemAbstractColumn keyCol);
+
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         // this method only handles table level relnodes
         if (rel.getTable() == null) {
             return null;
         }
-        
+
         double population = 1.0;
-        
+
         // if columns are part of a unique key, then just return the rowcount
         Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
         if (uniq == null) {
@@ -140,17 +158,16 @@ public abstract class MedAbstractColumnMetadata
         } else if (uniq) {
             return RelMetadataQuery.getRowCount(rel);
         }
-        
+
         // if no stats are available, return null
         RelStatSource tabStats = RelMetadataQuery.getStatistics(rel);
         if (tabStats == null) {
             return null;
         }
-        
+
         // multiply by the cardinality of each column
         for (int col = groupKey.nextSetBit(0); col >= 0;
-            col = groupKey.nextSetBit(col + 1))
-        {
+            col = groupKey.nextSetBit(col + 1)) {
             // calculate the original ordinal (before projection)
             int origCol = mapFieldToColumnOrdinal(rel, col);
             if (origCol == -1) {
@@ -168,15 +185,17 @@ public abstract class MedAbstractColumnMetadata
             }
             population *= colCard;
         }
-        
+
         // cap the number of distinct values
-        return RelMdUtil.numDistinctVals(
-            population, RelMetadataQuery.getRowCount(rel));
+        return
+            RelMdUtil.numDistinctVals(
+                population,
+                RelMetadataQuery.getRowCount(rel));
     }
 
     /**
-     * Maps a field reference to the underlying column ordinal corresponding
-     * to the FemAbstractColumn representing the column.
+     * Maps a field reference to the underlying column ordinal corresponding to
+     * the FemAbstractColumn representing the column.
      *
      * @param rel RelNode corresponding to the column
      * @param fieldNo the ordinal of the field reference
@@ -185,83 +204,86 @@ public abstract class MedAbstractColumnMetadata
      * column does not map to actual FemAbstractColumn
      */
     protected abstract int mapFieldToColumnOrdinal(RelNode rel, int fieldNo);
-    
+
     public Double getDistinctRowCount(
-        RelNode rel, BitSet groupKey, RexNode predicate)
+        RelNode rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         // this method only handles table level relnodes
         if (rel.getTable() == null) {
             return null;
         }
-        
+
         // if the columns form a unique key or are part of a unique key,
         // then just return the rowcount times the selectivity of the
         // predicate
         Boolean uniq = RelMdUtil.areColumnsUnique(rel, groupKey);
-        if (uniq != null && uniq) {
-            return NumberUtil.multiply(
-                RelMetadataQuery.getRowCount(rel),
-                RelMetadataQuery.getSelectivity(rel, predicate));
+        if ((uniq != null) && uniq) {
+            return
+                NumberUtil.multiply(
+                    RelMetadataQuery.getRowCount(rel),
+                    RelMetadataQuery.getSelectivity(rel, predicate));
         }
-        
+
         // if no stats are available, return null
         RelStatSource tabStats = RelMetadataQuery.getStatistics(rel);
         if (tabStats == null) {
             return null;
         }
-              
+
         Map<CwmColumn, SargIntervalSequence> col2SeqMap = null;
         RexNode nonSargFilters = null;
         if (predicate != null) {
             SargFactory sargFactory =
-                new SargFactory(rel.getCluster().getRexBuilder());            
+                new SargFactory(rel.getCluster().getRexBuilder());
             SargRexAnalyzer rexAnalyzer = sargFactory.newRexAnalyzer();
-    
+
             // determine which predicates are sargable and which aren't
             List<SargBinding> sargBindingList =
                 rexAnalyzer.analyzeAll(predicate);
             nonSargFilters = rexAnalyzer.getPostFilterRexNode();
-        
+
             if (!sargBindingList.isEmpty()) {
-                col2SeqMap =
-                    new HashMap<CwmColumn, SargIntervalSequence>();
-                
-                for (int i = 0; i < sargBindingList.size(); i ++) {
+                col2SeqMap = new HashMap<CwmColumn, SargIntervalSequence>();
+
+                for (int i = 0; i < sargBindingList.size(); i++) {
                     SargBinding sargBinding = sargBindingList.get(i);
                     RexInputRef fieldAccess = sargBinding.getInputRef();
                     FemAbstractColumn filterColumn =
-                        mapFieldToColumn(rel, fieldAccess.getIndex());
+                        mapFieldToColumn(
+                            rel,
+                            fieldAccess.getIndex());
                     if (filterColumn != null) {
-                    
-                        SargIntervalSequence sargSeq = 
+                        SargIntervalSequence sargSeq =
                             FennelRelUtil.evaluateSargExpr(
                                 sargBinding.getExpr());
-                    
+
                         col2SeqMap.put(filterColumn, sargSeq);
                     }
-                }            
+                }
             }
         }
-        
+
         // loop through each column and determine the cardinality of the
-        // column      
+        // column
         Double distRowCount = 1.0;
         for (int fieldNo = groupKey.nextSetBit(0); fieldNo >= 0;
-            fieldNo = groupKey.nextSetBit(fieldNo + 1))
-        {
+            fieldNo = groupKey.nextSetBit(fieldNo + 1)) {
             // if the column has sargable predicates, compute the
             // cardinality based on the predicates; otherwise, just compute
             // the full cardinality of the column
             RelStatColumnStatistics colStats = null;
-            
+
             FemAbstractColumn col = mapFieldToColumn(rel, fieldNo);
             if (col == null) {
                 return null;
             }
             int origColno = mapFieldToColumnOrdinal(rel, fieldNo);
-            
-            if (col2SeqMap != null) {   
+
+            if (col2SeqMap != null) {
                 SargIntervalSequence sargSeq = col2SeqMap.get(col);
+
                 // getColumnStatistics uses original field position
                 colStats = tabStats.getColumnStatistics(origColno, sargSeq);
             } else {
@@ -277,23 +299,24 @@ public abstract class MedAbstractColumnMetadata
             }
             distRowCount = distRowCount * colCard;
         }
-        
+
         // reduce cardinality by the selectivity of the non-sargable
         // predicates (which includes any semijoin filters)
         distRowCount *= RelMdUtil.guessSelectivity(nonSargFilters);
-        
+
         // return value should be no higher than just applying the selectivity
         // of all predicates on the rel
-        Double minRowCount = NumberUtil.multiply(
-            RelMetadataQuery.getRowCount(rel),
-            RelMetadataQuery.getSelectivity(rel, predicate));
+        Double minRowCount =
+            NumberUtil.multiply(
+                RelMetadataQuery.getRowCount(rel),
+                RelMetadataQuery.getSelectivity(rel, predicate));
         if (minRowCount != null) {
             distRowCount = Math.min(distRowCount, minRowCount);
         }
-        
+
         return distRowCount;
     }
-    
+
     /**
      * Maps a field reference to its underlying FemAbstractColumn
      *
@@ -304,7 +327,8 @@ public abstract class MedAbstractColumnMetadata
      * FemAbstractColumn
      */
     protected abstract FemAbstractColumn mapFieldToColumn(
-        RelNode rel, int fieldNo);
+        RelNode rel,
+        int fieldNo);
 }
 
 // End MedAbstractColumnMetadata

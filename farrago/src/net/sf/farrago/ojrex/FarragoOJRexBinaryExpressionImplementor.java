@@ -26,12 +26,13 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.rex.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.oj.util.OJUtil;
+
 
 /**
  * FarragoOJRexBinaryExpressionImplementor implements Farrago specifics of
@@ -44,11 +45,12 @@ import org.eigenbase.oj.util.OJUtil;
 public class FarragoOJRexBinaryExpressionImplementor
     extends FarragoOJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int ojBinaryExpressionOrdinal;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoOJRexBinaryExpressionImplementor(
         int ojBinaryExpressionOrdinal)
@@ -56,7 +58,7 @@ public class FarragoOJRexBinaryExpressionImplementor
         this.ojBinaryExpressionOrdinal = ojBinaryExpressionOrdinal;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -72,68 +74,86 @@ public class FarragoOJRexBinaryExpressionImplementor
         for (int i = 0; i < 2; ++i) {
             valueOperands[i] =
                 translator.convertPrimitiveAccess(
-                    operands[i], call.operands[i]);
+                    operands[i],
+                    call.operands[i]);
         }
 
         if (!call.getType().isNullable()) {
             Expression expr = implementNotNull(translator, call, valueOperands);
-            Statement ifstmt = checkOverflow(expr, call.getType());
+            Statement ifstmt = checkOverflow(
+                    expr,
+                    call.getType());
             if (ifstmt != null) {
                 translator.addStatement(ifstmt);
             }
 
             return expr;
-
         }
 
         Variable varResult = translator.createScratchVariable(call.getType());
 
         // special cases for three-valued logic
         if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_AND) {
-            return implement3VL(
-                translator, call,
-                operands, valueOperands,
-                varResult, 
-                "assignFromAnd3VL");
+            return
+                implement3VL(
+                    translator,
+                    call,
+                    operands,
+                    valueOperands,
+                    varResult,
+                    "assignFromAnd3VL");
         } else if (ojBinaryExpressionOrdinal == BinaryExpression.LOGICAL_OR) {
-            return implement3VL(
-                translator, call,
-                operands, valueOperands,
-                varResult, 
-                "assignFromOr3VL");
+            return
+                implement3VL(
+                    translator,
+                    call,
+                    operands,
+                    valueOperands,
+                    varResult,
+                    "assignFromOr3VL");
         }
 
         Expression nullTest = null;
         for (int i = 0; i < 2; ++i) {
-            nullTest = translator.createNullTest(
-                            call.operands[i], operands[i], nullTest);
+            nullTest =
+                translator.createNullTest(
+                    call.operands[i],
+                    operands[i],
+                    nullTest);
         }
         assert (nullTest != null);
 
         // TODO:  generalize to stuff other than NullablePrimitive
         Statement assignmentStmt =
-            new ExpressionStatement(new AssignmentExpression(
+            new ExpressionStatement(
+                new AssignmentExpression(
                     new FieldAccess(varResult,
                         NullablePrimitive.VALUE_FIELD_NAME),
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
 
-        Statement overflowStmt = checkOverflow(
-                        new FieldAccess(varResult,
-                            NullablePrimitive.VALUE_FIELD_NAME),
-                        call.getType());
-        StatementList stmtList = 
-                new StatementList(translator.createSetNullStatement(
-                        varResult, false),
-                    assignmentStmt);
+        Statement overflowStmt =
+            checkOverflow(
+                new FieldAccess(varResult,
+                    NullablePrimitive.VALUE_FIELD_NAME),
+                call.getType());
+        StatementList stmtList =
+            new StatementList(
+                translator.createSetNullStatement(
+                    varResult,
+                    false),
+                assignmentStmt);
         if (overflowStmt != null) {
             stmtList.add(overflowStmt);
         }
 
         Statement ifStatement =
-            new IfStatement(nullTest,
-                new StatementList(translator.createSetNullStatement(
-                        varResult, true)),
+            new IfStatement(
+                nullTest,
+                new StatementList(
+                    translator.createSetNullStatement(
+                        varResult,
+                        true)),
                 stmtList);
 
         translator.addStatement(ifStatement);
@@ -151,27 +171,29 @@ public class FarragoOJRexBinaryExpressionImplementor
     {
         ExpressionList expressionList = new ExpressionList();
 
-        Expression n0 = translator.createNullTest(
-            call.operands[0],
-            operands[0],
-            null);
+        Expression n0 =
+            translator.createNullTest(
+                call.operands[0],
+                operands[0],
+                null);
         if (n0 == null) {
             n0 = Literal.makeLiteral(false);
         }
-        
-        Expression n1 = translator.createNullTest(
-            call.operands[1],
-            operands[1],
-            null);
+
+        Expression n1 =
+            translator.createNullTest(
+                call.operands[1],
+                operands[1],
+                null);
         if (n1 == null) {
             n1 = Literal.makeLiteral(false);
         }
-        
+
         expressionList.add(n0);
         expressionList.add(valueOperands[0]);
         expressionList.add(n1);
         expressionList.add(valueOperands[1]);
-        
+
         translator.addStatement(
             new ExpressionStatement(
                 new MethodCall(
@@ -205,30 +227,33 @@ public class FarragoOJRexBinaryExpressionImplementor
         case BinaryExpression.LESS:
         case BinaryExpression.LESSEQUAL:
             for (int i = 0; i < 2; i++) {
-                if (call.operands[i].getType().getSqlTypeName() ==
-                    SqlTypeName.Boolean)
-                {
-                    valueOperands[i] = new ConditionalExpression(
-                        operands[i],
-                        Literal.makeLiteral(1),
-                        Literal.makeLiteral(0));
+                if (call.operands[i].getType().getSqlTypeName()
+                    == SqlTypeName.Boolean) {
+                    valueOperands[i] =
+                        new ConditionalExpression(
+                            operands[i],
+                            Literal.makeLiteral(1),
+                            Literal.makeLiteral(0));
                 }
             }
         }
 
         if (factory.getClassForPrimitive(type) != null) {
             RelDataType returnType = call.getType();
-            Expression expr = new BinaryExpression(valueOperands[0],
-                ojBinaryExpressionOrdinal, valueOperands[1]);
+            Expression expr =
+                new BinaryExpression(valueOperands[0],
+                    ojBinaryExpressionOrdinal,
+                    valueOperands[1]);
 
-            if ((returnType.getSqlTypeName() != SqlTypeName.Boolean) &&
-                (factory.getClassForPrimitive(returnType) != null)) {
+            if ((returnType.getSqlTypeName() != SqlTypeName.Boolean)
+                && (factory.getClassForPrimitive(returnType) != null)) {
                 // Cast to correct primitive return type so compiler is happy
-                return new CastExpression(
-                    OJClass.forClass(factory.getClassForPrimitive(returnType)),
-                    expr);
-            }
-            else {
+                return
+                    new CastExpression(
+                        OJClass.forClass(
+                            factory.getClassForPrimitive(returnType)),
+                        expr);
+            } else {
                 return expr;
             }
         }
@@ -248,17 +273,20 @@ public class FarragoOJRexBinaryExpressionImplementor
                     "compareVarbinary",
                     new ExpressionList(operands[0], operands[1]));
         }
-        return new BinaryExpression(
-            comparisonResultExp,
-            ojBinaryExpressionOrdinal,
-            Literal.makeLiteral(0));
+        return
+            new BinaryExpression(
+                comparisonResultExp,
+                ojBinaryExpressionOrdinal,
+                Literal.makeLiteral(0));
     }
 
     private Statement checkOverflow(Expression expr, RelDataType returnType)
     {
-        if (SqlTypeUtil.isApproximateNumeric(returnType) && 
-            (ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE || 
-            ojBinaryExpressionOrdinal == BinaryExpression.TIMES)) {
+        if (SqlTypeUtil.isApproximateNumeric(returnType)
+            && (
+                (ojBinaryExpressionOrdinal == BinaryExpression.DIVIDE)
+                || (ojBinaryExpressionOrdinal == BinaryExpression.TIMES)
+               )) {
             Statement ifStatement =
                 new IfStatement(
                     new MethodCall(
@@ -273,7 +301,7 @@ public class FarragoOJRexBinaryExpressionImplementor
                                 new Literal(
                                     Literal.STRING,
                                     "net.sf.farrago.resource.FarragoResource.instance().Overflow"),
-                                "ex", 
+                                "ex",
                                 new ExpressionList()))));
             return ifStatement;
         } else {
@@ -281,6 +309,5 @@ public class FarragoOJRexBinaryExpressionImplementor
         }
     }
 }
-
 
 // End FarragoOJRexBinaryExpressionImplementor.java

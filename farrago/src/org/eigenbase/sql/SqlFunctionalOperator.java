@@ -21,26 +21,31 @@
 */
 package org.eigenbase.sql;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
-import org.eigenbase.resource.*;
 
-import java.util.*;
 
 /**
- * SqlFunctionalOperator is a base class for special operators which
- * use functional syntax.
+ * SqlFunctionalOperator is a base class for special operators which use
+ * functional syntax.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlFunctionalOperator extends SqlSpecialOperator
+public class SqlFunctionalOperator
+    extends SqlSpecialOperator
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlFunctionalOperator(
         String name,
         SqlKind kind,
@@ -50,13 +55,20 @@ public class SqlFunctionalOperator extends SqlSpecialOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, pred, isLeftAssoc, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(name,
+            kind,
+            pred,
+            isLeftAssoc,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {

@@ -20,17 +20,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
 import org.eigenbase.sql.type.*;
 
+
 /**
  * Generic operator for nodes with internal syntax.
  */
-public abstract class SqlInternalOperator extends SqlSpecialOperator
+public abstract class SqlInternalOperator
+    extends SqlSpecialOperator
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlInternalOperator(
         String name,
@@ -56,11 +58,16 @@ public abstract class SqlInternalOperator extends SqlSpecialOperator
         SqlOperandTypeInference operandTypeInference,
         SqlOperandTypeChecker operandTypeChecker)
     {
-        super(name, kind, prec, isLeftAssoc, returnTypeInference,
-            operandTypeInference, operandTypeChecker);
+        super(name,
+            kind,
+            prec,
+            isLeftAssoc,
+            returnTypeInference,
+            operandTypeInference,
+            operandTypeChecker);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {
@@ -77,3 +84,5 @@ public abstract class SqlInternalOperator extends SqlSpecialOperator
             "unparse must be implemented by SqlCall subclass");
     }
 }
+
+// End SqlInternalOperator.java

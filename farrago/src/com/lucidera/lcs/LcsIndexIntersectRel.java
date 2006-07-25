@@ -27,20 +27,20 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
  * LcsIndexIntersectRel is a relation for intersecting the results of two index
- * scans.
- * The input to this relation must be more than one.
+ * scans. The input to this relation must be more than one.
  *
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexIntersectRel extends LcsIndexBitOpRel
+class LcsIndexIntersectRel
+    extends LcsIndexBitOpRel
 {
-    //~ Instance fields -------------------------------------------------------
-    
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new LcsIndexIntersectRel object.
      *
@@ -48,27 +48,28 @@ class LcsIndexIntersectRel extends LcsIndexBitOpRel
      */
     public LcsIndexIntersectRel(
         RelOptCluster cluster,
-        RelNode[] inputs,
+        RelNode [] inputs,
         LcsTable lcsTable,
         FennelRelParamId startRidParamId,
         FennelRelParamId rowLimitParamId)
     {
-        super (cluster, inputs, lcsTable, startRidParamId, rowLimitParamId);
+        super(cluster, inputs, lcsTable, startRidParamId, rowLimitParamId);
     }
-    
-    //~ Methods ---------------------------------------------------------------
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement Cloneable
     public Object clone()
     {
-        return new LcsIndexIntersectRel(
-            getCluster(),
-            RelOptUtil.clone(getInputs()),
-            lcsTable,
-            startRidParamId,
-            rowLimitParamId);
+        return
+            new LcsIndexIntersectRel(
+                getCluster(),
+                RelOptUtil.clone(getInputs()),
+                lcsTable,
+                startRidParamId,
+                rowLimitParamId);
     }
-    
+
     // implement RelNode
     public double getRows()
     {
@@ -76,23 +77,23 @@ class LcsIndexIntersectRel extends LcsIndexBitOpRel
         // the cost inversely proportional to the number of children
         double minChildRows = 0;
         for (int i = 0; i < inputs.length; i++) {
-            if (minChildRows == 0 || inputs[i].getRows() < minChildRows) {
+            if ((minChildRows == 0) || (inputs[i].getRows() < minChildRows)) {
                 minChildRows = RelMetadataQuery.getRowCount(inputs[i]);
             }
         }
         return minChildRows / inputs.length;
     }
-    
+
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        FemLbmIntersectStreamDef intersectStream = 
+        FemLbmIntersectStreamDef intersectStream =
             lcsTable.getIndexGuide().newBitmapIntersect(
                 implementor.translateParamId(startRidParamId),
                 implementor.translateParamId(rowLimitParamId));
-        
+
         setBitOpChildStreams(implementor, intersectStream);
-        
-        return intersectStream;     
+
+        return intersectStream;
     }
 }
 

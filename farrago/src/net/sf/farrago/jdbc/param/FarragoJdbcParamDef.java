@@ -22,51 +22,56 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import org.eigenbase.util.EigenbaseException;
+import java.math.*;
 
-import java.math.BigInteger;
-import java.sql.ParameterMetaData;
-import java.util.Calendar;
+import java.sql.*;
+
+import java.util.*;
+
+import org.eigenbase.util.*;
+
 
 /**
- * Handles data conversion for a dynamic parameter
- * (refactored from FarragoJdbcEngineParamDef)
+ * Handles data conversion for a dynamic parameter (refactored from
+ * FarragoJdbcEngineParamDef) Enforces constraints on parameters. The
+ * constraints are:
  *
- * Enforces constraints on parameters.
- *
- * The constraints are:<ol>
- *
+ * <ol>
  * <li>Ensures that null values cannot be inserted into not-null columns.
- *
  * <li>Ensures that value is the right paramMetaData.
- *
- * <li>Ensures that the value is within range. For example, you can't
- *    insert a 10001 into a DECIMAL(5) column.
- *
+ * <li>Ensures that the value is within range. For example, you can't insert a
+ * 10001 into a DECIMAL(5) column.
  * </ol>
  *
  * <p>TODO: Actually enfore these constraints.
- * 
+ *
  * @author Angel Chang
  * @version $Id$
  */
 public class FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final FarragoParamFieldMetaData paramMetaData;
     final String paramName;
 
+    //~ Constructors -----------------------------------------------------------
+
     FarragoJdbcParamDef(String paramName,
-                        FarragoParamFieldMetaData paramMetaData)
+        FarragoParamFieldMetaData paramMetaData)
     {
         this.paramName = paramName;
         this.paramMetaData = paramMetaData;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public String getParamName()
     {
         return paramName;
     }
-    
+
     public FarragoParamFieldMetaData getParamMetaData()
     {
         return paramMetaData;
@@ -82,8 +87,8 @@ public class FarragoJdbcParamDef
 
     public Object scrubValue(Object x, Calendar cal)
     {
-       return scrubValue(x);
-       //throw new UnsupportedOperationException();
+        return scrubValue(x);
+            //throw new UnsupportedOperationException();
     }
 
     protected void checkNullable()
@@ -93,23 +98,25 @@ public class FarragoJdbcParamDef
         }
     }
 
-    protected void checkRange(BigInteger value, BigInteger min, BigInteger max)
+    protected void checkRange(BigInteger value,
+        BigInteger min,
+        BigInteger max)
     {
-        if (value.compareTo(min) < 0 || value.compareTo(max) > 0) {
+        if ((value.compareTo(min) < 0) || (value.compareTo(max) > 0)) {
             throw newValueOutOfRange(value);
         }
     }
 
     protected void checkRange(long value, long min, long max)
     {
-        if (value < min || value > max) {
+        if ((value < min) || (value > max)) {
             throw newValueOutOfRange(Long.valueOf(value));
         }
     }
 
     protected void checkRange(double value, double min, double max)
     {
-        if (value < min || value > max) {
+        if ((value < min) || (value > max)) {
             throw newValueOutOfRange(Double.valueOf(value));
         }
     }
@@ -120,10 +127,11 @@ public class FarragoJdbcParamDef
     protected EigenbaseException newInvalidType(Object x)
     {
         // TODO: Change to use client resources
-        return new EigenbaseException(
-            "Cannot assign a value of Java class " + x.getClass().getName() +
-            " to parameter of type " + paramMetaData.paramTypeStr,
-            null);
+        return
+            new EigenbaseException(
+                "Cannot assign a value of Java class " + x.getClass().getName()
+                + " to parameter of type " + paramMetaData.paramTypeStr,
+                null);
 
         //return FarragoResource.instance().ParameterValueIncompatible.ex(
         //    x.getClass().getName(),
@@ -136,10 +144,11 @@ public class FarragoJdbcParamDef
     protected EigenbaseException newNotNullable()
     {
         // TODO: Change to use client resources
-        return new EigenbaseException(
-            "Cannot assign NULL to non-nullable parameter of type" +
-            paramMetaData.paramTypeStr,
-            null);
+        return
+            new EigenbaseException(
+                "Cannot assign NULL to non-nullable parameter of type"
+                + paramMetaData.paramTypeStr,
+                null);
 
         //return FarragoResource.instance().ParameterValueNotNullable.ex(
         //    paramMetaData.paramTypeStr);
@@ -152,10 +161,11 @@ public class FarragoJdbcParamDef
     protected EigenbaseException newInvalidFormat(Object x)
     {
         // TODO: Change to use client resources
-        return new EigenbaseException(
-            "Value '" + x +"' cannot be converted to parameter of type " +
-            paramMetaData.paramTypeStr,
-            null);
+        return
+            new EigenbaseException(
+                "Value '" + x + "' cannot be converted to parameter of type "
+                + paramMetaData.paramTypeStr,
+                null);
 
         //return FarragoResource.instance().ParameterValueInvalidFormat.ex(
         //    x.toString(),
@@ -169,10 +179,11 @@ public class FarragoJdbcParamDef
     protected EigenbaseException newValueTooLong(Object x)
     {
         // TODO: Change to use client resources
-        return new EigenbaseException(
-            "Value '" + x + "' is too long for parameter of type " +
-            paramMetaData.paramTypeStr,
-            null);
+        return
+            new EigenbaseException(
+                "Value '" + x + "' is too long for parameter of type "
+                + paramMetaData.paramTypeStr,
+                null);
 
         //return FarragoResource.instance().ParameterValueTooLong.ex(
         //    x.toString(),
@@ -180,19 +191,22 @@ public class FarragoJdbcParamDef
     }
 
     /**
-     * Returns an error the value is out of range and cannot be converted to
-     * the desired SQL type.
+     * Returns an error the value is out of range and cannot be converted to the
+     * desired SQL type.
      */
     protected EigenbaseException newValueOutOfRange(Object x)
     {
         // TODO: Change to use client resources
-        return new EigenbaseException(
-            "Value '" + x + "' is out of range for parameter of type " +
-            paramMetaData.paramTypeStr,
-            null);
+        return
+            new EigenbaseException(
+                "Value '" + x + "' is out of range for parameter of type "
+                + paramMetaData.paramTypeStr,
+                null);
 
         //return FarragoResource.instance().ParameterValueOutOfRange.ex(
         //    x.toString(),
         //    paramMetaData.paramTypeStr);
     }
 }
+
+// End FarragoJdbcParamDef.java

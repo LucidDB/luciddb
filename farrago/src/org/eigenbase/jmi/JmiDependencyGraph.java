@@ -21,77 +21,74 @@
 */
 package org.eigenbase.jmi;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.graph.*;
-
 import java.util.*;
 
 import javax.jmi.reflect.*;
 
+import org._3pq.jgrapht.*;
+import org._3pq.jgrapht.graph.*;
+
+
 /**
  * JmiDependencyGraph is a directed graph representation of the dependencies
- * spanning a set of JMI objects.  Vertices are instances of
- * {@link JmiDependencyVertex}.  Graph instances are immutable and can be
- * accessed concurrently by multiple threads.
+ * spanning a set of JMI objects. Vertices are instances of {@link
+ * JmiDependencyVertex}. Graph instances are immutable and can be accessed
+ * concurrently by multiple threads.
  *
- *<p>
- *
- * The rules for determining dependencies from a set of JMI objects
- * and their associations are supplied to the constructor via
- * an instance of {@link JmiDependencyTransform}.  This allows the
- * caller to define the dependencies of interest for a particular
- * model or application.
+ * <p>The rules for determining dependencies from a set of JMI objects and their
+ * associations are supplied to the constructor via an instance of {@link
+ * JmiDependencyTransform}. This allows the caller to define the dependencies of
+ * interest for a particular model or application.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JmiDependencyGraph
-    extends UnmodifiableDirectedGraph<
-        JmiDependencyVertex,
+    extends UnmodifiableDirectedGraph<JmiDependencyVertex,
         Edge<JmiDependencyVertex>>
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
-     * The underlying graph structure; we hide it here so that
-     * it can only be modified internally.
+     * The underlying graph structure; we hide it here so that it can only be
+     * modified internally.
      */
-    private final DirectedGraph<
-        JmiDependencyVertex,
-        Edge<JmiDependencyVertex>> mutableGraph;
+    private final DirectedGraph<JmiDependencyVertex, Edge<JmiDependencyVertex>> mutableGraph;
 
     private final JmiDependencyTransform transform;
-    
+
     private Map<RefObject, JmiDependencyVertex> vertexMap;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new dependency graph.
      *
-     * @param elements the elements among which dependencies are
-     * to be determined
-     *
+     * @param elements the elements among which dependencies are to be
+     * determined
      * @param transform rules for finding dependencies and grouping elements
      */
-    public JmiDependencyGraph(
-        Collection<RefObject> elements,
+    public JmiDependencyGraph(Collection<RefObject> elements,
         JmiDependencyTransform transform)
     {
         // don't allow multiple edges, but do allow loops
         // (to support transform.shouldProduceSelfLoops)
         this(
             elements,
-            transform, 
+            transform,
             new DefaultDirectedGraph());
     }
 
-    private JmiDependencyGraph(
-        Collection<RefObject> elements,
+    private JmiDependencyGraph(Collection<RefObject> elements,
         JmiDependencyTransform transform,
-        DirectedGraph<JmiDependencyVertex, Edge<JmiDependencyVertex>>
-        mutableGraph)
+        DirectedGraph<JmiDependencyVertex, Edge<JmiDependencyVertex>> mutableGraph)
     {
         super(mutableGraph);
         this.mutableGraph = mutableGraph;
         this.transform = transform;
-        vertexMap = transform.shouldSortByMofId()
+        vertexMap =
+            transform.shouldSortByMofId()
             ? new TreeMap<RefObject, JmiDependencyVertex>(
                 JmiMofIdComparator.instance)
             : new HashMap<RefObject, JmiDependencyVertex>();
@@ -101,6 +98,8 @@ public class JmiDependencyGraph
             vertex.makeImmutable();
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return an immutable map from an object in the graph to its containing
@@ -118,7 +117,7 @@ public class JmiDependencyGraph
             Collections.sort(list, JmiMofIdComparator.instance);
             elements = list;
         }
-        
+
         // Build up disconnected vertices representing elements
         // grouped by contraction.
         for (RefObject target : elements) {
@@ -127,10 +126,11 @@ public class JmiDependencyGraph
                 targetVertex = new JmiDependencyVertex();
                 addElementToVertex(target, targetVertex);
             }
-            Collection<RefObject> sources = transform.getSourceNeighbors(
-                target,
-                elements,
-                JmiAssocMapping.CONTRACTION);
+            Collection<RefObject> sources =
+                transform.getSourceNeighbors(
+                    target,
+                    elements,
+                    JmiAssocMapping.CONTRACTION);
             for (RefObject source : sources) {
                 if (source == target) {
                     continue;
@@ -156,21 +156,21 @@ public class JmiDependencyGraph
 
         // Create dependency edges.
         addDependencyEdges(elements, JmiAssocMapping.COPY);
-        
+
         // Create reverse dependency edges.
         addDependencyEdges(elements, JmiAssocMapping.REVERSAL);
     }
 
-    private void addDependencyEdges(
-        Collection<RefObject> elements,
+    private void addDependencyEdges(Collection<RefObject> elements,
         JmiAssocMapping mapping)
     {
         for (RefObject target : elements) {
             JmiDependencyVertex targetVertex = vertexMap.get(target);
-            Collection<RefObject> sources = transform.getSourceNeighbors(
-                target,
-                elements,
-                mapping);
+            Collection<RefObject> sources =
+                transform.getSourceNeighbors(
+                    target,
+                    elements,
+                    mapping);
             for (RefObject source : sources) {
                 JmiDependencyVertex sourceVertex = vertexMap.get(source);
                 if (sourceVertex == targetVertex) {
@@ -179,11 +179,12 @@ public class JmiDependencyGraph
                         continue;
                     }
                 }
+
                 // DefaultDirectedGraph will filter out duplicate edges
                 if (mapping == JmiAssocMapping.COPY) {
                     mutableGraph.addEdge(sourceVertex, targetVertex);
                 } else {
-                    assert(mapping == JmiAssocMapping.REVERSAL);
+                    assert (mapping == JmiAssocMapping.REVERSAL);
                     mutableGraph.addEdge(targetVertex, sourceVertex);
                 }
             }
@@ -191,7 +192,8 @@ public class JmiDependencyGraph
     }
 
     private void addElementToVertex(
-        RefObject refObj, JmiDependencyVertex vertex)
+        RefObject refObj,
+        JmiDependencyVertex vertex)
     {
         vertexMap.put(refObj, vertex);
         vertex.getElementSet().add(refObj);

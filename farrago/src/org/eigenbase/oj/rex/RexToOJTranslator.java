@@ -20,14 +20,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import java.math.*;
-import java.util.*;
+
 import java.nio.*;
 
+import java.util.*;
+
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
@@ -36,21 +38,22 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.fun.SqlCaseOperator;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
 /**
- * Converts expressions in logical format ({@link RexNode}) into
- * OpenJava code.
+ * Converts expressions in logical format ({@link RexNode}) into OpenJava code.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RexToOJTranslator implements RexVisitor<Expression>
+public class RexToOJTranslator
+    implements RexVisitor<Expression>
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final JavaRelImplementor implementor;
     private final RelNode contextRel;
@@ -58,11 +61,11 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     private Expression translatedExpr;
 
     /**
-     * Program which the expression is part of.<ul>
+     * Program which the expression is part of.
      *
+     * <ul>
      * <li>If this field is set, the expression is interpreted in terms of
      * output fields of the program.
-     *
      * <li>If this field is not set, the expression is interpreted in terms of
      * the inputs to the calculator.</li>
      * </ul>
@@ -70,10 +73,10 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     private RexProgram program;
 
     /**
-     * stmtLists for case expression. each when, then or else
-     * has one statmentList.
+     * stmtLists for case expression. each when, then or else has one
+     * statmentList.
      */
-    private StatementList[] stmtLists;
+    private StatementList [] stmtLists;
 
     /**
      * Maps expressions to the variable which has been assigned their value.
@@ -83,20 +86,18 @@ public class RexToOJTranslator implements RexVisitor<Expression>
      * specific enough (we might mistakenly match expressions which are
      * equivalent but which come from different programs).
      */
-    private final Map<Expression,Variable> exprMap =
+    private final Map<Expression, Variable> exprMap =
         new HashMap<Expression, Variable>();
     private final Stack<RexProgram> programStack = new Stack<RexProgram>();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a translator.
      *
      * @param implementor implementation context
-     *
      * @param contextRel relational expression which is the context for the
-     *   row-expressions which are to be translated
-     *
+     * row-expressions which are to be translated
      * @param implementorTable table of implementation functors for Rex
      * operators; if null, {@link OJRexImplementorTableImpl#instance} is used
      */
@@ -114,13 +115,10 @@ public class RexToOJTranslator implements RexVisitor<Expression>
         this.implementorTable = implementorTable;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the corresponding StatementList.
-     *
-     * 
-     * 
      */
     public StatementList getCaseStmtList(int i)
     {
@@ -179,8 +177,8 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     {
         final int index = localRef.getIndex();
         assert program != null;
-        if (program.getInputRowType().isStruct() &&
-            index < program.getInputRowType().getFields().length) {
+        if (program.getInputRowType().isStruct()
+            && (index < program.getInputRowType().getFields().length)) {
             // It's a reference to an input field.
             return translateInput(localRef.getIndex());
         } else {
@@ -206,6 +204,7 @@ public class RexToOJTranslator implements RexVisitor<Expression>
                 // variable.
                 return setTranslation(v);
             }
+
             // Unset program because the new expression is in terms of the
             // program's inputs. This also prevents infinite expansion.
             pushProgram(null);
@@ -265,6 +264,7 @@ public class RexToOJTranslator implements RexVisitor<Expression>
                 }
                 break;
             }
+
             // represent decimals with unscaled value
             long unscaled = bd.unscaledValue().longValue();
             setTranslation(Literal.makeLiteral(unscaled));
@@ -290,12 +290,13 @@ public class RexToOJTranslator implements RexVisitor<Expression>
             setTranslation(Literal.makeLiteral(timeInMillis));
             break;
         case SqlTypeName.Symbol_ordinal:
-            EnumeratedValues.BasicValue ord = 
+            EnumeratedValues.BasicValue ord =
                 (EnumeratedValues.BasicValue) value;
             setTranslation(Literal.makeLiteral(ord.getOrdinal()));
             break;
         default:
-            throw Util.newInternal("Bad literal value " + value + " ("
+            throw Util.newInternal(
+                "Bad literal value " + value + " ("
                 + value.getClass() + "); breaches "
                 + "post-condition on RexLiteral.getValue()");
         }
@@ -308,7 +309,7 @@ public class RexToOJTranslator implements RexVisitor<Expression>
         boolean bInsideCase;
         RexNode [] operands = call.getOperands();
         Expression [] exprs = new Expression[operands.length];
-        StatementList bkupStmtLists[] = stmtLists;
+        StatementList [] bkupStmtLists = stmtLists;
         StatementList outStmtList = null;
         bInsideCase = false;
         if (call.getOperator() instanceof SqlCaseOperator) {
@@ -336,16 +337,15 @@ public class RexToOJTranslator implements RexVisitor<Expression>
      * Converts a call after its operands have already been translated.
      *
      * @param call call to be translated
-     *
      * @param operandExprs translated operands
      *
      * @return converted call
      */
     protected Expression convertCall(
-        RexCall call, Expression [] operandExprs)
+        RexCall call,
+        Expression [] operandExprs)
     {
-        OJRexImplementor implementor =
-            implementorTable.get(call.getOperator());
+        OJRexImplementor implementor = implementorTable.get(call.getOperator());
         if (implementor == null) {
             throw Util.needToImplement(call);
         }
@@ -374,7 +374,9 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     public Expression visitRangeRef(RexRangeRef rangeRef)
     {
         final WhichInputResult inputAndCol =
-            whichInput(rangeRef.getOffset(), contextRel);
+            whichInput(
+                rangeRef.getOffset(),
+                contextRel);
         if (inputAndCol == null) {
             throw Util.newInternal("input not found");
         }
@@ -400,10 +402,13 @@ public class RexToOJTranslator implements RexVisitor<Expression>
             final String javaFieldName = Util.toJavaId(fieldName, i);
             args.add(new FieldAccess(inputExpr, javaFieldName));
         }
-        return setTranslation(
-            new AllocationExpression(
-                OJUtil.typeToOJClass(rangeType, getTypeFactory()),
-                args));
+        return
+            setTranslation(
+                new AllocationExpression(
+                    OJUtil.typeToOJClass(
+                        rangeType,
+                        getTypeFactory()),
+                    args));
     }
 
     // implement RexVisitor
@@ -413,38 +418,40 @@ public class RexToOJTranslator implements RexVisitor<Expression>
             Util.toJavaId(
                 fieldAccess.getName(),
                 fieldAccess.getField().getIndex());
-        return setTranslation(
-            new FieldAccess(
-                translateRexNode(fieldAccess.getReferenceExpr()),
-                javaFieldName));
+        return
+            setTranslation(
+                new FieldAccess(
+                    translateRexNode(fieldAccess.getReferenceExpr()),
+                    javaFieldName));
     }
 
     /**
-     * Translates an expression into a Java expression.
+     * Translates an expression into a Java expression. If the program has
+     * previously been set via {@link #pushProgram(RexProgram)}, the expression
+     * is interpreted in terms of the <em>output</em> fields of the program.
+     * Suppose that the program is
      *
-     * If the program has previously been set via
-     * {@link #pushProgram(RexProgram)}, the expression is interpreted in terms
-     * of the <em>output</em> fields of the program. Suppose that the program
-     * is
-     *
-     * <blockquote><pre>
+     * <blockquote>
+     * <pre>
      *   exprs: {$0, $1, $0 + $1}
      *   projectRefs: {$0, $2}
-     *   conditionRef: null</pre></blockquote>
+     *   conditionRef: null</pre>
+     * </blockquote>
      *
      * and the expression is <code>$1 + 5</code>. This would be expanded to
      * <code>(a + b) + 5</code>, because output field $1 of the program is
      * defined to be the expression <code>$0 + $1</code> in terms of the input
-     * fields.<p/>
+     * fields.
      *
-     * Sometimes a calculator expression is defined in terms of simpler
+     * <p/>Sometimes a calculator expression is defined in terms of simpler
      * calculator expressions. If this is the case, those expressions will be
      * successively evaluated and assigned to variables. If a variable with the
-     * appropriate value is already in scope, it will be used.<p/>
+     * appropriate value is already in scope, it will be used.
      *
-     * If the program is not present, no mapping occurs.
+     * <p/>If the program is not present, no mapping occurs.
      *
      * @param node Expression to be translated.
+     *
      * @return Java translation of expression
      */
     public Expression translateRexNode(RexNode node)
@@ -471,16 +478,16 @@ public class RexToOJTranslator implements RexVisitor<Expression>
 
     protected Expression convertByteArrayLiteral(byte [] bytes)
     {
-        return new ArrayAllocationExpression(
-            TypeName.forOJClass(OJSystem.BYTE),
-            new ExpressionList(null),
-            convertByteArrayLiteralToInitializer(bytes));
+        return
+            new ArrayAllocationExpression(
+                TypeName.forOJClass(OJSystem.BYTE),
+                new ExpressionList(null),
+                convertByteArrayLiteralToInitializer(bytes));
     }
 
     public boolean canConvertCall(RexCall call)
     {
-        OJRexImplementor implementor =
-            implementorTable.get(call.getOperator());
+        OJRexImplementor implementor = implementorTable.get(call.getOperator());
         if (implementor == null) {
             return false;
         }
@@ -491,16 +498,15 @@ public class RexToOJTranslator implements RexVisitor<Expression>
      * Returns the ordinal of the input relational expression which a given
      * column ordinal comes from.
      *
-     * <p>For example, if <code>rel</code> has inputs
-     * <code>I(a, b, c)</code> and <code>J(d, e)</code>, then
-     * <code>whichInput(0, rel)</code> returns 0 (column a),
-     * <code>whichInput(2, rel)</code> returns 0 (column c),
-     * <code>whichInput(3, rel)</code> returns 1 (column d).</p>
+     * <p>For example, if <code>rel</code> has inputs <code>I(a, b, c)</code>
+     * and <code>J(d, e)</code>, then <code>whichInput(0, rel)</code> returns 0
+     * (column a), <code>whichInput(2, rel)</code> returns 0 (column c), <code>
+     * whichInput(3, rel)</code> returns 1 (column d).</p>
      *
      * @param fieldIndex Index of field
-     * @param rel   Relational expression
-     * @return  a {@link WhichInputResult}
-     *     if found, otherwise null.
+     * @param rel Relational expression
+     *
+     * @return a {@link WhichInputResult} if found, otherwise null.
      */
     private static WhichInputResult whichInput(
         int fieldIndex,
@@ -509,7 +515,7 @@ public class RexToOJTranslator implements RexVisitor<Expression>
         assert fieldIndex >= 0;
         final RelNode [] inputs = rel.getInputs();
         for (int inputIndex = 0, firstFieldIndex = 0;
-                inputIndex < inputs.length; inputIndex++) {
+            inputIndex < inputs.length; inputIndex++) {
             RelNode input = inputs[inputIndex];
 
             // Index of first field in next input. Special case if this
@@ -518,7 +524,7 @@ public class RexToOJTranslator implements RexVisitor<Expression>
             final int fieldCount = input.getRowType().getFieldList().size();
             final int lastFieldIndex = firstFieldIndex + fieldCount;
             if ((lastFieldIndex > fieldIndex)
-                    || ((fieldCount == 0) && (lastFieldIndex == fieldIndex))) {
+                || ((fieldCount == 0) && (lastFieldIndex == fieldIndex))) {
                 final int fieldIndex2 = fieldIndex - firstFieldIndex;
                 return new WhichInputResult(input, inputIndex, fieldIndex2);
             }
@@ -548,11 +554,12 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     /**
      * Returns a sub-translator to deal with a sub-block.
      *
-     * <p>The default implementation simply returns this translator.
-     * Other implementations may create a new translator which contains the
+     * <p>The default implementation simply returns this translator. Other
+     * implementations may create a new translator which contains the
      * expression-to-variable mappings of the sub-block.
      *
      * @param stmtList Sub-block to generate code into
+     *
      * @return A translator
      */
     public RexToOJTranslator push(StatementList stmtList)
@@ -573,8 +580,8 @@ public class RexToOJTranslator implements RexVisitor<Expression>
     }
 
     /**
-     * Restores the current program to the one before
-     * {@link #pushProgram(RexProgram)} was called.
+     * Restores the current program to the one before {@link
+     * #pushProgram(RexProgram)} was called.
      *
      * @param program The program most recently pushed
      */
@@ -589,12 +596,12 @@ public class RexToOJTranslator implements RexVisitor<Expression>
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Result of call to {@link RexToOJTranslator#whichInput}, contains the
-     * input relational expression, its index, and the index of the field
-     * within that relational expression.
+     * input relational expression, its index, and the index of the field within
+     * that relational expression.
      */
     private static class WhichInputResult
     {
@@ -613,6 +620,5 @@ public class RexToOJTranslator implements RexVisitor<Expression>
         }
     }
 }
-
 
 // End RexToOJTranslator.java

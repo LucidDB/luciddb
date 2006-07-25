@@ -11,47 +11,43 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashMap;
+import java.io.*;
+
+import java.util.*;
 import java.util.regex.*;
 
+
 /**
- * PersistentPropertyStorage handles storage for persistent property
- * objects.  For example, see {@link PersistentStringProperty}.
+ * PersistentPropertyStorage handles storage for persistent property objects.
+ * For example, see {@link PersistentStringProperty}.
  *
  * @author stephan
- * @since December 3, 2004
  * @version $Id$
+ * @since December 3, 2004
  */
 class PersistentPropertyStorage
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final HashMap propertyFileMap = new HashMap();
 
-    //~ Fields ----------------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private File propertyFile;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a PersistentPropertyStorage for the given property file.
@@ -63,17 +59,16 @@ class PersistentPropertyStorage
         this.propertyFile = propertyFile;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Factory method for PersistentPropertyStorage.  Guarantees that
-     * only a single PersistentPropertyStorage object exists for any
-     * property file.
+     * Factory method for PersistentPropertyStorage. Guarantees that only a
+     * single PersistentPropertyStorage object exists for any property file.
      *
      * @param propertyFile the name of the property file to use
-     * @throws IOException if <code>propertyFile</code> cannot be
-     *                     converted into a canonical path name (via
-     *                     {@link File#getCanonicalPath()}).
+     *
+     * @throws IOException if <code>propertyFile</code> cannot be converted into
+     * a canonical path name (via {@link File#getCanonicalPath()}).
      */
     synchronized static PersistentPropertyStorage newPersistentPropertyStorage(
         String propertyFile)
@@ -85,11 +80,10 @@ class PersistentPropertyStorage
 
         if (propertyFileMap.containsKey(canonicalName)) {
             return
-                (PersistentPropertyStorage)propertyFileMap.get(canonicalName);
+                (PersistentPropertyStorage) propertyFileMap.get(canonicalName);
         }
 
-        PersistentPropertyStorage storage =
-            new PersistentPropertyStorage(file);
+        PersistentPropertyStorage storage = new PersistentPropertyStorage(file);
 
         propertyFileMap.put(canonicalName, storage);
 
@@ -97,17 +91,16 @@ class PersistentPropertyStorage
     }
 
     /**
-     * Stores the given property's value in the property file.  Unlike
-     * {@link java.util.Properties#store(java.io.OutputStream, String)}
-     * this method does not obliterate the format of the existing
-     * property file.
+     * Stores the given property's value in the property file. Unlike {@link
+     * java.util.Properties#store(java.io.OutputStream, String)} this method
+     * does not obliterate the format of the existing property file.
      *
      * @param property a {@link Property} value to store.
-     * @throws IOException if a temporary file cannot be created
-     *                     ({@link File#createTempFile(String, String)})
-     *                     or written, or if the property file given
-     *                     during construction cannot be created (if
-     *                     it didn't already exist) or written.
+     *
+     * @throws IOException if a temporary file cannot be created ({@link
+     * File#createTempFile(String, String)}) or written, or if the property file
+     * given during construction cannot be created (if it didn't already exist)
+     * or written.
      */
     synchronized void storeProperty(Property property)
         throws IOException
@@ -124,9 +117,9 @@ class PersistentPropertyStorage
             try {
                 FileWriter fileWriter = new FileWriter(tempFile);
                 try {
-                    char[] buffer = new char[4096];
+                    char [] buffer = new char[4096];
                     int read;
-                    while((read = fileReader.read(buffer)) != -1) {
+                    while ((read = fileReader.read(buffer)) != -1) {
                         fileWriter.write(buffer, 0, read);
                     }
                     fileWriter.flush();
@@ -151,7 +144,7 @@ class PersistentPropertyStorage
                     new BufferedWriter(new FileWriter(propertyFile));
                 try {
                     String line;
-                    while((line = reader.readLine()) != null) {
+                    while ((line = reader.readLine()) != null) {
                         matcher.reset(line);
 
                         if (matcher.matches()) {
@@ -205,3 +198,5 @@ class PersistentPropertyStorage
         }
     }
 }
+
+// End PersistentPropertyStorage.java

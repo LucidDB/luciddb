@@ -22,12 +22,13 @@
 */
 package net.sf.farrago.session;
 
-import java.util.*;
-import java.sql.DatabaseMetaData;
+import java.sql.*;
 
-import org.eigenbase.sql.SqlDialect;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.pretty.SqlPrettyWriter;
+import java.util.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.pretty.*;
+
 
 /**
  * FarragoSessionVariables defines global variable settings for a Farrago
@@ -36,19 +37,21 @@ import org.eigenbase.sql.pretty.SqlPrettyWriter;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSessionVariables implements Cloneable
+public class FarragoSessionVariables
+    implements Cloneable
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * The name of the default catalog qualifier, changed by SET CATALOG.
-     * Can never be null.
+     * The name of the default catalog qualifier, changed by SET CATALOG. Can
+     * never be null.
      */
     public String catalogName;
 
     /**
-     * The name of the default schema qualifier, changed by SET SCHEMA.  Can
-     * be null to indicate no default schema has been set yet.
+     * The name of the default schema qualifier, changed by SET SCHEMA. Can be
+     * null to indicate no default schema has been set yet.
      */
     public String schemaName;
 
@@ -73,37 +76,36 @@ public class FarragoSessionVariables implements Cloneable
     public String currentRoleName;
 
     /**
-     * Value of SQL expression CURRENT_PATH as a list of schemas.
-     * Each entry is a {@link SqlIdentifier} (catalog.schema).
-     * This list is immutable to prevent accidental aliasing.
+     * Value of SQL expression CURRENT_PATH as a list of schemas. Each entry is
+     * a {@link SqlIdentifier} (catalog.schema). This list is immutable to
+     * prevent accidental aliasing.
      */
     public List<SqlIdentifier> schemaSearchPath;
 
     /**
-     * Full user name, e.g. "Joe Smith". Can be null.
-     * TODO: Value of SQL expression SYSTEM_USER_FULLNAME?.
+     * Full user name, e.g. "Joe Smith". Can be null. TODO: Value of SQL
+     * expression SYSTEM_USER_FULLNAME?.
      */
     public String systemUserFullName;
 
     /**
-     * Session name. Can be null if session has no name.
-     * TODO: Value of SQL expression SESSION_NAME?
+     * Session name. Can be null if session has no name. TODO: Value of SQL
+     * expression SESSION_NAME?
      */
     public String sessionName;
 
     /**
-     * Client program name. Can be null.
-     * TODO: Value of SQL expression PROGRAM_NAME?
+     * Client program name. Can be null. TODO: Value of SQL expression
+     * PROGRAM_NAME?
      */
     public String programName;
 
     /**
-     * Client process Id.
-     * TODO: Value of SQL expression PROCESS_ID?
+     * Client process Id. TODO: Value of SQL expression PROCESS_ID?
      */
     public long processId;
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public FarragoSessionVariables cloneVariables()
     {
@@ -117,10 +119,11 @@ public class FarragoSessionVariables implements Cloneable
     /**
      * Format the schema search path as required by the SQL99 standard.
      *
-     * @sql.99 Part 2 Section 6.3 General Rule 10
-     *
      * @param databaseMetadata current database metadata
+     *
      * @return formated schema search path, as per the SQL standard
+     *
+     * @sql.99 Part 2 Section 6.3 General Rule 10
      */
     public String getFormattedSchemaSearchPath(
         DatabaseMetaData databaseMetadata)
@@ -142,13 +145,12 @@ public class FarragoSessionVariables implements Cloneable
     }
 
     /**
-     * Copy the values in <code>baseVariables</code> to this instance.
-     * Allows extensions projects to provide extend FarragoSessionVariables
-     * and those new session variables to values from  an existing
-     * FarragoSessionVariables.
+     * Copy the values in <code>baseVariables</code> to this instance. Allows
+     * extensions projects to provide extend FarragoSessionVariables and those
+     * new session variables to values from an existing FarragoSessionVariables.
      *
      * @param baseVariables an existing FarragoSessionVariables to copy into
-     *                      <code>this</code>.
+     * <code>this</code>.
      */
     protected void copyVariables(FarragoSessionVariables baseVariables)
     {
@@ -165,6 +167,5 @@ public class FarragoSessionVariables implements Cloneable
         this.schemaSearchPath = baseVariables.schemaSearchPath;
     }
 }
-
 
 // End FarragoSessionVariables.java

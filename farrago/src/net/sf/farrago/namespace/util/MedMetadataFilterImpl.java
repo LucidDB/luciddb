@@ -21,9 +21,10 @@
 */
 package net.sf.farrago.namespace.util;
 
+import java.util.*;
+
 import net.sf.farrago.namespace.*;
 
-import java.util.*;
 
 /**
  * MedMetadataFilterImpl is a default implementation {@link
@@ -32,14 +33,20 @@ import java.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMetadataFilterImpl implements FarragoMedMetadataFilter
+public class MedMetadataFilterImpl
+    implements FarragoMedMetadataFilter
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final boolean exclude;
 
     private final Set roster;
 
     private final String pattern;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public MedMetadataFilterImpl(
         boolean exclude,
         Set roster,
@@ -49,19 +56,21 @@ public class MedMetadataFilterImpl implements FarragoMedMetadataFilter
         this.roster = roster;
         this.pattern = pattern;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoMedMetadataFilter
     public boolean isExclusion()
     {
         return exclude;
     }
-    
+
     // implement FarragoMedMetadataFilter
     public Set getRoster()
     {
         return roster;
     }
-    
+
     // implement FarragoMedMetadataFilter
     public String getPattern()
     {

@@ -32,6 +32,7 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.sql.validate.*;
 
+
 /**
  * Utility class for manipulating statistics stored in the catalog
  *
@@ -40,15 +41,20 @@ import org.eigenbase.sql.validate.*;
  */
 public class FarragoStatsUtil
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final int DEFAULT_HISTOGRAM_BAR_COUNT = 100;
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public static void setTableRowCount(
-        FarragoSession session, 
+        FarragoSession session,
         String catalogName,
-        String schemaName, 
+        String schemaName,
         String tableName,
-        long rowCount) 
-    throws SqlValidatorException
+        long rowCount)
+        throws SqlValidatorException
     {
         FarragoRepos repos = session.getRepos();
 
@@ -58,10 +64,8 @@ public class FarragoStatsUtil
             rollback = true;
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
-            FemLocalSchema schema = 
-                lookupSchema(session, catalog, schemaName);
-            FemAbstractColumnSet columnSet = 
-                lookupColumnSet(schema, tableName);
+            FemLocalSchema schema = lookupSchema(session, catalog, schemaName);
+            FemAbstractColumnSet columnSet = lookupColumnSet(schema, tableName);
             FarragoCatalogUtil.updateRowCount(columnSet, rowCount);
 
             rollback = false;
@@ -69,14 +73,14 @@ public class FarragoStatsUtil
             repos.endReposTxn(rollback);
         }
     }
-    
+
     public static void setIndexPageCount(
         FarragoSession session,
         String catalogName,
         String schemaName,
         String indexName,
         long pageCount)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
         FarragoRepos repos = session.getRepos();
 
@@ -86,8 +90,7 @@ public class FarragoStatsUtil
             rollback = true;
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
-            FemLocalSchema schema = 
-                lookupSchema(session, catalog, schemaName);
+            FemLocalSchema schema = lookupSchema(session, catalog, schemaName);
             FemLocalIndex index = lookupIndex(schema, indexName);
             FarragoCatalogUtil.updatePageCount(index, pageCount);
 
@@ -96,7 +99,7 @@ public class FarragoStatsUtil
             repos.endReposTxn(rollback);
         }
     }
-    
+
     /**
      * Creates a column histogram
      */
@@ -111,7 +114,7 @@ public class FarragoStatsUtil
         long sampleDistinctValues,
         int distributionType,
         String valueDigits)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
         FarragoRepos repos = session.getRepos();
 
@@ -121,17 +124,15 @@ public class FarragoStatsUtil
             rollback = true;
 
             CwmCatalog catalog = lookupCatalog(session, repos, catalogName);
-            FemLocalSchema schema = 
-                lookupSchema(session, catalog, schemaName);
-            FemAbstractColumnSet columnSet = 
-                lookupColumnSet(schema, tableName);
+            FemLocalSchema schema = lookupSchema(session, catalog, schemaName);
+            FemAbstractColumnSet columnSet = lookupColumnSet(schema, tableName);
             FemAbstractColumn column = lookupColumn(columnSet, columnName);
-            
+
             long rowCount = columnSet.getRowCount();
             long sampleRows = (rowCount * samplePercent) / 100;
-            assert(distinctValues <= rowCount);
-            assert(sampleDistinctValues <= distinctValues);
-            assert(sampleDistinctValues <= sampleRows);
+            assert (distinctValues <= rowCount);
+            assert (sampleDistinctValues <= distinctValues);
+            assert (sampleDistinctValues <= sampleRows);
             int barCount = 0;
             long rowsPerBar = 0;
             long rowsLastBar = 0;
@@ -141,41 +142,51 @@ public class FarragoStatsUtil
             } else {
                 barCount = DEFAULT_HISTOGRAM_BAR_COUNT;
                 rowsPerBar = sampleRows / barCount;
-                if (sampleRows % barCount != 0) {
+                if ((sampleRows % barCount) != 0) {
                     rowsPerBar++;
                 }
-                rowsLastBar = sampleRows - ((barCount-1) * rowsPerBar);
+                rowsLastBar = sampleRows - ((barCount - 1) * rowsPerBar);
             }
-            List<FemColumnHistogramBar> bars = 
+            List<FemColumnHistogramBar> bars =
                 createColumnHistogramBars(
-                    repos, sampleDistinctValues, 
-                    barCount, rowsPerBar, rowsLastBar, 
-                    distributionType, valueDigits);
+                    repos,
+                    sampleDistinctValues,
+                    barCount,
+                    rowsPerBar,
+                    rowsLastBar,
+                    distributionType,
+                    valueDigits);
 
             FarragoCatalogUtil.updateHistogram(
-                repos, column, distinctValues, samplePercent, 
-                barCount, rowsPerBar, rowsLastBar, bars);
+                repos,
+                column,
+                distinctValues,
+                samplePercent,
+                barCount,
+                rowsPerBar,
+                rowsLastBar,
+                bars);
 
             rollback = false;
         } finally {
             repos.endReposTxn(rollback);
         }
     }
-    
+
     private static List<FemColumnHistogramBar> createColumnHistogramBars(
         FarragoRepos repos,
         long distinctValues,
         int barCount,
         long rowsPerBar,
         long rowsLastBar,
-        int distributionType, 
+        int distributionType,
         String valueDigits)
     {
-        List<FemColumnHistogramBar> bars = 
+        List<FemColumnHistogramBar> bars =
             new LinkedList<FemColumnHistogramBar>();
-        List<Long> valueCounts = 
+        List<Long> valueCounts =
             createValueCounts(barCount, distinctValues, distributionType);
-        List<String> values = 
+        List<String> values =
             createValues(barCount, valueDigits, distributionType, valueCounts);
         for (int i = 0; i < barCount; i++) {
             FemColumnHistogramBar bar = repos.newFemColumnHistogramBar();
@@ -186,15 +197,17 @@ public class FarragoStatsUtil
         }
         return bars;
     }
-    
+
     private static List<String> createValues(
-        int barCount, String valueDigits, 
-        int distributionType, List<Long> valueCounts)
+        int barCount,
+        String valueDigits,
+        int distributionType,
+        List<Long> valueCounts)
     {
         int digitCount = valueDigits.length();
-        assert(barCount <= digitCount * digitCount);
+        assert (barCount <= (digitCount * digitCount));
         List<String> values = new ArrayList<String>(barCount);
-        
+
         int iterations = barCount / digitCount;
         int residual = barCount % digitCount;
         for (int i = 0; i < digitCount; i++) {
@@ -203,9 +216,8 @@ public class FarragoStatsUtil
                 currentIterations++;
             }
             for (int j = 0; j < currentIterations; j++) {
-                char [] chars = {
-                    valueDigits.charAt(i), 
-                    valueDigits.charAt(j) };
+                char [] chars =
+                    { valueDigits.charAt(i), valueDigits.charAt(j) };
                 String next = new String(chars);
                 if (distributionType > 0) {
                     next += valueDigits.charAt(0);
@@ -213,24 +225,26 @@ public class FarragoStatsUtil
                 values.add(next);
             }
         }
-        
+
         return values;
     }
-    
+
     private static List<Long> createValueCounts(
-        int barCount, long distinctValueCount, int distributionType)
+        int barCount,
+        long distinctValueCount,
+        int distributionType)
     {
         List<Long> valueCounts = new ArrayList<Long>(barCount);
-        Double estValuesPerBar = 
+        Double estValuesPerBar =
             (double) distinctValueCount / (double) barCount;
-        
+
         long remaining = distinctValueCount;
         for (int i = 0; i < barCount; i++) {
             long barStart = (long) Math.ceil(estValuesPerBar * i);
-            long barEnd = (long) Math.ceil(estValuesPerBar * (i+1));
+            long barEnd = (long) Math.ceil(estValuesPerBar * (i + 1));
 
             long current;
-            if (i == barCount - 1) {
+            if (i == (barCount - 1)) {
                 current = remaining;
             } else {
                 current = barEnd - barStart;
@@ -238,53 +252,55 @@ public class FarragoStatsUtil
             valueCounts.add(current);
             remaining -= current;
         }
+
         // note: the first bar should be at least 1
         if (barCount > 0) {
-            assert(valueCounts.get(0) >= 1) 
-                : "first histogram bar must be at least 1";
-            assert(remaining == 0) 
-                : "generated histogram bars had remaining distinct values";
+            assert (valueCounts.get(0) >= 1) : "first histogram bar must be at least 1";
+            assert (remaining == 0) : "generated histogram bars had remaining distinct values";
         }
 
         return valueCounts;
     }
-    
+
     private static CwmCatalog lookupCatalog(
         FarragoSession session,
         FarragoRepos repos,
         String catalogName)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
-        if (catalogName == null || catalogName.length() == 0) {
+        if ((catalogName == null) || (catalogName.length() == 0)) {
             catalogName = session.getSessionVariables().catalogName;
         }
         CwmCatalog catalog = repos.getCatalog(catalogName);
         if (catalog == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(catalogName);
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                catalogName);
         }
         return catalog;
     }
-    
+
     private static FemLocalSchema lookupSchema(
         FarragoSession session,
         CwmCatalog catalog,
         String schemaName)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
-        if (schemaName == null || schemaName.length() == 0) {
+        if ((schemaName == null) || (schemaName.length() == 0)) {
             schemaName = session.getSessionVariables().schemaName;
         }
-        FemLocalSchema schema = FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
+        FemLocalSchema schema =
+            FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
         if (schema == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(schemaName);
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                schemaName);
         }
         return schema;
     }
-    
+
     private static FemAbstractColumnSet lookupColumnSet(
         FemLocalSchema schema,
         String tableName)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
         FemAbstractColumnSet columnSet = null;
         if (tableName != null) {
@@ -295,7 +311,8 @@ public class FarragoStatsUtil
                     FemAbstractColumnSet.class);
         }
         if (columnSet == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(tableName);
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                tableName);
         }
         return columnSet;
     }
@@ -303,26 +320,27 @@ public class FarragoStatsUtil
     private static FemLocalIndex lookupIndex(
         FemLocalSchema schema,
         String indexName)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
         FemLocalIndex index = null;
         if (indexName != null) {
             index =
                 FarragoCatalogUtil.getModelElementByNameAndType(
-                schema.getOwnedElement(),
+                    schema.getOwnedElement(),
                     indexName,
                     FemLocalIndex.class);
         }
         if (index == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(indexName);
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                indexName);
         }
         return index;
     }
-    
+
     private static FemAbstractColumn lookupColumn(
         FemAbstractColumnSet columnSet,
         String columnName)
-    throws SqlValidatorException
+        throws SqlValidatorException
     {
         FemAbstractColumn column = null;
         if (columnName != null) {
@@ -333,7 +351,8 @@ public class FarragoStatsUtil
                     FemAbstractColumn.class);
         }
         if (column == null) {
-            throw FarragoResource.instance().ValidatorUnknownObject.ex(columnName);
+            throw FarragoResource.instance().ValidatorUnknownObject.ex(
+                columnName);
         }
         return column;
     }

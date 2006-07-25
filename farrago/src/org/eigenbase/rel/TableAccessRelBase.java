@@ -26,24 +26,31 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
- * <code>TableAccessRelBase</code> is an abstract base class for
- * implementations of {@link TableAccessRel}.
+ * <code>TableAccessRelBase</code> is an abstract base class for implementations
+ * of {@link TableAccessRel}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class TableAccessRelBase extends AbstractRelNode
+public abstract class TableAccessRelBase
+    extends AbstractRelNode
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** The connection to the optimizing session. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * The connection to the optimizing session.
+     */
     protected RelOptConnection connection;
 
-    /** The table definition. */
+    /**
+     * The table definition.
+     */
     protected RelOptTable table;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected TableAccessRelBase(
         RelOptCluster cluster,
@@ -58,8 +65,8 @@ public abstract class TableAccessRelBase extends AbstractRelNode
             cluster.getPlanner().registerSchema(table.getRelOptSchema());
         }
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptConnection getConnection()
     {
@@ -103,8 +110,8 @@ public abstract class TableAccessRelBase extends AbstractRelNode
     {
         pw.explain(
             this,
-            new String [] { "table" },
-            new Object [] { Arrays.asList(table.getQualifiedName()) });
+            new String[] { "table" },
+            new Object[] { Arrays.asList(table.getQualifiedName()) });
     }
 }
 

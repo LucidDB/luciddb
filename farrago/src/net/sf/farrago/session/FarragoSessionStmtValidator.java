@@ -23,6 +23,7 @@
 package net.sf.farrago.session;
 
 import java.util.*;
+
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
@@ -32,34 +33,33 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.security.PrivilegedActionEnum;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.resgen.*;
-import org.eigenbase.trace.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.validate.SqlMoniker;
-import org.eigenbase.sql.validate.SqlValidatorException;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
  * FarragoSessionStmtValidator defines a generic interface for statement
- * validation services.  It is not as specific as the other validator-related
+ * validation services. It is not as specific as the other validator-related
  * interfaces ({@link FarragoSessionDdlValidator} and {@link
  * FarragoSessionPreparingStmt}).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
+public interface FarragoSessionStmtValidator
+    extends FarragoAllocationOwner
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return session invoking stmt to be validated
@@ -77,8 +77,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoRepos getRepos();
 
     /**
-     * @return FennelDbHandle storing local data to be accessed by
-     * validated stmt
+     * @return FennelDbHandle storing local data to be accessed by validated
+     * stmt
      */
     public FennelDbHandle getFennelDbHandle();
 
@@ -98,8 +98,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoObjectCache getCodeCache();
 
     /**
-     * @return private cache to use for validating references to
-     * data wrappers
+     * @return private cache to use for validating references to data wrappers
      */
     public FarragoDataWrapperCache getDataWrapperCache();
 
@@ -109,8 +108,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FarragoSessionIndexMap getIndexMap();
 
     /**
-     * @return shared cache to use for validating references to
-     * data wrappers
+     * @return shared cache to use for validating references to data wrappers
      */
     public FarragoObjectCache getSharedDataWrapperCache();
 
@@ -123,16 +121,15 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * @return the DDL lock manager for this validator
      */
     public FarragoDdlLockManager getDdlLockManager();
-    
+
     /**
      * Submits a request for access from the current user and/or role to a
-     * catalog object via this validator's privilege checker.  Actual checking
-     * of the request may be deferred.
-     * 
-     * @param obj object to be accessed
+     * catalog object via this validator's privilege checker. Actual checking of
+     * the request may be deferred.
      *
-     * @param action the action to be performed on obj
-     * (see {@link PrivilegedActionEnum} for base set)
+     * @param obj object to be accessed
+     * @param action the action to be performed on obj (see {@link
+     * PrivilegedActionEnum} for base set)
      */
     public void requestPrivilege(
         CwmModelElement obj,
@@ -181,9 +178,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * found.
      *
      * @param wrapperName name of wrapper to look up (must be simple)
-     *
-     * @param isForeign true for foreign data wrapper; false for
-     * local data wrapper
+     * @param isForeign true for foreign data wrapper; false for local data
+     * wrapper
      *
      * @return wrapper found
      */
@@ -201,8 +197,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public FemDataServer findDataServer(SqlIdentifier serverName);
 
     /**
-     * @return default data server to use if none specified in
-     * local table definition
+     * @return default data server to use if none specified in local table
+     * definition
      */
     public FemDataServer getDefaultLocalDataServer();
 
@@ -211,9 +207,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * found.
      *
      * @param qualifiedName name of object to look up
-     *
      * @param clazz expected class of object; if the object exists with a
-     *        different class, it will be treated as if it did not exist
+     * different class, it will be treated as if it did not exist
      *
      * @return schema object found
      */
@@ -222,11 +217,10 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
         Class<T> clazz);
 
     /**
-     * Looks up a top-level object (e.g. a catalog) by name, throwing
-     * a validation error if not found.
+     * Looks up a top-level object (e.g. a catalog) by name, throwing a
+     * validation error if not found.
      *
      * @param unqualifiedName SqlIdentifier which returns true for isSimple()
-     *
      * @param clazz class of object to find
      *
      * @return object found
@@ -239,9 +233,7 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      * Looks up all matching routine overloads by invocation name.
      *
      * @param invocationName invocation name of routine to look up
-     *
-     * @param routineType type of routine to look up, or null
-     * for any type
+     * @param routineType type of routine to look up, or null for any type
      *
      * @return list of matching FemRoutine objects (empty if no matches)
      */
@@ -259,9 +251,8 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public CwmSqldataType findSqldataType(SqlIdentifier typeName);
 
     /**
-     * Looks up a jar from a string literal representing its name
-     * (typically from a LIBRARY clause),  throwing an exception if
-     * not found.
+     * Looks up a jar from a string literal representing its name (typically
+     * from a LIBRARY clause), throwing an exception if not found.
      *
      * @param jarName string literal representing name of jar
      *
@@ -272,34 +263,32 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     /**
      * Resolve a (possibly qualified) name of a schema object.
      *
-     * @param names array of 1 or more name components, from
-     * most general to most specific
-     *
+     * @param names array of 1 or more name components, from most general to
+     * most specific
      * @param clazz type of object to resolve
      *
      * @return FarragoSessionResolvedObject, or null if object definitely
      * doesn't exist
      */
-    public <T extends CwmModelElement>
-    FarragoSessionResolvedObject<T> resolveSchemaObjectName(
+    public <T extends CwmModelElement> FarragoSessionResolvedObject<T>
+    resolveSchemaObjectName(
         String [] names,
         Class<T> clazz);
 
     /**
-      * Gets schema object names as specified. They can be schema or table
-      * object.
-      * If names array contain 1 element, return all schema names and 
-      *    all table names under the default schema (if that is set)
-      * If names array contain 2 elements, treat 1st element as schema name
-      *    and return all table names in this schema
-      *
-      * @param names the array contains either 2 elements representing a 
-      * partially qualified object name in the format of 'schema.object', or an 
-      * unqualified name in the format of 'object'
-      *
-      * @return the list of all {@link SqlMoniker} object (schema and table)
-      * names under the above criteria
-      */
+     * Gets schema object names as specified. They can be schema or table
+     * object. If names array contain 1 element, return all schema names and all
+     * table names under the default schema (if that is set) If names array
+     * contain 2 elements, treat 1st element as schema name and return all table
+     * names in this schema
+     *
+     * @param names the array contains either 2 elements representing a
+     * partially qualified object name in the format of 'schema.object', or an
+     * unqualified name in the format of 'object'
+     *
+     * @return the list of all {@link SqlMoniker} object (schema and table)
+     * names under the above criteria
+     */
     public SqlMoniker [] getAllSchemaObjectNames(String [] names);
 
     /**
@@ -312,11 +301,10 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     /**
      * Validates that a particular feature is enabled.
      *
-     * @param feature feature being used, represented as a
-     * resource definition from {@link EigenbaseResource}
-     *
-     * @param context parser position context for error reporting,
-     * or null if none available
+     * @param feature feature being used, represented as a resource definition
+     * from {@link EigenbaseResource}
+     * @param context parser position context for error reporting, or null if
+     * none available
      */
     public void validateFeature(
         ResourceDefinition feature,
@@ -336,11 +324,12 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
     public EigenbaseTimingTracer getTimingTracer();
 
     /**
-     * Looks up a sample dataset for a given schema object, or returns null
-     * if none is found.
+     * Looks up a sample dataset for a given schema object, or returns null if
+     * none is found.
      *
      * @param columnSet Schema object
      * @param datasetName Name of dataset, not null
+     *
      * @return Sample dataset, or null if not found
      */
     public CwmNamedColumnSet getSampleDataset(
@@ -352,8 +341,6 @@ public interface FarragoSessionStmtValidator extends FarragoAllocationOwner
      */
     public void validateDataType(SqlDataTypeSpec dataType)
         throws SqlValidatorException;
-
 }
-
 
 // End FarragoSessionStmtValidator.java

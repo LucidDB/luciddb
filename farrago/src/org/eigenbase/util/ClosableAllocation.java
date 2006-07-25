@@ -31,13 +31,13 @@ package org.eigenbase.util;
  */
 public interface ClosableAllocation
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Closes this object.
      */
     public void closeAllocation();
 }
-
 
 // End ClosableAllocation.java

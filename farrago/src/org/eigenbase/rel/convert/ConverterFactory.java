@@ -20,11 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.convert;
 
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.CallingConvention;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 
 
 /**
@@ -32,12 +31,12 @@ import org.eigenbase.relopt.CallingConvention;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since Jun 18, 2003
  */
 public interface ConverterFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the calling convention this converter converts to.
@@ -50,12 +49,11 @@ public interface ConverterFactory
     CallingConvention getInConvention();
 
     /**
-     * Converts a relational expression, which must have
-     * {@link #getInConvention} calling convention, to a relational expression
-     * of {@link #getConvention} calling convention.
+     * Converts a relational expression, which must have {@link
+     * #getInConvention} calling convention, to a relational expression of
+     * {@link #getConvention} calling convention.
      */
     ConverterRel convert(RelNode rel);
 }
-
 
 // End ConverterFactory.java

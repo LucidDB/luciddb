@@ -21,34 +21,40 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.Util;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.resource.EigenbaseResource;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.util.*;
+
 
 /**
- * A scope which delegates all requests to its parent scope.
- * Use this as a base class for defining nested scopes.
+ * A scope which delegates all requests to its parent scope. Use this as a base
+ * class for defining nested scopes.
  *
  * @author jhyde
  * @version $Id$
  * @since Mar 25, 2003
  */
-public abstract class DelegatingScope implements SqlValidatorScope
+public abstract class DelegatingScope
+    implements SqlValidatorScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
-     * Parent scope. This is where to look next to resolve an identifier;
-     * it is not always the parent object in the parse tree.
+     * Parent scope. This is where to look next to resolve an identifier; it is
+     * not always the parent object in the parse tree.
      *
-     * <p>This is never null: at the top of the tree, it is an
-     * {@link EmptyScope}.
+     * <p>This is never null: at the top of the tree, it is an {@link
+     * EmptyScope}.
      */
     protected final SqlValidatorScope parent;
     protected final SqlValidatorImpl validator;
+
+    //~ Constructors -----------------------------------------------------------
 
     DelegatingScope(SqlValidatorScope parent)
     {
@@ -58,11 +64,13 @@ public abstract class DelegatingScope implements SqlValidatorScope
         this.parent = parent;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Registers a relation in this scope.
+     *
      * @param ns Namespace representing the result-columns of the relation
-     * @param alias Alias with which to reference the relation, must not
-     *   be null
+     * @param alias Alias with which to reference the relation, must not be null
      */
     public void addChild(SqlValidatorNamespace ns, String alias)
     {
@@ -73,8 +81,8 @@ public abstract class DelegatingScope implements SqlValidatorScope
 
     public SqlValidatorNamespace resolve(
         String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut)
     {
         return parent.resolve(name, ancestorOut, offsetOut);
     }
@@ -95,7 +103,9 @@ public abstract class DelegatingScope implements SqlValidatorScope
         for (int i = 0; i < fields.length; i++) {
             RelDataTypeField field = fields[i];
             colNames.add(
-                new SqlMonikerImpl(field.getName(), SqlMonikerType.Column));
+                new SqlMonikerImpl(
+                    field.getName(),
+                    SqlMonikerType.Column));
         }
     }
 
@@ -114,7 +124,8 @@ public abstract class DelegatingScope implements SqlValidatorScope
     }
 
     public void findAllColumnNames(
-        String parentObjName, List<SqlMoniker> result)
+        String parentObjName,
+        List<SqlMoniker> result)
     {
         parent.findAllColumnNames(parentObjName, result);
     }
@@ -148,9 +159,9 @@ public abstract class DelegatingScope implements SqlValidatorScope
     }
 
     /**
-     * Converts an identifier into a fully-qualified identifier. For
-     * example, the "empno" in "select empno from emp natural join dept"
-     * becomes "emp.empno".
+     * Converts an identifier into a fully-qualified identifier. For example,
+     * the "empno" in "select empno from emp natural join dept" becomes
+     * "emp.empno".
      *
      * <p>If the identifier cannot be resolved, throws. Never returns null.
      */
@@ -160,50 +171,52 @@ public abstract class DelegatingScope implements SqlValidatorScope
             return identifier;
         }
         switch (identifier.names.length) {
-        case 1:
-            {
-                final String columnName = identifier.names[0];
-                final String tableName =
-                    findQualifyingTableName(columnName, identifier);
+        case 1: {
+            final String columnName = identifier.names[0];
+            final String tableName =
+                findQualifyingTableName(columnName, identifier);
 
-                //todo: do implicit collation here
-                final SqlParserPos pos = identifier.getParserPosition();
-                SqlIdentifier expanded = new SqlIdentifier(
-                    new String[]{tableName, columnName},
+            //todo: do implicit collation here
+            final SqlParserPos pos = identifier.getParserPosition();
+            SqlIdentifier expanded =
+                new SqlIdentifier(
+                    new String[] { tableName, columnName },
                     null,
                     pos,
-                    new SqlParserPos[]{
+                    new SqlParserPos[] {
                         SqlParserPos.ZERO,
-                        pos});
-                validator.setOriginal(expanded, identifier);
-                return expanded;
-            }
+                    pos
+                    });
+            validator.setOriginal(expanded, identifier);
+            return expanded;
+        }
 
-        case 2:
-            {
-                final String tableName = identifier.names[0];
-                final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
-                if (fromNs == null) {
-                    throw validator.newValidationError(
-                        identifier.getComponent(0),
-                        EigenbaseResource.instance().TableNameNotFound.ex(
-                            tableName));
-                }
-                final String columnName = identifier.names[1];
-                final RelDataType fromRowType = fromNs.getRowType();
-                final RelDataType type =
-                    SqlValidatorUtil.lookupFieldType(fromRowType, columnName);
-                if (type != null) {
-                    return identifier; // it was fine already
-                } else {
-                    throw validator.newValidationError(
-                        identifier.getComponent(1),
-                        EigenbaseResource.instance().ColumnNotFoundInTable.ex(
-                            columnName, tableName));
-                }
+        case 2: {
+            final String tableName = identifier.names[0];
+            final SqlValidatorNamespace fromNs = resolve(tableName, null, null);
+            if (fromNs == null) {
+                throw validator.newValidationError(
+                    identifier.getComponent(0),
+                    EigenbaseResource.instance().TableNameNotFound.ex(
+                        tableName));
             }
+            final String columnName = identifier.names[1];
+            final RelDataType fromRowType = fromNs.getRowType();
+            final RelDataType type =
+                SqlValidatorUtil.lookupFieldType(fromRowType, columnName);
+            if (type != null) {
+                return identifier; // it was fine already
+            } else {
+                throw validator.newValidationError(
+                    identifier.getComponent(1),
+                    EigenbaseResource.instance().ColumnNotFoundInTable.ex(
+                        columnName,
+                        tableName));
+            }
+        }
 
         default:
+
             // NOTE jvs 26-May-2004:  lengths greater than 2 are possible
             // for row and structured types
             assert identifier.names.length > 0;
@@ -239,4 +252,3 @@ public abstract class DelegatingScope implements SqlValidatorScope
 }
 
 // End DelegatingScope.java
-

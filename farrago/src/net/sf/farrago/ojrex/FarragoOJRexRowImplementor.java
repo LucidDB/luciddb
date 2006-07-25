@@ -35,9 +35,11 @@ import org.eigenbase.rex.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoOJRexRowImplementor extends FarragoOJRexImplementor
+public class FarragoOJRexRowImplementor
+    extends FarragoOJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
@@ -61,6 +63,5 @@ public class FarragoOJRexRowImplementor extends FarragoOJRexImplementor
         return variable;
     }
 }
-
 
 // End FarragoOJRexRowImplementor.java

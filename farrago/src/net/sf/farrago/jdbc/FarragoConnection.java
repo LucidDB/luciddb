@@ -22,22 +22,29 @@
 */
 package net.sf.farrago.jdbc;
 
-import java.sql.SQLException;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
 
 /**
  * JDBC connection to Farrago.
  *
- * <p>This interface extends the usual {@link java.sql.Connection} interface
- * to include methods for interrogating SQL/MED wrappers and data servers,
- * and to expose the farrago session identifier.
+ * <p>This interface extends the usual {@link java.sql.Connection} interface to
+ * include methods for interrogating SQL/MED wrappers and data servers, and to
+ * expose the farrago session identifier.
  *
  * @author jhyde
  * @version $Id$
- **/
-public interface FarragoConnection extends java.sql.Connection
+ */
+public interface FarragoConnection
+    extends java.sql.Connection
 {
-    long getFarragoSessionId() throws SQLException;
+
+    //~ Methods ----------------------------------------------------------------
+
+    long getFarragoSessionId()
+        throws SQLException;
 
     String findMofId(String wrapperName)
         throws SQLException;

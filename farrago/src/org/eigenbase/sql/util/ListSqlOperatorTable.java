@@ -22,26 +22,33 @@
 */
 package org.eigenbase.sql.util;
 
+import java.util.*;
+
 import org.eigenbase.sql.*;
 
-import java.util.List;
-import java.util.ArrayList;
 
 /**
- * Implementation of the {@link SqlOperatorTable} interface by
- * using a list of {@link SqlOperator operators}.
+ * Implementation of the {@link SqlOperatorTable} interface by using a list of
+ * {@link SqlOperator operators}.
  *
  * @author jhyde
  * @version $Id$
  */
-public class ListSqlOperatorTable implements SqlOperatorTable
+public class ListSqlOperatorTable
+    implements SqlOperatorTable
 {
-    private final List<SqlOperator> operatorList =
-        new ArrayList<SqlOperator>();
+
+    //~ Instance fields --------------------------------------------------------
+
+    private final List<SqlOperator> operatorList = new ArrayList<SqlOperator>();
+
+    //~ Constructors -----------------------------------------------------------
 
     public ListSqlOperatorTable()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void add(SqlOperator op)
     {
@@ -58,8 +65,8 @@ public class ListSqlOperatorTable implements SqlOperatorTable
             if (operator.getSyntax() != syntax) {
                 continue;
             }
-            if (!opName.isSimple() ||
-                !operator.isName(opName.getSimple())) {
+            if (!opName.isSimple()
+                || !operator.isName(opName.getSimple())) {
                 continue;
             }
             SqlFunctionCategory functionCategory;

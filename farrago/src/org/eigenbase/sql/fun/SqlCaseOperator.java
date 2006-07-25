@@ -20,112 +20,131 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
 
 
 /**
- * An operator describing a <code>CASE</code>, <code>NULLIF</code> or
- * <code>COALESCE</code> expression. All of these forms are normalized at parse
- * time to a to a simple <code>CASE</code> statement like this:
+ * An operator describing a <code>CASE</code>, <code>NULLIF</code> or <code>
+ * COALESCE</code> expression. All of these forms are normalized at parse time
+ * to a to a simple <code>CASE</code> statement like this:
  *
- * <blockquote><code><pre>CASE
+ * <blockquote><code>
+ * <pre>CASE
  *   WHEN &lt;when expression_0&gt; THEN &lt;then expression_0&gt;
  *   WHEN &lt;when expression_1&gt; THEN &lt;then expression_1&gt;
  *   ...
  *   WHEN &lt;when expression_N&gt; THEN &ltthen expression_N&gt;
  *   ELSE &lt;else expression&gt;
- * END</pre></code></blockquote>
+ * END</pre>
+ * </code></blockquote>
  *
  * The switched form of the <code>CASE</code> statement is normalized to the
  * simple form by inserting calls to the <code>=</code> operator. For example,
- *
- * <blockquote<code><pre>CASE x + y
+ * <blockquote<code>
+ * <pre>CASE x + y
  *   WHEN 1 THEN 'fee'
  *   WHEN 2 THEN 'fie'
  *   ELSE 'foe'
- * END</pre></code></blockquote>
+ * END</pre>
+ * </code></blockquote>
  *
  * becomes
  *
- * <blockquote><code><pre>CASE
+ * <blockquote><code>
+ * <pre>CASE
  * WHEN Equals(x + y, 1) THEN 'fee'
  * WHEN Equals(x + y, 2) THEN 'fie'
  * ELSE 'foe'
- * END</pre></code></blockquote>
+ * END</pre>
+ * </code></blockquote>
  *
  * <p>REVIEW jhyde 2004/3/19 Does <code>Equals</code> handle NULL semantics
  * correctly?</p>
  *
  * <p><code>COALESCE(x, y, z)</code> becomes
  *
- * <blockquote><code><pre>CASE
+ * <blockquote><code>
+ * <pre>CASE
  * WHEN x IS NOT NULL THEN x
  * WHEN y IS NOT NULL THEN y
  * ELSE z
- * END</pre></code></blockquote></p>
+ * END</pre>
+ * </code></blockquote>
+ * </p>
  *
  * <p><code>NULLIF(x, -1)</code> becomes
  *
- * <blockquote><code><pre>CASE
+ * <blockquote><code>
+ * <pre>CASE
  * WHEN x = -1 THEN NULL
  * ELSE x
- * END</pre></code></blockquote></p>
+ * END</pre>
+ * </code></blockquote>
+ * </p>
  *
- * <p>Note that some of these normalizations cause expressions to be
- * duplicated. This may make it more difficult to write optimizer rules
- * (because the rules will have to deduce that expressions are equivalent).
- * It also requires that some part of the planning process (probably the
- * generator of the calculator program) does common sub-expression
- * elimination.</p>
+ * <p>Note that some of these normalizations cause expressions to be duplicated.
+ * This may make it more difficult to write optimizer rules (because the rules
+ * will have to deduce that expressions are equivalent). It also requires that
+ * some part of the planning process (probably the generator of the calculator
+ * program) does common sub-expression elimination.</p>
  *
- * <p>REVIEW jhyde 2004/3/19. Expanding expressions at parse time has some
- * other drawbacks. It is more difficult to give meaningful validation errors:
- * given <code>COALESCE(DATE '2004-03-18', 3.5)</code>, do we issue a
- * type-checking error against a <code>CASE</code> operator? Second, I'd like
- * to use the {@link SqlNode} object model to generate SQL to send to 3rd-party
- * databases, but there's now no way to represent a call to COALESCE or NULLIF.
- * All in all, it would be better to have operators for COALESCE, NULLIF, and
- * both simple and switched forms of CASE, then translate to simple CASE when
- * building the {@link org.eigenbase.rex.RexNode} tree.</p>
-
- * <p>The arguments are physically represented as follows:<ul>
+ * <p>REVIEW jhyde 2004/3/19. Expanding expressions at parse time has some other
+ * drawbacks. It is more difficult to give meaningful validation errors: given
+ * <code>COALESCE(DATE '2004-03-18', 3.5)</code>, do we issue a type-checking
+ * error against a <code>CASE</code> operator? Second, I'd like to use the
+ * {@link SqlNode} object model to generate SQL to send to 3rd-party databases,
+ * but there's now no way to represent a call to COALESCE or NULLIF. All in all,
+ * it would be better to have operators for COALESCE, NULLIF, and both simple
+ * and switched forms of CASE, then translate to simple CASE when building the
+ * {@link org.eigenbase.rex.RexNode} tree.</p>
+ *
+ * <p>The arguments are physically represented as follows:
+ *
+ * <ul>
  * <li>The <i>when</i> expressions are stored in a {@link SqlNodeList}
- *     whenList.</li>
+ * whenList.</li>
  * <li>The <i>then</i> expressions are stored in a {@link SqlNodeList}
- *     thenList.</li>
+ * thenList.</li>
  * <li>The <i>else</i> expression is stored as a regular {@link SqlNode}.</li>
- * </ul></p>
+ * </ul>
+ * </p>
  *
  * @author Wael Chatila
- * @since Mar 14, 2004
  * @version $Id$
- **/
-public class SqlCaseOperator extends SqlOperator
+ * @since Mar 14, 2004
+ */
+public class SqlCaseOperator
+    extends SqlOperator
 {
-    private static final SqlWriter.FrameType CaseFrameType = SqlWriter.FrameType.create("CASE");
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    private static final SqlWriter.FrameType CaseFrameType =
+        SqlWriter.FrameType.create("CASE");
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlCaseOperator()
     {
-        super("CASE", SqlKind.Case, MaxPrec, true, null,
-            SqlTypeStrategies.otiReturnType, null);
+        super("CASE",
+            SqlKind.Case,
+            MaxPrec,
+            true,
+            null,
+            SqlTypeStrategies.otiReturnType,
+            null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void validateCall(
         SqlCall call,
@@ -151,7 +170,9 @@ public class SqlCaseOperator extends SqlOperator
     }
 
     public RelDataType deriveType(
-        SqlValidator validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidator validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         // Do not try to derive the types of the operands. We will do that
         // later, top down.
@@ -172,8 +193,10 @@ public class SqlCaseOperator extends SqlOperator
             SqlNode node = whenList.get(i);
 
             //should throw validation error if something wrong...
-            RelDataType type = callBinding.getValidator().deriveType(
-                callBinding.getScope(), node);
+            RelDataType type =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    node);
             if (!SqlTypeUtil.inBooleanFamily(type)) {
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
@@ -192,7 +215,9 @@ public class SqlCaseOperator extends SqlOperator
             }
         }
 
-        if (!SqlUtil.isNullLiteral(caseCall.getElseOperand(), false)) {
+        if (!SqlUtil.isNullLiteral(
+                caseCall.getElseOperand(),
+                false)) {
             foundNotNull = true;
         }
 
@@ -212,11 +237,12 @@ public class SqlCaseOperator extends SqlOperator
     {
         // REVIEW jvs 4-June-2005:  can't these be unified?
         if (!(opBinding instanceof SqlCallBinding)) {
-            return inferTypeFromOperands(
-                opBinding.getTypeFactory(), opBinding.collectOperandTypes());
+            return
+                inferTypeFromOperands(
+                    opBinding.getTypeFactory(),
+                    opBinding.collectOperandTypes());
         }
-        return inferTypeFromValidator(
-            (SqlCallBinding) opBinding);
+        return inferTypeFromValidator((SqlCallBinding) opBinding);
     }
 
     private RelDataType inferTypeFromValidator(
@@ -228,8 +254,10 @@ public class SqlCaseOperator extends SqlOperator
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = thenList.get(i);
-            argTypes[i] = callBinding.getValidator().deriveType(
-                callBinding.getScope(), node);
+            argTypes[i] =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    node);
             if (SqlUtil.isNullLiteral(node, false)) {
                 nullList.add(node);
             }
@@ -243,8 +271,9 @@ public class SqlCaseOperator extends SqlOperator
             nullList.add(elseOp);
         }
 
-        RelDataType ret = callBinding.getTypeFactory().leastRestrictive(
-            argTypes);
+        RelDataType ret =
+            callBinding.getTypeFactory().leastRestrictive(
+                argTypes);
         if (null == ret) {
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().IllegalMixingOfTypes.ex());
@@ -261,7 +290,7 @@ public class SqlCaseOperator extends SqlOperator
         RelDataType [] argTypes)
     {
         assert (argTypes.length % 2) == 1 : "odd number of arguments expected: "
-        + argTypes.length;
+            + argTypes.length;
         assert argTypes.length > 1 : argTypes.length;
         RelDataType [] thenTypes =
             new RelDataType[((argTypes.length - 1) / 2) + 1];
@@ -272,7 +301,6 @@ public class SqlCaseOperator extends SqlOperator
         thenTypes[thenTypes.length - 1] = argTypes[argTypes.length - 1];
         return typeFactory.leastRestrictive(thenTypes);
     }
-
 
     public SqlOperandCountRange getOperandCountRange()
     {
@@ -307,7 +335,9 @@ public class SqlCaseOperator extends SqlOperator
                 list.set(
                     i,
                     SqlStdOperatorTable.equalsOperator.createCall(
-                        caseIdentifier, e, pos));
+                        caseIdentifier,
+                        e,
+                        pos));
             }
         }
 
@@ -315,9 +345,10 @@ public class SqlCaseOperator extends SqlOperator
             elseClause = SqlLiteral.createNull(pos);
         }
 
-        return (SqlCase) createCall(
-            new SqlNode [] { whenList, thenList, elseClause },
-            pos);
+        return
+            (SqlCase) createCall(
+                new SqlNode[] { whenList, thenList, elseClause },
+                pos);
     }
 
     public void unparse(
@@ -345,8 +376,6 @@ public class SqlCaseOperator extends SqlOperator
         elseOperand.unparse(writer, 0, 0);
         writer.endList(frame);
     }
-
 }
-
 
 // End SqlCaseOperator.java

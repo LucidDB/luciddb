@@ -22,24 +22,31 @@
 */
 package org.eigenbase.sql.type;
 
+import java.nio.charset.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
-import java.nio.charset.*;
 
 /**
- * SqlTypeFactoryImpl provides a default implementation
- * of {@link RelDataTypeFactory} which supports SQL types.
+ * SqlTypeFactoryImpl provides a default implementation of {@link
+ * RelDataTypeFactory} which supports SQL types.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
+public class SqlTypeFactoryImpl
+    extends RelDataTypeFactoryImpl
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlTypeFactoryImpl()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeFactory
     public RelDataType createSqlType(SqlTypeName typeName)
@@ -75,9 +82,10 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
     }
 
     // implement RelDataTypeFactory
-    public RelDataType createMultisetType(RelDataType type, long maxCardinality)
+    public RelDataType createMultisetType(RelDataType type,
+        long maxCardinality)
     {
-        assert(maxCardinality == -1);
+        assert (maxCardinality == -1);
         RelDataType newType = new MultisetSqlType(type, false);
         return canonize(newType);
     }
@@ -96,7 +104,9 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         Charset charset,
         SqlCollation collation)
     {
-        Util.pre(SqlTypeUtil.inCharFamily(type), "Not a chartype");
+        Util.pre(
+            SqlTypeUtil.inCharFamily(type),
+            "Not a chartype");
         Util.pre(charset != null, "charset!=null");
         Util.pre(collation != null, "collation!=null");
         RelDataType newType;
@@ -105,11 +115,12 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             newType = sqlType.createWithCharsetAndCollation(charset, collation);
         } else if (type instanceof JavaType) {
             JavaType javaType = (JavaType) type;
-            newType = new JavaType(
-                javaType.getJavaClass(),
-                javaType.isNullable(),
-                charset,
-                collation);
+            newType =
+                new JavaType(
+                    javaType.getJavaClass(),
+                    javaType.isNullable(),
+                    charset,
+                    collation);
         } else {
             throw Util.needToImplement("need to implement " + type);
         }
@@ -187,13 +198,10 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private void assertBasic(SqlTypeName typeName)
     {
-        assert(typeName != null);
-        assert(typeName != SqlTypeName.Multiset) :
-            "use createMultisetType() instead";
-        assert(typeName != SqlTypeName.IntervalDayTime) :
-            "use createSqlIntervalType() instead";
-        assert(typeName != SqlTypeName.IntervalYearMonth) :
-            "use createSqlIntervalType() instead";
+        assert (typeName != null);
+        assert (typeName != SqlTypeName.Multiset) : "use createMultisetType() instead";
+        assert (typeName != SqlTypeName.IntervalDayTime) : "use createSqlIntervalType() instead";
+        assert (typeName != SqlTypeName.IntervalYearMonth) : "use createSqlIntervalType() instead";
     }
 
     private RelDataType leastRestrictiveSqlType(RelDataType [] types)
@@ -227,7 +235,7 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
             RelDataTypeFamily resultFamily = resultType.getFamily();
             SqlTypeName resultTypeName = resultType.getSqlTypeName();
-            
+
             if (resultFamily != family) {
                 return null;
             }
@@ -261,8 +269,8 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                 if (SqlTypeUtil.isExactNumeric(resultType)) {
                     // TODO: come up with a cleaner way to support
                     // interval + datetime = datetime
-                    if (types.length > i+1) {
-                        RelDataType type1 = types[i+1];
+                    if (types.length > (i + 1)) {
+                        RelDataType type1 = types[i + 1];
                         if (SqlTypeUtil.isDatetime(type1)) {
                             resultType = type1;
                             return resultType;
@@ -270,18 +278,16 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                     }
                     if (!type.equals(resultType)) {
                         if (!typeName.allowsPrec()
-                            && !resultTypeName.allowsPrec())
-                        {
+                            && !resultTypeName.allowsPrec()) {
                             // use the bigger primitive
-                            if (type.getPrecision() > resultType.getPrecision()) {
+                            if (type.getPrecision()
+                                > resultType.getPrecision()) {
                                 resultType = type;
                             }
                         } else {
                             // Let the result type have precision (p), scale (s)
-                            // and number of whole digits (d) as follows:
-                            // d = max(p1 - s1, p2 - s2)
-                            // s <= max(s1, s2)
-                            // p = s + d
+                            // and number of whole digits (d) as follows: d =
+                            // max(p1 - s1, p2 - s2) s <= max(s1, s2) p = s + d
 
                             int p1 = resultType.getPrecision();
                             int p2 = type.getPrecision();
@@ -289,17 +295,26 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
                             int s2 = type.getScale();
 
                             int dout = Math.max(p1 - s1, p2 - s2);
-                            dout = Math.min(dout, SqlTypeName.MAX_NUMERIC_PRECISION);
+                            dout =
+                                Math.min(dout,
+                                    SqlTypeName.MAX_NUMERIC_PRECISION);
 
                             int scale = Math.max(s1, s2);
-                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_PRECISION - dout);
-                            scale = Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
+                            scale =
+                                Math.min(scale,
+                                    SqlTypeName.MAX_NUMERIC_PRECISION - dout);
+                            scale =
+                                Math.min(scale, SqlTypeName.MAX_NUMERIC_SCALE);
 
                             int precision = dout + scale;
-                            assert(precision <= SqlTypeName.MAX_NUMERIC_PRECISION);
-                            assert(precision > 0);
+                            assert (precision
+                                    <= SqlTypeName.MAX_NUMERIC_PRECISION);
+                            assert (precision > 0);
 
-                            resultType = createSqlType(SqlTypeName.Decimal, precision, scale);
+                            resultType =
+                                createSqlType(SqlTypeName.Decimal,
+                                    precision,
+                                    scale);
                         }
                     }
                 } else if (SqlTypeUtil.isApproximateNumeric(resultType)) {
@@ -329,13 +344,14 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             } else if (SqlTypeUtil.isInterval(type)) {
                 // TODO: come up with a cleaner way to support
                 // interval + datetime = datetime
-                if (types.length > i+1) {
-                    RelDataType type1 = types[i+1];
+                if (types.length > (i + 1)) {
+                    RelDataType type1 = types[i + 1];
                     if (SqlTypeUtil.isDatetime(type1)) {
                         resultType = type1;
                         return resultType;
                     }
                 }
+
                 // TODO jvs 4-June-2005:  This shouldn't be necessary;
                 // move logic into IntervalSqlType.combine
                 Object type1 = resultType;
@@ -348,10 +364,10 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
             } else if (SqlTypeUtil.isDatetime(type)) {
                 // TODO: come up with a cleaner way to support
                 // datetime +/- interval (or integer) = datetime
-                if (types.length > i+1) {
-                    RelDataType type1 = types[i+1];
-                    if (SqlTypeUtil.isInterval(type1) ||
-                        SqlTypeUtil.isIntType(type1)) {
+                if (types.length > (i + 1)) {
+                    RelDataType type1 = types[i + 1];
+                    if (SqlTypeUtil.isInterval(type1)
+                        || SqlTypeUtil.isIntType(type1)) {
                         resultType = type;
                         return resultType;
                     }
@@ -383,17 +399,20 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
 
     private RelDataType copyIntervalType(RelDataType type, boolean nullable)
     {
-        return new IntervalSqlType(type.getIntervalQualifier(), nullable);
+        return new IntervalSqlType(
+                type.getIntervalQualifier(),
+                nullable);
     }
 
     private RelDataType copyObjectType(RelDataType type, boolean nullable)
     {
-        return new ObjectSqlType(
-            type.getSqlTypeName(),
-            type.getSqlIdentifier(),
-            nullable,
-            type.getFields(),
-            type.getComparability());
+        return
+            new ObjectSqlType(
+                type.getSqlTypeName(),
+                type.getSqlIdentifier(),
+                nullable,
+                type.getFields(),
+                type.getComparability());
     }
 
     // override RelDataTypeFactoryImpl
@@ -409,7 +428,8 @@ public class SqlTypeFactoryImpl extends RelDataTypeFactoryImpl
         } else {
             objectType.setFamily(
                 (RelDataTypeFamily) createTypeWithNullability(
-                    objectType, false));
+                    objectType,
+                    false));
         }
         return type;
     }

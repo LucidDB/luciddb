@@ -20,51 +20,57 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.sql.type.*;
 
 
 /**
- * SqlCastFunction.  Note that the std functions are really singleton objects,
- * because they always get fetched via the StdOperatorTable.  So you can't
- * story any local info in the class and hence the return type data is maintained
- * in operand[1] through the validation phase.
+ * SqlCastFunction. Note that the std functions are really singleton objects,
+ * because they always get fetched via the StdOperatorTable. So you can't story
+ * any local info in the class and hence the return type data is maintained in
+ * operand[1] through the validation phase.
  *
  * @author lee
- * @since Jun 5, 2004
  * @version $Id$
- **/
-public class SqlCastFunction extends SqlFunction
+ * @since Jun 5, 2004
+ */
+public class SqlCastFunction
+    extends SqlFunction
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlCastFunction()
     {
-        super("CAST", SqlKind.Cast, null,
+        super("CAST",
+            SqlKind.Cast,
+            null,
             SqlTypeStrategies.otiFirstKnown,
-            null, SqlFunctionCategory.System);
+            null,
+            SqlFunctionCategory.System);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
-        assert(opBinding.getOperandCount() == 2);
+        assert (opBinding.getOperandCount() == 2);
         RelDataType ret = opBinding.getOperandType(1);
         RelDataType firstType = opBinding.getOperandType(0);
-        ret = opBinding.getTypeFactory().createTypeWithNullability(
-            ret, firstType.isNullable());
+        ret =
+            opBinding.getTypeFactory().createTypeWithNullability(
+                ret,
+                firstType.isNullable());
         if (opBinding instanceof SqlCallBinding) {
             SqlCallBinding callBinding = (SqlCallBinding) opBinding;
             callBinding.getValidator().setValidatedNodeType(
-                callBinding.getCall().operands[0], ret);
+                callBinding.getCall().operands[0],
+                ret);
         }
         return ret;
     }
@@ -86,8 +92,8 @@ public class SqlCastFunction extends SqlFunction
 
     /**
      * Makes sure that the number and types of arguments are allowable.
-     * Operators (such as "ROW" and "AS") which do not check their arguments
-     * can override this method.
+     * Operators (such as "ROW" and "AS") which do not check their arguments can
+     * override this method.
      */
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,

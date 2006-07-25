@@ -20,40 +20,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import java.sql.DatabaseMetaData;
-import java.sql.SQLException;
-import java.util.regex.Pattern;
+import java.sql.*;
 
-import org.eigenbase.util.Util;
+import java.util.regex.*;
+
+import org.eigenbase.util.*;
 
 
 /**
- * <code>SqlDialect</code> encapsulates the differences between dialects of
- * SQL, for the benefit of a {@link SqlWriter}.
+ * <code>SqlDialect</code> encapsulates the differences between dialects of SQL,
+ * for the benefit of a {@link SqlWriter}.
  */
 public class SqlDialect
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     String databaseProductName;
     String identifierQuoteString;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>SqlDialect</code>
      *
      * @param databaseMetaData used to determine which dialect of SQL to
-     *        generate
+     * generate
      */
     public SqlDialect(DatabaseMetaData databaseMetaData)
     {
         try {
-            identifierQuoteString =
-                databaseMetaData.getIdentifierQuoteString();
+            identifierQuoteString = databaseMetaData.getIdentifierQuoteString();
         } catch (SQLException e) {
             throw Util.newInternal(e, "while quoting identifier");
         }
@@ -68,7 +67,7 @@ public class SqlDialect
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public boolean isAccess()
     {
@@ -87,14 +86,15 @@ public class SqlDialect
     }
 
     /**
-     * Encloses an identifier in quotation marks appropriate for the current
-     * SQL dialect.
+     * Encloses an identifier in quotation marks appropriate for the current SQL
+     * dialect.
      *
-     * <p>For example, <code>quoteIdentifier("emp")</code> yields a
-     * string containing <code>"emp"</code> in Oracle, and a string
-     * containing <code>[emp]</code> in Access.
+     * <p>For example, <code>quoteIdentifier("emp")</code> yields a string
+     * containing <code>"emp"</code> in Oracle, and a string containing <code>
+     * [emp]</code> in Access.
      *
      * @param val Identifier to quote
+     *
      * @return Quoted identifier
      */
     public String quoteIdentifier(String val)
@@ -109,15 +109,16 @@ public class SqlDialect
     }
 
     /**
-     * Encloses an identifier in quotation marks appropriate for the current
-     * SQL dialect, writing the result to a {@link StringBuffer}.
+     * Encloses an identifier in quotation marks appropriate for the current SQL
+     * dialect, writing the result to a {@link StringBuffer}.
      *
-     * <p>For example, <code>quoteIdentifier("emp")</code> yields a
-     * string containing <code>"emp"</code> in Oracle, and a string
-     * containing <code>[emp]</code> in Access.
+     * <p>For example, <code>quoteIdentifier("emp")</code> yields a string
+     * containing <code>"emp"</code> in Oracle, and a string containing <code>
+     * [emp]</code> in Access.
      *
      * @param buf Buffer
      * @param val Identifier to quote
+     *
      * @return The buffer
      */
     public StringBuffer quoteIdentifier(StringBuffer buf, String val)
@@ -164,6 +165,5 @@ public class SqlDialect
         return isPostgres();
     }
 }
-
 
 // End SqlDialect.java

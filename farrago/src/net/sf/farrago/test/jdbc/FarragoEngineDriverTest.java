@@ -20,21 +20,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.test.jdbc;
 
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver;
-import net.sf.farrago.jdbc.engine.FarragoJdbcEngineConnection;
-import net.sf.farrago.catalog.FarragoCatalogInit;
-import net.sf.farrago.test.FarragoTestCase;
-import net.sf.farrago.test.FarragoJdbcTest;
+import java.sql.*;
 
-import java.util.HashMap;
-import java.util.Properties;
-import java.util.Enumeration;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.ResultSet;
+import java.util.*;
+
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.test.*;
+
 
 /**
  * Farrago Engine Driver tests (refactored from FarragoJdbcTest)
@@ -43,58 +38,94 @@ import java.sql.ResultSet;
  * @version $Id$
  * @since Jun 4, 2006
  */
-public class FarragoEngineDriverTest extends FarragoTestCase
+public class FarragoEngineDriverTest
+    extends FarragoTestCase
 {
 
-    public FarragoEngineDriverTest(String testname) throws Exception
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoEngineDriverTest(String testname)
+        throws Exception
     {
         super(testname);
     }
 
-    /** Tests engine driver URIs. */
-    public void testURIs() throws Exception
+    //~ Methods ----------------------------------------------------------------
+
+    /**
+     * Tests engine driver URIs.
+     */
+    public void testURIs()
+        throws Exception
     {
         FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
 
         String uri = null;
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "foo:";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "foo:bar:";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:foobar:";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:farrago:";
-        assertTrue("driver doesn't accept " +uri, driver.acceptsURL(uri));
+        assertTrue(
+            "driver doesn't accept " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:farrago://localhost";
-        assertTrue("driver doesn't accept " +uri, driver.acceptsURL(uri));
+        assertTrue(
+            "driver doesn't accept " + uri,
+            driver.acceptsURL(uri));
 
-        uri = "jdbc:farrago:rmi:";  // only client driver should accept RMI
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        uri = "jdbc:farrago:rmi:"; // only client driver should accept RMI
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:farrago:rmi://";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
         uri = "jdbc:farrago:rmi://localhost";
-        assertFalse("driver accepts " +uri, driver.acceptsURL(uri));
+        assertFalse(
+            "driver accepts " + uri,
+            driver.acceptsURL(uri));
 
-        uri = "jdbc:farrago:client_rmi";    // internal
-        assertTrue("driver doesn't accept " +uri, driver.acceptsURL(uri));
+        uri = "jdbc:farrago:client_rmi"; // internal
+        assertTrue(
+            "driver doesn't accept " + uri,
+            driver.acceptsURL(uri));
     }
 
-    /** Tests engine driver URIs with connection params. */
-    public void testConnectStrings() throws Exception
+    /**
+     * Tests engine driver URIs with connection params.
+     */
+    public void testConnectStrings()
+        throws Exception
     {
         final String driverURI = "jdbc:farrago:";
 
@@ -103,20 +134,20 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         final int maxParams = 6;
         HashMap ref = new HashMap();
         StringBuffer params = new StringBuffer();
-        for (int i=0; i < maxParams; ++i) {
-            String key = "name" +i;
-            String val = "value" +i;
+        for (int i = 0; i < maxParams; ++i) {
+            String key = "name" + i;
+            String val = "value" + i;
             params.append(";");
             if (i == 2) {
                 key += "=";
-                val += "=False";    // name2==value2=False
+                val += "=False"; // name2==value2=False
             }
             if (i == 3) {
-                val += "==True";    // name3=value3==True
+                val += "==True"; // name3=value3==True
             }
             if (i == 4) {
                 // abandon without value
-                val = "";          // name4=
+                val = ""; // name4=
             }
             params.append(key);
             params.append("=");
@@ -124,27 +155,28 @@ public class FarragoEngineDriverTest extends FarragoTestCase
             ref.put(key, val);
         }
 
-        String uri = driverURI +params.toString();
-        tracer.info("loaded: " +uri);
+        String uri = driverURI + params.toString();
+        tracer.info("loaded: " + uri);
 
         // test the driver's use of the connect string parser
         FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
-//        tracer.info("stripped: " +strippedUri);
-//        tracer.info("parsed: " +toStringProperties(parsedProps));
-        for (int i=0; i < maxParams; ++i) {
-            String key = "name" +i;
-            String val = (String)parsedProps.get(key);
-            String expval = (String)ref.get(key);
-            assertEquals("param " +key +", ", expval, val);
+
+        //        tracer.info("stripped: " +strippedUri);
+        //        tracer.info("parsed: " +toStringProperties(parsedProps));
+        for (int i = 0; i < maxParams; ++i) {
+            String key = "name" + i;
+            String val = (String) parsedProps.get(key);
+            String expval = (String) ref.get(key);
+            assertEquals("param " + key + ", ", expval, val);
         }
 
         // since driver's implementing method is public, be sure it is safe
         String cleanUri = driver.parseConnectionParams(uri, null);
         assertEquals("stripped URIs differ,", strippedUri, cleanUri);
         cleanUri = driver.parseConnectionParams(null, null);
-        assertNull("cleanUri not null: " +cleanUri, cleanUri);
+        assertNull("cleanUri not null: " + cleanUri, cleanUri);
 
         // test an actual connection
         Properties props = newProperties();
@@ -152,7 +184,10 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         assertNotNull("null connection", conn);
         assertTrue("FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
-        assertEquals("user's props changed,", newProperties(), props);
+        assertEquals(
+            "user's props changed,",
+            newProperties(),
+            props);
         conn.close();
 
         // test a connection that fails without the params
@@ -163,18 +198,22 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         } catch (SQLException e) {
             FarragoJdbcTest.assertExceptionMatches(e, ".*Login failed.*");
         }
-        String loginUri = uri +";user=" +FarragoCatalogInit.SA_USER_NAME;
+        String loginUri = uri + ";user=" + FarragoCatalogInit.SA_USER_NAME;
         conn = driver.connect(loginUri, empty);
         assertNotNull("null connection", conn);
         assertTrue("FarragoJdbcEngineConnection",
             conn instanceof FarragoJdbcEngineConnection);
-        assertEquals("empty props changed", 0, empty.size());
+        assertEquals(
+            "empty props changed",
+            0,
+            empty.size());
         conn.close();
 
         // test that parameter precedence works
         Properties unauth = new Properties();
         unauth.setProperty("user", "unauthorized user");
         unauth.setProperty("password", "invalid password");
+
         // connect will fail unless loginUri attributes take precedence
         try {
             conn = driver.connect(uri, unauth);
@@ -187,14 +226,17 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         conn.close();
     }
 
-    /** tests that session parameter values make it to sessions_view. */
-    public void testSessionParams() throws Exception
+    /**
+     * tests that session parameter values make it to sessions_view.
+     */
+    public void testSessionParams()
+        throws Exception
     {
         final String driverURI = "jdbc:farrago:";
         final String sessionName = "FarragoJdbcTest.testSessionParams session";
         final String sessQuery =
             "SELECT * FROM sys_boot.mgmt.sessions_view "
-            +" WHERE session_name = '" +sessionName +"'";
+            + " WHERE session_name = '" + sessionName + "'";
         FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
 
         Properties sessionProps = new Properties(newProperties());
@@ -208,7 +250,7 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         assertNotNull("null connection", conn);
         ResultSet rset = conn.createStatement().executeQuery(sessQuery);
         boolean bool = rset.next();
-        assertTrue("no matching session for \"" +sessionName +"\"", bool);
+        assertTrue("no matching session for \"" + sessionName + "\"", bool);
 
         String exp = sessionProps.getProperty("clientUserName");
         String str = rset.getString("SYSTEM_USER_NAME");
@@ -229,7 +271,9 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         conn.close();
     }
 
-    /** creates test connection properties. */
+    /**
+     * creates test connection properties.
+     */
     private static Properties newProperties()
     {
         Properties props = new Properties();
@@ -238,7 +282,9 @@ public class FarragoEngineDriverTest extends FarragoTestCase
         return props;
     }
 
-    /** renders Properties values with quotes for easier reading. */
+    /**
+     * renders Properties values with quotes for easier reading.
+     */
     private static String toStringProperties(Properties props)
     {
         StringBuffer buf = new StringBuffer();
@@ -249,8 +295,8 @@ public class FarragoEngineDriverTest extends FarragoTestCase
             if (cnt++ > 0) {
                 buf.append(", ");
             }
-            String key = (String)enumer.nextElement();
-            String val = (String)props.get(key);
+            String key = (String) enumer.nextElement();
+            String val = (String) props.get(key);
             buf.append(key).append(" => ");
             buf.append("\"").append(val).append("\"");
         }

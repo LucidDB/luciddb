@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import openjava.ptree.*;
@@ -37,28 +36,32 @@ import org.eigenbase.sql.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class OJRexBinaryExpressionImplementor implements OJRexImplementor
+public class OJRexBinaryExpressionImplementor
+    implements OJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int ojBinaryExpressionOrdinal;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public OJRexBinaryExpressionImplementor(int ojBinaryExpressionOrdinal)
     {
         this.ojBinaryExpressionOrdinal = ojBinaryExpressionOrdinal;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Expression implement(
         RexToOJTranslator translator,
         RexCall call,
         Expression [] operands)
     {
-        return new BinaryExpression(operands[0], ojBinaryExpressionOrdinal,
-            operands[1]);
+        return
+            new BinaryExpression(operands[0],
+                ojBinaryExpressionOrdinal,
+                operands[1]);
     }
 
     public boolean canImplement(RexCall call)
@@ -66,6 +69,5 @@ public class OJRexBinaryExpressionImplementor implements OJRexImplementor
         return true;
     }
 }
-
 
 // End OJRexBinaryExpressionImplementor.java

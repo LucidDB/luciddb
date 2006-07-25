@@ -36,9 +36,12 @@ import org.eigenbase.relopt.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FennelSingleRel extends SingleRel implements FennelRel
+public abstract class FennelSingleRel
+    extends SingleRel
+    implements FennelRel
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FennelSingleRel object.
@@ -51,7 +54,9 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
         RelNode child)
     {
         super(
-            cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION), child);
+            cluster,
+            new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
+            child);
     }
 
     /**
@@ -63,14 +68,16 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
      */
     protected FennelSingleRel(
         RelOptCluster cluster,
-        RelTraitSet traits, 
+        RelTraitSet traits,
         RelNode child)
     {
         super(
-            cluster, traits, child);
+            cluster,
+            traits,
+            child);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FennelRel
     public FarragoTypeFactory getFarragoTypeFactory()
@@ -79,11 +86,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     }
 
     /**
-     * NOTE:  this method is intentionally private because interactions
-     * between FennelRels must be mediated by FarragoRelImplementor.
+     * NOTE: this method is intentionally private because interactions between
+     * FennelRels must be mediated by FarragoRelImplementor.
      *
-     * @return this rel's input, which must already have been
-     * converted to a FennelRel
+     * @return this rel's input, which must already have been converted to a
+     * FennelRel
      */
     private FennelRel getFennelInput()
     {
@@ -99,9 +106,11 @@ public abstract class FennelSingleRel extends SingleRel implements FennelRel
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
     {
-        return implementor.visitChild(this, 0, getChild());
+        return implementor.visitChild(
+                this,
+                0,
+                getChild());
     }
 }
-
 
 // End FennelSingleRel.java

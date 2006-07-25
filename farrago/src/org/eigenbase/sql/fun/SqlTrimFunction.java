@@ -20,41 +20,43 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Definition of the "TRIM" builtin SQL function.
  *
  * @author Wael Chatila, Julian Hyde
- * @since May 28, 2004
  * @version $Id$
- **/
-public class SqlTrimFunction extends SqlFunction
+ * @since May 28, 2004
+ */
+public class SqlTrimFunction
+    extends SqlFunction
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlTrimFunction()
     {
-        super("TRIM", SqlKind.Trim,
+        super(
+            "TRIM",
+            SqlKind.Trim,
             new SqlTypeTransformCascade(
                 SqlTypeStrategies.rtiThirdArgType,
                 SqlTypeTransforms.toNullable,
-                SqlTypeTransforms.toVarying
-            ),
+                SqlTypeTransforms.toVarying),
             null,
             SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.String);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public SqlOperandCountRange getOperandCountRange()
     {
@@ -113,13 +115,14 @@ public class SqlTrimFunction extends SqlFunction
     {
         SqlCall call = callBinding.getCall();
         SqlValidator validator = callBinding.getValidator();
-        SqlValidatorScope scope  = callBinding.getScope();
+        SqlValidatorScope scope = callBinding.getScope();
 
         for (int i = 1; i < 3; i++) {
             if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                     callBinding,
-                    call.operands[i], 0, throwOnFailure))
-            {
+                    call.operands[i],
+                    0,
+                    throwOnFailure)) {
                 if (throwOnFailure) {
                     throw callBinding.newValidationSignatureError();
                 }
@@ -132,17 +135,32 @@ public class SqlTrimFunction extends SqlFunction
             ops[i - 1] = call.operands[i];
         }
 
-        return SqlTypeUtil.isCharTypeComparable(
-            validator, scope, ops, throwOnFailure);
+        return
+            SqlTypeUtil.isCharTypeComparable(
+                validator,
+                scope,
+                ops,
+                throwOnFailure);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Defines the enumerated values "LEADING", "TRAILING", "BOTH".
      */
-    public static class Flag extends EnumeratedValues.BasicValue
+    public static class Flag
+        extends EnumeratedValues.BasicValue
     {
+        public static final int Both_ordinal = 0;
+        public static final Flag Both = new Flag("Both", 1, 1, Both_ordinal);
+        public static final int Leading_ordinal = 1;
+        public static final Flag Leading =
+            new Flag("Leading", 1, 0, Leading_ordinal);
+        public static final int Trailing_ordinal = 2;
+        public static final Flag Trailing =
+            new Flag("Trailing", 0, 1, Trailing_ordinal);
+        public static final EnumeratedValues enumeration =
+            new EnumeratedValues(new Flag[] { Both, Leading, Trailing });
         private final int left;
         private final int right;
 
@@ -164,15 +182,6 @@ public class SqlTrimFunction extends SqlFunction
         {
             return right;
         }
-
-        public static final int Both_ordinal = 0;
-        public static final Flag Both = new Flag("Both", 1, 1, Both_ordinal);
-        public static final int Leading_ordinal = 1;
-        public static final Flag Leading = new Flag("Leading", 1, 0, Leading_ordinal);
-        public static final int Trailing_ordinal = 2;
-        public static final Flag Trailing = new Flag("Trailing", 0, 1, Trailing_ordinal);
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new Flag[] {Both, Leading, Trailing});
     }
 }
 

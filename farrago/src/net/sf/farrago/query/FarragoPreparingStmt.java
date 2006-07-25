@@ -22,10 +22,12 @@
 */
 package net.sf.farrago.query;
 
-
 import java.io.*;
+
 import java.net.*;
+
 import java.util.*;
+import java.util.List;
 import java.util.logging.*;
 
 import net.sf.farrago.catalog.*;
@@ -33,8 +35,8 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.resource.*;
@@ -44,9 +46,10 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.JavaRelImplementor;
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
@@ -56,38 +59,38 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.sql2rel.*;
 import org.eigenbase.util.*;
 
-import java.util.List;
 
 /**
- * FarragoPreparingStmt subclasses OJPreparingStmt to implement the
- * {@link FarragoSessionPreparingStmt} interface.
+ * FarragoPreparingStmt subclasses OJPreparingStmt to implement the {@link
+ * FarragoSessionPreparingStmt} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoPreparingStmt extends OJPreparingStmt
+public class FarragoPreparingStmt
+    extends OJPreparingStmt
     implements FarragoSessionPreparingStmt,
         RelOptConnection,
         RelOptSchemaWithSampling,
         SqlValidatorCatalogReader
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 8-June-2004: this tracer is special in that it controls
     // preservation of dynamically generated Java code
-    private static final Logger dynamicTracer =
-        FarragoTrace.getDynamicTracer();
+    private static final Logger dynamicTracer = FarragoTrace.getDynamicTracer();
     private static final Logger streamGraphTracer =
         FarragoTrace.getPreparedStreamGraphTracer();
     private static final Logger planDumpTracer =
         FarragoTrace.getPlanDumpTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
@@ -131,7 +134,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     private FarragoSessionPlanner planner;
     private FarragoRelImplementor relImplementor;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoPreparingStmt object.
@@ -163,8 +166,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         savedDeclarer = OJUtil.threadDeclarers.get();
         OJSystem.env.pushThreadTempFrame();
 
-        routineLookup = new FarragoUserDefinedRoutineLookup(
-            stmtValidator, this, null);
+        routineLookup =
+            new FarragoUserDefinedRoutineLookup(
+                stmtValidator,
+                this,
+                null);
 
         resultSetTypeMap = new HashMap<String, RelDataType>();
 
@@ -179,7 +185,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             new FarragoRelMetadataProvider(getRepos()));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPreparingStmt: cache everything
     public boolean mayCacheImplementation()
@@ -194,15 +200,15 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     public void setPlanner(FarragoSessionPlanner planner)
     {
-        assert(this.planner == null);
+        assert (this.planner == null);
         this.planner = planner;
         getSession().getPersonality().definePlannerListeners(planner);
     }
 
     /**
      * Tells this statement not to throw an exception if optimizer can't find a
-     * valid physical plan.  This is intended for use mainly by unit tests
-     * which need to peer into intermediate query optimization states.
+     * valid physical plan. This is intended for use mainly by unit tests which
+     * need to peer into intermediate query optimization states.
      */
     public void enablePartialImplementation()
     {
@@ -241,8 +247,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public SqlValidator getSqlValidator()
     {
         if (sqlValidator == null) {
-            sqlValidator = new FarragoSqlValidator(
-                this, SqlValidator.Compatible.Default);
+            sqlValidator =
+                new FarragoSqlValidator(
+                    this,
+                    SqlValidator.Compatible.Default);
         }
         return sqlValidator;
     }
@@ -274,8 +282,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     public void preImplement()
     {
         definePackageName();
-        implementingArgs =
-            new Argument [] {
+        implementingArgs = new Argument[] {
                 new Argument(
                     connectionVariable,
                     getSession().getPersonality().getRuntimeContextClass(
@@ -290,7 +297,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return implementingClassDecl;
     }
 
-    protected Argument[] getImplementingArgs()
+    protected Argument [] getImplementingArgs()
     {
         return implementingArgs;
     }
@@ -323,8 +330,13 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         PreparedResult preparedResult =
             prepareSql(
-                rootRel.getRowType(), rootRel, sqlKind, logical,
-                implementingClassDecl, implementingArgs);
+                rootRel.getRowType(),
+                rootRel,
+                sqlKind,
+                logical,
+                implementingClassDecl,
+                implementingArgs);
+
         // When rootRel is a logical plan, optimize() sets the map, but for a
         // physical plan, set it here:
         if (!logical) {
@@ -366,8 +378,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // order of set?
         List<URL> jarUrlList = new ArrayList<URL>(jarUrlSet);
         URL [] urls = jarUrlList.toArray(new URL[jarUrlList.size()]);
-        URLClassLoader urlClassLoader = URLClassLoader.newInstance(
-            urls, getSession().getPluginClassLoader());
+        URLClassLoader urlClassLoader =
+            URLClassLoader.newInstance(
+                urls,
+                getSession().getPluginClassLoader());
         javaCompiler.getArgs().setClassLoader(urlClassLoader);
     }
 
@@ -402,7 +416,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     // Override OJPreparingStmt
     protected BoundMethod compileAndBind(
-        ClassDeclaration decl, ParseTree parseTree, Argument[] arguments)
+        ClassDeclaration decl,
+        ParseTree parseTree,
+        Argument [] arguments)
     {
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
@@ -413,16 +429,18 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     /**
-     *  Compiles the FarragoTransform implementations associated with this
-     *  statement.
+     * Compiles the FarragoTransform implementations associated with this
+     * statement.
      */
     private void compileTransforms()
     {
         // Compile any FarragoTransform implementations
         String packageName = getTempPackageName();
-        for(ClassDeclaration transformDecl: relImplementor.getTransforms()) {
+        for (ClassDeclaration transformDecl : relImplementor.getTransforms()) {
             CompilationUnit compUnit =
-                new CompilationUnit(packageName, new String[0],
+                new CompilationUnit(
+                    packageName,
+                    new String[0],
                     new ClassDeclarationList(transformDecl));
 
             Class clazz =
@@ -443,14 +461,15 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 (PreparedExecution) preparedResult;
             RelDataType rowType = preparedExecution.getPhysicalRowType();
             OJClass ojRowClass =
-                OJUtil.typeToOJClass(rowType, getFarragoTypeFactory());
+                OJUtil.typeToOJClass(
+                    rowType,
+                    getFarragoTypeFactory());
             Class rowClass;
             try {
                 String ojRowClassName = ojRowClass.getName();
                 int i = ojRowClassName.lastIndexOf('.');
                 assert (i != -1);
-                ojRowClassName =
-                    OJUtil.replaceDotWithDollar(ojRowClassName, i);
+                ojRowClassName = OJUtil.replaceDotWithDollar(ojRowClassName, i);
                 rowClass =
                     Class.forName(
                         ojRowClassName,
@@ -477,7 +496,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 streamGraphTracer.fine(xmiFennelPlan);
             }
 
-            assert(tableAccessMap != null);
+            assert (tableAccessMap != null);
             executableStmt =
                 new FarragoExecutableJavaStmt(
                     packageDir,
@@ -532,8 +551,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             Collections.unmodifiableSet(directDependencies);
 
         // walk the expression looking for dynamic parameters
-        SqlVisitor<Void> dynamicParamFinder = new SqlBasicVisitor<Void>()
-            {
+        SqlVisitor<Void> dynamicParamFinder =
+            new SqlBasicVisitor<Void>() {
                 public Void visit(SqlDynamicParam param)
                 {
                     analyzedSql.hasDynamicParams = true;
@@ -548,7 +567,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             finalizeRelMetadata(rootRel);
 
             if (analyzedSql.optimized) {
-                rootRel = optimize(rootRel.getRowType(), rootRel);
+                rootRel = optimize(
+                        rootRel.getRowType(),
+                        rootRel);
 
                 // From here on, use the planner's notion of root, because the
                 // rootRel it returned to us may have lost some metadata.
@@ -574,8 +595,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
                 Collections.unmodifiableList(columnOrigins);
 
             if (analyzedSql.optimized) {
-                analyzedSql.rowCount =
-                    RelMetadataQuery.getRowCount(
+                analyzedSql.rowCount = RelMetadataQuery.getRowCount(
                         rootRel);
             }
         }
@@ -587,13 +607,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // function lookup because overloads need to be resolved first.  And we
         // can't do this during SqlToRelConverter because then we stop
         // collecting direct dependencies.
-        SqlVisitor<Void> udfInvocationFinder = new SqlBasicVisitor<Void>()
-            {
+        SqlVisitor<Void> udfInvocationFinder =
+            new SqlBasicVisitor<Void>() {
                 public Void visit(SqlCall call)
                 {
                     if (call.getOperator()
-                        instanceof FarragoUserDefinedRoutine)
-                    {
+                        instanceof FarragoUserDefinedRoutine) {
                         FarragoUserDefinedRoutine function =
                             (FarragoUserDefinedRoutine) call.getOperator();
                         addDependency(
@@ -707,14 +726,15 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
         if (rel instanceof ConverterRel) {
             ConverterRel converterRel = (ConverterRel) rel;
-            return validatePlan(
-                converterRel.getChild(),
-                converterRel.getInputTraits());
+            return
+                validatePlan(
+                    converterRel.getChild(),
+                    converterRel.getInputTraits());
         } else {
             for (RelNode child : rel.getInputs()) {
                 RelNode problemChild = validatePlan(
-                    child,
-                    rel.getTraits());
+                        child,
+                        rel.getTraits());
                 if (problemChild != null) {
                     return problemChild;
                 }
@@ -763,23 +783,24 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
     protected RelDataType getParamRowType()
     {
-        return getFarragoTypeFactory().createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    return sqlToRelConverter.getDynamicParamCount();
-                }
+        return
+            getFarragoTypeFactory().createStructType(
+                new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return sqlToRelConverter.getDynamicParamCount();
+                    }
 
-                public String getFieldName(int index)
-                {
-                    return "?" + index;
-                }
+                    public String getFieldName(int index)
+                    {
+                        return "?" + index;
+                    }
 
-                public RelDataType getFieldType(int index)
-                {
-                    return sqlToRelConverter.getDynamicParamType(index);
-                }
-            });
+                    public RelDataType getFieldType(int index)
+                    {
+                        return sqlToRelConverter.getDynamicParamType(index);
+                    }
+                });
     }
 
     // implement FarragoAllocation
@@ -802,11 +823,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     /**
-     * Returns a relational expression which is to be substituted for
-     * an access to a SQL view.
+     * Returns a relational expression which is to be substituted for an access
+     * to a SQL view.
      *
      * @param rowType Row type of the view
      * @param queryString Body of the view
+     *
      * @return Relational expression
      */
     protected RelNode expandView(RelDataType rowType, String queryString)
@@ -817,7 +839,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             getSession().getPersonality().newParser(getSession());
         final SqlNode sqlQuery =
             (SqlNode) parser.parseSqlText(
-                stmtValidator, null, queryString, true);
+                stmtValidator,
+                null,
+                queryString,
+                true);
         RelNode relNode = sqlToRelConverter.convertQuery(sqlQuery, true, false);
 
         --expansionDepth;
@@ -832,18 +857,21 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         // NOTE jvs 2-Jan-2005: We already validated the expression during DDL,
         // but we stored the original pre-validation expression, and validation
-        // may have involved rewrites relied on by sqlToRelConverter.  So
-        // we must recapitulate here.
-        sqlExpr = getSqlValidator().validateParameterizedExpression(
-            sqlExpr,
-            invocation.getParamNameToTypeMap());
+        // may have involved rewrites relied on by sqlToRelConverter.  So we
+        // must recapitulate here.
+        sqlExpr =
+            getSqlValidator().validateParameterizedExpression(
+                sqlExpr,
+                invocation.getParamNameToTypeMap());
 
         // TODO jvs 1-Jan-2005: support a RexVariableBinding (like "let" in
         // Lisp), and avoid expansion of parameters which are referenced more
         // than once
 
-        RexNode rexNode = sqlToRelConverter.convertExpression(
-            sqlExpr, invocation.getParamNameToArgMap());
+        RexNode rexNode =
+            sqlToRelConverter.convertExpression(
+                sqlExpr,
+                invocation.getParamNameToArgMap());
         --expansionDepth;
         return rexNode;
     }
@@ -956,7 +984,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     // implement RelOptSchema
-    public RelOptTable getTableForMember(String[] names)
+    public RelOptTable getTableForMember(String [] names)
     {
         return getTableForMember(names, null);
     }
@@ -966,7 +994,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         FarragoSessionResolvedObject<CwmNamedColumnSet> resolved =
             stmtValidator.resolveSchemaObjectName(
-                names, CwmNamedColumnSet.class);
+                names,
+                CwmNamedColumnSet.class);
 
         if (resolved.object == null) {
             return getForeignTableFromNamespace(resolved);
@@ -994,7 +1023,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // REVIEW:  maybe defer this until physical implementation?
             if (table.isTemporary()) {
                 getIndexMap().instantiateTemporaryTable(
-                    stmtValidator.getDataWrapperCache(), table);
+                    stmtValidator.getDataWrapperCache(),
+                    table);
             }
         }
 
@@ -1010,8 +1040,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         } else if (columnSet instanceof FemLocalView) {
             RelDataType rowType = createTableRowType(columnSet);
             FemLocalView view = (FemLocalView) columnSet;
-            relOptTable = new FarragoView(
-                view, rowType, datasetName, view.getModality());
+            relOptTable =
+                new FarragoView(
+                    view,
+                    rowType,
+                    datasetName,
+                    view.getModality());
         } else {
             throw Util.needToImplement(columnSet);
         }
@@ -1019,9 +1053,12 @@ public class FarragoPreparingStmt extends OJPreparingStmt
 
         if (oldColumnSet != null) {
             RelDataType rowType = createTableRowType(oldColumnSet);
-            relOptTable = new PermutingRelOptTable(
-                this, oldColumnSet.getName(), rowType, relOptTable
-            );
+            relOptTable =
+                new PermutingRelOptTable(
+                    this,
+                    oldColumnSet.getName(),
+                    rowType,
+                    relOptTable);
         }
 
         return relOptTable;
@@ -1058,9 +1095,9 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         // access to foreign tables
 
         // When a foreign table is referenced directly via a namespace, we have
-        // nothing to hang a direct dependency on.  Instead, we
-        // remember the dependency on the server, so that if the server
-        // gets dropped, dependent views will cascade.
+        // nothing to hang a direct dependency on.  Instead, we remember the
+        // dependency on the server, so that if the server gets dropped,
+        // dependent views will cascade.
         addDependency(femServer, null);
 
         FarragoMedDataServer server = loadDataServerFromCache(femServer);
@@ -1083,10 +1120,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             return medColumnSet;
         } catch (Throwable ex) {
             // TODO:  better name formatting
-            throw FarragoResource.instance().
-                ValidatorForeignTableLookupFailed.ex(
-                    Arrays.asList(resolved.getQualifiedName()).toString(),
-                    ex);
+            throw FarragoResource.instance().ValidatorForeignTableLookupFailed
+            .ex(
+                Arrays.asList(resolved.getQualifiedName()).toString(),
+                ex);
         }
     }
 
@@ -1097,14 +1134,14 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             stmtValidator.getDataWrapperCache().loadServerFromCatalog(
                 femServer);
         if (loadedServerClassNameSet.add(server.getClass().getName())) {
-            // This is the first time we've seen this server class, so give it
-            // a chance to register any planner info such as calling
-            // conventions and rules.  REVIEW: the discrimination is based on
-            // class name, on the assumption that it should be unique regardless
-            // of classloader, JAR, etc.  Is that correct?
+            // This is the first time we've seen this server class, so give it a
+            // chance to register any planner info such as calling conventions
+            // and rules.  REVIEW: the discrimination is based on class name, on
+            // the assumption that it should be unique regardless of
+            // classloader, JAR, etc.  Is that correct?
             planner.beginMedPluginRegistration(server.getClass().getName());
             server.registerRules(planner);
-            assert(relMetadataProvider != null);
+            assert (relMetadataProvider != null);
             server.registerRelMetadataProviders(relMetadataProvider);
             planner.endMedPluginRegistration();
         }
@@ -1128,7 +1165,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     {
         FarragoSessionResolvedObject<CwmNamedColumnSet> resolved =
             stmtValidator.resolveSchemaObjectName(
-                names, CwmNamedColumnSet.class);
+                names,
+                CwmNamedColumnSet.class);
 
         if (resolved == null) {
             return null;
@@ -1153,7 +1191,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         PrivilegedAction action = PrivilegedActionEnum.SELECT;
         if (dmlTarget != null) {
             if (Arrays.equals(names, dmlTarget.names)) {
-                assert(dmlAction != null);
+                assert (dmlAction != null);
                 action = dmlAction;
 
                 // REVIEW jvs 27-Aug-2005:  This is a hack to handle the case
@@ -1173,35 +1211,41 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         }
 
         RelDataType rowType = createTableRowType(table);
-        SqlAccessType allowedAccess = FarragoCatalogUtil.getTableAllowedAccess(table);
-        return newValidatorTable(resolved.getQualifiedName(), rowType,
-            allowedAccess, modality);
+        SqlAccessType allowedAccess =
+            FarragoCatalogUtil.getTableAllowedAccess(table);
+        return
+            newValidatorTable(
+                resolved.getQualifiedName(),
+                rowType,
+                allowedAccess,
+                modality);
     }
 
     /**
-     * Creates a row-type for a given table.
-     * This row-type includes any system columns which are implicit for this
-     * type of type.
+     * Creates a row-type for a given table. This row-type includes any system
+     * columns which are implicit for this type of type.
      *
      * @param table Repository table
+     *
      * @return Row type including system columns
      */
     protected RelDataType createTableRowType(CwmNamedColumnSet table)
     {
         return getFarragoTypeFactory().createStructTypeFromClassifier(
-            table);
+                table);
     }
 
     /**
      * Factory method, creates a table.
      */
     protected SqlValidatorTable newValidatorTable(
-        String[] qualifiedName,
+        String [] qualifiedName,
         RelDataType rowType,
         SqlAccessType allowedAccess,
         ModalityType modality)
     {
-        return new ValidatorTable(qualifiedName, rowType, allowedAccess, modality);
+        return
+            new ValidatorTable(qualifiedName, rowType, allowedAccess, modality);
     }
 
     // implement SqlValidator.CatalogReader
@@ -1213,6 +1257,7 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             // user-defined structured type is allowed here
             return null;
         }
+
         // FIXME jvs 27-Aug-2005:  this should be USAGE, not REFERENCES;
         // need to add to FEM
         addDependency(cwmType, PrivilegedActionEnum.REFERENCES);
@@ -1225,7 +1270,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return stmtValidator.getAllSchemaObjectNames(names);
     }
 
-    public void addDependency(CwmModelElement supplier, PrivilegedAction action)
+    public void addDependency(CwmModelElement supplier,
+        PrivilegedAction action)
     {
         if (!isExpandingDefinition()) {
             directDependencies.add(supplier);
@@ -1303,8 +1349,10 @@ public class FarragoPreparingStmt extends OJPreparingStmt
         return "execute";
     }
 
-    //~ Inner Classes
-    protected static class ValidatorTable implements SqlValidatorTable
+    //~ Inner Classes ----------------------------------------------------------
+
+    protected static class ValidatorTable
+        implements SqlValidatorTable
     {
         private final String [] qualifiedName;
         private final RelDataType rowType;
@@ -1357,25 +1405,26 @@ public class FarragoPreparingStmt extends OJPreparingStmt
     }
 
     /**
-     * Transform which permutes the columns of an input table, applying
-     * casts amd renaming columns if necessary, to make the output rowtype
-     * match the desired rowtype.
+     * Transform which permutes the columns of an input table, applying casts
+     * amd renaming columns if necessary, to make the output rowtype match the
+     * desired rowtype.
      *
      * <p>The input table must have a superset of the columns of the output
      * rowtype, and their types must be coercible into the output types.
      * Conversion is performed by the {@link SqlToRelConverter#convertField}
      * method.
      *
-     * <p>The transform generally generates an extra
-     * {@link CalcRel} during the conversion to a {@link RelNode}.
+     * <p>The transform generally generates an extra {@link CalcRel} during the
+     * conversion to a {@link RelNode}.
      */
-    protected class PermutingRelOptTable extends RelOptAbstractTable
+    protected class PermutingRelOptTable
+        extends RelOptAbstractTable
     {
         private final RelOptTable inputTable;
 
         /**
-         * Creates a table which converts an input row type to a desired
-         * output row type, shuffling and casting columns in order to do so.
+         * Creates a table which converts an input row type to a desired output
+         * row type, shuffling and casting columns in order to do so.
          *
          * @param schema Schema the table belongs to
          * @param name Name of this table
@@ -1393,7 +1442,8 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             this.inputTable = inputTable;
         }
 
-        public RelNode toRel(RelOptCluster cluster, RelOptConnection connection)
+        public RelNode toRel(RelOptCluster cluster,
+            RelOptConnection connection)
         {
             final RelNode inputRel = inputTable.toRel(cluster, connection);
             final RelDataType inputRowType = inputRel.getRowType();
@@ -1409,12 +1459,11 @@ public class FarragoPreparingStmt extends OJPreparingStmt
             }
 
             return CalcRel.createProject(
-                inputRel,
-                fieldExprs,
-                fieldNames);
+                    inputRel,
+                    fieldExprs,
+                    fieldNames);
         }
     }
 }
-
 
 // End FarragoPreparingStmt.java

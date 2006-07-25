@@ -20,37 +20,38 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.Util;
 
 
 /**
  * Rule to remove an {@link AggregateRel} implementing DISTINCT if the
  * underlying relational expression is already distinct.
  */
-public class RemoveDistinctRule extends RelOptRule
+public class RemoveDistinctRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public RemoveDistinctRule()
     {
         // REVIEW jvs 14-Mar-2006: We have to explicitly mention the child here
         // to make sure the rule re-fires after the child changes (e.g. via
         // RemoveTrivialProjectRule), since that may change our information
-        // about whether the child is distinct.  If we clean up the inference
-        // of distinct to make it correct up-front, we can get rid of the
-        // reference to the child here.
-        super(new RelOptRuleOperand(
+        // about whether the child is distinct.  If we clean up the inference of
+        // distinct to make it correct up-front, we can get rid of the reference
+        // to the child here.
+        super(
+            new RelOptRuleOperand(
                 AggregateRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(RelNode.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -61,13 +62,14 @@ public class RemoveDistinctRule extends RelOptRule
         RelNode child = distinct.getChild();
         if (child.isDistinct()) {
             child = call.getPlanner().register(child, distinct);
-            child = convert(child, distinct.getTraits());
+            child = convert(
+                    child,
+                    distinct.getTraits());
             if (child != null) {
                 call.transformTo(child);
             }
         }
     }
 }
-
 
 // End RemoveDistinctRule.java

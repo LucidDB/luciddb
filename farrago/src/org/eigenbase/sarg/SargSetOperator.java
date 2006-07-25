@@ -22,14 +22,13 @@
 package org.eigenbase.sarg;
 
 /**
- * SargSetOperator defines the supported set operators which can
- * be used to combine instances of {@link SargExpr}.
+ * SargSetOperator defines the supported set operators which can be used to
+ * combine instances of {@link SargExpr}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SargSetOperator
-{
+public enum SargSetOperator {
     /**
      * Set intersection over any number of children
      * (no children => universal set).
@@ -47,4 +46,12 @@ public enum SargSetOperator
     COMPLEMENT
 }
 
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
+// End SargSetOperator.java
 // End SargSetOperator.java

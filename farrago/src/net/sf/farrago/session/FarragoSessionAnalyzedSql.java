@@ -24,11 +24,12 @@ package net.sf.farrago.session;
 
 import java.util.*;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.rel.metadata.*;
-
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.cwm.core.CwmModelElement;
+
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.reltype.*;
+
 
 /**
  * FarragoSessionAnalyzedSql contains the results of the analyzeSql call used
@@ -40,35 +41,30 @@ import net.sf.farrago.cwm.core.CwmModelElement;
  */
 public class FarragoSessionAnalyzedSql
 {
-    public FarragoSessionAnalyzedSql()
-    {
-    }
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /**
-     * True if post-optimization analysis was requested.
-     * If false, some fields noted below are invalid.
+     * True if post-optimization analysis was requested. If false, some fields
+     * noted below are invalid.
      */
     public boolean optimized;
-    
+
     /**
-     * The text of the SQL expression after expansion by the validator.  This
+     * The text of the SQL expression after expansion by the validator. This
      * contains no context-dependent information (e.g. all objects are fully
      * qualified), so it can be stored in the catalog.
      */
     public String canonicalString;
 
     /**
-     * Set of catalog objects on which the expression directly
-     * depends.
+     * Set of catalog objects on which the expression directly depends.
      */
     public Set<CwmModelElement> dependencies;
 
     /**
-     * Metadata for result set returned when the expression is executed:
-     * a row type for a query expression, or a single type
-     * for a non-query expression.
+     * Metadata for result set returned when the expression is executed: a row
+     * type for a query expression, or a single type for a non-query expression.
      */
     public RelDataType resultType;
 
@@ -88,16 +84,24 @@ public class FarragoSessionAnalyzedSql
     public boolean hasDynamicParams;
 
     /**
-     * Information about column origins, in same order as resultType row;
-     * null if expression is not a query.
+     * Information about column origins, in same order as resultType row; null
+     * if expression is not a query.
      */
     public List<Set<RelColumnOrigin>> columnOrigins;
 
     /**
-     * Estimated number of rows returned; invalid if expression is
-     * not a query, or no optimization was requested.
+     * Estimated number of rows returned; invalid if expression is not a query,
+     * or no optimization was requested.
      */
     public double rowCount;
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FarragoSessionAnalyzedSql()
+    {
+    }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void setResultType(RelDataType resultType)
     {
@@ -109,6 +113,5 @@ public class FarragoSessionAnalyzedSql
         colSet.setModality(ModalityTypeEnum.MODALITYTYPE_RELATIONAL);
     }
 }
-
 
 // End FarragoSessionAnalyzedSql.java

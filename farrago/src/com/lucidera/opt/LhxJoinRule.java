@@ -20,35 +20,36 @@
 */
 package com.lucidera.opt;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
+
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import net.sf.farrago.query.*;
 
 /**
- * LhxJoinRule implements the planner rule for converting a JoinRel
- * with join condition into a LhxJoinRel (hash join).
+ * LhxJoinRule implements the planner rule for converting a JoinRel with join
+ * condition into a LhxJoinRel (hash join).
  *
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxJoinRule extends RelOptRule
+public class LhxJoinRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public LhxJoinRule()
     {
         super(new RelOptRuleOperand(JoinRel.class, null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -61,28 +62,31 @@ public class LhxJoinRule extends RelOptRule
     {
         JoinRel joinRel = (JoinRel) call.rels[0];
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
-        
+
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
         RexNode nonEquiCondition = null;
-        
+
         // determine if we have a valid join condition
         List<Integer> leftKeys = new ArrayList<Integer>();
         List<Integer> rightKeys = new ArrayList<Integer>();
 
         List<RexNode> leftJoinKeys = new ArrayList<RexNode>();
         List<RexNode> rightJoinKeys = new ArrayList<RexNode>();
-        
-        nonEquiCondition = RelOptUtil.splitJoinCondition(
-            joinRel, leftJoinKeys, rightJoinKeys);
-        
-        if (nonEquiCondition != null
-            && joinRel.getJoinType() != JoinRelType.INNER) {
+
+        nonEquiCondition =
+            RelOptUtil.splitJoinCondition(
+                joinRel,
+                leftJoinKeys,
+                rightJoinKeys);
+
+        if ((nonEquiCondition != null)
+            && (joinRel.getJoinType() != JoinRelType.INNER)) {
             // this one can not be imlemented by hash join
             // nor can it be implemented by cartesian product
             return;
         }
-    
+
         if (!joinRel.getVariablesStopped().isEmpty()) {
             return;
         }
@@ -91,38 +95,44 @@ public class LhxJoinRule extends RelOptRule
             // should use cartesian product instead of hash join
             return;
         }
-        
+
         List<Integer> outputProj = new ArrayList<Integer>();
 
-        RelNode[] inputRels = new RelNode[] {leftRel, rightRel};
-        
-        RelOptUtil.projectJoinInputs(inputRels, leftJoinKeys, rightJoinKeys,
-            leftKeys, rightKeys, outputProj);
-        
+        RelNode [] inputRels = new RelNode[] { leftRel, rightRel };
+
+        RelOptUtil.projectJoinInputs(inputRels,
+            leftJoinKeys,
+            rightJoinKeys,
+            leftKeys,
+            rightKeys,
+            outputProj);
+
         // the new leftRel and new rightRel, afte projection is added.
         leftRel = inputRels[0];
         rightRel = inputRels[1];
-        
+
         List<String> newJoinOutputNames = new ArrayList<String>();
         newJoinOutputNames.addAll(
             RelOptUtil.getFieldNameList(leftRel.getRowType()));
         newJoinOutputNames.addAll(
             RelOptUtil.getFieldNameList(rightRel.getRowType()));
-        
+
         RelNode fennelLeft =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 leftRel);
-        
+
         if (fennelLeft == null) {
             return;
         }
 
         RelNode fennelRight =
             mergeTraitsAndConvert(
-                joinRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                joinRel.getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 rightRel);
-        
+
         if (fennelRight == null) {
             return;
         }
@@ -135,24 +145,26 @@ public class LhxJoinRule extends RelOptRule
         // Derive cardinality of RHS join keys.
         Double cndBuildKey;
         BitSet joinKeyMap = new BitSet();
-        
+
         // since rightJoinKeys can be more than simply inputrefs
         // assume the adinality of the key to be the cardinality of all
         // referenced fields.
-        
-        for (int i = 0; i < rightKeys.size(); i ++) {
+
+        for (int i = 0; i < rightKeys.size(); i++) {
             joinKeyMap.set(rightKeys.get(i));
         }
-        
-        cndBuildKey = RelMetadataQuery.getPopulationSize(
-            fennelRight, joinKeyMap);
-        
+
+        cndBuildKey =
+            RelMetadataQuery.getPopulationSize(
+                fennelRight,
+                joinKeyMap);
+
         if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
             cndBuildKey = numBuildRows;
         }
-        
+
         boolean isSetop = false;
-        
+
         RelNode rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
@@ -165,23 +177,22 @@ public class LhxJoinRule extends RelOptRule
                 newJoinOutputNames,
                 numBuildRows.intValue(),
                 cndBuildKey.intValue());
-        
+
         int newProjectOutputSize = outputProj.size();
-        RelDataTypeField[] joinOutputFields = rel.getRowType().getFields();
-        
+        RelDataTypeField [] joinOutputFields = rel.getRowType().getFields();
+
         // Need to project the new output(left+key+right+key) to the original
         // join output(left+right).
         // The projection needs to happen before additional filtering since
         // filtering condition references the original output ordinals.
         if (newProjectOutputSize < joinOutputFields.length) {
-            RexNode[] newProjectOutputFields =
+            RexNode [] newProjectOutputFields =
                 new RexNode[newProjectOutputSize];
-            String[]  newProjectOutputNames =
-                new String[newProjectOutputSize];
-                        
-            for (int i = 0; i < newProjectOutputSize; i ++) {
+            String [] newProjectOutputNames = new String[newProjectOutputSize];
+
+            for (int i = 0; i < newProjectOutputSize; i++) {
                 int fieldIndex = outputProj.get(i);
-            
+
                 newProjectOutputFields[i] =
                     rexBuilder.makeInputRef(
                         joinOutputFields[fieldIndex].getType(),
@@ -192,15 +203,15 @@ public class LhxJoinRule extends RelOptRule
 
             // Now let's create a project rel on the output of the join.
             RelNode projectOutputRel =
-                CalcRel.createProject(rel, newProjectOutputFields,
+                CalcRel.createProject(rel,
+                    newProjectOutputFields,
                     newProjectOutputNames);
-            
+
             rel = projectOutputRel;
         }
-                
+
         transformCall(call, rel, nonEquiCondition);
     }
-
 
     private void transformCall(
         RelOptRuleCall call,
@@ -208,10 +219,12 @@ public class LhxJoinRule extends RelOptRule
         RexNode extraFilter)
     {
         if (extraFilter != null) {
-            rel =
-                new FilterRel(rel.getCluster(), rel, extraFilter);
+            rel = new FilterRel(
+                    rel.getCluster(),
+                    rel,
+                    extraFilter);
         }
         call.transformTo(rel);
-    }    
+    }
 }
 // End LhxJoinRule.java

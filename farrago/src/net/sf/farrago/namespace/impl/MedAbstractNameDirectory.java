@@ -23,26 +23,28 @@
 package net.sf.farrago.namespace.impl;
 
 import java.sql.*;
+
 import java.util.*;
 
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.ModalityTypeEnum;
-
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.namespace.*;
 
 
 /**
- * MedAbstractNameDirectory is an abstract base class for
- * implementations of the {@link FarragoMedNameDirectory} interface.
+ * MedAbstractNameDirectory is an abstract base class for implementations of the
+ * {@link FarragoMedNameDirectory} interface.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class MedAbstractNameDirectory extends MedAbstractBase
+public abstract class MedAbstractNameDirectory
+    extends MedAbstractBase
     implements FarragoMedNameDirectory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedNameDirectory
     public FarragoMedNameDirectory lookupSubdirectory(String foreignName)
@@ -59,7 +61,7 @@ public abstract class MedAbstractNameDirectory extends MedAbstractBase
     {
         return false;
     }
-    
+
     // implement FarragoMedNameDirectory
     public FemBaseColumnSet newImportedColumnSet(
         FarragoRepos repos,
@@ -71,6 +73,5 @@ public abstract class MedAbstractNameDirectory extends MedAbstractBase
         return newColumnSet;
     }
 }
-
 
 // End MedAbstractNameDirectory.java

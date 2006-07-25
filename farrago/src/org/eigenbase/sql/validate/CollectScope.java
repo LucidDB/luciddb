@@ -21,23 +21,29 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.*;
+
 
 /**
- * The name-resolution context for expression inside a multiset call.
- * The objects visible are multiset expressions, and those
- * inherited from the parent scope.
+ * The name-resolution context for expression inside a multiset call. The
+ * objects visible are multiset expressions, and those inherited from the parent
+ * scope.
  *
  * @author wael
  * @version $Id$
- * @since Mar 25, 2003
  * @see CollectNamespace
+ * @since Mar 25, 2003
  */
-class CollectScope extends ListScope
+class CollectScope
+    extends ListScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlValidatorScope usingScope;
     private final SqlCall child;
+
+    //~ Constructors -----------------------------------------------------------
 
     CollectScope(
         SqlValidatorScope parent,
@@ -49,6 +55,8 @@ class CollectScope extends ListScope
         this.child = child;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode getNode()
     {
         return child;
@@ -56,4 +64,3 @@ class CollectScope extends ListScope
 }
 
 // End CollectScope.java
-

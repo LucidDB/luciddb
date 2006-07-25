@@ -20,54 +20,59 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel.rules;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * PushSemiJoinPastFilterRule implements the rule for pushing semijoins down
- * in a tree past a filter in order to trigger other rules that will convert
- * semijoins.
- * 
- * SemiJoinRel(FilterRel(X), Y) --> FilterRel(SemiJoinRel(X, Y))
- * 
+ * PushSemiJoinPastFilterRule implements the rule for pushing semijoins down in
+ * a tree past a filter in order to trigger other rules that will convert
+ * semijoins. SemiJoinRel(FilterRel(X), Y) --> FilterRel(SemiJoinRel(X, Y))
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class PushSemiJoinPastFilterRule extends RelOptRule
+public class PushSemiJoinPastFilterRule
+    extends RelOptRule
 {
     //  ~ Constructors --------------------------------------------------------
 
+    //~ Constructors -----------------------------------------------------------
+
     public PushSemiJoinPastFilterRule()
     {
-        super(new RelOptRuleOperand(
-            SemiJoinRel.class,
-            new RelOptRuleOperand [] {
-                new RelOptRuleOperand(FilterRel.class, null)
-            }));
+        super(
+            new RelOptRuleOperand(
+                SemiJoinRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(FilterRel.class, null)
+                }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
         SemiJoinRel semiJoin = (SemiJoinRel) call.rels[0];
         FilterRel filter = (FilterRel) call.rels[1];
-        
-        RelNode newSemiJoin = new SemiJoinRel(
-            semiJoin.getCluster(),
-            filter.getChild(),
-            semiJoin.getRight(),
-            semiJoin.getCondition(),
-            semiJoin.getLeftKeys(),
-            semiJoin.getRightKeys());
-        
-        RelNode newFilter = CalcRel.createFilter(
-            newSemiJoin, filter.getCondition());
-        
+
+        RelNode newSemiJoin =
+            new SemiJoinRel(
+                semiJoin.getCluster(),
+                filter.getChild(),
+                semiJoin.getRight(),
+                semiJoin.getCondition(),
+                semiJoin.getLeftKeys(),
+                semiJoin.getRightKeys());
+
+        RelNode newFilter =
+            CalcRel.createFilter(
+                newSemiJoin,
+                filter.getCondition());
+
         call.transformTo(newFilter);
     }
 }

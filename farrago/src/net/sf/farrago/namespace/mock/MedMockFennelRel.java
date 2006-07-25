@@ -30,6 +30,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -43,19 +44,22 @@ import org.eigenbase.util.*;
 
 
 /**
- * MedMockFennelRel provides a mock implementation for
- * {@link TableAccessRel} with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
+ * MedMockFennelRel provides a mock implementation for {@link TableAccessRel}
+ * with {@link FennelRel#FENNEL_EXEC_CONVENTION}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockFennelRel extends TableAccessRelBase implements FennelRel
+class MedMockFennelRel
+    extends TableAccessRelBase
+    implements FennelRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMockFennelRel(
         MedMockColumnSet columnSet,
@@ -63,12 +67,14 @@ class MedMockFennelRel extends TableAccessRelBase implements FennelRel
         RelOptConnection connection)
     {
         super(
-            cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), columnSet,
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            columnSet,
             connection);
         this.columnSet = columnSet;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
@@ -90,18 +96,20 @@ class MedMockFennelRel extends TableAccessRelBase implements FennelRel
     public RelFieldCollation [] getCollations()
     {
         // trivially sorted
-        return new RelFieldCollation [] { new RelFieldCollation(0) };
+        return new RelFieldCollation[] { new RelFieldCollation(0) };
     }
 
     // implement RelNode
     public Object clone()
     {
         MedMockFennelRel clone =
-            new MedMockFennelRel(columnSet, getCluster(), connection);
+            new MedMockFennelRel(
+                columnSet,
+                getCluster(),
+                connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }
 }
-
 
 // End MedMockFennelRel.java

@@ -22,35 +22,37 @@
 */
 package net.sf.farrago.session;
 
-import java.sql.DatabaseMetaData;
-
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.util.FarragoAllocation;
-import net.sf.farrago.plugin.*;
-
-import org.eigenbase.reltype.*;
-import org.eigenbase.relopt.RelOptPlanner;
+import java.sql.*;
 
 import java.util.*;
 import java.util.regex.*;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.plugin.*;
+import net.sf.farrago.util.*;
+
+import org.eigenbase.reltype.*;
+
+
 /**
- * FarragoSession represents an internal API to the Farrago database.  It is
- * designed to serve as a basis for the implementation of standard API's such
- * as JDBC.
+ * FarragoSession represents an internal API to the Farrago database. It is
+ * designed to serve as a basis for the implementation of standard API's such as
+ * JDBC.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoSession extends FarragoAllocation
+public interface FarragoSession
+    extends FarragoAllocation
 {
-    //~ Methods ---------------------------------------------------------------
 
-    /***
+    //~ Methods ----------------------------------------------------------------
+
+    /**
      * @return the factory which created this session
      */
     public FarragoSessionFactory getSessionFactory();
-    
+
     /**
      * @return the current personality for this session
      */
@@ -59,8 +61,8 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Creates a new statement context within this session.
      *
-     * @param paramDefFactory a factory for FarragoSessionStmtParamDef 
-     *                        instances
+     * @param paramDefFactory a factory for FarragoSessionStmtParamDef instances
+     *
      * @return new statement context
      */
     public FarragoSessionStmtContext newStmtContext(
@@ -74,14 +76,12 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoSessionStmtValidator newStmtValidator();
 
     /**
-     * Creates a new privilege checker for a session. This checker ensures
-     * that the session user has the right privileges on the objects
-     * which it requests to operate on.
+     * Creates a new privilege checker for a session. This checker ensures that
+     * the session user has the right privileges on the objects which it
+     * requests to operate on.
      *
-     *<p>
-     *
-     * Because privilege checkers are stateful, one privilege checker should be
-     * created for each statement.
+     * <p>Because privilege checkers are stateful, one privilege checker should
+     * be created for each statement.
      *
      * @return new privilege checker
      */
@@ -108,14 +108,13 @@ public interface FarragoSession extends FarragoAllocation
     public FarragoPluginClassLoader getPluginClassLoader();
 
     /**
-     * @return list of installed {@link FarragoSessionModelExtension}
-     * instances
+     * @return list of installed {@link FarragoSessionModelExtension} instances
      */
     public List<FarragoSessionModelExtension> getModelExtensions();
-    
+
     /**
-     * @return whether this session is an internal session cloned
-     * from another session
+     * @return whether this session is an internal session cloned from another
+     * session
      */
     public boolean isClone();
 
@@ -128,29 +127,29 @@ public interface FarragoSession extends FarragoAllocation
      * @return whether this session was killed (which implies closed)
      */
     public boolean wasKilled();
-    
+
     /**
-     * Kills this session.  A killed session is closed, so the implementation
-     * of this method should insure that {@link #closeAllocation} is
-     * called.  After this method is called, {@link #wasKilled()} and
-     * {@link #isClosed()} will return true. 
+     * Kills this session. A killed session is closed, so the implementation of
+     * this method should insure that {@link #closeAllocation} is called. After
+     * this method is called, {@link #wasKilled()} and {@link #isClosed()} will
+     * return true.
      */
     public void kill();
-    
+
     /**
      * @return whether this session currently has a transaction in progress
      */
     public boolean isTxnInProgress();
 
     /**
-     * Gets the ID of the current transaction on this session,
-     * optionally initiating a new transaction if none is currently active.
+     * Gets the ID of the current transaction on this session, optionally
+     * initiating a new transaction if none is currently active.
      *
-     * @param createIfNeeded if true and no transaction is active,
-     * create a new one
+     * @param createIfNeeded if true and no transaction is active, create a new
+     * one
      *
-     * @return transaction ID, or null if no transaction active
-     * and !createIfNeeded
+     * @return transaction ID, or null if no transaction active and
+     * !createIfNeeded
      */
     public FarragoSessionTxnId getTxnId(boolean createIfNeeded);
 
@@ -194,10 +193,10 @@ public interface FarragoSession extends FarragoAllocation
     public void setConnectionSource(FarragoSessionConnectionSource source);
 
     /**
-     * Clones this session.  TODO:  document what this entails.
+     * Clones this session. TODO: document what this entails.
      *
-     * @param inheritedVariables session variables to use for context
-     * in new session, or null to inherit those of session being cloned
+     * @param inheritedVariables session variables to use for context in new
+     * session, or null to inherit those of session being cloned
      *
      * @return cloned session.
      */
@@ -207,8 +206,8 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Changes the autocommit mode for this session.
      *
-     * @param autoCommit true to request autocommit; false to
-     * request manual commit
+     * @param autoCommit true to request autocommit; false to request manual
+     * commit
      */
     public void setAutoCommit(boolean autoCommit);
 
@@ -218,11 +217,11 @@ public interface FarragoSession extends FarragoAllocation
     public void commit();
 
     /**
-     * Ends the current transaction if session is in autocommit mode.
-     * Normally, an attempt to commit or rollback in autocommit mode
-     * will cause an exception; this method is for use by other components
-     * which need to notify the session that some event (e.g.
-     * cursor close) is triggering an autocommit boundary.
+     * Ends the current transaction if session is in autocommit mode. Normally,
+     * an attempt to commit or rollback in autocommit mode will cause an
+     * exception; this method is for use by other components which need to
+     * notify the session that some event (e.g. cursor close) is triggering an
+     * autocommit boundary.
      *
      * @param commit true to commit; false to rollback
      */
@@ -231,16 +230,15 @@ public interface FarragoSession extends FarragoAllocation
     /**
      * Rolls back current transaction if any.
      *
-     * @param savepoint savepoint to roll back to, or null to rollback
-     * entire transaction
+     * @param savepoint savepoint to roll back to, or null to rollback entire
+     * transaction
      */
     public void rollback(FarragoSessionSavepoint savepoint);
 
     /**
      * Creates a new savepoint based on the current session state.
      *
-     * @param name name to give new savepoint, or null
-     * for anonymous savepoint
+     * @param name name to give new savepoint, or null for anonymous savepoint
      *
      * @return new savepoint
      */
@@ -254,21 +252,17 @@ public interface FarragoSession extends FarragoAllocation
     public void releaseSavepoint(FarragoSessionSavepoint savepoint);
 
     /**
-     * Analyzes an SQL expression, and returns information about it.  Used
-     * when an expression is not going to be executed directly, but needs
-     * to be validated as part of the definition of some containing object
-     * such as a view.
+     * Analyzes an SQL expression, and returns information about it. Used when
+     * an expression is not going to be executed directly, but needs to be
+     * validated as part of the definition of some containing object such as a
+     * view.
      *
      * @param sql text of SQL expression
-     *
      * @param typeFactory factory for creating result and param types
-     *
-     * @param paramRowType if non-null, expression is expected to be
-     * a function body with these parameters; if null, expression is
-     * expected to be a query
-     *
-     * @param optimize if true, run optimizer as part of analysis;
-     * otherwise, skip optimization, returning less information
+     * @param paramRowType if non-null, expression is expected to be a function
+     * body with these parameters; if null, expression is expected to be a query
+     * @param optimize if true, run optimizer as part of analysis; otherwise,
+     * skip optimization, returning less information
      *
      * @return FarragoSessionAnalyzedSql derived from the query
      */
@@ -282,9 +276,8 @@ public interface FarragoSession extends FarragoAllocation
      * Executes a LURQL query against the repository.
      *
      * @param lurql query string
-     *
-     * @param argMap from parameter name (String) to argument value
-     * (typically String or Set)
+     * @param argMap from parameter name (String) to argument value (typically
+     * String or Set)
      *
      * @return collection of RefObjects retrieved by query
      */
@@ -293,9 +286,9 @@ public interface FarragoSession extends FarragoAllocation
         Map argMap);
 
     /**
-     * Returns a FarragoSessionInfo object which contains information
-     * on the runtime state of the session (e.g., active statements).
-     * 
+     * Returns a FarragoSessionInfo object which contains information on the
+     * runtime state of the session (e.g., active statements).
+     *
      * @return FarragoSessionInfo object
      */
     public FarragoSessionInfo getSessionInfo();
@@ -304,8 +297,8 @@ public interface FarragoSession extends FarragoAllocation
      * Sets the exclusion filter to use for planners created by this session.
      * See {@link RelOptPlanner#setRuleDescExclusionFilter} for details.
      *
-     * @param exclusionFilter pattern to match for exclusion; null
-     * to disable filtering
+     * @param exclusionFilter pattern to match for exclusion; null to disable
+     * filtering
      */
     public void setOptRuleDescExclusionFilter(Pattern exclusionFilter);
 

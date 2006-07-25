@@ -20,21 +20,21 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlAggFunction;
+import org.eigenbase.sql.*;
 
 
 /**
- * Contains, for each operator, an implementor which can convert a call
- * to that operator into a set of calculator instructions.
+ * Contains, for each operator, an implementor which can convert a call to that
+ * operator into a set of calculator instructions.
  *
  * @author jhyde
- * @since June 2nd, 2004
  * @version $Id$
+ * @since June 2nd, 2004
  */
 public interface CalcRexImplementorTable
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the implementor of an operator, or null if there is no
@@ -47,6 +47,5 @@ public interface CalcRexImplementorTable
      */
     CalcRexAggImplementor getAgg(SqlAggFunction op);
 }
-
 
 // End CalcRexImplementorTable.java

@@ -21,28 +21,37 @@
 */
 package net.sf.farrago.namespace.util;
 
-import net.sf.farrago.namespace.*;
-
 import java.util.*;
 
+import net.sf.farrago.namespace.*;
+
+
 /**
- * MedMetadataQueryImpl is a default implementation for
- * {@link FarragoMedMetadataQuery}.
+ * MedMetadataQueryImpl is a default implementation for {@link
+ * FarragoMedMetadataQuery}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedMetadataQueryImpl implements FarragoMedMetadataQuery
+public class MedMetadataQueryImpl
+    implements FarragoMedMetadataQuery
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Map filterMap;
 
     private final Set resultObjectTypes;
+
+    //~ Constructors -----------------------------------------------------------
 
     public MedMetadataQueryImpl()
     {
         filterMap = new HashMap();
         resultObjectTypes = new HashSet();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedMetadataQuery
     public Map getFilterMap()

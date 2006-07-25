@@ -20,133 +20,139 @@
 */
 package com.lucidera.opt;
 
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
+import java.util.*;
 
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.metadata.RelMetadataQuery;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 
+
 /**
- * LhxMinusRule is a rule for transforming {@link MinusRel} to
- * {@link LhxJoinRel}.
+ * LhxMinusRule is a rule for transforming {@link MinusRel} to {@link
+ * LhxJoinRel}.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-public class LhxMinusRule extends RelOptRule
+public class LhxMinusRule
+    extends RelOptRule
 {
-   //~ Constructors ----------------------------------------------------------
 
-   /**
-    * Creates a new LhxIntersectRule object.
-    */
-   public LhxMinusRule()
-   {
-       super(new RelOptRuleOperand(
-               MinusRel.class,
-               null));
-   }
+    //~ Constructors -----------------------------------------------------------
 
-   //~ Methods ---------------------------------------------------------------
+    /**
+     * Creates a new LhxIntersectRule object.
+     */
+    public LhxMinusRule()
+    {
+        super(new RelOptRuleOperand(
+                MinusRel.class,
+                null));
+    }
 
-   // implement RelOptRule
-   public CallingConvention getOutConvention()
-   {
-       return FennelRel.FENNEL_EXEC_CONVENTION;
-   }
+    //~ Methods ----------------------------------------------------------------
 
-   // implement RelOptRule
-   public void onMatch(RelOptRuleCall call)
-   {
-       MinusRel minusRel = (MinusRel) call.rels[0];
-       
-       // TODO: minus all
-       assert (minusRel.isDistinct());
-       
-       // implement minus as a "right anti" join;
-       // switch the input sides here.
-       RelNode leftRel = minusRel.getInputs()[0];
-       List<String> newJoinOutputNames = new ArrayList<String>();        
-       newJoinOutputNames.addAll(RelOptUtil.getFieldNameList(leftRel.getRowType()));
-       
-       // make up the condition
-       List<Integer> leftKeys = new ArrayList<Integer>();
-       List<Integer> rightKeys = new ArrayList<Integer>();
-   
-       for (int i = 0; i < leftRel.getRowType().getFieldCount(); i ++) {
-           leftKeys.add(i);
-           rightKeys.add(i);
-       }
-       
-       for (int inputNo = 1; inputNo < minusRel.getInputs().length;
-            inputNo ++) {        
-           // perform pair-wise minus
-           RelNode rightRel = minusRel.getInputs()[inputNo];
-           
-           // TODO: casting
-           assert (leftRel.getRowType() == rightRel.getRowType());
-               
-           RelNode fennelLeft =
-               mergeTraitsAndConvert(
-                   minusRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
-                   leftRel);
-       
-           if (fennelLeft == null) {
-               return;
-           }
+    // implement RelOptRule
+    public CallingConvention getOutConvention()
+    {
+        return FennelRel.FENNEL_EXEC_CONVENTION;
+    }
 
-           RelNode fennelRight =
-               mergeTraitsAndConvert(
-                   minusRel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
-                   rightRel);
-       
-           if (fennelRight == null) {
-               return;
-           }
-           
-           Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
-           if (numBuildRows == null) {
-               numBuildRows = 10000.0;
-           }
+    // implement RelOptRule
+    public void onMatch(RelOptRuleCall call)
+    {
+        MinusRel minusRel = (MinusRel) call.rels[0];
 
-           // implement minus as a "right anti" join;
-           // derive cardinality of builde side(LHS) join keys.
-           Double cndBuildKey;
-           BitSet joinKeyMap = new BitSet();
-           
-           for (int i = 0; i < leftKeys.size(); i ++) {
-               joinKeyMap.set(leftKeys.get(i));
-           }
-           
-           cndBuildKey = RelMetadataQuery.getPopulationSize(
-               fennelLeft, joinKeyMap);
-           
-           if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-               cndBuildKey = numBuildRows;
-           }
-           
-           // implement minus as a "right anti" join;
-           // switch the input sides here.
-           boolean isSetop = true;
-           leftRel =
-               new LhxJoinRel(
-                   minusRel.getCluster(),
-                   fennelRight,
-                   fennelLeft,
-                   LhxJoinRelType.RIGHTANTI,
-                   isSetop,
-                   rightKeys,
-                   leftKeys,
-                   newJoinOutputNames,                    
-                   numBuildRows.intValue(),
-                   cndBuildKey.intValue());
-       }
-       call.transformTo(leftRel);
-   }    
+        // TODO: minus all
+        assert (minusRel.isDistinct());
+
+        // implement minus as a "right anti" join;
+        // switch the input sides here.
+        RelNode leftRel = minusRel.getInputs()[0];
+        List<String> newJoinOutputNames = new ArrayList<String>();
+        newJoinOutputNames.addAll(
+            RelOptUtil.getFieldNameList(leftRel.getRowType()));
+
+        // make up the condition
+        List<Integer> leftKeys = new ArrayList<Integer>();
+        List<Integer> rightKeys = new ArrayList<Integer>();
+
+        for (int i = 0; i < leftRel.getRowType().getFieldCount(); i++) {
+            leftKeys.add(i);
+            rightKeys.add(i);
+        }
+
+        for (int inputNo = 1; inputNo < minusRel.getInputs().length;
+            inputNo++) {
+            // perform pair-wise minus
+            RelNode rightRel = minusRel.getInputs()[inputNo];
+
+            // TODO: casting
+            assert (leftRel.getRowType() == rightRel.getRowType());
+
+            RelNode fennelLeft =
+                mergeTraitsAndConvert(
+                    minusRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
+                    leftRel);
+
+            if (fennelLeft == null) {
+                return;
+            }
+
+            RelNode fennelRight =
+                mergeTraitsAndConvert(
+                    minusRel.getTraits(),
+                    FennelRel.FENNEL_EXEC_CONVENTION,
+                    rightRel);
+
+            if (fennelRight == null) {
+                return;
+            }
+
+            Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
+            if (numBuildRows == null) {
+                numBuildRows = 10000.0;
+            }
+
+            // implement minus as a "right anti" join;
+            // derive cardinality of builde side(LHS) join keys.
+            Double cndBuildKey;
+            BitSet joinKeyMap = new BitSet();
+
+            for (int i = 0; i < leftKeys.size(); i++) {
+                joinKeyMap.set(leftKeys.get(i));
+            }
+
+            cndBuildKey =
+                RelMetadataQuery.getPopulationSize(
+                    fennelLeft,
+                    joinKeyMap);
+
+            if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
+                cndBuildKey = numBuildRows;
+            }
+
+            // implement minus as a "right anti" join;
+            // switch the input sides here.
+            boolean isSetop = true;
+            leftRel =
+                new LhxJoinRel(
+                    minusRel.getCluster(),
+                    fennelRight,
+                    fennelLeft,
+                    LhxJoinRelType.RIGHTANTI,
+                    isSetop,
+                    rightKeys,
+                    leftKeys,
+                    newJoinOutputNames,
+                    numBuildRows.intValue(),
+                    cndBuildKey.intValue());
+        }
+        call.transformTo(leftRel);
+    }
 }
 
 // End LhxMinusRule.java

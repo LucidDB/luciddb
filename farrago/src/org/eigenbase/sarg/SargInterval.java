@@ -23,46 +23,44 @@ package org.eigenbase.sarg;
 
 import org.eigenbase.reltype.*;
 
+
 /**
  * SargInterval represents a single contiguous search interval over a scalar
- * domain of a given datatype (including null values).  It consists of two
+ * domain of a given datatype (including null values). It consists of two
  * endpoints: a lower bound and an upper bound, which may be the same for the
- * case of a single point.  The endpoints are represented via instances of
- * {@link SargEndpoint}.  An empty interval is represented by setting both
- * bounds to be open with the same value (the null value, but it doesn't really
- * matter).
+ * case of a single point. The endpoints are represented via instances of {@link
+ * SargEndpoint}. An empty interval is represented by setting both bounds to be
+ * open with the same value (the null value, but it doesn't really matter).
  *
- *<p>
+ * <p>Instances of SargInterval are immutable after construction.
  *
- * Instances of SargInterval are immutable after construction.
+ * <p>For string representation, we use the standard mathematical bracketed
+ * bounds pair notation, with round brackets for open bounds and square brackets
+ * for closed bounds, e.g.
  *
- *<p>
+ * <ul>
+ * <li>[3,5] represents all values between 3 and 5 inclusive
+ * <li>(3,5] represents all values greater than 3 and less than or equal to 5
+ * <li>[3,5) represents all values greatern than or equal to 3 and less than 5
+ * <li>(3,5) represents all values between 3 and 5 exclusive
+ * <li>(3,+infinity) represents all values greater than 3
+ * <li>(-infinity,5] represents all values less than or equal to 5
+ * <li>[5,5] represents the single point with coordinate 5
+ * </ul>
  *
- * For string representation, we use the standard mathematical bracketed bounds
- * pair notation, with round brackets for open bounds and square brackets for
- * closed bounds, e.g.
- *
- *<ul>
- *<li> [3,5] represents all values between 3 and 5 inclusive
- *<li> (3,5] represents all values greater than 3 and less than or equal to 5
- *<li> [3,5) represents all values greatern than or equal to 3 and less than 5
- *<li> (3,5) represents all values between 3 and 5 exclusive
- *<li> (3,+infinity) represents all values greater than 3
- *<li> (-infinity,5] represents all values less than or equal to 5
- *<li> [5,5] represents the single point with coordinate 5
- *</ul>
- *
- *<p>
- *
- * Null values are ordered lower than any non-null value
- * but higher than -infinity.  So the interval [null,7) would include
- * the null value and any non-null value less than 7.
+ * <p>Null values are ordered lower than any non-null value but higher than
+ * -infinity. So the interval [null,7) would include the null value and any
+ * non-null value less than 7.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargInterval extends SargIntervalBase
+public class SargInterval
+    extends SargIntervalBase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * @see SargFactory.newInterval
      */
@@ -73,16 +71,18 @@ public class SargInterval extends SargIntervalBase
         super(factory, dataType);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     void copyFrom(SargIntervalBase other)
     {
-        assert(getDataType() == other.getDataType());
+        assert (getDataType() == other.getDataType());
         lowerBound.copyFrom(other.getLowerBound());
         upperBound.copyFrom(other.getUpperBound());
     }
 
     boolean contains(SargInterval other)
     {
-        assert(getDataType() == other.getDataType());
+        assert (getDataType() == other.getDataType());
         if (getLowerBound().compareTo(other.getLowerBound()) > 0) {
             return false;
         }

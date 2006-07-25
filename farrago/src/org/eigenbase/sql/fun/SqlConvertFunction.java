@@ -21,16 +21,17 @@
 */
 package org.eigenbase.sql.fun;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
 
 /**
  * Common base for the <code>CONVERT</code> and <code>TRANSLATE</code>
@@ -39,13 +40,23 @@ import java.util.*;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlConvertFunction extends SqlFunction
+public class SqlConvertFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlConvertFunction(String name)
     {
-        super(name, SqlKind.Function, null, null, null,
+        super(name,
+            SqlKind.Function,
+            null,
+            null,
+            null,
             SqlFunctionCategory.String);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void unparse(
         SqlWriter writer,

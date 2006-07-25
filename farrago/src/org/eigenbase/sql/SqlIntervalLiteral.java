@@ -21,14 +21,17 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
 
 /**
  * A SQL literal representing a time interval.
  *
- * <p>Examples:<ul>
+ * <p>Examples:
+ *
+ * <ul>
  * <li>INTERVAL '1' SECOND</li>
  * <li>INTERVAL '1:00:05.345' HOUR</li>
  * <li>INTERVAL '3:4' YEAR TO MONTH</li>
@@ -38,11 +41,15 @@ import org.eigenbase.util.Util;
  *
  * <p>The interval string, such as '1:00:05.345', is not parsed yet.</p>
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-public class SqlIntervalLiteral extends SqlLiteral
+public class SqlIntervalLiteral
+    extends SqlLiteral
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlIntervalLiteral(
         int sign,
         String intervalStr,
@@ -67,15 +74,22 @@ public class SqlIntervalLiteral extends SqlLiteral
             pos);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlNode clone(SqlParserPos pos)
     {
-        return new SqlIntervalLiteral((IntervalValue) value, getTypeName(), pos);
+        return
+            new SqlIntervalLiteral(
+                (IntervalValue) value,
+                getTypeName(),
+                pos);
     }
 
     public void unparse(
-            SqlWriter writer,
-            int leftPrec,
-            int rightPrec) {
+        SqlWriter writer,
+        int leftPrec,
+        int rightPrec)
+    {
         IntervalValue interval = (IntervalValue) value;
         writer.keyword("INTERVAL");
         if (interval.getSign() == -1) {
@@ -85,10 +99,13 @@ public class SqlIntervalLiteral extends SqlLiteral
         writer.keyword(interval.intervalQualifier.toString());
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * A Interval value.
      */
-    public static class IntervalValue {
+    public static class IntervalValue
+    {
         private final SqlIntervalQualifier intervalQualifier;
         private final String intervalStr;
         private final int sign;
@@ -105,7 +122,7 @@ public class SqlIntervalLiteral extends SqlLiteral
             int sign,
             String intervalStr)
         {
-            assert sign == -1 || sign == 1;
+            assert (sign == -1) || (sign == 1);
             assert intervalQualifier != null;
             assert intervalStr != null;
             this.intervalQualifier = intervalQualifier;
@@ -119,10 +136,12 @@ public class SqlIntervalLiteral extends SqlLiteral
                 return false;
             }
             IntervalValue that = (IntervalValue) obj;
-            return this.intervalStr.equals(that.intervalStr) &&
-                this.sign == that.sign &&
-                this.intervalQualifier.equalsDeep(
-                    that.intervalQualifier, false);
+            return
+                this.intervalStr.equals(that.intervalStr)
+                && (this.sign == that.sign)
+                && this.intervalQualifier.equalsDeep(
+                    that.intervalQualifier,
+                    false);
         }
 
         public int hashCode()
@@ -147,7 +166,8 @@ public class SqlIntervalLiteral extends SqlLiteral
             return sign;
         }
 
-        public String toString() {
+        public String toString()
+        {
             return intervalStr;
         }
     }

@@ -31,12 +31,12 @@ import net.sf.farrago.plugin.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedAbstractBase extends FarragoAbstractPluginBase
+public class MedAbstractBase
+    extends FarragoAbstractPluginBase
 {
     // NOTE jvs 17-May-2004: At the moment there's nothing MED-specific here,
     // but it's staying around as a placeholder in case there is something in
     // the future.  Put any generic plugin stuff in FarragoAbstractPluginBase.
 }
-
 
 // End MedAbstractBase.java

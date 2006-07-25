@@ -21,18 +21,21 @@
 */
 package org.eigenbase.runtime;
 
-import java.sql.SQLException;
+import java.sql.*;
 
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
 
-public class TupleIterResultSet extends AbstractIterResultSet
+
+public class TupleIterResultSet
+    extends AbstractIterResultSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final TupleIter tupleIter;
     private TimeoutQueueTupleIter timeoutTupleIter;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a result set based upon an iterator. The column-getter accesses
@@ -45,12 +48,12 @@ public class TupleIterResultSet extends AbstractIterResultSet
         ColumnGetter columnGetter)
     {
         super(columnGetter);
-        
+
         Util.pre(tupleIter != null, "tupleIter != null");
         this.tupleIter = tupleIter;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Sets the timeout that this TupleIterResultSet will wait for a row from
@@ -61,7 +64,7 @@ public class TupleIterResultSet extends AbstractIterResultSet
     public void setTimeout(long timeoutMillis)
     {
         super.setTimeout(timeoutMillis);
-        
+
         assert timeoutTupleIter == null;
 
         // we create a new semaphore for each executeQuery call
@@ -87,18 +90,18 @@ public class TupleIterResultSet extends AbstractIterResultSet
         throws SQLException
     {
         try {
-            Object next = 
-                timeoutTupleIter != null
+            Object next =
+                (timeoutTupleIter != null)
                 ? timeoutTupleIter.fetchNext(timeoutMillis)
                 : tupleIter.fetchNext();
-            
+
             if (next == TupleIter.NoDataReason.END_OF_DATA) {
                 return false;
             } else if (next instanceof TupleIter.NoDataReason) {
                 // TODO: SWZ: 2/23/2006: better exception
                 throw new RuntimeException();
             }
-            
+
             this.current = next;
             this.row++;
             return true;
@@ -109,6 +112,5 @@ public class TupleIterResultSet extends AbstractIterResultSet
         }
     }
 }
-
 
 // End TupleIterResultSet.java

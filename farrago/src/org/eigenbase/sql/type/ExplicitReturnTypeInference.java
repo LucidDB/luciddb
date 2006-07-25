@@ -22,8 +22,9 @@
 package org.eigenbase.sql.type;
 
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * A {@link SqlReturnTypeInference} which always returns the same SQL type.
@@ -34,11 +35,16 @@ import org.eigenbase.sql.*;
 public class ExplicitReturnTypeInference
     implements SqlReturnTypeInference
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int argCount;
     private final SqlTypeName typeName;
     private final int length;
     private final int scale;
     private final RelDataType type;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an inference rule which always returns the same type object.
@@ -59,8 +65,8 @@ public class ExplicitReturnTypeInference
     }
 
     /**
-     * Creates an inference rule which always returns a given SQL type with
-     * zero parameters (such as <code>DATE</code>).
+     * Creates an inference rule which always returns a given SQL type with zero
+     * parameters (such as <code>DATE</code>).
      *
      * @param typeName Name of the type
      */
@@ -74,9 +80,9 @@ public class ExplicitReturnTypeInference
     }
 
     /**
-     * Creates an inference rule which always returns a given SQL type with
-     * a precision/length parameter (such as <code>VARCHAR(10)</code> and
-     * <code>NUMBER(5)</code>).
+     * Creates an inference rule which always returns a given SQL type with a
+     * precision/length parameter (such as <code>VARCHAR(10)</code> and <code>
+     * NUMBER(5)</code>).
      *
      * @param typeName Name of the type
      * @param length Length or precision of the type
@@ -91,14 +97,16 @@ public class ExplicitReturnTypeInference
     }
 
     /**
-     * Creates an inference rule which always returns a given SQL type with
-     * a precision and scale parameters (such as <code>DECIMAL(8, 3)</code>).
+     * Creates an inference rule which always returns a given SQL type with a
+     * precision and scale parameters (such as <code>DECIMAL(8, 3)</code>).
      *
      * @param typeName Name of the type
      * @param length Precision of the type
      */
     public ExplicitReturnTypeInference(
-        SqlTypeName typeName, int length, int scale)
+        SqlTypeName typeName,
+        int length,
+        int scale)
     {
         this.argCount = 3;
         this.typeName = typeName;
@@ -106,6 +114,8 @@ public class ExplicitReturnTypeInference
         this.scale = scale;
         this.type = null;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
@@ -116,7 +126,8 @@ public class ExplicitReturnTypeInference
         return createType(opBinding.getTypeFactory());
     }
 
-    private RelDataType createType(RelDataTypeFactory typeFactory) {
+    private RelDataType createType(RelDataTypeFactory typeFactory)
+    {
         switch (argCount) {
         case 1:
             return typeFactory.createSqlType(typeName);

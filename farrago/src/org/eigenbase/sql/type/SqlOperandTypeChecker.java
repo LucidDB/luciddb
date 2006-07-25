@@ -24,42 +24,44 @@ package org.eigenbase.sql.type;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.validate.*;
 
+
 /**
  * Strategy interface to check for allowed operand types of an operator call.
  *
- * <p>This interface is an example of the
- * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.</p>
+ * <p>This interface is an example of the {@link
+ * org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.</p>
  *
  * @author Wael Chatila
  * @version $Id$
  */
 public interface SqlOperandTypeChecker
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Checks the types of all operands to an operator call.
      *
      * @param callBinding description of the call to be checked
-     *
-     * @param throwOnFailure whether to throw an exception if check
-     * fails (otherwise returns false in that case)
+     * @param throwOnFailure whether to throw an exception if check fails
+     * (otherwise returns false in that case)
      *
      * @return whether check succeeded
      */
     public boolean checkOperandTypes(
         SqlCallBinding callBinding,
         boolean throwOnFailure);
-    
+
     /**
      * @return range of operand counts allowed in a call
      */
     public SqlOperandCountRange getOperandCountRange();
 
     /**
-     * Returns a string describing the allowed formal signatures of a
-     * call, e.g.  "SUBSTR(VARCHAR, INTEGER, INTEGER)".
+     * Returns a string describing the allowed formal signatures of a call, e.g.
+     * "SUBSTR(VARCHAR, INTEGER, INTEGER)".
      *
      * @param op the operator being checked
-     *
      * @param opName name to use for the operator in case of aliasing
      *
      * @return generated string

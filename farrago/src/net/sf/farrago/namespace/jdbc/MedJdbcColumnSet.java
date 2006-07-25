@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.jdbc;
 
 import java.sql.*;
+
 import java.util.*;
 
 import javax.sql.*;
@@ -47,15 +48,17 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedJdbcColumnSet extends MedAbstractColumnSet
+class MedJdbcColumnSet
+    extends MedAbstractColumnSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     final MedJdbcNameDirectory directory;
     final SqlSelect select;
     final SqlDialect dialect;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedJdbcColumnSet(
         MedJdbcNameDirectory directory,
@@ -71,7 +74,7 @@ class MedJdbcColumnSet extends MedAbstractColumnSet
         this.dialect = dialect;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptTable
     public double getRowCount()
@@ -85,15 +88,15 @@ class MedJdbcColumnSet extends MedAbstractColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return new MedJdbcQueryRel(
-            this,
-            cluster,
-            getRowType(),
-            connection,
-            dialect,
-            select);
+        return
+            new MedJdbcQueryRel(
+                this,
+                cluster,
+                getRowType(),
+                connection,
+                dialect,
+                select);
     }
 }
-
 
 // End MedJdbcColumnSet.java

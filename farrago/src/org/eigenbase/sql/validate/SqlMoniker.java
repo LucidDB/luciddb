@@ -19,20 +19,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlIdentifier;
+import org.eigenbase.sql.*;
+
 
 /**
  * An interface of an object identifier that represents a SqlIdentifier
  *
  * @author tleung
- * @since May 24, 2005
  * @version $Id$
- **/
+ * @since May 24, 2005
+ */
 public interface SqlMoniker
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the type of object referred to by this moniker. Never null.
      */
@@ -41,7 +44,7 @@ public interface SqlMoniker
     /**
      * Returns the array of component names.
      */
-    String[] getFullyQualifiedNames();
+    String [] getFullyQualifiedNames();
 
     /**
      * Creates a {@link SqlIdentifier} containing the fully-qualified name.

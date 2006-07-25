@@ -36,19 +36,22 @@ import org.eigenbase.sql.type.*;
  */
 public class FarragoJdbcMetaDataImpl
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Type info to return. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Type info to return.
+     */
     protected final RelDataType rowType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected FarragoJdbcMetaDataImpl(RelDataType rowType)
     {
         this.rowType = rowType;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     protected RelDataType getFieldNamedType(int fieldOrdinal)
     {
@@ -100,7 +103,7 @@ public class FarragoJdbcMetaDataImpl
         if (typeName == null) {
             return type.toString();
         }
-        switch(typeName.getOrdinal()) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Structured_ordinal:
         case SqlTypeName.Distinct_ordinal:
             return type.getSqlIdentifier().toString();
@@ -134,6 +137,7 @@ public class FarragoJdbcMetaDataImpl
         int type = getFieldJdbcType(column);
         switch (type) {
         case Types.BOOLEAN:
+
             // 5 for max(strlen("true"),strlen("false"))
             return 5;
         case Types.DATE:
@@ -162,6 +166,7 @@ public class FarragoJdbcMetaDataImpl
         case Types.DOUBLE:
             return 22;
         default:
+
             // TODO:  adjust for numeric formatting, etc.
             return precision;
         }
@@ -188,8 +193,9 @@ public class FarragoJdbcMetaDataImpl
     protected int isFieldNullable(int fieldOrdinal)
     {
         RelDataType type = getFieldType(fieldOrdinal);
-        return type.isNullable() ? ResultSetMetaData.columnNullable
-        : ResultSetMetaData.columnNoNulls;
+        return
+            type.isNullable() ? ResultSetMetaData.columnNullable
+            : ResultSetMetaData.columnNoNulls;
     }
 
     protected boolean isFieldAutoIncrement(int fieldOrdinal)
@@ -239,6 +245,5 @@ public class FarragoJdbcMetaDataImpl
         return false;
     }
 }
-
 
 // End FarragoJdbcMetaDataImpl.java

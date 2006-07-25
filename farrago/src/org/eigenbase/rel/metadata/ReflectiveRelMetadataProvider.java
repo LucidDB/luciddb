@@ -21,21 +21,21 @@
 */
 package org.eigenbase.rel.metadata;
 
+import java.lang.reflect.*;
+
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
-import java.lang.reflect.*;
 
 /**
- * ReflectiveRelMetadataProvider provides an abstract base for
- * reflective implementations of the {@link RelMetadataProvider} interface.
- * For an example, see {@link DefaultRelMetadataProvider}.
+ * ReflectiveRelMetadataProvider provides an abstract base for reflective
+ * implementations of the {@link RelMetadataProvider} interface. For an example,
+ * see {@link DefaultRelMetadataProvider}.
  *
- *<p>
- *
- * TODO jvs 28-Mar-2006:  most of this should probably be
- * refactored into ReflectUtil.
+ * <p>TODO jvs 28-Mar-2006: most of this should probably be refactored into
+ * ReflectUtil.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -43,20 +43,26 @@ import java.lang.reflect.*;
 public abstract class ReflectiveRelMetadataProvider
     implements RelMetadataProvider
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Map<String, List<Class>> parameterTypeMap;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     protected ReflectiveRelMetadataProvider()
     {
         parameterTypeMap = new HashMap<String, List<Class>>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Maps the parameter type signature to look up for a given metadata query.
      *
      * @param metadataQueryName name of metadata query to map
-     *
-     * @param parameterTypes argument types (beyond the overloaded rel type)
-     * to map
+     * @param parameterTypes argument types (beyond the overloaded rel type) to
+     * map
      */
     protected void mapParameterTypes(
         String metadataQueryName,
@@ -64,23 +70,23 @@ public abstract class ReflectiveRelMetadataProvider
     {
         parameterTypeMap.put(metadataQueryName, parameterTypes);
     }
-    
+
     // implement RelMetadataProvider
     public Object getRelMetadata(
         RelNode rel,
         String metadataQueryName,
         Object [] args)
     {
-        List<Class> parameterTypes =
-            parameterTypeMap.get(metadataQueryName);
+        List<Class> parameterTypes = parameterTypeMap.get(metadataQueryName);
         if (parameterTypes == null) {
             parameterTypes = Collections.EMPTY_LIST;
         }
-        Method method = ReflectUtil.lookupVisitMethod(
-            getClass(),
-            rel.getClass(),
-            metadataQueryName,
-            parameterTypes);
+        Method method =
+            ReflectUtil.lookupVisitMethod(
+                getClass(),
+                rel.getClass(),
+                metadataQueryName,
+                parameterTypes);
 
         if (method == null) {
             return null;
@@ -92,7 +98,7 @@ public abstract class ReflectiveRelMetadataProvider
             allArgs[0] = rel;
             System.arraycopy(args, 0, allArgs, 1, args.length);
         } else {
-            allArgs = new Object [] { rel };
+            allArgs = new Object[] { rel };
         }
 
         try {

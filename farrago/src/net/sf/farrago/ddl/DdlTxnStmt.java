@@ -22,24 +22,25 @@
 */
 package net.sf.farrago.ddl;
 
-
 /**
- * DdlTxnStmt is a base for all statements which control the transaction
- * context (e.g. COMMIT).
+ * DdlTxnStmt is a base for all statements which control the transaction context
+ * (e.g. COMMIT).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class DdlTxnStmt extends DdlStmt
+public abstract class DdlTxnStmt
+    extends DdlStmt
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public DdlTxnStmt()
     {
         super(null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override DdlStmt
     public boolean requiresCommit()
@@ -47,6 +48,5 @@ public abstract class DdlTxnStmt extends DdlStmt
         return false;
     }
 }
-
 
 // End DdlTxnStmt.java

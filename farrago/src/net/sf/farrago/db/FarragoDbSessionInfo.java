@@ -22,46 +22,44 @@
 */
 package net.sf.farrago.db;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 
-import net.sf.farrago.session.FarragoSessionExecutingStmtInfo;
-import net.sf.farrago.session.FarragoSessionInfo;
-import net.sf.farrago.session.FarragoSession;
+import net.sf.farrago.session.*;
 
 
 /**
- * Implements the {@link FarragoSessionInfo} interface
- * in the context of a {@link FarragoDbSession}.
+ * Implements the {@link FarragoSessionInfo} interface in the context of a
+ * {@link FarragoDbSession}.
  *
  * @author Jason Ouellette
  * @version $Id$
  */
-public class FarragoDbSessionInfo implements FarragoSessionInfo
+public class FarragoDbSessionInfo
+    implements FarragoSessionInfo
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private long id;
     private FarragoSession session;
     private FarragoDatabase database;
     private Map<Long, FarragoSessionExecutingStmtInfo> statements;
-    // REVIEW mberkowitz 28-Mar-2006: maybe have 1 map id->info in FarragoDatabase.
+    // REVIEW mberkowitz 28-Mar-2006: maybe have 1 map id->info in
+    // FarragoDatabase.
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     FarragoDbSessionInfo(FarragoSession session, FarragoDatabase database)
     {
         this.id = database.getUniqueId();
         this.session = session;
         this.database = database;
-        statements = new ConcurrentHashMap<Long, FarragoSessionExecutingStmtInfo>();
+        statements =
+            new ConcurrentHashMap<Long, FarragoSessionExecutingStmtInfo>();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public FarragoSession getSession()
     {
@@ -94,6 +92,7 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
 
     /**
      * Adds a running statement.
+     *
      * @param info Info object for the running statement
      */
     public void addExecutingStmtInfo(FarragoSessionExecutingStmtInfo info)
@@ -105,6 +104,7 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
 
     /**
      * Removes a running statement.
+     *
      * @param id Unique identifier of a running statement
      */
     public void removeExecutingStmtInfo(long id)
@@ -112,3 +112,5 @@ public class FarragoDbSessionInfo implements FarragoSessionInfo
         statements.remove(id);
     }
 }
+
+// End FarragoDbSessionInfo.java

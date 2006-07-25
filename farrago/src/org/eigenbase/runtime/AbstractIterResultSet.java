@@ -24,38 +24,42 @@ package org.eigenbase.runtime;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
 
-import org.eigenbase.util.Util;
-import org.eigenbase.util14.AbstractResultSet;
+import java.sql.*;
+
+import java.util.*;
+
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
+
 
 /**
  * AbstractIterResultSet provides functionality common to all ResultSet
- * implementations that convert from iterator convention. 
- * 
+ * implementations that convert from iterator convention.
+ *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public abstract class AbstractIterResultSet extends AbstractResultSet
+public abstract class AbstractIterResultSet
+    extends AbstractResultSet
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final ColumnGetter columnGetter;
     protected Object current;
     protected int row; // 1-based (starts on 0 to represent before first row)
     protected long timeoutMillis;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected AbstractIterResultSet(ColumnGetter columnGetter)
     {
         Util.discard(columnGetter.getColumnNames());
         this.columnGetter = columnGetter;
     }
-    
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     private String [] getColumnNames()
     {
@@ -66,13 +70,14 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
             return columnNames;
         }
     }
-    
+
     /**
      * Sets the timeout that this AbstractIterResultSet will wait for a row from
-     * the underlying iterator.  Note that the timeout must be implemented
-     * in the abstract method {@link #next()}.
+     * the underlying iterator. Note that the timeout must be implemented in the
+     * abstract method {@link #next()}.
      *
      * @param timeoutMillis Timeout in milliseconds. Must be greater than zero.
+     *
      * @pre timeoutMillis > 0
      * @pre this.timeoutMillis == 0
      */
@@ -91,7 +96,7 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         // next() returns false
         return false;
     }
-    
+
     public boolean isBeforeFirst()
         throws SQLException
     {
@@ -99,36 +104,36 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         // no rows?
         return row == 0;
     }
-    
+
     public void setFetchSize(int rows)
         throws SQLException
     {
     }
-    
+
     public int getFetchSize()
         throws SQLException
     {
         return 0;
     }
-    
+
     public boolean isFirst()
         throws SQLException
     {
         return row == 1;
     }
-    
+
     public boolean isLast()
         throws SQLException
     {
         return false;
     }
-    
+
     public ResultSetMetaData getMetaData()
         throws SQLException
     {
         return new MetaData();
     }
-    
+
     public int getRow()
         throws SQLException
     {
@@ -143,7 +148,7 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
         return columnGetter.get(current, columnIndex);
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * A <code>ColumnGetter</code> retrieves a column from an input row based
@@ -158,13 +163,14 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
             int columnIndex);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * A <code>FieldGetter</code> retrieves each public field as a separate
      * column.
      */
-    public static class FieldGetter implements ColumnGetter
+    public static class FieldGetter
+        implements ColumnGetter
     {
         private static final Field [] emptyFieldArray = new Field[0];
         private final Class clazz;
@@ -207,7 +213,7 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
             for (int i = 0; i < fields.length; i++) {
                 Field field = fields[i];
                 if (Modifier.isPublic(field.getModifiers())
-                        && !Modifier.isStatic(field.getModifiers())) {
+                    && !Modifier.isStatic(field.getModifiers())) {
                     list.add(field);
                 }
             }
@@ -218,7 +224,8 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
     // ------------------------------------------------------------------------
     // NOTE jvs 30-May-2003:  I made this public because iSQL wanted it that
     // way for reflection.
-    public class MetaData implements ResultSetMetaData
+    public class MetaData
+        implements ResultSetMetaData
     {
         public boolean isAutoIncrement(int column)
             throws SQLException
@@ -353,7 +360,8 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
     /**
      * A <code>SingletonColumnGetter</code> retrieves the object itself.
      */
-    public static class SingletonColumnGetter implements ColumnGetter
+    public static class SingletonColumnGetter
+        implements ColumnGetter
     {
         public SingletonColumnGetter()
         {
@@ -361,7 +369,7 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
 
         public String [] getColumnNames()
         {
-            return new String [] { "column0" };
+            return new String[] { "column0" };
         }
 
         public Object get(
@@ -377,7 +385,8 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
      * A <code>SyntheticColumnGetter</code> retrieves columns from a synthetic
      * object.
      */
-    public static class SyntheticColumnGetter implements ColumnGetter
+    public static class SyntheticColumnGetter
+        implements ColumnGetter
     {
         String [] columnNames;
         Field [] fields;
@@ -415,12 +424,16 @@ public abstract class AbstractIterResultSet extends AbstractResultSet
      * Indicates that an operation timed out. This is not an error; you can
      * retry the operation.
      */
-    public static class SqlTimeoutException extends SQLException
+    public static class SqlTimeoutException
+        extends SQLException
     {
-        SqlTimeoutException() {
+        SqlTimeoutException()
+        {
             // SQLException(reason, SQLState, vendorCode)
             // REVIEW mb 19-Jul-05 Is there a standard SQLState?
             super("timeout", null, 0);
         }
     }
 }
+
+// End AbstractIterResultSet.java

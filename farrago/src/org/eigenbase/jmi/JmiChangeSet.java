@@ -24,48 +24,52 @@ package org.eigenbase.jmi;
 import java.util.*;
 import java.util.logging.*;
 
-import javax.jmi.reflect.*;
 import javax.jmi.model.*;
+import javax.jmi.reflect.*;
 
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
+
 import org.netbeans.api.mdr.*;
 import org.netbeans.api.mdr.events.*;
 
+
 /**
- * JmiChangeSet manages the process of applying changes to a JMI
- * repository (currently relying on MDR specifics).
+ * JmiChangeSet manages the process of applying changes to a JMI repository
+ * (currently relying on MDR specifics).
  *
- *<p>
- *
- * TODO jvs 16-Nov-2005:  I factored a lot of this out of DdlValidator,
- * but I didn't update DdlValidator because Jason is working on CREATE
- * OR REPLACE in there.  Once things settle down, make DdlValidator
- * rely on JmiChangeSet instead of duplicating it.
+ * <p>TODO jvs 16-Nov-2005: I factored a lot of this out of DdlValidator, but I
+ * didn't update DdlValidator because Jason is working on CREATE OR REPLACE in
+ * there. Once things settle down, make DdlValidator rely on JmiChangeSet
+ * instead of duplicating it.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiChangeSet implements MDRPreChangeListener
+public class JmiChangeSet
+    implements MDRPreChangeListener
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getJmiChangeSetTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Queue of excns detected during plannedChange. */
+    /**
+     * Queue of excns detected during plannedChange.
+     */
     private DeferredException enqueuedValidationExcn;
 
     /**
-     * Map (from RefAssociation.Class to JmiDeletionRule) of
-     * associations for which special handling is required during deletion.
+     * Map (from RefAssociation.Class to JmiDeletionRule) of associations for
+     * which special handling is required during deletion.
      */
-    private MultiMap<Class<? extends Object>,JmiDeletionRule> deletionRules;
+    private MultiMap<Class<? extends Object>, JmiDeletionRule> deletionRules;
 
     /**
-     * Map containing scheduled validation actions.  The key is the MofId of
-     * the object scheduled for validation; the value is the action type.
+     * Map containing scheduled validation actions. The key is the MofId of the
+     * object scheduled for validation; the value is the action type.
      */
     private Map<String, JmiValidationAction> schedulingMap;
 
@@ -76,8 +80,8 @@ public class JmiChangeSet implements MDRPreChangeListener
     private Map<String, JmiValidationAction> transitMap;
 
     /**
-     * Map of object validations which have already taken place.
-     * The key is the RefObject itself; the value is the action type.
+     * Map of object validations which have already taken place. The key is the
+     * RefObject itself; the value is the action type.
      */
     private Map<RefObject, JmiValidationAction> validatedMap;
 
@@ -93,21 +97,20 @@ public class JmiChangeSet implements MDRPreChangeListener
     private Thread activeThread;
 
     private final JmiChangeDispatcher dispatcher;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new JmiChangeSet which will listen for repository
-     * change events and schedule appropriate validation actions on the
-     * affected objects.  Validation is deferred until validate() is called.
+     * Creates a new JmiChangeSet which will listen for repository change events
+     * and schedule appropriate validation actions on the affected objects.
+     * Validation is deferred until validate() is called.
      *
-     * @param dispatcher implementation of {@link JmiChangeDispatcher} to
-     * use
+     * @param dispatcher implementation of {@link JmiChangeDispatcher} to use
      */
     public JmiChangeSet(JmiChangeDispatcher dispatcher)
     {
         this.dispatcher = dispatcher;
-        
+
         // NOTE jvs 25-Jan-2004:  Use LinkedHashXXX, since order
         // matters for these.
         schedulingMap = new LinkedHashMap<String, JmiValidationAction>();
@@ -116,13 +119,14 @@ public class JmiChangeSet implements MDRPreChangeListener
 
         // NOTE:  deletionRules are populated implicitly as action handlers
         // are set up below.
-        deletionRules = new MultiMap<Class<? extends Object>, JmiDeletionRule>();
+        deletionRules =
+            new MultiMap<Class<? extends Object>, JmiDeletionRule>();
 
-        // MDR pre-change instance creation events are useless, since they
-        // don't refer to the new instance.  Instead, we rely on the
-        // fact that it's pretty much guaranteed that the new object will have
-        // attributes or associations set (though someone will probably come up
-        // with a pathological case eventually).
+        // MDR pre-change instance creation events are useless, since they don't
+        // refer to the new instance.  Instead, we rely on the fact that it's
+        // pretty much guaranteed that the new object will have attributes or
+        // associations set (though someone will probably come up with a
+        // pathological case eventually).
         activeThread = Thread.currentThread();
         getMdrRepos().addListener(this,
             InstanceEvent.EVENT_INSTANCE_DELETE
@@ -130,21 +134,19 @@ public class JmiChangeSet implements MDRPreChangeListener
             | AssociationEvent.EVENTMASK_ASSOCIATION);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Releases any resources associated with this change.
      *
-     *<p>
-     *
-     * TODO jvs 16-Nov-2005:  move FarragoAllocation framework up
-     * to org.eigenbase level.
+     * <p>TODO jvs 16-Nov-2005: move FarragoAllocation framework up to
+     * org.eigenbase level.
      */
     public void closeAllocation()
     {
         stopListening();
     }
-    
+
     /**
      * Determines whether an object is being deleted by this change.
      *
@@ -173,10 +175,13 @@ public class JmiChangeSet implements MDRPreChangeListener
         RefObject refObject,
         JmiValidationAction status)
     {
-        return (schedulingMap.get(refObject.refMofId()) == status)
+        return
+            (schedulingMap.get(refObject.refMofId()) == status)
             || (validatedMap.get(refObject) == status)
-            || ((transitMap != null)
-            && (transitMap.get(refObject.refMofId()) == status));
+            || (
+                (transitMap != null)
+                && (transitMap.get(refObject.refMofId()) == status)
+               );
     }
 
     private void stopListening()
@@ -200,8 +205,7 @@ public class JmiChangeSet implements MDRPreChangeListener
 
         List<RefObject> deletionList = new ArrayList<RefObject>();
         for (Map.Entry<RefObject, JmiValidationAction> mapEntry
-                 : validatedMap.entrySet())
-        {
+            : validatedMap.entrySet()) {
             RefObject obj = (RefObject) mapEntry.getKey();
             Object action = mapEntry.getValue();
 
@@ -245,7 +249,7 @@ public class JmiChangeSet implements MDRPreChangeListener
         if (tracer.isLoggable(Level.FINE)) {
             tracer.fine(event.toString());
         }
-        
+
         // ignore events from other threads
         if (activeThread != Thread.currentThread()) {
             // REVIEW:  This isn't going to be good enough if we have
@@ -278,11 +282,12 @@ public class JmiChangeSet implements MDRPreChangeListener
             if (event.getType() == AssociationEvent.EVENT_ASSOCIATION_REMOVE) {
                 RefAssociation refAssoc =
                     (RefAssociation) associationEvent.getSource();
-                List<JmiDeletionRule> rules = deletionRules.getMulti(refAssoc.getClass());
+                List<JmiDeletionRule> rules =
+                    deletionRules.getMulti(refAssoc.getClass());
                 for (JmiDeletionRule rule : rules) {
                     if ((rule != null)
                         && rule.getEndName().equals(
-                        associationEvent.getEndName())) {
+                            associationEvent.getEndName())) {
                         fireDeletionRule(
                             refAssoc,
                             rule,
@@ -294,7 +299,7 @@ public class JmiChangeSet implements MDRPreChangeListener
         } else {
             // REVIEW jvs 19-Nov-2005:  Somehow these slip through even
             // though we mask them out.  Probably an MDR bug.
-            assert(event.getType() == InstanceEvent.EVENT_INSTANCE_CREATE);
+            assert (event.getType() == InstanceEvent.EVENT_INSTANCE_CREATE);
         }
     }
 
@@ -309,7 +314,7 @@ public class JmiChangeSet implements MDRPreChangeListener
     {
         // don't care
     }
-    
+
     public void validate()
     {
         checkValidationExcnQueue();
@@ -354,8 +359,7 @@ public class JmiChangeSet implements MDRPreChangeListener
             boolean progress = false;
             boolean unvalidatedDependency = false;
             for (Map.Entry<String, JmiValidationAction> mapEntry
-                     : transitMap.entrySet())
-            {
+                : transitMap.entrySet()) {
                 RefObject obj =
                     (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
                 if (obj == null) {
@@ -397,8 +401,8 @@ public class JmiChangeSet implements MDRPreChangeListener
         RefAssociation refAssoc,
         JmiDeletionRule dropRule)
     {
-        // NOTE:  use class object because in some circumstances MDR makes
-        // up multiple instances of the same association, but doesn't implement
+        // NOTE:  use class object because in some circumstances MDR makes up
+        // multiple instances of the same association, but doesn't implement
         // equals/hashCode correctly.
         deletionRules.putMulti(
             refAssoc.getClass(),
@@ -410,8 +414,7 @@ public class JmiChangeSet implements MDRPreChangeListener
         Collection<RefObject> collection,
         boolean includeType)
     {
-        Map<String, RefObject> nameMap =
-            new LinkedHashMap<String, RefObject>();
+        Map<String, RefObject> nameMap = new LinkedHashMap<String, RefObject>();
         for (RefObject element : collection) {
             String nameKey = dispatcher.getNameKey(element, includeType);
             if (nameKey == null) {
@@ -421,8 +424,7 @@ public class JmiChangeSet implements MDRPreChangeListener
             RefObject other = nameMap.get(nameKey);
             if (other != null) {
                 if (dispatcher.isNewObject(other)
-                    && dispatcher.isNewObject(element))
-                {
+                    && dispatcher.isNewObject(element)) {
                     // clash between two new objects being defined
                     // simultaneously
                     dispatcher.notifyNameCollision(
@@ -481,18 +483,17 @@ public class JmiChangeSet implements MDRPreChangeListener
         RefObject otherEnd)
     {
         if ((rule.getSuperInterface() != null)
-            && !(rule.getSuperInterface().isInstance(droppedEnd)))
-        {
+            && !(rule.getSuperInterface().isInstance(droppedEnd))) {
             return;
         }
         JmiDeletionAction action = rule.getAction();
-        
+
         if ((action == JmiDeletionAction.CASCADE)
-            || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE))
-        {
+            || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE)) {
             deleteQueue.add(otherEnd);
             dispatcher.notifyDeleteEffect(
-                otherEnd, JmiDeletionAction.CASCADE);
+                otherEnd,
+                JmiDeletionAction.CASCADE);
             return;
         }
 
@@ -504,20 +505,19 @@ public class JmiChangeSet implements MDRPreChangeListener
             // we would need to explicitly queue an action to
             // break the link.
             dispatcher.notifyDeleteEffect(
-                otherEnd, JmiDeletionAction.INVALIDATE);
+                otherEnd,
+                JmiDeletionAction.INVALIDATE);
             return;
         }
 
         // NOTE: We can't construct the exception now since the object is
         // deleted.  Instead, defer until after rollback.
         final String mofId = droppedEnd.refMofId();
-        enqueueValidationExcn(
-            new DeferredException()
-            {
+        enqueueValidationExcn(new DeferredException() {
                 RuntimeException getException()
                 {
-                    RefObject droppedElement = (RefObject)
-                        getMdrRepos().getByMofId(mofId);
+                    RefObject droppedElement =
+                        (RefObject) getMdrRepos().getByMofId(mofId);
                     return new JmiRestrictException(droppedElement);
                 }
             });
@@ -525,10 +525,10 @@ public class JmiChangeSet implements MDRPreChangeListener
 
     private void rollbackDeletions()
     {
-        // A savepoint or chained transaction would be smoother, but MDR
-        // doesn't support those.  Instead, have to restart the txn
-        // altogether.  Take advantage of the fact that MDR allows us to retain
-        // references across txns.
+        // A savepoint or chained transaction would be smoother, but MDR doesn't
+        // support those.  Instead, have to restart the txn altogether.  Take
+        // advantage of the fact that MDR allows us to retain references across
+        // txns.
         getMdrRepos().endTrans(true);
 
         // TODO:  really need a lock to protect us against someone else's
@@ -537,12 +537,12 @@ public class JmiChangeSet implements MDRPreChangeListener
     }
 
     /**
-     * Explicitly schedules an object for deletion.  Objects may
-     * also be scheduled for deletion implicitly via cascades, or
-     * by listening for refDelete events.
+     * Explicitly schedules an object for deletion. Objects may also be
+     * scheduled for deletion implicitly via cascades, or by listening for
+     * refDelete events.
      *
-     * @param obj object whose deletion is to be scheduled as
-     * part of this change
+     * @param obj object whose deletion is to be scheduled as part of this
+     * change
      */
     public void scheduleDeletion(RefObject obj)
     {
@@ -576,7 +576,7 @@ public class JmiChangeSet implements MDRPreChangeListener
 
     /**
      * Explicitly schedules an object for creation or modification (which one
-     * depends on the result of JmiChangeDispatcher.isNewObject).  This can be
+     * depends on the result of JmiChangeDispatcher.isNewObject). This can be
      * used to include objects for which events were not heard by the listener
      * mechanism.
      *
@@ -606,8 +606,7 @@ public class JmiChangeSet implements MDRPreChangeListener
     private void setOrdinalsInTransitMap()
     {
         for (Map.Entry<String, JmiValidationAction> mapEntry
-                 : transitMap.entrySet())
-        {
+            : transitMap.entrySet()) {
             JmiValidationAction action = mapEntry.getValue();
             if (action == JmiValidationAction.DELETION) {
                 continue;
@@ -620,7 +619,7 @@ public class JmiChangeSet implements MDRPreChangeListener
 
     /**
      * Sets the "ordinal" attribute of all objects which are targets of ordered
-     * composite associations with the given object as the source.  The ordinal
+     * composite associations with the given object as the source. The ordinal
      * attribute (if it exists) is set to match the 0-based association order.
      *
      * @param refObj source of associations to maintain
@@ -631,30 +630,31 @@ public class JmiChangeSet implements MDRPreChangeListener
         JmiClassVertex classVertex =
             modelView.getModelGraph().getVertexForRefClass(
                 refObj.refClass());
-        assert(classVertex != null);
+        assert (classVertex != null);
         Set edges = modelView.getAllOutgoingAssocEdges(classVertex);
         for (Object edgeObj : edges) {
             JmiAssocEdge edge = (JmiAssocEdge) edgeObj;
             if (edge.getSourceEnd().getAggregation()
-                != AggregationKindEnum.COMPOSITE)
-            {
+                != AggregationKindEnum.COMPOSITE) {
                 continue;
             }
             if (!edge.getTargetEnd().getMultiplicity().isOrdered()) {
                 continue;
             }
             JmiClassVertex targetVertex = (JmiClassVertex) edge.getTarget();
-            List targetFeatures = JmiObjUtil.getFeatures(
-                targetVertex.getRefClass(),
-                Attribute.class,
-                false);
-            
-            Collection targets = edge.getRefAssoc().refQuery(
-                edge.getSourceEnd(),
-                refObj);
+            List targetFeatures =
+                JmiObjUtil.getFeatures(
+                    targetVertex.getRefClass(),
+                    Attribute.class,
+                    false);
+
+            Collection targets =
+                edge.getRefAssoc().refQuery(
+                    edge.getSourceEnd(),
+                    refObj);
 
             // It's an ordered end, so it should be a List.
-            assert(targets instanceof List);
+            assert (targets instanceof List);
 
             int nextOrdinal = 0;
             for (Object targetObj : targets) {
@@ -668,6 +668,7 @@ public class JmiChangeSet implements MDRPreChangeListener
                     // No ordinal attribute to be maintained.
                     continue;
                 }
+
                 // Avoid unnecessary updates in the case where ordinals
                 // are already correct.
                 if (oldOrdinal != newOrdinal) {
@@ -676,13 +677,13 @@ public class JmiChangeSet implements MDRPreChangeListener
             }
         }
     }
-    
-    //~ Inner Classes ---------------------------------------------------------
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * DeferredException allows an exception's creation to be deferred.
-     * This is needed since it is not possible to correctly construct
-     * an exception in certain validation contexts.
+     * DeferredException allows an exception's creation to be deferred. This is
+     * needed since it is not possible to correctly construct an exception in
+     * certain validation contexts.
      */
     private static abstract class DeferredException
     {

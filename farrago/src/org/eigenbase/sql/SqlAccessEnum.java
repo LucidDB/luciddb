@@ -19,10 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql;
 
-import org.eigenbase.util.EnumeratedValues;
+import org.eigenbase.util.*;
+
 
 /**
  * Enumeration representing different access types
@@ -32,30 +32,37 @@ import org.eigenbase.util.EnumeratedValues;
  * @since Sep 18, 2005
  */
 // TODO: Change to use Enum
-public class SqlAccessEnum extends EnumeratedValues.BasicValue
+public class SqlAccessEnum
+    extends EnumeratedValues.BasicValue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final int SelectORDINAL = 1;
-    public static final SqlAccessEnum SELECT = new SqlAccessEnum("SELECT", SelectORDINAL);
+    public static final SqlAccessEnum SELECT =
+        new SqlAccessEnum("SELECT", SelectORDINAL);
 
     public static final int UpdateORDINAL = 2;
-    public static final SqlAccessEnum UPDATE = new SqlAccessEnum("UPDATE", UpdateORDINAL);
+    public static final SqlAccessEnum UPDATE =
+        new SqlAccessEnum("UPDATE", UpdateORDINAL);
 
     public static final int InsertORDINAL = 3;
-    public static final SqlAccessEnum INSERT = new SqlAccessEnum("INSERT", InsertORDINAL);
+    public static final SqlAccessEnum INSERT =
+        new SqlAccessEnum("INSERT", InsertORDINAL);
 
     public static final int DeleteORDINAL = 4;
-    public static final SqlAccessEnum DELETE = new SqlAccessEnum("DELETE", DeleteORDINAL);
+    public static final SqlAccessEnum DELETE =
+        new SqlAccessEnum("DELETE", DeleteORDINAL);
 
+    public static final SqlAccessEnum [] ALL =
+        { SELECT, UPDATE, INSERT, DELETE };
+    public static final SqlAccessEnum [] READ_ONLY = { SELECT };
+    public static final SqlAccessEnum [] WRITE_ONLY = { INSERT };
 
-    public static final SqlAccessEnum[] ALL = { SELECT, UPDATE, INSERT, DELETE };
-    public static final SqlAccessEnum[] READ_ONLY = { SELECT };
-    public static final SqlAccessEnum[] WRITE_ONLY = { INSERT };
+    public static final EnumeratedValues enumeration =
+        new EnumeratedValues(ALL);
 
-    public static final EnumeratedValues enumeration = new EnumeratedValues(ALL);
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private SqlAccessEnum(
         String name,
@@ -64,7 +71,7 @@ public class SqlAccessEnum extends EnumeratedValues.BasicValue
         super(name, ordinal, null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Looks up an access enum from its ordinal.

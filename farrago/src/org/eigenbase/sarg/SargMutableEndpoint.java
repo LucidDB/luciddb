@@ -21,22 +21,26 @@
 */
 package org.eigenbase.sarg;
 
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
-
 import java.util.*;
 
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
+
 /**
- * SargMutableEndpoint exposes methods for modifying a
- * {@link SargEndpoint}.
+ * SargMutableEndpoint exposes methods for modifying a {@link SargEndpoint}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SargMutableEndpoint extends SargEndpoint
+public class SargMutableEndpoint
+    extends SargEndpoint
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * @see SargFactory.newEndpoint
      */
@@ -44,6 +48,8 @@ public class SargMutableEndpoint extends SargEndpoint
     {
         super(factory, dataType);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // publicize SargEndpoint
     public void setInfinity(int infinitude)

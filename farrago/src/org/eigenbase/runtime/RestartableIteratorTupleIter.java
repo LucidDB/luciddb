@@ -23,22 +23,30 @@ package org.eigenbase.runtime;
 
 import java.util.*;
 
+
 /**
- * <code>RestartableIteratorTupleIter</code> implements the
- * {@link TupleIter} interface in terms of an underlying
- * {@link RestartableIterator}.
+ * <code>RestartableIteratorTupleIter</code> implements the {@link TupleIter}
+ * interface in terms of an underlying {@link RestartableIterator}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class RestartableIteratorTupleIter implements TupleIter
+public class RestartableIteratorTupleIter
+    implements TupleIter
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RestartableIterator iterator;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public RestartableIteratorTupleIter(RestartableIterator iterator)
     {
         this.iterator = iterator;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement TupleIter
     public Object fetchNext()
@@ -49,7 +57,7 @@ public class RestartableIteratorTupleIter implements TupleIter
 
         return NoDataReason.END_OF_DATA;
     }
-    
+
     // implement TupleIter
     public void restart()
     {

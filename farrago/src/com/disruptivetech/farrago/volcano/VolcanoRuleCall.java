@@ -21,23 +21,26 @@
 package com.disruptivetech.farrago.volcano;
 
 import java.util.*;
-import java.util.logging.Level;
+import java.util.logging.*;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.Util;
+import org.eigenbase.util.*;
+
 
 /**
  * <code>VolcanoRuleCall</code> implements the {@link RelOptRuleCall} interface
  * for VolcanoPlanner.
  */
-public class VolcanoRuleCall extends RelOptRuleCall
+public class VolcanoRuleCall
+    extends RelOptRuleCall
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final VolcanoPlanner volcanoPlanner;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected VolcanoRuleCall(
         VolcanoPlanner volcanoPlanner,
@@ -52,10 +55,13 @@ public class VolcanoRuleCall extends RelOptRuleCall
         VolcanoPlanner planner,
         RelOptRuleOperand operand)
     {
-        this(planner, operand, new RelNode[operand.getRule().operands.length]);
+        this(
+            planner,
+            operand,
+            new RelNode[operand.getRule().operands.length]);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRuleCall
     public void transformTo(RelNode rel)
@@ -68,14 +74,17 @@ public class VolcanoRuleCall extends RelOptRuleCall
             // Make sure traits that the new rel doesn't know about are
             // propagated.
             RelTraitSet rels0Traits = rels[0].getTraits();
-            new RelTraitPropagationVisitor(getPlanner(), rels0Traits).go(rel);
+            new RelTraitPropagationVisitor(
+                getPlanner(),
+                rels0Traits).go(rel);
 
             if (tracer.isLoggable(Level.FINEST)) {
                 // Cannot call RelNode.toString() yet, because rel has not
                 // been registered. For now, let's make up something similar.
                 String relDesc =
                     "rel#" + rel.getId() + ":" + rel.getRelTypeName();
-                tracer.finest("Rule " + getRule() + " arguments "
+                tracer.finest(
+                    "Rule " + getRule() + " arguments "
                     + RelOptUtil.toString(rels) + " created " + relDesc);
             }
 
@@ -88,9 +97,9 @@ public class VolcanoRuleCall extends RelOptRuleCall
                         true);
                 volcanoPlanner.listener.ruleProductionSucceeded(event);
             }
-            
+
             Util.discard(getPlanner().ensureRegistered(rel, rels[0]));
-            
+
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleProductionEvent event =
                     new RelOptListener.RuleProductionEvent(
@@ -100,7 +109,6 @@ public class VolcanoRuleCall extends RelOptRuleCall
                         false);
                 volcanoPlanner.listener.ruleProductionSucceeded(event);
             }
-            
         } catch (Throwable e) {
             throw Util.newInternal(e,
                 "Error occurred while applying rule " + getRule());
@@ -115,16 +123,18 @@ public class VolcanoRuleCall extends RelOptRuleCall
         try {
             if (volcanoPlanner.isRuleExcluded(getRule())) {
                 if (tracer.isLoggable(Level.FINE)) {
-                    tracer.fine("Rule [" + getRule() + "] not fired"
+                    tracer.fine(
+                        "Rule [" + getRule() + "] not fired"
                         + " due to exclusion filter");
                 }
                 return;
             }
             if (tracer.isLoggable(Level.FINE)) {
-                tracer.fine("Apply rule [" + getRule() + "] to ["
+                tracer.fine(
+                    "Apply rule [" + getRule() + "] to ["
                     + RelOptUtil.toString(rels) + "]");
             }
-            
+
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleAttemptedEvent event =
                     new RelOptListener.RuleAttemptedEvent(
@@ -134,9 +144,9 @@ public class VolcanoRuleCall extends RelOptRuleCall
                         true);
                 volcanoPlanner.listener.ruleAttempted(event);
             }
-            
+
             getRule().onMatch(this);
-            
+
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleAttemptedEvent event =
                     new RelOptListener.RuleAttemptedEvent(
@@ -146,10 +156,10 @@ public class VolcanoRuleCall extends RelOptRuleCall
                         false);
                 volcanoPlanner.listener.ruleAttempted(event);
             }
-            
         } catch (Throwable e) {
-            throw Util.newInternal(e, "Error while applying rule " +
-                getRule() + ", args " + Arrays.asList(rels));
+            throw Util.newInternal(e,
+                "Error while applying rule "
+                + getRule() + ", args " + Arrays.asList(rels));
         }
     }
 
@@ -213,10 +223,10 @@ public class VolcanoRuleCall extends RelOptRuleCall
                     // We know that the previous operand was *a* child of
                     // its parent, but now check that it is the *correct*
                     // child
-                    final RelSubset input = (RelSubset)
-                        rel.getInput(previousOperand.ordinalInParent);
-                    List<RelNode> inputRels =
-                        input.set.getRelsFromAllSubsets();
+                    final RelSubset input =
+                        (RelSubset) rel.getInput(
+                            previousOperand.ordinalInParent);
+                    List<RelNode> inputRels = input.set.getRelsFromAllSubsets();
                     if (!inputRels.contains(rels[previousOperandOrdinal])) {
                         continue;
                     }
@@ -227,6 +237,5 @@ public class VolcanoRuleCall extends RelOptRuleCall
         }
     }
 }
-
 
 // End VolcanoRuleCall.java

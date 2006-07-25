@@ -113,7 +113,6 @@ ${farrago.test.jvmargs}
   <fail unless="javacc.dir"/>
   <fail unless="junit.dir"/>
   <fail unless="macker.dir"/>
-  <fail unless="jalopy.dir"/>
   <fail unless="janino.dir"/>
   <fail unless="jswat.dir"/>
   <fail unless="sqlline.dir"/>
@@ -359,6 +358,13 @@ ${farrago.test.jvmargs}
     <pathelement path="${farrago.run.classpath}"/>
   </path>
   <property name="farrago.sqlline.classpath" refid="farrago.sqlline.classpath"/>
+
+  <!-- classpath for running Jalopy -->
+  <path id="farrago.jalopy.classpath">
+    <pathelement path="${farrago.sqlline.classpath}"/>
+    <pathelement location="${farrago.plugin.dir}/classes"/>
+  </path>
+  <property name="farrago.jalopy.classpath" refid="farrago.jalopy.classpath"/>
 
   <path id="emma.classpath">
     <fileset dir="${emma.dir}" includes="lib/*.jar"/>

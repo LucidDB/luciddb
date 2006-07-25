@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.relopt;
 
 import org.eigenbase.reltype.*;
@@ -33,20 +32,18 @@ import org.eigenbase.reltype.*;
  */
 public interface RelOptSchema
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves a {@link RelOptTable} based upon a member access.
      *
-     * <p>
-     * For example, the Saffron expression <code>salesSchema.emps</code> would
-     * be resolved using a call to
-     * <code>salesSchema.getTableForMember(new String[]{"emps"})</code>.
-     * </p>
+     * <p>For example, the Saffron expression <code>salesSchema.emps</code>
+     * would be resolved using a call to <code>salesSchema.getTableForMember(new
+     * String[]{"emps" })</code>.</p>
      *
-     * <p> Note that name.length is only greater than 1 for queries originating
-     * from JDBC.
-     * </p>
+     * <p>Note that name.length is only greater than 1 for queries originating
+     * from JDBC.</p>
      */
     RelOptTable getTableForMember(String [] names);
 
@@ -63,6 +60,5 @@ public interface RelOptSchema
     void registerRules(RelOptPlanner planner)
         throws Exception;
 }
-
 
 // End RelOptSchema.java

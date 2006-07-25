@@ -20,7 +20,6 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
 import openjava.ptree.*;
@@ -36,20 +35,22 @@ import org.eigenbase.rex.*;
  * @author Angel Chang
  * @version $Id$
  */
-public class OJRexUnaryExpressionImplementor implements OJRexImplementor
+public class OJRexUnaryExpressionImplementor
+    implements OJRexImplementor
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final int ojUnaryExpressionOrdinal;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public OJRexUnaryExpressionImplementor(int ojUnaryExpressionOrdinal)
     {
         this.ojUnaryExpressionOrdinal = ojUnaryExpressionOrdinal;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Expression implement(
         RexToOJTranslator translator,
@@ -64,6 +65,5 @@ public class OJRexUnaryExpressionImplementor implements OJRexImplementor
         return true;
     }
 }
-
 
 // End OJRexUnaryExpressionImplementor.java

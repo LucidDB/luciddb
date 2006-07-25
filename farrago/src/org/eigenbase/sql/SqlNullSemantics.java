@@ -22,15 +22,14 @@
 package org.eigenbase.sql;
 
 /**
- * SqlNullSemantics defines the possible comparison rules for values which
- * might be null.  In SQL (and internal plans used to process SQL) different
- * rules are used depending on the context.
+ * SqlNullSemantics defines the possible comparison rules for values which might
+ * be null. In SQL (and internal plans used to process SQL) different rules are
+ * used depending on the context.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum SqlNullSemantics
-{
+public enum SqlNullSemantics {
     /**
      * Predicate semantics:  e.g. in the expression (WHERE X=5),
      * if X is NULL, the comparison result is unknown, and so
@@ -53,4 +52,12 @@ public enum SqlNullSemantics
     NULL_MATCHES_ANYTHING
 }
 
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
+// End SqlNullSemantics.java
 // End SqlNullSemantics.java

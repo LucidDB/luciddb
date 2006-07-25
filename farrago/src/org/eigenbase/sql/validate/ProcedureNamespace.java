@@ -21,29 +21,40 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+
 
 /**
- * Namespace whose contents are defined by the result of a
- * call to a user-defined procedure.
+ * Namespace whose contents are defined by the result of a call to a
+ * user-defined procedure.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ProcedureNamespace extends AbstractNamespace
+public class ProcedureNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlValidatorScope scope;
-    
+
     private final SqlCall call;
 
+    //~ Constructors -----------------------------------------------------------
+
     ProcedureNamespace(
-        SqlValidatorImpl validator, SqlValidatorScope scope, SqlCall call)
+        SqlValidatorImpl validator,
+        SqlValidatorScope scope,
+        SqlCall call)
     {
         super(validator);
         this.scope = scope;
         this.call = call;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType validateImpl()
     {

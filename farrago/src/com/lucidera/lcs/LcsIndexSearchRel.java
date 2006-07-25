@@ -23,7 +23,7 @@ package com.lucidera.lcs;
 import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.fem.med.FemLocalIndex;
+import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
@@ -31,40 +31,45 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
- * LcsIndexSearchRel is a relation for reading from an unclustered index. 
- * It has two major modes. In the "full scan" mode, it has no input and 
- * it scans an entire. In the "key search" mode, it has one input and 
- * only searches for keys produced by its child. 
- * 
- * <p>
- * 
- * Key search relations, have two formats for input. A single key set 
- * may be specified, in which case, exact matches for keys are returned. 
- * The double key format is a more versatile format in which both points 
- * and ranges can be represented. The input produces two sets of keys, one 
- * for a lower bound and one for an upper bound. The upper and lower bounds 
- * are described by directives as OPEN, or CLOSED, etc.
+ * LcsIndexSearchRel is a relation for reading from an unclustered index. It has
+ * two major modes. In the "full scan" mode, it has no input and it scans an
+ * entire. In the "key search" mode, it has one input and only searches for keys
+ * produced by its child.
  *
- * <p>
- * 
- * The output of an index scan may be expanded with fields from its input,
+ * <p>Key search relations, have two formats for input. A single key set may be
+ * specified, in which case, exact matches for keys are returned. The double key
+ * format is a more versatile format in which both points and ranges can be
+ * represented. The input produces two sets of keys, one for a lower bound and
+ * one for an upper bound. The upper and lower bounds are described by
+ * directives as OPEN, or CLOSED, etc.
+ *
+ * <p>The output of an index scan may be expanded with fields from its input,
  * making it more useful for implementing an index-based join.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-class LcsIndexSearchRel extends FennelOptionalRel
+class LcsIndexSearchRel
+    extends FennelOptionalRel
 {
-    //~ Instance fields -------------------------------------------------------
-    
-    /** Index to use for access. */
+
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Index to use for access.
+     */
     final FemLocalIndex index;
 
-    /** The table containing the index to be scanned */
+    /**
+     * The table containing the index to be scanned
+     */
     final LcsTable lcsTable;
 
-    /** Whether to perform a full scan */
+    /**
+     * Whether to perform a full scan
+     */
     final boolean fullScan;
 
     /**
@@ -72,43 +77,42 @@ class LcsIndexSearchRel extends FennelOptionalRel
      * bitmap columns. These ordinals are relative to the index.
      */
     final Integer [] projectedColumns;
-    
+
     final boolean isUniqueKey;
     final boolean isOuter;
-    
+
     final Integer [] inputKeyProj;
     final Integer [] inputJoinProj;
     final Integer [] inputDirectiveProj;
-    
+
     FennelRelParamId startRidParamId;
     FennelRelParamId rowLimitParamId;
-    
-    //~ Constructors ----------------------------------------------------------
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new LcsIndexSearchRel object. In general, parameters are 
+     * Creates a new LcsIndexSearchRel object. In general, parameters are
      * nullable if they do not apply to the search being specified.
      *
      * @param cluster the environment for the scan
      * @param child input which produces keys
      * @param lcsTable the table containing the index
      * @param fullScan whether to perform a full scan
-     * @param projectedColumns the columns to be projected from an index  
-     *   scan. If this parameter is null for a "key search", then the 
-     *   three bitmap fields are projected. This parameter cannot be null 
-     *   for a "full scan".
+     * @param projectedColumns the columns to be projected from an index scan.
+     * If this parameter is null for a "key search", then the three bitmap
+     * fields are projected. This parameter cannot be null for a "full scan".
      * @param isUniqueKey for a search, whether keys are known to be unique
-     * @param isOuter for a search with join, whether nulls should be made 
-     *   up for unmatched inputs
-     * @param inputKeyProj for a double key search, the projection of input 
-     *   fields to be used as search keys
-     * @param inputJoinProj for an index join, a projection of input fields 
-     *   to be added to the output
-     * @param inputDirectiveProj for a double key search, the projection of 
-     *   input fields describing search endpoints, such as OPEN or CLOSED
+     * @param isOuter for a search with join, whether nulls should be made up
+     * for unmatched inputs
+     * @param inputKeyProj for a double key search, the projection of input
+     * fields to be used as search keys
+     * @param inputJoinProj for an index join, a projection of input fields to
+     * be added to the output
+     * @param inputDirectiveProj for a double key search, the projection of
+     * input fields describing search endpoints, such as OPEN or CLOSED
      */
     public LcsIndexSearchRel(
-        RelOptCluster cluster,    		
+        RelOptCluster cluster,
         RelNode child,
         LcsTable lcsTable,
         FemLocalIndex index,
@@ -123,8 +127,8 @@ class LcsIndexSearchRel extends FennelOptionalRel
         FennelRelParamId rowLimitParamId)
     {
         super(cluster, child);
-        assert (isOuter == false && inputJoinProj == null);
-            
+        assert ((isOuter == false) && (inputJoinProj == null));
+
         this.lcsTable = lcsTable;
         this.index = index;
         this.fullScan = fullScan;
@@ -137,49 +141,50 @@ class LcsIndexSearchRel extends FennelOptionalRel
         this.inputKeyProj = inputKeyProj;
         this.inputJoinProj = inputJoinProj;
         this.inputDirectiveProj = inputDirectiveProj;
-        
+
         this.startRidParamId = startRidParamId;
         this.rowLimitParamId = rowLimitParamId;
     }
-    
-    //~ Methods ---------------------------------------------------------------
-        
+
+    //~ Methods ----------------------------------------------------------------
+
     // override Rel
     public double getRows()
     {
         // TODO:  this is not correct if num of rows returned by an index is
-    	// filtered by sargable predicte.
+        // filtered by sargable predicte.
         return lcsTable.getRowCount();
     }
-    
+
     // implement Cloneable
     public Object clone()
     {
-        LcsIndexSearchRel clone = new LcsIndexSearchRel(
-            getCluster(),
-            getChild(),
-            lcsTable,
-            index,
-            fullScan,
-            projectedColumns,
-            isUniqueKey,
-            isOuter,
-            inputKeyProj,
-            inputJoinProj,
-            inputDirectiveProj,
-            startRidParamId,
-            rowLimitParamId);
+        LcsIndexSearchRel clone =
+            new LcsIndexSearchRel(
+                getCluster(),
+                getChild(),
+                lcsTable,
+                index,
+                fullScan,
+                projectedColumns,
+                isUniqueKey,
+                isOuter,
+                inputKeyProj,
+                inputJoinProj,
+                inputDirectiveProj,
+                startRidParamId,
+                rowLimitParamId);
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         // TODO:  refined costing
         return computeCost(
-            planner,
-            RelMetadataQuery.getRowCount(this));
+                planner,
+                RelMetadataQuery.getRowCount(this));
     }
 
     // implement RelNode
@@ -205,9 +210,9 @@ class LcsIndexSearchRel extends FennelOptionalRel
     protected RelDataType deriveRowType()
     {
         RelDataType rowType =
-            lcsTable.getIndexGuide()
-            .createUnclusteredRowType(index, projectedColumns);
-    	
+            lcsTable.getIndexGuide().createUnclusteredRowType(index,
+                projectedColumns);
+
         if (inputJoinProj != null) {
             // TODO: this part is no implemented yet.
             // We're implementing a join, so make up an appropriate join type.
@@ -219,140 +224,142 @@ class LcsIndexSearchRel extends FennelOptionalRel
                         {
                             return inputJoinProj.length;
                         }
-                        
+
                         public String getFieldName(int index)
                         {
                             int i = inputJoinProj[index].intValue();
                             return childFields[i].getName();
                         }
-                        
+
                         public RelDataType getFieldType(int index)
                         {
                             int i = inputJoinProj[index].intValue();
                             return childFields[i].getType();
                         }
                     });
-            
+
             RelDataType rightType = rowType;
-            
+
             // for outer join, have to make left side nullable
             if (isOuter) {
                 rightType =
                     getFarragoTypeFactory().createTypeWithNullability(rightType,
                         true);
             }
-            
-            return getCluster().getTypeFactory().createJoinType(
-                new RelDataType [] { leftType, rightType });
+
+            return
+                getCluster().getTypeFactory().createJoinType(
+                    new RelDataType[] { leftType, rightType });
         } else {
             return rowType;
         }
     }
-    
+
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
         Object projection;
         Object inputKeyProjObj;
         Object inputDirectiveProjObj;
-        
+
         if (projectedColumns == null) {
             projection = "*";
         } else {
             projection = Arrays.asList(projectedColumns);
         }
-        
+
         if (inputKeyProj == null) {
             inputKeyProjObj = "*";
         } else {
             inputKeyProjObj = Arrays.asList(inputKeyProj);
         }
-                
+
         if (inputDirectiveProj == null) {
             inputDirectiveProjObj = Collections.EMPTY_LIST;
         } else {
             inputDirectiveProjObj = Arrays.asList(inputDirectiveProj);
         }
-        
+
         pw.explain(
             this,
-            new String [] {
+            new String[] {
                 "child", "table", "index", "projection", "inputKeyProj",
-                "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
+            "inputDirectiveProj", "startRidParamId", "rowLimitParamId"
             },
-            new Object [] {
+            new Object[] {
                 Arrays.asList(lcsTable.getQualifiedName()), index.getName(),
-                projection, inputKeyProjObj, inputDirectiveProjObj, 
-                (startRidParamId == null) ? (Integer)0 : startRidParamId,
-                (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId
+            projection, inputKeyProjObj, inputDirectiveProjObj,
+            (startRidParamId == null) ? (Integer) 0 : startRidParamId,
+            (rowLimitParamId == null) ? (Integer) 0 : rowLimitParamId
             });
     }
 
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-    	FemExecutionStreamDef newStream;
-    	
-    	if (!fullScan) {
+        FemExecutionStreamDef newStream;
+
+        if (!fullScan) {
             // index search use the default projection of:
             // [StartRID, BitmapDescriptor, BitmapSegment]
-    	    newStream = 
-    	        lcsTable.getIndexGuide().newIndexSearch(
-    	            this,
-    	            index,
-    	            isUniqueKey,
-    	            isOuter,
-    	            inputKeyProj,
-    	            inputJoinProj,
-    	            inputDirectiveProj,
+            newStream =
+                lcsTable.getIndexGuide().newIndexSearch(
+                    this,
+                    index,
+                    isUniqueKey,
+                    isOuter,
+                    inputKeyProj,
+                    inputJoinProj,
+                    inputDirectiveProj,
                     projectedColumns,
-    	            implementor.translateParamId(startRidParamId),
-    	            implementor.translateParamId(rowLimitParamId));
-            
+                    implementor.translateParamId(startRidParamId),
+                    implementor.translateParamId(rowLimitParamId));
+
             implementor.addDataFlowFromProducerToConsumer(
-                implementor.visitFennelChild((FennelRel) getChild()), 
+                implementor.visitFennelChild((FennelRel) getChild()),
                 newStream);
-    	} else {
-    	    // pure scan
-    	    newStream =
-    	        lcsTable.getIndexGuide().newIndexScan(this, index,
+        } else {
+            // pure scan
+            newStream =
+                lcsTable.getIndexGuide().newIndexScan(this,
+                    index,
                     projectedColumns);
-    	}
-        
+        }
+
         return newStream;
     }
-    
+
     // override Rel
     public RelOptTable getTable()
     {
         return lcsTable;
     }
-            
+
     public boolean isUniqueKey()
     {
         return isUniqueKey;
     }
-    
+
     public boolean isOuter()
     {
         return isOuter;
     }
-    
-    public Integer[] getInputKeyProj()
+
+    public Integer [] getInputKeyProj()
     {
         return inputKeyProj;
     }
-    
-    public Integer[] getInputJoinProj()
+
+    public Integer [] getInputJoinProj()
     {
         return inputJoinProj;
     }
-    
-    public Integer[] getInputDirectiveProj()
+
+    public Integer [] getInputDirectiveProj()
     {
         return inputDirectiveProj;
     }
-    
+
     public boolean isInputSingleKeyset()
     {
         return inputDirectiveProj == null;
@@ -364,6 +371,7 @@ class LcsIndexSearchRel extends FennelOptionalRel
             // one key format
             return index.getIndexedFeature().size();
         }
+
         // two key format
         return inputKeyProj.length / 2;
     }

@@ -22,25 +22,34 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
- * Base class for functions such as "USER", "CURRENT_ROLE",
- * and "CURRENT_PATH".
+ * Base class for functions such as "USER", "CURRENT_ROLE", and "CURRENT_PATH".
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class SqlStringContextVariable extends SqlFunction
+public class SqlStringContextVariable
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     protected SqlStringContextVariable(String name)
     {
         super(
-            name, SqlKind.Function, SqlTypeStrategies.rtiVarchar2000,
-            null, SqlTypeStrategies.otcNiladic,
+            name,
+            SqlKind.Function,
+            SqlTypeStrategies.rtiVarchar2000,
+            null,
+            SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.System);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {

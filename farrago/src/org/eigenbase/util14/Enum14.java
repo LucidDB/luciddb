@@ -20,34 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util14;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
 
 
 /**
  * <code>Enum14</code> is a pre-JDK1.5-enum helper class for declaring a set of
- * symbolic constants which have names, ordinals, and possibly descriptions.
- * The ordinals do not have to be contiguous.
+ * symbolic constants which have names, ordinals, and possibly descriptions. The
+ * ordinals do not have to be contiguous.
  *
- * <p>
- * Typically, for a particular set of constants, you derive a class from this
+ * <p>Typically, for a particular set of constants, you derive a class from this
  * interface, and declare the constants as <code>public static final</code>
- * members. Give it a private constructor, and a <code>public static final
- * <i>ClassName</i> instance</code> member to hold the singleton instance.
- * </p>
+ * members. Give it a private constructor, and a <code>public static final <i>
+ * ClassName</i> instance</code> member to hold the singleton instance.</p>
  */
-public class Enum14 implements Cloneable
+public class Enum14
+    implements Cloneable
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final String [] emptyStringArray = new String[0];
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** map symbol names to values */
+    /**
+     * map symbol names to values
+     */
     private HashMap valuesByName = new HashMap();
 
     // the variables below are only set AFTER makeImmutable() has been called
@@ -58,13 +60,17 @@ public class Enum14 implements Cloneable
      */
     private Value [] ordinalToValueMap;
 
-    /** the largest ordinal value */
+    /**
+     * the largest ordinal value
+     */
     private int max = Integer.MIN_VALUE;
 
-    /** the smallest ordinal value */
+    /**
+     * the smallest ordinal value
+     */
     private int min = Integer.MAX_VALUE;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new empty, mutable enumeration.
@@ -97,8 +103,8 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Create an enumeration, initializes it with arrays of code/name pairs,
-     * and freezes it.
+     * Create an enumeration, initializes it with arrays of code/name pairs, and
+     * freezes it.
      */
     public Enum14(
         String [] names,
@@ -111,8 +117,8 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Create an enumeration, initializes it with arrays of code/name pairs,
-     * and freezes it.
+     * Create an enumeration, initializes it with arrays of code/name pairs, and
+     * freezes it.
      */
     public Enum14(
         String [] names,
@@ -125,7 +131,7 @@ public class Enum14 implements Cloneable
         makeImmutable();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the description associated with an ordinal; the return value is
@@ -150,7 +156,8 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns the number of enumerated values currently contained in this enumeration
+     * Returns the number of enumerated values currently contained in this
+     * enumeration
      */
     public final int getSize()
     {
@@ -183,8 +190,8 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns the name associated with an ordinal; the return value is null
-     * if the ordinal is not a member of the enumeration.
+     * Returns the name associated with an ordinal; the return value is null if
+     * the ordinal is not a member of the enumeration.
      *
      * @pre isImmutable()
      */
@@ -195,8 +202,8 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns the value associated with an ordinal; the return value is null
-     * if the ordinal is not a member of the enumeration.
+     * Returns the value associated with an ordinal; the return value is null if
+     * the ordinal is not a member of the enumeration.
      *
      * @pre isImmutable()
      */
@@ -222,9 +229,9 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns whether <code>ordinal</code> is valid for this enumeration.
-     * This method is particularly useful in pre- and post-conditions, for
-     * example
+     * Returns whether <code>ordinal</code> is valid for this enumeration. This
+     * method is particularly useful in pre- and post-conditions, for example
+     *
      * <blockquote>
      * <pre>&#64;param axisCode Axis code, must be a {&#64;link AxisCode} value
      * &#64;pre AxisCode.instance.isValid(axisCode)</pre>
@@ -250,11 +257,12 @@ public class Enum14 implements Cloneable
      */
     public Iterator iterator()
     {
-        final Collection values = Collections.unmodifiableCollection(
-            valuesByName.values());
+        final Collection values =
+            Collections.unmodifiableCollection(
+                valuesByName.values());
         return values.iterator();
     }
-    
+
     /**
      * Returns the names in this enumeration, in no particular order.
      */
@@ -278,7 +286,7 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns true if this enumerationr contains {@param name}, else false.
+     * Returns true if this enumerationr contains <code>name</code>, else false.
      */
     public boolean containsName(String name)
     {
@@ -286,14 +294,17 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns an error indicating that the value is illegal. (The client
-     * needs to throw the error.)
+     * Returns an error indicating that the value is illegal. (The client needs
+     * to throw the error.)
      */
     public Error badValue(int ordinal)
     {
-        return new AssertionError("bad value " + ordinal + "("
-            + getName(ordinal) + ") for enumeration '" + getClass().getName()
-            + "'");
+        return
+            new AssertionError(
+                "bad value " + ordinal + "("
+                + getName(ordinal) + ") for enumeration '"
+                + getClass().getName()
+                + "'");
     }
 
     /**
@@ -303,7 +314,7 @@ public class Enum14 implements Cloneable
     {
         ordinalToValueMap = new Value[(1 + max) - min];
         for (Iterator values = valuesByName.values().iterator();
-                values.hasNext();) {
+            values.hasNext();) {
             Value value = (Value) values.next();
             final int index = value.getOrdinal() - min;
             if (ordinalToValueMap[index] != null) {
@@ -330,7 +341,8 @@ public class Enum14 implements Cloneable
         assert (name != null);
         Value old = (Value) valuesByName.put(name, value);
         if (old != null) {
-            throw new AssertionError("Enumeration already contained a value '"
+            throw new AssertionError(
+                "Enumeration already contained a value '"
                 + old.getName() + "'");
         }
         final int ordinal = value.getOrdinal();
@@ -339,14 +351,16 @@ public class Enum14 implements Cloneable
     }
 
     /**
-     * Returns an exception indicating that we didn't expect to find this
-     * value here.
+     * Returns an exception indicating that we didn't expect to find this value
+     * here.
      */
     public Error unexpected(Value value)
     {
-        return new AssertionError("Was not expecting value '" + value
-            + "' for enumeration '" + getClass().getName()
-            + "' in this context");
+        return
+            new AssertionError(
+                "Was not expecting value '" + value
+                + "' for enumeration '" + getClass().getName()
+                + "' in this context");
     }
 
     protected Object clone()
@@ -362,15 +376,15 @@ public class Enum14 implements Cloneable
         return clone;
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * A <code>Value</code> represents a member of an enumerated type. If an
-     * enumerated type is not based upon an explicit array of values, an
-     * array of {@link Enum14.BasicValue}s will implicitly be
-     * created.
+     * enumerated type is not based upon an explicit array of values, an array
+     * of {@link Enum14.BasicValue}s will implicitly be created.
      */
-    public interface Value extends Comparable
+    public interface Value
+        extends Comparable
     {
         String getDescription();
 
@@ -379,30 +393,27 @@ public class Enum14 implements Cloneable
         int getOrdinal();
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * <code>BasicValue</code> is an obvious implementation of {@link
-     * Enum14.Value}.
-     *
-     * This class is marked Serializable so that serializable subclasses
-     * can be supported without requiring a default (no-argument)
-     * constructor.
-     *
-     * However, note that while <code>BasicValue</code> is marked Serializable,
-     * deserialized instances will be new instances rather than members
-     * of the original enumeration. In other words,
-     * <code>deserializedBasicValue == origBasicValue</code>
-     * will be false.
-     *
-     * Use {@link Enum14.SerializableValue} for instances
-     * that deserialize into members of the original enumeration so that
-     * <code>deserializedBasicValue == origBasicValue</code>
-     * will be true.
+     * Enum14.Value}. This class is marked Serializable so that serializable
+     * subclasses can be supported without requiring a default (no-argument)
+     * constructor. However, note that while <code>BasicValue</code> is marked
+     * Serializable, deserialized instances will be new instances rather than
+     * members of the original enumeration. In other words, <code>
+     * deserializedBasicValue == origBasicValue</code> will be false. Use {@link
+     * Enum14.SerializableValue} for instances that deserialize into members of
+     * the original enumeration so that <code>deserializedBasicValue ==
+     * origBasicValue</code> will be true.
      */
-    public static class BasicValue implements Value, Serializable
+    public static class BasicValue
+        implements Value,
+            Serializable
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = -7944099370846909699L;
 
         private final String description;
@@ -417,7 +428,7 @@ public class Enum14 implements Cloneable
             int ordinal,
             String description)
         {
-            assert(name != null);
+            assert (name != null);
             this.name = name;
             this.ordinal = ordinal;
             this.description = description;
@@ -441,9 +452,9 @@ public class Enum14 implements Cloneable
         /**
          * Returns whether this value is equal to a given string.
          *
-         * @deprecated I bet you meant to write
-         *             <code>value.name.equals(s)</code> rather than
-         *             <code>value.equals(s)</code>, didn't you?
+         * @deprecated I bet you meant to write <code>
+         * value.name.equals(s)</code> rather than <code>value.equals(s)</code>,
+         * didn't you?
          */
         public boolean equals(String s)
         {
@@ -459,7 +470,7 @@ public class Enum14 implements Cloneable
         // implement Comparable
         public int compareTo(Object other)
         {
-            assert(other instanceof BasicValue);
+            assert (other instanceof BasicValue);
             BasicValue otherValue = (BasicValue) other;
             return ordinal - otherValue.ordinal;
         }
@@ -474,34 +485,39 @@ public class Enum14 implements Cloneable
 
         public Error unexpected()
         {
-            return new AssertionError("Value " + name + " of class "
-                + getClass() + " unexpected here");
+            return
+                new AssertionError(
+                    "Value " + name + " of class "
+                    + getClass() + " unexpected here");
         }
     }
 
     /**
-     * <code>SerializableValue</code> extends <code>BasicValue</code> to
-     * provide better support for serializable subclasses.
-     *
-     * Instances of <code>SerializableValue</code> will deserialize
-     * into members of the original enumeration so that
-     * <code>deserializedBasicValue == origBasicValue</code>
+     * <code>SerializableValue</code> extends <code>BasicValue</code> to provide
+     * better support for serializable subclasses. Instances of <code>
+     * SerializableValue</code> will deserialize into members of the original
+     * enumeration so that <code>deserializedBasicValue == origBasicValue</code>
      * will be true.
      */
-    public static abstract class SerializableValue extends BasicValue
+    public static abstract class SerializableValue
+        extends BasicValue
         implements Serializable
     {
-        /** SerialVersionUID created with JDK 1.5 serialver tool. */
+        /**
+         * SerialVersionUID created with JDK 1.5 serialver tool.
+         */
         private static final long serialVersionUID = 1534436036499327177L;
 
         /**
-         * Ordinal value which, when deserialized, can be used by
-         * {@link #readResolve} to locate a matching instance in
-         * the original enumeration. 
+         * Ordinal value which, when deserialized, can be used by {@link
+         * #readResolve} to locate a matching instance in the original
+         * enumeration.
          */
         protected int _ordinal;
 
-        /** Creates a new SerializableValue. */
+        /**
+         * Creates a new SerializableValue.
+         */
         public SerializableValue(
             String name,
             int ordinal,
@@ -511,36 +527,39 @@ public class Enum14 implements Cloneable
         }
 
         /**
-         * Subclass must implement this method to retrieve a matching
-         * instance based on the <code>_ordinal</code> deserialized by
-         * {@link #readObject}.
-         * This would typically be an instance from the original enumeration.
-         *
-         * Current instance is the candidate object deserialized from the
-         * ObjectInputStream. It is incomplete, cannot be used as-is, and
-         * this method must return a valid replacement.
-         *
-         * For example, <br>
+         * Subclass must implement this method to retrieve a matching instance
+         * based on the <code>_ordinal</code> deserialized by {@link
+         * #readObject}. This would typically be an instance from the original
+         * enumeration. Current instance is the candidate object deserialized
+         * from the ObjectInputStream. It is incomplete, cannot be used as-is,
+         * and this method must return a valid replacement. For example,<br>
          * <code>return SqlTypeName.get(_ordinal);</code>
          *
          * @return replacement instance that matches <code>_ordinal</code>
+         *
          * @throws java.io.ObjectStreamException
          */
-        protected abstract Object readResolve() throws ObjectStreamException;
+        protected abstract Object readResolve()
+            throws ObjectStreamException;
 
-        /** Deserialization method reads the <code>_ordinal</code> value. */
-        private void readObject(ObjectInputStream in) throws IOException
+        /**
+         * Deserialization method reads the <code>_ordinal</code> value.
+         */
+        private void readObject(ObjectInputStream in)
+            throws IOException
         {
             this._ordinal = in.readInt();
         }
 
-        /** Serialization method writes just the ordinal value. */
-        private void writeObject(ObjectOutputStream out) throws IOException
+        /**
+         * Serialization method writes just the ordinal value.
+         */
+        private void writeObject(ObjectOutputStream out)
+            throws IOException
         {
             out.writeInt(this.getOrdinal());
         }
     }
 }
-
 
 // End Enum14.java

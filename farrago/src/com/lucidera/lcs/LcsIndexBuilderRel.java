@@ -32,25 +32,30 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
+
 /**
- * LcsIndexBuilderRel is a relational expression that builds an unclustered
- * Lcs index. It is implemented via a bitmap index generator.
+ * LcsIndexBuilderRel is a relational expression that builds an unclustered Lcs
+ * index. It is implemented via a bitmap index generator.
  *
- * <p>
- *
- * The input to this relation should be a single row of inputs expected by
- * LbmGeneratorStream. This row has two columns, number of rows to index
- * and start row id.
+ * <p>The input to this relation should be a single row of inputs expected by
+ * LbmGeneratorStream. This row has two columns, number of rows to index and
+ * start row id.
  *
  * @author John Pham
  * @version $Id$
  */
-class LcsIndexBuilderRel extends FennelSingleRel
+class LcsIndexBuilderRel
+    extends FennelSingleRel
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Index to be built.
      */
     private final FemLocalIndex index;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected LcsIndexBuilderRel(
         RelOptCluster cluster,
@@ -61,13 +66,16 @@ class LcsIndexBuilderRel extends FennelSingleRel
         this.index = index;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     // implement Cloneable
     public Object clone()
     {
-        LcsIndexBuilderRel clone = new LcsIndexBuilderRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            index);
+        LcsIndexBuilderRel clone =
+            new LcsIndexBuilderRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                index);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -86,14 +94,19 @@ class LcsIndexBuilderRel extends FennelSingleRel
             implementor.visitFennelChild((FennelRel) getChild());
         FarragoTypeFactory typeFactory = getFarragoTypeFactory();
 
-        LcsIndexGuide indexGuide = new LcsIndexGuide(
-            typeFactory,
-            FarragoCatalogUtil.getIndexTable(index),
-            index);
+        LcsIndexGuide indexGuide =
+            new LcsIndexGuide(
+                typeFactory,
+                FarragoCatalogUtil.getIndexTable(index),
+                index);
         FennelRelParamId paramId = implementor.allocateRelParamId();
-        LcsCompositeStreamDef bitmapSet
-            = indexGuide.newBitmapAppend(
-                this, index, implementor, true, paramId);
+        LcsCompositeStreamDef bitmapSet =
+            indexGuide.newBitmapAppend(
+                this,
+                index,
+                implementor,
+                true,
+                paramId);
 
         // TODO: review recovery behavior
         implementor.addDataFlowFromProducerToConsumer(
@@ -113,13 +126,13 @@ class LcsIndexBuilderRel extends FennelSingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "index" },
-            new Object [] {
+            new String[] { "child", "index" },
+            new Object[] {
                 Arrays.asList(
                     FarragoCatalogUtil.getQualifiedName(index).names)
             });
     }
-    
+
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
@@ -127,7 +140,6 @@ class LcsIndexBuilderRel extends FennelSingleRel
         // FennelRel's guaranteed to return at most one row
         return RelFieldCollation.emptyCollationArray;
     }
-
 }
 
 // End LcsIndexBuilderRel.java

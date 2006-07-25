@@ -20,38 +20,35 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.reltype;
 
-import java.nio.charset.Charset;
-import java.util.List;
+import java.nio.charset.*;
 
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlIntervalQualifier;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.util.*;
+
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
 
 
 /**
- * RelDataTypeFactory is a factory for datatype descriptors.  It defines
- * methods for instantiating and combining SQL, Java, and collection types.
+ * RelDataTypeFactory is a factory for datatype descriptors. It defines methods
+ * for instantiating and combining SQL, Java, and collection types.
  *
- * <p>
- *
- * This interface is an example of the {@link
- * org.eigenbase.util.Glossary#AbstractFactoryPattern abstract factory
- * pattern}.  Any implementation of <code>RelDataTypeFactory</code> must ensure
- * that type objects are canonical: two types are equal if and only if they are
- * represented by the same Java object.  This reduces memory consumption
- * and comparison cost.
+ * <p>This interface is an example of the {@link
+ * org.eigenbase.util.Glossary#AbstractFactoryPattern abstract factory pattern}.
+ * Any implementation of <code>RelDataTypeFactory</code> must ensure that type
+ * objects are canonical: two types are equal if and only if they are
+ * represented by the same Java object. This reduces memory consumption and
+ * comparison cost.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since May 29, 2003
  */
 public interface RelDataTypeFactory
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Creates a type which corresponds to a Java class.
@@ -65,10 +62,9 @@ public interface RelDataTypeFactory
     /**
      * Creates a cartesian product type.
      *
-     * @pre types array of types to be joined
-     *
      * @return canonical join type descriptor
      *
+     * @pre types array of types to be joined
      * @pre types != null
      * @pre types.length >= 1
      */
@@ -90,8 +86,8 @@ public interface RelDataTypeFactory
         String [] fieldNames);
 
     /**
-     * Creates a type which represents a structured collection of fields,
-     * given lists of the names and types of the fields.
+     * Creates a type which represents a structured collection of fields, given
+     * lists of the names and types of the fields.
      *
      * @param typeList types of the fields
      * @param fieldNameList names of the fields
@@ -101,8 +97,7 @@ public interface RelDataTypeFactory
      * @pre typeList.size() == fieldNameList.size()
      * @post return != null
      */
-    public RelDataType createStructType(
-        List<RelDataType> typeList,
+    public RelDataType createStructType(List<RelDataType> typeList,
         List<String> fieldNameList);
 
     /**
@@ -116,10 +111,9 @@ public interface RelDataTypeFactory
     public RelDataType createStructType(FieldInfo fieldInfo);
 
     /**
-     * Creates an array type.  Arrays are ordered collections of elements.
+     * Creates an array type. Arrays are ordered collections of elements.
      *
      * @param elementType type of the elements of the array
-     *
      * @param maxCardinality maximum array size, or -1 for unlimited
      *
      * @return canonical array type descriptor
@@ -129,23 +123,21 @@ public interface RelDataTypeFactory
         long maxCardinality);
 
     /**
-     * Creates a multiset type.  Multisets are unordered collections
-     * of elements.
+     * Creates a multiset type. Multisets are unordered collections of elements.
      *
      * @param elementType type of the elements of the multiset
-     *
      * @param maxCardinality maximum collection size, or -1 for unlimited
      *
      * @return canonical multiset type descriptor
      */
     public RelDataType createMultisetType(
-        RelDataType elementType, 
+        RelDataType elementType,
         long maxCardinality);
-    
+
     /**
-     * Duplicates a type, making a deep copy.  Normally, this is a
-     * no-op, since canonical type objects are returned.  However,
-     * it is useful when copying a type from one factory to another.
+     * Duplicates a type, making a deep copy. Normally, this is a no-op, since
+     * canonical type objects are returned. However, it is useful when copying a
+     * type from one factory to another.
      *
      * @param type input type
      *
@@ -156,13 +148,12 @@ public interface RelDataTypeFactory
     /**
      * Creates a type which is the same as another type but with possibly
      * different nullability. The output type may be identical to the input
-     * type.  For type systems without a concept of nullability, the return
-     * value is always the same as the input.
+     * type. For type systems without a concept of nullability, the return value
+     * is always the same as the input.
      *
      * @param type input type
-     *
-     * @param nullable true to request a nullable type; false to request a
-     * NOT NULL type
+     * @param nullable true to request a nullable type; false to request a NOT
+     * NULL type
      *
      * @return output type, same as input type except with specified nullability
      */
@@ -172,19 +163,17 @@ public interface RelDataTypeFactory
 
     /**
      * Creates a Type which is the same as another type but with possibily
-     * different charset or collation. For types without a concept of
-     * charset or collation this function must throw an error.
-     *
-     * @pre SqlTypeUtil.inCharFamily(type)
+     * different charset or collation. For types without a concept of charset or
+     * collation this function must throw an error.
      *
      * @param type input type
-     *
      * @param charset charset to assign
-     *
      * @param collation collation to assign
      *
-     * @return output type, same as input type except with specified charset
-     * and collation
+     * @return output type, same as input type except with specified charset and
+     * collation
+     *
+     * @pre SqlTypeUtil.inCharFamily(type)
      */
     public RelDataType createTypeWithCharsetAndCollation(
         RelDataType type,
@@ -193,26 +182,27 @@ public interface RelDataTypeFactory
 
     /**
      * Returns the most general of a set of types (that is, one type to which
-     * they can all be cast), or null if conversion is not possible.
-     * The result may be a new type which is less restrictive than any
-     * of the input types, e.g. leastRestrictive(INT, NUMERIC(3,2))
-     * could be NUMERIC(12,2).
-     *
-     * @pre types != null
-     * @pre types.length >= 1
+     * they can all be cast), or null if conversion is not possible. The result
+     * may be a new type which is less restrictive than any of the input types,
+     * e.g. leastRestrictive(INT, NUMERIC(3,2)) could be NUMERIC(12,2).
      *
      * @param types input types to be unioned
      *
      * @return canonical union type descriptor
+     *
+     * @pre types != null
+     * @pre types.length >= 1
      */
     public RelDataType leastRestrictive(RelDataType [] types);
 
     /**
      * Creates a SQL type with no precision or scale.
      *
-     * @param typeName Name of the type, for example
-     *   {@link SqlTypeName#Boolean}.
+     * @param typeName Name of the type, for example {@link
+     * SqlTypeName#Boolean}.
+     *
      * @return canonical type descriptor
+     *
      * @pre typeName != null
      * @post return != null
      */
@@ -221,11 +211,13 @@ public interface RelDataTypeFactory
     /**
      * Creates a SQL type with length (precision) but no scale.
      *
-     * @param typeName Name of the type, for example
-     *   {@link org.eigenbase.sql.type.SqlTypeName#Varchar}.
-     * @param precision maximum length of the value (non-numeric types)
-     *   or the precision of the value (numeric/datetime types)
+     * @param typeName Name of the type, for example {@link
+     * org.eigenbase.sql.type.SqlTypeName#Varchar}.
+     * @param precision maximum length of the value (non-numeric types) or the
+     * precision of the value (numeric/datetime types)
+     *
      * @return canonical type descriptor
+     *
      * @pre typeName != null
      * @pre length >= 0
      * @post return != null
@@ -237,14 +229,16 @@ public interface RelDataTypeFactory
     /**
      * Creates a SQL type with precision and scale.
      *
-     * @param typeName Name of the type, for example
-     *   {@link org.eigenbase.sql.type.SqlTypeName#Decimal}.
-     * @param precision precision  of the value
+     * @param typeName Name of the type, for example {@link
+     * org.eigenbase.sql.type.SqlTypeName#Decimal}.
+     * @param precision precision of the value
      * @param scale scale of the values, i.e. the number of decimal places to
      * shift the value. For example, a NUMBER(10,3) value of "123.45" is
-     * represented "123450" (that is, multiplied by 10^3). A negative scale
-     * <em>is</em> valid.
+     * represented "123450" (that is, multiplied by 10^3). A negative scale <em>
+     * is</em> valid.
+     *
      * @return canonical type descriptor
+     *
      * @pre typeName != null
      * @pre length >= 0
      * @post return != null
@@ -265,7 +259,7 @@ public interface RelDataTypeFactory
     public RelDataType createSqlIntervalType(
         SqlIntervalQualifier intervalQualifier);
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * Callback which provides enough information to create fields.
@@ -279,6 +273,5 @@ public interface RelDataTypeFactory
         public RelDataType getFieldType(int index);
     }
 }
-
 
 // End RelDataTypeFactory.java

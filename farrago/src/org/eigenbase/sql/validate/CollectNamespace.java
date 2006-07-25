@@ -21,17 +21,17 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.type.MultisetSqlType;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * Namespace for COLLECT and TABLE constructs.
  *
- * <p>Examples:<ul>
+ * <p>Examples:
+ *
+ * <ul>
  * <li><code>SELECT deptno, COLLECT(empno) FROM emp GROUP BY deptno</code>,
  * <li><code>SELECT * FROM (TABLE getEmpsInDept(30))</code>.
  * </ul>
@@ -39,15 +39,21 @@ import org.eigenbase.sql.type.MultisetSqlType;
  * <p>NOTE: jhyde, 2006/4/24: These days, this class seems to be used
  * exclusively for the <code>MULTISET</code> construct.
  *
- * @see CollectScope
  * @author wael
  * @version $Id$
+ * @see CollectScope
  * @since Mar 25, 2003
  */
-public class CollectNamespace extends AbstractNamespace
+public class CollectNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlCall child;
     private final SqlValidatorScope scope;
+
+    //~ Constructors -----------------------------------------------------------
 
     CollectNamespace(SqlCall child, SqlValidatorScope scope)
     {
@@ -56,6 +62,8 @@ public class CollectNamespace extends AbstractNamespace
         this.scope = scope;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected RelDataType validateImpl()
     {
         final RelDataType type =
@@ -63,9 +71,10 @@ public class CollectNamespace extends AbstractNamespace
 
         switch (child.getKind().getOrdinal()) {
         case SqlKind.MultisetValueConstructorORDINAL:
+
             // "MULTISET [<expr>, ...]" needs to be wrapped in a record if
             // <expr> has a scalar type.
-            // For example, "MULTISET [8, 9]" has type 
+            // For example, "MULTISET [8, 9]" has type
             // "RECORD(INTEGER EXPR$0 NOT NULL) NOT NULL MULTISET NOT NULL".
             boolean isNullable = type.isNullable();
             final RelDataType componentType =
@@ -74,20 +83,23 @@ public class CollectNamespace extends AbstractNamespace
             if (componentType.isStruct()) {
                 return type;
             } else {
-                final RelDataType structType = typeFactory.createStructType(
-                    new RelDataType[] {type},
-                    new String[] {validator.deriveAlias(child, 0)});
+                final RelDataType structType =
+                    typeFactory.createStructType(
+                        new RelDataType[] { type },
+                        new String[] { validator.deriveAlias(child, 0) });
                 final RelDataType multisetType =
                     typeFactory.createMultisetType(structType, -1);
-                return typeFactory.createTypeWithNullability(
-                    multisetType, isNullable);
+                return
+                    typeFactory.createTypeWithNullability(
+                        multisetType,
+                        isNullable);
             }
 
         case SqlKind.MultisetQueryConstructorORDINAL:
+
             // "MULTISET(<query>)" is already a record.
-            assert type instanceof MultisetSqlType &&
-                ((MultisetSqlType) type).getComponentType().isStruct() :
-                type;
+            assert (type instanceof MultisetSqlType)
+                && ((MultisetSqlType) type).getComponentType().isStruct() : type;
             return type;
         default:
             throw child.getKind().unexpected();
@@ -106,4 +118,3 @@ public class CollectNamespace extends AbstractNamespace
 }
 
 // End CollectNamespace.java
-

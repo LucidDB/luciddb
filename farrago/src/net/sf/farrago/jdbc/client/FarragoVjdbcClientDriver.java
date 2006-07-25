@@ -21,30 +21,34 @@
 */
 package net.sf.farrago.jdbc.client;
 
+import de.simplicit.vjdbc.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.jdbc.*;
 import net.sf.farrago.release.*;
 
-import de.simplicit.vjdbc.*;
 
 /**
- * FarragoJdbcClientDriver implements the Farrago client side of
- * the {@link java.sql.Driver} interface via the VJDBC proxy.
+ * FarragoJdbcClientDriver implements the Farrago client side of the {@link
+ * java.sql.Driver} interface via the VJDBC proxy.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoVjdbcClientDriver extends FarragoAbstractJdbcDriver
+public class FarragoVjdbcClientDriver
+    extends FarragoAbstractJdbcDriver
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     static {
         new FarragoVjdbcClientDriver().register();
     }
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoVjdbcClientDriver object.
@@ -53,11 +57,11 @@ public class FarragoVjdbcClientDriver extends FarragoAbstractJdbcDriver
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * @return the prefix for JDBC URL's understood by this driver;
-     * subclassing drivers can override this to customize the URL scheme
+     * @return the prefix for JDBC URL's understood by this driver; subclassing
+     * drivers can override this to customize the URL scheme
      */
     public String getUrlPrefix()
     {

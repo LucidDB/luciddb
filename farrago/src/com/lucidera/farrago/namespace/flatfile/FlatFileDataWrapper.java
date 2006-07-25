@@ -22,6 +22,7 @@
 package com.lucidera.farrago.namespace.flatfile;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -31,15 +32,17 @@ import net.sf.farrago.resource.*;
 
 
 /**
- * FlatFileDataWrapper provides an implementation of the
- * {@link FarragoMedDataWrapper} interface for reading from flat files.
+ * FlatFileDataWrapper provides an implementation of the {@link
+ * FarragoMedDataWrapper} interface for reading from flat files.
  *
  * @author John V. Pham
  * @version $Id$
  */
-public class FlatFileDataWrapper extends MedAbstractDataWrapper
+public class FlatFileDataWrapper
+    extends MedAbstractDataWrapper
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new data wrapper instance.
@@ -48,7 +51,7 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedDataWrapper
     public String getSuggestedName()
@@ -71,37 +74,38 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
     {
         // TODO:  use locale
 
-        MedPropertyInfoMap infoMap = new MedPropertyInfoMap(
-            FarragoResource.instance(),
-            "MedFlatFile",
-            serverProps);
+        MedPropertyInfoMap infoMap =
+            new MedPropertyInfoMap(
+                FarragoResource.instance(),
+                "MedFlatFile",
+                serverProps);
         infoMap.addPropInfo(
             FlatFileParams.PROP_DIRECTORY,
             true);
         infoMap.addPropInfo(
             FlatFileParams.PROP_FILE_EXTENSION,
             true,
-            new String[] {FlatFileParams.DEFAULT_FILE_EXTENSION});
+            new String[] { FlatFileParams.DEFAULT_FILE_EXTENSION });
         infoMap.addPropInfo(
             FlatFileParams.PROP_CONTROL_FILE_EXTENSION,
             true,
-            new String[] {FlatFileParams.DEFAULT_CONTROL_FILE_EXTENSION});
+            new String[] { FlatFileParams.DEFAULT_CONTROL_FILE_EXTENSION });
         infoMap.addPropInfo(
             FlatFileParams.PROP_FIELD_DELIMITER,
             true,
-            new String[] {FlatFileParams.DEFAULT_FIELD_DELIMITER});
+            new String[] { FlatFileParams.DEFAULT_FIELD_DELIMITER });
         infoMap.addPropInfo(
             FlatFileParams.PROP_LINE_DELIMITER,
             true,
-            new String[] {FlatFileParams.DEFAULT_LINE_DELIMITER});
+            new String[] { FlatFileParams.DEFAULT_LINE_DELIMITER });
         infoMap.addPropInfo(
             FlatFileParams.PROP_QUOTE_CHAR,
             true,
-            new String[] {FlatFileParams.DEFAULT_QUOTE_CHAR});
+            new String[] { FlatFileParams.DEFAULT_QUOTE_CHAR });
         infoMap.addPropInfo(
             FlatFileParams.PROP_ESCAPE_CHAR,
             true,
-            new String[] {FlatFileParams.DEFAULT_ESCAPE_CHAR});
+            new String[] { FlatFileParams.DEFAULT_ESCAPE_CHAR });
         if (FlatFileParams.DEFAULT_WITH_HEADER) {
             infoMap.addPropInfo(
                 FlatFileParams.PROP_WITH_HEADER,
@@ -116,8 +120,9 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
         infoMap.addPropInfo(
             FlatFileParams.PROP_NUM_ROWS_SCAN,
             true,
-            new String[] {Integer.toString
-                          (FlatFileParams.DEFAULT_NUM_ROWS_SCAN)});
+            new String[] {
+                Integer.toString(FlatFileParams.DEFAULT_NUM_ROWS_SCAN)
+            });
         if (FlatFileParams.DEFAULT_WITH_LOGGING) {
             infoMap.addPropInfo(
                 FlatFileParams.PROP_WITH_LOGGING,
@@ -150,8 +155,11 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
         Properties props)
         throws SQLException
     {
-        FlatFileDataServer server = new FlatFileDataServer(
-            this, serverMofId, props);
+        FlatFileDataServer server =
+            new FlatFileDataServer(
+                this,
+                serverMofId,
+                props);
         boolean success = false;
         try {
             server.initialize();
@@ -164,6 +172,5 @@ public class FlatFileDataWrapper extends MedAbstractDataWrapper
         }
     }
 }
-
 
 // End FlatFileDataWrapper.java

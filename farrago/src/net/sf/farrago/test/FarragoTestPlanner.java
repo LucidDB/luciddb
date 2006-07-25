@@ -21,17 +21,18 @@
 */
 package net.sf.farrago.test;
 
-import org.eigenbase.relopt.hep.*;
-import org.eigenbase.rel.*;
-import org.eigenbase.oj.rel.*;
-
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
 
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.hep.*;
+
+
 /**
  * FarragoTestPlanner provides an implementation of the {@link
- * FarragoSessionPlanner} interface which allows for precise control
- * over the heuristic planner used during testing.
+ * FarragoSessionPlanner} interface which allows for precise control over the
+ * heuristic planner used during testing.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -40,8 +41,13 @@ public class FarragoTestPlanner
     extends HepPlanner
     implements FarragoSessionPlanner
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoPreparingStmt stmt;
-        
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoTestPlanner(
         HepProgram program,
         FarragoPreparingStmt stmt)
@@ -49,13 +55,15 @@ public class FarragoTestPlanner
         super(program);
         this.stmt = stmt;
     }
-        
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoSessionPlanner
     public FarragoSessionPreparingStmt getPreparingStmt()
     {
         return stmt;
     }
-        
+
     // implement FarragoSessionPlanner
     public void beginMedPluginRegistration(String serverClassName)
     {
@@ -67,12 +75,12 @@ public class FarragoTestPlanner
     {
         // don't care
     }
-    
+
     // implement RelOptPlanner
     public JavaRelImplementor getJavaRelImplementor(RelNode rel)
     {
         return stmt.getRelImplementor(
-            rel.getCluster().getRexBuilder());
+                rel.getCluster().getRexBuilder());
     }
 }
 

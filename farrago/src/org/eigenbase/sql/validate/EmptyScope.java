@@ -21,32 +21,40 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.*;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.reltype.RelDataType;
+import java.util.*;
 
-import java.util.List;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+
 
 /**
  * Deviant implementation of {@link SqlValidatorScope} for the top of the scope
  * stack.
  *
- * <p>It is convenient, because we never need to check whether a scope's
- * parent is null. (This scope knows not to ask about its parents, just like
- * Adam.)
+ * <p>It is convenient, because we never need to check whether a scope's parent
+ * is null. (This scope knows not to ask about its parents, just like Adam.)
  *
  * @author jhyde
  * @version $Id$
  * @since Mar 25, 2003
  */
-class EmptyScope implements SqlValidatorScope
+class EmptyScope
+    implements SqlValidatorScope
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final SqlValidatorImpl validator;
+
+    //~ Constructors -----------------------------------------------------------
 
     EmptyScope(SqlValidatorImpl validator)
     {
         this.validator = validator;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlValidator getValidator()
     {
@@ -64,14 +72,15 @@ class EmptyScope implements SqlValidatorScope
     }
 
     public SqlValidatorNamespace resolve(String name,
-        SqlValidatorScope[] ancestorOut,
-        int[] offsetOut)
+        SqlValidatorScope [] ancestorOut,
+        int [] offsetOut)
     {
         return null;
     }
 
     public void findAllColumnNames(
-        String parentObjName, List<SqlMoniker> result)
+        String parentObjName,
+        List<SqlMoniker> result)
     {
     }
 
@@ -98,7 +107,8 @@ class EmptyScope implements SqlValidatorScope
         String columnName,
         SqlNode ctx)
     {
-        throw validator.newValidationError(ctx,
+        throw validator.newValidationError(
+            ctx,
             EigenbaseResource.instance().ColumnNotFound.ex(columnName));
     }
 
@@ -116,9 +126,9 @@ class EmptyScope implements SqlValidatorScope
 
     public boolean isMonotonic(SqlNode expr)
     {
-        return expr instanceof SqlLiteral ||
-            expr instanceof SqlDynamicParam ||
-            expr instanceof SqlDataTypeSpec;
+        return
+            (expr instanceof SqlLiteral) || (expr instanceof SqlDynamicParam)
+            || (expr instanceof SqlDataTypeSpec);
     }
 
     public SqlNodeList getOrderList()
@@ -129,4 +139,3 @@ class EmptyScope implements SqlValidatorScope
 }
 
 // End EmptyScope.java
-

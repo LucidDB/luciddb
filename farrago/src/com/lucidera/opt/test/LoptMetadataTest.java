@@ -22,6 +22,17 @@ package com.lucidera.opt.test;
 
 import com.lucidera.lcs.*;
 
+import java.math.*;
+
+import java.util.*;
+
+import junit.framework.*;
+
+import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.session.*;
+import net.sf.farrago.test.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
@@ -35,62 +46,58 @@ import org.eigenbase.sql.fun.*;
 import org.eigenbase.stat.*;
 import org.eigenbase.util.*;
 
-import net.sf.farrago.jdbc.engine.*;
-import net.sf.farrago.test.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-
-import java.math.*;
-import java.util.*;
-
-import junit.framework.*;
 
 /**
- * LoptMetadataTest tests the relational expression metadata queries
- * relied on by the LucidDB optimizer.
+ * LoptMetadataTest tests the relational expression metadata queries relied on
+ * by the LucidDB optimizer.
  *
- *<p>
- *
- * NOTE jvs 11-Apr-2006: We don't actually diff the plans used as input to the
- * metadata queries, because that's not what we're testing here.  To see what
- * you're getting while developing new tests (or when old ones break), set
- * trace net.sf.farrago.query.plandump.level=FINE and check the trace output;
- * you'll also be able to see rowcounts and cumulative costs for all
- * expressions.
+ * <p>NOTE jvs 11-Apr-2006: We don't actually diff the plans used as input to
+ * the metadata queries, because that's not what we're testing here. To see what
+ * you're getting while developing new tests (or when old ones break), set trace
+ * net.sf.farrago.query.plandump.level=FINE and check the trace output; you'll
+ * also be able to see rowcounts and cumulative costs for all expressions.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LoptMetadataTest extends FarragoSqlToRelTestBase
+public class LoptMetadataTest
+    extends FarragoSqlToRelTestBase
 {
-    private HepProgram program;
 
-    private RelNode rootRel;
-
-    private RelStatSource tableStats;
-    
-    private RexBuilder rexBuilder;
+    //~ Static fields/initializers ---------------------------------------------
 
     private static boolean doneStaticSetup;
-    
+
     private static final double EPSILON = 1.0e-5;
 
     // REVIEW jvs 19-Apr-2006:  It's a bit confusing having two
     // tables named EMPS!
     private static final long SALES_EMPS_ROWCOUNT = 100;
-    
+
     private static final long COLSTORE_EMPS_ROWCOUNT = 99500;
-    
+
     private static final long COLSTORE_DEPTS_ROWCOUNT = 150;
 
-    // guess for non-sargable equals 
+    // guess for non-sargable equals
     private static final double DEFAULT_EQUAL_SELECTIVITY = 0.15;
-    
+
     // guess for any sargable predicate when stats are missing
     private static final double DEFAULT_SARGABLE_SELECTIVITY = 0.1;
-    
+
     private static final double DEFAULT_ROWCOUNT = 100.0;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
+    private HepProgram program;
+
+    private RelNode rootRel;
+
+    private RelStatSource tableStats;
+
+    private RexBuilder rexBuilder;
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new LoptMetadataTest object.
      *
@@ -103,6 +110,8 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         super(testName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement TestCase
     public static Test suite()
@@ -133,10 +142,10 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             + " sys_boot.sys_boot.luciddb_plugin");
 
         // Tables with statistics
-        FarragoJdbcEngineConnection farragoConnection = 
+        FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
-        
+
         // simulate a 1% sample with 995 rows
         // split among 100 bars: 10 rows per (99) bars, 5 rows last bar
         // deptno is a low cardinality column (all points sampled):
@@ -146,23 +155,65 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         stmt.executeUpdate(
             "create table EMPS (deptno int, name varchar(256), age int)");
         FarragoStatsUtil.setTableRowCount(
-            session, "", "", "EMPS", COLSTORE_EMPS_ROWCOUNT);
+            session,
+            "",
+            "",
+            "EMPS",
+            COLSTORE_EMPS_ROWCOUNT);
         FarragoStatsUtil.createColumnHistogram(
-            session, "", "", "EMPS", "DEPTNO", 150, 1, 150, 1, "0123456789");
+            session,
+            "",
+            "",
+            "EMPS",
+            "DEPTNO",
+            150,
+            1,
+            150,
+            1,
+            "0123456789");
         FarragoStatsUtil.createColumnHistogram(
-            session, "", "", "EMPS", "NAME", 90000, 1, 990, 0, 
+            session,
+            "",
+            "",
+            "EMPS",
+            "NAME",
+            90000,
+            1,
+            990,
+            0,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-        
+
         stmt.executeUpdate(
             "create table DEPTS (deptno int, dname varchar(256))");
         FarragoStatsUtil.setTableRowCount(
-            session, "", "", "DEPTS", COLSTORE_DEPTS_ROWCOUNT);
+            session,
+            "",
+            "",
+            "DEPTS",
+            COLSTORE_DEPTS_ROWCOUNT);
         FarragoStatsUtil.createColumnHistogram(
-            session, "", "", "DEPTS", "DEPTNO", 150, 100, 150, 1, "0123456789");
+            session,
+            "",
+            "",
+            "DEPTS",
+            "DEPTNO",
+            150,
+            100,
+            150,
+            1,
+            "0123456789");
         FarragoStatsUtil.createColumnHistogram(
-            session, "", "", "DEPTS", "DNAME", 150, 100, 150, 0, 
+            session,
+            "",
+            "",
+            "DEPTS",
+            "DNAME",
+            150,
+            100,
+            150,
+            0,
             "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-       
+
         // a table for testing typed values
         stmt.executeUpdate(
             "create table WINES ("
@@ -176,20 +227,20 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             + "  purchase_timestamp timestamp)");
         stmt.executeUpdate(
             "insert into WINES values "
-            + "  ('zinfadel', false, 15.00, 15e0, x'45e6ab', " 
+            + "  ('zinfadel', false, 15.00, 15e0, x'45e6ab', "
             + "   DATE'2001-01-01', TIME'23:01:01', TIMESTAMP'2002-01-01 12:01:01'),"
-            + "  ('zinfadel2', false, 15.00, 15e0, x'45e6ab', " 
+            + "  ('zinfadel2', false, 15.00, 15e0, x'45e6ab', "
             + "   DATE'2001-01-01', TIME'23:01:01', TIMESTAMP'2002-01-01 12:01:01'),"
-            + "  ('merlot', true, 22.00, 22e0, x'00', " 
+            + "  ('merlot', true, 22.00, 22e0, x'00', "
             + "   DATE'2002-01-01', TIME'12:01:01', TIMESTAMP'2004-01-01 12:01:01'),"
-            + "  ('mystery', null, null, null, null, " 
+            + "  ('mystery', null, null, null, null, "
             + "   null, null, null),"
-            + "  ('mystery', null, null, null, null, " 
+            + "  ('mystery', null, null, null, null, "
             + "   null, null, null)");
         stmt.executeUpdate(
             "analyze table WINES compute statistics for all columns");
     }
-    
+
     protected void checkAbstract(
         FarragoPreparingStmt stmt,
         RelNode relBefore)
@@ -197,6 +248,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         RelOptPlanner planner = stmt.getPlanner();
         planner.setRoot(relBefore);
+
         // NOTE jvs 11-Apr-2006: This is a little iffy, because the
         // superclass is going to yank a lot out from under us when we return,
         // but then we're going to keep using rootRel after that.  Seems
@@ -211,34 +263,44 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         this.program = program;
 
-        String explainQuery =
-            "EXPLAIN PLAN FOR " + sql;
+        String explainQuery = "EXPLAIN PLAN FOR " + sql;
 
         checkQuery(explainQuery);
     }
-    
+
     private void transformQuery(
         String sql)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        transformQuery(programBuilder.createProgram(), sql);
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
     }
-    
+
     protected void initPlanner(FarragoPreparingStmt stmt)
     {
         FarragoSessionPlanner planner = new FarragoTestPlanner(
-            program,
-            stmt);
+                program,
+                stmt);
         stmt.setPlanner(planner);
     }
 
     private void checkCost(double costExpected, RelOptCost costActual)
     {
         assertTrue(costActual != null);
-        assertEquals(costExpected, costActual.getRows(), EPSILON);
-        assertEquals(0, costActual.getCpu(), EPSILON);
-        assertEquals(0, costActual.getIo(), EPSILON);
+        assertEquals(
+            costExpected,
+            costActual.getRows(),
+            EPSILON);
+        assertEquals(
+            0,
+            costActual.getCpu(),
+            EPSILON);
+        assertEquals(
+            0,
+            costActual.getIo(),
+            EPSILON);
     }
 
     // queries table and checks the row count
@@ -247,17 +309,20 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     {
         transformQuery(
             "select * from " + table);
-        checkDouble(rowCount, RelMetadataQuery.getRowCount(rootRel), EPSILON);
+        checkDouble(
+            rowCount,
+            RelMetadataQuery.getRowCount(rootRel),
+            EPSILON);
 
         RelNode tableScan = rootRel.getInput(0);
         tableStats = RelMetadataQuery.getStatistics(tableScan);
         rexBuilder = rootRel.getCluster().getRexBuilder();
     }
-    
+
     private void checkColumn(
-        int ordinal, 
-        RexNode rexPredicate, 
-        Double selectivity, 
+        int ordinal,
+        RexNode rexPredicate,
+        Double selectivity,
         Double cardinality)
     {
         SargIntervalSequence predicate = null;
@@ -268,10 +333,16 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             predicate = FennelRelUtil.evaluateSargExpr(expr);
         }
 
-        RelStatColumnStatistics columnStats = 
+        RelStatColumnStatistics columnStats =
             tableStats.getColumnStatistics(ordinal, predicate);
-        checkDouble(selectivity, columnStats.getSelectivity(), EPSILON);
-        checkDouble(cardinality, columnStats.getCardinality(), EPSILON);
+        checkDouble(
+            selectivity,
+            columnStats.getSelectivity(),
+            EPSILON);
+        checkDouble(
+            cardinality,
+            columnStats.getCardinality(),
+            EPSILON);
     }
 
     private void checkDouble(Double expected, Double value, double epsilon)
@@ -282,11 +353,11 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             assertEquals(expected, value, epsilon);
         }
     }
-    
+
     // checks a single numeric predicate
     private void checkPredicate(
-        int ordinal, 
-        SqlBinaryOperator operator, 
+        int ordinal,
+        SqlBinaryOperator operator,
         BigDecimal value,
         Double selectivity,
         Double cardinality)
@@ -294,68 +365,76 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         RexNode rexPredicate = makeIntNode(ordinal, operator, value);
         checkColumn(ordinal, rexPredicate, selectivity, cardinality);
     }
-    
+
     private RexNode makeIntNode(
         int ordinal,
-        SqlBinaryOperator operator, 
+        SqlBinaryOperator operator,
         BigDecimal value)
     {
-        RelDataTypeField[] fields = rootRel.getRowType().getFields();
+        RelDataTypeField [] fields = rootRel.getRowType().getFields();
         RelDataType type = fields[ordinal].getType();
-        RexNode rexPredicate = rexBuilder.makeCall(
-            operator,
-            rexBuilder.makeInputRef(type, ordinal+1),
-            rexBuilder.makeExactLiteral(value));
+        RexNode rexPredicate =
+            rexBuilder.makeCall(
+                operator,
+                rexBuilder.makeInputRef(type, ordinal + 1),
+                rexBuilder.makeExactLiteral(value));
         return rexPredicate;
     }
 
     private RexNode makeStringNode(
         int ordinal,
-        SqlBinaryOperator operator, 
+        SqlBinaryOperator operator,
         String str)
     {
-        RelDataTypeField[] fields = rootRel.getRowType().getFields();
+        RelDataTypeField [] fields = rootRel.getRowType().getFields();
         RelDataType type = fields[ordinal].getType();
-        RexNode rexPredicate = rexBuilder.makeCall(
-            operator,
-            rexBuilder.makeInputRef(type, ordinal+1),
-            rexBuilder.makeCharLiteral(
-                new NlsString(str, null, null)));
+        RexNode rexPredicate =
+            rexBuilder.makeCall(
+                operator,
+                rexBuilder.makeInputRef(type, ordinal + 1),
+                rexBuilder.makeCharLiteral(new NlsString(str, null, null)));
         return rexPredicate;
     }
 
     private RexNode makeOrNode(RexNode a, RexNode b)
     {
-        RexNode rexPredicate = rexBuilder.makeCall(
-            SqlStdOperatorTable.orOperator, a, b);
+        RexNode rexPredicate =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.orOperator,
+                a,
+                b);
         return rexPredicate;
     }
 
     private RexNode makeAndNode(RexNode a, RexNode b)
     {
-        RexNode rexPredicate = rexBuilder.makeCall(
-            SqlStdOperatorTable.andOperator, a, b);
+        RexNode rexPredicate =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.andOperator,
+                a,
+                b);
         return rexPredicate;
     }
 
     private RexNode makeSearchNode(
-        int ordinal, 
+        int ordinal,
         RexLiteral value)
     {
-        assert(value != null);
+        assert (value != null);
 
-        RelDataTypeField[] fields = rootRel.getRowType().getFields();
+        RelDataTypeField [] fields = rootRel.getRowType().getFields();
         RelDataType type = fields[ordinal].getType();
-        RexNode rexPredicate = rexBuilder.makeCall(
-            SqlStdOperatorTable.equalsOperator,
-            rexBuilder.makeInputRef(type, ordinal+1),
-            value);
+        RexNode rexPredicate =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                rexBuilder.makeInputRef(type, ordinal + 1),
+                value);
         return rexPredicate;
     }
 
     private void searchColumn(
         int ordinal,
-        RexLiteral value, 
+        RexLiteral value,
         Double selectivity,
         Double cardinality)
     {
@@ -369,6 +448,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             "select * from sales.emps");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is just table access, since we removed the
         // projection.  This also verifies that we override derivation
         // based on FtrsIndexScanRel.computeSelfCost, which would
@@ -384,6 +464,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             "select * from lopt_metadata.emps where age=30");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is the filtered table access since the
         // predicate is sargable.
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
@@ -399,6 +480,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             "select * from (select age from lopt_metadata.emps) where age=30");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is same as for testCumulativeCostFilter
         // after expansion of projection
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
@@ -415,6 +497,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select * from (select upper(name) as n from lopt_metadata.emps)"
             + " where n='ZELDA' order by 1");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is full table access plus the filtered rowcount for
         // the sort.
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
@@ -431,8 +514,9 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select name from sales.emps"
             + " union all select name from sales.emps");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is two table accesses; union is a freebie.
-        double expected = 2*SALES_EMPS_ROWCOUNT;
+        double expected = 2 * SALES_EMPS_ROWCOUNT;
         checkCost(
             expected,
             cost);
@@ -445,12 +529,15 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select * from sales.emps e1 inner join sales.emps e2"
             + " on e1.empid=e2.empid");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is two table accesses plus join.
         double expected = 0;
+
         // table access
-        expected += 2*SALES_EMPS_ROWCOUNT;
+        expected += 2 * SALES_EMPS_ROWCOUNT;
+
         // worst-case join (two sides are balanced, so factor is 10)
-        expected += 10*SALES_EMPS_ROWCOUNT;
+        expected += 10 * SALES_EMPS_ROWCOUNT;
         checkCost(
             expected,
             cost);
@@ -468,15 +555,18 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             + " where e1.empid=e2.empid and e2.name='Zelda'");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
         double expected = 0;
+
         // table accesses for e2 as semijoin input and join input, and e1 as
         // join input (none of these are treated as filtered because it's an
         // FTRS table)
-        expected += 3*SALES_EMPS_ROWCOUNT;
+        expected += 3 * SALES_EMPS_ROWCOUNT;
+
         // worst-case join (two sides are balanced due to semijoin filtering,
         // so factor is 10)
-        expected += 10*SALES_EMPS_ROWCOUNT*DEFAULT_EQUAL_SELECTIVITY;
+        expected += 10 * SALES_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
+
         // semijoin overhead
-        expected += SALES_EMPS_ROWCOUNT*DEFAULT_EQUAL_SELECTIVITY;
+        expected += SALES_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY;
         checkCost(
             expected,
             cost);
@@ -488,10 +578,13 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             "select sum(empid) from sales.emps");
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
+
         // Cumulative cost is table access plus aggregation.
         double expected = 0;
+
         // table access
         expected += SALES_EMPS_ROWCOUNT;
+
         // agg
         expected += 3 + SALES_EMPS_ROWCOUNT;
         checkCost(
@@ -503,7 +596,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
     public void testEmptyStatistics()
         throws Exception
     {
-        FarragoJdbcEngineConnection farragoConnection = 
+        FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
 
@@ -514,7 +607,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
 
         // no statistics for projections yet
         assertNull(RelMetadataQuery.getStatistics(rootRel));
-        
+
         // no histogram, not a typical situation, but possible if we
         // dummy up values and only do row counts
         stmt.executeUpdate(
@@ -524,85 +617,124 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         checkColumn(0, null, null, null);
 
         // no predicate, should be able to query all data
-        checkRowCount("EMPS", (double)COLSTORE_EMPS_ROWCOUNT);
+        checkRowCount("EMPS", (double) COLSTORE_EMPS_ROWCOUNT);
         checkColumn(0, null, 1.0, 150.0);
         checkColumn(1, null, 1.0, 90000.0);
-        
+
         // TODO: tests when table cardinality is missing
     }
-    
+
     public void testFilteredStatistics()
         throws Exception
     {
-        checkRowCount("EMPS", (double)COLSTORE_EMPS_ROWCOUNT);
+        checkRowCount("EMPS", (double) COLSTORE_EMPS_ROWCOUNT);
 
         // the deptno distribution is 00,01,02,...
         // the predicate "deptno = 10" matches 1/2 first bar, 1/2 second bar
         checkPredicate(
-            0, SqlStdOperatorTable.equalsOperator, BigDecimal.valueOf(10), 
-            0.01, 1.0);
-        
+            0,
+            SqlStdOperatorTable.equalsOperator,
+            BigDecimal.valueOf(10),
+            0.01,
+            1.0);
+
         // the query "deptno < 150" matches 00..13, 1/2 of bar14
         // total card 2+1+2+... (21) + 1 for bar14 (total 22)
         checkPredicate(
-            0, SqlStdOperatorTable.lessThanOperator, BigDecimal.valueOf(150),
-            0.145, 22.0);
-        
+            0,
+            SqlStdOperatorTable.lessThanOperator,
+            BigDecimal.valueOf(150),
+            0.145,
+            22.0);
+
         // the query "deptno > 980" matches 1/2 of bar98, bar99
         // the bar99 contains only half the rows (50)
         checkPredicate(
-            0, SqlStdOperatorTable.greaterThanOperator, 
-            BigDecimal.valueOf(980), 0.01, 2.0);
+            0,
+            SqlStdOperatorTable.greaterThanOperator,
+            BigDecimal.valueOf(980),
+            0.01,
+            2.0);
 
         // the query "deptno >= 980" matches 1/2 of bar97, 98-99
         // selectivity = 0.5+1+0.5 percent  cardinality = 0.5+2+1
         checkPredicate(
-            0, SqlStdOperatorTable.greaterThanOrEqualOperator,
-            BigDecimal.valueOf(980), 0.02, 3.5);
+            0,
+            SqlStdOperatorTable.greaterThanOrEqualOperator,
+            BigDecimal.valueOf(980),
+            0.02,
+            3.5);
 
         // the query "deptno < 0" matches nothing
         checkPredicate(
-            0, SqlStdOperatorTable.lessThanOperator, BigDecimal.ZERO,
-            0.0, 0.0);
+            0,
+            SqlStdOperatorTable.lessThanOperator,
+            BigDecimal.ZERO,
+            0.0,
+            0.0);
 
         // "deptno > 990" matches 1/2 of the last bar
         checkPredicate(
-            0, SqlStdOperatorTable.greaterThanOperator,
-            BigDecimal.valueOf(990), 0.0025, 0.5);
+            0,
+            SqlStdOperatorTable.greaterThanOperator,
+            BigDecimal.valueOf(990),
+            0.0025,
+            0.5);
 
-        // "deptno = 7 or deptno < 5" supplies one point and one 
+        // "deptno = 7 or deptno < 5" supplies one point and one
         // range on bar0; should count as 3/4 bar
-        RexNode equalsZero = makeIntNode(
-            0, SqlStdOperatorTable.equalsOperator, BigDecimal.valueOf(7));
-        RexNode lessThanOne = makeIntNode(
-            0, SqlStdOperatorTable.lessThanOperator, BigDecimal.valueOf(5));
+        RexNode equalsZero =
+            makeIntNode(
+                0,
+                SqlStdOperatorTable.equalsOperator,
+                BigDecimal.valueOf(7));
+        RexNode lessThanOne =
+            makeIntNode(
+                0,
+                SqlStdOperatorTable.lessThanOperator,
+                BigDecimal.valueOf(5));
         RexNode pointAndRange = makeOrNode(equalsZero, lessThanOne);
         checkColumn(0, pointAndRange, 0.0075, 1.5);
-        
-        // "name = ABBY|ABIGAIL|ABOO or name < AC" matches the 
+
+        // "name = ABBY|ABIGAIL|ABOO or name < AC" matches the
         // entire bar AA, and has (3 points, 1 range) on bar AB.
-        // The 3 points should contribute 3/900 while the range 
+        // The 3 points should contribute 3/900 while the range
         // provides half the remainder = 3/900 + 897/1800
         // Cardinality:
         //     Correction = 90000 / 990 = 90.909
-        //     Bar values = (10-full bar) + (10-half bar) 
+        //     Bar values = (10-full bar) + (10-half bar)
         //                  + half of 3 w/o corrections
-        RexNode abby = makeStringNode(
-            1, SqlStdOperatorTable.equalsOperator, "ABBY");
-        RexNode abigail = makeStringNode(
-            1, SqlStdOperatorTable.equalsOperator, "ABIGAIL");
-        RexNode aboo = makeStringNode(
-            1, SqlStdOperatorTable.equalsOperator, "ABOO");
-        RexNode ac = makeStringNode(
-            1, SqlStdOperatorTable.lessThanOperator, "ABA");
-        RexNode rexPredicate = makeOrNode(
-            makeOrNode(abby, makeOrNode(aboo, abigail)),
-             ac);
+        RexNode abby =
+            makeStringNode(
+                1,
+                SqlStdOperatorTable.equalsOperator,
+                "ABBY");
+        RexNode abigail =
+            makeStringNode(
+                1,
+                SqlStdOperatorTable.equalsOperator,
+                "ABIGAIL");
+        RexNode aboo =
+            makeStringNode(
+                1,
+                SqlStdOperatorTable.equalsOperator,
+                "ABOO");
+        RexNode ac =
+            makeStringNode(
+                1,
+                SqlStdOperatorTable.lessThanOperator,
+                "ABA");
+        RexNode rexPredicate =
+            makeOrNode(
+                makeOrNode(
+                    abby,
+                    makeOrNode(aboo, abigail)),
+                ac);
         checkColumn(1, rexPredicate, 0.015017, 1365.136363);
     }
-    
+
     public void testTypedStatistics()
-    throws Exception
+        throws Exception
     {
         checkRowCount("WINES", 5.0);
 
@@ -618,6 +750,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         searchColumn(4, value, 0.2, 1.0);
 
         Calendar cal = Calendar.getInstance();
+
         // note: this matches a value of each column
         // be careful of 0-indexed month, and timezone
         cal.clear();
@@ -646,7 +779,7 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
 
         // TODO: in and not in operators, but does IN work?
     }
-    
+
     private void checkRowCountJoin(String sql, Double expected)
         throws Exception
     {
@@ -655,35 +788,37 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new PushFilterRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
-        transformQuery(programBuilder.createProgram(), sql);
-        
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+
         Double result = RelMetadataQuery.getRowCount(rootRel);
         assertTrue(result != null);
         assertEquals(expected, result, EPSILON);
     }
-    
+
     public void testRowCountJoinFtrs()
         throws Exception
     {
         checkRowCountJoin(
-            "select * from sales.emps e, sales.depts d " +
-                "where e.deptno = d.deptno and d.name = 'foo'",
+            "select * from sales.emps e, sales.depts d "
+            + "where e.deptno = d.deptno and d.name = 'foo'",
             SALES_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
     }
-    
+
     public void testRowCountJoinLcs()
         throws Exception
     {
         checkRowCountJoin(
-            "select * from emps e, depts d " +
-                "where e.deptno = d.deptno and d.dname = 'foo'",
+            "select * from emps e, depts d "
+            + "where e.deptno = d.deptno and d.dname = 'foo'",
             COLSTORE_EMPS_ROWCOUNT * 1.0 / COLSTORE_DEPTS_ROWCOUNT);
     }
-    
+
     public void testRowCountJoinNoColStats()
         throws Exception
-    {     
-        FarragoJdbcEngineConnection farragoConnection = 
+    {
+        FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
 
@@ -695,16 +830,16 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
             "select * from t1, t2 where t1.a = t2.a and t2.b = 1",
             1000 * DEFAULT_SARGABLE_SELECTIVITY);
     }
-    
+
     public void testRowCountJoinNonEquiJoin()
         throws Exception
     {
         checkRowCountJoin(
-            "select * from emps e, depts d " +
-                "where e.deptno > d.deptno",
+            "select * from emps e, depts d "
+            + "where e.deptno > d.deptno",
             COLSTORE_EMPS_ROWCOUNT * COLSTORE_DEPTS_ROWCOUNT * .5);
     }
-    
+
     public void testSelectivityJoin()
         throws Exception
     {
@@ -712,65 +847,82 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         programBuilder.addRuleInstance(new PushFilterRule());
         transformQuery(
             programBuilder.createProgram(),
-            "select * from " +
-                "(select * from emps e, depts d where e.deptno = d.deptno) " +
-                "where name = 'foo'");
+            "select * from "
+            + "(select * from emps e, depts d where e.deptno = d.deptno) "
+            + "where name = 'foo'");
         Double result = RelMetadataQuery.getSelectivity(rootRel, null);
-        assert(result != null);
+        assert (result != null);
         assertEquals(DEFAULT_EQUAL_SELECTIVITY, result, EPSILON);
     }
-    
+
     private void checkDistinctRowCount(
-        String sql, BitSet groupKey, Double expected)
+        String sql,
+        BitSet groupKey,
+        Double expected)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        transformQuery(programBuilder.createProgram(), sql);
-        
-        Double result = RelMetadataQuery.getDistinctRowCount(
-            rootRel, groupKey, null);
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+
+        Double result =
+            RelMetadataQuery.getDistinctRowCount(
+                rootRel,
+                groupKey,
+                null);
         if (expected != null) {
             assertTrue(result != null);
-            assertEquals(expected, result.doubleValue(), EPSILON);
+            assertEquals(
+                expected,
+                result.doubleValue(),
+                EPSILON);
         } else {
             assertTrue(expected == null);
         }
     }
-    
+
     public void testDistinctRowCountTabNoFilter()
         throws Exception
     {
         // count the number of distinct values in "name"
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(
-                (double) 90000, (double) COLSTORE_EMPS_ROWCOUNT);
+        double expected =
+            RelMdUtil.numDistinctVals((double) 90000,
+                (double) COLSTORE_EMPS_ROWCOUNT);
         checkDistinctRowCount(
-            "select * from emps", groupKey, expected);  
+            "select * from emps",
+            groupKey,
+            expected);
     }
-    
+
     public void testDistinctRowCountSargableFilter()
         throws Exception
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         checkDistinctRowCount(
-            "select * from emps where deptno = 10", groupKey, new Double(1));
+            "select * from emps where deptno = 10",
+            groupKey,
+            new Double(1));
     }
-    
+
     public void testDistinctRowCountNonSargableFilter()
         throws Exception
     {
         BitSet groupKey = new BitSet();
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(
-            90000 * DEFAULT_EQUAL_SELECTIVITY,
-            COLSTORE_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
+        double expected =
+            RelMdUtil.numDistinctVals(
+                90000 * DEFAULT_EQUAL_SELECTIVITY,
+                COLSTORE_EMPS_ROWCOUNT * DEFAULT_EQUAL_SELECTIVITY);
         checkDistinctRowCount(
-            "select * from emps where upper(name) = 'FOO'", groupKey,
-            expected);   
+            "select * from emps where upper(name) = 'FOO'",
+            groupKey,
+            expected);
     }
-    
+
     public void testDistinctRowCountSargAndNonSargFilters()
         throws Exception
     {
@@ -779,40 +931,52 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(
-            (double) COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY,
-            (double) COLSTORE_EMPS_ROWCOUNT * .145 * DEFAULT_EQUAL_SELECTIVITY);
+        double expected =
+            RelMdUtil.numDistinctVals(
+                (double) COLSTORE_EMPS_ROWCOUNT * .145
+                * DEFAULT_EQUAL_SELECTIVITY,
+                (double) COLSTORE_EMPS_ROWCOUNT * .145
+                * DEFAULT_EQUAL_SELECTIVITY);
+
         // selectivity of deptno < 150 is .145
         checkDistinctRowCount(
             "select * from emps where deptno < 150 and upper(name) = 'FOO'",
-            groupKey, expected);
+            groupKey,
+            expected);
     }
-    
+
     public void testDistinctRowCountNoStatsFilter()
         throws Exception
     {
         BitSet groupKey = new BitSet();
         groupKey.set(2);
+
         // if no stats are available, null is returned
         checkDistinctRowCount(
-            "select * from emps where age = 40", groupKey, null);
+            "select * from emps where age = 40",
+            groupKey,
+            null);
     }
-    
+
     public void testDistinctRowCountUniqueTab()
         throws Exception
     {
         stmt.executeUpdate(
-            "create table tabwithuniquekey(a int not null constraint u unique," +
-                "b int)");
+            "create table tabwithuniquekey(a int not null constraint u unique,"
+            + "b int)");
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        double expected = RelMdUtil.numDistinctVals(
-            DEFAULT_ROWCOUNT, DEFAULT_ROWCOUNT);
+        double expected =
+            RelMdUtil.numDistinctVals(
+                DEFAULT_ROWCOUNT,
+                DEFAULT_ROWCOUNT);
         checkDistinctRowCount(
-            "select * from tabwithuniqueKey", groupKey, expected);
+            "select * from tabwithuniqueKey",
+            groupKey,
+            expected);
     }
-    
+
     public void testSelectivityLcsTableNoStats()
         throws Exception
     {
@@ -825,12 +989,14 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             programBuilder.createProgram(),
             "select * from noStats where a = 1");
-        
+
         Double result = RelMetadataQuery.getSelectivity(rootRel, null);
         assertTrue(result != null);
-        assertEquals(DEFAULT_SARGABLE_SELECTIVITY, result.doubleValue());
+        assertEquals(
+            DEFAULT_SARGABLE_SELECTIVITY,
+            result.doubleValue());
     }
-    
+
     public void testDistinctRowCountProjectedLcsTable()
         throws Exception
     {
@@ -839,29 +1005,43 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         transformQuery(
             programBuilder.createProgram(),
             "select name from emps");
-        
+
         BitSet groupKey = new BitSet();
         groupKey.set(0);
-        Double result = RelMetadataQuery.getDistinctRowCount(
-            rootRel, groupKey, null);
+        Double result =
+            RelMetadataQuery.getDistinctRowCount(
+                rootRel,
+                groupKey,
+                null);
         double expected = 90000;
-        assertEquals(expected, result.doubleValue(), EPSILON);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            EPSILON);
     }
-    
+
     private void testPopulationProjectedLcsTable(
-        String sql, BitSet groupKey, double expected, double epsilon)
+        String sql,
+        BitSet groupKey,
+        double expected,
+        double epsilon)
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new LcsTableProjectionRule());
-        transformQuery(programBuilder.createProgram(), sql);    
-        
+        transformQuery(
+            programBuilder.createProgram(),
+            sql);
+
         Double result = RelMetadataQuery.getPopulationSize(rootRel, groupKey);
-            
+
         assertTrue(result != null);
-        assertEquals(expected, result.doubleValue(), epsilon);
+        assertEquals(
+            expected,
+            result.doubleValue(),
+            epsilon);
     }
-    
+
     public void testPopulationNoProjExprs()
         throws Exception
     {
@@ -870,95 +1050,121 @@ public class LoptMetadataTest extends FarragoSqlToRelTestBase
         BitSet groupKey = new BitSet();
         groupKey.set(1);
         groupKey.set(2);
-        
-        double expected = RelMdUtil.numDistinctVals(
-            90000*150.0, (double) COLSTORE_EMPS_ROWCOUNT);
-        
+
+        double expected =
+            RelMdUtil.numDistinctVals(
+                90000 * 150.0,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+
         testPopulationProjectedLcsTable(
-            "select age, deptno, name from emps", groupKey, expected, EPSILON);
+            "select age, deptno, name from emps",
+            groupKey,
+            expected,
+            EPSILON);
     }
-    
+
     public void testPopulationProjFuncExpr()
         throws Exception
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-        
+
         // 150 distinct values in deptno
-        Double nonProjExpr = RelMdUtil.numDistinctVals(
-            150.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        Double nonProjExpr =
+            RelMdUtil.numDistinctVals(
+                150.0,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+
         // 90000 distinct values in name
-        Double projExpr = RelMdUtil.numDistinctVals(
-            90000.0, (double) COLSTORE_EMPS_ROWCOUNT);
-        projExpr = RelMdUtil.numDistinctVals(
-            projExpr, (double) COLSTORE_EMPS_ROWCOUNT);
+        Double projExpr =
+            RelMdUtil.numDistinctVals(
+                90000.0,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+        projExpr =
+            RelMdUtil.numDistinctVals(
+                projExpr,
+                (double) COLSTORE_EMPS_ROWCOUNT);
         double expected =
             RelMdUtil.numDistinctVals(
-               nonProjExpr * projExpr, (double) COLSTORE_EMPS_ROWCOUNT);
-        
+                nonProjExpr * projExpr,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+
         testPopulationProjectedLcsTable(
-            "select deptno, upper(name) from emps", groupKey, expected,
+            "select deptno, upper(name) from emps",
+            groupKey,
+            expected,
             EPSILON);
     }
-    
+
     public void testPopulationProjTimesExpr()
         throws Exception
     {
         BitSet groupKey = new BitSet();
         groupKey.set(0);
         groupKey.set(1);
-             
+
         // 90000 distinct values in name
-        double expected = RelMdUtil.numDistinctVals(
-            90000.0, (double) COLSTORE_EMPS_ROWCOUNT);
-        expected = RelMdUtil.numDistinctVals(
-            expected, (double) COLSTORE_EMPS_ROWCOUNT);
+        double expected =
+            RelMdUtil.numDistinctVals(
+                90000.0,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+        expected =
+            RelMdUtil.numDistinctVals(
+                expected,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+
         // 150 distinct values in deptno
-        double nonProjExpr = RelMdUtil.numDistinctVals(
-            150.0 * 150.0, (double) COLSTORE_EMPS_ROWCOUNT);
+        double nonProjExpr =
+            RelMdUtil.numDistinctVals(
+                150.0 * 150.0,
+                (double) COLSTORE_EMPS_ROWCOUNT);
         expected *= nonProjExpr;
         expected =
             RelMdUtil.numDistinctVals(
-               expected, (double) COLSTORE_EMPS_ROWCOUNT);
-        
+                expected,
+                (double) COLSTORE_EMPS_ROWCOUNT);
+
         testPopulationProjectedLcsTable(
-            "select deptno * deptno, name from emps", groupKey, expected, 1.0);
-    }  
-    
+            "select deptno * deptno, name from emps",
+            groupKey,
+            expected,
+            1.0);
+    }
+
     public void testUniqueKeysProjectedLcsTable()
         throws Exception
     {
         stmt.executeUpdate(
-            "create table tab(" +
-            "c0 int not null," +
-            "c1 int not null," +
-            "c2 int not null,"+
-            "c3 int not null," +
-            "c4 int," +
-            "constraint primkey primary key(c4)," +
-            "constraint uniquekey1 unique(c2, c3)," +
-            "constraint uniquekey2 unique(c0, c1))");
-        
+            "create table tab("
+            + "c0 int not null,"
+            + "c1 int not null,"
+            + "c2 int not null,"
+            + "c3 int not null,"
+            + "c4 int,"
+            + "constraint primkey primary key(c4),"
+            + "constraint uniquekey1 unique(c2, c3),"
+            + "constraint uniquekey2 unique(c0, c1))");
+
         HepProgramBuilder programBuilder = new HepProgramBuilder();
         programBuilder.addRuleInstance(new LcsTableProjectionRule());
         transformQuery(
             programBuilder.createProgram(),
             "select c4, c2, c1, c0 from tab");
-        
+
         // unique keys relative to projection are (0) and (3, 2);
         // uniquekey1 is not included because c3 is not projected
         Set<BitSet> expected = new HashSet<BitSet>();
-        
+
         BitSet uniqKey = new BitSet();
         uniqKey.set(0);
         expected.add(uniqKey);
-        
+
         uniqKey = new BitSet();
         uniqKey.set(3);
         uniqKey.set(2);
         expected.add(uniqKey);
-        
+
         Set<BitSet> result = RelMetadataQuery.getUniqueKeys(rootRel);
         assertTrue(result.equals(expected));
     }

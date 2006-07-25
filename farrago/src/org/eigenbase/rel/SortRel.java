@@ -20,35 +20,33 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptUtil;
-import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
 
 /**
- * Relational expression which imposes a
- * particular sort order on its input without otherwise changing its content.
+ * Relational expression which imposes a particular sort order on its input
+ * without otherwise changing its content.
  */
-public final class SortRel extends SingleRel
+public final class SortRel
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final RelFieldCollation [] collations;
     protected final RexNode [] fieldExps;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a sorter.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param child input relational expression
      * @param collations array of sort specifications
      */
@@ -57,7 +55,10 @@ public final class SortRel extends SingleRel
         RelNode child,
         RelFieldCollation [] collations)
     {
-        super(cluster, new RelTraitSet(CallingConvention.NONE), child);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            child);
         this.collations = collations;
 
         fieldExps = new RexNode[collations.length];
@@ -71,14 +72,15 @@ public final class SortRel extends SingleRel
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public Object clone()
     {
-        SortRel clone = new SortRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            collations);
+        SortRel clone =
+            new SortRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                collations);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -99,7 +101,7 @@ public final class SortRel extends SingleRel
 
     public void explain(RelOptPlanWriter pw)
     {
-        String [] terms = new String[1 + collations.length * 2];
+        String [] terms = new String[1 + (collations.length * 2)];
         Object [] values = new Object[collations.length];
         int i = 0;
         terms[i++] = "child";
@@ -113,6 +115,5 @@ public final class SortRel extends SingleRel
         pw.explain(this, terms, values);
     }
 }
-
 
 // End SortRel.java

@@ -29,23 +29,24 @@ import org.eigenbase.trace.*;
 
 
 /**
- * A <code>RelOptRuleCall</code> is an invocation of a {@link RelOptRule}
- * with a set of {@link RelNode relational expression}s as arguments.
+ * A <code>RelOptRuleCall</code> is an invocation of a {@link RelOptRule} with a
+ * set of {@link RelNode relational expression}s as arguments.
  */
 public abstract class RelOptRuleCall
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final RelOptRuleOperand operand0;
     private final RelOptRule rule;
     public final RelNode [] rels;
     private final RelOptPlanner planner;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected RelOptRuleCall(
         RelOptPlanner planner,
@@ -59,7 +60,7 @@ public abstract class RelOptRuleCall
         assert (rels.length == rule.operands.length);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptRuleOperand getOperand0()
     {
@@ -80,18 +81,17 @@ public abstract class RelOptRuleCall
     {
         return planner;
     }
-    
+
     /**
-     * Called by the rule whenever it finds a match.  The implementation of
-     * this method will guarantee that the original relational expression
-     * (e.g., <code>this.rels[0]</code>) has its traits propagated to the new
+     * Called by the rule whenever it finds a match. The implementation of this
+     * method will guarantee that the original relational expression (e.g.,
+     * <code>this.rels[0]</code>) has its traits propagated to the new
      * relational expression (<code>rel</code>) and its unregistered children.
-     * Any trait not specifically set in the RelTraitSet returned by 
-     * <code>rel.getTraits()</code> will be copied from
-     * <code>this.rels[0].getTraitSet()</code>.
+     * Any trait not specifically set in the RelTraitSet returned by <code>
+     * rel.getTraits()</code> will be copied from <code>
+     * this.rels[0].getTraitSet()</code>.
      */
     public abstract void transformTo(RelNode rel);
 }
-
 
 // End RelOptRuleCall.java

@@ -27,21 +27,24 @@ import javax.jmi.reflect.*;
 
 // REVIEW jvs 21-May-2005:  Make this a heavyweight allocation?
 
+
 /**
  * JmiQueryProcessor defines an interface for preparing and executing queries
- * against JMI data.  It does not specify the actual query language to use.
+ * against JMI data. It does not specify the actual query language to use.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface JmiQueryProcessor
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Prepares a query for execution.
      *
      * @param modelView a view of the model to be queried
-     *
-     * @param query the text of the query (expected language is 
+     * @param query the text of the query (expected language is
      * implementation-dependent)
      *
      * @return reference to prepared query

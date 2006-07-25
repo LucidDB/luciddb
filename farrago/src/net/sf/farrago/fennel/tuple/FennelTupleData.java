@@ -20,24 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.fennel.tuple;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+
 
 /**
  * FennelTupleData is an in-memory collection of independent data values, as
- * explained in the fennel tuple
- * <a href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
+ * explained in the fennel tuple <a
+ * href="http://fennel.sourceforge.net/doxygen/html/structTupleDesign.html">
  * design document</a>.
  */
 public class FennelTupleData
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * the TupleDatums we are responsible for.
      */
     private final List datums = new ArrayList();
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * default constructor.
@@ -54,6 +58,8 @@ public class FennelTupleData
         compute(tupleDesc);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * obtains a FennelTupleDatum object given the index of an entry.
      */
@@ -63,7 +69,7 @@ public class FennelTupleData
     }
 
     /**
-     *  returns the number of datums we have.
+     * returns the number of datums we have.
      */
     public int getDatumCount()
     {
@@ -91,19 +97,19 @@ public class FennelTupleData
     }
 
     /**
-     * indicates whether this tuple contains any null
-     * FennelTupleDatum elements.
+     * indicates whether this tuple contains any null FennelTupleDatum elements.
      */
-    public boolean containsNull() 
+    public boolean containsNull()
     {
         int i;
         for (i = 0; i < datums.size(); ++i) {
-            if (! getDatum(i).isPresent()) {
+            if (!getDatum(i).isPresent()) {
                 return true;
             }
         }
         return false;
     }
-};
+}
+;
 
 // End FennelTupleData.java

@@ -22,9 +22,10 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.fennel.FennelPseudoUuid;
-import net.sf.farrago.fennel.FennelPseudoUuidGenerator;
-import org.eigenbase.util.Util;
+import net.sf.farrago.fennel.*;
+
+import org.eigenbase.util.*;
+
 
 /**
  * FennelPseudoUuidTest tests the FennelPseudoUuid class.
@@ -35,16 +36,25 @@ import org.eigenbase.util.Util;
 public class FennelPseudoUuidTest
     extends FarragoTestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     static {
-         Util.loadLibrary("farrago");
+        Util.loadLibrary("farrago");
     }
 
-    public FennelPseudoUuidTest(String name) throws Exception
+    //~ Constructors -----------------------------------------------------------
+
+    public FennelPseudoUuidTest(String name)
+        throws Exception
     {
         super(name);
     }
 
-    public void testValidPseudoUuid() throws Exception
+    //~ Methods ----------------------------------------------------------------
+
+    public void testValidPseudoUuid()
+        throws Exception
     {
         FennelPseudoUuid uuid1 =
             new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
@@ -54,7 +64,8 @@ public class FennelPseudoUuidTest
         assertTrue(uuid1.toString().length() > 0);
     }
 
-    public void testInvalidPseudoUuid() throws Exception
+    public void testInvalidPseudoUuid()
+        throws Exception
     {
         FennelPseudoUuid uuid1 =
             new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
@@ -66,7 +77,8 @@ public class FennelPseudoUuidTest
         assertTrue(uuid2.toString().length() > 0);
     }
 
-    public void testPseudoUuidSymmetry() throws Exception
+    public void testPseudoUuidSymmetry()
+        throws Exception
     {
         FennelPseudoUuid uuid1 =
             new FennelPseudoUuid(FennelPseudoUuidGenerator.validUuid());
@@ -76,10 +88,10 @@ public class FennelPseudoUuidTest
         String uuidStr = "01234567-89ab-cdef-0123-456789abcdef";
         FennelPseudoUuid uuid3 = new FennelPseudoUuid(uuidStr);
 
-        byte[] uuidBytes = new byte[16];
+        byte [] uuidBytes = new byte[16];
         byte val = 0;
-        for(int i = 0; i < 16; i++) {
-            if (i == 0 || i == 8) {
+        for (int i = 0; i < 16; i++) {
+            if ((i == 0) || (i == 8)) {
                 val = 0x01;
             }
 
@@ -91,3 +103,5 @@ public class FennelPseudoUuidTest
         assertEquals(uuid3, uuid4);
     }
 }
+
+// End FennelPseudoUuidTest.java

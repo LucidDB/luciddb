@@ -23,30 +23,34 @@ package net.sf.farrago.session;
 
 import net.sf.farrago.cwm.relational.enumerations.*;
 
+
 /**
- * FarragoSessionDdlDropRule specifies the action to take when
- * an association link deletion event is detected during DDL.
+ * FarragoSessionDdlDropRule specifies the action to take when an association
+ * link deletion event is detected during DDL.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoSessionDdlDropRule
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Class superInterface;
-    
+
     private final ReferentialRuleTypeEnum action;
-    
+
     private final String endName;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoSessionDdlDropRule object.
      *
      * @param endName the end to which this rule applies
-     *
      * @param superInterface a filter on the instance of the end to which the
      * rule applies; if null, the rule applies to any object; otherwise, the
      * object must be an instance of this class
-     *
      * @param action what to do when this rule fires
      */
     public FarragoSessionDdlDropRule(
@@ -59,11 +63,13 @@ public class FarragoSessionDdlDropRule
         this.action = action;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public String getEndName()
     {
         return endName;
     }
-    
+
     public Class getSuperInterface()
     {
         return superInterface;

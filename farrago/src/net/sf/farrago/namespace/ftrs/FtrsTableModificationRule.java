@@ -36,9 +36,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class FtrsTableModificationRule extends RelOptRule
+class FtrsTableModificationRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FtrsTableModificationRule object.
@@ -50,7 +52,7 @@ class FtrsTableModificationRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -77,15 +79,16 @@ class FtrsTableModificationRule extends RelOptRule
         // Require input types to match expected types exactly.  This
         // is accomplished by the usage of CoerceInputsRule.
         if (!RelOptUtil.areRowTypesEqual(
-                    inputRel.getRowType(),
-                    tableModification.getExpectedInputRowType(0),
-                    false)) {
+                inputRel.getRowType(),
+                tableModification.getExpectedInputRowType(0),
+                false)) {
             return;
         }
 
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                call.rels[0].getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 inputRel);
         if (fennelInput == null) {
             return;
@@ -103,6 +106,5 @@ class FtrsTableModificationRule extends RelOptRule
         call.transformTo(fennelModificationRel);
     }
 }
-
 
 // End FtrsTableModificationRule.java

@@ -22,20 +22,17 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.cwm.relational.CwmView;
-import net.sf.farrago.ddl.gen.FarragoDdlGenerator;
-import net.sf.farrago.ddl.gen.GeneratedDdlStmt;
-
-
 /**
- * Test cases for FarragoDdlGenerator.  This is a placeholder for now.
+ * Test cases for FarragoDdlGenerator. This is a placeholder for now.
  *
  * @author Jason Ouellette
  * @version $Id$
  */
-public class FarragoDdlGeneratorTest extends FarragoTestCase
+public class FarragoDdlGeneratorTest
+    extends FarragoTestCase
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoDdlGeneratorTest(String testName)
         throws Exception
@@ -43,10 +40,12 @@ public class FarragoDdlGeneratorTest extends FarragoTestCase
         super(testName);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void testCreateTable()
         throws Exception
     {
     }
 }
+
+// End FarragoDdlGeneratorTest.java

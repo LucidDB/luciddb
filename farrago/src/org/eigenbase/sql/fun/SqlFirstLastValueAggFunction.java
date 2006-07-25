@@ -22,31 +22,32 @@
 */
 package org.eigenbase.sql.fun;
 
-import openjava.mop.OJClass;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlFunction;
-import org.eigenbase.sql.SqlFunctionCategory;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.sql.test.SqlTester;
-import org.eigenbase.sql.test.SqlOperatorTests;
+import openjava.mop.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
- * <code>Count</code> is an aggregator which returns the number of rows
- * which have gone into it. With one argument (or more), it returns the
- * number of rows for which that argument (or all) is not
- * <code>null</code>.
+ * <code>Count</code> is an aggregator which returns the number of rows which
+ * have gone into it. With one argument (or more), it returns the number of rows
+ * for which that argument (or all) is not <code>null</code>.
  */
-public class SqlFirstLastValueAggFunction extends SqlAggFunction
+public class SqlFirstLastValueAggFunction
+    extends SqlAggFunction
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     public static final RelDataType type = null; // TODO:
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlFirstLastValueAggFunction(boolean firstFlag)
     {
         super(
-            (firstFlag) ? "FIRST_VALUE":"LAST_VALUE",
+            (firstFlag) ? "FIRST_VALUE" : "LAST_VALUE",
             SqlKind.Function,
             SqlTypeStrategies.rtiFirstArgType,
             null,
@@ -54,9 +55,11 @@ public class SqlFirstLastValueAggFunction extends SqlAggFunction
             SqlFunctionCategory.Numeric);
     }
 
-    public RelDataType[] getParameterTypes(RelDataTypeFactory typeFactory)
+    //~ Methods ----------------------------------------------------------------
+
+    public RelDataType [] getParameterTypes(RelDataTypeFactory typeFactory)
     {
-        return new RelDataType[] {type};
+        return new RelDataType[] { type };
     }
 
     public RelDataType getReturnType(RelDataTypeFactory typeFactory)
@@ -68,7 +71,6 @@ public class SqlFirstLastValueAggFunction extends SqlAggFunction
     {
         return new OJClass[0];
     }
-
 }
 
 // End SqlCountAggFunction.java

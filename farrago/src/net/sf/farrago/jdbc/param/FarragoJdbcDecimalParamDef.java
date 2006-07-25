@@ -22,21 +22,27 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.math.*;
 
-import org.eigenbase.util14.NumberUtil;
+import org.eigenbase.util14.*;
+
 
 /**
  * FarragoJdbcEngineDecimalParamDef defines a Decimal parameter.
- * 
+ *
  * @author Angel Chang
  * @version $Id$
  */
-class FarragoJdbcDecimalParamDef extends FarragoJdbcParamDef
+class FarragoJdbcDecimalParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final BigInteger maxUnscaled;
     final BigInteger minUnscaled;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcDecimalParamDef(
         String paramName,
@@ -46,6 +52,8 @@ class FarragoJdbcDecimalParamDef extends FarragoJdbcParamDef
         maxUnscaled = NumberUtil.getMaxUnscaled(paramMetaData.precision);
         minUnscaled = NumberUtil.getMinUnscaled(paramMetaData.precision);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     private BigDecimal getBigDecimal(Object value, int scale)
     {
@@ -81,3 +89,5 @@ class FarragoJdbcDecimalParamDef extends FarragoJdbcParamDef
         return n;
     }
 }
+
+// End FarragoJdbcDecimalParamDef.java

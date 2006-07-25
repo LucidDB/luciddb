@@ -20,25 +20,26 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-
 /**
- * A <code>RelVisitor</code> is a Visitor role in the
- * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern} and
- * visits {@link RelNode} objects as the role of Element.  Other
- * components in the pattern: {@link RelNode#childrenAccept(RelVisitor)}.
+ * A <code>RelVisitor</code> is a Visitor role in the {@link
+ * org.eigenbase.util.Glossary#VisitorPattern visitor pattern} and visits {@link
+ * RelNode} objects as the role of Element. Other components in the pattern:
+ * {@link RelNode#childrenAccept(RelVisitor)}.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 22 September, 2001
  */
 public abstract class RelVisitor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private RelNode root;
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Visits a node during a traversal.
@@ -46,7 +47,7 @@ public abstract class RelVisitor
      * @param node Node to visit
      * @param ordinal Ordinal of node within its parent
      * @param parent Parent of the node, or null if it is the root of the
-     *               traversal
+     * traversal
      */
     public void visit(
         RelNode node,
@@ -60,7 +61,7 @@ public abstract class RelVisitor
      * Replaces the root node of this traversal.
      *
      * @param node The new root node
-      */
+     */
     public void replaceRoot(RelNode node)
     {
         this.root = node;

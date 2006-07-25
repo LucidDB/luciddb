@@ -22,22 +22,30 @@
 package net.sf.farrago.namespace.impl;
 
 import java.sql.*;
+
 import java.util.*;
 
+
 /**
- * MedPropertyInfoMap collects information to be returned via
- * DriverPropertyInfo calls.
+ * MedPropertyInfoMap collects information to be returned via DriverPropertyInfo
+ * calls.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class MedPropertyInfoMap extends MedAbstractBase
+public class MedPropertyInfoMap
+    extends MedAbstractBase
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final ResourceBundle resourceBundle;
     private final String resourcePrefix;
     private final Properties proposedProps;
     private final Map<String, DriverPropertyInfo> map;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public MedPropertyInfoMap(
         ResourceBundle resourceBundle,
         String resourcePrefix,
@@ -49,19 +57,21 @@ public class MedPropertyInfoMap extends MedAbstractBase
         this.map = new LinkedHashMap<String, DriverPropertyInfo>();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public void addPropInfo(
         String propName)
     {
         addPropInfo(propName, false, null);
     }
-    
+
     public void addPropInfo(
         String propName,
         boolean required)
     {
         addPropInfo(propName, required, null);
     }
-    
+
     public void addPropInfo(
         String propName,
         boolean required,
@@ -90,8 +100,9 @@ public class MedPropertyInfoMap extends MedAbstractBase
 
     public DriverPropertyInfo [] toArray()
     {
-        return (DriverPropertyInfo [])
-            map.values().toArray(EMPTY_DRIVER_PROPERTIES);
+        return
+            (DriverPropertyInfo []) map.values().toArray(
+                EMPTY_DRIVER_PROPERTIES);
     }
 }
 

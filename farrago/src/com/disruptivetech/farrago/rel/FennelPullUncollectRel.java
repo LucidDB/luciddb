@@ -20,34 +20,48 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import net.sf.farrago.catalog.FarragoRepos;
-import net.sf.farrago.fem.fennel.FemExecutionStreamDef;
-import net.sf.farrago.fem.fennel.FemUncollectTupleStreamDef;
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.UncollectRel;
+
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
+
 
 /**
  * FennelPullUncollectRel is the relational expression corresponding to an
  * UNNEST (Uncollect) implemented inside of Fennel.
  *
- * <p>Rules:<ul>
+ * <p>Rules:
+ *
+ * <ul>
  * <li>{@link FennelUncollectRule} creates this from a rex call which has the
- * operator {@link org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}</li>
- * </ul></p>
+ * operator {@link
+ * org.eigenbase.sql.fun.SqlStdOperatorTable#unnestOperator}</li>
+ * </ul>
+ * </p>
  *
  * @author Wael Chatila
- * @since Dec 12, 2004
  * @version $Id$
+ * @since Dec 12, 2004
  */
-public class FennelPullUncollectRel extends FennelSingleRel
+public class FennelPullUncollectRel
+    extends FennelSingleRel
 {
-    public FennelPullUncollectRel(RelOptCluster cluster, RelNode child) {
-        super(cluster, new RelTraitSet(FENNEL_EXEC_CONVENTION), child);
+
+    //~ Constructors -----------------------------------------------------------
+
+    public FennelPullUncollectRel(RelOptCluster cluster, RelNode child)
+    {
+        super(
+            cluster,
+            new RelTraitSet(FENNEL_EXEC_CONVENTION),
+            child);
         assert deriveRowType() != null : "invalid child rowtype";
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     protected RelDataType deriveRowType()
     {
@@ -77,7 +91,8 @@ public class FennelPullUncollectRel extends FennelSingleRel
     {
         FennelPullUncollectRel clone =
             new FennelPullUncollectRel(
-                getCluster(), RelOptUtil.clone(getChild()));
+                getCluster(),
+                RelOptUtil.clone(getChild()));
         clone.inheritTraitsFrom(this);
         return clone;
     }

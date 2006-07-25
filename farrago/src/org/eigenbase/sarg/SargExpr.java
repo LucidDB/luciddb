@@ -21,23 +21,27 @@
 */
 package org.eigenbase.sarg;
 
+import java.util.*;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
 
 /**
- * SargExpr represents an expression defining a possibly non-contiguous
- * search subset of a scalar domain of a given datatype.
+ * SargExpr represents an expression defining a possibly non-contiguous search
+ * subset of a scalar domain of a given datatype.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public interface SargExpr
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Overrides the default Object.toString.  The result must be
-     * safe for use in a RelNode digest.
+     * Overrides the default Object.toString. The result must be safe for use in
+     * a RelNode digest.
      */
     public String toString();
 
@@ -49,10 +53,8 @@ public interface SargExpr
     /**
      * Resolves this expression into a fixed {@link SargIntervalSequence}.
      *
-     *<p>
-     *
-     * TODO jvs 17-Jan-2006:  add binding for dynamic params so they
-     * can be evaluated as well
+     * <p>TODO jvs 17-Jan-2006: add binding for dynamic params so they can be
+     * evaluated as well
      *
      * @return immutable ordered sequence of disjoint intervals
      */
@@ -64,8 +66,7 @@ public interface SargExpr
     public SargFactory getFactory();
 
     /**
-     * Collects all dynamic parameters referenced by this
-     * expression.
+     * Collects all dynamic parameters referenced by this expression.
      *
      * @param dynamicParams receives dynamic parameter references
      */

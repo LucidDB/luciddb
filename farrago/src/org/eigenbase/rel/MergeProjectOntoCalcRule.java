@@ -20,45 +20,45 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.reltype.RelDataTypeField;
 
 
 /**
  * Planner rule which merges a {@link ProjectRel} and a {@link CalcRel}. The
- * resulting {@link CalcRel} has the same project list as the original
- * {@link ProjectRel}, but expressed in terms of the original {@link CalcRel}'s
- * inputs.
- *
- * @see MergeFilterOntoCalcRule
+ * resulting {@link CalcRel} has the same project list as the original {@link
+ * ProjectRel}, but expressed in terms of the original {@link CalcRel}'s inputs.
  *
  * @author jhyde
- * @since Mar 7, 2004
  * @version $Id$
- **/
-public class MergeProjectOntoCalcRule extends RelOptRule
+ * @see MergeFilterOntoCalcRule
+ * @since Mar 7, 2004
+ */
+public class MergeProjectOntoCalcRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final MergeProjectOntoCalcRule instance =
         new MergeProjectOntoCalcRule();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     private MergeProjectOntoCalcRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 ProjectRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(CalcRel.class, null),
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -72,16 +72,20 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         // expanded.
         RexProgram program =
             RexProgram.create(
-                calc.getRowType(), project.getProjectExps(), null,
-                project.getRowType(), project.getCluster().getRexBuilder());
-        if (RexOver.containsOver(program)) {
-            CalcRel projectAsCalc = new CalcRel(
-                project.getCluster(),
-                project.cloneTraits(),
-                calc,
+                calc.getRowType(),
+                project.getProjectExps(),
+                null,
                 project.getRowType(),
-                program,
-                RelCollation.emptyList);
+                project.getCluster().getRexBuilder());
+        if (RexOver.containsOver(program)) {
+            CalcRel projectAsCalc =
+                new CalcRel(
+                    project.getCluster(),
+                    project.cloneTraits(),
+                    calc,
+                    project.getRowType(),
+                    program,
+                    RelCollation.emptyList);
             call.transformTo(projectAsCalc);
             return;
         }
@@ -89,25 +93,34 @@ public class MergeProjectOntoCalcRule extends RelOptRule
         // Create a program containing the project node's expressions.
         final RexBuilder rexBuilder = project.getCluster().getRexBuilder();
         final RexProgramBuilder progBuilder =
-            new RexProgramBuilder(calc.getRowType(), rexBuilder);
-        final RelDataTypeField[] fields = project.getRowType().getFields();
+            new RexProgramBuilder(
+                calc.getRowType(),
+                rexBuilder);
+        final RelDataTypeField [] fields = project.getRowType().getFields();
         for (int i = 0; i < project.exps.length; i++) {
-            progBuilder.addProject(project.exps[i], fields[i].getName());
+            progBuilder.addProject(
+                project.exps[i],
+                fields[i].getName());
         }
         RexProgram topProgram = progBuilder.getProgram();
         RexProgram bottomProgram = calc.getProgram();
 
         // Merge the programs together.
-        RexProgram mergedProgram = RexProgramBuilder.mergePrograms(
-            topProgram, bottomProgram, rexBuilder);
+        RexProgram mergedProgram =
+            RexProgramBuilder.mergePrograms(
+                topProgram,
+                bottomProgram,
+                rexBuilder);
         final CalcRel newCalc =
             new CalcRel(
-                calc.getCluster(), RelOptUtil.clone(calc.traits),
-                calc.getChild(), project.getRowType(), mergedProgram,
+                calc.getCluster(),
+                RelOptUtil.clone(calc.traits),
+                calc.getChild(),
+                project.getRowType(),
+                mergedProgram,
                 RelCollation.emptyList);
         call.transformTo(newCalc);
     }
-
 }
 
 // End MergeProjectOntoCalcRule.java

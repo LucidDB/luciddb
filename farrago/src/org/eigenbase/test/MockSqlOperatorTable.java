@@ -22,30 +22,36 @@
 */
 package org.eigenbase.test;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.util.ChainedSqlOperatorTable;
-import org.eigenbase.sql.util.ListSqlOperatorTable;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+
 
 /**
- * Mock operator table for testing purposes.
- * Contains the standard SQL operator table, plus a list of operators.
+ * Mock operator table for testing purposes. Contains the standard SQL operator
+ * table, plus a list of operators.
  *
  * @author jhyde
  * @version $Id$
  */
-public class MockSqlOperatorTable extends ChainedSqlOperatorTable
+public class MockSqlOperatorTable
+    extends ChainedSqlOperatorTable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final ListSqlOperatorTable listOpTab = new ListSqlOperatorTable();
+
+    //~ Constructors -----------------------------------------------------------
 
     public MockSqlOperatorTable(SqlOperatorTable parentTable)
     {
         add(parentTable);
         add(listOpTab);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Adds an operator to this table.
@@ -59,34 +65,40 @@ public class MockSqlOperatorTable extends ChainedSqlOperatorTable
     {
         opTab.addOperator(
             new SqlFunction(
-                "RAMP", SqlKind.Function, null, null,
+                "RAMP",
+                SqlKind.Function,
+                null,
+                null,
                 SqlTypeStrategies.otcNumeric,
                 SqlFunctionCategory.UserDefinedFunction) {
-                public RelDataType inferReturnType(SqlOperatorBinding opBinding)
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
                 {
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
-                    final RelDataType[] types = {
-                        typeFactory.createSqlType(SqlTypeName.Integer)
-                    };
-                    final String[] fieldNames = new String[] { "I"};
+                    final RelDataType [] types =
+                        { typeFactory.createSqlType(SqlTypeName.Integer) };
+                    final String [] fieldNames = new String[] { "I" };
                     return typeFactory.createStructType(types, fieldNames);
                 }
             });
-        
+
         opTab.addOperator(
             new SqlFunction(
-                "DEDUP", SqlKind.Function, null, null,
+                "DEDUP",
+                SqlKind.Function,
+                null,
+                null,
                 SqlTypeStrategies.otcVariadic,
                 SqlFunctionCategory.UserDefinedFunction) {
-                public RelDataType inferReturnType(SqlOperatorBinding opBinding)
+                public RelDataType inferReturnType(
+                    SqlOperatorBinding opBinding)
                 {
                     final RelDataTypeFactory typeFactory =
                         opBinding.getTypeFactory();
-                    final RelDataType[] types = {
-                        typeFactory.createSqlType(SqlTypeName.Varchar, 1024)
-                    };
-                    final String[] fieldNames = new String[] { "NAME"};
+                    final RelDataType [] types =
+                        { typeFactory.createSqlType(SqlTypeName.Varchar, 1024) };
+                    final String [] fieldNames = new String[] { "NAME" };
                     return typeFactory.createStructType(types, fieldNames);
                 }
             });

@@ -30,36 +30,30 @@ import net.sf.farrago.session.*;
 
 
 /**
- * DdlAlterStmt represents a DDL ALTER statement.  Represents any kind
- * of ALTER statement except ALTER SYSTEM ..., which is handled by
- * {@link DdlSetSystemParamStmt}.
+ * DdlAlterStmt represents a DDL ALTER statement. Represents any kind of ALTER
+ * statement except ALTER SYSTEM ..., which is handled by {@link
+ * DdlSetSystemParamStmt}.
  *
  * @author Stephan Zuercher
  * @version $Id$
  */
-public abstract class DdlAlterStmt extends DdlStmt
+public abstract class DdlAlterStmt
+    extends DdlStmt
 {
+
+    //~ Enums ------------------------------------------------------------------
+
     private enum ActionType {
         ALTER_IDENTITY
     }
+
+    //~ Instance fields --------------------------------------------------------
 
     private ActionType action;
     private CwmColumn column;
     private FarragoSequenceOptions identityOptions;
 
-
-    public void setColumn(CwmColumn column)
-    {
-        this.column = column;
-    }
-
-    public void alterIdentityColumn(FarragoSequenceOptions options)
-    {
-        action = ActionType.ALTER_IDENTITY;
-        identityOptions = options;
-    }
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Constructs a new DdlAlterStmt.
@@ -71,7 +65,18 @@ public abstract class DdlAlterStmt extends DdlStmt
         super(alterElement);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
+
+    public void setColumn(CwmColumn column)
+    {
+        this.column = column;
+    }
+
+    public void alterIdentityColumn(FarragoSequenceOptions options)
+    {
+        action = ActionType.ALTER_IDENTITY;
+        identityOptions = options;
+    }
 
     // implement DdlStmt
     public void visit(DdlVisitor visitor)
@@ -97,6 +102,5 @@ public abstract class DdlAlterStmt extends DdlStmt
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);
 }
-
 
 // End DdlAlterStmt.java

@@ -21,23 +21,26 @@
 */
 package net.sf.farrago.runtime;
 
-import net.sf.farrago.type.*;
-import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.session.*;
-
-import org.eigenbase.util.*;
-import org.eigenbase.runtime.*;
-import org.eigenbase.reltype.*;
-
-import java.math.*;
-import java.util.*;
-import java.util.concurrent.*;
-import java.sql.*;
 import java.lang.reflect.*;
 
+import java.math.*;
+
+import java.sql.*;
+
+import java.util.*;
+import java.util.concurrent.*;
+
+import net.sf.farrago.session.*;
+import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.runtime.*;
+import org.eigenbase.util.*;
+
+
 /**
- * FarragoJavaUdxIterator provides runtime support for a call to
- * a Java UDX.
+ * FarragoJavaUdxIterator provides runtime support for a call to a Java UDX.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -46,8 +49,13 @@ public abstract class FarragoJavaUdxIterator
     extends ThreadIterator
     implements RestartableIterator
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final int QUEUE_ARRAY_SIZE = 100;
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSyntheticObject [] rowObjs;
 
     private final PreparedStatement resultInserter;
@@ -62,6 +70,8 @@ public abstract class FarragoJavaUdxIterator
 
     private final ParameterMetaData parameterMetaData;
 
+    //~ Constructors -----------------------------------------------------------
+
     protected FarragoJavaUdxIterator(
         FarragoSessionRuntimeContext runtimeContext,
         Class rowClass,
@@ -71,7 +81,7 @@ public abstract class FarragoJavaUdxIterator
         this.runtimeContext = runtimeContext;
 
         parameterMetaData = new FarragoParameterMetaData(rowType);
-        
+
         // NOTE jvs 16-Jan-2006: We construct a circular array with two extra
         // slots:  one for the producer thread to write into, and one for the
         // consumer thread to read from; this guarantees that we
@@ -85,11 +95,14 @@ public abstract class FarragoJavaUdxIterator
             throw Util.newInternal(ex);
         }
         iRow = 0;
-        resultInserter = (PreparedStatement) Proxy.newProxyInstance(
-            null,
-            new Class [] { PreparedStatement.class },
-            new PreparedStatementInvocationHandler());
+        resultInserter =
+            (PreparedStatement) Proxy.newProxyInstance(
+                null,
+                new Class[] { PreparedStatement.class },
+                new PreparedStatementInvocationHandler());
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override QueueIterator
     public boolean hasNext()
@@ -166,12 +179,14 @@ public abstract class FarragoJavaUdxIterator
             throw new RuntimeException("UDX thread restart");
         }
     }
-    
+
     /**
-     * Calls specific UDX to produce result set.  Subclass implementation
-     * is typically code-generated.
+     * Calls specific UDX to produce result set. Subclass implementation is
+     * typically code-generated.
      */
     protected abstract void executeUdx();
+
+    //~ Inner Classes ----------------------------------------------------------
 
     public class PreparedStatementInvocationHandler
         extends BarfingInvocationHandler
@@ -181,12 +196,15 @@ public abstract class FarragoJavaUdxIterator
             throws SQLException
         {
             checkCancel();
+
             // on a full pipe, timeout every second to check cancellation; we
             // have to do it this way because the iterator above us
             // may not get sucked dry when the cursor is closed, in which
             // case we'll be stuck on the full pipe unless we can check
             // for cancellation
-            while (!offer(getCurrentRow(), 1000)) {
+            while (!offer(
+                    getCurrentRow(),
+                    1000)) {
                 checkCancel();
             }
             ++iRow;
@@ -201,7 +219,7 @@ public abstract class FarragoJavaUdxIterator
         {
             return parameterMetaData;
         }
-        
+
         // implement PreparedStatement
         public void clearParameters()
             throws SQLException
@@ -211,13 +229,14 @@ public abstract class FarragoJavaUdxIterator
                 setDynamicParam(i + 1, null);
             }
         }
-        
+
         private void setDynamicParam(
             int parameterIndex,
             Object obj)
             throws SQLException
         {
             int iField = parameterIndex - 1;
+
             // result types are always nullable, so we're guaranteed
             // to get something which implements both NullableValue
             // and AssignableValue
@@ -231,7 +250,7 @@ public abstract class FarragoJavaUdxIterator
                 assignableValue.assignFrom(obj);
             }
         }
-        
+
         // implement PreparedStatement
         public void setNull(
             int parameterIndex,

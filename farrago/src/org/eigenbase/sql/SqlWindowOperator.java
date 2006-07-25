@@ -21,80 +21,83 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeFamily;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql.util.SqlVisitor;
-import org.eigenbase.sql.util.SqlBasicVisitor;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Collections;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.util.*;
+import org.eigenbase.sql.validate.*;
+import org.eigenbase.util.*;
+
 
 /**
  * An operator describing a window specification.
  *
- * <p>
- * Operands are as follows:
+ * <p>Operands are as follows:
  *
  * <ul>
- * <li>
- * 0: name of referenced window ({@link SqlIdentifier})
- * </li>
- * <li>
- * 1: partition clause ({@link SqlNodeList})
- * </li>
- * <li>
- * 2: order clause ({@link SqlNodeList})
- * </li>
- * <li>
- * 3: isRows ({@link SqlLiteral})
- * </li>
- * <li>
- * 4: lowerBound ({@link SqlNode})
- * </li>
- * <li>
- * 5: upperBound ({@link SqlNode})
- * </li>
+ * <li>0: name of referenced window ({@link SqlIdentifier})</li>
+ * <li>1: partition clause ({@link SqlNodeList})</li>
+ * <li>2: order clause ({@link SqlNodeList})</li>
+ * <li>3: isRows ({@link SqlLiteral})</li>
+ * <li>4: lowerBound ({@link SqlNode})</li>
+ * <li>5: upperBound ({@link SqlNode})</li>
  * </ul>
  *
- * All operands are optional.
- * </p>
+ * All operands are optional.</p>
  *
  * @author jhyde
- * @since Oct 19, 2004
  * @version $Id$
- **/
-public class SqlWindowOperator extends SqlOperator
+ * @since Oct 19, 2004
+ */
+public class SqlWindowOperator
+    extends SqlOperator
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * The FOLLOWING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator followingOperator =
         new SqlPostfixOperator(
-            "FOLLOWING", SqlKind.Following, 20, null, null, null);
+            "FOLLOWING",
+            SqlKind.Following,
+            20,
+            null,
+            null,
+            null);
 
     /**
      * The PRECEDING operator used exclusively in a window specification.
      */
     private final SqlPostfixOperator precedingOperator =
         new SqlPostfixOperator(
-            "PRECEDING", SqlKind.Following, 20, null, null, null);
+            "PRECEDING",
+            SqlKind.Following,
+            20,
+            null,
+            null,
+            null);
 
-    public SqlWindowOperator() {
+    //~ Constructors -----------------------------------------------------------
+
+    public SqlWindowOperator()
+    {
         super("WINDOW", SqlKind.Window, 2, true, null, null, null);
     }
 
-    public SqlSyntax getSyntax() {
+    //~ Methods ----------------------------------------------------------------
+
+    public SqlSyntax getSyntax()
+    {
         return SqlSyntax.Special;
     }
 
     public SqlCall createCall(
-        SqlNode[] operands,
+        SqlNode [] operands,
         SqlParserPos pos,
         SqlLiteral functionQualifier)
     {
@@ -113,17 +116,17 @@ public class SqlWindowOperator extends SqlOperator
         SqlNode upperBound,
         SqlParserPos pos)
     {
-        return (SqlWindow) createCall(
-            new SqlNode[] {
-                declName, refName, partitionList, orderList,
+        return
+            (SqlWindow) createCall(
+                new SqlNode[] {
+                    declName, refName, partitionList, orderList,
                 SqlLiteral.createBoolean(isRows, rowRangePos),
                 lowerBound, upperBound
-            },
-            pos);
+                },
+                pos);
     }
 
-    public <R> void acceptCall(
-        SqlVisitor<R> visitor,
+    public <R> void acceptCall(SqlVisitor<R> visitor,
         SqlCall call,
         boolean onlyExpressions,
         SqlBasicVisitor.ArgHandler<R> argHandler)
@@ -131,14 +134,15 @@ public class SqlWindowOperator extends SqlOperator
         if (onlyExpressions) {
             for (int i = 0; i < call.operands.length; i++) {
                 SqlNode operand = call.operands[i];
+
                 // if the second parm is an Identifier then it's supposed to
                 // be a name from a window clause and isn't part of the
                 // group by check
                 if (operand == null) {
                     continue;
                 }
-                if (i == SqlWindow.RefName_OPERAND &&
-                    operand instanceof SqlIdentifier) {
+                if ((i == SqlWindow.RefName_OPERAND)
+                    && (operand instanceof SqlIdentifier)) {
                     continue;
                 }
                 argHandler.visitChild(visitor, call, i, operand);
@@ -150,19 +154,19 @@ public class SqlWindowOperator extends SqlOperator
 
     public void unparse(
         SqlWriter writer,
-        SqlNode[] operands,
+        SqlNode [] operands,
         int leftPrec,
         int rightPrec)
     {
         final SqlWriter.Frame frame =
             writer.startList(SqlWriter.FrameType.Window, "(", ")");
         SqlIdentifier refName =
-                (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
+            (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
         if (refName != null) {
             refName.unparse(writer, 0, 0);
         }
         SqlNodeList partitionList =
-                (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
+            (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
         if (partitionList.size() > 0) {
             writer.sep("PARTITION BY");
             final SqlWriter.Frame partitionFrame = writer.startList("", "");
@@ -170,7 +174,7 @@ public class SqlWindowOperator extends SqlOperator
             writer.endList(partitionFrame);
         }
         SqlNodeList orderList =
-                (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
+            (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
         if (orderList.size() > 0) {
             writer.sep("ORDER BY");
             final SqlWriter.Frame orderFrame = writer.startList("", "");
@@ -178,9 +182,9 @@ public class SqlWindowOperator extends SqlOperator
             writer.endList(orderFrame);
         }
         boolean isRows =
-                SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
+            SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
         SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
-                upperBound = operands[SqlWindow.UpperBound_OPERAND];
+            upperBound = operands[SqlWindow.UpperBound_OPERAND];
         if (lowerBound == null) {
             // No ROWS or RANGE clause
         } else if (upperBound == null) {
@@ -213,21 +217,22 @@ public class SqlWindowOperator extends SqlOperator
         final SqlWindow window = (SqlWindow) call;
         final SqlCall windowCall = window.getWindowCall();
         SqlNode [] operands = call.operands;
-//        operandScope = validator.getScope(operands[0]);
+
+        //        operandScope = validator.getScope(operands[0]);
         SqlIdentifier refName =
-                (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
+            (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
         if (refName != null) {
-            SqlWindow win = validator.resolveWindow(call,operandScope);
+            SqlWindow win = validator.resolveWindow(call, operandScope);
             operands = win.operands;
         }
 
         SqlNodeList partitionList =
-                (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
+            (SqlNodeList) operands[SqlWindow.PartitionList_OPERAND];
         if (null != partitionList) {
             if (0 != partitionList.size()) {
                 for (int i = 0; i < partitionList.size(); i++) {
                     SqlNode partitionItem = partitionList.get(i);
-                    partitionItem.validateExpr(validator,operandScope);
+                    partitionItem.validateExpr(validator, operandScope);
                 }
             } else {
                 partitionList = null;
@@ -235,7 +240,7 @@ public class SqlWindowOperator extends SqlOperator
         }
 
         SqlNodeList orderList =
-                (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
+            (SqlNodeList) operands[SqlWindow.OrderList_OPERAND];
         if (orderList != null) {
             if (0 != orderList.size()) {
                 for (int i = 0; i < orderList.size(); i++) {
@@ -250,9 +255,9 @@ public class SqlWindowOperator extends SqlOperator
         }
 
         boolean isRows =
-                SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
+            SqlLiteral.booleanValue(operands[SqlWindow.IsRows_OPERAND]);
         SqlNode lowerBound = operands[SqlWindow.LowerBound_OPERAND],
-                upperBound = operands[SqlWindow.UpperBound_OPERAND];
+            upperBound = operands[SqlWindow.UpperBound_OPERAND];
 
         boolean triggerFunction = false;
         if (null != windowCall) {
@@ -262,39 +267,45 @@ public class SqlWindowOperator extends SqlOperator
         }
 
         // 6.10 rule 6a Function RANk & DENSE_RANK require OBC
-        if ( (null == orderList) && triggerFunction && !isTableSorted(scope)) {
+        if ((null == orderList) && triggerFunction && !isTableSorted(scope)) {
             throw validator.newValidationError(
                 call,
                 EigenbaseResource.instance().FuncNeedsOrderBy.ex());
         }
 
         // Run framing checks if there are any
-        if (null != upperBound || null != lowerBound) {
+        if ((null != upperBound) || (null != lowerBound)) {
             // 6.10 Rule 6a
             if (triggerFunction) {
                 throw validator.newValidationError(
                     operands[SqlWindow.IsRows_OPERAND],
-                    EigenbaseResource.instance().
-                        RankWithFrame.ex());
+                    EigenbaseResource.instance().RankWithFrame.ex());
             }
             SqlTypeFamily orderTypeFam = null;
+
             // SQL03 7.10 Rule 11a
             if (null != orderList) {
                 // if order by is a conpound list then range not allowed
-                if (orderList.size() > 1 && !isRows) {
+                if ((orderList.size() > 1) && !isRows) {
                     throw validator.newValidationError(
                         operands[SqlWindow.IsRows_OPERAND],
-                        EigenbaseResource.instance().
-                            CompoundOrderByProhibitsRange.ex());
+                        EigenbaseResource.instance()
+                        .CompoundOrderByProhibitsRange.ex());
                 }
+
                 // get the type family for the sort key for Frame Boundary Val.
-                RelDataType orderType = validator.deriveType(operandScope,orderList.get(0));
-                orderTypeFam = SqlTypeFamily.getFamilyForSqlType(orderType.getSqlTypeName());
+                RelDataType orderType =
+                    validator.deriveType(
+                        operandScope,
+                        orderList.get(0));
+                orderTypeFam =
+                    SqlTypeFamily.getFamilyForSqlType(
+                        orderType.getSqlTypeName());
             } else {
                 // requires an ORDER BY clause if frame is logical(RANGE)
                 // We relax this requirment if the table appears to be
                 // sorted already
-                if (!isRows  && !isTableSorted(scope)) {
+                if (!isRows && !isTableSorted(scope)) {
                     throw validator.newValidationError(
                         call,
                         EigenbaseResource.instance().OverMissingOrderBy.ex());
@@ -302,12 +313,22 @@ public class SqlWindowOperator extends SqlOperator
             }
 
             // Let the bounds validate themselves
-            validateFrameBoundary(lowerBound,isRows,orderTypeFam,validator,operandScope);
-            validateFrameBoundary(upperBound,isRows,orderTypeFam,validator,operandScope);
+            validateFrameBoundary(lowerBound,
+                isRows,
+                orderTypeFam,
+                validator,
+                operandScope);
+            validateFrameBoundary(upperBound,
+                isRows,
+                orderTypeFam,
+                validator,
+                operandScope);
+
             // Validate across boundries. 7.10 Rule 8 a-d
-            checkSpecialLiterals(lowerBound,upperBound,validator);
-        } else if (null == orderList && !isTableSorted(scope)) {
-            throw validator.newValidationError(call,
+            checkSpecialLiterals(lowerBound, upperBound, validator);
+        } else if ((null == orderList) && !isTableSorted(scope)) {
+            throw validator.newValidationError(
+                call,
                 EigenbaseResource.instance().OverMissingOrderBy.ex());
         }
     }
@@ -325,34 +346,36 @@ public class SqlWindowOperator extends SqlOperator
         bound.validate(validator, scope);
         switch (bound.getKind().getOrdinal()) {
         case SqlKind.LiteralORDINAL:
-            // is there really anything to validate here?
-            // this covers "CURRENT_ROW","unbounded preceding" & "unbounded following"
+
+            // is there really anything to validate here? this covers
+            // "CURRENT_ROW","unbounded preceding" & "unbounded following"
             break;
 
         case SqlKind.OtherORDINAL:
         case SqlKind.FollowingORDINAL:
         case SqlKind.PrecedingORDINAL:
-            assert(bound instanceof SqlCall);
-            final SqlNode boundVal = ((SqlCall)bound).getOperands()[0];
+            assert (bound instanceof SqlCall);
+            final SqlNode boundVal = ((SqlCall) bound).getOperands()[0];
+
             // Boundries must be a constant
             if (!(boundVal instanceof SqlLiteral)) {
                 throw validator.newValidationError(
                     boundVal,
-                    EigenbaseResource.instance().
-                        RangeOrRowMustBeConstant.ex());
+                    EigenbaseResource.instance().RangeOrRowMustBeConstant.ex());
             }
+
             // SQL03 7.10 rule 11b
             // Physical ROWS must be a numeric constant.
             if (isRows && !(boundVal instanceof SqlNumericLiteral)) {
                 throw validator.newValidationError(
                     boundVal,
-                    EigenbaseResource.instance().
-                        RowMustBeNumeric.ex());
+                    EigenbaseResource.instance().RowMustBeNumeric.ex());
             }
+
             // if this is a range spec check and make sure the boundery type
             // and order by type are compatible
-            if (null != orderTypeFam && !isRows) {
-                RelDataType bndType = validator.deriveType(scope,boundVal);
+            if ((null != orderTypeFam) && !isRows) {
+                RelDataType bndType = validator.deriveType(scope, boundVal);
                 SqlTypeFamily bndTypeFam =
                     SqlTypeFamily.getFamilyForSqlType(
                         bndType.getSqlTypeName());
@@ -361,26 +384,26 @@ public class SqlWindowOperator extends SqlOperator
                     if (SqlTypeFamily.Numeric != bndTypeFam) {
                         throw validator.newValidationError(
                             boundVal,
-                            EigenbaseResource.instance().
-                                OrderByRangeMismatch.ex());
+                            EigenbaseResource.instance().OrderByRangeMismatch
+                            .ex());
                     }
                     break;
                 case SqlTypeFamily.Date_ordinal:
                 case SqlTypeFamily.Time_ordinal:
                 case SqlTypeFamily.Timestamp_ordinal:
-                    if (SqlTypeFamily.IntervalDayTime != bndTypeFam &&
-                        SqlTypeFamily.IntervalYearMonth != bndTypeFam) {
+                    if ((SqlTypeFamily.IntervalDayTime != bndTypeFam)
+                        && (SqlTypeFamily.IntervalYearMonth != bndTypeFam)) {
                         throw validator.newValidationError(
                             boundVal,
-                            EigenbaseResource.instance().
-                                OrderByRangeMismatch.ex());
+                            EigenbaseResource.instance().OrderByRangeMismatch
+                            .ex());
                     }
                     break;
                 default:
                     throw validator.newValidationError(
                         boundVal,
-                        EigenbaseResource.instance().
-                            OrderByDataTypeProhibitsRange.ex());
+                        EigenbaseResource.instance()
+                        .OrderByDataTypeProhibitsRange.ex());
                 }
             }
             break;
@@ -400,14 +423,14 @@ public class SqlWindowOperator extends SqlOperator
         SqlOperator upperOp = null;
         if (null != lowerBound) {
             if (lowerBound.getKind().getOrdinal() == SqlKind.LiteralORDINAL) {
-                lowerLitType = ((SqlLiteral)lowerBound).getValue();
+                lowerLitType = ((SqlLiteral) lowerBound).getValue();
                 if (Bound.UnboundedFollowing == lowerLitType) {
                     throw validator.newValidationError(
                         lowerBound,
                         EigenbaseResource.instance().BadLowerBoundary.ex());
                 }
             } else if (lowerBound instanceof SqlCall) {
-                lowerOp = ((SqlCall)lowerBound).getOperator();
+                lowerOp = ((SqlCall) lowerBound).getOperator();
             }
         }
         if (null != upperBound) {
@@ -419,7 +442,7 @@ public class SqlWindowOperator extends SqlOperator
                         EigenbaseResource.instance().BadUpperBoundary.ex());
                 }
             } else if (upperBound instanceof SqlCall) {
-                upperOp = ((SqlCall)upperBound).getOperator();
+                upperOp = ((SqlCall) upperBound).getOperator();
             }
         }
 
@@ -428,8 +451,8 @@ public class SqlWindowOperator extends SqlOperator
                 if (upperOp.getName().equals("PRECEDING")) {
                     throw validator.newValidationError(
                         upperBound,
-                        EigenbaseResource.instance().
-                            CurrentRowPrecedingError.ex());
+                        EigenbaseResource.instance().CurrentRowPrecedingError
+                        .ex());
                 }
             }
         } else if (null != lowerOp) {
@@ -438,25 +461,24 @@ public class SqlWindowOperator extends SqlOperator
                     if (upperOp.getName().equals("PRECEDING")) {
                         throw validator.newValidationError(
                             upperBound,
-                            EigenbaseResource.instance().
-                                FollowingBeforePrecedingError.ex());
+                            EigenbaseResource.instance()
+                            .FollowingBeforePrecedingError.ex());
                     }
                 } else if (null != upperLitType) {
                     if (Bound.CurrentRow == upperLitType) {
                         throw validator.newValidationError(
                             upperBound,
-                            EigenbaseResource.instance().
-                                CurrentRowFollowingError.ex());
+                            EigenbaseResource.instance()
+                            .CurrentRowFollowingError.ex());
                     }
                 }
             }
         }
-     }
+    }
 
     /**
-     * This method retrieves the list of columns for the current table
-     * then walks through the list looking for a column that is monotonic
-     * (sorted)
+     * This method retrieves the list of columns for the current table then
+     * walks through the list looking for a column that is monotonic (sorted)
      */
     private static boolean isTableSorted(SqlValidatorScope scope)
     {
@@ -473,39 +495,22 @@ public class SqlWindowOperator extends SqlOperator
 
     public SqlWindow createCurrentRowWindow(final String columnName)
     {
-        return createCall(
-            null,
-            null,
-            new SqlNodeList(SqlParserPos.ZERO),
-            new SqlNodeList(
-                Collections.singletonList(
-                    new SqlIdentifier(
-                        new String[] {columnName},
-                        SqlParserPos.ZERO)),
-                SqlParserPos.ZERO),
-            true,
-            SqlParserPos.ZERO,
-            createCurrentRow(SqlParserPos.ZERO),
-            createCurrentRow(SqlParserPos.ZERO),
-            SqlParserPos.ZERO);
-    }
-
-    /**
-     * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
-     * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
-     */
-    static class Bound extends EnumeratedValues.BasicValue
-    {
-        private Bound(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-        public static final Bound CurrentRow =
-            new Bound("CURRENT ROW", 0);
-        public static final Bound UnboundedPreceding =
-            new Bound("UNBOUNDED PRECEDING", 1);
-        public static final Bound UnboundedFollowing =
-            new Bound("UNBOUNDED FOLLOWING", 2);
+        return
+            createCall(
+                null,
+                null,
+                new SqlNodeList(SqlParserPos.ZERO),
+                new SqlNodeList(
+                    Collections.singletonList(
+                        new SqlIdentifier(
+                            new String[] { columnName },
+                            SqlParserPos.ZERO)),
+                    SqlParserPos.ZERO),
+                true,
+                SqlParserPos.ZERO,
+                createCurrentRow(SqlParserPos.ZERO),
+                createCurrentRow(SqlParserPos.ZERO),
+                SqlParserPos.ZERO);
     }
 
     public SqlNode createCurrentRow(SqlParserPos pos)
@@ -536,6 +541,27 @@ public class SqlWindowOperator extends SqlOperator
     public SqlNode createBound(SqlLiteral range)
     {
         return range;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    /**
+     * An enumeration of types of bounds in a window: <code>CURRENT ROW</code>,
+     * <code>UNBOUNDED PRECEDING</code>, and <code>UNBOUNDED FOLLOWING</code>.
+     */
+    static class Bound
+        extends EnumeratedValues.BasicValue
+    {
+        public static final Bound CurrentRow = new Bound("CURRENT ROW", 0);
+        public static final Bound UnboundedPreceding =
+            new Bound("UNBOUNDED PRECEDING", 1);
+        public static final Bound UnboundedFollowing =
+            new Bound("UNBOUNDED FOLLOWING", 2);
+
+        private Bound(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
     }
 }
 

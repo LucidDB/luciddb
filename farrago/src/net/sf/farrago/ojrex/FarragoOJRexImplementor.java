@@ -29,15 +29,17 @@ import org.eigenbase.rex.*;
 
 
 /**
- * FarragoOJRexImplementor refines {@link OJRexImplementor}
- * to provide Farrago-specific context.
+ * FarragoOJRexImplementor refines {@link OJRexImplementor} to provide
+ * Farrago-specific context.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoOJRexImplementor implements OJRexImplementor
+public abstract class FarragoOJRexImplementor
+    implements OJRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement OJRexImplementor
     public Expression implement(
@@ -45,19 +47,19 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
         RexCall call,
         Expression [] operands)
     {
-        return implementFarrago((FarragoRexToOJTranslator) translator, call,
-            operands);
+        return
+            implementFarrago((FarragoRexToOJTranslator) translator,
+                call,
+                operands);
     }
 
     /**
      * Refined version of {@link OJRexImplementor#implement}.
      *
      * @param translator provides Farrago-specific translation context
-     *
      * @param call the call to be translated
-     *
-     * @param operands call's operands, which have already
-     * been translated independently
+     * @param operands call's operands, which have already been translated
+     * independently
      */
     public abstract Expression implementFarrago(
         FarragoRexToOJTranslator translator,
@@ -70,7 +72,7 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
         if (RexUtil.requiresDecimalExpansion(call, true)) {
             return false;
         }
-        
+
         // NOTE jvs 17-June-2004:  In general, we assume that if
         // an implementor is registered, it is capable of the
         // requested implementation independent of operands.
@@ -79,6 +81,5 @@ public abstract class FarragoOJRexImplementor implements OJRexImplementor
         return true;
     }
 }
-
 
 // End FarragoOJRexImplementor.java

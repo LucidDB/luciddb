@@ -29,29 +29,31 @@ import org.netbeans.mdr.persistence.memoryimpl.*;
 
 
 /**
- * Factory for {@link FarragoTransientStorage}.
- * Adapted from org.netbeans.mdr.persistence.memoryimpl.
+ * Factory for {@link FarragoTransientStorage}. Adapted from
+ * org.netbeans.mdr.persistence.memoryimpl.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoTransientStorageFactory implements StorageFactory
+public class FarragoTransientStorageFactory
+    implements StorageFactory
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // distinguish this from normal memory storage
     static final String NULL_STORAGE_ID = "#";
-    
+
     private static final MOFID NULL_MOFID = new MOFID(0, NULL_STORAGE_ID);
     private static FarragoTransientStorage singletonStorage;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoTransientStorageFactory()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement StorageFactory
     public synchronized Storage createStorage(Map properties)
@@ -68,6 +70,5 @@ public class FarragoTransientStorageFactory implements StorageFactory
         return NULL_MOFID;
     }
 }
-
 
 // End FarragoTransientStorageFactory.java

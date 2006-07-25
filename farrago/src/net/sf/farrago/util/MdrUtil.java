@@ -23,18 +23,20 @@
 package net.sf.farrago.util;
 
 import java.io.*;
+
 import java.util.*;
 import java.util.logging.*;
+
+import javax.jmi.reflect.*;
 
 import org.netbeans.api.mdr.*;
 import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.btreeimpl.btreestorage.*;
 
 import org.openide.ErrorManager;
-import org.openide.util.Lookup;
+import org.openide.util.*;
 import org.openide.util.lookup.*;
 
-import javax.jmi.reflect.*;
 
 // NOTE:  This class gets compiled independently of everything else since
 // it is used by build-time utilities such as ProxyGen.  That means it must
@@ -48,25 +50,27 @@ import javax.jmi.reflect.*;
  */
 public abstract class MdrUtil
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     // NOTE jvs 23-Dec-2004: This tracer cannot be statically initialized,
     // because MdrUtil is not allowed to depend on FarragoTrace.  Instead, this
     // tracer must be initialized via the integrateTracing() method.  Don't use
     // it outside of TracingErrorManager.
     private static Logger tracer;
-    
-    //~ Methods ---------------------------------------------------------------
+
+    private static final String LOOKUP_PROP_NAME = "org.openide.util.Lookup";
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Loads an MDRepository instance.
      *
-     * @param storageFactoryClassName fully qualified name of the class
-     * used to implement repository storage (if null, this
-     * defaults to BtreeFactory if not specified as an entry in storageProps)
-     *
-     * @param storageProps storage-specific properties
-     * (with or without the MDRStorageProperty prefix)
+     * @param storageFactoryClassName fully qualified name of the class used to
+     * implement repository storage (if null, this defaults to BtreeFactory if
+     * not specified as an entry in storageProps)
+     * @param storageProps storage-specific properties (with or without the
+     * MDRStorageProperty prefix)
      *
      * @return loaded repository
      */
@@ -86,7 +90,7 @@ public abstract class MdrUtil
             // may be specified as a property
             storageFactoryClassName = storageProps.getProperty(classNameProp);
         }
-        
+
         if (storageFactoryClassName == null) {
             // use default
             storageFactoryClassName = BtreeFactory.class.getName();
@@ -104,8 +108,10 @@ public abstract class MdrUtil
         iter = storageProps.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
-            String propName = applyPrefix(
-                storagePrefix, entry.getKey().toString());
+            String propName =
+                applyPrefix(
+                    storagePrefix,
+                    entry.getKey().toString());
             savedProps.put(
                 propName,
                 sysProps.get(propName));
@@ -118,7 +124,9 @@ public abstract class MdrUtil
             while (iter.hasNext()) {
                 Map.Entry entry = (Map.Entry) iter.next();
                 sysProps.put(
-                    applyPrefix(storagePrefix, entry.getKey().toString()),
+                    applyPrefix(
+                        storagePrefix,
+                        entry.getKey().toString()),
                     entry.getValue());
             }
 
@@ -148,18 +156,16 @@ public abstract class MdrUtil
         return storagePrefix + propName;
     }
 
-    private static final String LOOKUP_PROP_NAME = "org.openide.util.Lookup";
-
     /**
-     * Integrates MDR tracing with Farrago tracing.  Must be called
-     * before first usage of MDR.
+     * Integrates MDR tracing with Farrago tracing. Must be called before first
+     * usage of MDR.
      *
      * @param mdrTracer Logger for MDR tracing
      */
     public static void integrateTracing(Logger mdrTracer)
     {
         tracer = mdrTracer;
-        
+
         // Install a lookup mechanism which will register our
         // TracingErrorManager.
         try {
@@ -174,10 +180,13 @@ public abstract class MdrUtil
         }
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Helper class for implementing Farrago/MDR trace integration.
      */
-    public static class TraceIntegrationLookup extends ProxyLookup
+    public static class TraceIntegrationLookup
+        extends ProxyLookup
     {
         public TraceIntegrationLookup()
         {
@@ -191,21 +200,22 @@ public abstract class MdrUtil
 
             // Register our custom ErrorManager together with the default.
             ErrorManager em = new TracingErrorManager(tracer);
-            setLookups(new Lookup[]{
-                defaultLookup, 
+            setLookups(new Lookup[] {
+                    defaultLookup,
                 Lookups.singleton(em)
-            });
+                });
         }
     }
 
     /**
-     * TracingErrorManager overrides the Netbeans ErrorManager to
-     * intercept messages and route them to Farrago tracing.
+     * TracingErrorManager overrides the Netbeans ErrorManager to intercept
+     * messages and route them to Farrago tracing.
      */
-    private static class TracingErrorManager extends ErrorManager
+    private static class TracingErrorManager
+        extends ErrorManager
     {
         private final Logger tracer;
-        
+
         TracingErrorManager(Logger tracer)
         {
             this.tracer = tracer;
@@ -213,29 +223,35 @@ public abstract class MdrUtil
 
         // implement ErrorManager
         public Throwable attachAnnotations(
-            Throwable t, Annotation[] arr)
+            Throwable t,
+            Annotation [] arr)
         {
             return t;
         }
-        
+
         // implement ErrorManager
-        public Annotation[] findAnnotations(Throwable t)
+        public Annotation [] findAnnotations(Throwable t)
         {
             return null;
         }
-        
+
         // implement ErrorManager
         public Throwable annotate(
-            Throwable t, int severity,
-            String message, String localizedMessage,
-            Throwable stackTrace, java.util.Date date)
+            Throwable t,
+            int severity,
+            String message,
+            String localizedMessage,
+            Throwable stackTrace,
+            java.util.Date date)
         {
             Level level = convertSeverity(severity);
             if (!tracer.isLoggable(level)) {
                 return t;
             }
             tracer.throwing(
-                "MdrUtil.TracingErrorManager", "annotate", t);
+                "MdrUtil.TracingErrorManager",
+                "annotate",
+                t);
             if (tracer.isLoggable(Level.FINEST) && (stackTrace != null)) {
                 tracer.throwing(
                     "MdrUtil.TracingErrorManager",
@@ -246,9 +262,11 @@ public abstract class MdrUtil
             if (t instanceof JmiException) {
                 JmiException ex = (JmiException) t;
                 tracer.log(
-                    level, "JmiException.ELEMENT:  " + ex.getElementInError());
+                    level,
+                    "JmiException.ELEMENT:  " + ex.getElementInError());
                 tracer.log(
-                    level, "JmiException.OBJECT:  " + ex.getObjectInError());
+                    level,
+                    "JmiException.OBJECT:  " + ex.getObjectInError());
             }
             if (t instanceof TypeMismatchException) {
                 TypeMismatchException ex = (TypeMismatchException) t;
@@ -259,7 +277,7 @@ public abstract class MdrUtil
             }
             return t;
         }
-        
+
         // implement ErrorManager
         public void notify(int severity, Throwable t)
         {
@@ -269,12 +287,14 @@ public abstract class MdrUtil
         // implement ErrorManager
         public void log(int severity, String s)
         {
-            tracer.log(convertSeverity(severity), s);
+            tracer.log(
+                convertSeverity(severity),
+                s);
         }
 
         private static Level convertSeverity(int severity)
         {
-            switch(severity) {
+            switch (severity) {
             case INFORMATIONAL:
                 return Level.FINE;
             case WARNING:
@@ -289,7 +309,7 @@ public abstract class MdrUtil
                 return Level.FINER;
             }
         }
-        
+
         // implement ErrorManager
         public ErrorManager getInstance(String name)
         {
@@ -297,6 +317,5 @@ public abstract class MdrUtil
         }
     }
 }
-
 
 // End MdrUtil.java

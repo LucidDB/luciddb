@@ -20,32 +20,36 @@
 */
 package com.disruptivetech.farrago.rel;
 
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.relopt.CallingConvention;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.rel.CollectRel;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.CorrelatorRel;
-import net.sf.farrago.query.FennelRel;
-
 import java.util.*;
+
+import net.sf.farrago.query.*;
+
+import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
+
 
 /**
  * FennelCorrelateRule is a rule to implement the join of two correlated
  * streams.
  *
- * @author Wael Chatila 
- * @since Feb 1, 2005
+ * @author Wael Chatila
  * @version $Id$
+ * @since Feb 1, 2005
  */
-public class FennelCorrelatorRule extends RelOptRule {
+public class FennelCorrelatorRule
+    extends RelOptRule
+{
 
-    public FennelCorrelatorRule() {
+    //~ Constructors -----------------------------------------------------------
+
+    public FennelCorrelatorRule()
+    {
         super(new RelOptRuleOperand(
                 CorrelatorRel.class,
                 null));
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -53,7 +57,8 @@ public class FennelCorrelatorRule extends RelOptRule {
         return FennelRel.FENNEL_EXEC_CONVENTION;
     }
 
-    public void onMatch(RelOptRuleCall call) {
+    public void onMatch(RelOptRuleCall call)
+    {
         CorrelatorRel correlatorRel = (CorrelatorRel) call.rels[0];
         RelNode relLeftInput = correlatorRel.getLeft();
         RelNode fennelLeftInput =
@@ -84,3 +89,5 @@ public class FennelCorrelatorRule extends RelOptRule {
         call.transformTo(fennelPullCorrelatorRel);
     }
 }
+
+// End FennelCorrelatorRule.java

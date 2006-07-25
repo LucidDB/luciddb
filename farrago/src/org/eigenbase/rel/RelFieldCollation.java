@@ -20,95 +20,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
-
 
 /**
  * RelFieldCollation defines the ordering for one field of a RelNode whose
  * output is to be sorted.
  *
- *<p>
- *
- * TODO:  collation sequence (including ASC/DESC)
+ * <p>TODO: collation sequence (including ASC/DESC)
  */
 public class RelFieldCollation
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     public static final RelFieldCollation [] emptyCollationArray =
         new RelFieldCollation[0];
 
-    //~ Instance fields -------------------------------------------------------
-
-    /**
-     * 0-based index of field being sorted.
-     */
-    private final int fieldIndex;
-
-    /**
-     * Direction of sorting.
-     */
-    private final Direction direction;
-
-    //~ Constructors ----------------------------------------------------------
-
-    /**
-     * Creates an ascending field collation.
-     */
-    public RelFieldCollation(int fieldIndex)
-    {
-        this(fieldIndex, Direction.Ascending);
-    }
-
-    /**
-     * Creates a field collation.
-     */
-    public RelFieldCollation(int fieldIndex, Direction direction)
-    {
-        this.fieldIndex = fieldIndex;
-        this.direction = direction;
-    }
-
-    //~ Methods ---------------------------------------------------------------
-
-    // implement Object
-    public boolean equals(Object obj)
-    {
-        if (!(obj instanceof RelFieldCollation)) {
-            return false;
-        }
-        RelFieldCollation other = (RelFieldCollation) obj;
-        return fieldIndex == other.fieldIndex &&
-            direction == other.direction;
-    }
-
-    // implement Object
-    public int hashCode()
-    {
-        return this.direction.ordinal() << 4 | this.fieldIndex;
-    }
-
-    public int getFieldIndex()
-    {
-        return fieldIndex;
-    }
-
-    public RelFieldCollation.Direction getDirection()
-    {
-        return direction;
-    }
-
-    public String toString()
-    {
-        return fieldIndex + " " + direction;
-    }
+    //~ Enums ------------------------------------------------------------------
 
     /**
      * Direction that a field is ordered in.
      */
-    public static enum Direction
-    {
+    public static enum Direction {
         /**
          * Ascending direction: A value is always followed by a greater
          * or equal value.
@@ -141,7 +74,71 @@ public class RelFieldCollation
          */
         Clustered,
     }
-}
 
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * 0-based index of field being sorted.
+     */
+    private final int fieldIndex;
+
+    /**
+     * Direction of sorting.
+     */
+    private final Direction direction;
+
+    //~ Constructors -----------------------------------------------------------
+
+    /**
+     * Creates an ascending field collation.
+     */
+    public RelFieldCollation(int fieldIndex)
+    {
+        this(fieldIndex, Direction.Ascending);
+    }
+
+    /**
+     * Creates a field collation.
+     */
+    public RelFieldCollation(int fieldIndex, Direction direction)
+    {
+        this.fieldIndex = fieldIndex;
+        this.direction = direction;
+    }
+
+    //~ Methods ----------------------------------------------------------------
+
+    // implement Object
+    public boolean equals(Object obj)
+    {
+        if (!(obj instanceof RelFieldCollation)) {
+            return false;
+        }
+        RelFieldCollation other = (RelFieldCollation) obj;
+        return
+            (fieldIndex == other.fieldIndex) && (direction == other.direction);
+    }
+
+    // implement Object
+    public int hashCode()
+    {
+        return (this.direction.ordinal() << 4) | this.fieldIndex;
+    }
+
+    public int getFieldIndex()
+    {
+        return fieldIndex;
+    }
+
+    public RelFieldCollation.Direction getDirection()
+    {
+        return direction;
+    }
+
+    public String toString()
+    {
+        return fieldIndex + " " + direction;
+    }
+}
 
 // End RelFieldCollation.java

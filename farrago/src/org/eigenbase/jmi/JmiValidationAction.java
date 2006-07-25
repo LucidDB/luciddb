@@ -22,17 +22,22 @@
 package org.eigenbase.jmi;
 
 /**
- * Enumerates the possible actions taken during validation of
- * a {@link JmiChangeSet}.
+ * Enumerates the possible actions taken during validation of a {@link
+ * JmiChangeSet}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public enum JmiValidationAction
-{
-    CREATION,
-    MODIFICATION,
-    DELETION
+public enum JmiValidationAction {
+    CREATION, MODIFICATION, DELETION
 }
 
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
+// End JmiValidationAction.java
 // End JmiValidationAction.java

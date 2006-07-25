@@ -20,46 +20,50 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package net.sf.farrago.query;
 
-import org.eigenbase.sql2rel.DefaultValueFactory;
-import org.eigenbase.rex.*;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.SqlParser;
-import org.eigenbase.sql.parser.SqlParseException;
-import org.eigenbase.util.Util;
-import net.sf.farrago.util.FarragoObjectCache;
-import net.sf.farrago.util.FarragoUtil;
-import net.sf.farrago.cwm.relational.CwmColumn;
-import net.sf.farrago.cwm.relational.CwmSqldataType;
-import net.sf.farrago.cwm.core.CwmExpression;
+import java.util.*;
+
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.session.FarragoSessionParser;
+import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
-import java.util.Map;
-import java.util.HashMap;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql2rel.*;
+import org.eigenbase.util.*;
+
 
 /**
- * DefaultValueFactory looks up a default
- * value stored in the catalog, parses it, and converts it to an
- * Expression.  Processed expressions are cached for use by subsequent
- * calls.  The CwmExpression's MofId is used as the cache key.
+ * DefaultValueFactory looks up a default value stored in the catalog, parses
+ * it, and converts it to an Expression. Processed expressions are cached for
+ * use by subsequent calls. The CwmExpression's MofId is used as the cache key.
  */
-public class ReposDefaultValueFactory implements DefaultValueFactory,
-    FarragoObjectCache.CachedObjectFactory
+public class ReposDefaultValueFactory
+    implements DefaultValueFactory,
+        FarragoObjectCache.CachedObjectFactory
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private Map constructorToSqlMap = new HashMap();
     protected FarragoPreparingStmt farragoPreparingStmt;
+
+    //~ Constructors -----------------------------------------------------------
 
     public ReposDefaultValueFactory(FarragoPreparingStmt farragoPreparingStmt)
     {
         this.farragoPreparingStmt = farragoPreparingStmt;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement DefaultValueFactory
     public boolean isGeneratedAlways(
@@ -69,11 +73,11 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         if (table instanceof FarragoQueryColumnSet) {
             FarragoQueryColumnSet queryColumnSet =
                 (FarragoQueryColumnSet) table;
-            CwmColumn column = 
-                (CwmColumn) queryColumnSet.getCwmColumnSet()
-                .getFeature().get(iColumn);
+            CwmColumn column =
+                (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(
+                    iColumn);
             if (column instanceof FemStoredColumn) {
-                return ((FemStoredColumn) column).isGeneratedAlways(); 
+                return ((FemStoredColumn) column).isGeneratedAlways();
             }
         }
         return false;
@@ -85,12 +89,14 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         int iColumn)
     {
         if (!(table instanceof FarragoQueryColumnSet)) {
-            return farragoPreparingStmt.sqlToRelConverter.getRexBuilder().constantNull();
+            return
+                farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
+                .constantNull();
         }
-        FarragoQueryColumnSet queryColumnSet =
-            (FarragoQueryColumnSet) table;
+        FarragoQueryColumnSet queryColumnSet = (FarragoQueryColumnSet) table;
         CwmColumn column =
-            (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(iColumn);
+            (CwmColumn) queryColumnSet.getCwmColumnSet().getFeature().get(
+                iColumn);
         if (column instanceof FemStoredColumn) {
             FemStoredColumn storedColumn = (FemStoredColumn) column;
             FemSequenceGenerator sequence = storedColumn.getSequence();
@@ -109,15 +115,17 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         RexNode [] constructorArgs)
     {
         SqlIdentifier typeName = type.getSqlIdentifier();
-        CwmSqldataType cwmType = farragoPreparingStmt.getStmtValidator().findSqldataType(typeName);
-        assert(cwmType instanceof FemSqlobjectType);
+        CwmSqldataType cwmType =
+            farragoPreparingStmt.getStmtValidator().findSqldataType(typeName);
+        assert (cwmType instanceof FemSqlobjectType);
         FemSqltypeAttribute attribute =
             (FemSqltypeAttribute) cwmType.getFeature().get(iAttribute);
         if (constructor instanceof FarragoUserDefinedRoutine) {
-            RexNode initializer = convertConstructorAssignment(
-                (FarragoUserDefinedRoutine) constructor,
-                attribute,
-                constructorArgs);
+            RexNode initializer =
+                convertConstructorAssignment(
+                    (FarragoUserDefinedRoutine) constructor,
+                    attribute,
+                    constructorArgs);
             if (initializer != null) {
                 return initializer;
             }
@@ -130,20 +138,23 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         FemSqltypeAttribute attribute,
         RexNode [] constructorArgs)
     {
-        SqlNodeList nodeList = (SqlNodeList)
-            constructorToSqlMap.get(constructor.getFemRoutine());
+        SqlNodeList nodeList =
+            (SqlNodeList) constructorToSqlMap.get(constructor.getFemRoutine());
         if (nodeList == null) {
             assert (constructor.hasDefinition());
             FarragoSessionParser parser =
                 farragoPreparingStmt.getSession().getPersonality().newParser(
                     farragoPreparingStmt.getSession());
             String body = constructor.getFemRoutine().getBody().getBody();
-            nodeList = (SqlNodeList) parser.parseSqlText(
-                farragoPreparingStmt.getStmtValidator(),
-                null,
-                body,
-                true);
-            constructorToSqlMap.put(constructor.getFemRoutine(), nodeList);
+            nodeList =
+                (SqlNodeList) parser.parseSqlText(
+                    farragoPreparingStmt.getStmtValidator(),
+                    null,
+                    body,
+                    true);
+            constructorToSqlMap.put(
+                constructor.getFemRoutine(),
+                nodeList);
         }
         SqlNode rhs = null;
         for (SqlNode node : nodeList) {
@@ -157,16 +168,19 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
         if (rhs == null) {
             return null;
         }
-        FarragoRoutineInvocation invocation = new FarragoRoutineInvocation(
-            constructor,
-            constructorArgs);
+        FarragoRoutineInvocation invocation =
+            new FarragoRoutineInvocation(
+                constructor,
+                constructorArgs);
         return farragoPreparingStmt.expandInvocationExpression(rhs, invocation);
     }
 
     private RexNode convertExpression(CwmExpression cwmExp)
     {
         if (cwmExp.getBody().equalsIgnoreCase("NULL")) {
-            return farragoPreparingStmt.sqlToRelConverter.getRexBuilder().constantNull();
+            return
+                farragoPreparingStmt.sqlToRelConverter.getRexBuilder()
+                .constantNull();
         }
 
         FarragoObjectCache.Entry cacheEntry =
@@ -175,7 +189,8 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
                 this,
                 false);
         RexNode parsedExp = (RexNode) cacheEntry.getValue();
-        farragoPreparingStmt.getStmtValidator().getCodeCache().unpin(cacheEntry);
+        farragoPreparingStmt.getStmtValidator().getCodeCache().unpin(
+            cacheEntry);
         return parsedExp;
     }
 
@@ -183,9 +198,10 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
     {
         RexBuilder rexBuilder =
             farragoPreparingStmt.sqlToRelConverter.getRexBuilder();
-        return rexBuilder.makeCall(
-            SqlStdOperatorTable.nextValueFunc,
-            rexBuilder.makeLiteral(sequence.refMofId()));
+        return
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.nextValueFunc,
+                rexBuilder.makeLiteral(sequence.refMofId()));
     }
 
     // implement CachedObjectFactory
@@ -195,7 +211,8 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
     {
         String mofId = (String) key;
         CwmExpression cwmExp =
-            (CwmExpression) farragoPreparingStmt.getRepos().getMdrRepos().getByMofId(mofId);
+            (CwmExpression) farragoPreparingStmt.getRepos().getMdrRepos()
+            .getByMofId(mofId);
         String defaultString = cwmExp.getBody();
         SqlParser sqlParser = new SqlParser(defaultString);
         SqlNode sqlNode;
@@ -206,10 +223,13 @@ public class ReposDefaultValueFactory implements DefaultValueFactory,
             // always succeed
             throw Util.newInternal(ex);
         }
-        RexNode exp = farragoPreparingStmt.sqlToRelConverter.convertExpression(sqlNode);
+        RexNode exp =
+            farragoPreparingStmt.sqlToRelConverter.convertExpression(sqlNode);
 
         // TODO:  better memory usage estimate
         entry.initialize(exp,
             3 * FarragoUtil.getStringMemoryUsage(defaultString));
     }
 }
+
+// End ReposDefaultValueFactory.java

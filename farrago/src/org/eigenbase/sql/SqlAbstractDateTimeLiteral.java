@@ -21,29 +21,39 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.sql.Date;
+import java.sql.Time;
 
 import java.util.Calendar;
 import java.util.TimeZone;
-import java.sql.Date;
-import java.sql.Time;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
  * A SQL literal representing a DATE, TIME or TIMESTAMP value.
  *
- * <p>Examples:<ul>
+ * <p>Examples:
+ *
+ * <ul>
  * <li>DATE '2004-10-22'</li>
  * <li>TIME '14:33:44.567'</li>
  * <li><code>TIMESTAMP '1969-07-21 03:15 GMT'</code></li>
  * </ul>
- **/
-abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
+ */
+abstract class SqlAbstractDateTimeLiteral
+    extends SqlLiteral
+{
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final boolean hasTimeZone;
     protected final String formatString;
     protected final int precision;
+
+    //~ Constructors -----------------------------------------------------------
 
     protected SqlAbstractDateTimeLiteral(
         Calendar d,
@@ -58,6 +68,8 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
         this.precision = precision;
         this.formatString = formatString;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public int getPrec()
     {
@@ -75,15 +87,16 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
     }
 
     /**
-     * Returns timezone component of this literal.  Technically, a sql date
+     * Returns timezone component of this literal. Technically, a sql date
      * doesn't come with a tz, but time and ts inherit this, and the calendar
      * object has one, so it seems harmless.
+     *
      * @return timezone
      */
     public TimeZone getTimeZone()
     {
         assert hasTimeZone : "Attempt to get timezone on Literal date: "
-        + getCal() + ", which has no timezone";
+            + getCal() + ", which has no timezone";
         return getCal().getTimeZone();
     }
 
@@ -99,7 +112,9 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)
     {
-        return typeFactory.createSqlType(getTypeName(), getPrec());
+        return typeFactory.createSqlType(
+                getTypeName(),
+                getPrec());
     }
 
     public void unparse(
@@ -115,8 +130,10 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
      */
     protected Date getDate()
     {
-        return new Date(getCal().getTimeInMillis()
-            - Calendar.getInstance().getTimeZone().getRawOffset());
+        return
+            new Date(
+                getCal().getTimeInMillis()
+                - Calendar.getInstance().getTimeZone().getRawOffset());
     }
 
     /**
@@ -125,11 +142,9 @@ abstract class SqlAbstractDateTimeLiteral extends SqlLiteral {
     protected Time getTime()
     {
         long millis = getCal().getTimeInMillis();
-        int tzOffset =
-            Calendar.getInstance().getTimeZone().getOffset(millis);
+        int tzOffset = Calendar.getInstance().getTimeZone().getOffset(millis);
         return new Time(millis - tzOffset);
     }
-
 }
 
 // End SqlAbstractDateTimeLiteral.java

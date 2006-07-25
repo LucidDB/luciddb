@@ -23,8 +23,11 @@
 package net.sf.farrago.ddl;
 
 import java.io.*;
+
 import java.nio.charset.*;
+
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -56,13 +59,15 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class DdlRelationalHandler extends DdlHandler
+public class DdlRelationalHandler
+    extends DdlHandler
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     protected final DdlMedHandler medHandler;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public DdlRelationalHandler(DdlMedHandler medHandler)
     {
@@ -70,7 +75,7 @@ public class DdlRelationalHandler extends DdlHandler
         this.medHandler = medHandler;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionDdlHandler
     public void validateDefinition(CwmCatalog catalog)
@@ -229,8 +234,8 @@ public class DdlRelationalHandler extends DdlHandler
         // Perform validation specific to the local data server
         FarragoMedDataServer medDataServer =
             validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
-        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer.getClass()
-            .getName();
+        assert (medDataServer instanceof FarragoMedLocalDataServer) : medDataServer
+            .getClass().getName();
         FarragoMedLocalDataServer medLocalDataServer =
             (FarragoMedLocalDataServer) medDataServer;
         try {
@@ -338,7 +343,7 @@ public class DdlRelationalHandler extends DdlHandler
 
         validator.createDependency(view, analyzedSql.dependencies);
     }
-    
+
     public FemLocalIndex createUniqueConstraintIndex(
         FemLocalTable table,
         FemAbstractUniqueConstraint constraint)
@@ -346,7 +351,9 @@ public class DdlRelationalHandler extends DdlHandler
         // TODO:  make index SYSTEM-owned so that it can't be
         // dropped explicitly
         FemLocalIndex index = repos.newFemLocalIndex();
-        FarragoCatalogUtil.generateConstraintIndexName(repos, constraint, index);
+        FarragoCatalogUtil.generateConstraintIndexName(repos,
+            constraint,
+            index);
         index.setSpannedClass(table);
         index.setUnique(true);
         index.setSorted(true);
@@ -430,8 +437,8 @@ public class DdlRelationalHandler extends DdlHandler
             validator.getDataWrapperCache(),
             index);
 
-        FemLocalTable table = (FemLocalTable) 
-            FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table =
+            (FemLocalTable) FarragoCatalogUtil.getIndexTable(index);
 
         if (!validator.isCreatedObject(table)) {
             indexExistingRows(table, index);
@@ -443,13 +450,14 @@ public class DdlRelationalHandler extends DdlHandler
         FemLocalIndex index)
     {
         FemDataServer dataServer = table.getServer();
-        FarragoMedLocalDataServer medDataServer = (FarragoMedLocalDataServer)
-            validator.getDataWrapperCache().loadServerFromCatalog(dataServer);
+        FarragoMedLocalDataServer medDataServer =
+            (FarragoMedLocalDataServer) validator.getDataWrapperCache()
+            .loadServerFromCatalog(dataServer);
 
         // NOTE jvs 30-Dec-2005:  We rely on the visibility of the
         // new object still being VK_PRIVATE so that the optimizer won't
         // see it and try to use it to satisfy source table scans!
-        
+
         FarragoSession session = validator.newReentrantSession();
         try {
             ReentrantIndexBuilderStmt reentrantStmt =
@@ -457,37 +465,6 @@ public class DdlRelationalHandler extends DdlHandler
             reentrantStmt.execute(session, false);
         } finally {
             validator.releaseReentrantSession(session);
-        }
-    }
-
-    private static class ReentrantIndexBuilderStmt extends FarragoReentrantStmt
-    {
-        private final FemLocalTable table;
-        private final FemLocalIndex index;
-        private final FarragoMedLocalDataServer medDataServer;
-
-        ReentrantIndexBuilderStmt(
-            FemLocalTable table,
-            FemLocalIndex index,
-            FarragoMedLocalDataServer medDataServer)
-        {
-            this.table = table;
-            this.index = index;
-            this.medDataServer = medDataServer;
-        }
-        
-        protected void executeImpl()
-        {
-            RelOptTable relOptTable = getPreparingStmt().loadColumnSet(
-                FarragoCatalogUtil.getQualifiedName(table));
-            assert(relOptTable != null);
-            RelNode indexBuildPlan = medDataServer.constructIndexBuildPlan(
-                relOptTable,
-                index,
-                getPreparingStmt().getRelOptCluster());
-            getStmtContext().prepare(
-                indexBuildPlan, SqlKind.Insert, true, getPreparingStmt());
-            getStmtContext().execute();
         }
     }
 
@@ -516,6 +493,45 @@ public class DdlRelationalHandler extends DdlHandler
     protected boolean isReplacingType(CwmModelElement obj)
     {
         return ((DdlValidator) medHandler.getValidator()).isReplacingType(obj);
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ReentrantIndexBuilderStmt
+        extends FarragoReentrantStmt
+    {
+        private final FemLocalTable table;
+        private final FemLocalIndex index;
+        private final FarragoMedLocalDataServer medDataServer;
+
+        ReentrantIndexBuilderStmt(
+            FemLocalTable table,
+            FemLocalIndex index,
+            FarragoMedLocalDataServer medDataServer)
+        {
+            this.table = table;
+            this.index = index;
+            this.medDataServer = medDataServer;
+        }
+
+        protected void executeImpl()
+        {
+            RelOptTable relOptTable =
+                getPreparingStmt().loadColumnSet(
+                    FarragoCatalogUtil.getQualifiedName(table));
+            assert (relOptTable != null);
+            RelNode indexBuildPlan =
+                medDataServer.constructIndexBuildPlan(
+                    relOptTable,
+                    index,
+                    getPreparingStmt().getRelOptCluster());
+            getStmtContext().prepare(
+                indexBuildPlan,
+                SqlKind.Insert,
+                true,
+                getPreparingStmt());
+            getStmtContext().execute();
+        }
     }
 }
 

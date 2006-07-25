@@ -20,11 +20,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rex;
 
-import org.eigenbase.rel.Aggregation;
-import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.rel.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -36,7 +35,8 @@ import org.eigenbase.sql.SqlOperator;
  */
 public interface OJRexImplementorTable
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the implementor of an operator, or null if there is no
@@ -50,6 +50,5 @@ public interface OJRexImplementorTable
      */
     public OJAggImplementor get(Aggregation aggregation);
 }
-
 
 // End OJRexImplementorTable.java

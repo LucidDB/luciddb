@@ -22,18 +22,22 @@
 package net.sf.farrago.ojrex;
 
 import java.lang.reflect.*;
-import java.sql.*;
 
-import openjava.ptree.*;
-import openjava.mop.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.reltype.*;
+import java.sql.*;
 
 import net.sf.farrago.session.*;
 
+import openjava.mop.*;
+
+import openjava.ptree.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
+
+
 /**
- * FarragoOJRexStaticMethodImplementor implements {@link OJRexImplementor}
- * by generating a call to a static Java method.
+ * FarragoOJRexStaticMethodImplementor implements {@link OJRexImplementor} by
+ * generating a call to a static Java method.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -41,12 +45,17 @@ import net.sf.farrago.session.*;
 public class FarragoOJRexStaticMethodImplementor
     extends FarragoOJRexImplementor
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final Method method;
 
     private final boolean allowSql;
-    
+
     private final RelDataType returnType;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoOJRexStaticMethodImplementor(
         Method method,
         boolean allowSql,
@@ -56,7 +65,9 @@ public class FarragoOJRexStaticMethodImplementor
         this.allowSql = allowSql;
         this.returnType = returnType;
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement FarragoOJRexImplementor
     public Expression implementFarrago(
         FarragoRexToOJTranslator translator,
@@ -68,25 +79,26 @@ public class FarragoOJRexStaticMethodImplementor
         for (int i = 0; i < operands.length; ++i) {
             Expression expr;
             if (javaParams[i].isPrimitive()
-                || javaParams[i] == ResultSet.class
-                || javaParams[i] == PreparedStatement.class)
-            {
+                || (javaParams[i] == ResultSet.class)
+                || (javaParams[i] == PreparedStatement.class)) {
                 expr = operands[i];
             } else {
-                expr = new CastExpression(
-                    OJClass.forClass(javaParams[i]),
-                    new MethodCall(
-                        operands[i],
-                        "getNullableData",
-                        new ExpressionList()));
+                expr =
+                    new CastExpression(
+                        OJClass.forClass(javaParams[i]),
+                        new MethodCall(
+                            operands[i],
+                            "getNullableData",
+                            new ExpressionList()));
             }
             exprList.add(expr);
         }
 
-        Expression callExpr = new MethodCall(
-            OJClass.forClass(method.getDeclaringClass()),
-            method.getName(),
-            exprList);
+        Expression callExpr =
+            new MethodCall(
+                OJClass.forClass(method.getDeclaringClass()),
+                method.getName(),
+                exprList);
 
         String invocationId =
             method.getName()
@@ -123,32 +135,29 @@ public class FarragoOJRexStaticMethodImplementor
 
         TryStatement tryStmt = new TryStatement(null, null, null);
 
-        Variable varException =
-            translator.getRelImplementor().newVariable();
+        Variable varException = translator.getRelImplementor().newVariable();
         tryStmt.setCatchList(
             new CatchList(
                 new CatchBlock(
                     new Parameter(
-                        TypeName.forOJClass(OJClass.forClass(Throwable.class)),
+                        TypeName.forOJClass(OJClass.forClass(
+                                Throwable.class)),
                         varException.toString()),
                     new StatementList(
-                        new ThrowStatement(
-                            new MethodCall(
-                                translator.getRelImplementor().
-                                getConnectionVariable(),
+                        new ThrowStatement(new MethodCall(
+                                translator.getRelImplementor()
+                                .getConnectionVariable(),
                                 "handleRoutineInvocationException",
                                 new ExpressionList(
                                     varException,
                                     Literal.makeLiteral(
                                         method.getName()))))))));
 
-
         tryStmt.setFinallyBody(
             new StatementList(
                 new ExpressionStatement(
                     new MethodCall(
-                        translator.getRelImplementor().
-                        getConnectionVariable(),
+                        translator.getRelImplementor().getConnectionVariable(),
                         "popRoutineInvocation",
                         new ExpressionList()))));
 
@@ -158,8 +167,7 @@ public class FarragoOJRexStaticMethodImplementor
             // treating procedure invocation as DML, this will
             // appear to the client as 0 rows processed
             tryStmt.setBody(
-                new StatementList(
-                    new ExpressionStatement(callExpr)));
+                new StatementList(new ExpressionStatement(callExpr)));
             translator.addStatement(tryStmt);
             if (returnType.isStruct()) {
                 // For UDX invocation, we don't want to return
@@ -170,8 +178,7 @@ public class FarragoOJRexStaticMethodImplementor
             return Literal.makeLiteral((long) 0);
         }
 
-        Variable varResult =
-            translator.getRelImplementor().newVariable();
+        Variable varResult = translator.getRelImplementor().newVariable();
         translator.addStatement(
             new VariableDeclaration(
                 TypeName.forOJClass(

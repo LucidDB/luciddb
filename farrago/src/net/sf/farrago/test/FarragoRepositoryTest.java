@@ -21,12 +21,12 @@
 */
 package net.sf.farrago.test;
 
-import net.sf.farrago.catalog.*;
+import junit.framework.*;
 
+import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
-import junit.framework.*;
 
 /**
  * FarragoRepositoryTest contains unit tests for the repository.
@@ -34,8 +34,12 @@ import junit.framework.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoRepositoryTest extends FarragoTestCase
+public class FarragoRepositoryTest
+    extends FarragoTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new FarragoRepositoryTest object.
      *
@@ -48,7 +52,9 @@ public class FarragoRepositoryTest extends FarragoTestCase
     {
         super(testName);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     // implement TestCase
     public static Test suite()
     {
@@ -57,8 +63,8 @@ public class FarragoRepositoryTest extends FarragoTestCase
 
     public void testTags()
     {
-        FemAnnotatedElement element = (FemAnnotatedElement)
-            repos.getSelfAsCatalog();
+        FemAnnotatedElement element =
+            (FemAnnotatedElement) repos.getSelfAsCatalog();
 
         String TAG_NAME = "SHIP_TO";
         String TAG_VALUE = "BUGS_BUNNY";
@@ -71,8 +77,12 @@ public class FarragoRepositoryTest extends FarragoTestCase
 
         FemTagAnnotation tag = repos.getTagAnnotation(element, TAG_NAME);
         assertNotNull(tag);
-        assertEquals(TAG_NAME, tag.getName());
-        assertEquals(TAG_VALUE, tag.getValue());
+        assertEquals(
+            TAG_NAME,
+            tag.getName());
+        assertEquals(
+            TAG_VALUE,
+            tag.getValue());
 
         // Clean up the repo
         tag.refDelete();

@@ -20,21 +20,20 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import junit.framework.TestCase;
-import org.eigenbase.relopt.*;
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.rel.AbstractRelNode;
-import org.eigenbase.rel.SingleRel;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.rel.convert.ConverterRel;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.oj.rel.JavaRel;
-import org.eigenbase.oj.rel.JavaRelImplementor;
-import org.eigenbase.util.MultiMap;
+import java.util.Iterator;
+import java.util.List;
+
+import junit.framework.*;
+
 import openjava.ptree.ParseTree;
 
-import java.util.List;
-import java.util.Iterator;
+import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.*;
+import org.eigenbase.rel.convert.*;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.util.*;
+
 
 /**
  * VolcanoPlannerTraitTest
@@ -45,25 +44,27 @@ import java.util.Iterator;
 public class VolcanoPlannerTraitTest
     extends TestCase
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /**
-     * Private calling convention representing a generic "physical" calling 
+     * Private calling convention representing a generic "physical" calling
      * convention.
      */
     private static final CallingConvention PHYS_CALLING_CONVENTION =
-        new CallingConvention("PHYS",
-            CallingConvention.generateOrdinal(), RelNode.class);
+        new CallingConvention(
+            "PHYS",
+            CallingConvention.generateOrdinal(),
+            RelNode.class);
 
     /**
-     * Private trait definition for an alternate type of traits. 
-     */ 
-    private static final AltTraitDef ALT_TRAIT_DEF =
-        new AltTraitDef();
-    
+     * Private trait definition for an alternate type of traits.
+     */
+    private static final AltTraitDef ALT_TRAIT_DEF = new AltTraitDef();
+
     /**
      * Private alternate trait.
-     */ 
+     */
     private static final AltTrait ALT_TRAIT =
         new AltTrait(ALT_TRAIT_DEF, "ALT");
 
@@ -74,20 +75,19 @@ public class VolcanoPlannerTraitTest
         new AltTrait(ALT_TRAIT_DEF, "ALT2");
 
     /**
-     * Ordinal count for alternate traits (so they can implement equals()
-     * and avoid being canonized into the same trait).
+     * Ordinal count for alternate traits (so they can implement equals() and
+     * avoid being canonized into the same trait).
      */
     private static int altTraitOrdinal = 0;
 
-
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public VolcanoPlannerTraitTest(String name)
     {
         super(name);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void testDoubleConversion()
     {
@@ -99,8 +99,9 @@ public class VolcanoPlannerTraitTest
         planner.addRule(new PhysToIteratorConverterRule());
         planner.addRule(
             new AltTraitConverterRule(
-                ALT_TRAIT, ALT_TRAIT2, "AltToAlt2ConverterRule"
-            ));
+                ALT_TRAIT,
+                ALT_TRAIT2,
+                "AltToAlt2ConverterRule"));
         planner.addRule(new PhysLeafRule());
         planner.addRule(new IterSingleRule());
 
@@ -116,8 +117,7 @@ public class VolcanoPlannerTraitTest
             planner.changeTraits(
                 noneRel,
                 new RelTraitSet(
-                    new RelTrait[] {
-                        CallingConvention.ITERATOR, ALT_TRAIT2 }));
+                    new RelTrait[] { CallingConvention.ITERATOR, ALT_TRAIT2 }));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -126,22 +126,23 @@ public class VolcanoPlannerTraitTest
         assertEquals(
             CallingConvention.ITERATOR,
             result.getTraits().getTrait(CallingConventionTraitDef.instance));
-        assertEquals(ALT_TRAIT2, result.getTraits().getTrait(ALT_TRAIT_DEF));
+        assertEquals(
+            ALT_TRAIT2,
+            result.getTraits().getTrait(ALT_TRAIT_DEF));
 
         RelNode child = result.getInput(0);
         assertTrue(
-            child instanceof AltTraitConverter ||
-            child instanceof PhysToIteratorConverter);
+            (child instanceof AltTraitConverter)
+            || (child instanceof PhysToIteratorConverter));
 
         child = child.getInput(0);
         assertTrue(
-            child instanceof AltTraitConverter ||
-            child instanceof PhysToIteratorConverter);
+            (child instanceof AltTraitConverter)
+            || (child instanceof PhysToIteratorConverter));
 
         child = child.getInput(0);
         assertTrue(child instanceof PhysLeafRel);
     }
-
 
     public void testTraitPropagation()
     {
@@ -153,8 +154,9 @@ public class VolcanoPlannerTraitTest
         planner.addRule(new PhysToIteratorConverterRule());
         planner.addRule(
             new AltTraitConverterRule(
-                ALT_TRAIT, ALT_TRAIT2, "AltToAlt2ConverterRule"
-            ));
+                ALT_TRAIT,
+                ALT_TRAIT2,
+                "AltToAlt2ConverterRule"));
         planner.addRule(new PhysLeafRule());
         planner.addRule(new IterSingleRule2());
 
@@ -170,8 +172,7 @@ public class VolcanoPlannerTraitTest
             planner.changeTraits(
                 noneRel,
                 new RelTraitSet(
-                    new RelTrait[] {
-                        CallingConvention.ITERATOR, ALT_TRAIT2 }));
+                    new RelTrait[] { CallingConvention.ITERATOR, ALT_TRAIT2 }));
 
         planner.setRoot(convertedRel);
         RelNode result = planner.chooseDelegate().findBestExp();
@@ -180,31 +181,34 @@ public class VolcanoPlannerTraitTest
         assertEquals(
             CallingConvention.ITERATOR,
             result.getTraits().getTrait(CallingConventionTraitDef.instance));
-        assertEquals(ALT_TRAIT2, result.getTraits().getTrait(ALT_TRAIT_DEF));
+        assertEquals(
+            ALT_TRAIT2,
+            result.getTraits().getTrait(ALT_TRAIT_DEF));
 
         RelNode child = result.getInput(0);
         assertTrue(child instanceof IterSingleRel);
         assertEquals(
             CallingConvention.ITERATOR,
             child.getTraits().getTrait(CallingConventionTraitDef.instance));
-        assertEquals(ALT_TRAIT2, child.getTraits().getTrait(ALT_TRAIT_DEF));
+        assertEquals(
+            ALT_TRAIT2,
+            child.getTraits().getTrait(ALT_TRAIT_DEF));
 
         child = child.getInput(0);
         assertTrue(
-            child instanceof AltTraitConverter ||
-            child instanceof PhysToIteratorConverter);
+            (child instanceof AltTraitConverter)
+            || (child instanceof PhysToIteratorConverter));
 
         child = child.getInput(0);
         assertTrue(
-            child instanceof AltTraitConverter ||
-            child instanceof PhysToIteratorConverter);
+            (child instanceof AltTraitConverter)
+            || (child instanceof PhysToIteratorConverter));
 
         child = child.getInput(0);
         assertTrue(child instanceof PhysLeafRel);
     }
 
-
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     private static class AltTrait
         implements RelTrait
@@ -231,7 +235,7 @@ public class VolcanoPlannerTraitTest
                 return false;
             }
 
-            AltTrait that = (AltTrait)other;
+            AltTrait that = (AltTrait) other;
             return this.ordinal == that.ordinal;
         }
 
@@ -249,7 +253,7 @@ public class VolcanoPlannerTraitTest
     private static class AltTraitDef
         extends RelTraitDef
     {
-        private MultiMap<RelTrait,Object[]> conversionMap =
+        private MultiMap<RelTrait, Object[]> conversionMap =
             new MultiMap<RelTrait, Object[]>();
 
         public Class getTraitClass()
@@ -263,24 +267,28 @@ public class VolcanoPlannerTraitTest
         }
 
         public RelNode convert(
-            RelOptPlanner planner, RelNode rel, RelTrait toTrait, 
+            RelOptPlanner planner,
+            RelNode rel,
+            RelTrait toTrait,
             boolean allowInfiniteCostConverters)
         {
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
                 List<Object[]> entries = conversionMap.getMulti(fromTrait);
-                for(Iterator<Object[]> i = entries.iterator(); i.hasNext(); ) {
-                    Object[] traitAndRule = i.next();
+                for (Iterator<Object[]> i = entries.iterator(); i.hasNext();) {
+                    Object [] traitAndRule = i.next();
 
-                    RelTrait trait = (RelTrait)traitAndRule[0];
-                    ConverterRule rule = (ConverterRule)traitAndRule[1];
+                    RelTrait trait = (RelTrait) traitAndRule[0];
+                    ConverterRule rule = (ConverterRule) traitAndRule[1];
 
                     if (trait == toTrait) {
                         RelNode converted = rule.convert(rel);
-                        if (converted != null &&
-                            (!planner.getCost(converted).isInfinite() ||
-                                allowInfiniteCostConverters)) {
+                        if ((converted != null)
+                            && (
+                                !planner.getCost(converted).isInfinite()
+                                || allowInfiniteCostConverters
+                               )) {
                             return converted;
                         }
                     }
@@ -291,12 +299,14 @@ public class VolcanoPlannerTraitTest
         }
 
         public boolean canConvert(
-            RelOptPlanner planner, RelTrait fromTrait, RelTrait toTrait)
+            RelOptPlanner planner,
+            RelTrait fromTrait,
+            RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
                 List<Object[]> entries = conversionMap.getMulti(fromTrait);
-                for(Iterator<Object[]> i = entries.iterator(); i.hasNext(); ) {
-                    Object[] traitAndRule = i.next();
+                for (Iterator<Object[]> i = entries.iterator(); i.hasNext();) {
+                    Object [] traitAndRule = i.next();
 
                     if (traitAndRule[0] == toTrait) {
                         return true;
@@ -308,7 +318,8 @@ public class VolcanoPlannerTraitTest
         }
 
         public void registerConverterRule(
-            RelOptPlanner planner, ConverterRule converterRule)
+            RelOptPlanner planner,
+            ConverterRule converterRule)
         {
             if (!converterRule.isGuaranteed()) {
                 return;
@@ -318,11 +329,13 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait = converterRule.getOutTraits().getTrait(this);
 
             conversionMap.putMulti(
-                fromTrait, new Object[] { toTrait, converterRule });
+                fromTrait,
+                new Object[] { toTrait, converterRule });
         }
     }
 
-    private static abstract class TestLeafRel extends AbstractRelNode
+    private static abstract class TestLeafRel
+        extends AbstractRelNode
     {
         private String label;
 
@@ -355,39 +368,48 @@ public class VolcanoPlannerTraitTest
         // implement RelNode
         protected RelDataType deriveRowType()
         {
-            return getCluster().getTypeFactory().createStructType(
-                new RelDataType [] {
-                    getCluster().getTypeFactory().createJavaType(Void.TYPE)
-                },
-                new String [] { "this" });
+            return
+                getCluster().getTypeFactory().createStructType(
+                    new RelDataType[] {
+                        getCluster().getTypeFactory().createJavaType(Void.TYPE)
+                    },
+                    new String[] { "this" });
         }
 
         public void explain(RelOptPlanWriter pw)
         {
             pw.explain(
                 this,
-                new String [] { "label" },
-                new Object [] { label });
+                new String[] { "label" },
+                new Object[] { label });
         }
     }
 
-    private static class NoneLeafRel extends TestLeafRel
+    private static class NoneLeafRel
+        extends TestLeafRel
     {
         protected NoneLeafRel(
             RelOptCluster cluster,
             String label)
         {
-            super(cluster, new RelTraitSet(CallingConvention.NONE), label);
+            super(
+                cluster,
+                new RelTraitSet(CallingConvention.NONE),
+                label);
         }
     }
 
-    private static class PhysLeafRel extends TestLeafRel
+    private static class PhysLeafRel
+        extends TestLeafRel
     {
         PhysLeafRel(
             RelOptCluster cluster,
             String label)
         {
-            super(cluster, new RelTraitSet(PHYS_CALLING_CONVENTION), label);
+            super(
+                cluster,
+                new RelTraitSet(PHYS_CALLING_CONVENTION),
+                label);
         }
 
         // implement RelNode
@@ -399,7 +421,8 @@ public class VolcanoPlannerTraitTest
         // TODO: SWZ Implement clone?
     }
 
-    private static abstract class TestSingleRel extends SingleRel
+    private static abstract class TestSingleRel
+        extends SingleRel
     {
         protected TestSingleRel(
             RelOptCluster cluster,
@@ -424,30 +447,40 @@ public class VolcanoPlannerTraitTest
         // TODO: SWZ Implement clone?
     }
 
-    private static class NoneSingleRel extends TestSingleRel
+    private static class NoneSingleRel
+        extends TestSingleRel
     {
         protected NoneSingleRel(
             RelOptCluster cluster,
             RelNode child)
         {
-            super(cluster, new RelTraitSet(CallingConvention.NONE), child);
+            super(
+                cluster,
+                new RelTraitSet(CallingConvention.NONE),
+                child);
         }
 
         // implement RelNode
         public Object clone()
         {
-            NoneSingleRel clone = new NoneSingleRel(getCluster(), getChild());
+            NoneSingleRel clone = new NoneSingleRel(
+                    getCluster(),
+                    getChild());
             clone.inheritTraitsFrom(this);
             return clone;
         }
     }
 
-
-    private static class IterSingleRel extends TestSingleRel implements JavaRel
+    private static class IterSingleRel
+        extends TestSingleRel
+        implements JavaRel
     {
         public IterSingleRel(RelOptCluster cluster, RelNode child)
         {
-            super(cluster, new RelTraitSet(CallingConvention.ITERATOR), child);
+            super(
+                cluster,
+                new RelTraitSet(CallingConvention.ITERATOR),
+                child);
         }
 
         // implement RelNode
@@ -458,7 +491,9 @@ public class VolcanoPlannerTraitTest
 
         public Object clone()
         {
-            IterSingleRel clone = new IterSingleRel(getCluster(), getInput(0));
+            IterSingleRel clone = new IterSingleRel(
+                    getCluster(),
+                    getInput(0));
             clone.inheritTraitsFrom(this);
             return clone;
         }
@@ -469,7 +504,8 @@ public class VolcanoPlannerTraitTest
         }
     }
 
-    private static class PhysLeafRule extends RelOptRule
+    private static class PhysLeafRule
+        extends RelOptRule
     {
         PhysLeafRule()
         {
@@ -493,8 +529,8 @@ public class VolcanoPlannerTraitTest
         }
     }
 
-
-    private static class IterSingleRule extends RelOptRule
+    private static class IterSingleRule
+        extends RelOptRule
     {
         IterSingleRule()
         {
@@ -514,17 +550,18 @@ public class VolcanoPlannerTraitTest
 
             RelNode converted =
                 mergeTraitsAndConvert(
-                    rel.getTraits(), getOutTraits(), rel.getInput(0));
+                    rel.getTraits(),
+                    getOutTraits(),
+                    rel.getInput(0));
 
-            call.transformTo(
-                new IterSingleRel(
+            call.transformTo(new IterSingleRel(
                     rel.getCluster(),
                     converted));
         }
     }
 
-
-    private static class IterSingleRule2 extends RelOptRule
+    private static class IterSingleRule2
+        extends RelOptRule
     {
         IterSingleRule2()
         {
@@ -544,30 +581,35 @@ public class VolcanoPlannerTraitTest
 
             RelNode converted =
                 mergeTraitsAndConvert(
-                    rel.getTraits(), getOutTraits(), rel.getInput(0));
+                    rel.getTraits(),
+                    getOutTraits(),
+                    rel.getInput(0));
 
             IterSingleRel child =
-                new IterSingleRel(rel.getCluster(), converted);
-
-            call.transformTo(
                 new IterSingleRel(
+                    rel.getCluster(),
+                    converted);
+
+            call.transformTo(new IterSingleRel(
                     rel.getCluster(),
                     child));
         }
     }
 
-
-    private static class AltTraitConverterRule extends ConverterRule
+    private static class AltTraitConverterRule
+        extends ConverterRule
     {
         private final RelTrait toTrait;
 
         private AltTraitConverterRule(
-            AltTrait fromTrait, AltTrait toTrait, String description)
+            AltTrait fromTrait,
+            AltTrait toTrait,
+            String description)
         {
             super(
                 RelNode.class,
                 new RelTraitSet(new RelTrait[] { null, fromTrait }),
-                new RelTraitSet(new RelTrait[] { null, toTrait } ),
+                new RelTraitSet(new RelTrait[] { null, toTrait }),
                 description);
 
             this.toTrait = toTrait;
@@ -575,7 +617,10 @@ public class VolcanoPlannerTraitTest
 
         public RelNode convert(RelNode rel)
         {
-            return new AltTraitConverter(rel.getCluster(), rel, toTrait);
+            return new AltTraitConverter(
+                    rel.getCluster(),
+                    rel,
+                    toTrait);
         }
 
         public boolean isGuaranteed()
@@ -584,16 +629,23 @@ public class VolcanoPlannerTraitTest
         }
     }
 
-    private static class AltTraitConverter extends ConverterRel
+    private static class AltTraitConverter
+        extends ConverterRel
     {
         private final RelTrait toTrait;
 
         private AltTraitConverter(
-            RelOptCluster cluster, RelNode child, RelTrait toTrait)
+            RelOptCluster cluster,
+            RelNode child,
+            RelTrait toTrait)
         {
             super(
-                cluster, toTrait.getTraitDef(),
-                convertTraits(child.getTraits(), toTrait), child);
+                cluster,
+                toTrait.getTraitDef(),
+                convertTraits(
+                    child.getTraits(),
+                    toTrait),
+                child);
 
             this.toTrait = toTrait;
         }
@@ -602,30 +654,37 @@ public class VolcanoPlannerTraitTest
         public Object clone()
         {
             AltTraitConverter clone =
-                new AltTraitConverter(getCluster(), getInput(0), toTrait);
+                new AltTraitConverter(
+                    getCluster(),
+                    getInput(0),
+                    toTrait);
             clone.inheritTraitsFrom(this);
             return clone;
         }
     }
 
-    private static class PhysToIteratorConverterRule extends ConverterRule
+    private static class PhysToIteratorConverterRule
+        extends ConverterRule
     {
         public PhysToIteratorConverterRule()
         {
             super(
-                RelNode.class, PHYS_CALLING_CONVENTION,
-                CallingConvention.ITERATOR, "PhysToIteratorRule");
+                RelNode.class,
+                PHYS_CALLING_CONVENTION,
+                CallingConvention.ITERATOR,
+                "PhysToIteratorRule");
         }
 
         public RelNode convert(RelNode rel)
         {
             return new PhysToIteratorConverter(
-                rel.getCluster(),
-                rel);
+                    rel.getCluster(),
+                    rel);
         }
     }
 
-    private static class PhysToIteratorConverter extends ConverterRel
+    private static class PhysToIteratorConverter
+        extends ConverterRel
     {
         public PhysToIteratorConverter(
             RelOptCluster cluster,
@@ -635,7 +694,8 @@ public class VolcanoPlannerTraitTest
                 cluster,
                 CallingConventionTraitDef.instance,
                 convertTraits(
-                    child.getTraits(), CallingConvention.ITERATOR),
+                    child.getTraits(),
+                    CallingConvention.ITERATOR),
                 child);
         }
 
@@ -643,9 +703,13 @@ public class VolcanoPlannerTraitTest
         public Object clone()
         {
             PhysToIteratorConverter clone =
-                new PhysToIteratorConverter(getCluster(), getChild());
+                new PhysToIteratorConverter(
+                    getCluster(),
+                    getChild());
             clone.inheritTraitsFrom(this);
             return clone;
         }
     }
 }
+
+// End VolcanoPlannerTraitTest.java

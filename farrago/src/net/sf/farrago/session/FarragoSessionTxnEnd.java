@@ -27,10 +27,16 @@ package net.sf.farrago.session;
  * @author John V. Sichi
  * @version $Id$
  */
-public enum FarragoSessionTxnEnd
-{
-    ROLLBACK,
-    COMMIT
+public enum FarragoSessionTxnEnd {
+    ROLLBACK, COMMIT
 }
 
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
+// End FarragoSessionTxnEnd.java
 // End FarragoSessionTxnEnd.java

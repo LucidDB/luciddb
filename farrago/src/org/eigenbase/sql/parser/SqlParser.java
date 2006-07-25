@@ -20,16 +20,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.parser;
 
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.parser.impl.ParseException;
-import org.eigenbase.sql.parser.impl.SqlParserImpl;
-import org.eigenbase.sql.parser.impl.TokenMgrError;
+import java.io.*;
 
-import java.io.Reader;
-import java.io.StringReader;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.impl.*;
 
 
 /**
@@ -41,11 +37,12 @@ import java.io.StringReader;
  */
 public class SqlParser
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final SqlParserImpl parser;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>SqlParser</code> which reads input from a string.
@@ -63,7 +60,7 @@ public class SqlParser
         parser = new SqlParserImpl(reader);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Parses a SQL expression.
@@ -83,11 +80,9 @@ public class SqlParser
     /**
      * Parses a <code>SELECT</code> statement.
      *
-     * @return A {@link org.eigenbase.sql.SqlSelect} for a regular
-     *         <code>SELECT</code> statement; a {@link
-     *         org.eigenbase.sql.SqlBinaryOperator} for a
-     *         <code>UNION</code>, <code>INTERSECT</code>, or
-     *         <code>EXCEPT</code>.
+     * @return A {@link org.eigenbase.sql.SqlSelect} for a regular <code>
+     * SELECT</code> statement; a {@link org.eigenbase.sql.SqlBinaryOperator}
+     * for a <code>UNION</code>, <code>INTERSECT</code>, or <code>EXCEPT</code>.
      *
      * @throws SqlParseException if there is a parse error
      */
@@ -120,12 +115,11 @@ public class SqlParser
 
     /**
      * Returns the underlying generated parser.
-     */ 
+     */
     public SqlParserImpl getParserImpl()
     {
         return parser;
     }
 }
-
 
 // End SqlParser.java

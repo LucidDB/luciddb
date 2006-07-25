@@ -34,18 +34,20 @@ import java.util.logging.*;
  */
 public class NativeTrace
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static NativeTrace instance = null;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private String loggerPrefix;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new NativeTrace object.  Do not construct NativeTrace
-     * objects directly.  This constructor is protected only for the use
-     * of subclasses.
+     * Creates a new NativeTrace object. Do not construct NativeTrace objects
+     * directly. This constructor is protected only for the use of subclasses.
      *
      * @param loggerPrefix prefix to use in constructing logger names
      */
@@ -54,19 +56,17 @@ public class NativeTrace
         this.loggerPrefix = loggerPrefix;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public static void createInstance(String loggerPrefix)
     {
         instance = new NativeTrace(loggerPrefix);
     }
 
-
     public static NativeTrace instance()
     {
         return instance;
     }
-
 
     private Logger getLogger(String loggerSuffix)
     {
@@ -74,8 +74,8 @@ public class NativeTrace
     }
 
     /**
-     * Called from native code to determine the trace level
-     * for a given component.
+     * Called from native code to determine the trace level for a given
+     * component.
      *
      * @param loggerSuffix suffix to use in constructing logger name
      *
@@ -113,6 +113,5 @@ public class NativeTrace
         tracer.logp(level, loggerPrefix + loggerSuffix, "<native>", message);
     }
 }
-
 
 // End NativeTrace.java

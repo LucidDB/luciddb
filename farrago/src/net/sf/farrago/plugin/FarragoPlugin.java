@@ -23,6 +23,7 @@
 package net.sf.farrago.plugin;
 
 import java.sql.*;
+
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
@@ -30,24 +31,24 @@ import net.sf.farrago.util.*;
 
 
 /**
- * FarragoPlugin defines an abstract plugin interface.  Some JDBC
- * infrastructure is borrowed ({@link java.sql.SQLException} and {@link
- * java.sql.DriverPropertyInfo}).  The property info calls are designed to work
+ * FarragoPlugin defines an abstract plugin interface. Some JDBC infrastructure
+ * is borrowed ({@link java.sql.SQLException} and {@link
+ * java.sql.DriverPropertyInfo}). The property info calls are designed to work
  * in the same iterative fashion as {@link java.sql.Driver#getPropertyInfo}.
  *
- *<p>
- *
- * Implementations of FarragoPlugin must provide a public default constructor
- * in order to be loaded via DDL statements.  FarragoPlugin extends {@link
- * FarragoAllocation}; when closeAllocation is called, all resources acquired
- * by the plugin should be released.
+ * <p>Implementations of FarragoPlugin must provide a public default constructor
+ * in order to be loaded via DDL statements. FarragoPlugin extends {@link
+ * FarragoAllocation}; when closeAllocation is called, all resources acquired by
+ * the plugin should be released.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public interface FarragoPlugin extends FarragoAllocation
+public interface FarragoPlugin
+    extends FarragoAllocation
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Obtains a suggested name for this plugin in the SQL catalog.
@@ -70,9 +71,8 @@ public interface FarragoPlugin extends FarragoAllocation
      * initialization (the props parameter to the initialize method).
      *
      * @param locale Locale for formatting property info
-     *
-     * @param props proposed list of property name/value
-     * pairs which will be sent to initialize()
+     * @param props proposed list of property name/value pairs which will be
+     * sent to initialize()
      *
      * @return 0 or more property info descriptors
      */
@@ -81,12 +81,11 @@ public interface FarragoPlugin extends FarragoAllocation
         Properties props);
 
     /**
-     * Initializes this plugin with a given set of properties.  This is called
-     * after an uninitialized instance has been created via Class.forName.  As
+     * Initializes this plugin with a given set of properties. This is called
+     * after an uninitialized instance has been created via Class.forName. As
      * much validation as possible should be performed.
      *
      * @param repos FarragoRepos which can be used for metadata access
-     *
      * @param props plugin properties
      *
      * @exception SQLException if plugin initialization is unsuccessful
@@ -109,7 +108,7 @@ public interface FarragoPlugin extends FarragoAllocation
      * @return library name
      */
     public String getLibraryName();
-    
+
     /**
      * return the options with which this plugin was initialized
      *
@@ -117,6 +116,5 @@ public interface FarragoPlugin extends FarragoAllocation
      */
     public Properties getProperties();
 }
-
 
 // End FarragoPlugin.java

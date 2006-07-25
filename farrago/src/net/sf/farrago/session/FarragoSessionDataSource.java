@@ -22,27 +22,37 @@
 package net.sf.farrago.session;
 
 import java.sql.*;
+
 import javax.sql.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * FarragoSessionDataSource implements {@link DataSource} by
- * providing a loopback {@link Connection} into a session;
- * this can be used for execution of reentrant SQL.
+ * FarragoSessionDataSource implements {@link DataSource} by providing a
+ * loopback {@link Connection} into a session; this can be used for execution of
+ * reentrant SQL.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoSessionDataSource extends JdbcDataSource
+public class FarragoSessionDataSource
+    extends JdbcDataSource
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final FarragoSessionConnectionSource connectionSource;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoSessionDataSource(FarragoSession session)
     {
         super("jdbc:farrago:");
         connectionSource = session.getConnectionSource();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public Connection getConnection()
         throws SQLException

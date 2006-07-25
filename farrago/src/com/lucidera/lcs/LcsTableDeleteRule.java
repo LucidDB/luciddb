@@ -22,7 +22,7 @@ package com.lucidera.lcs;
 
 import com.lucidera.query.*;
 
-import net.sf.farrago.query.FennelRel;
+import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
@@ -30,25 +30,31 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
+
 /**
  * LcsTableDeleteRule is a rule for converting an abstract {@link
  * TableModificationRel} into a corresponding {@link LcsTableDeleteRel}.
- * 
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class LcsTableDeleteRule extends RelOptRule
+public class LcsTableDeleteRule
+    extends RelOptRule
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public LcsTableDeleteRule()
     {
-        super(new RelOptRuleOperand(
+        super(
+            new RelOptRuleOperand(
                 TableModificationRel.class,
-                new RelOptRuleOperand [] {
+                new RelOptRuleOperand[] {
                     new RelOptRuleOperand(ProjectRel.class, null)
                 }));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -73,27 +79,34 @@ public class LcsTableDeleteRule extends RelOptRule
         if (!tableModification.isDelete()) {
             return;
         }
-        
+
         ProjectRel origProj = (ProjectRel) call.rels[1];
-        
+
         // replace the project with one that projects out the rid and 2 null
         // columns to simulate a singleton bitmap entry; need to cast the
         // rid expression to not nullable since that is what Fennel expects
         RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-        RexNode ridExpr = rexBuilder.makeCast(
-            rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Bigint),
-            LucidDbSpecialOperators.makeRidExpr(rexBuilder, origProj));
-        RexNode nullLiteral = rexBuilder.makeNullLiteral(
-            SqlTypeName.Varbinary, LcsIndexGuide.LbmBitmapSegMaxSize);
-        RexNode[] singletonExpr = { ridExpr, nullLiteral, nullLiteral };
-        String[] fieldNames = { "rid", "descriptor", "segment" };
+        RexNode ridExpr =
+            rexBuilder.makeCast(
+                rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Bigint),
+                LucidDbSpecialOperators.makeRidExpr(rexBuilder, origProj));
+        RexNode nullLiteral =
+            rexBuilder.makeNullLiteral(
+                SqlTypeName.Varbinary,
+                LcsIndexGuide.LbmBitmapSegMaxSize);
+        RexNode [] singletonExpr = { ridExpr, nullLiteral, nullLiteral };
+        String [] fieldNames = { "rid", "descriptor", "segment" };
 
-        ProjectRel projRel = (ProjectRel) CalcRel.createProject(
-            origProj.getChild(), singletonExpr, fieldNames);
-        
+        ProjectRel projRel =
+            (ProjectRel) CalcRel.createProject(
+                origProj.getChild(),
+                singletonExpr,
+                fieldNames);
+
         RelNode fennelInput =
             mergeTraitsAndConvert(
-                call.rels[0].getTraits(), FennelRel.FENNEL_EXEC_CONVENTION,
+                call.rels[0].getTraits(),
+                FennelRel.FENNEL_EXEC_CONVENTION,
                 projRel);
         if (fennelInput == null) {
             return;
@@ -108,7 +121,7 @@ public class LcsTableDeleteRule extends RelOptRule
                 tableModification.getOperation(),
                 tableModification.getUpdateColumnList());
 
-        call.transformTo(deleteRel);      
+        call.transformTo(deleteRel);
     }
 }
 

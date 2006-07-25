@@ -22,8 +22,9 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * The <code>CURRENT_DATE</code> function.
@@ -31,16 +32,24 @@ import org.eigenbase.sql.validate.SqlValidatorScope;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlCurrentDateFunction extends SqlFunction
+public class SqlCurrentDateFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlCurrentDateFunction()
     {
         super(
             "CURRENT_DATE",
-            SqlKind.Function, SqlTypeStrategies.rtiDate, null,
+            SqlKind.Function,
+            SqlTypeStrategies.rtiDate,
+            null,
             SqlTypeStrategies.otcNiladic,
             SqlFunctionCategory.TimeDate);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlSyntax getSyntax()
     {

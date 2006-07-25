@@ -19,44 +19,39 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.mapping;
 
 /**
- * Describes the type of a mapping, from the most general
- * {@link #MultiFunction} (every element in the source and target domain can
- * participate in many mappings) to the most retricted {@link #Bijection}
- * (every element in the source and target domain must be paired with precisely
- * one element in the other domain).
+ * Describes the type of a mapping, from the most general {@link #MultiFunction}
+ * (every element in the source and target domain can participate in many
+ * mappings) to the most retricted {@link #Bijection} (every element in the
+ * source and target domain must be paired with precisely one element in the
+ * other domain).
  *
- * <p>Some common types:<ul>
- * <li>A surjection is a mapping if every target has at
- * least one source; also known as an 'onto' mapping.
+ * <p>Some common types:
  *
- * <li>A mapping is a partial function if every source has at most one
- * target.
- *
+ * <ul>
+ * <li>A surjection is a mapping if every target has at least one source; also
+ * known as an 'onto' mapping.
+ * <li>A mapping is a partial function if every source has at most one target.
  * <li>A mapping is a function if every source has precisely one target.
- *
- * <li>An injection is a mapping where a target has at most one
- * source; also somewhat confusingly known as a 'one-to-one' mapping.
- *
+ * <li>An injection is a mapping where a target has at most one source; also
+ * somewhat confusingly known as a 'one-to-one' mapping.
  * <li>A bijection is a mapping which is both an injection and a surjection.
  * Every source has precisely one target, and vice versa.
  * </ul>
  *
- * <p>Once you know what type of mapping you want, call
- * {@link Mappings#create(MappingType, int, int)} to create an efficient
- * implementation of that mapping. 
+ * <p>Once you know what type of mapping you want, call {@link
+ * Mappings#create(MappingType, int, int)} to create an efficient implementation
+ * of that mapping.
  *
  * @author jhyde
  * @version $Id$
  * @since Mar 24, 2006
  */
-public enum MappingType
-{
-    //            ordinal source target function inverse
-    //            ======= ====== ====== ======== =================
+public enum MappingType {
+    //            ordinal source target function inverse            =======
+    // ====== ====== ======== =================
 
     //                  0      1      1 true     0 Bijection
     Bijection,
@@ -128,9 +123,8 @@ public enum MappingType
 
     private MappingType()
     {
-        this.inverseOrdinal =
-            ((ordinal() & 3) << 2) |
-            ((ordinal() & 12) >> 2);
+        this.inverseOrdinal = ((ordinal() & 3) << 2)
+            | ((ordinal() & 12) >> 2);
     }
 
     public MappingType inverse()
@@ -139,8 +133,8 @@ public enum MappingType
     }
 
     /**
-     * Returns whether this mapping type is (possibly a weaker form of) a
-     * given mapping type.
+     * Returns whether this mapping type is (possibly a weaker form of) a given
+     * mapping type.
      *
      * <p>For example, a {@link #Bijection} is a {@link #Function}, but not
      * every {link #Function} is a {@link #Bijection}.
@@ -151,8 +145,7 @@ public enum MappingType
     }
 
     /**
-     * A mapping is a total function if
-     * every source has precisely one target.
+     * A mapping is a total function if every source has precisely one target.
      */
     public boolean isFunction()
     {
@@ -160,8 +153,7 @@ public enum MappingType
     }
 
     /**
-     * A mapping is a partial function if
-     * every source has at most one target.
+     * A mapping is a partial function if every source has at most one target.
      */
     public boolean isPartialFunction()
     {
@@ -169,35 +161,41 @@ public enum MappingType
     }
 
     /**
-     * A mapping is a surjection if
-     * it is a function and
-     * every target has at least one source.
+     * A mapping is a surjection if it is a function and every target has at
+     * least one source.
      */
     public boolean isSurjection()
     {
-        return (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource)) == 0;
+        return
+            (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource))
+            == 0;
     }
 
     /**
-     * A mapping is an injection if
-     * it is a function and
-     * no target has more than one source.
-     * (In other words, every source has precisely one target.)
+     * A mapping is an injection if it is a function and no target has more than
+     * one source. (In other words, every source has precisely one target.)
      */
     public boolean isInjection()
     {
-        return (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource)) == 0;
+        return
+            (ordinal() & (OptionalTarget | MultipleTarget | MultipleSource))
+            == 0;
     }
 
     /**
-     * A mapping is a bijection if
-     * it is a surjection and
-     * it is an injection.
+     * A mapping is a bijection if it is a surjection and it is an injection.
      * (In other words,
      */
     public boolean isBijection()
     {
-        return (ordinal() & (OptionalTarget | MultipleTarget | OptionalSource | MultipleSource)) == 0;
+        return
+            (
+                ordinal()
+                & (
+                    OptionalTarget | MultipleTarget | OptionalSource
+                    | MultipleSource
+                  )
+            ) == 0;
     }
 
     public boolean isOptionalTarget()
@@ -224,18 +222,24 @@ public enum MappingType
      * Allow less than one source for a given target.
      */
     private static final int OptionalSource = 1;
+
     /**
      * Allow more than one source for a given target.
      */
     private static final int MultipleSource = 2;
+
     /**
      * Allow less than one target for a given source.
      */
     private static final int OptionalTarget = 4;
+
     /**
      * Allow more than one target for a given source.
      */
     private static final int MultipleTarget = 8;
 }
 
+// End MappingType.java
+// End MappingType.java
+// End MappingType.java
 // End MappingType.java

@@ -23,16 +23,22 @@
 package net.sf.farrago.jdbc.param;
 
 /**
- * FarragoJdbcEngineStringParamDef defines a string parameter. Values which 
- * are not strings are converted into strings. Strings are not padded, even
- * for CHAR columns.
- * 
+ * FarragoJdbcEngineStringParamDef defines a string parameter. Values which are
+ * not strings are converted into strings. Strings are not padded, even for CHAR
+ * columns.
+ *
  * @author Julian Hyde
  * @version $Id$
  */
-class FarragoJdbcStringParamDef extends FarragoJdbcParamDef
+class FarragoJdbcStringParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int maxCharCount;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoJdbcStringParamDef(
         String paramName,
@@ -41,6 +47,8 @@ class FarragoJdbcStringParamDef extends FarragoJdbcParamDef
         super(paramName, paramMetaData);
         maxCharCount = paramMetaData.precision;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionStmtParamDef
     public Object scrubValue(Object x)
@@ -52,10 +60,11 @@ class FarragoJdbcStringParamDef extends FarragoJdbcParamDef
         if (x instanceof String) {
             return x;
         }
-        if (x instanceof byte[]) {
+        if (x instanceof byte []) {
             // Don't allow binary to placed in string
             throw newInvalidType(x);
         }
+
         // REVIEW jvs 7-Oct-2004: the default toString() implementation for
         // Float/Double/Date/Time/Timestamp/byte[] may not be correct here.
         final String s = x.toString();
@@ -65,3 +74,5 @@ class FarragoJdbcStringParamDef extends FarragoJdbcParamDef
         return s;
     }
 }
+
+// End FarragoJdbcStringParamDef.java

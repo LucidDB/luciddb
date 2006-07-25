@@ -21,25 +21,27 @@
 */
 package org.eigenbase.jmi;
 
+import java.util.*;
+
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.graph.*;
 import org._3pq.jgrapht.traverse.*;
 
-import java.util.*;
 
 /**
- * JmiModelView represents an annotated view of a JMI model.  Instances
- * are immutable and can be accessed concurrently by multiple threads.
+ * JmiModelView represents an annotated view of a JMI model. Instances are
+ * immutable and can be accessed concurrently by multiple threads.
  *
- *<p>
- *
- * TODO:  support transformations such as ignoring or reversing edges.
+ * <p>TODO: support transformations such as ignoring or reversing edges.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JmiModelView
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     /**
      * Graph of the underlying model we are querying.
      */
@@ -49,6 +51,8 @@ public class JmiModelView
      * Map from JmiClassVertex to ClassAttributes.
      */
     private Map classVertexAttributes;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new view of a model.
@@ -62,6 +66,8 @@ public class JmiModelView
         deriveAttributes();
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * @return graph for the underlying model
      */
@@ -71,8 +77,8 @@ public class JmiModelView
     }
 
     /**
-     * Gets all JmiClassVertexes representing superclasses of a class
-     * (including the class itself).
+     * Gets all JmiClassVertexes representing superclasses of a class (including
+     * the class itself).
      *
      * @param vertex vertex representing class of interest
      *
@@ -82,7 +88,7 @@ public class JmiModelView
     {
         return getClassAttributes(vertex).allSuperclassVertices;
     }
-        
+
     /**
      * Gets all JmiClassVertexes representing subclasses of a class (including
      * the class itself).
@@ -97,8 +103,8 @@ public class JmiModelView
     }
 
     /**
-     * Gets all JmiAssocEdges representing associations outgoing
-     * from any class vertex returned by getAllSuperclassVertices(vertex).
+     * Gets all JmiAssocEdges representing associations outgoing from any class
+     * vertex returned by getAllSuperclassVertices(vertex).
      *
      * @param vertex vertex representing class of interest
      *
@@ -110,8 +116,8 @@ public class JmiModelView
     }
 
     /**
-     * Gets all JmiAssocEdges representing associations incoming
-     * to any class vertex returned by getAllSuperclassVertices(vertex).
+     * Gets all JmiAssocEdges representing associations incoming to any class
+     * vertex returned by getAllSuperclassVertices(vertex).
      *
      * @param vertex vertex representing class of interest
      *
@@ -123,8 +129,8 @@ public class JmiModelView
     }
 
     /**
-     * Gets the union of getInheritedOutgoingAssocEdges() for all
-     * classes returned by getAllSubclassVertices(vertex).
+     * Gets the union of getInheritedOutgoingAssocEdges() for all classes
+     * returned by getAllSubclassVertices(vertex).
      *
      * @param vertex vertex representing class of interest
      *
@@ -136,8 +142,8 @@ public class JmiModelView
     }
 
     /**
-     * Gets the union of getInheritedIncomingAssocEdges() for all
-     * classes returned by getAllSubclassVertices(vertex).
+     * Gets the union of getInheritedIncomingAssocEdges() for all classes
+     * returned by getAllSubclassVertices(vertex).
      *
      * @param vertex vertex representing class of interest
      *
@@ -147,7 +153,7 @@ public class JmiModelView
     {
         return getClassAttributes(vertex).allIncomingAssocEdges;
     }
-    
+
     private ClassAttributes getClassAttributes(JmiClassVertex classVertex)
     {
         return (ClassAttributes) classVertexAttributes.get(classVertex);
@@ -155,8 +161,9 @@ public class JmiModelView
 
     private void deriveAttributes()
     {
-        Iterator topoIter = new TopologicalOrderIterator(
-            modelGraph.getInheritanceGraph());
+        Iterator topoIter =
+            new TopologicalOrderIterator(
+                modelGraph.getInheritanceGraph());
 
         // First pass: iterate in topological order from superclasses to
         // subclasses
@@ -175,7 +182,7 @@ public class JmiModelView
                 modelGraph.getAssocGraph().outgoingEdgesOf(vertex));
             attrs.inheritedIncomingAssocEdges.addAll(
                 modelGraph.getAssocGraph().incomingEdgesOf(vertex));
-            
+
             // Agglomerate superclasses and their edges
             Iterator superIter =
                 GraphHelper.predecessorListOf(
@@ -226,7 +233,9 @@ public class JmiModelView
         }
     }
 
-    private static class ClassAttributes 
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class ClassAttributes
     {
         final Set allSuperclassVertices;
 

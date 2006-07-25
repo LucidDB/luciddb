@@ -22,8 +22,9 @@
 package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.parser.SqlParserPos;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * The <code>COALESCE</code> function.
@@ -31,13 +32,23 @@ import org.eigenbase.sql.parser.SqlParserPos;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlCoalesceFunction extends SqlFunction
+public class SqlCoalesceFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlCoalesceFunction()
     {
-        super("COALESCE", SqlKind.Function, null, null, null,
+        super("COALESCE",
+            SqlKind.Function,
+            null,
+            null,
+            null,
             SqlFunctionCategory.System);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // override SqlOperator
     public SqlNode rewriteCall(SqlValidator validator, SqlCall call)
@@ -52,17 +63,22 @@ public class SqlCoalesceFunction extends SqlFunction
 
         //todo optimize when know operand is not null.
 
-        for (int i = 0; i + 1 < operands.length; ++i) {
+        for (int i = 0; (i + 1) < operands.length; ++i) {
             whenList.add(
                 SqlStdOperatorTable.isNotNullOperator.createCall(
-                    operands[i], pos));
+                    operands[i],
+                    pos));
             thenList.add(operands[i]);
         }
         SqlNode elseExpr = operands[operands.length - 1];
         assert call.getFunctionQuantifier() == null;
         final SqlCall newCall =
             SqlStdOperatorTable.caseOperator.createCall(
-                null, whenList, thenList, elseExpr, pos);
+                null,
+                whenList,
+                thenList,
+                elseExpr,
+                pos);
         return newCall;
     }
 

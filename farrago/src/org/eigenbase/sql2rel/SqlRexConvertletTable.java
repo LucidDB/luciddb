@@ -20,20 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql2rel;
 
-import org.eigenbase.sql.SqlCall;
+import org.eigenbase.sql.*;
+
 
 /**
  * Collection of {@link SqlRexConvertlet}s.
  *
  * @author jhyde
- * @since 2005/8/3
  * @version $Id$
+ * @since 2005/8/3
  */
 public interface SqlRexConvertletTable
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the convertlet applicable to a given expression.
      */

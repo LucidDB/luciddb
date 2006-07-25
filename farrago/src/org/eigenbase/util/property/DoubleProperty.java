@@ -11,44 +11,44 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.util.Properties;
+import java.util.*;
 
 
 /**
  * Definition and accessor for a double-precision property.
  *
  * @author jhyde
- * @since July 5, 2005
  * @version $Id$
- **/
-public class DoubleProperty extends Property
+ * @since July 5, 2005
+ */
+public class DoubleProperty
+    extends Property
 {
-    //~ Fields ----------------------------------------------------------------
-    
+
+    //~ Instance fields --------------------------------------------------------
+
     private final double minValue;
     private final double maxValue;
-    
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Double property.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value.
      */
     public DoubleProperty(
@@ -57,17 +57,19 @@ public class DoubleProperty extends Property
         double defaultValue)
     {
         this(
-            properties, path, defaultValue, -Double.MAX_VALUE, 
+            properties,
+            path,
+            defaultValue,
+            -Double.MAX_VALUE,
             Double.MAX_VALUE);
     }
 
     /**
      * Creates a Double property which has no default value.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      */
     public DoubleProperty(
         Properties properties,
@@ -79,14 +81,13 @@ public class DoubleProperty extends Property
     /**
      * Creates a Double property.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value.
-     * @throws IllegalArgumentException if <code>defaultValue</code> is not
-     *                                  in the range [<code>minValue</code>,
-     *                                                <code>maxValue</code>]. 
+     *
+     * @throws IllegalArgumentException if <code>defaultValue</code> is not in
+     * the range [<code>minValue</code>, <code>maxValue</code>].
      */
     public DoubleProperty(
         Properties properties,
@@ -95,15 +96,18 @@ public class DoubleProperty extends Property
         double minValue,
         double maxValue)
     {
-        super(properties, path, Double.toString(defaultValue));
-        
+        super(
+            properties,
+            path,
+            Double.toString(defaultValue));
+
         if (minValue > maxValue) {
             double temp = minValue;
             minValue = maxValue;
             maxValue = temp;
         }
-        
-        if (defaultValue < minValue || defaultValue > maxValue) {
+
+        if ((defaultValue < minValue) || (defaultValue > maxValue)) {
             throw new IllegalArgumentException(
                 "invalid default value " + defaultValue);
         }
@@ -115,10 +119,9 @@ public class DoubleProperty extends Property
     /**
      * Creates a Double property which has no default value.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      */
     public DoubleProperty(
         Properties properties,
@@ -133,28 +136,22 @@ public class DoubleProperty extends Property
             minValue = maxValue;
             maxValue = temp;
         }
-        
+
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the value of this double property according to these rules.
-     * 
+     *
      * <ul>
-     * <li>
-     *   If the property has no value, returns the default value.
-     * </li>
-     * <li>
-     *   If there is no default value and
-     *   {@link #minValue} &lt;= 0.0 &lt;= {@link #maxValue}, returns 0.0.
-     * </li>
-     * <li>
-     *   If there is no default value and 0.0 is not in the min/max range, 
-     *   returns {@link #minValue}.
-     * </li>
+     * <li>If the property has no value, returns the default value.</li>
+     * <li>If there is no default value and {@link #minValue} &lt;= 0.0 &lt;=
+     * {@link #maxValue}, returns 0.0.</li>
+     * <li>If there is no default value and 0.0 is not in the min/max range,
+     * returns {@link #minValue}.</li>
      * </ul>
      */
     public double get()
@@ -163,42 +160,41 @@ public class DoubleProperty extends Property
         if (value == null) {
             return noValue();
         }
-        
+
         double v = Double.parseDouble(value);
-        
+
         return limit(v);
     }
 
     /**
-     * Retrieves the value of this double property.
-     * If the property has no value, returns the default value.
-     * If there is no default value, returns the given default value.
-     * 
-     * In all cases, the returned value is limited to the min/max value
-     * range given during construction.
+     * Retrieves the value of this double property. If the property has no
+     * value, returns the default value. If there is no default value, returns
+     * the given default value. In all cases, the returned value is limited to
+     * the min/max value range given during construction.
      */
     public double get(double defaultValue)
     {
-        final String value = getInternal(Double.toString(defaultValue), false);
+        final String value = getInternal(
+                Double.toString(defaultValue),
+                false);
         if (value == null) {
             return limit(defaultValue);
         }
 
         double v = Double.parseDouble(value);
-        
+
         // need to limit value in case setString() was called directly with
         // an out-of-range value
         return limit(v);
     }
 
     /**
-     * Sets the value of this double property.  The value is limited to the
+     * Sets the value of this double property. The value is limited to the
      * min/max range given during construction.
      *
-     * @return the previous value, or if not set: the default value.  If no
-     *         default value exists, 0.0 if that value is in the
-     *         range [minValue, maxValue], or minValue if 0.0 is not in the 
-     *         range
+     * @return the previous value, or if not set: the default value. If no
+     * default value exists, 0.0 if that value is in the range [minValue,
+     * maxValue], or minValue if 0.0 is not in the range
      */
     public double set(double value)
     {
@@ -211,7 +207,7 @@ public class DoubleProperty extends Property
         }
 
         double v = Double.parseDouble(prevValue);
-        
+
         return limit(v);
     }
 
@@ -219,26 +215,28 @@ public class DoubleProperty extends Property
      * Returns value limited to the range [minValue, maxValue].
      *
      * @param value the value to limit
+     *
      * @return value limited to the range [minValue, maxValue].
      */
     private double limit(double value)
     {
-        return Math.min(Math.max(value, minValue), maxValue); 
+        return Math.min(
+                Math.max(value, minValue),
+                maxValue);
     }
-    
+
     /**
      * Returns 0.0 if that value is in the range [minValue, maxValue].
      * Otherwise, returns minValue.
      */
     private double noValue()
     {
-        if (minValue <= 0.0 && maxValue >= 0.0) {
+        if ((minValue <= 0.0) && (maxValue >= 0.0)) {
             return 0.0;
         } else {
             return minValue;
         }
     }
 }
-
 
 // End DoubleProperty.java

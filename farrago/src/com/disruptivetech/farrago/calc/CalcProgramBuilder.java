@@ -20,42 +20,43 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.math.BigDecimal;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.*;
 
+import java.math.*;
+
+import java.nio.*;
+import java.nio.charset.*;
+
+import java.util.*;
+import java.util.logging.*;
+
+import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.fennel.tuple.FennelStandardTypeDescriptor;
 
-import org.eigenbase.sql.SqlLiteral;
-import org.eigenbase.util.EnumeratedValues;
-import org.eigenbase.util.Util;
-import org.eigenbase.util14.ConversionUtil;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
- * Constructs a calculator assembly language program based upon a series
- * of calls made by the client.
+ * Constructs a calculator assembly language program based upon a series of
+ * calls made by the client.
  *
- * <p>If you want multi-line programs, call
- * <code>setSeparator(System.getProperty("line.separator")</code>.</p>
+ * <p>If you want multi-line programs, call <code>
+ * setSeparator(System.getProperty("line.separator")</code>.</p>
  *
  * <p>See {@link #tracer}.
-
- * @testcase {@link CalcProgramBuilderTest}
+ *
  * @author jhyde
- * @since Jan 11, 2004
  * @version $Id$
- **/
+ * @since Jan 11, 2004
+ * @testcase
+ */
 public class CalcProgramBuilder
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     /* Constants */
     private static final String NL = System.getProperty("line.separator");
@@ -176,8 +177,8 @@ public class CalcProgramBuilder
                 CalcProgramBuilder builder,
                 Register [] regs)
             {
-                builder.compilationAssert(regs[0].getOpType() == regs[1]
-                        .getOpType(),
+                builder.compilationAssert(
+                    regs[0].getOpType() == regs[1].getOpType(),
                     "Type Mismatch. Tried to MOVE "
                     + regs[1].getOpType().getName() + " into a "
                     + regs[0].getOpType().getName());
@@ -228,7 +229,9 @@ public class CalcProgramBuilder
             }
         };
 
-    /** Rounds approximate types to nearest integer but remains same type */
+    /**
+     * Rounds approximate types to nearest integer but remains same type
+     */
     public static final InstructionDef round =
         new NativeInstructionDef("ROUND", 2);
     public static final InstructionDef integralNativeShiftLeft =
@@ -238,7 +241,7 @@ public class CalcProgramBuilder
     public static final InstructionDef integralNativeXor =
         new IntegralNativeInstructionDef("XOR", 3);
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     /* Member variables */
     protected String separator = SEPARATOR_SEMICOLON_NEWLINE;
@@ -248,7 +251,7 @@ public class CalcProgramBuilder
     protected final HashMap labels = new HashMap();
     private boolean outputComments = false;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a CalcProgramBuilder.
@@ -256,6 +259,8 @@ public class CalcProgramBuilder
     public CalcProgramBuilder()
     {
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Re-initializes a CalcProgramBuilder.
@@ -268,20 +273,18 @@ public class CalcProgramBuilder
         labels.clear();
     }
 
-    //~ Methods ---------------------------------------------------------------
-
     // Methods -----------------------------------------------------------------
 
     /**
-     * Sets the separator between instructions in the generated program.
-     * Can be either {@link #SEPARATOR_SEMICOLON ';'}
-     * or {@link #SEPARATOR_NEWLINE '\n' or ";\n"}
+     * Sets the separator between instructions in the generated program. Can be
+     * either {@link #SEPARATOR_SEMICOLON ';'} or {@link #SEPARATOR_NEWLINE '\n'
+     * or ";\n"}
      */
     public void setSeparator(String separator)
     {
         if (!separator.equals(SEPARATOR_NEWLINE)
-                && !separator.equals(SEPARATOR_SEMICOLON)
-                && !separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
+            && !separator.equals(SEPARATOR_SEMICOLON)
+            && !separator.equals(SEPARATOR_SEMICOLON_NEWLINE)) {
             throw FarragoResource.instance().ProgramCompilationError.ex(
                 "Separator must be ';'[\\n] or '\\n'");
         }
@@ -308,12 +311,14 @@ public class CalcProgramBuilder
     }
 
     /**
-     * A program consists of two parts, its instructions and the user defined registers with its value.
-     * The string representation of the program will be in the following format
-     * <Register Set Definitions> See {@link #getRegisterSetsLayout}<br>
+     * A program consists of two parts, its instructions and the user defined
+     * registers with its value. The string representation of the program will
+     * be in the following format <Register Set Definitions> See {@link
+     * #getRegisterSetsLayout}<br>
      * <"\n"><br>
      * <Instruction set> See {@link #getInstructions}<br>
      * <br>
+     *
      * @return
      */
     public String getProgram()
@@ -321,7 +326,8 @@ public class CalcProgramBuilder
         bindReferences();
         validate();
         optimize();
-        validate(); //validate again to check if the optimization broke something
+        validate(); //validate again to check if the optimization broke
+                    //something
         StringWriter sw = new StringWriter();
         PrintWriter writer = new PrintWriter(sw);
         getRegisterSetsLayout(writer);
@@ -337,8 +343,7 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Introduces NL's for prettiness.
-     * Comments would be nice too.
+     * Introduces NL's for prettiness. Comments would be nice too.
      */
     private String prettyPrint(String program)
     {
@@ -355,8 +360,7 @@ public class CalcProgramBuilder
         int ordinal,
         CalcProgramBuilder.RegisterSetType registerType)
     {
-        ArrayList registerSet =
-            registerSets.getSet(registerType.getOrdinal());
+        ArrayList registerSet = registerSets.getSet(registerType.getOrdinal());
         Register register = (Register) registerSet.get(ordinal);
         return register;
     }
@@ -372,21 +376,23 @@ public class CalcProgramBuilder
             Instruction instruction = (Instruction) it.next();
             instruction.setLineNumber(i);
             Operand [] operands = instruction.getOperands();
-            for (int j = 0; (null != operands) && (j < operands.length);
-                    j++) {
+            for (int j = 0; (null != operands) && (j < operands.length); j++) {
                 Operand operand = operands[j];
                 if (operand instanceof Line) {
                     Line line = (Line) operand;
-                    if (line.getLabel() != null) //we have a label, update the line number with whats in the labels map
-                     {
+                    if (line.getLabel() != null) //we have a label, update the
+                                                 //line number with whats in the
+                                                 //labels map
+                    {
                         compilationAssert(null == line.getLine(),
                             "Line has already been bind.");
                         java.lang.Integer lineNumberFromLabel =
                             (java.lang.Integer) labels.get(line.getLabel());
                         if (null == lineNumberFromLabel) {
-                            throw FarragoResource.instance().
-                                ProgramCompilationError.ex("Label '"
-                                    + line.getLabel() + "' not defined");
+                            throw FarragoResource.instance()
+                            .ProgramCompilationError.ex(
+                                "Label '"
+                                + line.getLabel() + "' not defined");
                         }
                         line.setLine(lineNumberFromLabel.intValue());
                     }
@@ -397,6 +403,7 @@ public class CalcProgramBuilder
 
     /**
      * Returns the number of existing lines of instructions - 1
+     *
      * @return
      */
     public int getCurrentLineNumber()
@@ -407,13 +414,15 @@ public class CalcProgramBuilder
     /**
      * Outputs register declarations. The results look like this:
      *
-     * <blockquote><pre>
+     * <blockquote>
+     * <pre>
      * O vc,20;
      * I vc,30;
      * C u1, u1, vc,22, vc,12, vc,30, s4;
      * V 1, 0, 'ISO-8859-1', 'WILMA', 'ISO-8859-1$en', 0;
      * L vc,30, u1, s4;
-     * S u1;</pre></blockquote>
+     * S u1;</pre>
+     * </blockquote>
      *
      * @param writer
      */
@@ -494,6 +503,7 @@ public class CalcProgramBuilder
 
     /**
      * See {@link #getProgram}
+     *
      * @param writer
      */
     protected void getInstructions(PrintWriter writer)
@@ -509,14 +519,17 @@ public class CalcProgramBuilder
      */
     private void optimize()
     {
-        //todo 1 look and remove unused registers
-        //todo 2 maybe dangersous but an idea anyway, implement an algorithm that reduces and reuses local registers
-        //todo 3 look for instruction like "literal operation literal" and precalcuate if possible.
-        //todo    Probably wouldnt happen too often. Who would query "not true"=false
+        //todo 1 look and remove unused registers todo 2 maybe dangersous but an
+        //idea anyway, implement an algorithm that reduces and reuses local
+        //registers todo 3 look for instruction like "literal operation
+        //literal" and precalcuate if possible. todo    Probably wouldnt happen
+        //too often. Who would query "not true"=false
     }
 
     /**
-     * Validates the program. Some errors are:<ul>
+     * Validates the program. Some errors are:
+     *
+     * <ul>
      * <li>use of same register with different types</li>
      * <li>jumping to a line that does not exist</li>
      * </ul>
@@ -528,16 +541,17 @@ public class CalcProgramBuilder
             Instruction inst = (Instruction) it.next();
             String op = inst.getOpCode();
 
-            //this try-catch clause will pick up any compiler excpetions messages and wrap it into a msg containg
-            //what line went wrong
+            //this try-catch clause will pick up any compiler excpetions
+            //messages and wrap it into a msg containg what line went wrong
             try {
-                //-----------Check if any jump instructions are jumping off the cliff
+                //-----------Check if any jump instructions are jumping off the
+                //cliff
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() >= instructions.size()) {
-                        throw FarragoResource.instance().
-                            ProgramCompilationError.ex("Line "
-                                + line.getLine() + " doesn't exist");
+                        throw FarragoResource.instance().ProgramCompilationError
+                        .ex("Line "
+                            + line.getLine() + " doesn't exist");
                     }
                 }
 
@@ -545,33 +559,34 @@ public class CalcProgramBuilder
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() == i) {
-                        throw FarragoResource.instance().
-                            ProgramCompilationError.ex(
-                                "Cannot jump to the same line as the instruction");
+                        throw FarragoResource.instance().ProgramCompilationError
+                        .ex(
+                            "Cannot jump to the same line as the instruction");
                     }
                 }
 
-                //-----------Forbidding loops. Check if any jump instructions jumps to a previous line.
+                //-----------Forbidding loops. Check if any jump instructions
+                //jumps to a previous line.
                 if (op.startsWith(jumpInstruction)) {
                     Line line = (Line) inst.getOperands()[0];
                     if (line.getLine().intValue() < i) {
-                        throw FarragoResource.instance().
-                            ProgramCompilationError.ex(
-                                "Loops are forbidden. Cannot jump to a previous line");
+                        throw FarragoResource.instance().ProgramCompilationError
+                        .ex(
+                            "Loops are forbidden. Cannot jump to a previous line");
                     }
                 }
 
-                //TODO add to see that all declared registers are beeing referenced
-                //TODO add to see if output registers where declared (?)
-                //TODO add to see if all output registers where written to
-                //TODO add to see if a non constant register is used before assigned to
-                //----------- Other post validation goes here
-                //...
+                //TODO add to see that all declared registers are beeing
+                //referenced TODO add to see if output registers where declared
+                //(?) TODO add to see if all output registers where written to
+                //TODO add to see if a non constant register is used before
+                //assigned to ----------- Other post validation goes here ...
             } catch (Throwable e) {
                 StringWriter log = new StringWriter();
                 inst.print(new PrintWriter(log));
                 throw FarragoResource.instance().ProgramCompilationError.ex(
-                    log.toString() + NL + e.getMessage(), e);
+                    log.toString() + NL + e.getMessage(),
+                    e);
             }
         }
     }
@@ -602,8 +617,11 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(type, null, RegisterSetType.Output,
-            storageBytes);
+        return
+            registerSets.newRegister(type,
+                null,
+                RegisterSetType.Output,
+                storageBytes);
     }
 
     /**
@@ -612,16 +630,18 @@ public class CalcProgramBuilder
     public Register newOutput(RegisterDescriptor desc)
     {
         return newOutput(
-            desc.getType(),
-            desc.getBytes());
+                desc.getType(),
+                desc.getBytes());
     }
 
     /**
-     * Genererates a reference to a constant register.
-     * If the the constant value already has been defined,
-     * the existing reference for that value will silently be returned instead of creating a new one
+     * Genererates a reference to a constant register. If the the constant value
+     * already has been defined, the existing reference for that value will
+     * silently be returned instead of creating a new one
+     *
      * @param type {@link OpType} Type of value
      * @param value Value
+     *
      * @return
      */
     private Register newLiteral(
@@ -660,8 +680,9 @@ public class CalcProgramBuilder
                 } else {
                     valueHash = value.hashCode();
                 }
-                return (valueHash * (OpType.enumeration.getMax() + 2))
-                + type.getOrdinal();
+                return
+                    (valueHash * (OpType.enumeration.getMax() + 2))
+                    + type.getOrdinal();
             }
 
             public boolean equals(Object o)
@@ -674,9 +695,12 @@ public class CalcProgramBuilder
                     }
 
                     if (null != this.value) {
-                        return this.value.equals(that.value)
-                            && (this.type.getOrdinal()
-                                == that.type.getOrdinal());
+                        return
+                            this.value.equals(that.value)
+                            && (
+                                this.type.getOrdinal()
+                                == that.type.getOrdinal()
+                               );
                     }
                 }
                 return false;
@@ -688,8 +712,11 @@ public class CalcProgramBuilder
         if (literals.containsKey(key)) {
             ret = (Register) literals.get(key);
         } else {
-            ret = registerSets.newRegister(type, value,
-                    RegisterSetType.Literal, storageBytes);
+            ret =
+                registerSets.newRegister(type,
+                    value,
+                    RegisterSetType.Literal,
+                    storageBytes);
             literals.put(key, ret);
         }
         return ret;
@@ -700,34 +727,34 @@ public class CalcProgramBuilder
         Object value)
     {
         return newLiteral(
-            desc.getType(),
-            value,
-            desc.getBytes());
+                desc.getType(),
+                value,
+                desc.getBytes());
     }
 
     public Register newBoolLiteral(boolean b)
     {
         return newLiteral(
-            OpType.Bool,
-            Boolean.valueOf(b),
-            -1);
+                OpType.Bool,
+                Boolean.valueOf(b),
+                -1);
     }
 
     public Register newInt4Literal(int i)
     {
         return newLiteral(
-            OpType.Int4,
-            new java.lang.Integer(i),
-            -1);
+                OpType.Int4,
+                new java.lang.Integer(i),
+                -1);
     }
 
     public Register newInt8Literal(int i) //REVIEW shouldnt this be a long type?
 
     {
         return newLiteral(
-            OpType.Int8,
-            new java.lang.Integer(i),
-            -1);
+                OpType.Int8,
+                new java.lang.Integer(i),
+                -1);
     }
 
     public Register newUint4Literal(int i)
@@ -735,36 +762,37 @@ public class CalcProgramBuilder
         compilationAssert(i >= 0,
             "Unsigned value was found to be negative. Value=" + i);
         return newLiteral(
-            OpType.Uint4,
-            new java.lang.Integer(i),
-            -1);
+                OpType.Uint4,
+                new java.lang.Integer(i),
+                -1);
     }
 
-    public Register newUint8Literal(int i) //REVIEW shouldnt this be a long type?
+    public Register newUint8Literal(int i) //REVIEW shouldnt this be a long
+                                           //type?
 
     {
         compilationAssert(i >= 0,
             "Unsigned value was found to be negative. Value=" + i);
         return newLiteral(
-            OpType.Uint8,
-            new java.lang.Integer(i),
-            -1);
+                OpType.Uint8,
+                new java.lang.Integer(i),
+                -1);
     }
 
     public Register newFloatLiteral(float f)
     {
         return newLiteral(
-            OpType.Real,
-            new java.lang.Float(f),
-            -1);
+                OpType.Real,
+                new java.lang.Float(f),
+                -1);
     }
 
     public Register newDoubleLiteral(double d)
     {
         return newLiteral(
-            OpType.Double,
-            new java.lang.Double(d),
-            -1);
+                OpType.Double,
+                new java.lang.Double(d),
+                -1);
     }
 
     public Register newVarbinaryLiteral(byte [] bytes)
@@ -773,37 +801,38 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Generates a reference to a string literal. The actual value will be
-     * a pointer to an array of bytes.
+     * Generates a reference to a string literal. The actual value will be a
+     * pointer to an array of bytes.
      */
     public Register newVarcharLiteral(String s)
     {
         return newLiteral(
-            OpType.Varchar,
-            s,
-            stringByteCount(s));
+                OpType.Varchar,
+                s,
+                stringByteCount(s));
     }
 
     /**
-     * Generates a reference to a string literal. The actual value will be
-     * a pointer to an array of bytes.
-     * This methods is just here temporary until newVarcharLiteral(string) can
-     * distinguise between ascii and non-ascii strings and should not be used
-     * in places of general code. Only very specific code where you know for a
-     * dead fact the string is the right length.
+     * Generates a reference to a string literal. The actual value will be a
+     * pointer to an array of bytes. This methods is just here temporary until
+     * newVarcharLiteral(string) can distinguise between ascii and non-ascii
+     * strings and should not be used in places of general code. Only very
+     * specific code where you know for a dead fact the string is the right
+     * length.
      */
     public Register newVarcharLiteral(
         String s,
         int length)
     {
-        //TODO this methods is just here temporary until newVarcharLiteral(string)
-        //can distinguise between ascii and non-ascii strings
+        //TODO this methods is just here temporary until
+        //newVarcharLiteral(string) can distinguise between ascii and non-ascii
+        //strings
         return newLiteral(OpType.Varchar, s, length);
     }
 
     /**
-     * Returns the number of bytes storage required for a string.
-     * TODO: There is already a utility function somewhere which does this.
+     * Returns the number of bytes storage required for a string. TODO: There is
+     * already a utility function somewhere which does this.
      */
     public static int stringByteCount(String s)
     {
@@ -811,8 +840,8 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Returns the number of bytes storage required for a string.
-     * TODO: There is already a utility function somewhere which does this.
+     * Returns the number of bytes storage required for a string. TODO: There is
+     * already a utility function somewhere which does this.
      */
     public static int stringByteCount(int i)
     {
@@ -826,15 +855,18 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(type, null, RegisterSetType.Input,
-            storageBytes);
+        return
+            registerSets.newRegister(type,
+                null,
+                RegisterSetType.Input,
+                storageBytes);
     }
 
     public Register newInput(RegisterDescriptor desc)
     {
         return newInput(
-            desc.getType(),
-            desc.getBytes());
+                desc.getType(),
+                desc.getBytes());
     }
 
     /**
@@ -844,8 +876,11 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(type, null, RegisterSetType.Local,
-            storageBytes);
+        return
+            registerSets.newRegister(type,
+                null,
+                RegisterSetType.Local,
+                storageBytes);
     }
 
     /**
@@ -854,8 +889,8 @@ public class CalcProgramBuilder
     public Register newLocal(RegisterDescriptor desc)
     {
         return newLocal(
-            desc.getType(),
-            desc.getBytes());
+                desc.getType(),
+                desc.getBytes());
     }
 
     /**
@@ -865,8 +900,11 @@ public class CalcProgramBuilder
         OpType type,
         int storageBytes)
     {
-        return registerSets.newRegister(type, null, RegisterSetType.Status,
-            storageBytes);
+        return
+            registerSets.newRegister(type,
+                null,
+                RegisterSetType.Status,
+                storageBytes);
     }
 
     //---------------------------------------
@@ -877,7 +915,7 @@ public class CalcProgramBuilder
     {
         addInstruction(
             operator,
-            new Operand [] { op1 });
+            new Operand[] { op1 });
     }
 
     protected void addInstruction(
@@ -887,7 +925,7 @@ public class CalcProgramBuilder
     {
         addInstruction(
             operator,
-            new Operand [] { op1, op2 });
+            new Operand[] { op1, op2 });
     }
 
     protected void addInstruction(
@@ -898,7 +936,7 @@ public class CalcProgramBuilder
     {
         addInstruction(
             operator,
-            new Operand [] { op1, op2, op3 });
+            new Operand[] { op1, op2, op3 });
     }
 
     protected void addInstruction(
@@ -920,11 +958,13 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Adds an comment string to the last instruction.
-     * Some special character sequences are modified, see {@link #formatComment}
+     * Adds an comment string to the last instruction. Some special character
+     * sequences are modified, see {@link #formatComment}
+     *
+     * @param comment
+     *
      * @pre at least one instruction needs to have been added prior to calling
      * this function.
-     * @param comment
      */
     protected void addComment(String comment)
     {
@@ -947,37 +987,53 @@ public class CalcProgramBuilder
      */
     private String formatComment(String comment)
     {
-        return " /* "
-        /* all 6 \'s are needed */
-        + comment.replaceAll("/\\*", "\\\\\\*").replaceAll("\\*/", "\\*\\\\")
-        + " */";
+        return
+            " /* "
+
+            /* all 6 \'s are needed */
+            + comment.replaceAll("/\\*", "\\\\\\*").replaceAll("\\*/",
+                "\\*\\\\")
+            + " */";
     }
 
     // assert helper functions---
 
     /**
-     * Asserts that the register is not declared as {@link RegisterSetType#Literal} or {@link RegisterSetType#Input}
+     * Asserts that the register is not declared as {@link
+     * RegisterSetType#Literal} or {@link RegisterSetType#Input}
+     *
      * @param result
      */
     protected void assertRegisterNotConstant(Register result)
     {
-        compilationAssert((result.getRegisterType().getOrdinal() != RegisterSetType.LiteralORDINAL)
-                && (result.getRegisterType().getOrdinal() != RegisterSetType.InputORDINAL),
+        compilationAssert(
+            (
+                result.getRegisterType().getOrdinal()
+                != RegisterSetType.LiteralORDINAL
+            )
+            && (
+                result.getRegisterType().getOrdinal()
+                != RegisterSetType.InputORDINAL
+               ),
             "Expected a non constant register. Constant registers are Literals and Inputs");
     }
 
     /**
      * Asserts that the register is declared as {@link RegisterSetType#Literal}
+     *
      * @param result
      */
     protected void assertRegisterLiteral(Register result)
     {
-        compilationAssert(result.getRegisterType().getOrdinal() == RegisterSetType.LiteralORDINAL,
+        compilationAssert(
+            result.getRegisterType().getOrdinal()
+            == RegisterSetType.LiteralORDINAL,
             "Expected a Literal register.");
     }
 
     /**
      * Asserts that the register is declared as {@link OpType#Bool}
+     *
      * @param reg
      */
     protected void assertRegisterBool(Register reg)
@@ -988,45 +1044,55 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Asserts that the register is declared as a pointer.
-     * Pointers are {@link OpType#Varchar},{@link OpType#Varbinary}
+     * Asserts that the register is declared as a pointer. Pointers are {@link
+     * OpType#Varchar},{@link OpType#Varbinary}
+     *
      * @param reg
      */
     protected void assertRegisterIsPointer(Register reg)
     {
-        compilationAssert((reg.getOpType().getOrdinal() == OpType.Varbinary_ordinal)
-                || (reg.getOpType().getOrdinal() == OpType.Varchar_ordinal),
+        compilationAssert(
+            (reg.getOpType().getOrdinal() == OpType.Varbinary_ordinal)
+            || (reg.getOpType().getOrdinal() == OpType.Varchar_ordinal),
             "Expected a register of Pointer type");
     }
 
     /**
-     * Asserts that the register is declared as integer.
-     * Integers are {@link OpType#Int4}, {@link OpType#Int8},
-     * {@link OpType#Uint4},{@link OpType#Uint8}
+     * Asserts that the register is declared as integer. Integers are {@link
+     * OpType#Int4}, {@link OpType#Int8}, {@link OpType#Uint4},{@link
+     * OpType#Uint8}
+     *
      * @param reg
      */
     protected void assertRegisterInteger(Register reg)
     {
-        compilationAssert((reg.getOpType().getOrdinal() == OpType.Int4_ordinal)
-                || (reg.getOpType().getOrdinal() == OpType.Int8_ordinal)
-                || (reg.getOpType().getOrdinal() == OpType.Uint4_ordinal)
-                || (reg.getOpType().getOrdinal() == OpType.Uint8_ordinal),
+        compilationAssert(
+            (reg.getOpType().getOrdinal() == OpType.Int4_ordinal)
+            || (reg.getOpType().getOrdinal() == OpType.Int8_ordinal)
+            || (reg.getOpType().getOrdinal() == OpType.Uint4_ordinal)
+            || (reg.getOpType().getOrdinal() == OpType.Uint8_ordinal),
             "Expected a register of Integer type");
     }
 
     /**
-     * Asserts that Register is nothing of the following, all at once<ul>
+     * Asserts that Register is nothing of the following, all at once
+     *
+     * <ul>
      * <li>of Literal type</li>
      * <li>of Integer type</li>
      * <li>its value is zero</li>
      * </ul>
+     *
      * @param reg
      */
     protected void assertNotDivideByZero(Register reg)
     {
-        if ((reg.getRegisterType().getOrdinal() == RegisterSetType.LiteralORDINAL)
-                && (reg.getValue() != null)
-                && (reg.getValue() instanceof java.lang.Integer)) {
+        if ((
+                reg.getRegisterType().getOrdinal()
+                == RegisterSetType.LiteralORDINAL
+            )
+            && (reg.getValue() != null)
+            && (reg.getValue() instanceof java.lang.Integer)) {
             compilationAssert(!reg.getValue().equals(new Integer(0)),
                 "A literal register of Integer type and value=0 was found");
         }
@@ -1034,35 +1100,40 @@ public class CalcProgramBuilder
 
     /**
      * Asserts input is of native type except booleans
+     *
      * @param register
      */
     protected void assertIsNativeType(Register register)
     {
-        compilationAssert((register.getOpType().getOrdinal() == OpType.Int1_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Uint1_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Int2_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Uint2_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Int4_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Int8_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Uint4_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Uint8_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Real_ordinal)
-                || (register.getOpType().getOrdinal() == OpType.Double_ordinal),
+        compilationAssert(
+            (register.getOpType().getOrdinal() == OpType.Int1_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Uint1_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Int2_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Uint2_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Int4_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Int8_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Uint4_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Uint8_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Real_ordinal)
+            || (register.getOpType().getOrdinal() == OpType.Double_ordinal),
             "Register is not of native OpType");
     }
 
     /**
      * Asserts input is of type {@link OpType#Varchar}
+     *
      * @param register
      */
     protected void assertIsVarchar(Register register)
     {
-        compilationAssert(register.getOpType().getOrdinal() == OpType.Varchar_ordinal,
+        compilationAssert(
+            register.getOpType().getOrdinal() == OpType.Varchar_ordinal,
             "Register is not of type Varchar");
     }
 
     /**
      * Asserts that all operands are not null
+     *
      * @param operands
      */
     protected void assertOperandsNotNull(Operand [] operands)
@@ -1077,6 +1148,7 @@ public class CalcProgramBuilder
 
     /**
      * Adds a move instruction.
+     *
      * @deprecated
      */
     public void addMove(
@@ -1085,7 +1157,7 @@ public class CalcProgramBuilder
     {
         move.add(
             this,
-            new Register [] { target, src });
+            new Register[] { target, src });
     }
 
     /**
@@ -1098,8 +1170,8 @@ public class CalcProgramBuilder
         compilationAssert(outputRegister.getOpType() == src.getOpType(),
             "Type Mismatch. Tried to MOVE " + src.getOpType().getName()
             + " into a " + outputRegister.getOpType().getName());
-        compilationAssert(RegisterSetType.Output == outputRegister
-                .getRegisterType(),
+        compilationAssert(
+            RegisterSetType.Output == outputRegister.getRegisterType(),
             "Only output register allowed to reference other registers");
 
         addInstruction(refInstruction, outputRegister, src);
@@ -1109,6 +1181,7 @@ public class CalcProgramBuilder
 
     /**
      * Adds an uncondtional JMP instruction
+     *
      * @param line
      */
     public void addJump(int line)
@@ -1116,7 +1189,7 @@ public class CalcProgramBuilder
         compilationAssert(line >= 0, "Line can not be negative. Value=" + line);
         addInstruction(
             jumpInstruction,
-            new Operand [] { new Line(line) });
+            new Operand[] { new Line(line) });
     }
 
     protected void addJumpBooleanWithCondition(
@@ -1143,7 +1216,9 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Adds an condtional JMP instruction. Jumps to {@param line} if the value in {@param reg} is TRUE
+     * Adds an condtional JMP instruction. Jumps to <code>line</code> if the
+     * value in <code>reg</code> is TRUE.
+     *
      * @pre reg of Boolean Type
      * @pre line>=0
      * @post line < number of calls to addXxxInstruction methods
@@ -1185,7 +1260,7 @@ public class CalcProgramBuilder
     {
         addInstruction(
             jumpInstruction,
-            new Operand [] { new Line(label) });
+            new Operand[] { new Line(label) });
     }
 
     public void addLabelJumpTrue(
@@ -1240,7 +1315,9 @@ public class CalcProgramBuilder
 
     // Bool related instructions----------------------
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolAnd(
         Register result,
         Register op1,
@@ -1248,10 +1325,12 @@ public class CalcProgramBuilder
     {
         boolAnd.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolOr(
         Register result,
         Register op1,
@@ -1259,10 +1338,12 @@ public class CalcProgramBuilder
     {
         boolOr.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolEqual(
         Register result,
         Register op1,
@@ -1270,10 +1351,12 @@ public class CalcProgramBuilder
     {
         boolEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNotEqual(
         Register result,
         Register op1,
@@ -1281,10 +1364,12 @@ public class CalcProgramBuilder
     {
         boolNotEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolGreaterThan(
         Register result,
         Register op1,
@@ -1292,10 +1377,12 @@ public class CalcProgramBuilder
     {
         boolGreaterThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolLessThan(
         Register result,
         Register op1,
@@ -1303,52 +1390,62 @@ public class CalcProgramBuilder
     {
         boolLessThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNot(
         Register result,
         Register op1)
     {
         boolNot.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolMove(
         Register result,
         Register op1)
     {
         boolMove.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolIsNull(
         Register result,
         Register op1)
     {
         boolIsNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolIsNotNull(
         Register result,
         Register op1)
     {
         boolIsNotNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
     // Native instructions----------------------
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addNativeAdd(
         Register result,
         Register op1,
@@ -1356,10 +1453,12 @@ public class CalcProgramBuilder
     {
         nativeAdd.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addNativeSub(
         Register result,
         Register op1,
@@ -1367,10 +1466,12 @@ public class CalcProgramBuilder
     {
         nativeMinus.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addNativeDiv(
         Register result,
         Register op1,
@@ -1379,32 +1480,38 @@ public class CalcProgramBuilder
         //smart check, check if divide by zero if op2 is a constant
         nativeDiv.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addNativeNeg(
         Register result,
         Register op1)
     {
         nativeNeg.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addNativeMove(
         Register result,
         Register op1)
     {
         nativeMove.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
     //Integral Native Instructions ---------------------------------
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeMod(
         Register result,
         Register op1,
@@ -1412,10 +1519,12 @@ public class CalcProgramBuilder
     {
         integralNativeMod.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeShiftLeft(
         Register result,
         Register op1,
@@ -1423,10 +1532,12 @@ public class CalcProgramBuilder
     {
         integralNativeShiftLeft.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeShiftRight(
         Register result,
         Register op1,
@@ -1434,10 +1545,12 @@ public class CalcProgramBuilder
     {
         integralNativeShiftRight.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeAnd(
         Register result,
         Register op1,
@@ -1445,10 +1558,12 @@ public class CalcProgramBuilder
     {
         integralNativeAnd.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeOr(
         Register result,
         Register op1,
@@ -1456,10 +1571,12 @@ public class CalcProgramBuilder
     {
         integralNativeOr.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addIntegralNativeXor(
         Register result,
         Register op1,
@@ -1467,12 +1584,14 @@ public class CalcProgramBuilder
     {
         integralNativeXor.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
     //Bool Native Instructions --------------------------------
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeEqual(
         Register result,
         Register op1,
@@ -1480,10 +1599,12 @@ public class CalcProgramBuilder
     {
         boolNativeEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeNotEqual(
         Register result,
         Register op1,
@@ -1491,10 +1612,12 @@ public class CalcProgramBuilder
     {
         boolNativeNotEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeGreaterThan(
         Register result,
         Register op1,
@@ -1502,10 +1625,12 @@ public class CalcProgramBuilder
     {
         boolNativeGreaterThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeGreaterOrEqual(
         Register result,
         Register op1,
@@ -1513,10 +1638,12 @@ public class CalcProgramBuilder
     {
         boolNativeGreaterOrEqualThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeLessThan(
         Register result,
         Register op1,
@@ -1524,10 +1651,12 @@ public class CalcProgramBuilder
     {
         boolNativeLessThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeLessOrEqual(
         Register result,
         Register op1,
@@ -1535,42 +1664,50 @@ public class CalcProgramBuilder
     {
         boolNativeLessOrEqualThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeIsNull(
         Register result,
         Register op1)
     {
         boolNativeIsNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addBoolNativeIsNotNull(
         Register result,
         Register op1)
     {
         boolNativeIsNotNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
     //Pointer Instructions --------------------------------
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerMove(
         Register result,
         Register op1)
     {
         pointerMove.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerAdd(
         Register result,
         Register op1,
@@ -1578,10 +1715,12 @@ public class CalcProgramBuilder
     {
         pointerAdd.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerEqual(
         Register result,
         Register op1,
@@ -1589,10 +1728,12 @@ public class CalcProgramBuilder
     {
         pointerBoolEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerNotEqual(
         Register result,
         Register op1,
@@ -1600,10 +1741,12 @@ public class CalcProgramBuilder
     {
         pointerBoolNotEqual.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerGreaterThan(
         Register result,
         Register op1,
@@ -1611,10 +1754,12 @@ public class CalcProgramBuilder
     {
         pointerBoolGreaterThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerGreaterOrEqual(
         Register result,
         Register op1,
@@ -1622,10 +1767,12 @@ public class CalcProgramBuilder
     {
         pointerBoolGreaterOrEqualThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerLessThan(
         Register result,
         Register op1,
@@ -1633,10 +1780,12 @@ public class CalcProgramBuilder
     {
         pointerBoolLessThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerLessOrEqual(
         Register result,
         Register op1,
@@ -1644,52 +1793,58 @@ public class CalcProgramBuilder
     {
         pointerBoolLessOrEqualThan.add(
             this,
-            new Register [] { result, op1, op2 });
+            new Register[] { result, op1, op2 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerIsNull(
         Register result,
         Register op1)
     {
         pointerBoolIsNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    /** @deprecated */
+    /**
+     * @deprecated
+     */
     public void addPointerIsNotNull(
         Register result,
         Register op1)
     {
         pointerBoolIsNotNull.add(
             this,
-            new Register [] { result, op1 });
+            new Register[] { result, op1 });
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     // -- Inner classes -------------------------------------------------------
 
     /**
-     * Represents an Operand in an opereation
-     * e.g. a register, line number or a call to a function
-     * */
+     * Represents an Operand in an opereation e.g. a register, line number or a
+     * call to a function
+     */
     interface Operand
     {
         /**
          * Serializes itself or parts of itself for transport over the wire
+         *
          * @param writer
          */
         void print(PrintWriter writer);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Holds and represents the parameters for a call to an operator
      */
-    public static class FunctionCall implements Operand
+    public static class FunctionCall
+        implements Operand
     {
         private String functionName;
         private Register [] registers;
@@ -1713,9 +1868,9 @@ public class CalcProgramBuilder
         /**
          * Outputs itself in the following format:
          *
-         * <blockquote>
-         * <code>CALL 'funName(result, arg1, arg2, ...)</code>
+         * <blockquote><code>CALL 'funName(result, arg1, arg2, ...)</code>
          * </blockquote>
+         *
          * @param writer
          */
         public void print(PrintWriter writer)
@@ -1733,17 +1888,20 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Represents a virtual register.
-     * Each register lives in a register set of type {@link RegisterSetType}<br>
+     * Represents a virtual register. Each register lives in a register set of
+     * type {@link RegisterSetType}<br>
      * Each register is of type {@link OpType}
      */
-    public class Register implements Operand
+    public class Register
+        implements Operand
     {
         final OpType opType;
         final Object value;
         RegisterSetType registerType;
 
-        /** Number of bytes storage to allocate for this value. */
+        /**
+         * Number of bytes storage to allocate for this value.
+         */
         int storageBytes;
         int index;
 
@@ -1783,7 +1941,9 @@ public class CalcProgramBuilder
 
         /**
          * Serializes the {@link #value} in the virtual register if not null<br>
-         * <b>NOTE</b> See also {@link #print} which serializes the "identity" of the register
+         * <b>NOTE</b> See also {@link #print} which serializes the "identity"
+         * of the register
+         *
          * @param writer
          */
         void printValue(PrintWriter writer)
@@ -1800,7 +1960,8 @@ public class CalcProgramBuilder
                 assert charset != null;
                 final ByteBuffer buf = charset.encode(s);
                 writer.print("0x");
-                writer.print(ConversionUtil.toStringFromByteArray(
+                writer.print(
+                    ConversionUtil.toStringFromByteArray(
                         buf.array(),
                         16));
                 if (outputComments) {
@@ -1829,6 +1990,7 @@ public class CalcProgramBuilder
         /**
          * Serializes the identity of the register. It does not attempt to
          * serialize its value; see {@link #printValue} for that.
+         *
          * @param writer
          */
         final public void print(PrintWriter writer)
@@ -1843,7 +2005,8 @@ public class CalcProgramBuilder
     /**
      * Reference to a line number
      */
-    public class Line implements Operand
+    public class Line
+        implements Operand
     {
         java.lang.Integer line = null;
         String label = null;
@@ -1882,14 +2045,13 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Enumeration of the types supported by the calculator.
-     * These types map onto the {@link FennelStandardTypeDescriptor} values,
-     * and even have the same names and ordinals.
+     * Enumeration of the types supported by the calculator. These types map
+     * onto the {@link FennelStandardTypeDescriptor} values, and even have the
+     * same names and ordinals.
      */
-    public static class OpType implements EnumeratedValues.Value
+    public static class OpType
+        implements EnumeratedValues.Value
     {
-        private final FennelStandardTypeDescriptor type;
-
         public static final int Bool_ordinal =
             FennelStandardTypeDescriptor.BOOL_ORDINAL;
         public static final OpType Bool =
@@ -1952,10 +2114,12 @@ public class CalcProgramBuilder
             new OpType(FennelStandardTypeDescriptor.CHAR);
 
         public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new OpType [] {
+            new EnumeratedValues(
+                new OpType[] {
                     Int1, Uint1, Int2, Uint2, Bool, Int4, Uint4, Real, Int8,
-                    Uint8, Double, Varbinary, Varchar, Binary, Char,
+                Uint8, Double, Varbinary, Varchar, Binary, Char,
                 });
+        private final FennelStandardTypeDescriptor type;
 
         private OpType(FennelStandardTypeDescriptor type)
         {
@@ -2005,11 +2169,11 @@ public class CalcProgramBuilder
         {
             return type.isNumeric();
         }
-        
+
         // implement Comparable
         public int compareTo(Object other)
         {
-            assert(other instanceof OpType);
+            assert (other instanceof OpType);
             OpType otherValue = (OpType) other;
             return getOrdinal() - otherValue.getOrdinal();
         }
@@ -2107,9 +2271,10 @@ public class CalcProgramBuilder
     }
 
     /**
-     *  Enumeration of register types
+     * Enumeration of register types
      */
-    public static class RegisterSetType extends EnumeratedValues.BasicValue
+    public static class RegisterSetType
+        extends EnumeratedValues.BasicValue
     {
         public static final int OutputORDINAL = 0;
         public static final RegisterSetType Output =
@@ -2127,7 +2292,8 @@ public class CalcProgramBuilder
         public static final RegisterSetType Status =
             new RegisterSetType("status", StatusORDINAL, 'S');
         public static final EnumeratedValues enumeration =
-            new EnumeratedValues(new RegisterSetType [] {
+            new EnumeratedValues(
+                new RegisterSetType[] {
                     Output, Input, Literal, Local, Status
                 });
         final char prefix;
@@ -2171,9 +2337,12 @@ public class CalcProgramBuilder
 
         /**
          * Creates a register in a register set
+         *
          * @param opType what type the value in the register should have
          * @param initValue
-         * @param registerType specifies in which register set the register should live
+         * @param registerType specifies in which register set the register
+         * should live
+         *
          * @return the newly created Register
          */
         public Register newRegister(
@@ -2192,7 +2361,11 @@ public class CalcProgramBuilder
             }
 
             Register newReg =
-                new Register(opType, initValue, registerType, storageBytes,
+                new Register(
+                    opType,
+                    initValue,
+                    registerType,
+                    storageBytes,
                     sets[set].size());
             sets[set].add(newReg);
             return newReg;
@@ -2201,9 +2374,9 @@ public class CalcProgramBuilder
 
     /**
      * Definition for an instruction. An instruction can only do one thing --
-     * add itself to a program -- so this class is basically just a functor.
-     * The concrete derived class must provide a name, and implement the
-     * {@link #add(CalcProgramBuilder,Register[])} method.
+     * add itself to a program -- so this class is basically just a functor. The
+     * concrete derived class must provide a name, and implement the {@link
+     * #add(CalcProgramBuilder,Register[])} method.
      */
     static class InstructionDef
     {
@@ -2219,8 +2392,8 @@ public class CalcProgramBuilder
         }
 
         /**
-         * Convenience method which converts the register list into an array
-         * and calls the {@link #add(CalcProgramBuilder,Register[])} method.
+         * Convenience method which converts the register list into an array and
+         * calls the {@link #add(CalcProgramBuilder,Register[])} method.
          */
         final void add(
             CalcProgramBuilder builder,
@@ -2237,7 +2410,7 @@ public class CalcProgramBuilder
         {
             add(
                 builder,
-                new Register [] { reg0 });
+                new Register[] { reg0 });
         }
 
         final void add(
@@ -2247,7 +2420,7 @@ public class CalcProgramBuilder
         {
             add(
                 builder,
-                new Register [] { reg0, reg1 });
+                new Register[] { reg0, reg1 });
         }
 
         final void add(
@@ -2258,7 +2431,7 @@ public class CalcProgramBuilder
         {
             add(
                 builder,
-                new Register [] { reg0, reg1, reg2 });
+                new Register[] { reg0, reg1, reg2 });
         }
 
         /**
@@ -2268,14 +2441,15 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             Register [] regs)
         {
-            assert regs.length == regCount :
-                "Wrong number of params for instruction " + name;
+            assert regs.length == regCount : "Wrong number of params for instruction "
+                + name;
             builder.assertOperandsNotNull(regs);
             builder.addInstruction(name, regs);
         }
     }
 
-    static class IntegralNativeInstructionDef extends InstructionDef
+    static class IntegralNativeInstructionDef
+        extends InstructionDef
     {
         IntegralNativeInstructionDef(
             String name,
@@ -2294,7 +2468,8 @@ public class CalcProgramBuilder
         }
     }
 
-    static class NativeInstructionDef extends InstructionDef
+    static class NativeInstructionDef
+        extends InstructionDef
     {
         NativeInstructionDef(
             String name,
@@ -2319,13 +2494,15 @@ public class CalcProgramBuilder
             builder.assertIsNativeType(regs[1]);
 
             if (regCount > 2) {
-                builder.assertIsNativeType(regs[2]); //todo need precision checking
+                builder.assertIsNativeType(regs[2]); //todo need precision
+                                                     //checking
             }
             super.add(builder, regs);
         }
     }
 
-    static class BoolInstructionDef extends InstructionDef
+    static class BoolInstructionDef
+        extends InstructionDef
     {
         BoolInstructionDef(
             String name,
@@ -2356,7 +2533,8 @@ public class CalcProgramBuilder
         }
     }
 
-    static class BoolNativeInstructionDef extends InstructionDef
+    static class BoolNativeInstructionDef
+        extends InstructionDef
     {
         BoolNativeInstructionDef(
             String name,
@@ -2382,7 +2560,8 @@ public class CalcProgramBuilder
         }
     }
 
-    static class PointerBoolInstructionDef extends InstructionDef
+    static class PointerBoolInstructionDef
+        extends InstructionDef
     {
         PointerBoolInstructionDef(
             String name,
@@ -2417,7 +2596,8 @@ public class CalcProgramBuilder
     /**
      * Defines an extended instruction.
      */
-    static class ExtInstrDef extends InstructionDef
+    static class ExtInstrDef
+        extends InstructionDef
     {
         ExtInstrDef(
             String name,
@@ -2430,8 +2610,8 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             Register [] regs)
         {
-            assert this.regCount == regs.length
-                : "Wrong number of params for instruction " + name
+            assert this.regCount == regs.length : "Wrong number of params for instruction "
+                + name
                 + "; expected=" + this.regCount + " but was=" + regs.length;
             add(builder, regs, name);
         }
@@ -2456,7 +2636,8 @@ public class CalcProgramBuilder
      * Defines an extended instruction with name depending on the number or
      * operands.
      */
-    public static class ExtInstrSizeDef extends ExtInstrDef
+    public static class ExtInstrSizeDef
+        extends ExtInstrDef
     {
         public ExtInstrSizeDef(String name)
         {
@@ -2471,7 +2652,8 @@ public class CalcProgramBuilder
         }
     }
 
-    static class IntegralNativeShift extends IntegralNativeInstructionDef
+    static class IntegralNativeShift
+        extends IntegralNativeInstructionDef
     {
         IntegralNativeShift(String name)
         {
@@ -2481,7 +2663,8 @@ public class CalcProgramBuilder
         /**
          * @pre result is not constant
          * @pre op2 is of type Integer
-         * @pre op2 is not negative if it is a constant (cant shift negative steps)
+         * @pre op2 is not negative if it is a constant (cant shift negative
+         * steps)
          */
         void add(
             CalcProgramBuilder builder,
@@ -2493,14 +2676,20 @@ public class CalcProgramBuilder
             //second operand can only be either long or ulong
             builder.assertRegisterInteger(op2);
 
-            //smart check, if a constant value that could be negative IS negative, complain
-            if ((op2.getRegisterType().getOrdinal() == RegisterSetType.LiteralORDINAL)
-                    && ((op2.getOpType().getOrdinal() == OpType.Int4_ordinal)
-                    || (op2.getOpType().getOrdinal() == OpType.Int8_ordinal))
-                    && (op2.getValue() != null)
-                    && (op2.getValue() instanceof java.lang.Integer)) {
-                builder.compilationAssert(((java.lang.Integer) op2.getValue())
-                        .intValue() >= 0,
+            //smart check, if a constant value that could be negative IS
+            //negative, complain
+            if ((
+                    op2.getRegisterType().getOrdinal()
+                    == RegisterSetType.LiteralORDINAL
+                )
+                && (
+                    (op2.getOpType().getOrdinal() == OpType.Int4_ordinal)
+                    || (op2.getOpType().getOrdinal() == OpType.Int8_ordinal)
+                   )
+                && (op2.getValue() != null)
+                && (op2.getValue() instanceof java.lang.Integer)) {
+                builder.compilationAssert(
+                    ((java.lang.Integer) op2.getValue()).intValue() >= 0,
                     "Cannot shift negative amout of steps. Value="
                     + ((java.lang.Integer) op2.getValue()).intValue());
             }
@@ -2508,6 +2697,5 @@ public class CalcProgramBuilder
         }
     }
 }
-
 
 // End CalcProgramBuilder.java

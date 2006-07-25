@@ -23,11 +23,12 @@ package org.eigenbase.rel;
 
 import java.util.*;
 
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rel.metadata.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+
 
 /**
  * <code>TableModificationRelBase</code> is an abstract base class for
@@ -36,21 +37,27 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class TableModificationRelBase extends SingleRel
+public abstract class TableModificationRelBase
+    extends SingleRel
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** The connection to the optimizing session. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * The connection to the optimizing session.
+     */
     protected RelOptConnection connection;
 
-    /** The table definition. */
+    /**
+     * The table definition.
+     */
     protected RelOptTable table;
     private Operation operation;
     private List<String> updateColumnList;
     private RelDataType inputRowType;
     private boolean flattened;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     protected TableModificationRelBase(
         RelOptCluster cluster,
@@ -73,7 +80,7 @@ public abstract class TableModificationRelBase extends SingleRel
         this.flattened = flattened;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelOptConnection getConnection()
     {
@@ -104,28 +111,28 @@ public abstract class TableModificationRelBase extends SingleRel
     {
         return operation.equals(Operation.INSERT);
     }
-    
+
     public boolean isUpdate()
     {
         return operation.equals(Operation.UPDATE);
-    }    
+    }
 
     public boolean isDelete()
     {
         return operation.equals(Operation.DELETE);
     }
-    
+
     public boolean isMerge()
     {
         return operation.equals(Operation.MERGE);
     }
-    
+
     // implement RelNode
     public RelDataType deriveRowType()
     {
         return RelOptUtil.createDmlRowType(getCluster().getTypeFactory());
     }
-    
+
     // override RelNode
     public RelDataType getExpectedInputRowType(int ordinalInParent)
     {
@@ -138,25 +145,25 @@ public abstract class TableModificationRelBase extends SingleRel
         if (isUpdate()) {
             inputRowType =
                 getCluster().getTypeFactory().createJoinType(
-                    new RelDataType [] {
+                    new RelDataType[] {
                         table.getRowType(),
-                        RelOptUtil.createTypeFromProjection(
+                    RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
-                            getCluster().getTypeFactory(), 
+                            getCluster().getTypeFactory(),
                             updateColumnList)
                     });
         } else if (isMerge()) {
             inputRowType =
                 getCluster().getTypeFactory().createJoinType(
-                    new RelDataType [] {
+                    new RelDataType[] {
                         getCluster().getTypeFactory().createJoinType(
-                            new RelDataType [] {
+                            new RelDataType[] {
                                 table.getRowType(),
-                                table.getRowType()
+                        table.getRowType()
                             }),
-                        RelOptUtil.createTypeFromProjection(
+                    RelOptUtil.createTypeFromProjection(
                             table.getRowType(),
-                            getCluster().getTypeFactory(), 
+                            getCluster().getTypeFactory(),
                             updateColumnList)
                     });
         } else {
@@ -164,10 +171,11 @@ public abstract class TableModificationRelBase extends SingleRel
         }
 
         if (flattened) {
-            inputRowType = SqlTypeUtil.flattenRecordType(
-                getCluster().getTypeFactory(),
-                inputRowType,
-                null);
+            inputRowType =
+                SqlTypeUtil.flattenRecordType(
+                    getCluster().getTypeFactory(),
+                    inputRowType,
+                    null);
         }
 
         return inputRowType;
@@ -177,13 +185,15 @@ public abstract class TableModificationRelBase extends SingleRel
     {
         pw.explain(
             this,
-            new String [] { "child", "table", "operation", "updateColumnList",
-                            "flattened" },
-            new Object [] {
+            new String[] {
+                "child", "table", "operation", "updateColumnList",
+            "flattened"
+            },
+            new Object[] {
                 Arrays.asList(table.getQualifiedName()), getOperation(),
-                (updateColumnList == null) ? Collections.EMPTY_LIST
+            (updateColumnList == null) ? Collections.EMPTY_LIST
                 : updateColumnList,
-                Boolean.valueOf(flattened)
+            Boolean.valueOf(flattened)
             });
     }
 
@@ -195,12 +205,13 @@ public abstract class TableModificationRelBase extends SingleRel
         return planner.makeCost(rowCount, 0, 0);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Enumeration of supported modification operations.
      */
-    public static class Operation extends EnumeratedValues.BasicValue
+    public static class Operation
+        extends EnumeratedValues.BasicValue
     {
         public static final int INSERT_ORDINAL = 1;
         public static final Operation INSERT =
@@ -220,7 +231,7 @@ public abstract class TableModificationRelBase extends SingleRel
          */
         public static final EnumeratedValues enumeration =
             new EnumeratedValues(
-                new Operation [] { INSERT, UPDATE, DELETE, MERGE });
+                new Operation[] { INSERT, UPDATE, DELETE, MERGE });
 
         private Operation(
             String name,

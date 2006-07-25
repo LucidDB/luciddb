@@ -11,39 +11,39 @@
 // Free Software Foundation; either version 2 of the License, or (at your
 // option) any later version approved by The Eigenbase Project.
 //
-// This library is distributed in the hope that it will be useful, 
+// This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU Lesser General Public License
 // along with this library; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util.property;
 
-import java.util.Properties;
+import java.util.*;
 
 
 /**
  * Definition and accessor for a boolean property.
  *
  * @author jhyde
- * @since May 4, 2004
  * @version $Id$
- **/
-public class BooleanProperty extends Property
+ * @since May 4, 2004
+ */
+public class BooleanProperty
+    extends Property
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a Boolean property.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      * @param defaultValue Default value, null if there is no default.
      */
     public BooleanProperty(
@@ -57,10 +57,9 @@ public class BooleanProperty extends Property
     /**
      * Creates a Boolean property which has no default value.
      *
-     * @param properties Properties object which holds values for this
-     *    property.
+     * @param properties Properties object which holds values for this property.
      * @param path Name by which this property is serialized to a properties
-     *    file, for example "com.acme.trace.Verbosity".
+     * file, for example "com.acme.trace.Verbosity".
      */
     public BooleanProperty(
         Properties properties,
@@ -69,15 +68,14 @@ public class BooleanProperty extends Property
         super(properties, path, null);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Retrieves the value of this boolean property.
      *
-     * <p>Returns <code>true</code> if the property exists,
-     * and its value is <code>1</code>, <code>true</code>
-     * or <code>yes</code>;
-     * returns <code>false</code> otherwise.
+     * <p>Returns <code>true</code> if the property exists, and its value is
+     * <code>1</code>, <code>true</code> or <code>yes</code>; returns <code>
+     * false</code> otherwise.
      */
     public boolean get()
     {
@@ -87,15 +85,15 @@ public class BooleanProperty extends Property
     /**
      * Retrieves the value of this boolean property.
      *
-     * <p>Returns <code>true</code> if the property exists,
-     * and its value is <code>1</code>, <code>true</code>
-     * or <code>yes</code>;
-     * returns <code>false</code> otherwise.
+     * <p>Returns <code>true</code> if the property exists, and its value is
+     * <code>1</code>, <code>true</code> or <code>yes</code>; returns <code>
+     * false</code> otherwise.
      */
     public boolean get(boolean defaultValue)
     {
-        final String value = 
-            getInternal(Boolean.toString(defaultValue), false);
+        final String value = getInternal(
+                Boolean.toString(defaultValue),
+                false);
         if (value == null) {
             return defaultValue;
         }
@@ -119,6 +117,5 @@ public class BooleanProperty extends Property
         return toBoolean(prevValue);
     }
 }
-
 
 // End BooleanProperty.java

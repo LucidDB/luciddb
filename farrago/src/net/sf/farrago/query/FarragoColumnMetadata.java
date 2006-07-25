@@ -26,28 +26,34 @@ import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
 
+
 /**
  * FarragoColumnMetadata is a default Farrago implementation of
- * MedAbstractColumnMetadata for table level RelNodes.  Note that it does not
+ * MedAbstractColumnMetadata for table level RelNodes. Note that it does not
  * account for projection or UDTs.
- * 
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class FarragoColumnMetadata extends MedAbstractColumnMetadata
-{   
+public class FarragoColumnMetadata
+    extends MedAbstractColumnMetadata
+{
+
+    //~ Methods ----------------------------------------------------------------
+
     protected int mapColumnToField(
-        RelNode rel, FemAbstractColumn keyCol)
+        RelNode rel,
+        FemAbstractColumn keyCol)
     {
         if (keyCol.getOrdinal() >= numColumns(rel)) {
             return -1;
         }
         return keyCol.getOrdinal();
     }
-    
+
     protected int mapFieldToColumnOrdinal(RelNode rel, int fieldNo)
     {
-        if (fieldNo == -1 || fieldNo >= numColumns(rel)) {
+        if ((fieldNo == -1) || (fieldNo >= numColumns(rel))) {
             return -1;
         } else {
             return fieldNo;
@@ -57,18 +63,20 @@ public class FarragoColumnMetadata extends MedAbstractColumnMetadata
     protected FemAbstractColumn mapFieldToColumn(RelNode rel, int fieldNo)
     {
         int colno = mapFieldToColumnOrdinal(rel, fieldNo);
-        if (colno == -1 || colno >= numColumns(rel)) {
+        if ((colno == -1) || (colno >= numColumns(rel))) {
             return null;
         } else {
-            return (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable()).
-                getCwmColumnSet().getFeature().get(colno);
+            return
+                (FemAbstractColumn) ((MedAbstractColumnSet) rel.getTable())
+                .getCwmColumnSet().getFeature().get(colno);
         }
     }
-    
+
     private int numColumns(RelNode rel)
     {
-        return ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet().
-            getFeature().size();
+        return
+            ((MedAbstractColumnSet) rel.getTable()).getCwmColumnSet()
+            .getFeature().size();
     }
 }
 

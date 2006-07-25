@@ -23,9 +23,9 @@ package org.eigenbase.sql.util;
 
 import org.eigenbase.sql.*;
 
+
 /**
- * Basic implementation of {@link SqlVisitor} which does nothing at each
- * node.
+ * Basic implementation of {@link SqlVisitor} which does nothing at each node.
  *
  * <p>This class is useful as a base class for classes which implement the
  * {@link SqlVisitor} interface. The derived class can override whichever
@@ -34,8 +34,12 @@ import org.eigenbase.sql.*;
  * @author jhyde
  * @version $Id$
  */
-public class SqlBasicVisitor<R> implements SqlVisitor<R>
+public class SqlBasicVisitor<R>
+    implements SqlVisitor<R>
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public R visit(SqlLiteral literal)
     {
         return null;
@@ -76,23 +80,30 @@ public class SqlBasicVisitor<R> implements SqlVisitor<R>
         return null;
     }
 
+    //~ Inner Interfaces -------------------------------------------------------
+
     // REVIEW jvs 16-June-2006:  Without javadoc, the interaction between
     // ArgHandler and SqlBasicVisitor isn't obvious (nor why this interface
     // belongs here instead of at top-level).  visitChild already returns
     // R; why is a separate result() call needed?
-    public interface ArgHandler <R>
+    public interface ArgHandler<R>
     {
         R result();
-        R visitChild(
-            SqlVisitor<R> visitor,
-            SqlNode expr, int i, SqlNode operand);
+
+        R visitChild(SqlVisitor<R> visitor,
+            SqlNode expr,
+            int i,
+            SqlNode operand);
     }
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
-     * Default implementation of {@link ArgHandler} which merely calls
-     * {@link SqlNode#accept} on each operand.
+     * Default implementation of {@link ArgHandler} which merely calls {@link
+     * SqlNode#accept} on each operand.
      */
-    public static class ArgHandlerImpl<R> implements ArgHandler<R>
+    public static class ArgHandlerImpl<R>
+        implements ArgHandler<R>
     {
         // REVIEW jvs 16-June-2006:  This doesn't actually work, because it
         // is type-erased, and if you try to add <R>, you get the error
@@ -104,8 +115,10 @@ public class SqlBasicVisitor<R> implements SqlVisitor<R>
             return null;
         }
 
-        public R visitChild(
-            SqlVisitor<R> visitor, SqlNode expr, int i, SqlNode operand)
+        public R visitChild(SqlVisitor<R> visitor,
+            SqlNode expr,
+            int i,
+            SqlNode operand)
         {
             if (operand == null) {
                 return null;

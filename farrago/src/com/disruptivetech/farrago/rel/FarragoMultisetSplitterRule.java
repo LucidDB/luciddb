@@ -20,62 +20,55 @@
 */
 package com.disruptivetech.farrago.rel;
 
+import java.math.*;
+
+import java.util.*;
+
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.SqlOperator;
-import org.eigenbase.sql.SqlStateCodes;
-import org.eigenbase.sql.fun.SqlMultisetSetOperator;
-import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.util.Permutation;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.util.*;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
 
 /**
  * FarragoMultisetSplitterRule is a planner rule which removes multiset
  * operations from an expression.
  *
  * <p>It works in three ways:
+ *
  * <ol>
- * <li>It works on relational expressions consisting
- *     of a mix between multiset and non-multisets calls, splitting them up.
- *     For example, <code>CARDINALITY(ms) != 632</code></li>
- *
- * <li>It works on relational expressions consisting
- *     of nested multiset calls, splitting them up. For example,
- *     <code>CARDINALITY(ms1 MULTISET UNION ms2)</code></li>
- *
+ * <li>It works on relational expressions consisting of a mix between multiset
+ * and non-multisets calls, splitting them up. For example, <code>
+ * CARDINALITY(ms) != 632</code></li>
+ * <li>It works on relational expressions consisting of nested multiset calls,
+ * splitting them up. For example, <code>CARDINALITY(ms1 MULTISET UNION
+ * ms2)</code></li>
  * <li>It also transforms a multiset call to an equivalent RelNode tree.</li>
  * </ol>
  *
- * <p>It uses the {@link CalcRelSplitter} for its splitting.
- * Example:
- * The expression <code>CARDINALITY(ms) = 5</code>
- * begins its life as: <code>CalcRel=[=(CARD(ms),5)]</code>
- * After the split it, looks in principle like:
+ * <p>It uses the {@link CalcRelSplitter} for its splitting. Example: The
+ * expression <code>CARDINALITY(ms) = 5</code> begins its life as: <code>
+ * CalcRel=[=(CARD(ms),5)]</code> After the split it, looks in principle like:
+ * <code>
+ * <pre>CalcRel=[=($in_ms,5]
+ * &nbsp;&nbsp;CalcRel=[CARD(ms)]</pre>
+ * </code> See {@link CalcRelSplitter} on details of the split.
  *
- * <code><pre>CalcRel=[=($in_ms,5]
- * &nbsp;&nbsp;CalcRel=[CARD(ms)]</pre></code>
- *
- * See {@link CalcRelSplitter} on details of the split.
- *
- * <p>CalcRel=[CARD(ms)] is intercepted in this very same rule
- * and an equivalent RelNode tree is injected in its place.
+ * <p>CalcRel=[CARD(ms)] is intercepted in this very same rule and an equivalent
+ * RelNode tree is injected in its place.
  *
  * @author Wael Chatila
- * @since Mar 10, 2005
  * @version $Id$
+ * @since Mar 10, 2005
  */
-public class FarragoMultisetSplitterRule extends RelOptRule
+public class FarragoMultisetSplitterRule
+    extends RelOptRule
 {
-    //~ Static fields/initializers --------------------------------------------
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoMultisetSplitter object.
@@ -83,11 +76,11 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     public FarragoMultisetSplitterRule()
     {
         super(new RelOptRuleOperand(
-            CalcRel.class,
-            null));
+                CalcRel.class,
+                null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     private int findMultiset(List<RexNode> exprs)
     {
@@ -137,11 +130,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         }
 
         final RexNode expr = exprList.get(targetField);
-        assert expr instanceof RexCall ||
-            expr instanceof RexFieldAccess;
+        assert (expr instanceof RexCall) || (expr instanceof RexFieldAccess);
         final CorrelatorRel correlatorRel = insertRels(calc, targetField);
-        final int inputFieldCount =
-            program.getInputRowType().getFieldCount();
+        final int inputFieldCount = program.getInputRowType().getFieldCount();
 
         // Use a visitor to convert the old program. The "targetField"
         // field becomes a new input field, and the expressions before it
@@ -156,18 +147,19 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         // By default, the replacement field is the new last field of
         // the input relational expression.
         int replacementField = inputFieldCount;
-        RexNode[] newExprs = exprList.toArray(new RexNode[exprList.size()]);
+        RexNode [] newExprs = exprList.toArray(new RexNode[exprList.size()]);
 
         // If the expression we are transforming is a multiset of
         // non-record types, the result will be a multiset of records.
         // Add a slice function to make the types compatible.
-        if (expr.getType().getComponentType() != null &&
-            !expr.getType().getComponentType().isStruct()) {
+        if ((expr.getType().getComponentType() != null)
+            && !expr.getType().getComponentType().isStruct()) {
             RexNode slicedExpr =
                 calc.getCluster().getRexBuilder().makeCall(
                     SqlStdOperatorTable.sliceOp,
                     RelOptUtil.createInputRef(
-                        correlatorRel, replacementField));
+                        correlatorRel,
+                        replacementField));
             newExprs = exprList.toArray(new RexNode[exprList.size() + 1]);
             newExprs[newExprs.length - 1] = slicedExpr;
             replacementField = newExprs.length - 1;
@@ -182,8 +174,10 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             permutation.set(i, i);
             newExprs[i] = exprList.get(i);
         }
-        newExprs[inputFieldCount] = RelOptUtil.createInputRef(
-            correlatorRel, inputFieldCount);
+        newExprs[inputFieldCount] =
+            RelOptUtil.createInputRef(
+                correlatorRel,
+                inputFieldCount);
         for (int i = inputFieldCount; i < targetField; i++) {
             permutation.set(i, i + 1);
             newExprs[i + 1] = exprList.get(i);
@@ -192,23 +186,28 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final RexShuttle shuttle = new RexPermutationShuttle(permutation);
 
         final List<RexLocalRef> projectRefList = program.getProjectList();
-        RexProgramBuilder programBuilder = RexProgramBuilder.create(
-            calc.getCluster().getRexBuilder(),
-            correlatorRel.getRowType(),
-            Arrays.asList(newExprs),
-            projectRefList,
-            program.getCondition(),
-            program.getOutputRowType(),
-            shuttle,
-            false);
+        RexProgramBuilder programBuilder =
+            RexProgramBuilder.create(
+                calc.getCluster().getRexBuilder(),
+                correlatorRel.getRowType(),
+                Arrays.asList(newExprs),
+                projectRefList,
+                program.getCondition(),
+                program.getOutputRowType(),
+                shuttle,
+                false);
 
         // Eliminate unused expressions, and create a program.
         programBuilder.eliminateUnused();
         RexProgram newProgram = programBuilder.getProgram();
-        CalcRel newCalc = new CalcRel(
-            calc.getCluster(), calc.cloneTraits(), correlatorRel,
-            calc.getRowType(), newProgram,
-            newProgram.getCollations(correlatorRel.getCollationList()));
+        CalcRel newCalc =
+            new CalcRel(
+                calc.getCluster(),
+                calc.cloneTraits(),
+                correlatorRel,
+                calc.getRowType(),
+                newProgram,
+                newProgram.getCollations(correlatorRel.getCollationList()));
         call.transformTo(newCalc);
     }
 
@@ -217,8 +216,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
      * multiset operator.
      *
      * <p>If the expression is a multiset of scslar values (say an INTEGER
-     * MULTISET) then the relation's type will be a row with a single field,
-     * and that field will need to be dereferenced.
+     * MULTISET) then the relation's type will be a row with a single field, and
+     * that field will need to be dereferenced.
      *
      * @param calc The {@link CalcRel} that the multiset call belongs to
      * @param offset Ordinal of the expression to transform.
@@ -261,7 +260,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
             RelDataType countType =
                 SqlStdOperatorTable.countOperator.inferReturnType(
                     rexBuilder.getTypeFactory(),
@@ -269,10 +270,15 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    false, new int[0], countType);
+                    false,
+                    new int[0],
+                    countType);
             AggregateRel aggregateRel =
                 new AggregateRel(
-                    cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
+                    cluster,
+                    uncollect,
+                    1,
+                    new AggregateRel.Call[] { countCall });
             final RexNode inputRef =
                 RexUtil.maybeCast(
                     rexBuilder,
@@ -280,11 +286,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     RelOptUtil.createInputRef(aggregateRel, -1));
             final RelNode projectRel =
                 CalcRel.createProject(
-                    aggregateRel, new RexNode[] {inputRef}, null);
-            return new CorrelatorRel(
-                cluster, input, projectRel, correlationList,
-                JoinRelType.INNER);
-
+                    aggregateRel,
+                    new RexNode[] { inputRef },
+                    null);
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    projectRel,
+                    correlationList,
+                    JoinRelType.INNER);
         } else if (SqlStdOperatorTable.castFunc == op) {
             // A call to
             //
@@ -305,7 +316,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
             assert null != componentType;
             assert componentType.isStruct();
             RelDataType type = componentType.getFields()[0].getType();
@@ -313,18 +326,25 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 rexBuilder.makeCast(
                     type,
                     RelOptUtil.createInputRef(uncollect, 0));
-            RelNode castRel = CalcRel.createProject(
-                uncollect,
-                new RexNode[]{newCastCall},
-                new String[]{uncollect.getRowType().getFields()[0].getName()});
-            return new CorrelatorRel(
-                cluster, input, castRel, correlationList,
-                JoinRelType.LEFT);
-
+            RelNode castRel =
+                CalcRel.createProject(
+                    uncollect,
+                    new RexNode[] { newCastCall },
+                    new String[] {
+                        uncollect.getRowType().getFields()[0].getName()
+                    });
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    castRel,
+                    correlationList,
+                    JoinRelType.LEFT);
         } else if (SqlStdOperatorTable.isASetOperator == op) {
             // (ms IS A SET) <=>
             // UNIQUE(UNNEST(ms)) <=>
-            // NOT EXISTS ((select <ms element>, count(*) as c from UNNEST(ms) GROUP BY <ms element>) WHERE c > 1)
+            // NOT EXISTS ((select <ms element>, count(*) as c
+            // from UNNEST(ms) GROUP BY <ms element>) WHERE c > 1)
             //
             // A call to
             //
@@ -347,7 +367,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new ArrayList<CorrelatorRel.Correlation>();
             UncollectRel uncollect =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
             RelDataType countType =
                 SqlStdOperatorTable.countOperator.inferReturnType(
                     rexBuilder.getTypeFactory(),
@@ -355,29 +377,39 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             final AggregateRelBase.Call countCall =
                 new AggregateRelBase.Call(
                     SqlStdOperatorTable.countOperator,
-                    false, new int[0], countType);
+                    false,
+                    new int[0],
+                    countType);
             AggregateRel aggregateRel =
                 new AggregateRel(
-                    cluster, uncollect, 1, new AggregateRel.Call[]{countCall});
+                    cluster,
+                    uncollect,
+                    1,
+                    new AggregateRel.Call[] { countCall });
             RexNode c = RelOptUtil.createInputRef(aggregateRel, -1);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
                     cluster,
                     aggregateRel,
-                    new RexNode[]{ rexBuilder.makeCall(
-                        SqlStdOperatorTable.greaterThanOperator,
-                        c,
-                        rexBuilder.makeExactLiteral(
-                            new BigDecimal(BigInteger.ONE)))},
+                    new RexNode[] {
+                        rexBuilder.makeCall(
+                            SqlStdOperatorTable.greaterThanOperator,
+                            c,
+                            rexBuilder.makeExactLiteral(
+                                new BigDecimal(BigInteger.ONE)))
+                    },
                     null,
                     null);
             RelNode notExistRel = createExistsPlanSingleRow(filterRel, true);
-            return new CorrelatorRel(
-                cluster, input, notExistRel, correlationList,
-                JoinRelType.LEFT);
-
-        } else if (SqlStdOperatorTable.elementFunc == op ||
-            SqlStdOperatorTable.elementSlicefunc == op) {
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    notExistRel,
+                    correlationList,
+                    JoinRelType.LEFT);
+        } else if ((SqlStdOperatorTable.elementFunc == op)
+            || (SqlStdOperatorTable.elementSlicefunc == op)) {
             // A call to
             //
             // CalcRel=[...,ELEMENT($in_i),...]
@@ -399,12 +431,17 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new ArrayList<CorrelatorRel.Correlation>();
             RelNode uncollect =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
             RelNode limitRel = createLimitRel(uncollect);
-            return new CorrelatorRel(
-                cluster, input, limitRel, correlationList,
-                JoinRelType.INNER);
-
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    limitRel,
+                    correlationList,
+                    JoinRelType.INNER);
         } else if (op instanceof SqlMultisetSetOperator) {
             // A call to
             //
@@ -428,11 +465,15 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 new ArrayList<CorrelatorRel.Correlation>();
             final UncollectRel uncollectRel0 =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
             final UncollectRel uncollectRel1 =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[1], correlationList);
-            RelNode[] inputs = {uncollectRel0, uncollectRel1};
+                    calc,
+                    (RexLocalRef) rexCall.operands[1],
+                    correlationList);
+            RelNode [] inputs = { uncollectRel0, uncollectRel1 };
             final RelNode setRel;
             if (SqlStdOperatorTable.multisetExceptAllOperator == op) {
                 setRel = new MinusRel(cluster, inputs, true);
@@ -452,14 +493,18 @@ public class FarragoMultisetSplitterRule extends RelOptRule
 
             final CollectRel collectRel =
                 new CollectRel(cluster, setRel, "multiset");
-            return new CorrelatorRel(
-                cluster, input, collectRel, correlationList,
-                JoinRelType.INNER);
-
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    collectRel,
+                    correlationList,
+                    JoinRelType.INNER);
         } else if (SqlStdOperatorTable.memberOfOperator == op) {
             // (x MEMBER OF ms) <=>
             // (x IN UNNEST(ms)) <=>
-            // (EXISTS (select <multiset element> from UNNEST(ms) WHERE <multiset element>=x))
+            // (EXISTS (select <multiset element>
+            //          from UNNEST(ms) WHERE <multiset element>=x))
             //
             // A call to
             //
@@ -491,34 +536,40 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                 final String dyn_inIdStr = cluster.getQuery().createCorrel();
                 final int dyn_inId = RelOptQuery.getCorrelOrdinal(dyn_inIdStr);
                 correlationList.add(
-                    new CorrelatorRel.Correlation(dyn_inId, local.getIndex()));
-                corRef  =
-                    rexBuilder.makeCorrel(
-                        local.getType(), dyn_inIdStr);
+                    new CorrelatorRel.Correlation(
+                        dyn_inId,
+                        local.getIndex()));
+                corRef = rexBuilder.makeCorrel(
+                        local.getType(),
+                        dyn_inIdStr);
             } else {
                 corRef = operand0;
             }
 
             RelDataType elementType = localRef.getType().getComponentType();
-            assert(null != elementType);
+            assert (null != elementType);
             RelNode filterRel =
                 RelOptUtil.createExistsPlan(
                     cluster,
                     uncollectRel,
-                    new RexNode[]{
+                    new RexNode[] {
                         rexBuilder.makeCall(
                             SqlStdOperatorTable.equalsOperator,
                             corRef,
                             rexBuilder.makeInputRef(
-                                elementType, 0))
+                                elementType,
+                                0))
                     },
                     null,
                     null);
             RelNode existsRel = createExistsPlanSingleRow(filterRel, false);
-            return new CorrelatorRel(
-                cluster, input, existsRel, correlationList,
-                JoinRelType.LEFT);
-
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    existsRel,
+                    correlationList,
+                    JoinRelType.LEFT);
         } else if (SqlStdOperatorTable.submultisetOfOperator == op) {
             // (ms1 SUBMULTISET OF ms2 ) <=>
             // [ u1 := SELECT*FROM UNNEST(ms1) as u1 ]
@@ -544,7 +595,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             //     CalcInput
             //     NotExistsRel
             //       FilterRel=[c1>c2 OR c2 IS NULL]
-            //         JoinRel=[left outer join on $0.* IS NOT DISTINCT FROM $1.*]
+            //         JoinRel=[left outer join
+            //                  on $0.* IS NOT DISTINCT FROM $1.*]
             //           AggregateRel[$0, count(*) as c1 group by $0]
             //             Uncollect
             //               ProjectRel=[output=$cor0]
@@ -560,27 +612,40 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             List<CorrelatorRel.Correlation> correlationList =
                 new ArrayList<CorrelatorRel.Correlation>();
             correlationList.add(
-                new CorrelatorRel.Correlation(dyn_inId,rexInput2.getIndex()));
+                new CorrelatorRel.Correlation(
+                    dyn_inId,
+                    rexInput2.getIndex()));
             final RexNode corRef2 =
                 rexBuilder.makeCorrel(
-                    rexInput2.getType(), dyn_inIdStr);
-            RelNode projectRel2 = CalcRel.createProject(
-                new OneRowRel(cluster),
-                new RexNode[]{corRef2},
-                new String[]{"output"+corRef2.toString()});
+                    rexInput2.getType(),
+                    dyn_inIdStr);
+            RelNode projectRel2 =
+                CalcRel.createProject(
+                    new OneRowRel(cluster),
+                    new RexNode[] { corRef2 },
+                    new String[] { "output" + corRef2.toString() });
 
             final UncollectRel u1 =
                 createUncollect(
-                    calc, (RexLocalRef) rexCall.operands[0], correlationList);
-            final UncollectRel u2 =
-                new UncollectRel(cluster, projectRel2);
-            // TODO wael 4/26/05: need to create proper count & group by agg call def.
+                    calc,
+                    (RexLocalRef) rexCall.operands[0],
+                    correlationList);
+            final UncollectRel u2 = new UncollectRel(cluster, projectRel2);
+
+            // TODO wael 4/26/05: need to create proper count & group by agg
+            // call def.
             AggregateRel aggregateGroupRel1 =
                 new AggregateRel(
-                    cluster, u1, 1, new AggregateRel.Call[]{});
+                    cluster,
+                    u1,
+                    1,
+                    new AggregateRel.Call[] {});
             AggregateRel aggregateGroupRel2 =
                 new AggregateRel(
-                    cluster, u2, 1, new AggregateRel.Call[]{});
+                    cluster,
+                    u2,
+                    1,
+                    new AggregateRel.Call[] {});
             JoinRel joinRel =
                 new JoinRel(
                     cluster,
@@ -602,14 +667,18 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                             SqlStdOperatorTable.greaterThanOperator,
                             RelOptUtil.createInputRef(joinRel, 0),
                             rexBuilder.makeExactLiteral(
-                                new BigDecimal(BigInteger.ONE)))},
+                                new BigDecimal(BigInteger.ONE)))
+                    },
                     null,
                     null);
             RelNode notExistsRel = createExistsPlanSingleRow(filterRel, true);
-            return new CorrelatorRel(
-                cluster, input, notExistsRel, correlationList,
-                JoinRelType.LEFT);
-
+            return
+                new CorrelatorRel(
+                    cluster,
+                    input,
+                    notExistsRel,
+                    correlationList,
+                    JoinRelType.LEFT);
         } else {
             throw Util.newInternal(
                 op.getName() + " is not defined to be implementable");
@@ -622,7 +691,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         List<CorrelatorRel.Correlation> correlationList)
     {
         RelNode corProjectRel = createProject(calc, local, correlationList);
-        return new UncollectRel(calc.getCluster(), corProjectRel);
+        return new UncollectRel(
+                calc.getCluster(),
+                corProjectRel);
     }
 
     private static RelNode createProject(
@@ -634,7 +705,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         // operator. The slice expression, if unused, will be garbage-collected
         // later.
         boolean slice = false;
-        final RexNode expr = calc.getProgram().getExprList().get(local.getIndex());
+        final RexNode expr =
+            calc.getProgram().getExprList().get(local.getIndex());
         if (expr instanceof RexCall) {
             RexCall call = (RexCall) expr;
             if (call.getOperator() == SqlStdOperatorTable.sliceOp) {
@@ -643,37 +715,45 @@ public class FarragoMultisetSplitterRule extends RelOptRule
             }
         }
         Util.discard(slice);
+
         // Create a correlation, and add it to the list.
         RelOptCluster cluster = calc.getCluster();
         final String dyn_inIdStr = cluster.getQuery().createCorrel();
         final int dyn_inId = RelOptQuery.getCorrelOrdinal(dyn_inIdStr);
         correlationList.add(
-            new CorrelatorRel.Correlation(dyn_inId, local.getIndex()));
-        final RexNode corRef  =
+            new CorrelatorRel.Correlation(
+                dyn_inId,
+                local.getIndex()));
+        final RexNode corRef =
             cluster.getRexBuilder().makeCorrel(
-                local.getType(), dyn_inIdStr);
+                local.getType(),
+                dyn_inIdStr);
+
         // Create and return a projection.
-        return CalcRel.createProject(
-            new OneRowRel (cluster),
-            new RexNode[] {corRef},
-            new String[] {"output" + corRef.toString()});
+        return
+            CalcRel.createProject(
+                new OneRowRel(cluster),
+                new RexNode[] { corRef },
+                new String[] { "output" + corRef.toString() });
     }
 
     /**
      * Creates a relational expression which ensures that a given expression
-     * only returns one row, and throws a runtime error otherwise.
+     * only returns one row, and throws a runtime error otherwise. The result is
      *
-     * The result is
      * <pre>
      * ProjectRel($0)
      *   FilterRel[condition=CASE WHEN $0==1 THEN true ELSE throw("21000") END]
      *     AggregateRel[count(*), $0]
      *
      * </pre>
+     *
      * where 21000 is the standard CARDINALITY VIOLATION error code.
      *
      * @param child Child relational expression
+     *
      * @return A relational expression of the same type
+     *
      * @post return.getRowType() == child.getRowType()
      */
     private static RelNode createLimitRel(RelNode child)
@@ -689,42 +769,47 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         final AggregateRelBase.Call countCall =
             new AggregateRelBase.Call(
                 SqlStdOperatorTable.countOperator,
-                false, new int[0], countType);
+                false,
+                new int[0],
+                countType);
         final int groupCount = child.getRowType().getFieldCount();
         AggregateRel aggregateRel =
             new AggregateRel(
-                cluster, child, groupCount,
-                new AggregateRel.Call[] {countCall});
-        RexNode[] whenThenElse = new RexNode[] {
-            // when
-            rexBuilder.makeCall(
-                SqlStdOperatorTable.equalsOperator,
-                RelOptUtil.createInputRef(aggregateRel, -1),
-                rexBuilder.makeExactLiteral(
-                    new BigDecimal(BigInteger.ONE))),
-            // then
-            rexBuilder.makeLiteral(true),
-            // else
-            rexBuilder.makeCall(
-                SqlStdOperatorTable.throwOperator,
-                rexBuilder.makeLiteral(
-                    SqlStateCodes.CardinalityViolation.getState()))};
+                cluster,
+                child,
+                groupCount,
+                new AggregateRel.Call[] { countCall });
+        RexNode [] whenThenElse =
+            new RexNode[] { // when
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.equalsOperator,
+                    RelOptUtil.createInputRef(aggregateRel, -1),
+                    rexBuilder.makeExactLiteral(
+                        new BigDecimal(BigInteger.ONE))), 
+                // then
+                rexBuilder.makeLiteral(true), 
+                // else
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.throwOperator,
+                    rexBuilder.makeLiteral(
+                        SqlStateCodes.CardinalityViolation.getState())) };
         RexNode condition =
             rexBuilder.makeCall(
-                SqlStdOperatorTable.caseOperator, whenThenElse);
-        RelNode filterRel =
-            CalcRel.createFilter(aggregateRel, condition);
-        final RelDataTypeField field =
-            filterRel.getRowType().getFields()[0];
+                SqlStdOperatorTable.caseOperator,
+                whenThenElse);
+        RelNode filterRel = CalcRel.createFilter(aggregateRel, condition);
+        final RelDataTypeField field = filterRel.getRowType().getFields()[0];
         RelNode limitRel =
             CalcRel.createProject(
                 filterRel,
-                new RexNode[] {RelOptUtil.createInputRef(filterRel, 0)},
-                new String[] {field.getName()});
+                new RexNode[] { RelOptUtil.createInputRef(filterRel, 0) },
+                new String[] { field.getName() });
         assert RelOptUtil.eq(
-            "return.getRowType()", limitRel.getRowType(),
-            "child.getRowType()", child.getRowType(), true) :
-            "post: return.getRowType() == child.getRowType()";
+                "return.getRowType()",
+                limitRel.getRowType(),
+                "child.getRowType()",
+                child.getRowType(),
+                true) : "post: return.getRowType() == child.getRowType()";
         return limitRel;
     }
 
@@ -748,20 +833,69 @@ public class FarragoMultisetSplitterRule extends RelOptRule
      */
     private boolean containsNestedMultiset(RexNode node, boolean deep)
     {
-        RexCall multisetCall = RexMultisetUtil.findFirstMultiset(node,deep);
+        RexCall multisetCall = RexMultisetUtil.findFirstMultiset(node, deep);
         if (null == multisetCall) {
             return false;
         }
         for (int i = 0; i < multisetCall.operands.length; i++) {
-            if (multisetCall.operands[i] instanceof RexCall &&
-                RexMultisetUtil.containsMultiset(multisetCall.operands[i], false)) {
+            if ((multisetCall.operands[i] instanceof RexCall)
+                && RexMultisetUtil.containsMultiset(multisetCall.operands[i],
+                    false)) {
                 return true;
             }
         }
         return false;
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    public RelNode createExistsPlanSingleRow(RelNode child, boolean neg)
+    {
+        RelOptCluster cluster = child.getCluster();
+        RelDataType countType =
+            SqlStdOperatorTable.countOperator.inferReturnType(
+                cluster.getTypeFactory(),
+                new RelDataType[0]);
+        final AggregateRelBase.Call countCall =
+            new AggregateRelBase.Call(
+                SqlStdOperatorTable.countOperator,
+                false,
+                new int[0],
+                countType);
+        AggregateRel aggregateRel =
+            new AggregateRel(
+                cluster,
+                child,
+                1,
+                new AggregateRel.Call[] { countCall });
+        SqlOperator op;
+        if (neg) {
+            op = SqlStdOperatorTable.equalsOperator;
+        } else {
+            op = SqlStdOperatorTable.greaterThanOperator;
+        }
+        RexNode [] whenThenElse =
+            new RexNode[] { // when
+                cluster.getRexBuilder().makeCall(
+                    op,
+                    RelOptUtil.createInputRef(aggregateRel, -1),
+                    cluster.getRexBuilder().makeExactLiteral(
+                        new BigDecimal(BigInteger.ZERO))), 
+                // then
+                cluster.getRexBuilder().makeLiteral(true), 
+                // else
+                cluster.getRexBuilder().makeLiteral(false) };
+        RexNode caseRexNode =
+            cluster.getRexBuilder().makeCall(
+                SqlStdOperatorTable.caseOperator,
+                whenThenElse);
+        RelNode caseRel =
+            CalcRel.createProject(
+                aggregateRel,
+                new RexNode[] { caseRexNode },
+                new String[] { "case" });
+        return caseRel;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Unmix mixing between multisets and non-multisets
@@ -771,17 +905,19 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     {
         private MultisetRelSplitter(CalcRel calc)
         {
-            super(calc, new RelType[] {
-                new CalcRelSplitter.RelType("REL_TYPE_MULTISET") {
+            super(
+                calc,
+                new RelType[] {
+                    new CalcRelSplitter.RelType("REL_TYPE_MULTISET") {
                     protected boolean canImplement(RexFieldAccess field)
                     {
-                        // Field access rex nodes are not multisets
+                            // Field access rex nodes are not multisets
                         return false;
                     }
 
                     protected boolean canImplement(RexDynamicParam param)
                     {
-                        // Dynamic param rex nodes are not multisets
+                            // Dynamic param rex nodes are not multisets
                         return false;
                     }
 
@@ -794,7 +930,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     {
                         return RexMultisetUtil.containsMultiset(call, false);
                     }
-                },
+                }
+                ,
                 new CalcRelSplitter.RelType("REL_TYPE_NOT_MULTISET") {
                     protected boolean canImplement(RexFieldAccess field)
                     {
@@ -816,7 +953,7 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         return !RexMultisetUtil.containsMultiset(call, false);
                     }
                 }
-            });
+                });
         }
     }
 
@@ -826,11 +963,12 @@ public class FarragoMultisetSplitterRule extends RelOptRule
     private class NestedRelSplitter
         extends CalcRelSplitter
     {
-
         private NestedRelSplitter(CalcRel calc)
         {
-            super(calc, new RelType[] {
-                new CalcRelSplitter.RelType("REL_TYPE_NESTED") {
+            super(
+                calc,
+                new RelType[] {
+                    new CalcRelSplitter.RelType("REL_TYPE_NESTED") {
                     protected boolean canImplement(RexFieldAccess field)
                     {
                         return false;
@@ -850,7 +988,8 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                     {
                         return containsNestedMultiset(call, false);
                     }
-                },
+                }
+                ,
                 new CalcRelSplitter.RelType("REL_TYPE_NOT_NESTED") {
                     protected boolean canImplement(RexFieldAccess field)
                     {
@@ -872,56 +1011,16 @@ public class FarragoMultisetSplitterRule extends RelOptRule
                         return !containsNestedMultiset(call, false);
                     }
                 }
-            });
+                });
         }
-    }
-
-    public RelNode createExistsPlanSingleRow(RelNode child, boolean neg) {
-        RelOptCluster cluster = child.getCluster();
-        RelDataType countType =
-            SqlStdOperatorTable.countOperator.inferReturnType(
-                cluster.getTypeFactory(),
-                new RelDataType[0]);
-        final AggregateRelBase.Call countCall =
-            new AggregateRelBase.Call(
-                SqlStdOperatorTable.countOperator,
-                false, new int[0], countType);
-        AggregateRel aggregateRel =
-            new AggregateRel(
-                cluster, child, 1, new AggregateRel.Call[]{countCall});
-        SqlOperator op;
-        if (neg) {
-            op = SqlStdOperatorTable.equalsOperator;
-        } else {
-            op = SqlStdOperatorTable.greaterThanOperator;
-        }
-        RexNode[] whenThenElse = new RexNode[] {
-            // when
-            cluster.getRexBuilder().makeCall(
-                op,
-                RelOptUtil.createInputRef(aggregateRel, -1),
-                cluster.getRexBuilder().makeExactLiteral(
-                    new BigDecimal(BigInteger.ZERO))),
-            // then
-            cluster.getRexBuilder().makeLiteral(true),
-            // else
-            cluster.getRexBuilder().makeLiteral(false)
-        };
-        RexNode caseRexNode = cluster.getRexBuilder().makeCall(
-            SqlStdOperatorTable.caseOperator, whenThenElse);
-        RelNode caseRel =
-            CalcRel.createProject(
-                aggregateRel,
-                new RexNode[]{caseRexNode},
-                new String[]{"case"});
-        return caseRel;
     }
 
     /**
      * Visitor which replaces {@link RexLocalRef} objects after the expressions
      * in a {@link RexProgram} have been reordered.
      */
-    public static class RexPermutationShuttle extends RexShuttle
+    public static class RexPermutationShuttle
+        extends RexShuttle
     {
         private final Permutation permutation;
 
@@ -934,7 +1033,9 @@ public class FarragoMultisetSplitterRule extends RelOptRule
         {
             final int index = local.getIndex();
             int target = permutation.getTarget(index);
-            return new RexLocalRef(target, local.getType());
+            return new RexLocalRef(
+                    target,
+                    local.getType());
         }
     }
 }

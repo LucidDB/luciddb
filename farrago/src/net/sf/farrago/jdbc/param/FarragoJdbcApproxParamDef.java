@@ -22,19 +22,27 @@
 */
 package net.sf.farrago.jdbc.param;
 
-import java.math.BigDecimal;
-import java.sql.Types;
+import java.math.*;
+
+import java.sql.*;
+
 
 /**
  * FarragoJdbcEngineApproxParamDef defines a approximate numeric parameter.
- * 
+ *
  * @author Angel Chang
  * @version $Id$
  */
-class FarragoJdbcApproxParamDef extends FarragoJdbcParamDef
+class FarragoJdbcApproxParamDef
+    extends FarragoJdbcParamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     final double min;
     final double max;
+
+    //~ Constructors -----------------------------------------------------------
 
     FarragoJdbcApproxParamDef(
         String paramName,
@@ -43,31 +51,39 @@ class FarragoJdbcApproxParamDef extends FarragoJdbcParamDef
         super(paramName, paramMetaData);
 
         switch (paramMetaData.type) {
-            case Types.REAL:
-                min = -Float.MAX_VALUE;
-                max = Float.MAX_VALUE;
-                break;
-            case Types.FLOAT:
-            case Types.DOUBLE:
-                min = -Double.MAX_VALUE;
-                max = Double.MAX_VALUE;
-                break;
-            default:
-                min = 0;
-                max = 0;
-                assert(false) : "Approximate paramMetaData expected";
+        case Types.REAL:
+            min = -Float.MAX_VALUE;
+            max = Float.MAX_VALUE;
+            break;
+        case Types.FLOAT:
+        case Types.DOUBLE:
+            min = -Double.MAX_VALUE;
+            max = Double.MAX_VALUE;
+            break;
+        default:
+            min = 0;
+            max = 0;
+            assert (false) : "Approximate paramMetaData expected";
         }
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     private Double getDouble(Object value)
     {
         if (value instanceof Number) {
             Number n = (Number) value;
-            checkRange(n.doubleValue(), min, max);
+            checkRange(
+                n.doubleValue(),
+                min,
+                max);
             return new Double(n.doubleValue());
         } else if (value instanceof Boolean) {
-            return (((Boolean) value).booleanValue() ?
-                new Double(1): new Double(0));
+            return
+                (
+                    ((Boolean) value).booleanValue() ? new Double(1)
+                    : new Double(0)
+                );
         } else if (value instanceof String) {
             try {
                 BigDecimal bd = new BigDecimal(value.toString().trim());
@@ -91,3 +107,5 @@ class FarragoJdbcApproxParamDef extends FarragoJdbcParamDef
         }
     }
 }
+
+// End FarragoJdbcApproxParamDef.java

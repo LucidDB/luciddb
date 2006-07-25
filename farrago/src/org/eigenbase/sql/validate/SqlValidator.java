@@ -21,62 +21,61 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import java.util.*;
+
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
-import java.util.Map;
 
 /**
- * Validates the parse tree of a SQL statement, and
- * provides semantic information about the parse tree.
+ * Validates the parse tree of a SQL statement, and provides semantic
+ * information about the parse tree.
  *
- * <p>To create an instance of the default validator implementation, call
- * {@link SqlValidatorUtil#newValidator}.
+ * <p>To create an instance of the default validator implementation, call {@link
+ * SqlValidatorUtil#newValidator}.
  *
  * <h2>Visitor pattern</h2>
  *
- * <p>The validator interface is an instance of the
- * {@link org.eigenbase.util.Glossary#VisitorPattern visitor pattern}.
- * Implementations of the {@link SqlNode#validate} method call the
- * <code>validateXxx</code> method appropriate to the kind of node:
- * {@link SqlLiteral#validate(SqlValidator, SqlValidatorScope)} calls
- * {@link #validateLiteral(org.eigenbase.sql.SqlLiteral)};
- * {@link SqlCall#validate(SqlValidator, SqlValidatorScope)} calls
- * {@link #validateCall(SqlCall,SqlValidatorScope)};
- * and so forth.
+ * <p>The validator interface is an instance of the {@link
+ * org.eigenbase.util.Glossary#VisitorPattern visitor pattern}. Implementations
+ * of the {@link SqlNode#validate} method call the <code>validateXxx</code>
+ * method appropriate to the kind of node: {@link
+ * SqlLiteral#validate(SqlValidator, SqlValidatorScope)} calls {@link
+ * #validateLiteral(org.eigenbase.sql.SqlLiteral)}; {@link
+ * SqlCall#validate(SqlValidator, SqlValidatorScope)} calls {@link
+ * #validateCall(SqlCall,SqlValidatorScope)}; and so forth.
  *
  * <p>The {@link SqlNode#validateExpr(SqlValidator, SqlValidatorScope)} method
- * is as {@link SqlNode#validate(SqlValidator, SqlValidatorScope)} but is
- * called when the node is known to be a scalar expression.
+ * is as {@link SqlNode#validate(SqlValidator, SqlValidatorScope)} but is called
+ * when the node is known to be a scalar expression.
  *
  * <h2>Scopes and namespaces</h2>
  *
- * <p>In order to resolve names to objects, the validator builds a map
- * of the structure of the query. This map consists of two types of
- * objects. A {@link SqlValidatorScope} describes the tables and
- * columns accessible at a particular point in the query; and a {@link
- * SqlValidatorNamespace} is a description of a data source used in a
- * query.
+ * <p>In order to resolve names to objects, the validator builds a map of the
+ * structure of the query. This map consists of two types of objects. A {@link
+ * SqlValidatorScope} describes the tables and columns accessible at a
+ * particular point in the query; and a {@link SqlValidatorNamespace} is a
+ * description of a data source used in a query.
  *
- * <p>The validator builds the map by making a quick scan over the
- * query when the root {@link SqlNode} is first provided. Thereafter,
- * it supplies the correct scope or namespace object when it calls
- * validation methods.
+ * <p>The validator builds the map by making a quick scan over the query when
+ * the root {@link SqlNode} is first provided. Thereafter, it supplies the
+ * correct scope or namespace object when it calls validation methods.
  *
- * <p>The methods {@link #getSelectScope}, {@link #getFromScope},
- * {@link #getWhereScope}, {@link #getGroupScope}, {@link
- * #getHavingScope}, {@link #getOrderScope} and {@link #getJoinScope}
- * get the correct scope to resolve names in a particular clause of a
- * SQL statement.
+ * <p>The methods {@link #getSelectScope}, {@link #getFromScope}, {@link
+ * #getWhereScope}, {@link #getGroupScope}, {@link #getHavingScope}, {@link
+ * #getOrderScope} and {@link #getJoinScope} get the correct scope to resolve
+ * names in a particular clause of a SQL statement.
  *
  * @author jhyde
- * @since Oct 28, 2004
  * @version $Id$
+ * @since Oct 28, 2004
  */
 public interface SqlValidator
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns the dialect of SQL (SQL:2003, etc.) this validator recognizes.
      * Default is {@link Compatible#Default}.
@@ -110,9 +109,8 @@ public interface SqlValidator
      * but not reentrantly.
      *
      * @param topNode top of expression tree to be validated
-     *
-     * @param nameToTypeMap map of simple name to {@link RelDataType};
-     * used to resolve {@link SqlIdentifier} references
+     * @param nameToTypeMap map of simple name to {@link RelDataType}; used to
+     * resolve {@link SqlIdentifier} references
      *
      * @return validated tree (possibly rewritten)
      *
@@ -141,11 +139,10 @@ public interface SqlValidator
     RelDataType getValidatedNodeType(SqlNode node);
 
     /**
-     * Returns the type assigned to a node by validation, or null
-     * if unknown.  This allows for queries against nodes such as aliases,
-     * which have no type of their own.  If you want to assert
-     * that the node of interest must have a type, use {@link
-     * #getValidatedNodeType} instead.
+     * Returns the type assigned to a node by validation, or null if unknown.
+     * This allows for queries against nodes such as aliases, which have no type
+     * of their own. If you want to assert that the node of interest must have a
+     * type, use {@link #getValidatedNodeType} instead.
      *
      * @param node the node of interest
      *
@@ -184,7 +181,7 @@ public interface SqlValidator
      * Validates a DELETE statement.
      */
     void validateDelete(SqlDelete delete);
-    
+
     /**
      * Validates a MERGE statement.
      */
@@ -201,9 +198,9 @@ public interface SqlValidator
     void validateDynamicParam(SqlDynamicParam dynamicParam);
 
     /**
-     * Validates the right-hand side of an OVER expression. It might be
-     * either an {@link SqlIdentifier identifier} referencing a window, or
-     * an {@link SqlWindow inline window specification}.
+     * Validates the right-hand side of an OVER expression. It might be either
+     * an {@link SqlIdentifier identifier} referencing a window, or an {@link
+     * SqlWindow inline window specification}.
      */
     void validateWindow(
         SqlNode windowOrId,
@@ -212,16 +209,16 @@ public interface SqlValidator
 
     /**
      * Validates a call to an operator.
-     *
      */
     void validateCall(SqlCall call, SqlValidatorScope scope);
 
     /**
-     * Derives the type of a node in a given scope. If the type has already
-     * been inferred, returns the previous type.
+     * Derives the type of a node in a given scope. If the type has already been
+     * inferred, returns the previous type.
      *
-     * @param scope  Syntactic scope
+     * @param scope Syntactic scope
      * @param operand Parse tree node
+     *
      * @return Type of the SqlNode. Should never return <code>NULL</code>
      */
     RelDataType deriveType(
@@ -231,13 +228,14 @@ public interface SqlValidator
     /**
      * Adds "line x, column y" context to a validator exception.
      *
-     * <p>Note that the input exception is checked (it derives from
-     * {@link Exception}) and the output exception is unchecked (it derives
-     * from {@link RuntimeException}). This is intentional -- it should remind
-     * code authors to provide context for their validation errors.
+     * <p>Note that the input exception is checked (it derives from {@link
+     * Exception}) and the output exception is unchecked (it derives from {@link
+     * RuntimeException}). This is intentional -- it should remind code authors
+     * to provide context for their validation errors.
      *
      * @param e The validation error
      * @param node The place where the exception occurred
+     *
      * @return
      *
      * @pre node != null
@@ -248,36 +246,26 @@ public interface SqlValidator
         SqlValidatorException e);
 
     /**
-     * Returns whether a SELECT statement is an aggregation. Criteria are:
-     * (1) contains GROUP BY, or
-     * (2) contains HAVING, or
-     * (3) SELECT or ORDER BY clause contains aggregate functions. (Windowed
-     *     aggregate functions, such as <code>SUM(x) OVER w</code>, don't
-     *     count.)
+     * Returns whether a SELECT statement is an aggregation. Criteria are: (1)
+     * contains GROUP BY, or (2) contains HAVING, or (3) SELECT or ORDER BY
+     * clause contains aggregate functions. (Windowed aggregate functions, such
+     * as <code>SUM(x) OVER w</code>, don't count.)
      */
     boolean isAggregate(SqlSelect select);
 
     /**
      * Converts a window specification or window name into a fully-resolved
-     * window specification.
-     *
-     * For example, in
-     *
-     * <code>SELECT sum(x) OVER (PARTITION BY x ORDER BY y),
-     *   sum(y) OVER w1,
-     *   sum(z) OVER (w ORDER BY y)
-     * FROM t
-     * WINDOW w AS (PARTITION BY x)</code>
-     *
-     * all aggregations have the same resolved window specification
-     * <code>(PARTITION BY x ORDER BY y)</code>.
+     * window specification. For example, in <code>SELECT sum(x) OVER (PARTITION
+     * BY x ORDER BY y), sum(y) OVER w1, sum(z) OVER (w ORDER BY y) FROM t
+     * WINDOW w AS (PARTITION BY x)</code> all aggregations have the same
+     * resolved window specification <code>(PARTITION BY x ORDER BY y)</code>.
      *
      * @param windowOrRef Either the name of a window (a {@link SqlIdentifier})
-     *   or a window specification (a {@link SqlWindow}).
-     *
+     * or a window specification (a {@link SqlWindow}).
      * @param scope Scope in which to resolve window names
      *
      * @return A window
+     *
      * @throws RuntimeException Validation exception if window does not exist
      */
     SqlWindow resolveWindow(SqlNode windowOrRef, SqlValidatorScope scope);
@@ -285,8 +273,8 @@ public interface SqlValidator
     /**
      * Finds the namespace corresponding to a given node.
      *
-     * <p>For example, in the query <code>SELECT * FROM (SELECT * FROM t), t1
-     * AS alias</code>, the both items in the FROM clause have a corresponding
+     * <p>For example, in the query <code>SELECT * FROM (SELECT * FROM t), t1 AS
+     * alias</code>, the both items in the FROM clause have a corresponding
      * namespace.
      */
     SqlValidatorNamespace getNamespace(SqlNode node);
@@ -328,8 +316,8 @@ public interface SqlValidator
      * @param type Its type; must not be null
      *
      * @deprecated This method should not be in the {@link SqlValidator}
-     *   interface. The validator should drive the type-derivation process, and
-     *   store nodes' types when they have been derived.
+     * interface. The validator should drive the type-derivation process, and
+     * store nodes' types when they have been derived.
      * @pre type != null
      * @pre node != null
      */
@@ -343,12 +331,13 @@ public interface SqlValidator
     RelDataType getUnknownType();
 
     /**
-     * Returns the appropriate scope for validating a particular clause of
-     * a SELECT statement.
+     * Returns the appropriate scope for validating a particular clause of a
+     * SELECT statement.
      *
      * <p>Consider
      *
-     * <blockquote><code><pre>SELECT *
+     * <blockquote><code>
+     * <pre>SELECT *
      * FROM foo
      * WHERE EXISTS (
      *    SELECT deptno AS x
@@ -356,18 +345,16 @@ public interface SqlValidator
      *       JOIN dept ON emp.deptno = dept.deptno
      *    WHERE emp.deptno = 5
      *    GROUP BY deptno
-     *    ORDER BY x)</pre></code></blockquote>
+     *    ORDER BY x)</pre>
+     * </code></blockquote>
      *
-     * What objects can be seen in each part of the sub-query?<ul>
+     * What objects can be seen in each part of the sub-query?
      *
+     * <ul>
      * <li>In FROM ({@link #getFromScope} , you can only see 'foo'.
-     *
-     * <li>In WHERE ({@link #getWhereScope}),
-     * GROUP BY ({@link #getGroupScope}),
-     * SELECT ({@link #getSelectScope}), and
-     * the ON clause of the JOIN ({@link #getJoinScope})
-     * you can see 'emp', 'dept', and 'foo'.
-     *
+     * <li>In WHERE ({@link #getWhereScope}), GROUP BY ({@link #getGroupScope}),
+     * SELECT ({@link #getSelectScope}), and the ON clause of the JOIN ({@link
+     * #getJoinScope}) you can see 'emp', 'dept', and 'foo'.
      * <li>In ORDER BY ({@link #getOrderScope}), you can see the column alias
      * 'x'; and tables 'emp', 'dept', and 'foo'.
      * </ul>
@@ -376,14 +363,14 @@ public interface SqlValidator
 
     /**
      * Returns the scope for resolving the SELECT, GROUP BY and HAVING clauses.
-     * Always a {@link SelectScope}; if this is an aggregation query, the
-     * {@link AggregatingScope} is stripped away.
+     * Always a {@link SelectScope}; if this is an aggregation query, the {@link
+     * AggregatingScope} is stripped away.
      */
     SelectScope getRawSelectScope(SqlSelect select);
 
     /**
-     * Returns a scope containing the objects visible from the FROM clause
-     * of a query.
+     * Returns a scope containing the objects visible from the FROM clause of a
+     * query.
      */
     SqlValidatorScope getFromScope(SqlSelect select);
 
@@ -392,7 +379,7 @@ public interface SqlValidator
      * sections of a JOIN clause.
      *
      * @param node The item in the FROM clause which contains the ON or USING
-     *   expression
+     * expression
      *
      * @see #getFromScope
      */
@@ -405,8 +392,8 @@ public interface SqlValidator
     SqlValidatorScope getGroupScope(SqlSelect select);
 
     /**
-     * Returns a scope containing the objects visible from the HAVING clause
-     * of a query.
+     * Returns a scope containing the objects visible from the HAVING clause of
+     * a query.
      */
     SqlValidatorScope getHavingScope(SqlSelect select);
 
@@ -419,8 +406,7 @@ public interface SqlValidator
     SqlValidatorScope getOrderScope(SqlSelect select);
 
     /**
-     * Returns the boolean result of testing the node to
-     * see if it's a constant
+     * Returns the boolean result of testing the node to see if it's a constant
      */
     boolean isConstant(SqlNode expr);
 
@@ -435,7 +421,7 @@ public interface SqlValidator
      * @param expandIdentifiers new setting
      */
     void setIdentifierExpansion(boolean expandIdentifiers);
-    
+
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,
         SqlCall call,
@@ -449,41 +435,39 @@ public interface SqlValidator
         RelDataType [] argTypes);
 
     /**
-     * Expands an expression in the ORDER BY clause into an expression with
-     * the same semantics as expressions in the SELECT clause.
+     * Expands an expression in the ORDER BY clause into an expression with the
+     * same semantics as expressions in the SELECT clause.
      *
-     * <p>This is made necessary by a couple of dialect 'features':<ul>
-     * <li><b>ordinal expressions</b>: In "SELECT x, y FROM t ORDER BY 2",
-     *     the expression "2" is shorthand for the 2nd item in the select
-     *     clause, namely "y".
-     * <li><b>alias references</b>: In "SELECT x AS a, y FROM t ORDER BY a",
-     *     the expression "a" is shorthand for the item in the select clause
-     *     whose alias is "a"
+     * <p>This is made necessary by a couple of dialect 'features':
+     *
+     * <ul>
+     * <li><b>ordinal expressions</b>: In "SELECT x, y FROM t ORDER BY 2", the
+     * expression "2" is shorthand for the 2nd item in the select clause, namely
+     * "y".
+     * <li><b>alias references</b>: In "SELECT x AS a, y FROM t ORDER BY a", the
+     * expression "a" is shorthand for the item in the select clause whose alias
+     * is "a"
      * </ul>
      *
      * @param select Select statement which contains ORDER BY
      * @param orderExpr Expression in the ORDER BY clause.
+     *
      * @return Expression translated into SELECT clause semantics
      */
     SqlNode expandOrderExpr(SqlSelect select, SqlNode orderExpr);
 
     SqlNode expand(SqlNode expr, SqlValidatorScope scope);
 
+    //~ Inner Classes ----------------------------------------------------------
+
     /**
      * Enumeration of valid SQL compatiblity modes.
      *
-     *<p>
-     *
-     * TODO jvs 16-June-2006:  Move this to top-level as enum
-     * SqlConformance.
+     * <p>TODO jvs 16-June-2006: Move this to top-level as enum SqlConformance.
      */
-    public class Compatible extends EnumeratedValues.BasicValue
+    public class Compatible
+        extends EnumeratedValues.BasicValue
     {
-        private Compatible(String name, int ordinal)
-        {
-            super(name, ordinal, null);
-        }
-
         public static final int Default_ordinal = 0;
         public static final int Strict92_ordinal = 1;
         public static final int Strict99_ordinal = 2;
@@ -507,17 +491,36 @@ public interface SqlValidator
         public static final Compatible Pragmatic2003 =
             new Compatible("Pragmatic2003", Pragmatic2003_ordinal);
 
+        public static final Compatible [] Values =
+            {
+                Default,
+                Strict92,
+                Strict99,
+                Pragmatic99,
+                Oracle10g,
+                Sql2003,
+                Pragmatic2003,
+            };
+
+        public static final EnumeratedValues enumeration =
+            new EnumeratedValues(Values);
+
+        private Compatible(String name, int ordinal)
+        {
+            super(name, ordinal, null);
+        }
+
         /**
          * Whether 'order by 2' is interpreted to mean 'sort by the 2nd column
          * in the select list'.
          */
         public boolean isSortByOrdinal()
         {
-            return this == Compatible.Default ||
-                this == Compatible.Oracle10g ||
-                this == Compatible.Strict92 ||
-                this == Compatible.Pragmatic99 ||
-                this == Compatible.Pragmatic2003;
+            return
+                (this == Compatible.Default) || (this == Compatible.Oracle10g)
+                || (this == Compatible.Strict92)
+                || (this == Compatible.Pragmatic99)
+                || (this == Compatible.Pragmatic2003);
         }
 
         /**
@@ -526,9 +529,9 @@ public interface SqlValidator
          */
         public boolean isSortByAlias()
         {
-            return this == Compatible.Default ||
-                this == Compatible.Oracle10g ||
-                this == Compatible.Strict92;
+            return
+                (this == Compatible.Default) || (this == Compatible.Oracle10g)
+                || (this == Compatible.Strict92);
         }
 
         /**
@@ -539,19 +542,6 @@ public interface SqlValidator
         {
             return this == Compatible.Strict92;
         }
-
-        public static final Compatible[] Values = {
-            Default,
-            Strict92,
-            Strict99,
-            Pragmatic99,
-            Oracle10g,
-            Sql2003,
-            Pragmatic2003,
-        };
-
-        public static final EnumeratedValues enumeration =
-            new EnumeratedValues(Values);
     }
 }
 

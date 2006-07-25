@@ -19,23 +19,29 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.util.Util;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * An implementation of {@link SqlMoniker} that encapsulates the normalized name
  * information of a {@link SqlIdentifier}.
  *
  * @author tleung
- * @since May 24, 2005
  * @version $Id$
- **/
-public class SqlIdentifierMoniker implements SqlMoniker
-{   
+ * @since May 24, 2005
+ */
+public class SqlIdentifierMoniker
+    implements SqlMoniker
+{
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlIdentifier id;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an SqlIdentifierMoniker.
@@ -46,12 +52,14 @@ public class SqlIdentifierMoniker implements SqlMoniker
         this.id = id;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public SqlMonikerType getType()
     {
         return SqlMonikerType.Column;
     }
 
-    public String[] getFullyQualifiedNames()
+    public String [] getFullyQualifiedNames()
     {
         return id.names;
     }

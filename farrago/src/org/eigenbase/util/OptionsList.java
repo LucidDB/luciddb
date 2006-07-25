@@ -20,125 +20,95 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 
 
 /**
  * Command-line option parser.
  *
- * <p>
- * For example, given the options
- * </p>
+ * <p>For example, given the options</p>
  *
  * <table>
- * <tr><th>
- * Short name
- * </td><th>
- * Long name
- * </td><th>
- * Type
- * </td><th>
- * Default
- * </td><th>
- * Anonymous
- * </td></tr>
- * <tr><td>
- * v
- * </td><td>
- * verbose
- * </td><td>
- * Boolean
- * </td><td>
- * true
- * </td><td>
- * false
- * </td></tr>
- * <tr><td>
- * f
- * </td><td>
- * &nbsp;
- * </td><td>
- * String
- * </td><td>
- * &nbsp;
- * </td><td>
- * true
- * </td></tr>
- * <tr><td>
- * c
- * </td><td>
- * count
- * </td><td>
- * Number
- * </td><td>
- * &nbsp;
- * </td><td>
- * false
- * </td></tr>
+ * <tr>
+ * <th>Short name</td>
+ * <th>Long name</td>
+ * <th>Type</td>
+ * <th>Default</td>
+ * <th>Anonymous</td>
+ * </tr>
+ * <tr>
+ * <td>v</td>
+ * <td>verbose</td>
+ * <td>Boolean</td>
+ * <td>true</td>
+ * <td>false</td>
+ * </tr>
+ * <tr>
+ * <td>f</td>
+ * <td>&nbsp;</td>
+ * <td>String</td>
+ * <td>&nbsp;</td>
+ * <td>true</td>
+ * </tr>
+ * <tr>
+ * <td>c</td>
+ * <td>count</td>
+ * <td>Number</td>
+ * <td>&nbsp;</td>
+ * <td>false</td>
+ * </tr>
  * </table>
  *
- * <p>
- * and the command line
+ * <p>and the command line
+ *
  * <pre>-v count=5 Foo.txt</pre>
- * the parser will set <tt>verbose = true</tt>, <tt>count = 5</tt>, and
- * <tt>file = Foo.txt</tt>.
- * </p>
  *
- * <p>
- * Options can generally be specified using <dfn>flag syntax</dfn> (for
- * example <tt>-v</tt> or <tt>-count 5</tt>) or <dfn>property synax</dfn>
- * (for example <tt>verbose=true</tt> or <tt>count=5</tt>).
- * </p>
+ * the parser will set <tt>verbose = true</tt>, <tt>count = 5</tt>, and <tt>file
+ * = Foo.txt</tt>.</p>
  *
- * <p>
- * Boolean options do not have a value following the flag. <tt>-v</tt> means
- * the same as <tt>verbose=true</tt>, and <tt>+v</tt> means the same as
- * <tt>verbose=false</tt>.
- * </p>
+ * <p>Options can generally be specified using <dfn>flag syntax</dfn> (for
+ * example <tt>-v</tt> or <tt>-count 5</tt>) or <dfn>property synax</dfn> (for
+ * example <tt>verbose=true</tt> or <tt>count=5</tt>).</p>
  *
- * <p>
- * One of the options in a list can be <em>anonymous</em>. Arguments which are
- * not flagged with an option name are assumed to be for this option. <br>
+ * <p>Boolean options do not have a value following the flag. <tt>-v</tt> means
+ * the same as <tt>verbose=true</tt>, and <tt>+v</tt> means the same as <tt>
+ * verbose=false</tt>.</p>
+ *
+ * <p>One of the options in a list can be <em>anonymous</em>. Arguments which
+ * are not flagged with an option name are assumed to be for this option.<br>
  * <em>Defining options</em><br>
  * </p>
  *
- * <p>
- * You first define what options are available. Options all implement
- * interface {@link Option}. You can use one of the built-in option types
- * ({@link StringOption}, {@link NumberOption}, {@link BooleanOption}, {@link
- * EnumeratedOption}) or write one of your own. <br>
+ * <p>You first define what options are available. Options all implement
+ * interface {@link Option}. You can use one of the built-in option types (
+ * {@link StringOption}, {@link NumberOption}, {@link BooleanOption}, {@link
+ * EnumeratedOption}) or write one of your own.<br>
  * <em>Parsing options</em><br>
  * </p>
  *
- * <p>
- * Once you have defined the options, you can parse an argument list by
- * calling {@link #parse}.
- * </p>
+ * <p>Once you have defined the options, you can parse an argument list by
+ * calling {@link #parse}.</p>
  *
- * <p>
- * There are two ways of handling options. By default, when you parse an array
- * of command-line parameters, the values of those parameters are stored in
- * the options themselves. Alternatively, you can specify a {@link
- * OptionsList.OptionHandler handler}.
- * </p>
+ * <p>There are two ways of handling options. By default, when you parse an
+ * array of command-line parameters, the values of those parameters are stored
+ * in the options themselves. Alternatively, you can specify a {@link
+ * OptionsList.OptionHandler handler}.</p>
  *
  * @author Julian Hyde
  * @version $Id$
- *
  * @since Sep 4, 2003
  */
 public class OptionsList
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private final ArrayList optionGroups = new ArrayList();
     private final ArrayList options = new ArrayList();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates an options list with no options.
@@ -157,7 +127,7 @@ public class OptionsList
         }
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void add(Option option)
     {
@@ -168,17 +138,13 @@ public class OptionsList
      * Tells the options list that the given options are mutually exclusive.
      * This means that at most one of the given options can be specified.
      *
-     * <p>
-     * To create a set mutually exclusive options, specify minCount = 0 or 1,
+     * <p>To create a set mutually exclusive options, specify minCount = 0 or 1,
      * maxCount = 1. To create a set of mutually inclusive options, specify
-     * minCount = 1, maxCount = -1.
-     * </p>
+     * minCount = 1, maxCount = -1.</p>
      *
      * @param options List of mutually exclusive options
-     * @param minCount Minimum number of these options which must be
-     *        specified.
-     * @param maxCount Maximum number of these options which must be
-     *        specified.
+     * @param minCount Minimum number of these options which must be specified.
+     * @param maxCount Maximum number of these options which must be specified.
      *
      * @pre None of the options must be mandatory.
      */
@@ -221,7 +187,8 @@ public class OptionsList
                 continue;
             }
             if (!usedOptions.contains(option)) {
-                throw new RuntimeException("Mandatory option '"
+                throw new RuntimeException(
+                    "Mandatory option '"
                     + option.getName() + "' was not specified");
             }
         }
@@ -237,12 +204,14 @@ public class OptionsList
                 }
             }
             if (count > group.maxCount) {
-                throw new RuntimeException("More than " + group.maxCount
+                throw new RuntimeException(
+                    "More than " + group.maxCount
                     + " of the following options were specified: "
                     + group.description);
             }
             if (count < group.minCount) {
-                throw new RuntimeException("Fewer than " + group.minCount
+                throw new RuntimeException(
+                    "Fewer than " + group.minCount
                     + " of the following options were specified: "
                     + group.description);
             }
@@ -252,7 +221,8 @@ public class OptionsList
         // have not been seen while parsing.
         for (int i = 0; i < options.length; i++) {
             Option option = options[i];
-            if (!usedOptions.contains(option) && (option.defaultValue != null)) {
+            if (!usedOptions.contains(option)
+                && (option.defaultValue != null)) {
                 option.set(option.defaultValue, false);
             }
         }
@@ -263,7 +233,7 @@ public class OptionsList
         return (Option []) options.toArray(new Option[options.size()]);
     }
 
-    //~ Inner Interfaces ------------------------------------------------------
+    //~ Inner Interfaces -------------------------------------------------------
 
     /**
      * Handles the event of setting options. One implementation stores options
@@ -281,9 +251,10 @@ public class OptionsList
             boolean isExplicit);
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    //~ Inner Classes ----------------------------------------------------------
 
-    public class BasicOptionHandler implements OptionHandler
+    public class BasicOptionHandler
+        implements OptionHandler
     {
         public void invalidValue(
             Option option,
@@ -300,42 +271,44 @@ public class OptionsList
     }
 
     /**
-     * Definition of a command-line option, including its short and long
-     * names, description, default value, and whether it is mandatory.
+     * Definition of a command-line option, including its short and long names,
+     * description, default value, and whether it is mandatory.
      *
-     * <p>
-     * You can optionally provide a {@link OptionsList.OptionHandler handler} to
-     * handle events such as the option receiving a value, or a value being of
-     * the wrong format. If you do not provide a handler, the value is stored
-     * inside the option, and can be retrieved via
-     * </p>
+     * <p>You can optionally provide a {@link OptionsList.OptionHandler handler}
+     * to handle events such as the option receiving a value, or a value being
+     * of the wrong format. If you do not provide a handler, the value is stored
+     * inside the option, and can be retrieved via</p>
      */
     public static abstract class Option
     {
         /**
          * Holds the runtime value of this option. Set by the default
          * implementation {@link #set}. If the user has supplied an {@link
-         * OptionHandler}, or overridden the <code>set</code> method, this
-         * field is not assigned.
+         * OptionHandler}, or overridden the <code>set</code> method, this field
+         * is not assigned.
          *
-         * <p>
-         * Several derived classes have typesafe methods to access this field:
-         * see {@link OptionsList.BooleanOption#booleanValue},
-         * {@link OptionsList.StringOption#stringValue},
-         * {@link OptionsList.NumberOption#intValue},
-         * {@link OptionsList.NumberOption#doubleValue}.
-         * </p>
+         * <p>Several derived classes have typesafe methods to access this
+         * field: see {@link OptionsList.BooleanOption#booleanValue}, {@link
+         * OptionsList.StringOption#stringValue}, {@link
+         * OptionsList.NumberOption#intValue}, {@link
+         * OptionsList.NumberOption#doubleValue}.</p>
          */
         protected Object value;
 
-        /** Default value of option, or null if there is no default value. */
+        /**
+         * Default value of option, or null if there is no default value.
+         */
         private final Object defaultValue;
         private final String description;
 
-        /** Short name of option, used as a flag, e.g. "c". */
+        /**
+         * Short name of option, used as a flag, e.g. "c".
+         */
         private final String flag;
 
-        /** Long name of option, e.g. "color". */
+        /**
+         * Long name of option, e.g. "color".
+         */
         private final String name;
         private final boolean required;
         private OptionHandler handler;
@@ -376,18 +349,14 @@ public class OptionsList
          * Returns the value of this option for the most recent call to {@link
          * #parse}.
          *
-         * <p>
-         * If you specified an {@link OptionsList.OptionHandler}, this value
+         * <p>If you specified an {@link OptionsList.OptionHandler}, this value
          * will not be set. Also note that this method is unsafe if the same
-         * options are shared between multiple threads.
-         * </p>
+         * options are shared between multiple threads.</p>
          *
-         * <p>
-         * Some derived classes have methods which return the same information
-         * in a typesafe manner. For example:
-         * {@link OptionsList.BooleanOption#booleanValue},
-         * {@link OptionsList.NumberOption#intValue}.
-         * </p>
+         * <p>Some derived classes have methods which return the same
+         * information in a typesafe manner. For example: {@link
+         * OptionsList.BooleanOption#booleanValue}, {@link
+         * OptionsList.NumberOption#intValue}.</p>
          */
         public Object getValue()
         {
@@ -395,14 +364,14 @@ public class OptionsList
         }
 
         /**
-         * Tries to apply this option to the <tt>i</tt>th member of
-         * <tt>args</tt>.
+         * Tries to apply this option to the <tt>i</tt>th member of <tt>
+         * args</tt>.
          *
          * @param args Argument list
          * @param i Offset of argument in argument list
          *
          * @return If matched, the offset of the argument after the last one
-         *         matched, otherwise <tt>i</tt>.
+         * matched, otherwise <tt>i</tt>.
          */
         public int match(
             String [] args,
@@ -410,7 +379,7 @@ public class OptionsList
         {
             final String arg = args[i];
             if (arg.startsWith("-") && (flag != null)
-                    && arg.equals("-" + flag)) {
+                && arg.equals("-" + flag)) {
                 // e.g. "-nolog"
                 // e.g. "-threads 5"
                 readArg(args[i + 1]);
@@ -438,15 +407,13 @@ public class OptionsList
          * Converts an argument to the correct value type, and acts on the
          * value.
          *
-         * <p>
-         * What action is taken depends upon whether the value is valid for
+         * <p>What action is taken depends upon whether the value is valid for
          * this argument type, and whether there is a handler. If there is a
-         * handler, this method calls either
-         * {@link OptionsList.OptionHandler#set} or
-         * {@link OptionsList.OptionHandler#invalidValue}. If there is no
-         * handler, the method should execute a reasonable default action like
-         * assigning to a field via reflection.
-         * </p>
+         * handler, this method calls either {@link
+         * OptionsList.OptionHandler#set} or {@link
+         * OptionsList.OptionHandler#invalidValue}. If there is no handler, the
+         * method should execute a reasonable default action like assigning to a
+         * field via reflection.</p>
          *
          * @param arg
          */
@@ -456,21 +423,17 @@ public class OptionsList
          * Called by the parser when an argument is not a valid value for this
          * type of argument.
          *
-         * <p>
-         * For example, if "flag" is a boolean argument and they specify
-         * "flag=oui" on the command-line, the parser will call
-         * <code>valueError("oui")</code>.
-         * </p>
+         * <p>For example, if "flag" is a boolean argument and they specify
+         * "flag=oui" on the command-line, the parser will call <code>
+         * valueError("oui")</code>.</p>
          *
-         * <p>
-         * The default implementation calls
-         * {@link OptionsList.OptionHandler#invalidValue}
-         * if there is a handler, or prints a message to {@link System#out}
-         * if there is not. Derived option classes can override this method.
-         * </p>
+         * <p>The default implementation calls {@link
+         * OptionsList.OptionHandler#invalidValue} if there is a handler, or
+         * prints a message to {@link System#out} if there is not. Derived
+         * option classes can override this method.</p>
          *
-         * @param arg String value which is supposed to match the parameter,
-         *        but doesn't.
+         * @param arg String value which is supposed to match the parameter, but
+         * doesn't.
          */
         protected void valueError(String arg)
         {
@@ -478,7 +441,8 @@ public class OptionsList
         }
     }
 
-    public static class BooleanOption extends Option
+    public static class BooleanOption
+        extends Option
     {
         public BooleanOption(
             String flag,
@@ -489,8 +453,14 @@ public class OptionsList
             boolean defaultValue,
             OptionHandler handler)
         {
-            super(flag, option, description, required, anonymous,
-                Boolean.valueOf(defaultValue), handler);
+            super(
+                flag,
+                option,
+                description,
+                required,
+                anonymous,
+                Boolean.valueOf(defaultValue),
+                handler);
         }
 
         public boolean booleanValue()
@@ -510,7 +480,8 @@ public class OptionsList
         }
     }
 
-    public static class EnumeratedOption extends Option
+    public static class EnumeratedOption
+        extends Option
     {
         private final EnumeratedValues enumeration;
 
@@ -524,8 +495,13 @@ public class OptionsList
             EnumeratedValues enumeration,
             OptionHandler handler)
         {
-            super(flag, option, description, required, anonymous,
-                defaultValue, handler);
+            super(flag,
+                option,
+                description,
+                required,
+                anonymous,
+                defaultValue,
+                handler);
             this.enumeration = enumeration;
         }
 
@@ -540,7 +516,8 @@ public class OptionsList
         }
     }
 
-    public static class NumberOption extends Option
+    public static class NumberOption
+        extends Option
     {
         public NumberOption(
             String flag,
@@ -551,8 +528,13 @@ public class OptionsList
             Number defaultValue,
             OptionHandler handler)
         {
-            super(flag, option, description, required, anonymous,
-                defaultValue, handler);
+            super(flag,
+                option,
+                description,
+                required,
+                anonymous,
+                defaultValue,
+                handler);
         }
 
         public double doubleValue()
@@ -585,7 +567,8 @@ public class OptionsList
         }
     }
 
-    public static class StringOption extends Option
+    public static class StringOption
+        extends Option
     {
         public StringOption(
             String flag,
@@ -596,8 +579,13 @@ public class OptionsList
             String defaultValue,
             OptionHandler handler)
         {
-            super(flag, option, description, required, anonymous,
-                defaultValue, handler);
+            super(flag,
+                option,
+                description,
+                required,
+                anonymous,
+                defaultValue,
+                handler);
         }
 
         public String stringValue()
@@ -641,3 +629,5 @@ public class OptionsList
         }
     }
 }
+
+// End OptionsList.java

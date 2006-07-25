@@ -21,26 +21,33 @@
 */
 package net.sf.farrago.test;
 
-import junit.framework.*;
-
 import java.util.*;
+
+import junit.framework.*;
 
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.graph.*;
 
+
 /**
- * Jdk15Test tests language features introduced in JDK 1.5.  It is excluded
- * from compilation when src="1.4" is passed to javac.
+ * Jdk15Test tests language features introduced in JDK 1.5. It is excluded from
+ * compilation when src="1.4" is passed to javac.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class Jdk15Test extends TestCase
+public class Jdk15Test
+    extends TestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public Jdk15Test(String testName)
     {
         super(testName);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void testGenericCollections()
     {
@@ -48,7 +55,7 @@ public class Jdk15Test extends TestCase
         words.add("left");
         words.add("right");
         words.add("drat");
-        
+
         // remove four-letter words
         Iterator<String> iter = words.iterator();
         while (iter.hasNext()) {
@@ -58,8 +65,12 @@ public class Jdk15Test extends TestCase
             }
         }
 
-        assertEquals(1, words.size());
-        assertEquals("right", words.get(0));
+        assertEquals(
+            1,
+            words.size());
+        assertEquals(
+            "right",
+            words.get(0));
     }
 
     public void testForeach()

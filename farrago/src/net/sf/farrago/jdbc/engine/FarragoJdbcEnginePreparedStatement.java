@@ -23,10 +23,14 @@
 package net.sf.farrago.jdbc.engine;
 
 import java.io.*;
+
 import java.math.*;
+
 import java.net.*;
+
 import java.sql.*;
 import java.sql.Date;
+
 import java.util.*;
 
 import net.sf.farrago.session.*;
@@ -34,33 +38,33 @@ import net.sf.farrago.session.*;
 
 /**
  * FarragoJdbcEnginePreparedStatement is an abstract base for Farrago
- * implementations of {@link java.sql.PreparedStatement}.  Subclasses define
+ * implementations of {@link java.sql.PreparedStatement}. Subclasses define
  * details of preparation for DDL, DML, and queries.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public abstract class FarragoJdbcEnginePreparedStatement
-    extends FarragoJdbcEngineStatement implements PreparedStatement
+    extends FarragoJdbcEngineStatement
+    implements PreparedStatement
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     protected static final String ERRMSG_ALREADY_PREPARED =
         "Statement already prepared";
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     protected String sql;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoJdbcEnginePreparedStatement object.
      *
      * @param connection the connection creating this statement
-     *
      * @param stmtContext underlying FarragoSessionStmtContext
-     *
      * @param sql the text of the SQL statement
      */
     protected FarragoJdbcEnginePreparedStatement(
@@ -72,7 +76,7 @@ public abstract class FarragoJdbcEnginePreparedStatement
         this.sql = sql;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement PreparedStatement
     public ResultSetMetaData getMetaData()
@@ -486,6 +490,5 @@ public abstract class FarragoJdbcEnginePreparedStatement
         throw new SQLException(ERRMSG_ALREADY_PREPARED);
     }
 }
-
 
 // End FarragoJdbcEnginePreparedStatement.java

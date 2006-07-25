@@ -21,32 +21,36 @@
 */
 package net.sf.farrago.test;
 
-import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
+import java.io.*;
 
-import junit.framework.*;
+import java.util.*;
 
 import javax.jmi.reflect.*;
 
-import java.util.*;
-import java.io.*;
+import junit.framework.*;
 
 import org._3pq.jgrapht.*;
+
+import org.eigenbase.jmi.*;
+import org.eigenbase.util.*;
+
 
 /**
  * JmiModelTest is a unit test for {@link JmiModelGraph} and {@link
  * JmiModelView}.
  *
- *<p>
- *
- * NOTE:  this test lives here rather than under org.eigenbase because
- * it currently depends on MDR for a JMI implementation.
+ * <p>NOTE: this test lives here rather than under org.eigenbase because it
+ * currently depends on MDR for a JMI implementation.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiModelTest extends FarragoTestCase
+public class JmiModelTest
+    extends FarragoTestCase
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new JmiModelTest object.
      *
@@ -59,7 +63,9 @@ public class JmiModelTest extends FarragoTestCase
     {
         super(testName);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public static Test suite()
     {
         return wrappedSuite(JmiModelTest.class);
@@ -105,7 +111,9 @@ public class JmiModelTest extends FarragoTestCase
         JmiModelView view = new JmiModelView(graph);
 
         List list = new ArrayList(graph.vertexSet());
-        Collections.sort(list, new StringRepresentationComparator());
+        Collections.sort(
+            list,
+            new StringRepresentationComparator());
 
         Writer writer = openTestLog();
         PrintWriter pw = new PrintWriter(writer);
@@ -131,7 +139,7 @@ public class JmiModelTest extends FarragoTestCase
         List list = new ArrayList();
         list.addAll(graph.vertexSet());
         list.addAll(graph.edgeSet());
-        
+
         Writer writer = openTestLog();
         PrintWriter pw = new PrintWriter(writer);
         dumpList(pw, list);
@@ -140,7 +148,9 @@ public class JmiModelTest extends FarragoTestCase
     }
 
     private void dumpViewVertex(
-        PrintWriter pw, JmiModelView view, JmiClassVertex vertex)
+        PrintWriter pw,
+        JmiModelView view,
+        JmiClassVertex vertex)
     {
         pw.println("Vertex:  " + vertex);
         dumpNamedSet(
@@ -171,18 +181,25 @@ public class JmiModelTest extends FarragoTestCase
     }
 
     private void dumpNamedSet(
-        PrintWriter pw, String name, Set set)
+        PrintWriter pw,
+        String name,
+        Set set)
     {
         pw.print(name);
         pw.println(" {");
-        dumpList(pw, new ArrayList(set));
+        dumpList(
+            pw,
+            new ArrayList(set));
         pw.println("}");
     }
 
     private void dumpList(
-        PrintWriter pw, List list)
+        PrintWriter pw,
+        List list)
     {
-        Collections.sort(list, new StringRepresentationComparator());
+        Collections.sort(
+            list,
+            new StringRepresentationComparator());
         Iterator iter = list.iterator();
         while (iter.hasNext()) {
             pw.println(iter.next());

@@ -24,23 +24,30 @@ package org.eigenbase.reltype;
 
 import org.eigenbase.sql.type.*;
 
+
 /**
  * RelRecordType represents a structured type having named fields.
  *
  * @author jhyde
  * @version $Id$
  */
-public class RelRecordType extends RelDataTypeImpl
+public class RelRecordType
+    extends RelDataTypeImpl
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a <code>RecordType</code>.  This should only be called
-     * from a factory method.
+     * Creates a <code>RecordType</code>. This should only be called from a
+     * factory method.
      */
     public RelRecordType(RelDataTypeField [] fields)
     {
         super(fields);
         computeDigest();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelDataType
     public SqlTypeName getSqlTypeName()

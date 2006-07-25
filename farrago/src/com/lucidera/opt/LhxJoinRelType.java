@@ -20,7 +20,8 @@
 */
 package com.lucidera.opt;
 
-import org.eigenbase.rel.JoinRelType;
+import org.eigenbase.rel.*;
+
 
 /**
  * Enumeration of LucidDB Hash Join types.
@@ -28,14 +29,9 @@ import org.eigenbase.rel.JoinRelType;
  * @author Rushan Chen
  * @version $Id$
  */
-public enum LhxJoinRelType
-{
-    INNER(JoinRelType.INNER),
-    LEFT(JoinRelType.LEFT),
-    RIGHT(JoinRelType.RIGHT),
-    FULL(JoinRelType.FULL),
-    LEFTSEMI(null),
-    RIGHTANTI(null);
+public enum LhxJoinRelType {
+    INNER(JoinRelType.INNER), LEFT(JoinRelType.LEFT), RIGHT(JoinRelType.RIGHT),
+    FULL(JoinRelType.FULL), LEFTSEMI(null), RIGHTANTI(null);
 
     private final JoinRelType logicalJoinType;
 
@@ -48,7 +44,7 @@ public enum LhxJoinRelType
     {
         return logicalJoinType;
     }
-    
+
     public static LhxJoinRelType getLhxJoinType(JoinRelType logicalJoinType)
     {
         if (logicalJoinType == JoinRelType.FULL) {
@@ -64,4 +60,12 @@ public enum LhxJoinRelType
     }
 }
 
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
+// End LhxJoinRelType.java
 // End LhxJoinRelType.java

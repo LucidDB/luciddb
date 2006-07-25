@@ -23,6 +23,7 @@
 package net.sf.farrago.namespace.mock;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -32,23 +33,25 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql2rel.*;
 
+
 /**
- * MedMockIterRel provides a mock implementation for
- * {@link TableAccessRel} with {@link CallingConvention.ITERATOR}.
+ * MedMockIterRel provides a mock implementation for {@link TableAccessRel} with
+ * {@link CallingConvention.ITERATOR}.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 class MedMockIterRel
     extends TableAccessRelBase
-    implements JavaRel, RelStructuredTypeFlattener.SelfFlatteningRel
-
+    implements JavaRel,
+        RelStructuredTypeFlattener.SelfFlatteningRel
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private MedMockColumnSet columnSet;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     MedMockIterRel(
         MedMockColumnSet columnSet,
@@ -56,19 +59,22 @@ class MedMockIterRel
         RelOptConnection connection)
     {
         super(
-            cluster, new RelTraitSet(CallingConvention.ITERATOR), columnSet,
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            columnSet,
             connection);
         this.columnSet = columnSet;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public ParseTree implement(JavaRelImplementor implementor)
     {
         final RelDataType outputRowType = getRowType();
-        OJClass outputRowClass = OJUtil.typeToOJClass(
-            outputRowType,
-            implementor.getTypeFactory());
+        OJClass outputRowClass =
+            OJUtil.typeToOJClass(
+                outputRowType,
+                implementor.getTypeFactory());
 
         Expression newRowExp =
             new AllocationExpression(
@@ -84,22 +90,24 @@ class MedMockIterRel
 
         return iterExp;
     }
-    
+
     // implement RelNode
     public Object clone()
     {
         MedMockIterRel clone =
-            new MedMockIterRel(columnSet, getCluster(), connection);
+            new MedMockIterRel(
+                columnSet,
+                getCluster(),
+                connection);
         clone.inheritTraitsFrom(this);
         return clone;
     }
-    
+
     // implement RelStructuredTypeFlattener.SelfFlatteningRel
     public void flattenRel(RelStructuredTypeFlattener flattener)
     {
         flattener.rewriteGeneric(this);
     }
 }
-
 
 // End MedMockIterRel.java

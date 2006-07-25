@@ -20,17 +20,23 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.javac;
 
 /**
  * The interface <code>JavaCompiler</code> represents an interface to invoke a
- * regular Java compiler.  Classes implementing this interface should accept
- * the same arguments as Sun's javac.
+ * regular Java compiler. Classes implementing this interface should accept the
+ * same arguments as Sun's javac.
  */
 public interface JavaCompiler
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     public void compile();
+
     public JavaCompilerArgs getArgs();
+
     public ClassLoader getClassLoader();
 }
+
+// End JavaCompiler.java

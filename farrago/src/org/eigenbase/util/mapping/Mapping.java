@@ -21,43 +21,47 @@
 */
 package org.eigenbase.util.mapping;
 
-import java.util.Iterator;
+import java.util.*;
+
 
 /**
  * A <dfn>Mapping</dfn> is a relationship between a source domain to target
  * domain of integers.
  *
- * <p>This interface represents the most general possible mapping. Depending
- * on the {@link MappingType} of a particular mapping, some of the operations
- * may not be applicable. If you call the method, you will receive a runtime
- * error.  For instance:
- * <li>If a target has more than one source, then the method
- *     {@link #getSource(int)} will throw
- *     {@link Mappings.TooManyElementsException}.
- * <li>If a source has no targets, then the method {@link #getTarget}
- *     will throw {@link Mappings.NoElementException}.
- *
+ * <p>This interface represents the most general possible mapping. Depending on
+ * the {@link MappingType} of a particular mapping, some of the operations may
+ * not be applicable. If you call the method, you will receive a runtime error.
+ * For instance:
+ * <li>If a target has more than one source, then the method {@link
+ * #getSource(int)} will throw {@link Mappings.TooManyElementsException}.
+ * <li>If a source has no targets, then the method {@link #getTarget} will throw
+ * {@link Mappings.NoElementException}.
  */
-public interface Mapping extends 
-    Mappings.FunctionMapping, Mappings.SourceMapping, Iterable<IntPair>
+public interface Mapping
+    extends Mappings.FunctionMapping,
+        Mappings.SourceMapping,
+        Iterable<IntPair>
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Returns an iterator over the elements in this mapping.
      *
-     * <p>This method is optional;
-     * implementations may throw {@link UnsupportedOperationException}.
+     * <p>This method is optional; implementations may throw {@link
+     * UnsupportedOperationException}.
      */
     Iterator<IntPair> iterator();
 
     /**
-     * Returns the number of sources. Valid sources will be in the range 0
-     * .. sourceCount.
+     * Returns the number of sources. Valid sources will be in the range 0 ..
+     * sourceCount.
      */
     int getSourceCount();
 
     /**
-     * Returns the number of targets. Valid targets will be in the range 0
-     * .. targetCount.
+     * Returns the number of targets. Valid targets will be in the range 0 ..
+     * targetCount.
      */
     int getTargetCount();
 

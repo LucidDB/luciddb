@@ -22,10 +22,10 @@
 */
 package org.eigenbase.rex;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.SqlAggFunction;
-import org.eigenbase.sql.SqlWindow;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Call to an aggregate function over a window.
@@ -34,14 +34,22 @@ import org.eigenbase.util.Util;
  * @version $Id$
  * @since Dec 6, 2004
  */
-public class RexOver extends RexCall
+public class RexOver
+    extends RexCall
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final RexWindow window;
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a RexOver.
      *
-     * <p>For example, "SUM(x) OVER (ROWS 3 PRECEDING)" is represented as:<ul>
+     * <p>For example, "SUM(x) OVER (ROWS 3 PRECEDING)" is represented as:
+     *
+     * <ul>
      * <li>type = Integer,
      * <li>op = {@link org.eigenbase.sql.fun.SqlStdOperatorTable#sumOperator},
      * <li>operands = { {@link RexFieldAccess}("x") }
@@ -60,7 +68,7 @@ public class RexOver extends RexCall
     RexOver(
         RelDataType type,
         SqlAggFunction op,
-        RexNode[] operands,
+        RexNode [] operands,
         RexWindow window)
     {
         super(type, op, operands);
@@ -70,6 +78,8 @@ public class RexOver extends RexCall
         this.window = window;
         this.digest = computeDigest(true);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the aggregate operator for this expression.
@@ -92,7 +102,10 @@ public class RexOver extends RexCall
     public Object clone()
     {
         return new RexOver(
-            getType(), getAggOperator(), operands, window);
+                getType(),
+                getAggOperator(),
+                operands,
+                window);
     }
 
     public <R> R accept(RexVisitor<R> visitor)
@@ -126,24 +139,27 @@ public class RexOver extends RexCall
      *
      * @deprecated
      */
-    public static boolean containsOver(RexNode[] exprs, RexNode expr)
+    public static boolean containsOver(RexNode [] exprs, RexNode expr)
     {
         for (int i = 0; i < exprs.length; i++) {
             if (Finder.instance.containsOver(exprs[i])) {
                 return true;
             }
         }
-        if (expr != null &&
-            Finder.instance.containsOver(expr)) {
+        if ((expr != null)
+            && Finder.instance.containsOver(expr)) {
             return true;
         }
         return false;
     }
 
-    private static class OverFound extends RuntimeException
+    //~ Inner Classes ----------------------------------------------------------
+
+    private static class OverFound
+        extends RuntimeException
     {
         public static final OverFound instance = new OverFound();
-    };
+    }
 
     /**
      * Visitor which detects a {@link RexOver} inside a {@link RexNode}
@@ -152,7 +168,8 @@ public class RexOver extends RexCall
      * <p>It is re-entrant (two threads can use an instance at the same time)
      * and it can be re-used for multiple visits.
      */
-    private static class Finder extends RexVisitorImpl<Void>
+    private static class Finder
+        extends RexVisitorImpl<Void>
     {
         static final RexOver.Finder instance = new RexOver.Finder();
 
@@ -180,7 +197,6 @@ public class RexOver extends RexCall
             }
         }
     }
-
 }
 
 // End RexOver.java

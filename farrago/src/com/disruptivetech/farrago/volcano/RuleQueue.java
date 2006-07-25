@@ -20,31 +20,33 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.*;
 
-import org.eigenbase.rel.RelNode;
+import java.util.*;
+import java.util.logging.*;
+
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.BinaryHeap;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
 
 /**
- * Priority queue of relexps whose rules have not been called, and
- * rule-matches which have not yet been acted upon.
+ * Priority queue of relexps whose rules have not been called, and rule-matches
+ * which have not yet been acted upon.
  */
 class RuleQueue
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** The importance of each subset. */
+    /**
+     * The importance of each subset.
+     */
     final Map<RelSubset, Double> subsetImportances =
         new HashMap<RelSubset, Double>();
 
@@ -58,7 +60,9 @@ class RuleQueue
 
     private final VolcanoPlanner planner;
 
-    /** Compares relexps according to their cached 'importance'. */
+    /**
+     * Compares relexps according to their cached 'importance'.
+     */
     private final Comparator<RelSubset> relImportanceComparator =
         new RelImportanceComparator();
 
@@ -67,14 +71,14 @@ class RuleQueue
 
     private final Set<RelNode> rels = new HashSet<RelNode>();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     RuleQueue(VolcanoPlanner planner)
     {
         this.planner = planner;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Computes the importance a set (which is that of its most important
@@ -126,16 +130,14 @@ class RuleQueue
     }
 
     /**
-     * Returns the importance of an equivalence class of relational
-     * expressions. Subset importances are held in a lookup table, and
-     * importance changes gradually propagate through that table.
+     * Returns the importance of an equivalence class of relational expressions.
+     * Subset importances are held in a lookup table, and importance changes
+     * gradually propagate through that table.
      *
-     * <p>
-     * If a subset in the same set but with a different calling convention is
+     * <p>If a subset in the same set but with a different calling convention is
      * deemed to be important, then this subset has at least half of its
      * importance. (This rule is designed to encourage conversions to take
-     * place.)
-     * </p>
+     * place.)</p>
      */
     double getImportance(RelSubset rel)
     {
@@ -169,8 +171,8 @@ class RuleQueue
     {
         assert rel != null : "pre: rel != null";
         boolean b = rels.add(rel);
-        assert b : "RuleQueue already contained rel: " + rel +
-            " (Did you forget to clone a rel in a rule?)";
+        assert b : "RuleQueue already contained rel: " + rel
+            + " (Did you forget to clone a rel in a rule?)";
         final RelSubset subset = planner.getSubset(rel);
         assert (subset != null);
         add(subset);
@@ -211,31 +213,25 @@ class RuleQueue
      * follows:
      *
      * <ul>
-     * <li>
-     * the root {@link RelSubset} has an importance of 1
-     * </li>
-     * <li>
-     * the importance of any other subset is the sum of its importance to its
-     * parents
-     * </li>
-     * <li>
-     * The importance of children is pro-rated according to the cost of the
-     * children. Consider a node which has a cost of 3, and children with
-     * costs of 2 and 5. The total cost is 10. If the node has an importance
-     * of .5, then the children will have importance of .1 and .25. The
-     * retains .15 importance points, to reflect the fact that work needs to
-     * be done on the node's algorithm.
-     * </li>
+     * <li>the root {@link RelSubset} has an importance of 1</li>
+     * <li>the importance of any other subset is the sum of its importance to
+     * its parents</li>
+     * <li>The importance of children is pro-rated according to the cost of the
+     * children. Consider a node which has a cost of 3, and children with costs
+     * of 2 and 5. The total cost is 10. If the node has an importance of .5,
+     * then the children will have importance of .1 and .25. The retains .15
+     * importance points, to reflect the fact that work needs to be done on the
+     * node's algorithm.</li>
      * </ul>
      *
      * The formula for the importance I of node n is:
-     * <blockquote>
-     * I<sub>n</sub> = Sum<sub>parents p of n</sub>{I<sub>p</sub> . W<sub>n,
-     * p</sub>}
-     * </blockquote>
+     *
+     * <blockquote>I<sub>n</sub> = Sum<sub>parents p of n</sub>{I<sub>p</sub> . W
+     * <sub>n, p</sub>}</blockquote>
+     *
      * where W<sub>n, p</sub>, the weight of n within its parent p, is
-     * <blockquote>
-     * W<sub>n, p</sub> = Cost<sub>n</sub> / (SelfCost<sub>p</sub> +
+     *
+     * <blockquote>W<sub>n, p</sub> = Cost<sub>n</sub> / (SelfCost<sub>p</sub> +
      * Cost<sub>n<sub>0</sub></sub> + ... + Cost<sub>n<sub>k</sub></sub>)
      * </blockquote>
      */
@@ -280,7 +276,8 @@ class RuleQueue
         Arrays.sort(subsets, relImportanceComparator);
         for (int i = 0; i < subsets.length; i++) {
             RelSubset subset = subsets[i];
-            pw.print(" " + subset.toString() + "="
+            pw.print(
+                " " + subset.toString() + "="
                 + subsetImportances.get(subset));
         }
         pw.println("}");
@@ -334,8 +331,7 @@ class RuleQueue
             final RelNode cheapestMember = findCheapestMember(subset);
             if (cheapestMember != null) {
                 relQueue.insert(subset); // put it back.. there may be more
-                assert rels.remove(cheapestMember) :
-                    "candidate rel must be on rule queue";
+                assert rels.remove(cheapestMember) : "candidate rel must be on rule queue";
                 return cheapestMember;
             }
 
@@ -356,8 +352,8 @@ class RuleQueue
         dump();
         assert (hasNextMatch());
         final VolcanoRuleMatch [] matches =
-            (VolcanoRuleMatch[])
-            matchList.toArray(new VolcanoRuleMatch[matchList.size()]);
+            (VolcanoRuleMatch []) matchList.toArray(
+                new VolcanoRuleMatch[matchList.size()]);
         for (int i = 0; i < matches.length; i++) {
             assert matches[i] != null : i;
         }
@@ -407,8 +403,8 @@ class RuleQueue
      * Returns the importance of a child to a parent. This is defined by the
      * importance of the parent, pro-rated by the cost of the child. For
      * example, if the parent has importance = 0.8 and cost 100, then a child
-     * with cost 50 will have importance 0.4, and a child with cost 25 will
-     * have importance 0.2.
+     * with cost 50 will have importance 0.4, and a child with cost 25 will have
+     * importance 0.2.
      */
     private double computeImportanceOfChild(
         RelSubset child,
@@ -424,7 +420,8 @@ class RuleQueue
         }
         final double importance = parentImportance * alpha;
         if (tracer.isLoggable(Level.FINEST)) {
-            tracer.finest("Importance of [" + child + "] to its parent ["
+            tracer.finest(
+                "Importance of [" + child + "] to its parent ["
                 + parent + "] is " + importance + " (parent importance="
                 + parentImportance + ", child cost=" + childCost
                 + ", parent cost=" + parentCost + ")");
@@ -444,13 +441,28 @@ class RuleQueue
         }
     }
 
-    //~ Inner Classes ---------------------------------------------------------
+    static int compareRels(RelNode [] rels0, RelNode [] rels1)
+    {
+        int c = rels0.length - rels1.length;
+        if (c != 0) {
+            return c;
+        }
+        for (int i = 0; i < rels0.length; i++) {
+            c = rels0[i].getId() - rels1[i].getId();
+            if (c != 0) {
+                return c;
+            }
+        }
+        return c;
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
 
     /**
-     * Compares {@link RelNode} objects according to their cached
-     * 'importance'.
+     * Compares {@link RelNode} objects according to their cached 'importance'.
      */
-    private class RelImportanceComparator implements Comparator<RelSubset>
+    private class RelImportanceComparator
+        implements Comparator<RelSubset>
     {
         public int compare(
             RelSubset rel1,
@@ -467,10 +479,10 @@ class RuleQueue
     }
 
     /**
-     * Compares {@link VolcanoRuleMatch} objects according to their
-     * importance. Matches which are more important collate earlier.
-     * Ties are adjudicated by comparing the {@link RelNode#getId id}s
-     * of the relational expressions matched.
+     * Compares {@link VolcanoRuleMatch} objects according to their importance.
+     * Matches which are more important collate earlier. Ties are adjudicated by
+     * comparing the {@link RelNode#getId id}s of the relational expressions
+     * matched.
      */
     private class RuleMatchImportanceComparator
         implements Comparator<VolcanoRuleMatch>
@@ -483,27 +495,13 @@ class RuleQueue
             double imp2 = match2.computeImportance();
             int c = Double.compare(imp1, imp2);
             if (c == 0) {
-                c = compareRels(match1.getRels(), match2.getRels());
+                c = compareRels(
+                        match1.getRels(),
+                        match2.getRels());
             }
-            return - c;
+            return -c;
         }
-    }
-
-    static int compareRels(RelNode[] rels0, RelNode[] rels1)
-    {
-        int c = rels0.length - rels1.length;
-        if (c != 0) {
-            return c;
-        }
-        for (int i = 0; i < rels0.length; i++) {
-            c = rels0[i].getId() - rels1[i].getId();
-            if (c != 0) {
-                return c;
-            }
-        }
-        return c;
     }
 }
-
 
 // End RuleQueue.java

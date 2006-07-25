@@ -21,35 +21,33 @@
 package com.disruptivetech.farrago.volcano;
 
 import java.util.*;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
-import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.trace.EigenbaseTrace;
+import org.eigenbase.trace.*;
 
 
 /**
- * A <code>RelSet</code> is an equivalence-set of expressions; that is, a set
- * of expressions which have identical semantics.  We are generally
- * interested in using the expression which has the lowest cost.
+ * A <code>RelSet</code> is an equivalence-set of expressions; that is, a set of
+ * expressions which have identical semantics. We are generally interested in
+ * using the expression which has the lowest cost.
  *
- * <p>
- * All of the expressions in an <code>RelSet</code> have the same calling
- * convention.
- * </p>
+ * <p>All of the expressions in an <code>RelSet</code> have the same calling
+ * convention.</p>
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 16 December, 2001
  */
 class RelSet
 {
-    //~ Static fields/initializers --------------------------------------------
+
+    //~ Static fields/initializers ---------------------------------------------
 
     private static final Logger tracer = EigenbaseTrace.getPlannerTracer();
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     final List<RelNode> rels = new ArrayList<RelNode>();
     final List<RelSubset> subsets = new ArrayList<RelSubset>();
@@ -62,8 +60,8 @@ class RelSet
         new ArrayList<AbstractConverter>();
 
     /**
-     * Set to the superseding set when this is found to be equivalent to
-     * another set.
+     * Set to the superseding set when this is found to be equivalent to another
+     * set.
      */
     RelSet equivalentSet;
     RelNode rel;
@@ -75,8 +73,7 @@ class RelSet
     Set<String> variablesPropagated;
 
     /**
-     * Names of variables which are used by relational expressions in this
-     * set.
+     * Names of variables which are used by relational expressions in this set.
      */
     Set<String> variablesUsed;
     int id;
@@ -86,17 +83,17 @@ class RelSet
      */
     boolean inMetadataQuery;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     RelSet()
     {
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
-     * Returns all of the {@link RelNode}s which reference {@link
-     * RelNode}s in this set.
+     * Returns all of the {@link RelNode}s which reference {@link RelNode}s in
+     * this set.
      */
     public List<RelNode> getParentRels()
     {
@@ -108,8 +105,8 @@ class RelSet
     }
 
     /**
-     * @return all of the {@link RelNode}s contained by any subset
-     * of this set (does not include the subset objects themselves)
+     * @return all of the {@link RelNode}s contained by any subset of this set
+     * (does not include the subset objects themselves)
      */
     public List<RelNode> getRelsFromAllSubsets()
     {
@@ -127,16 +124,14 @@ class RelSet
     }
 
     /**
-     * Adds a relational expression to a set, with its results available under
-     * a particular calling convention.  An expression may be in the set
-     * several times with different calling conventions (and hence different
-     * costs).
+     * Adds a relational expression to a set, with its results available under a
+     * particular calling convention. An expression may be in the set several
+     * times with different calling conventions (and hence different costs).
      */
     public RelSubset add(RelNode rel)
     {
         assert equivalentSet == null : "adding to a dead set";
-        RelSubset subset =
-            getOrCreateSubset(
+        RelSubset subset = getOrCreateSubset(
                 rel.getCluster(),
                 rel.getTraits());
         subset.add(rel);
@@ -173,16 +168,16 @@ class RelSet
 
     /**
      * Adds an expression <code>rel</code> to this set, without creating a
-     * {@link com.disruptivetech.farrago.volcano.RelSubset}.  (Called only from {@link
-     * com.disruptivetech.farrago.volcano.RelSubset#add}.
+     * {@link com.disruptivetech.farrago.volcano.RelSubset}. (Called only from
+     * {@link com.disruptivetech.farrago.volcano.RelSubset#add}.
      */
     void addInternal(RelNode rel)
     {
         if (!rels.contains(rel)) {
             rels.add(rel);
 
-            VolcanoPlanner planner = (VolcanoPlanner)
-                rel.getCluster().getPlanner();
+            VolcanoPlanner planner =
+                (VolcanoPlanner) rel.getCluster().getPlanner();
             if (planner.listener != null) {
                 postEquivalenceEvent(planner, rel);
             }
@@ -206,10 +201,9 @@ class RelSet
 
     /**
      * Merges <code>otherSet</code> into this one. You generally call this
-     * method after you discover that two relational expressions are
-     * equivalent, and hence their sets are equivalent also. After you have
-     * called this method, <code>otherSet</code> is obsolete, this otherSet
-     * is still alive.
+     * method after you discover that two relational expressions are equivalent,
+     * and hence their sets are equivalent also. After you have called this
+     * method, <code>otherSet</code> is obsolete, this otherSet is still alive.
      */
     void mergeWith(
         VolcanoPlanner planner,
@@ -251,7 +245,8 @@ class RelSet
             for (RelSubset parentSubset : relSubset.getParentSubsets()) {
                 for (RelNode parentRel : parentSubset.rels) {
                     parentSubset.propagateCostImprovements(
-                        planner, parentRel);
+                        planner,
+                        parentRel);
                 }
             }
         }
@@ -266,6 +261,5 @@ class RelSet
         }
     }
 }
-
 
 // End RelSet.java

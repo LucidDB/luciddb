@@ -22,12 +22,12 @@
 */
 package net.sf.farrago.query;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.relational.*;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 
 
 /**
@@ -37,41 +37,50 @@ import org.eigenbase.reltype.*;
  * @author John V. Sichi
  * @version $Id$
  */
-public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
+public abstract class FarragoQueryNamedColumnSet
+    extends RelOptAbstractTable
     implements FarragoQueryColumnSet
 {
-    //~ Instance fields -------------------------------------------------------
 
-    /** Catalog definition of column set. */
+    //~ Instance fields --------------------------------------------------------
+
+    /**
+     * Catalog definition of column set.
+     */
     private CwmNamedColumnSet cwmColumnSet;
 
-    /** Refinement for RelOptAbstractTable.schema. */
+    /**
+     * Refinement for RelOptAbstractTable.schema.
+     */
     private FarragoPreparingStmt preparingStmt;
 
-    /** Allowed access */
+    /**
+     * Allowed access
+     */
     private SqlAccessType allowedAccess;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new FarragoQueryNamedColumnSet object.
      *
      * @param cwmColumnSet catalog definition for column set
-     *
      * @param rowType type for rows stored in column set
      */
     FarragoQueryNamedColumnSet(
         CwmNamedColumnSet cwmColumnSet,
         RelDataType rowType)
     {
-        super(null,
-            cwmColumnSet.getName(), rowType);
+        super(
+            null,
+            cwmColumnSet.getName(),
+            rowType);
         this.cwmColumnSet = cwmColumnSet;
         this.allowedAccess =
             FarragoCatalogUtil.getTableAllowedAccess(cwmColumnSet);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // override RelOptAbstractTable
     public String [] getQualifiedName()
@@ -116,6 +125,5 @@ public abstract class FarragoQueryNamedColumnSet extends RelOptAbstractTable
         return cwmColumnSet;
     }
 }
-
 
 // End FarragoTable.java

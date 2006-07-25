@@ -37,9 +37,11 @@ import org.eigenbase.util.*;
  * @author John V. Sichi
  * @version $Id$
  */
-class MedMockTableModificationRule extends RelOptRule
+class MedMockTableModificationRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new MockTableModificationRule object.
@@ -51,7 +53,7 @@ class MedMockTableModificationRule extends RelOptRule
                 null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement RelOptRule
     public CallingConvention getOutConvention()
@@ -70,8 +72,8 @@ class MedMockTableModificationRule extends RelOptRule
             return;
         }
 
-        MedMockColumnSet targetColumnSet = (MedMockColumnSet)
-            tableModification.getTable();
+        MedMockColumnSet targetColumnSet =
+            (MedMockColumnSet) tableModification.getTable();
 
         // create a 1-row column set with the correct type for rowcount;
         // single value returned will be 0, which is what we want
@@ -83,13 +85,12 @@ class MedMockTableModificationRule extends RelOptRule
                 1,
                 targetColumnSet.executorImpl,
                 null);
-        
+
         call.transformTo(
             rowCountColumnSet.toRel(
                 tableModification.getCluster(),
                 tableModification.getConnection()));
     }
 }
-
 
 // End MedMockTableModificationRule.java

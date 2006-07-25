@@ -20,7 +20,7 @@
 */
 package com.disruptivetech.farrago.calc;
 
-import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.*;
 
 
 /**
@@ -29,12 +29,13 @@ import org.eigenbase.rex.RexCall;
  * <p>Implementors are held in a {@link CalcRexImplementorTable}.
  *
  * @author jhyde
- * @since June 2nd, 2004
  * @version $Id$
+ * @since June 2nd, 2004
  */
 public interface CalcRexImplementor
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Generates instructions to implement this call, and returns the register
@@ -46,6 +47,5 @@ public interface CalcRexImplementor
 
     boolean canImplement(RexCall call);
 }
-
 
 // End CalcRexImplementor.java

@@ -22,29 +22,32 @@
 */
 package net.sf.farrago.util;
 
-import org.eigenbase.util.CompoundClosableAllocation;
+import org.eigenbase.util.*;
+
 
 /**
- * FarragoCompoundAllocation represents a collection of FarragoAllocations
- * which share a common lifecycle.  It guarantees that allocations are closed
- * in the reverse order in which they were added.
+ * FarragoCompoundAllocation represents a collection of FarragoAllocations which
+ * share a common lifecycle. It guarantees that allocations are closed in the
+ * reverse order in which they were added.
  *
- * <p>
- * REVIEW: SWZ: 2/22/2006: New code should use CompoundClosableAllocation
- * directly when possible.  Eventually remove this class and replace all 
- * usages with CompoundClosableAllocation.
+ * <p>REVIEW: SWZ: 2/22/2006: New code should use CompoundClosableAllocation
+ * directly when possible. Eventually remove this class and replace all usages
+ * with CompoundClosableAllocation.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoCompoundAllocation extends CompoundClosableAllocation 
+public class FarragoCompoundAllocation
+    extends CompoundClosableAllocation
     implements FarragoAllocationOwner
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public FarragoCompoundAllocation()
     {
         super();
     }
 }
-
 
 // End FarragoCompoundAllocation.java

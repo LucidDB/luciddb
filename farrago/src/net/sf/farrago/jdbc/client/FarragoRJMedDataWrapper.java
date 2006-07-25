@@ -22,60 +22,76 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import net.sf.farrago.jdbc.FarragoRJDriverPropertyInfo;
-import net.sf.farrago.jdbc.FarragoMedDataWrapperInfo;
-import net.sf.farrago.jdbc.rmi.FarragoRJMedDataWrapperInterface;
+import java.rmi.*;
 
-import java.rmi.RemoteException;
-import java.sql.DriverPropertyInfo;
-import java.util.Locale;
-import java.util.Properties;
+import java.sql.*;
+
+import java.util.*;
+
+import net.sf.farrago.jdbc.*;
+import net.sf.farrago.jdbc.rmi.*;
+
 
 /**
- * Client-side JDBC implementation of
- * {@link net.sf.farrago.namespace.FarragoMedDataWrapper}.
+ * Client-side JDBC implementation of {@link
+ * net.sf.farrago.namespace.FarragoMedDataWrapper}.
  *
  * <p>It is paired with a <code>FarragoRJMedDataWrapperServer</code> via RMI.
  *
  * @author Tim Leung
  * @version $Id$
- */ 
+ */
 class FarragoRJMedDataWrapper
-    implements FarragoMedDataWrapperInfo, java.io.Serializable
+    implements FarragoMedDataWrapperInfo,
+        java.io.Serializable
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final FarragoRJMedDataWrapperInterface rmiDataWrapper_;
+
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoRJMedDataWrapper(FarragoRJMedDataWrapperInterface wrapper)
     {
         rmiDataWrapper_ = wrapper;
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     public DriverPropertyInfo [] getPluginPropertyInfo(
-            Locale locale,
-            Properties wrapperProps)
+        Locale locale,
+        Properties wrapperProps)
     {
         try {
-            return getDriverPropertyInfo(
-                rmiDataWrapper_.getPluginPropertyInfo(
-                    locale, wrapperProps));
+            return
+                getDriverPropertyInfo(
+                    rmiDataWrapper_.getPluginPropertyInfo(
+                        locale,
+                        wrapperProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new
+            // SQLException(e.getMessage());
         }
     }
-     
+
     public DriverPropertyInfo [] getServerPropertyInfo(
         Locale locale,
         Properties wrapperProps,
         Properties serverProps)
     {
         try {
-            return getDriverPropertyInfo(
-                rmiDataWrapper_.getServerPropertyInfo(
-                    locale, wrapperProps, serverProps));
+            return
+                getDriverPropertyInfo(
+                    rmiDataWrapper_.getServerPropertyInfo(
+                        locale,
+                        wrapperProps,
+                        serverProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new
+            // SQLException(e.getMessage());
         }
     }
 
@@ -86,12 +102,17 @@ class FarragoRJMedDataWrapper
         Properties tableProps)
     {
         try {
-            return getDriverPropertyInfo(
-                rmiDataWrapper_.getColumnSetPropertyInfo(
-                    locale, wrapperProps, serverProps, tableProps));
+            return
+                getDriverPropertyInfo(
+                    rmiDataWrapper_.getColumnSetPropertyInfo(
+                        locale,
+                        wrapperProps,
+                        serverProps,
+                        tableProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new
+            // SQLException(e.getMessage());
         }
     }
 
@@ -103,31 +124,40 @@ class FarragoRJMedDataWrapper
         Properties columnProps)
     {
         try {
-            return getDriverPropertyInfo(
-                rmiDataWrapper_.getColumnPropertyInfo(locale,
-                    wrapperProps, serverProps, tableProps, columnProps));
+            return
+                getDriverPropertyInfo(
+                    rmiDataWrapper_.getColumnPropertyInfo(locale,
+                        wrapperProps,
+                        serverProps,
+                        tableProps,
+                        columnProps));
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new
+            // SQLException(e.getMessage());
         }
     }
 
-    public boolean isForeign() {
+    public boolean isForeign()
+    {
         try {
             return rmiDataWrapper_.isForeign();
         } catch (RemoteException e) {
             throw new RuntimeException(e.getMessage());
-            // TODO: add 'throws SQLException' to interface, and throw new SQLException(e.getMessage());
+            // TODO: add 'throws SQLException' to interface, and throw new
+            // SQLException(e.getMessage());
         }
     }
 
     private DriverPropertyInfo [] getDriverPropertyInfo(
-        FarragoRJDriverPropertyInfo [] infos) {
-
-        DriverPropertyInfo dpis[] = new DriverPropertyInfo[infos.length];
+        FarragoRJDriverPropertyInfo [] infos)
+    {
+        DriverPropertyInfo [] dpis = new DriverPropertyInfo[infos.length];
         for (int i = 0; i < infos.length; i++) {
             dpis[i] = infos[i].getPropertyInfo();
         }
         return dpis;
     }
 }
+
+// End FarragoRJMedDataWrapper.java

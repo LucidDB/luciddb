@@ -20,37 +20,32 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.RelOptRuleCall;
-import org.eigenbase.relopt.RelOptRuleOperand;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeField;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexNode;
+import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+import org.eigenbase.rex.*;
 
 
 /**
  * Rule which, given a {@link ProjectRel} node which merely returns its input,
  * converts the node into its child.
  *
- * <p>
- * For example, <code>ProjectRel(ArrayReader(a), {$input0})</code> becomes
- * <code>ArrayReader(a)</code>.
- * </p>
+ * <p>For example, <code>ProjectRel(ArrayReader(a), {$input0})</code> becomes
+ * <code>ArrayReader(a)</code>.</p>
  */
-public class RemoveTrivialProjectRule extends RelOptRule
+public class RemoveTrivialProjectRule
+    extends RelOptRule
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     public RemoveTrivialProjectRule()
     {
         super(new RelOptRuleOperand(ProjectRel.class, null));
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void onMatch(RelOptRuleCall call)
     {
@@ -64,9 +59,9 @@ public class RemoveTrivialProjectRule extends RelOptRule
             return;
         }
         if (!isIdentity(
-                    project.exps,
-                    project.getRowType(),
-                    childRowType)) {
+                project.exps,
+                project.getRowType(),
+                childRowType)) {
             return;
         }
         child = call.getPlanner().register(child, project);
@@ -106,6 +101,5 @@ public class RemoveTrivialProjectRule extends RelOptRule
         return true;
     }
 }
-
 
 // End RemoveTrivialProjectRule.java

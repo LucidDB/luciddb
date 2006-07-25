@@ -20,25 +20,33 @@
 */
 package com.lucidera.lurql;
 
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
 
 import org.eigenbase.util.*;
 
+
 /**
- * LurqlPathSpec represents the parsed form of a path specification in
- * a LURQL query.
+ * LurqlPathSpec represents the parsed form of a path specification in a LURQL
+ * query.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class LurqlPathSpec extends LurqlQueryNode
+public class LurqlPathSpec
+    extends LurqlQueryNode
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final List branches;
 
     private final LurqlPathSpec gatherThen;
 
     private final boolean gatherParent;
+
+    //~ Constructors -----------------------------------------------------------
 
     public LurqlPathSpec(
         List branches,
@@ -49,6 +57,8 @@ public class LurqlPathSpec extends LurqlQueryNode
         this.gatherThen = gatherThen;
         this.gatherParent = gatherParent;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public List getBranches()
     {
@@ -69,7 +79,7 @@ public class LurqlPathSpec extends LurqlQueryNode
     {
         return gatherParent;
     }
-    
+
     // implement LurqlQueryNode
     public void unparse(PrintWriter pw)
     {

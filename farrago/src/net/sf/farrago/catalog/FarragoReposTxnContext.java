@@ -22,23 +22,23 @@
 */
 package net.sf.farrago.catalog;
 
-
 /**
  * FarragoReposTxnContext manages the state of at most one repository
- * transaction.  A context may be inactive, meaning it has no
- * current transaction.
+ * transaction. A context may be inactive, meaning it has no current
+ * transaction.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class FarragoReposTxnContext
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private FarragoRepos repos;
     private boolean isTxnInProgress;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new inactive transaction context.
@@ -50,7 +50,7 @@ public class FarragoReposTxnContext
         this.repos = repos;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * @return whether a transaction is currently in progress
@@ -104,6 +104,5 @@ public class FarragoReposTxnContext
         isTxnInProgress = false;
     }
 }
-
 
 // End FarragoReposTxnContext.java

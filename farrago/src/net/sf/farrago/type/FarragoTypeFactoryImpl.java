@@ -22,9 +22,12 @@
 */
 package net.sf.farrago.type;
 
-import java.nio.charset.Charset;
+import java.nio.charset.*;
+
 import java.sql.*;
+
 import java.util.*;
+import java.util.List;
 
 import javax.jmi.model.*;
 
@@ -37,6 +40,7 @@ import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import openjava.mop.*;
+
 import openjava.ptree.*;
 
 import org.eigenbase.oj.*;
@@ -46,9 +50,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
-import org.eigenbase.resource.EigenbaseResource;
 
-import java.util.List;
 
 /**
  * FarragoTypeFactoryImpl is the Farrago-specific implementation of the
@@ -57,21 +59,27 @@ import java.util.List;
  * @author John V. Sichi
  * @version $Id$
  */
-public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
+public class FarragoTypeFactoryImpl
+    extends OJTypeFactoryImpl
     implements FarragoTypeFactory
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final int unknownCharPrecision = 1024;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    /** Repos for type object definitions. */
+    /**
+     * Repos for type object definitions.
+     */
     private final FarragoRepos repos;
 
     private int nextGeneratedClassId;
 
     private Map mapTypeToOJClass;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public FarragoTypeFactoryImpl(FarragoRepos repos)
     {
@@ -82,7 +90,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         mapTypeToOJClass = new HashMap();
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoTypeFactory
     public FarragoRepos getRepos()
@@ -101,16 +109,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     public RelDataType createCwmElementType(
         FemAbstractTypedElement abstractElement)
     {
-        FemSqltypedElement element = FarragoCatalogUtil.toFemSqltypedElement(
-            abstractElement);
+        FemSqltypedElement element =
+            FarragoCatalogUtil.toFemSqltypedElement(
+                abstractElement);
 
         CwmClassifier classifier = element.getType();
         RelDataType type = createCwmTypeImpl(classifier, element);
 
         boolean isNullable = true;
         if (abstractElement instanceof CwmColumn) {
-            isNullable = FarragoCatalogUtil.isColumnNullable(
-                getRepos(), (CwmColumn) abstractElement);
+            isNullable =
+                FarragoCatalogUtil.isColumnNullable(
+                    getRepos(),
+                    (CwmColumn) abstractElement);
         }
 
         type = createTypeWithNullability(type, isNullable);
@@ -131,14 +142,14 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         SqlTypeName typeName = null;
         if (classifier instanceof CwmSqlsimpleType) {
             typeName = SqlTypeName.get(classifier.getName());
-            assert(typeName != null);
+            assert (typeName != null);
         } else {
             // special case for system-defined pseudotypes like CURSOR
             if (classifier.getNamespace() == null) {
                 typeName = SqlTypeName.get(classifier.getName());
             }
         }
-        
+
         if (typeName != null) {
             Integer pPrecision = null;
             Integer pScale = null;
@@ -153,18 +164,19 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
             RelDataType type;
             if (pScale != null) {
-                assert(pPrecision != null);
-                type = createSqlType(
-                    typeName,
-                    pPrecision.intValue(),
-                    pScale.intValue());
+                assert (pPrecision != null);
+                type =
+                    createSqlType(
+                        typeName,
+                        pPrecision.intValue(),
+                        pScale.intValue());
             } else if (pPrecision != null) {
                 type = createSqlType(
-                    typeName,
-                    pPrecision.intValue());
+                        typeName,
+                        pPrecision.intValue());
             } else {
                 type = createSqlType(
-                    typeName);
+                        typeName);
             }
 
             if (element != null) {
@@ -172,64 +184,73 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                 SqlCollation collation;
                 if (!charsetName.equals("")) {
                     // TODO:  collation in CWM
-                    collation = new SqlCollation(
-                        SqlCollation.Coercibility.Implicit);
+                    collation =
+                        new SqlCollation(
+                            SqlCollation.Coercibility.Implicit);
 
                     Charset charSet = Charset.forName(charsetName);
-                    type = createTypeWithCharsetAndCollation(
-                        type,
-                        charSet,
-                        collation);
+                    type =
+                        createTypeWithCharsetAndCollation(
+                            type,
+                            charSet,
+                            collation);
                 }
             }
             return type;
         } else if (classifier instanceof FemSqlcollectionType) {
             FemSqlcollectionType collectionType =
                 (FemSqlcollectionType) classifier;
-            assert(collectionType instanceof FemSqlmultisetType) :
-                "todo array type creation not yet implemented";
-            FemSqltypeAttribute femComponentType = (FemSqltypeAttribute)
-                collectionType.getFeature().get(0);
-            RelDataType componentType =
-                createCwmElementType(femComponentType);
+            assert (collectionType instanceof FemSqlmultisetType) : "todo array type creation not yet implemented";
+            FemSqltypeAttribute femComponentType =
+                (FemSqltypeAttribute) collectionType.getFeature().get(0);
+            RelDataType componentType = createCwmElementType(femComponentType);
 
             if (!componentType.isStruct()) {
                 // REVIEW jvs 12-Feb-2005:  what is this for?
-                componentType = createStructType(
-                    new RelDataType[]{componentType},
-                    new String[]{"EXP$0"});
+                componentType =
+                    createStructType(
+                        new RelDataType[] { componentType },
+                        new String[] { "EXP$0" });
             }
             return createMultisetType(componentType, -1);
         } else if (classifier instanceof FemSqldistinguishedType) {
             FemSqldistinguishedType type = (FemSqldistinguishedType) classifier;
             RelDataType predefinedType = createCwmElementType(type);
-            RelDataTypeField field = new RelDataTypeFieldImpl(
-                "PREDEFINED",
-                0,
-                predefinedType);
+            RelDataTypeField field =
+                new RelDataTypeFieldImpl(
+                    "PREDEFINED",
+                    0,
+                    predefinedType);
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(type);
-            return canonize(
-                new ObjectSqlType(
-                    SqlTypeName.Distinct, id, false,
-                    new RelDataTypeField [] {field},
-                    getUserDefinedComparability(type)));
+            return
+                canonize(
+                    new ObjectSqlType(
+                        SqlTypeName.Distinct,
+                        id,
+                        false,
+                        new RelDataTypeField[] { field },
+                        getUserDefinedComparability(type)));
         } else if (classifier instanceof FemSqlobjectType) {
-            FemSqlobjectType objectType =
-                (FemSqlobjectType) classifier;
+            FemSqlobjectType objectType = (FemSqlobjectType) classifier;
+
             // first, create an anonymous row type
             RelDataType structType = createStructTypeFromClassifier(
-                objectType);
+                    objectType);
+
             // then, christen it
             SqlIdentifier id = FarragoCatalogUtil.getQualifiedName(objectType);
-            return canonize(
-                new ObjectSqlType(
-                    SqlTypeName.Structured, id, false, structType.getFields(),
-                    getUserDefinedComparability(objectType)));
+            return
+                canonize(
+                    new ObjectSqlType(
+                        SqlTypeName.Structured,
+                        id,
+                        false,
+                        structType.getFields(),
+                        getUserDefinedComparability(objectType)));
         } else if (classifier instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) classifier;
             RelDataType structType = createStructTypeFromClassifier(rowType);
             return canonize(structType);
-
         } else {
             throw Util.needToImplement(classifier);
         }
@@ -241,7 +262,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (type.getOrdering().isEmpty()) {
             return RelDataTypeComparability.None;
         }
-        assert(type.getOrdering().size() == 1);
+        assert (type.getOrdering().size() == 1);
         FemUserDefinedOrdering udo =
             (FemUserDefinedOrdering) type.getOrdering().iterator().next();
         if (udo.isFull()) {
@@ -260,28 +281,27 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (featureList.isEmpty()) {
             return null;
         }
-        return createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    return featureList.size();
-                }
+        return createStructType(new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
+                        return featureList.size();
+                    }
 
-                public String getFieldName(int index)
-                {
-                    final FemAbstractTypedElement element =
-                        (FemAbstractTypedElement) featureList.get(index);
-                    return element.getName();
-                }
+                    public String getFieldName(int index)
+                    {
+                        final FemAbstractTypedElement element =
+                            (FemAbstractTypedElement) featureList.get(index);
+                        return element.getName();
+                    }
 
-                public RelDataType getFieldType(int index)
-                {
-                    final FemAbstractTypedElement element =
-                        (FemAbstractTypedElement) featureList.get(index);
-                    RelDataType type = createCwmElementType(element);
-                    return type;
-                }
-            });
+                    public RelDataType getFieldType(int index)
+                    {
+                        final FemAbstractTypedElement element =
+                            (FemAbstractTypedElement) featureList.get(index);
+                        RelDataType type = createCwmElementType(element);
+                        return type;
+                    }
+                });
     }
 
     // implement FarragoTypeFactory
@@ -289,57 +309,62 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         final ResultSetMetaData metaData,
         final boolean substitute)
     {
-        return createStructType(
-            new RelDataTypeFactory.FieldInfo() {
-                public int getFieldCount()
-                {
-                    try {
-                        return metaData.getColumnCount();
-                    } catch (SQLException ex) {
-                        throw newSqlTypeException(ex);
-                    }
-                }
-
-                public String getFieldName(int index)
-                {
-                    int iOneBased = index + 1;
-                    try {
-                        return metaData.getColumnName(iOneBased);
-                    } catch (SQLException ex) {
-                        throw newSqlTypeException(ex);
-                    }
-                }
-
-                public RelDataType getFieldType(int index)
-                {
-                    int iOneBased = index + 1;
-                    try {
-                        int typeOrdinal = metaData.getColumnType(iOneBased);
-                        int precision = metaData.getPrecision(iOneBased);
-                        int scale = metaData.getScale(iOneBased);
-                        boolean isNullable =
-                            (metaData.isNullable(iOneBased)
-                                != ResultSetMetaData.columnNoNulls);
+        return createStructType(new RelDataTypeFactory.FieldInfo() {
+                    public int getFieldCount()
+                    {
                         try {
-                            RelDataType type = createJdbcType(
-                                typeOrdinal, precision, scale, isNullable,
-                                substitute);
-                            return (RelDataType) type;
-                        } catch (Throwable ex) {
-                            throw newUnsupportedJdbcType(
-                                metaData.getTableName(iOneBased),
-                                metaData.getColumnName(iOneBased),
-                                metaData.getColumnTypeName(iOneBased),
-                                typeOrdinal,
-                                precision,
-                                scale,
-                                ex);
+                            return metaData.getColumnCount();
+                        } catch (SQLException ex) {
+                            throw newSqlTypeException(ex);
                         }
-                    } catch (Throwable ex) {
-                        throw newSqlTypeException(ex);
                     }
-                }
-            });
+
+                    public String getFieldName(int index)
+                    {
+                        int iOneBased = index + 1;
+                        try {
+                            return metaData.getColumnName(iOneBased);
+                        } catch (SQLException ex) {
+                            throw newSqlTypeException(ex);
+                        }
+                    }
+
+                    public RelDataType getFieldType(int index)
+                    {
+                        int iOneBased = index + 1;
+                        try {
+                            int typeOrdinal = metaData.getColumnType(iOneBased);
+                            int precision = metaData.getPrecision(iOneBased);
+                            int scale = metaData.getScale(iOneBased);
+                            boolean isNullable =
+                                (
+                                    metaData.isNullable(iOneBased)
+                                    != ResultSetMetaData.columnNoNulls
+                                );
+                            try {
+                                RelDataType type =
+                                    createJdbcType(
+                                        typeOrdinal,
+                                        precision,
+                                        scale,
+                                        isNullable,
+                                        substitute);
+                                return (RelDataType) type;
+                            } catch (Throwable ex) {
+                                throw newUnsupportedJdbcType(
+                                    metaData.getTableName(iOneBased),
+                                    metaData.getColumnName(iOneBased),
+                                    metaData.getColumnTypeName(iOneBased),
+                                    typeOrdinal,
+                                    precision,
+                                    scale,
+                                    ex);
+                            }
+                        } catch (Throwable ex) {
+                            throw newSqlTypeException(ex);
+                        }
+                    }
+                });
     }
 
     // implement FarragoTypeFactory
@@ -357,7 +382,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             try {
                 RelDataType type =
                     createJdbcType(
-                        typeOrdinal, precision, scale, isNullable,
+                        typeOrdinal,
+                        precision,
+                        scale,
+                        isNullable,
                         substitute);
                 return (RelDataType) type;
             } catch (Throwable ex) {
@@ -385,12 +413,11 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         RelDataType type;
 
-        // TODO jvs 1-Mar-2006: Avoid using try/catch for substitution;
-        // instead, get lower levels to participate.  Particularly bad is
-        // catching Throwable, which could be an assertion error which has
-        // nothing to do with type construction.  Also, supply more information
-        // in cases where we currently just throw a plain
-        // UnsupportedOperationException.
+        // TODO jvs 1-Mar-2006: Avoid using try/catch for substitution; instead,
+        // get lower levels to participate.  Particularly bad is catching
+        // Throwable, which could be an assertion error which has nothing to do
+        // with type construction.  Also, supply more information in cases where
+        // we currently just throw a plain UnsupportedOperationException.
         try {
             SqlTypeName typeName = SqlTypeName.getNameForJdbcType(typeOrdinal);
             if (typeName == null) {
@@ -433,8 +460,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 
                     // In the case where we lost precision, we cap the scale at
                     // 6.  This is an arbitrary decision just like the scale of
-                    // division, and we expect to have to revisit it; perhaps
-                    // we could allow it to be overridden via a column-level
+                    // division, and we expect to have to revisit it; perhaps we
+                    // could allow it to be overridden via a column-level
                     // SQL/MED storage option.
                     int cappedScale = 6;
                     if (scale > cappedScale) {
@@ -448,37 +475,41 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     scale = 0;
                 }
                 type = createSqlType(
-                    typeName,
-                    precision,
-                    scale);
+                        typeName,
+                        precision,
+                        scale);
             } else if (typeName.allowsScale()) {
                 // This is probably never used because Decimal is the
                 // only type which supports scale.
                 type = createSqlType(
-                    typeName, precision, scale);
+                        typeName,
+                        precision,
+                        scale);
             } else if (typeName.allowsPrec() && !isDatetime) {
                 type = createSqlType(
-                    typeName, precision);
+                        typeName,
+                        precision);
             } else {
                 type = createSqlType(
-                    typeName);
+                        typeName);
             }
         } catch (Throwable ex) {
             if (substitute) {
                 // last resort
                 type = createSqlType(
-                    SqlTypeName.Varchar,
-                    unknownCharPrecision);
+                        SqlTypeName.Varchar,
+                        unknownCharPrecision);
             } else {
                 // Rethrow
                 throw ex;
             }
         }
         type = createTypeWithNullability(
-            type, isNullable);
+                type,
+                isNullable);
         return type;
     }
-    
+
     private EigenbaseException newSqlTypeException(Throwable ex)
     {
         return FarragoResource.instance().JdbcDriverTypeInfoFailed.ex(ex);
@@ -497,14 +528,15 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             // hide this because it's not a real excn
             ex = null;
         }
-        return FarragoResource.instance().JdbcDriverTypeUnsupported.ex(
-            repos.getLocalizedObjectName(tableName),
-            repos.getLocalizedObjectName(columnName),
-            repos.getLocalizedObjectName(typeName),
-            typeOrdinal,
-            precision,
-            scale,
-            ex);
+        return
+            FarragoResource.instance().JdbcDriverTypeUnsupported.ex(
+                repos.getLocalizedObjectName(tableName),
+                repos.getLocalizedObjectName(columnName),
+                repos.getLocalizedObjectName(typeName),
+                typeOrdinal,
+                precision,
+                scale,
+                ex);
     }
 
     int generateClassId()
@@ -547,8 +579,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             type = createSqlType(typeName);
         }
         type = createTypeWithNullability(
-            type,
-            isNullable);
+                type,
+                isNullable);
         return type;
     }
 
@@ -580,47 +612,50 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         switch (type.getSqlTypeName().getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
             if (type.isNullable()) {
-                return OJClass.forClass(
-                    NullablePrimitive.NullableBoolean.class);
+                return
+                    OJClass.forClass(
+                        NullablePrimitive.NullableBoolean.class);
             } else {
                 return OJSystem.BOOLEAN;
             }
         case SqlTypeName.Tinyint_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
-                    NullablePrimitive.NullableByte.class);
+                        NullablePrimitive.NullableByte.class);
             } else {
                 return OJSystem.BYTE;
             }
         case SqlTypeName.Smallint_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
-                    NullablePrimitive.NullableShort.class);
+                        NullablePrimitive.NullableShort.class);
             } else {
                 return OJSystem.SHORT;
             }
         case SqlTypeName.Symbol_ordinal:
         case SqlTypeName.Integer_ordinal:
             if (type.isNullable()) {
-                return OJClass.forClass(
-                    NullablePrimitive.NullableInteger.class);
+                return
+                    OJClass.forClass(
+                        NullablePrimitive.NullableInteger.class);
             } else {
                 return OJSystem.INT;
             }
         case SqlTypeName.Bigint_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
-                    NullablePrimitive.NullableLong.class);
+                        NullablePrimitive.NullableLong.class);
             } else {
                 return OJSystem.LONG;
             }
         case SqlTypeName.Decimal_ordinal:
             return newDecimalOJClass(
-                declarer, type);
+                    declarer,
+                    type);
         case SqlTypeName.Real_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
-                    NullablePrimitive.NullableFloat.class);
+                        NullablePrimitive.NullableFloat.class);
             } else {
                 return OJSystem.FLOAT;
             }
@@ -628,26 +663,36 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         case SqlTypeName.Double_ordinal:
             if (type.isNullable()) {
                 return OJClass.forClass(
-                    NullablePrimitive.NullableDouble.class);
+                        NullablePrimitive.NullableDouble.class);
             } else {
                 return OJSystem.DOUBLE;
             }
         case SqlTypeName.Date_ordinal:
-            return newDatetimeOJClass(
-                SqlDateTimeWithoutTZ.SqlDate.class, declarer, type);
+            return
+                newDatetimeOJClass(
+                    SqlDateTimeWithoutTZ.SqlDate.class,
+                    declarer,
+                    type);
         case SqlTypeName.Time_ordinal:
-            return newDatetimeOJClass(
-                SqlDateTimeWithoutTZ.SqlTime.class, declarer, type);
+            return
+                newDatetimeOJClass(
+                    SqlDateTimeWithoutTZ.SqlTime.class,
+                    declarer,
+                    type);
         case SqlTypeName.Timestamp_ordinal:
-            return newDatetimeOJClass(
-                SqlDateTimeWithoutTZ.SqlTimestamp.class, declarer, type);
+            return
+                newDatetimeOJClass(
+                    SqlDateTimeWithoutTZ.SqlTimestamp.class,
+                    declarer,
+                    type);
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Binary_ordinal:
         case SqlTypeName.Varbinary_ordinal:
         case SqlTypeName.Multiset_ordinal:
             return newStringOJClass(
-                declarer, type);
+                    declarer,
+                    type);
         case SqlTypeName.Structured_ordinal:
             return createOJClassForRecordType(declarer, type);
         default:
@@ -656,7 +701,8 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     }
 
     private OJClass newDecimalOJClass(
-        OJClass declarer, RelDataType type)
+        OJClass declarer,
+        RelDataType type)
     {
         Class superclass = EncodedSqlDecimal.class;
         MemberDeclarationList memberDecls = new MemberDeclarationList();
@@ -681,18 +727,28 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                     new ReturnStatement(
                         Literal.makeLiteral(type.getScale())))));
         return newHolderOJClass(
-            superclass, memberDecls, declarer, type);
+                superclass,
+                memberDecls,
+                declarer,
+                type);
     }
 
     private OJClass newDatetimeOJClass(
-        Class superclass, OJClass declarer, RelDataType type)
+        Class superclass,
+        OJClass declarer,
+        RelDataType type)
     {
-        return newHolderOJClass(
-            superclass, new MemberDeclarationList(), declarer, type);
+        return
+            newHolderOJClass(
+                superclass,
+                new MemberDeclarationList(),
+                declarer,
+                type);
     }
 
     private OJClass newStringOJClass(
-        OJClass declarer, RelDataType type)
+        OJClass declarer,
+        RelDataType type)
     {
         Class superclass;
         MemberDeclarationList memberDecls = new MemberDeclarationList();
@@ -713,7 +769,10 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
                             Literal.makeLiteral(charsetName)))));
         }
         return newHolderOJClass(
-            superclass, memberDecls, declarer, type);
+                superclass,
+                memberDecls,
+                declarer,
+                type);
     }
 
     private OJClass newHolderOJClass(
@@ -723,18 +782,18 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type)
     {
         TypeName [] superDecl =
-            new TypeName [] { OJUtil.typeNameForClass(superclass) };
+            new TypeName[] { OJUtil.typeNameForClass(superclass) };
 
         TypeName [] interfaceDecls = null;
         if (type.isNullable()) {
-            interfaceDecls =
-                new TypeName [] {
+            interfaceDecls = new TypeName[] {
                     OJUtil.typeNameForClass(NullableValue.class)
                 };
         }
         ClassDeclaration decl =
-            new ClassDeclaration(new ModifierList(ModifierList.PUBLIC
-                        | ModifierList.STATIC),
+            new ClassDeclaration(
+                new ModifierList(ModifierList.PUBLIC
+                    | ModifierList.STATIC),
                 "Oj_inner_" + generateClassId(),
                 superDecl,
                 interfaceDecls,
@@ -754,7 +813,6 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
             ojClass.getName(),
             ojClass);
         return ojClass;
-
     }
 
     // implement FarragoTypeFactory
@@ -762,10 +820,9 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         RelDataType type,
         Expression expr)
     {
-        if (SqlTypeUtil.isDatetime(type) ||
-            SqlTypeUtil.isDecimal(type) ||
-            ((getClassForPrimitive(type) != null) && type.isNullable()))
-        {
+        if (SqlTypeUtil.isDatetime(type)
+            || SqlTypeUtil.isDecimal(type)
+            || ((getClassForPrimitive(type) != null) && type.isNullable())) {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
         } else {
             return expr;
@@ -780,7 +837,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         if (typeName == null) {
             return null;
         }
-        switch(typeName.getOrdinal()) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Boolean_ordinal:
             return boolean.class;
         case SqlTypeName.Tinyint_ordinal:
@@ -819,7 +876,7 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
         // SQL:2003 Part 13 Section 4.5,
         // these mappings are based on Appendix B of the JDBC 3.0
         // spec
-        switch(typeName.getOrdinal()) {
+        switch (typeName.getOrdinal()) {
         case SqlTypeName.Decimal_ordinal:
             return java.math.BigDecimal.class;
         case SqlTypeName.Char_ordinal:
@@ -880,12 +937,13 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
     {
         if (SqlTypeUtil.inCharFamily(type)) {
             Charset charset = getDefaultCharset();
-            SqlCollation collation = new SqlCollation(
-                SqlCollation.Coercibility.Coercible);
+            SqlCollation collation =
+                new SqlCollation(
+                    SqlCollation.Coercibility.Coercible);
             type = createTypeWithCharsetAndCollation(
-                type,
-                charset,
-                collation);
+                    type,
+                    charset,
+                    collation);
         }
         return type;
     }
@@ -902,4 +960,3 @@ public class FarragoTypeFactoryImpl extends OJTypeFactoryImpl
 }
 
 // End FarragoTypeFactoryImpl.java
-

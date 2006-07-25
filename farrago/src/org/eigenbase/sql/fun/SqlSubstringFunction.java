@@ -20,33 +20,40 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.validate.SqlValidator;
-import org.eigenbase.sql.validate.SqlValidatorScope;
+import java.util.*;
 
-import java.util.ArrayList;
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * Definition of the "SUBSTRING" builtin SQL function.
  *
  * @author Wael Chatila
- * @since Sep 5, 2004
  * @version $Id$
+ * @since Sep 5, 2004
  */
-public class SqlSubstringFunction extends SqlFunction {
+public class SqlSubstringFunction
+    extends SqlFunction
+{
 
-    SqlSubstringFunction() {
-        super("SUBSTRING", SqlKind.Function,
-            SqlTypeStrategies.rtiNullableVaryingFirstArgType, null, null,
+    //~ Constructors -----------------------------------------------------------
+
+    SqlSubstringFunction()
+    {
+        super("SUBSTRING",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableVaryingFirstArgType,
+            null,
+            null,
             SqlFunctionCategory.String);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public String getSignatureTemplate(final int operandsCount)
     {
@@ -63,7 +70,7 @@ public class SqlSubstringFunction extends SqlFunction {
     public String getAllowedSignatures(String opName)
     {
         StringBuffer ret = new StringBuffer();
-        for (int i = 0; i < SqlTypeName.stringTypes.length;i++) {
+        for (int i = 0; i < SqlTypeName.stringTypes.length; i++) {
             if (i > 0) {
                 ret.append(NL);
             }
@@ -84,58 +91,65 @@ public class SqlSubstringFunction extends SqlFunction {
     {
         SqlCall call = callBinding.getCall();
         SqlValidator validator = callBinding.getValidator();
-        SqlValidatorScope scope  = callBinding.getScope();
+        SqlValidatorScope scope = callBinding.getScope();
 
         int n = call.operands.length;
         assert ((3 == n) || (2 == n));
         if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                 callBinding,
-                call.operands[0], 0, throwOnFailure))
-        {
+                call.operands[0],
+                0,
+                throwOnFailure)) {
             return false;
         }
         if (2 == n) {
             if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                     callBinding,
-                    call.operands[1], 0, throwOnFailure))
-            {
+                    call.operands[1],
+                    0,
+                    throwOnFailure)) {
                 return false;
             }
         } else {
-            RelDataType t1 =
-                validator.deriveType(scope, call.operands[1]);
-            RelDataType t2 =
-                validator.deriveType(scope, call.operands[2]);
+            RelDataType t1 = validator.deriveType(scope, call.operands[1]);
+            RelDataType t2 = validator.deriveType(scope, call.operands[2]);
 
             if (SqlTypeUtil.inCharFamily(t1)) {
                 if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
-                        call.operands[1], 0, throwOnFailure))
-                {
+                        call.operands[1],
+                        0,
+                        throwOnFailure)) {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcString.checkSingleOperandType(
                         callBinding,
-                        call.operands[2], 0, throwOnFailure))
-                {
+                        call.operands[2],
+                        0,
+                        throwOnFailure)) {
                     return false;
                 }
 
                 if (!SqlTypeUtil.isCharTypeComparable(
-                    validator, scope, call.operands, throwOnFailure)) {
+                        validator,
+                        scope,
+                        call.operands,
+                        throwOnFailure)) {
                     return false;
                 }
             } else {
                 if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
-                        call.operands[1], 0, throwOnFailure))
-                {
+                        call.operands[1],
+                        0,
+                        throwOnFailure)) {
                     return false;
                 }
                 if (!SqlTypeStrategies.otcNumeric.checkSingleOperandType(
                         callBinding,
-                        call.operands[2], 0, throwOnFailure))
-                {
+                        call.operands[2],
+                        0,
+                        throwOnFailure)) {
                     return false;
                 }
             }

@@ -22,9 +22,11 @@
 package org.eigenbase.jmi;
 
 import java.sql.*;
+
 import java.util.*;
 
 // REVIEW jvs 21-May-2005:  Make this a heavyweight allocation?
+
 
 /**
  * JmiPreparedQuery represents a prepared query returned by {@link
@@ -35,11 +37,14 @@ import java.util.*;
  */
 public interface JmiPreparedQuery
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Gets a description of the parameters to this query.
      *
-     * @return map from parameter name (String) to expected type
-     * (type representation is implementation-dependent)
+     * @return map from parameter name (String) to expected type (type
+     * representation is implementation-dependent)
      */
     public Map describeParameters();
 
@@ -50,16 +55,15 @@ public interface JmiPreparedQuery
      * multi-line
      */
     public String explainPlan();
-    
+
     /**
-     * Executes the prepared query.  Whether it is legal to simultaneously
+     * Executes the prepared query. Whether it is legal to simultaneously
      * execute the same query from different threads is
-     * implementation-dependent.  The query transaction scope is
-     * determined by the current thread context and JMI implementation.
+     * implementation-dependent. The query transaction scope is determined by
+     * the current thread context and JMI implementation.
      *
-     * @param connection JDBC connection to use for processing SQL
-     * subqueries, or null if none available
-     *
+     * @param connection JDBC connection to use for processing SQL subqueries,
+     * or null if none available
      * @param args map from parameter name (String) to argument value (allowable
      * value type is implementation-dependent)
      *

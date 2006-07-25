@@ -21,27 +21,29 @@
 */
 package org.eigenbase.sql;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.sql.parser.SqlParserPos;
-import org.eigenbase.sql.parser.SqlParserUtil;
-import org.eigenbase.sql.type.SqlTypeName;
+import java.text.*;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.*;
+
+import org.eigenbase.reltype.*;
+import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
+
 
 /**
- * A SQL literal representing a DATE value,
- * such as <code>DATE '2004-10-22'</code>.
+ * A SQL literal representing a DATE value, such as <code>DATE
+ * '2004-10-22'</code>.
  *
  * <p>Create values using {@link SqlLiteral#createDate}.
  *
- * @version $Id$
  * @author jhyde
+ * @version $Id$
  */
-public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
- {
+public class SqlDateLiteral
+    extends SqlAbstractDateTimeLiteral
+{
+
+    //~ Constructors -----------------------------------------------------------
 
     SqlDateLiteral(Calendar d, SqlParserPos pos)
     {
@@ -53,10 +55,14 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
         super(d, false, SqlTypeName.Date, 0, format, pos);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Constructs a new dateformat object for the given string.
-     * Note that DateFormat objects aren't thread-safe.
+     * Constructs a new dateformat object for the given string. Note that
+     * DateFormat objects aren't thread-safe.
+     *
      * @param dfString
+     *
      * @return date format object
      */
     static DateFormat getDateFormat(String dfString)
@@ -69,7 +75,6 @@ public class SqlDateLiteral extends SqlAbstractDateTimeLiteral
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlDateLiteral((Calendar) value, pos);
-
     }
 
     public String toString()

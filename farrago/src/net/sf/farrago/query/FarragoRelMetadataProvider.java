@@ -28,58 +28,66 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.stat.*;
 
+
 /**
- * FarragoRelMetadataProvider implements Farrago specific metadata. 
- * Initially, it provides costing information available through statistics.
- * Other potential uses of this class are:
- * 
+ * FarragoRelMetadataProvider implements Farrago specific metadata. Initially,
+ * it provides costing information available through statistics. Other potential
+ * uses of this class are:
+ *
  * <ol>
- *   <li>Provide cost information for Farrago rels</li>
- *   <li>Provides a uniform cost model for all rels of concern to 
- *      Farrago</li>
+ * <li>Provide cost information for Farrago rels</li>
+ * <li>Provides a uniform cost model for all rels of concern to Farrago</li>
  * </ol>
  *
  * @author John Pham
  * @version $Id$
  */
-public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
+public class FarragoRelMetadataProvider
+    extends ReflectiveRelMetadataProvider
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoRepos repos;
-    
+
     private FarragoColumnMetadata columnMd;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Initializes a provider with access to the Farrago catalog. The 
-     * provider reads statistics stored in the catalog.
-     * 
+     * Initializes a provider with access to the Farrago catalog. The provider
+     * reads statistics stored in the catalog.
+     *
      * @param repos the Farrago catalog
      */
     public FarragoRelMetadataProvider(FarragoRepos repos)
     {
         this.repos = repos;
         columnMd = new FarragoColumnMetadata();
-        
+
         mapParameterTypes(
             "getPopulationSize",
             Collections.singletonList((Class) BitSet.class));
-        
+
         List<Class> args = new ArrayList<Class>();
         args.add((Class) BitSet.class);
         args.add((Class) RexNode.class);
         mapParameterTypes("getDistinctRowCount", args);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
-     * Retrieves statistics for a relational expression, if they exist 
-     * in the catalog.
-     * 
+     * Retrieves statistics for a relational expression, if they exist in the
+     * catalog.
+     *
      * @param rel the relational expression
-     * 
+     *
      * @return the statistics object, or null
      */
     public RelStatSource getStatistics(RelNode rel)
@@ -88,19 +96,18 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         if (table == null) {
             return null;
         }
-        
-        String[] qualifiedName = table.getQualifiedName();
-        assert (qualifiedName.length == 3) 
-            : "qualified name did not have three parts";
+
+        String [] qualifiedName = table.getQualifiedName();
+        assert (qualifiedName.length == 3) : "qualified name did not have three parts";
         String catalogName = qualifiedName[0];
         String schemaName = qualifiedName[1];
         String tableName = qualifiedName[2];
-        
+
         CwmCatalog catalog = repos.getCatalog(catalogName);
         if (catalog == null) {
             return null;
         }
-        FemLocalSchema schema = 
+        FemLocalSchema schema =
             FarragoCatalogUtil.getSchemaByName(catalog, schemaName);
         if (schema == null) {
             return null;
@@ -108,24 +115,25 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         FemAbstractColumnSet columnSet =
             FarragoCatalogUtil.getModelElementByNameAndType(
                 schema.getOwnedElement(),
-                tableName, 
+                tableName,
                 FemAbstractColumnSet.class);
         if (columnSet == null) {
             return null;
         }
- 
+
         RelStatSource result = new FarragoTableStatistics(repos, columnSet);
         return result;
     }
-    
+
     /**
      * Retrieves the row count of a Farrago expression or null
-     * 
+     *
      * @param rel the relational expression
-     * 
+     *
      * @return the row count, or null if the row count was not available
      */
-    public Double getRowCount(RelNode rel) {
+    public Double getRowCount(RelNode rel)
+    {
         Double result = null;
         RelStatSource source = getStatistics(rel);
         if (source != null) {
@@ -133,19 +141,21 @@ public class FarragoRelMetadataProvider extends ReflectiveRelMetadataProvider
         }
         return result;
     }
-    
+
     public Set<BitSet> getUniqueKeys(RelNode rel)
-    {           
+    {
         return columnMd.getUniqueKeys(rel, repos);
     }
-    
+
     public Double getPopulationSize(RelNode rel, BitSet groupKey)
     {
         return columnMd.getPopulationSize(rel, groupKey);
     }
-    
+
     public Double getDistinctRowCount(
-        RelNode rel, BitSet groupKey, RexNode predicate)
+        RelNode rel,
+        BitSet groupKey,
+        RexNode predicate)
     {
         return columnMd.getDistinctRowCount(rel, groupKey, predicate);
     }

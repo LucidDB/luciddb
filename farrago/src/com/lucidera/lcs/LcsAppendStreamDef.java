@@ -30,23 +30,29 @@ import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
 
+
 /**
  * LcsAppendStreamDef creates an append execution stream def
- * 
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
 public class LcsAppendStreamDef
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private FarragoRepos repos;
     private LcsTable lcsTable;
     private FemExecutionStreamDef inputStream;
     private FennelRel appendRel;
     private LcsIndexGuide indexGuide;
 
+    //~ Constructors -----------------------------------------------------------
+
     public LcsAppendStreamDef(
         FarragoRepos repos,
-        LcsTable lcsTable, 
+        LcsTable lcsTable,
         FemExecutionStreamDef inputStream,
         FennelRel appendRel)
     {
@@ -56,41 +62,43 @@ public class LcsAppendStreamDef
         this.appendRel = appendRel;
         indexGuide = lcsTable.getIndexGuide();
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
         CwmTable table = (CwmTable) lcsTable.getCwmColumnSet();
-        
+
         //
         // 1. Setup the SplitterStreamDef
         //
         FemSplitterStreamDef splitter =
             indexGuide.newSplitter((SingleRel) appendRel);
-        
+
         //
         // 2. Setup all the LcsClusterAppendStreamDef's
         //    - Get all the clustered indices.
         //    - For each index, set up the corresponding clusterAppend stream
         //      def.
         //
-        
-        ArrayList<FemLcsClusterAppendStreamDef> clusterAppendDefs = 
+
+        ArrayList<FemLcsClusterAppendStreamDef> clusterAppendDefs =
             new ArrayList<FemLcsClusterAppendStreamDef>();
-        
+
         // Get the clustered indexes associated with this table.
         List<FemLocalIndex> clusteredIndexes =
             FarragoCatalogUtil.getClusteredIndexes(repos, table);
-        
-        for (FemLocalIndex clusteredIndex : clusteredIndexes) {            
+
+        for (FemLocalIndex clusteredIndex : clusteredIndexes) {
             clusterAppendDefs.add(
                 indexGuide.newClusterAppend(appendRel, clusteredIndex));
         }
-        
+
         //
         // 3. Setup the BarrierStreamDef.
         //
         FemBarrierStreamDef barrier = indexGuide.newBarrier(appendRel, -1);
-        
+
         //
         // 4. Link the StreamDefs together.  Note that the input may be
         //    a buffering stream
@@ -102,7 +110,7 @@ public class LcsAppendStreamDef
         implementor.addDataFlowFromProducerToConsumer(
             inputStream,
             splitter);
-        
+
         for (Object streamDef : clusterAppendDefs) {
             FemLcsClusterAppendStreamDef clusterAppend =
                 (FemLcsClusterAppendStreamDef) streamDef;
@@ -111,9 +119,9 @@ public class LcsAppendStreamDef
                 clusterAppend);
             implementor.addDataFlowFromProducerToConsumer(
                 clusterAppend,
-                barrier);                
+                barrier);
         }
-        
+
         //
         // 5. If there are no unclustered indexes, stop at the barrier
         //
@@ -122,7 +130,7 @@ public class LcsAppendStreamDef
         if (unclusteredIndexes.size() == 0) {
             return barrier;
         }
-        
+
         // Update clustered index scans
         for (Object streamDef : clusterAppendDefs) {
             FemLcsClusterAppendStreamDef clusterAppend =
@@ -131,35 +139,38 @@ public class LcsAppendStreamDef
                 indexGuide.getUnclusteredInputDesc());
         }
         barrier.setOutputDesc(indexGuide.getUnclusteredInputDesc());
-        
+
         //
         // 6. Setup unclustered indices.
         //    - For each index, set up the corresponding bitmap append
         //
-        ArrayList<LcsCompositeStreamDef> bitmapAppendDefs = 
+        ArrayList<LcsCompositeStreamDef> bitmapAppendDefs =
             new ArrayList<LcsCompositeStreamDef>();
-        
+
         for (FemLocalIndex unclusteredIndex : unclusteredIndexes) {
             LcsIndexGuide ucxIndexGuide = getIndexGuide(unclusteredIndex);
             FennelRelParamId dynParamId = implementor.allocateRelParamId();
-            bitmapAppendDefs.add( 
+            bitmapAppendDefs.add(
                 ucxIndexGuide.newBitmapAppend(
-                    appendRel, unclusteredIndex, implementor, false,
+                    appendRel,
+                    unclusteredIndex,
+                    implementor,
+                    false,
                     dynParamId));
         }
-        
+
         //
         // 7. Setup a bitmap SplitterStreamDef
         //
-        FemSplitterStreamDef bitmapSplitter = 
+        FemSplitterStreamDef bitmapSplitter =
             indexGuide.newSplitter((SingleRel) appendRel);
-        
+
         //
         // 8. Setup a bitmap BarrierStreamDef
         //
-        FemBarrierStreamDef bitmapBarrier = 
+        FemBarrierStreamDef bitmapBarrier =
             indexGuide.newBarrier(appendRel, -1);
-        
+
         //
         // 9. Link the bitmap StreamDefs together.
         //                     -> bitmap append streams ->
@@ -167,11 +178,11 @@ public class LcsAppendStreamDef
         //                                  ...
         //                     -> bitmap append streams ->
         //
-        
+
         implementor.addDataFlowFromProducerToConsumer(
             barrier,
             bitmapSplitter);
-        
+
         for (Object streamDef : bitmapAppendDefs) {
             LcsCompositeStreamDef bitmapAppend =
                 (LcsCompositeStreamDef) streamDef;
@@ -180,21 +191,22 @@ public class LcsAppendStreamDef
                 bitmapAppend.getConsumer());
             implementor.addDataFlowFromProducerToConsumer(
                 bitmapAppend.getProducer(),
-                bitmapBarrier);                
+                bitmapBarrier);
         }
-        
+
         return bitmapBarrier;
     }
-    
+
     /**
      * Returns an index guide specific to an unclustered index
      */
     private LcsIndexGuide getIndexGuide(FemLocalIndex unclusteredIndex)
     {
-        return new LcsIndexGuide(
-            lcsTable.getPreparingStmt().getFarragoTypeFactory(),
-            lcsTable.getCwmColumnSet(),
-            unclusteredIndex);
+        return
+            new LcsIndexGuide(
+                lcsTable.getPreparingStmt().getFarragoTypeFactory(),
+                lcsTable.getCwmColumnSet(),
+                unclusteredIndex);
     }
 }
 

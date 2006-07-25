@@ -20,29 +20,30 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.util;
 
-import org.eigenbase.util14.*;
-import java.util.*;
 import java.io.*;
+
+import java.util.*;
+
+import org.eigenbase.util14.*;
 
 
 /**
  * <code>EnumeratedValues</code> is a helper class for declaring a set of
- * symbolic constants which have names, ordinals, and possibly descriptions.
- * The ordinals do not have to be contiguous.
+ * symbolic constants which have names, ordinals, and possibly descriptions. The
+ * ordinals do not have to be contiguous.
  *
- * <p>
- * Typically, for a particular set of constants, you derive a class from this
+ * <p>Typically, for a particular set of constants, you derive a class from this
  * interface, and declare the constants as <code>public static final</code>
- * members. Give it a private constructor, and a <code>public static final
- * <i>ClassName</i> instance</code> member to hold the singleton instance.
- * </p>
+ * members. Give it a private constructor, and a <code>public static final <i>
+ * ClassName</i> instance</code> member to hold the singleton instance.</p>
  */
-public class EnumeratedValues extends Enum14
+public class EnumeratedValues
+    extends Enum14
 {
-    //~ Constructors ----------------------------------------------------------
+
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a new empty, mutable enumeration.
@@ -69,8 +70,8 @@ public class EnumeratedValues extends Enum14
     }
 
     /**
-     * Create an enumeration, initializes it with arrays of code/name pairs,
-     * and freezes it.
+     * Create an enumeration, initializes it with arrays of code/name pairs, and
+     * freezes it.
      */
     public EnumeratedValues(
         String [] names,
@@ -80,8 +81,8 @@ public class EnumeratedValues extends Enum14
     }
 
     /**
-     * Create an enumeration, initializes it with arrays of code/name pairs,
-     * and freezes it.
+     * Create an enumeration, initializes it with arrays of code/name pairs, and
+     * freezes it.
      */
     public EnumeratedValues(
         String [] names,
@@ -91,7 +92,8 @@ public class EnumeratedValues extends Enum14
         super(names, codes, descriptions);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Creates a mutable enumeration from an existing enumeration, which may
      * already be immutable.
@@ -101,6 +103,5 @@ public class EnumeratedValues extends Enum14
         return (EnumeratedValues) clone();
     }
 }
-
 
 // End EnumeratedValues.java

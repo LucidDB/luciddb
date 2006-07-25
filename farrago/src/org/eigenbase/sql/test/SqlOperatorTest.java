@@ -22,30 +22,38 @@
 */
 package org.eigenbase.sql.test;
 
-import org.eigenbase.test.SqlValidatorTestCase;
+import org.eigenbase.test.*;
+
 
 /**
  * Concrete subclass of {@link SqlOperatorTests} which checks against
  *
  * @author Julian Hyde
- * @since July 7, 2005
  * @version $Id$
+ * @since July 7, 2005
  */
-public class SqlOperatorTest extends SqlOperatorTests
+public class SqlOperatorTest
+    extends SqlOperatorTests
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private SqlTester tester =
         (SqlTester) new SqlValidatorTestCase("dummy").getTester();
+
+    //~ Constructors -----------------------------------------------------------
 
     public SqlOperatorTest(String testName)
     {
         super(testName);
     }
 
+    //~ Methods ----------------------------------------------------------------
+
     protected SqlTester getTester()
     {
         return tester;
     }
-
 }
 
 // End SqlOperatorTest.java

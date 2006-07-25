@@ -20,25 +20,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
-
 
 /**
  * A relational expression which implements itself by generating Java
- * flow-control statements. This interface corresponds to the
- * {@link org.eigenbase.relopt.CallingConvention#JAVA Java calling-convention}.
+ * flow-control statements. This interface corresponds to the {@link
+ * org.eigenbase.relopt.CallingConvention#JAVA Java calling-convention}.
  *
  * <p>For example, {@link JavaFilterRel} implements filtering logic by
  * generating an <code>if (...) { ... }</code> construct.
  *
  * @author jhyde
- * @since May 27, 2004
  * @version $Id$
- **/
-public interface JavaLoopRel extends JavaRel
+ * @since May 27, 2004
+ */
+public interface JavaLoopRel
+    extends JavaRel
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Calls a parent back.
@@ -50,6 +50,5 @@ public interface JavaLoopRel extends JavaRel
         JavaRelImplementor implementor,
         int ordinal);
 }
-
 
 // End JavaLoopRel.java

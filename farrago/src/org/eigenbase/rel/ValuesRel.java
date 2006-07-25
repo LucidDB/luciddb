@@ -21,34 +21,36 @@
 */
 package org.eigenbase.rel;
 
+import java.util.*;
+
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
-import java.util.*;
 
 /**
- * <code>ValuesRel</code> represents a sequence of zero or more
- * literal row values.
+ * <code>ValuesRel</code> represents a sequence of zero or more literal row
+ * values.
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class ValuesRel extends ValuesRelBase
+public class ValuesRel
+    extends ValuesRelBase
 {
 
+    //~ Constructors -----------------------------------------------------------
+
     /**
-     * Creates a new ValuesRel.  Note that tuples passed in become owned
-     * by this rel (without a deep copy), so caller must not modify them after
-     * this call, otherwise bad things will happen.
+     * Creates a new ValuesRel. Note that tuples passed in become owned by this
+     * rel (without a deep copy), so caller must not modify them after this
+     * call, otherwise bad things will happen.
      *
      * @param cluster .
-     *
      * @param rowType row type for tuples produced by this rel
-     *
      * @param tuples 2-dimensional array of tuple values to be produced; outer
-     * list contains tuples; each inner list is one tuple; all tuples must be
-     * of same length, conforming to rowType
+     * list contains tuples; each inner list is one tuple; all tuples must be of
+     * same length, conforming to rowType
      */
     public ValuesRel(
         RelOptCluster cluster,
@@ -56,7 +58,9 @@ public class ValuesRel extends ValuesRelBase
         List<List<RexLiteral>> tuples)
     {
         super(
-            cluster, rowType, tuples,
+            cluster,
+            rowType,
+            tuples,
             new RelTraitSet(CallingConvention.NONE));
     }
 }

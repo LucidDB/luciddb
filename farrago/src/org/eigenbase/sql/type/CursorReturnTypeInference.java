@@ -24,24 +24,31 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
+
 /**
  * Returns the rowtype of a cursor of the operand at a particular 0-based
  * ordinal position.
  *
- * @see OrdinalReturnTypeInference
- *
  * @author Julian Hyde
  * @version $Id$
+ * @see OrdinalReturnTypeInference
  */
 public class CursorReturnTypeInference
     implements SqlReturnTypeInference
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final int ordinal;
+
+    //~ Constructors -----------------------------------------------------------
 
     public CursorReturnTypeInference(int ordinal)
     {
         this.ordinal = ordinal;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)

@@ -21,12 +21,11 @@
 */
 package org.eigenbase.sql.validate;
 
-import org.eigenbase.sql.SqlCall;
-import org.eigenbase.sql.SqlNode;
-import org.eigenbase.sql.SqlKind;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.resource.EigenbaseResource;
-import org.eigenbase.util.Util;
+import org.eigenbase.reltype.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.util.*;
+
 
 /**
  * Namespace based upon a set operation (UNION, INTERSECT, EXCEPT).
@@ -35,15 +34,23 @@ import org.eigenbase.util.Util;
  * @version $Id$
  * @since Mar 25, 2003
  */
-class SetopNamespace extends AbstractNamespace
+class SetopNamespace
+    extends AbstractNamespace
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     private final SqlCall call;
+
+    //~ Constructors -----------------------------------------------------------
 
     SetopNamespace(SqlValidatorImpl validator, SqlCall call)
     {
         super(validator);
         this.call = call;
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public SqlNode getNode()
     {
@@ -59,7 +66,8 @@ class SetopNamespace extends AbstractNamespace
             for (int i = 0; i < call.operands.length; i++) {
                 SqlNode operand = call.operands[i];
                 if (!operand.getKind().isA(SqlKind.Query)) {
-                    throw validator.newValidationError(operand,
+                    throw validator.newValidationError(
+                        operand,
                         EigenbaseResource.instance().NeedQueryOp.ex(
                             operand.toString()));
                 }
@@ -67,12 +75,13 @@ class SetopNamespace extends AbstractNamespace
             }
             final SqlValidatorScope scope = validator.scopes.get(call);
             return call.getOperator().validateOperands(
-                validator, scope, call);
+                    validator,
+                    scope,
+                    call);
         default:
             throw Util.newInternal("Not a query: " + call.getKind());
         }
     }
 }
-
 
 // End SetopNamespace.java

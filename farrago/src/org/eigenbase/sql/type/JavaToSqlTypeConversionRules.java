@@ -22,23 +22,34 @@
 */
 package org.eigenbase.sql.type;
 
-import java.util.*;
+import java.math.*;
+
 import java.sql.*;
 import java.sql.Date;
-import java.math.BigDecimal;
+
+import java.util.*;
+
 
 /**
- * JavaToSqlTypeConversionRules defines mappings from common Java types
- * to corresponding SQL types.
+ * JavaToSqlTypeConversionRules defines mappings from common Java types to
+ * corresponding SQL types.
  *
  * @author John V. Sichi
  * @version $Id$
  */
 public class JavaToSqlTypeConversionRules
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final JavaToSqlTypeConversionRules instance =
         new JavaToSqlTypeConversionRules();
+
+    //~ Instance fields --------------------------------------------------------
+
     private final HashMap rules = new HashMap();
+
+    //~ Constructors -----------------------------------------------------------
 
     private JavaToSqlTypeConversionRules()
     {
@@ -68,9 +79,11 @@ public class JavaToSqlTypeConversionRules
         rules.put(Timestamp.class, SqlTypeName.Timestamp);
         rules.put(Time.class, SqlTypeName.Time);
         rules.put(BigDecimal.class, SqlTypeName.Decimal);
-        
+
         rules.put(ResultSet.class, SqlTypeName.Cursor);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     /**
      * Returns the {@link org.eigenbase.util.Glossary#SingletonPattern
@@ -82,8 +95,7 @@ public class JavaToSqlTypeConversionRules
     }
 
     /**
-     * Returns a corresponding {@link SqlTypeName} for a given
-     * Java class.
+     * Returns a corresponding {@link SqlTypeName} for a given Java class.
      *
      * @param javaClass the Java class to lookup
      *

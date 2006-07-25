@@ -22,27 +22,28 @@
 */
 package org.eigenbase.sql.type;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.SqlValidatorScope;
-import org.eigenbase.sql.validate.SqlValidator;
+
 
 /**
  * Strategy interface to infer the type of an operator call from the type of the
  * operands.
  *
- * <p>This interface is an example of the
- * {@link org.eigenbase.util.Glossary#StrategyPattern strategy pattern}.
- * This makes sense because many operators have similar, straightforward
- * strategies, such as to take the type of the first operand.</p>
+ * <p>This interface is an example of the {@link
+ * org.eigenbase.util.Glossary#StrategyPattern strategy pattern}. This makes
+ * sense because many operators have similar, straightforward strategies, such
+ * as to take the type of the first operand.</p>
  *
  * @author Wael Chatila
- * @since Sept 8, 2004
  * @version $Id$
+ * @since Sept 8, 2004
  */
 public interface SqlReturnTypeInference
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     /**
      * Infers the return type of a call to an {@link SqlOperator}.
      *
@@ -55,4 +56,3 @@ public interface SqlReturnTypeInference
 }
 
 // End SqlReturnTypeInference.java
-

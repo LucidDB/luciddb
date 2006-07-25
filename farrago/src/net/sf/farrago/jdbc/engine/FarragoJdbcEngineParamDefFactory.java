@@ -22,37 +22,43 @@
 */
 package net.sf.farrago.jdbc.engine;
 
-import org.eigenbase.reltype.RelDataType;
+import java.sql.*;
 
-import net.sf.farrago.session.FarragoSessionStmtParamDef;
-import net.sf.farrago.session.FarragoSessionStmtParamDefFactory;
-import net.sf.farrago.jdbc.param.FarragoParamFieldMetaData;
-import net.sf.farrago.jdbc.param.FarragoJdbcParamDef;
-import net.sf.farrago.jdbc.param.FarragoJdbcParamDefFactory;
+import net.sf.farrago.jdbc.param.*;
+import net.sf.farrago.session.*;
 
-import java.sql.ParameterMetaData;
+import org.eigenbase.reltype.*;
+
 
 /**
- * FarragoJdbcEngineParamDefFactory implements 
- * {@link FarragoSessionStmtParamDefFactory} for JDBC.
- * 
+ * FarragoJdbcEngineParamDefFactory implements {@link
+ * FarragoSessionStmtParamDefFactory} for JDBC.
+ *
  * @author stephan
  * @version $Id$
  */
-public class FarragoJdbcEngineParamDefFactory 
+public class FarragoJdbcEngineParamDefFactory
     implements FarragoSessionStmtParamDefFactory
 {
+
+    //~ Methods ----------------------------------------------------------------
+
     // Implement FarragoSessionStmtParamDefFactory
     public FarragoSessionStmtParamDef newParamDef(
-        String paramName, RelDataType type)
+        String paramName,
+        RelDataType type)
     {
         FarragoParamFieldMetaData paramMetaData =
             FarragoParamFieldMetaDataFactory.newParamFieldMetaData(
-                type, ParameterMetaData.parameterModeIn);
+                type,
+                ParameterMetaData.parameterModeIn);
 
         FarragoJdbcParamDef param =
-            FarragoJdbcParamDefFactory.newParamDef(paramName, paramMetaData, false);
+            FarragoJdbcParamDefFactory.newParamDef(paramName,
+                paramMetaData,
+                false);
         return new FarragoJdbcEngineParamDef(param, type);
     }
 }
 
+// End FarragoJdbcEngineParamDefFactory.java

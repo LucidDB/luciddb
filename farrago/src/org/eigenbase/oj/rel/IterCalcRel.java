@@ -20,56 +20,65 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.rel;
 
-import openjava.mop.OJClass;
+import java.util.*;
+import java.util.List;
+import java.util.logging.*;
+
+import openjava.mop.*;
+
 import openjava.ptree.*;
 
-import org.eigenbase.oj.util.OJUtil;
-import org.eigenbase.oj.rex.RexToOJTranslator;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.runtime.CalcTupleIter;
-import org.eigenbase.runtime.TupleIter;
+import org.eigenbase.runtime.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.trace.EigenbaseTrace;
-import org.eigenbase.util.Util;
+import org.eigenbase.trace.*;
+import org.eigenbase.util.*;
 
-import java.util.*;
-import java.util.List;
-import java.util.logging.Level;
 
 /**
  * <code>IterCalcRel</code> is an iterator implementation of a combination of
- * {@link ProjectRel} above an optional {@link FilterRel}.  It takes a
- * {@link TupleIter iterator} as input, and for each row applies the filter condition if defined.
- * Rows passing the filter expression are transformed via projection and
- * returned.  Note that the same object is always returned (with different
+ * {@link ProjectRel} above an optional {@link FilterRel}. It takes a {@link
+ * TupleIter iterator} as input, and for each row applies the filter condition
+ * if defined. Rows passing the filter expression are transformed via projection
+ * and returned. Note that the same object is always returned (with different
  * values), so parents must not buffer the result.
  *
- * <p>Rules:<ul>
+ * <p>Rules:
+ *
+ * <ul>
  * <li>{@link org.eigenbase.oj.rel.IterRules.IterCalcRule} creates an
- *     IterCalcRel from a {@link org.eigenbase.rel.CalcRel}</li>
+ * IterCalcRel from a {@link org.eigenbase.rel.CalcRel}</li>
  * </ul>
  */
-public class IterCalcRel extends SingleRel implements JavaRel
+public class IterCalcRel
+    extends SingleRel
+    implements JavaRel
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static boolean abortOnError = true;
 
-    //~ Instance fields -------------------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
     private final RexProgram program;
 
-    /** Values defined in {@link ProjectRelBase.Flags}. */
+    /**
+     * Values defined in {@link ProjectRelBase.Flags}.
+     */
     protected int flags;
 
     private String loggerType;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public IterCalcRel(
         RelOptCluster cluster,
@@ -77,14 +86,17 @@ public class IterCalcRel extends SingleRel implements JavaRel
         RexProgram program,
         int flags)
     {
-        super(cluster, new RelTraitSet(CallingConvention.ITERATOR), child);
+        super(
+            cluster,
+            new RelTraitSet(CallingConvention.ITERATOR),
+            child);
         this.flags = flags;
         this.program = program;
         this.rowType = program.getOutputRowType();
         loggerType = null;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public void setLoggerType(String loggerType)
     {
@@ -105,9 +117,9 @@ public class IterCalcRel extends SingleRel implements JavaRel
         if (loggerType != null) {
             // append logger type to digest
             int lastParen = tempDigest.lastIndexOf(')');
-            tempDigest = 
-                tempDigest.substring(0, lastParen) 
-                + ",type=" + loggerType 
+            tempDigest =
+                tempDigest.substring(0, lastParen)
+                + ",type=" + loggerType
                 + tempDigest.substring(lastParen);
         }
         return tempDigest;
@@ -115,14 +127,17 @@ public class IterCalcRel extends SingleRel implements JavaRel
 
     public double getRows()
     {
-        return FilterRel.estimateFilteredRows(
-            getChild(), program.getCondition());
+        return
+            FilterRel.estimateFilteredRows(
+                getChild(),
+                program.getCondition());
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {
         double dRows = RelMetadataQuery.getRowCount(this);
-        double dCpu = RelMetadataQuery.getRowCount(getChild())
+        double dCpu =
+            RelMetadataQuery.getRowCount(getChild())
             * program.getExprCount();
         double dIo = 0;
         return planner.makeCost(dRows, dCpu, dIo);
@@ -130,11 +145,12 @@ public class IterCalcRel extends SingleRel implements JavaRel
 
     public Object clone()
     {
-        IterCalcRel clone = new IterCalcRel(
-            getCluster(),
-            RelOptUtil.clone(getChild()),
-            program.copy(),
-            getFlags());
+        IterCalcRel clone =
+            new IterCalcRel(
+                getCluster(),
+                RelOptUtil.clone(getChild()),
+                program.copy(),
+                getFlags());
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -146,39 +162,43 @@ public class IterCalcRel extends SingleRel implements JavaRel
 
     public boolean isBoxed()
     {
-        return (flags & ProjectRelBase.Flags.Boxed) == ProjectRelBase.Flags.Boxed;
+        return
+            (flags & ProjectRelBase.Flags.Boxed) == ProjectRelBase.Flags.Boxed;
     }
 
     /**
-     * Burrows into a synthetic record and returns the underlying relation
-     * which provides the field called <code>fieldName</code>.
+     * Burrows into a synthetic record and returns the underlying relation which
+     * provides the field called <code>fieldName</code>.
      */
     public JavaRel implementFieldAccess(
         JavaRelImplementor implementor,
         String fieldName)
     {
         if (!isBoxed()) {
-            return implementor.implementFieldAccess(
-                (JavaRel) getChild(), fieldName);
+            return
+                implementor.implementFieldAccess((JavaRel) getChild(),
+                    fieldName);
         }
         RelDataType type = getRowType();
         int field = type.getFieldOrdinal(fieldName);
         RexLocalRef ref = program.getProjectList().get(field);
         final int index = ref.getIndex();
-        return implementor.findRel(
-            (JavaRel) this, program.getExprList().get(index));
+        return
+            implementor.findRel(
+                (JavaRel) this,
+                program.getExprList().get(index));
     }
 
     /**
-     * Disables throwing of exceptions on error.  Do not set this
-     * false without a very good reason!  Doing so will prevent type
-     * cast, overflow/underflow, etc. errors in Farrago.
+     * Disables throwing of exceptions on error. Do not set this false without a
+     * very good reason! Doing so will prevent type cast, overflow/underflow,
+     * etc. errors in Farrago.
      */
     public static void setAbortOnError(boolean abortOnError)
     {
         IterCalcRel.abortOnError = abortOnError;
     }
-    
+
     public static Expression implementAbstract(
         JavaRelImplementor implementor,
         JavaRel rel,
@@ -189,9 +209,16 @@ public class IterCalcRel extends SingleRel implements JavaRel
         RexProgram program,
         String loggerType)
     {
-        return implementAbstractTupleIter(
-            implementor, rel, childExp, varInputRow, inputRowType,
-            outputRowType, program, loggerType);
+        return
+            implementAbstractTupleIter(
+                implementor,
+                rel,
+                childExp,
+                varInputRow,
+                inputRowType,
+                outputRowType,
+                program,
+                loggerType);
     }
 
     public static Expression implementAbstractTupleIter(
@@ -205,15 +232,19 @@ public class IterCalcRel extends SingleRel implements JavaRel
         String loggerType)
     {
         RelDataTypeFactory typeFactory = implementor.getTypeFactory();
-        OJClass outputRowClass = OJUtil.typeToOJClass(
-            outputRowType, typeFactory);
+        OJClass outputRowClass =
+            OJUtil.typeToOJClass(
+                outputRowType,
+                typeFactory);
         OJClass inputRowClass = OJUtil.typeToOJClass(
-            inputRowType, typeFactory);
+                inputRowType,
+                typeFactory);
 
         Variable varOutputRow = implementor.newVariable();
 
         FieldDeclaration rowVarDecl =
-            new FieldDeclaration(new ModifierList(ModifierList.PRIVATE),
+            new FieldDeclaration(
+                new ModifierList(ModifierList.PRIVATE),
                 TypeName.forOJClass(outputRowClass),
                 varOutputRow.toString(),
                 new AllocationExpression(
@@ -242,28 +273,27 @@ public class IterCalcRel extends SingleRel implements JavaRel
                     OJUtil.typeNameForClass(TupleIter.NoDataReason.class)),
                 ifNoDataReasonBody));
 
-        ifNoDataReasonBody.add(
-            new ReturnStatement(varInputObj));
+        ifNoDataReasonBody.add(new ReturnStatement(varInputObj));
 
         // The calculator (projection, filtering) statements are added to
         // calcStmts.  In most cases it will just be the while loop's body.
         StatementList calcStmts;
-        if (abortOnError && loggerType == null) {
+        if (abortOnError && (loggerType == null)) {
             calcStmts = whileBody;
         } else {
             // This is not the usual case.  Here we wrap the calc statements
             // (e.g., everything but the code that reads rows from the
             // inputIterator) in a try/catch that ignores exceptions.
-            
+
             calcStmts = new StatementList();
-            
+
             // try { /* calcStmts */ }
             // catch(RuntimeException ex) {
             //     EigenbaseTrace.getStatementTracer().log(
             //         Level.WARNING, "java calc exception", ex);
             // }
             StatementList catchStmts = new StatementList();
-            
+
             catchStmts.add(
                 new ExpressionStatement(
                     new MethodCall(
@@ -278,20 +308,20 @@ public class IterCalcRel extends SingleRel implements JavaRel
                                 "WARNING"),
                             Literal.makeLiteral("java calc exception"),
                             new FieldAccess("ex")))));
-                    
-            CatchList catchList = 
+
+            CatchList catchList =
                 new CatchList(
                     new CatchBlock(
                         new Parameter(
                             OJUtil.typeNameForClass(RuntimeException.class),
                             "ex"),
                         catchStmts));
-            
+
             TryStatement tryStmt = new TryStatement(calcStmts, catchList);
-    
+
             whileBody.add(tryStmt);
         }
-        
+
         calcStmts.add(
             new VariableDeclaration(
                 TypeName.forOJClass(inputRowClass),
@@ -301,7 +331,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
                     varInputObj)));
 
         MemberDeclarationList memberList = new MemberDeclarationList();
-        
+
         StatementList condBody;
         RexToOJTranslator translator =
             implementor.newStmtTranslator(rel, calcStmts, memberList);
@@ -312,7 +342,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
                 RexNode rexIsTrue =
                     rel.getCluster().getRexBuilder().makeCall(
                         SqlStdOperatorTable.isTrueOperator,
-                        new RexNode [] { program.getCondition() });
+                        new RexNode[] { program.getCondition() });
                 Expression conditionExp =
                     translator.translateRexNode(rexIsTrue);
                 calcStmts.add(new IfStatement(conditionExp, condBody));
@@ -327,8 +357,8 @@ public class IterCalcRel extends SingleRel implements JavaRel
             for (RexLocalRef rhs : projectRefList) {
                 ++i;
                 String javaFieldName = Util.toJavaId(
-                    fields[i].getName(),
-                    i);
+                        fields[i].getName(),
+                        i);
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
                 condTranslator.translateAssignment(fields[i], lhs, rhs);
             }
@@ -337,7 +367,7 @@ public class IterCalcRel extends SingleRel implements JavaRel
         }
 
         condBody.add(new ReturnStatement(varOutputRow));
-        
+
         WhileStatement whileStmt =
             new WhileStatement(
                 Literal.makeLiteral(true),
@@ -349,8 +379,11 @@ public class IterCalcRel extends SingleRel implements JavaRel
         MemberDeclaration fetchNextMethodDecl =
             new MethodDeclaration(
                 new ModifierList(ModifierList.PUBLIC),
-                OJUtil.typeNameForClass(Object.class), "fetchNext",
-                new ParameterList(), null, nextMethodBody);
+                OJUtil.typeNameForClass(Object.class),
+                "fetchNext",
+                new ParameterList(),
+                null,
+                nextMethodBody);
 
         memberList.add(rowVarDecl);
         memberList.add(fetchNextMethodDecl);
@@ -371,11 +404,20 @@ public class IterCalcRel extends SingleRel implements JavaRel
         RelDataType inputRowType = getChild().getRowType();
 
         Variable varInputRow = implementor.newVariable();
-        implementor.bind(getChild(), varInputRow);
+        implementor.bind(
+            getChild(),
+            varInputRow);
 
-        return implementAbstract(
-            implementor, this, childExp, varInputRow, inputRowType,
-            outputRowType, program, loggerType);
+        return
+            implementAbstract(
+                implementor,
+                this,
+                childExp,
+                varInputRow,
+                inputRowType,
+                outputRowType,
+                program,
+                loggerType);
     }
 
     public RexProgram getProgram()
@@ -383,6 +425,5 @@ public class IterCalcRel extends SingleRel implements JavaRel
         return program;
     }
 }
-
 
 // End IterCalcRel.java

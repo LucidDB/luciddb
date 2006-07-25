@@ -20,38 +20,36 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.rel;
 
-import org.eigenbase.relopt.*;
 import org.eigenbase.rel.metadata.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.Util;
-import org.eigenbase.sql.type.SqlTypeUtil;
+import org.eigenbase.util.*;
 
 
 /**
- * A <code>SingleRel</code> is a base class single-input relational
- * expressions.
+ * A <code>SingleRel</code> is a base class single-input relational expressions.
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 23 September, 2001
  */
-public abstract class SingleRel extends AbstractRelNode
+public abstract class SingleRel
+    extends AbstractRelNode
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private RelNode child;
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     /**
      * Creates a <code>SingleRel</code>.
      *
-     * @param cluster {@link RelOptCluster} this relational expression
-     *        belongs to
+     * @param cluster {@link RelOptCluster} this relational expression belongs
+     * to
      * @param child input relational expression
      */
     protected SingleRel(
@@ -63,17 +61,17 @@ public abstract class SingleRel extends AbstractRelNode
         this.child = child;
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public RelNode getChild()
     {
         return child;
     }
-    
+
     // implement RelNode
     public RelNode [] getInputs()
     {
-        return new RelNode [] { child };
+        return new RelNode[] { child };
     }
 
     public double getRows()
@@ -91,7 +89,7 @@ public abstract class SingleRel extends AbstractRelNode
     {
         pw.explain(
             this,
-            new String [] { "child" },
+            new String[] { "child" },
             Util.emptyObjectArray);
     }
 
@@ -109,6 +107,5 @@ public abstract class SingleRel extends AbstractRelNode
         return child.getRowType();
     }
 }
-
 
 // End SingleRel.java

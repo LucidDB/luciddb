@@ -21,46 +21,46 @@
 */
 package net.sf.farrago.defimpl;
 
-import com.disruptivetech.farrago.calc.CalcRexImplementorTable;
-import com.disruptivetech.farrago.calc.CalcRexImplementorTableImpl;
+import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.fennel.*;
+
 import com.lucidera.farrago.fennel.*;
 import com.lucidera.lurql.*;
-
-import org.eigenbase.util.*;
-import org.eigenbase.jmi.*;
-import org.eigenbase.oj.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.rel.metadata.*;
-import org.eigenbase.resgen.*;
-import org.eigenbase.resource.*;
-
-import net.sf.farrago.session.*;
-import net.sf.farrago.db.*;
-import net.sf.farrago.query.*;
-import net.sf.farrago.ddl.*;
-import net.sf.farrago.parser.*;
-import net.sf.farrago.runtime.*;
-import net.sf.farrago.catalog.*;
-
-import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
-import net.sf.farrago.fem.med.*;
-import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fem.security.*;
 
 import java.util.*;
 
 import javax.jmi.reflect.*;
 
+import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.core.*;
+import net.sf.farrago.cwm.datatypes.*;
+import net.sf.farrago.cwm.keysindexes.*;
+import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.db.*;
+import net.sf.farrago.ddl.*;
+import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.security.*;
+import net.sf.farrago.fem.sql2003.*;
+import net.sf.farrago.parser.*;
+import net.sf.farrago.query.*;
+import net.sf.farrago.runtime.*;
+import net.sf.farrago.session.*;
+
+import org.eigenbase.jmi.*;
+import org.eigenbase.oj.rex.*;
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.resgen.*;
+import org.eigenbase.resource.*;
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.*;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.util.*;
+
+
 /**
- * FarragoDefaultSessionPersonality is a default implementation of the
- * {@link FarragoSessionPersonality} interface.
+ * FarragoDefaultSessionPersonality is a default implementation of the {@link
+ * FarragoSessionPersonality} interface.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -68,12 +68,19 @@ import javax.jmi.reflect.*;
 public class FarragoDefaultSessionPersonality
     implements FarragoSessionPersonality
 {
+
+    //~ Instance fields --------------------------------------------------------
+
     protected final FarragoDatabase database;
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     protected FarragoDefaultSessionPersonality(FarragoDbSession session)
     {
         database = session.getDatabase();
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     // implement FarragoSessionPersonality
     public FarragoSessionPlanner newPlanner(
@@ -94,7 +101,7 @@ public class FarragoDefaultSessionPersonality
         DisruptiveTechJni.registerStreamFactory(hStreamGraph);
         LucidEraJni.registerStreamFactory(hStreamGraph);
     }
-    
+
     // implement FarragoSessionPersonality
     public String getDefaultLocalDataServerName(
         FarragoSessionStmtValidator stmtValidator)
@@ -105,7 +112,7 @@ public class FarragoDefaultSessionPersonality
             return "SYS_MOCK_DATA_SERVER";
         }
     }
-    
+
     // implement FarragoSessionPersonality
     public SqlOperatorTable getSqlOperatorTable(
         FarragoSessionPreparingStmt preparingStmt)
@@ -119,7 +126,7 @@ public class FarragoDefaultSessionPersonality
     {
         return database.getOJRexImplementorTable();
     }
-    
+
     // implement FarragoSessionPersonality
     public <C> C newComponentImpl(Class<C> componentInterface)
     {
@@ -129,7 +136,7 @@ public class FarragoDefaultSessionPersonality
 
         return null;
     }
-    
+
     // implement FarragoSessionPersonality
     public FarragoSessionParser newParser(FarragoSession session)
     {
@@ -147,21 +154,21 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtValidator stmtValidator)
     {
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
-        FarragoSessionPlanner planner = 
+        FarragoSessionPlanner planner =
             stmtValidator.getSession().getPersonality().newPlanner(stmt, true);
         planner.setRuleDescExclusionFilter(
             stmtValidator.getSession().getOptRuleDescExclusionFilter());
         stmt.setPlanner(planner);
         return stmt;
     }
-    
+
     // implement FarragoSessionPersonality
     public FarragoSessionDdlValidator newDdlValidator(
         FarragoSessionStmtValidator stmtValidator)
     {
         return new DdlValidator(stmtValidator);
     }
-    
+
     // implement FarragoSessionPersonality
     public void defineDdlHandlers(
         FarragoSessionDdlValidator ddlValidator,
@@ -187,21 +194,24 @@ public class FarragoDefaultSessionPersonality
         // implicitly dropped.
         ddlValidator.defineDropRule(
             repos.getKeysIndexesPackage().getIndexSpansClass(),
-            new FarragoSessionDdlDropRule("spannedClass", null,
+            new FarragoSessionDdlDropRule("spannedClass",
+                null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Dependencies can never be dropped without CASCADE, but with
         // CASCADE, they go away.
         ddlValidator.defineDropRule(
             repos.getCorePackage().getDependencySupplier(),
-            new FarragoSessionDdlDropRule("supplier", null,
+            new FarragoSessionDdlDropRule("supplier",
+                null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
 
         // When a dependency gets dropped, take its owner (the client)
         // down with it.
         ddlValidator.defineDropRule(
             repos.getCorePackage().getElementOwnership(),
-            new FarragoSessionDdlDropRule("ownedElement", CwmDependency.class,
+            new FarragoSessionDdlDropRule("ownedElement",
+                CwmDependency.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Without CASCADE, a schema can only be dropped when it is empty.
@@ -209,14 +219,16 @@ public class FarragoDefaultSessionPersonality
         // are dropped implicitly), so we specify the superInterface filter.
         ddlValidator.defineDropRule(
             repos.getCorePackage().getElementOwnership(),
-            new FarragoSessionDdlDropRule("namespace", CwmSchema.class,
+            new FarragoSessionDdlDropRule("namespace",
+                CwmSchema.class,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_RESTRICT));
-        
+
         // When a UDT is dropped, all routines which realize methods should
         // also be implicitly dropped.
         ddlValidator.defineDropRule(
             repos.getBehavioralPackage().getOperationMethod(),
-            new FarragoSessionDdlDropRule("specification", null,
+            new FarragoSessionDdlDropRule("specification",
+                null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
 
         // Grants should be dropped together with any of the grantor, grantee,
@@ -240,15 +252,15 @@ public class FarragoDefaultSessionPersonality
                 null,
                 ReferentialRuleTypeEnum.IMPORTED_KEY_CASCADE));
     }
-    
+
     // implement FarragoSessionPersonality
     public void definePrivileges(
         FarragoSessionPrivilegeMap map)
     {
         FarragoRepos repos = database.getSystemRepos();
 
-        PrivilegedAction [] tableActions = new PrivilegedAction [] 
-            {
+        PrivilegedAction [] tableActions =
+            new PrivilegedAction[] {
                 PrivilegedActionEnum.SELECT,
                 PrivilegedActionEnum.INSERT,
                 PrivilegedActionEnum.DELETE,
@@ -258,14 +270,12 @@ public class FarragoDefaultSessionPersonality
             map,
             repos.getRelationalPackage().getCwmNamedColumnSet(),
             tableActions);
-        
-        PrivilegedAction [] routineActions = new PrivilegedAction [] 
-            {
-                PrivilegedActionEnum.EXECUTE
-            };
+
+        PrivilegedAction [] routineActions =
+            new PrivilegedAction[] { PrivilegedActionEnum.EXECUTE };
         defineTypePrivileges(
             map,
-            repos.getSql2003Package().getFemRoutine(), 
+            repos.getSql2003Package().getFemRoutine(),
             routineActions);
     }
 
@@ -282,7 +292,7 @@ public class FarragoDefaultSessionPersonality
                 true);
         }
     }
-    
+
     // implement FarragoSessionPersonality
     public Class getRuntimeContextClass(
         FarragoSessionPreparingStmt preparingStmt)
@@ -296,14 +306,14 @@ public class FarragoDefaultSessionPersonality
     {
         return new FarragoRuntimeContext(params);
     }
-    
+
     // implement FarragoSessionPersonality
     public void validate(
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode)
     {
     }
-    
+
     // implement FarragoSessionPersonality
     public JmiQueryProcessor newJmiQueryProcessor(String language)
     {
@@ -311,7 +321,7 @@ public class FarragoDefaultSessionPersonality
             return null;
         }
         return new LurqlQueryProcessor(
-            database.getSystemRepos().getMdrRepos());
+                database.getSystemRepos().getMdrRepos());
     }
 
     public boolean isSupportedType(SqlTypeName type)
@@ -355,12 +365,13 @@ public class FarragoDefaultSessionPersonality
         // support for this isn't done yet, so for now we prevent
         // multiple active statements on an autocommit connection
         // (unless a personality specifically enables it).
-        ResourceDefinition maasFeature = EigenbaseResource.instance()
+        ResourceDefinition maasFeature =
+            EigenbaseResource.instance()
             .SQLConformance_MultipleActiveAutocommitStatements;
         if (feature == maasFeature) {
             return false;
         }
-        
+
         // By default, support everything except the above.
         return true;
     }

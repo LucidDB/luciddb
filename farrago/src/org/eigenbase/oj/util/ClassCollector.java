@@ -20,18 +20,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 package org.eigenbase.oj.util;
 
-import java.util.HashSet;
+import java.util.*;
 
-import openjava.mop.Environment;
-import openjava.mop.OJClass;
-import openjava.ptree.Expression;
-import openjava.ptree.ParseTreeException;
-import openjava.ptree.TypeName;
-import openjava.ptree.Variable;
-import openjava.ptree.util.ScopeHandler;
+import openjava.mop.*;
+
+import openjava.ptree.*;
+import openjava.ptree.util.*;
 
 
 /**
@@ -42,23 +38,24 @@ import openjava.ptree.util.ScopeHandler;
  *
  * @author jhyde
  * @version $Id$
- *
  * @since 2 October, 2001
  */
-public class ClassCollector extends ScopeHandler
+public class ClassCollector
+    extends ScopeHandler
 {
-    //~ Instance fields -------------------------------------------------------
+
+    //~ Instance fields --------------------------------------------------------
 
     private HashSet classSet = new HashSet();
 
-    //~ Constructors ----------------------------------------------------------
+    //~ Constructors -----------------------------------------------------------
 
     public ClassCollector(Environment env)
     {
         super(env);
     }
 
-    //~ Methods ---------------------------------------------------------------
+    //~ Methods ----------------------------------------------------------------
 
     public OJClass [] getClasses()
     {
@@ -85,6 +82,5 @@ public class ClassCollector extends ScopeHandler
         classSet.add(clazz);
     }
 }
-
 
 // End ClassCollector.java

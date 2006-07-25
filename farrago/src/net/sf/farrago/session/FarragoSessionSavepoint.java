@@ -22,7 +22,6 @@
 */
 package net.sf.farrago.session;
 
-
 /**
  * FarragoSessionSavepoint represents a savepoint within the transactional
  * context of a {@link FarragoSession}.
@@ -32,12 +31,12 @@ package net.sf.farrago.session;
  */
 public interface FarragoSessionSavepoint
 {
-    //~ Methods ---------------------------------------------------------------
+
+    //~ Methods ----------------------------------------------------------------
 
     public int getId();
 
     public String getName();
 }
-
 
 // End FarragoSessionSavepoint.java

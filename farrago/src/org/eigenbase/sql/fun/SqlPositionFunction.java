@@ -21,11 +21,11 @@
 */
 package org.eigenbase.sql.fun;
 
-import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.type.SqlTypeStrategies;
-import org.eigenbase.sql.type.SqlTypeUtil;
-import org.eigenbase.sql.validate.SqlValidator;
+import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.validate.*;
+
 
 /**
  * The <code>POSITION</code> function.
@@ -33,15 +33,23 @@ import org.eigenbase.sql.validate.SqlValidator;
  * @author Wael Chatila
  * @version $Id$
  */
-public class SqlPositionFunction extends SqlFunction
+public class SqlPositionFunction
+    extends SqlFunction
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     public SqlPositionFunction()
     {
-        super("POSITION", SqlKind.Function,
-            SqlTypeStrategies.rtiNullableInteger, null,
+        super("POSITION",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableInteger,
+            null,
             SqlTypeStrategies.otcStringSameX2,
             SqlFunctionCategory.Numeric);
     }
+
+    //~ Methods ----------------------------------------------------------------
 
     public void unparse(
         SqlWriter writer,
@@ -74,10 +82,8 @@ public class SqlPositionFunction extends SqlFunction
         SqlCall call = callBinding.getCall();
 
         //check that the two operands are of same type.
-        RelDataType type0 =
-            validator.getValidatedNodeType(call.operands[0]);
-        RelDataType type1 =
-            validator.getValidatedNodeType(call.operands[1]);
+        RelDataType type0 = validator.getValidatedNodeType(call.operands[0]);
+        RelDataType type1 = validator.getValidatedNodeType(call.operands[1]);
         if (!SqlTypeUtil.inSameFamily(type0, type1)) {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
@@ -85,8 +91,10 @@ public class SqlPositionFunction extends SqlFunction
             return false;
         }
 
-        return getOperandTypeChecker().checkOperandTypes(
-            callBinding, throwOnFailure);
+        return
+            getOperandTypeChecker().checkOperandTypes(
+                callBinding,
+                throwOnFailure);
     }
 }
 

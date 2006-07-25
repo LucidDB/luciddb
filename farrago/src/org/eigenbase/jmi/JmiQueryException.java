@@ -27,8 +27,12 @@ package org.eigenbase.jmi;
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiQueryException extends Exception
+public class JmiQueryException
+    extends Exception
 {
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Constructs a new exception.
      *
@@ -39,12 +43,11 @@ public class JmiQueryException extends Exception
     {
         this(message, null);
     }
-    
+
     /**
      * Constructs a new exception with an underlying cause.
      *
      * @param message description of exception
-     *
      * @param cause underlying cause
      */
     public JmiQueryException(

@@ -21,6 +21,14 @@
 */
 package net.sf.farrago.test;
 
+import java.io.*;
+
+import java.util.*;
+
+import javax.jmi.reflect.*;
+
+import junit.framework.*;
+
 import net.sf.farrago.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
@@ -30,32 +38,30 @@ import org.eigenbase.jmi.mem.*;
 
 import org.netbeans.api.xmi.*;
 
-import java.io.*;
-import java.util.*;
-
-import javax.jmi.reflect.*;
-
-import junit.framework.*;
 
 /**
  * JmiMemTest is a unit test for {@link JmiMemFactory}.
  *
- *<p>
- *
- * NOTE:  this test lives here rather than under org.eigenbase because
- * it currently depends on MDR for the metamodel JMI implementation
- * (even though JmiMemFactory itself provides a JMI implementation for the
- * model objects being tested).
+ * <p>NOTE: this test lives here rather than under org.eigenbase because it
+ * currently depends on MDR for the metamodel JMI implementation (even though
+ * JmiMemFactory itself provides a JMI implementation for the model objects
+ * being tested).
  *
  * @author John V. Sichi
  * @version $Id$
  */
-public class JmiMemTest extends FarragoTestCase
+public class JmiMemTest
+    extends FarragoTestCase
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
     private static final String TABLE_NAME = "Chips Ahoy";
-    
+
     private static final String COLUMN_NAME = "Keebler Elves";
-    
+
+    //~ Constructors -----------------------------------------------------------
+
     /**
      * Creates a new JmiMemTest object.
      *
@@ -66,7 +72,9 @@ public class JmiMemTest extends FarragoTestCase
     {
         super(testName);
     }
-    
+
+    //~ Methods ----------------------------------------------------------------
+
     public static Test suite()
     {
         return wrappedSuite(JmiMemTest.class);
@@ -75,50 +83,66 @@ public class JmiMemTest extends FarragoTestCase
     public void testEarlyBinding()
         throws Exception
     {
-        FarragoMemFactory factory = new FarragoMemFactory(
-            repos.getModelGraph());
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
 
         FemLocalTable table = factory.newFemLocalTable();
         table.setName(TABLE_NAME);
         FemStoredColumn column = factory.newFemStoredColumn();
         table.getFeature().add(column);
-        assertSame(table, column.getOwner());
-        assertSame(table, column.refImmediateComposite());
-        assertEquals(TABLE_NAME, table.getName());
+        assertSame(
+            table,
+            column.getOwner());
+        assertSame(
+            table,
+            column.refImmediateComposite());
+        assertEquals(
+            TABLE_NAME,
+            table.getName());
 
         assertNull(factory.getImpl().getPersistentMofId(table));
         factory.getImpl().setPersistentMofId(table, "XYZZY");
-        assertEquals("XYZZY", factory.getImpl().getPersistentMofId(table));
+        assertEquals(
+            "XYZZY",
+            factory.getImpl().getPersistentMofId(table));
 
         RefClass tableClass = table.refClass();
-        RefObject tableObj = tableClass.refCreateInstance(
-            Collections.singletonList(TABLE_NAME));
+        RefObject tableObj =
+            tableClass.refCreateInstance(
+                Collections.singletonList(TABLE_NAME));
         assertTrue(tableObj instanceof FemLocalTable);
         table = (FemLocalTable) tableObj;
-        assertEquals(TABLE_NAME, table.getName());
+        assertEquals(
+            TABLE_NAME,
+            table.getName());
     }
 
     public void testBreakOneToOneAssoc()
         throws Exception
     {
-        FarragoMemFactory factory = new FarragoMemFactory(
-            repos.getModelGraph());
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
         FemStoredColumn col = factory.newFemStoredColumn();
         FemSequenceGenerator seq = factory.newFemSequenceGenerator();
         col.setSequence(seq);
 
-        assertSame(col, seq.getColumn());
-        
+        assertSame(
+            col,
+            seq.getColumn());
+
         col.setSequence(null);
-        
+
         assertNull(seq.getColumn());
     }
 
     public void testExportImport()
     {
-        FarragoMemFactory factory = new FarragoMemFactory(
-            repos.getModelGraph());
-        
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+
         FemLocalTable table = factory.newFemLocalTable();
         table.setName(TABLE_NAME);
         FemStoredColumn column = factory.newFemStoredColumn();
@@ -126,24 +150,34 @@ public class JmiMemTest extends FarragoTestCase
         table.getFeature().add(column);
 
         String xmi = JmiObjUtil.exportToXmiString(
-            Collections.singleton(table));
+                Collections.singleton(table));
 
-        Collection c = JmiObjUtil.importFromXmiString(
-            factory.getImpl().getRootPackage(), xmi);
+        Collection c =
+            JmiObjUtil.importFromXmiString(
+                factory.getImpl().getRootPackage(),
+                xmi);
 
-        assertEquals(1, c.size());
+        assertEquals(
+            1,
+            c.size());
 
         Object root = c.iterator().next();
         assertTrue(root instanceof FemLocalTable);
         table = (FemLocalTable) root;
-        assertEquals(TABLE_NAME, table.getName());
+        assertEquals(
+            TABLE_NAME,
+            table.getName());
 
         c = table.getFeature();
-        assertEquals(1, c.size());
+        assertEquals(
+            1,
+            c.size());
         Object child = c.iterator().next();
         assertTrue(child instanceof FemStoredColumn);
         column = (FemStoredColumn) child;
-        assertEquals(COLUMN_NAME, column.getName());
+        assertEquals(
+            COLUMN_NAME,
+            column.getName());
     }
 
     public void testMassiveExportImport()
@@ -159,7 +193,10 @@ public class JmiMemTest extends FarragoTestCase
         repos.beginReposTxn(true);
         try {
             repos.getCurrentConfig().getFennelConfig().refDelete();
-            xmiWriter.write(outStream, repos.getFarragoPackage(), "1.2");
+            xmiWriter.write(
+                outStream,
+                repos.getFarragoPackage(),
+                "1.2");
         } finally {
             // rollback
             repos.endReposTxn(true);
@@ -167,10 +204,13 @@ public class JmiMemTest extends FarragoTestCase
         String xmi1 = outStream.toString();
 
         // Import into an in-mem repository.
-        FarragoMemFactory factory = new FarragoMemFactory(
-            repos.getModelGraph());
-        Collection c = JmiObjUtil.importFromXmiString(
-            factory.getImpl().getRootPackage(), xmi1);
+        FarragoMemFactory factory =
+            new FarragoMemFactory(
+                repos.getModelGraph());
+        Collection c =
+            JmiObjUtil.importFromXmiString(
+                factory.getImpl().getRootPackage(),
+                xmi1);
 
         // Re-export from there.  This time we use the root objects from
         // the import because JmiMemFactory has no notion of
@@ -186,7 +226,10 @@ public class JmiMemTest extends FarragoTestCase
         assertEquals(xmi1, xmi2);
     }
 
-    private class FarragoMemFactory extends FarragoMetadataFactoryImpl
+    //~ Inner Classes ----------------------------------------------------------
+
+    private class FarragoMemFactory
+        extends FarragoMetadataFactoryImpl
     {
         private final FactoryImpl factoryImpl;
 
@@ -202,13 +245,14 @@ public class JmiMemTest extends FarragoTestCase
         }
     }
 
-    private class FactoryImpl extends JmiModeledMemFactory
+    private class FactoryImpl
+        extends JmiModeledMemFactory
     {
         FactoryImpl(JmiModelGraph modelGraph)
         {
             super(modelGraph);
         }
-        
+
         protected RefPackageImpl newRootPackage()
         {
             return new RefPackageImpl(FarragoPackage.class);
