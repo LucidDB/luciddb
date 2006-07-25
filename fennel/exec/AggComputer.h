@@ -82,7 +82,7 @@ public:
      *
      * @param iInputAttrIndex 0-based tuple attribute index
      */
-    void setInputAttrIndex(uint iInputAttrIndex);
+    virtual void setInputAttrIndex(uint iInputAttrIndex);
 
     /**
      * Clears an accumulator.
