@@ -641,12 +641,6 @@ public class JmiChangeSet
             if (!edge.getTargetEnd().getMultiplicity().isOrdered()) {
                 continue;
             }
-            JmiClassVertex targetVertex = (JmiClassVertex) edge.getTarget();
-            List targetFeatures =
-                JmiObjUtil.getFeatures(
-                    targetVertex.getRefClass(),
-                    Attribute.class,
-                    false);
 
             Collection targets =
                 edge.getRefAssoc().refQuery(
