@@ -524,7 +524,7 @@ from lbmemps
 where (empno = 110 or empno = 120) and (deptno = 10 or deptno = 20)
 order by empno;
 
--- TODO implement index only access.
+-- index only access.
 explain plan for
 select deptno from lbmemps where deptno = 20 order by deptno;
 
@@ -610,6 +610,66 @@ explain plan for select * from multikey where a = 1 and b >= 2 and b < 4;
 select * from multikey where a = 1 and b > 1;
 select * from multikey where a = 1 and b <= 3;
 select * from multikey where a = 1 and b >= 2 and b < 4;
+
+----------------------------
+-- Tests of index only scans
+----------------------------
+create table person(
+    id int primary key,
+    age int)
+server sys_column_store_data_server
+create index age_idx on person(age);
+
+-- index search
+explain plan for
+select id from person where id = 30;
+
+-- index search with merge
+explain plan for
+select id from person where id > 30;
+
+-- histogram type aggregate
+explain plan for 
+select age, count(*) from person group by age order by age;
+
+-- cardinality type aggregate
+explain plan for 
+select count(distinct(age)) from person;
+
+-- agg with index search
+explain plan for 
+select avg(age) from person where age > 30;
+
+-- multikey
+explain plan for 
+select a from multikey where a = 1 and b > 1 group by a;
+
+explain plan for 
+select b from multikey where a = 1;
+
+explain plan for 
+select b from multikey where a = 1 group by b;
+
+-- widening of an index search 
+create index multikey_a on multikey(a);
+
+explain plan for
+select a, b from multikey where a = 1;
+
+-- negative test: row scan with child can't be converted
+explain plan for 
+select age, count(*) from person where id > 5 group by age;
+
+-- negative test: index only scan produces wrong sort order for agg
+explain plan for 
+select a, b from multikey where a = 1 and b > 1 group by b, a;
+
+-- TODO: implement interposed calc when we have sort order propagation
+explain plan for 
+select avg(age+1) from person;
+
+explain plan for 
+select avg(age+1) from person where age = 30;
 
 ----------------------------------------------------------
 -- Tests to exercise using startrid in bitmap index search

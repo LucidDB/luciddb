@@ -71,6 +71,8 @@ void LhxJoinExecStream::prepare(
      * Force partitioning level. Only set in tests.
      */
     forcePartitionLevel = params.forcePartitionLevel;
+    enableJoinFilter = params.enableJoinFilter;
+    enableSubPartStat = params.enableSubPartStat;
 
     /*
      * Set special hash table properties.
@@ -237,29 +239,33 @@ void LhxJoinExecStream::open(bool restart)
     rightPart->inputIndex = RightInputIndex;
 
     uint numInput       = 2;
-    uint numChild       = 3;
     LhxPlan *parentPlan = NULL;
 
     vector<SharedLhxPartition> partitionList;
     partitionList.push_back(leftPart);
     partitionList.push_back(rightPart);
 
-    vector<bool> useFilter;
-    useFilter.push_back(!leftOuter && !fullOuter);
-    useFilter.push_back(!rightOuter && !fullOuter && !rightAnti);
+    vector<bool> useJoinFilter;
+    useJoinFilter.push_back(enableJoinFilter && !leftOuter && !fullOuter);
+    useJoinFilter.push_back(enableJoinFilter && !rightOuter && !fullOuter
+        && !rightAnti);
 
+    vector<shared_array<uint> > subPartStats;
+    subPartStats.push_back(shared_array<uint>());
+    subPartStats.push_back(shared_array<uint>());
+    
     /*
      * No input join filter for root plan.
      */
     rootPlan =  SharedLhxPlan(new LhxPlan());
-    rootPlan->init(partitionLevel, numChild, partitionList, parentPlan,
-        useFilter);
+    rootPlan->init(partitionLevel, partitionList, enableSubPartStat,
+        subPartStats, parentPlan, useJoinFilter);
 
     /*
      * Initialize recursive partitioning context.
      */
     isTopPartition = true;
-    partInfo.init(numInput, numChild, &hashInfo);
+    partInfo.init(numInput, &hashInfo);
 
     curPlan = rootPlan.get();
     rightReader.open(curPlan->getPartition(RightInputIndex), hashInfo);
@@ -320,7 +326,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                      * NOTE: This is a testing state. Always partition up to
                      * forcePartitionLevel.
                      */
-                    if (curPlan->partitionLevel < forcePartitionLevel ||
+                    if (curPlan->getPartitionLevel() < forcePartitionLevel ||
                         !hashTable.addTuple(rightTuple)) {
                         /*
                          * If hash table is full, partition input data.
@@ -421,6 +427,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                  * Link the newly created partitioned in the plan tree.
                  */
                 curPlan->createChildren(partInfo);
+
+                FENNEL_TRACE(TRACE_FINE, curPlan->toString());
                 
                 /*
                  * now recursice down the plan tree to get the first leaf plan.
@@ -430,7 +438,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 isTopPartition = false;
                 hashTable.releaseResources();
 
-                hashTable.init(curPlan->partitionLevel, hashInfo);
+                hashTable.init(curPlan->getPartitionLevel(), hashInfo);
                 hashTableReader.init(&hashTable, hashInfo);
 
                 bool status = hashTable.allocateResources();
@@ -448,7 +456,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                 if (curPlan) {
                     hashTable.releaseResources();
 
-                    hashTable.init(curPlan->partitionLevel, hashInfo);
+                    hashTable.init(curPlan->getPartitionLevel(), hashInfo);
                     hashTableReader.init(&hashTable, hashInfo);
 
                     bool status = hashTable.allocateResources();

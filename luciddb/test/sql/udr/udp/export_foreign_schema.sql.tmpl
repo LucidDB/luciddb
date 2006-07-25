@@ -47,10 +47,6 @@ select count(*) from fexp_server.BCP.location;
 select count(*) from fexp_server.BCP.products;
 select count(*) from fexp_server.BCP.sales;
 
--- check tmp schema
-select schema_name from sys_root.dba_schemas where 
-schema_name = '_TMP_LOCAL_SCHEMA';
-
 --
 -- include with table_list
 --
@@ -214,6 +210,10 @@ cursor(select * from tempudp2.customers)));
 select count(*) from tempudp2.sales;
 select count(*) from tempudp2.products;
 select count(*) from tempudp2.customers;
+
+-- check temp schemas were all dropped
+select schema_name from sys_root.dba_schemas where 
+schema_name like '_TMP_LOCAL_SCHEMA%';
 
 drop schema tempudp2 cascade;
 drop server fexp_server2 cascade;

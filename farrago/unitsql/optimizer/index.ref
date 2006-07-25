@@ -1171,14 +1171,14 @@
 '120','Wilma','20'
 '120','Wilma','20'
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- TODO implement index only access.
+0: jdbc:farrago:> -- index only access.
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select deptno from lbmemps where deptno = 20 order by deptno;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'    LcsNormalizerRel'
+'      LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[DEPTNO_IX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select deptno from lbmemps where deptno = 20 order by deptno;
@@ -1195,8 +1195,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
+'    LcsNormalizerRel'
+'      LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, LBMEMPS]], index=[ENAME_IX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'ADAM', _ISO-8859-1']', _ISO-8859-1'ADAM' }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select ename from lbmemps where ename = 'ADAM' order by ename;
@@ -1358,24 +1358,21 @@
 0: jdbc:farrago:> explain plan for select * from multikey where a = 1 and b > 1;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, MULTIKEY]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$MULTIKEY$A, SYS$CLUSTERED_INDEX$LBM$MULTIKEY$B]])'
-'    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
-'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, 1, _ISO-8859-1'+', 1, null }]])'
+'  LcsNormalizerRel'
+'    LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 1, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, 1, _ISO-8859-1'+', 1, null }]])'
 0: jdbc:farrago:> explain plan for select * from multikey where a = 1 and b <= 3;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, MULTIKEY]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$MULTIKEY$A, SYS$CLUSTERED_INDEX$LBM$MULTIKEY$B]])'
-'    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
-'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, null, _ISO-8859-1']', 1, 3 }]])'
+'  LcsNormalizerRel'
+'    LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 1, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, null, _ISO-8859-1']', 1, 3 }]])'
 0: jdbc:farrago:> explain plan for select * from multikey where a = 1 and b >= 2 and b < 4;
 'column0'
 'FennelToIteratorConverter'
-'  LcsRowScanRel(table=[[LOCALDB, LBM, MULTIKEY]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$MULTIKEY$A, SYS$CLUSTERED_INDEX$LBM$MULTIKEY$B]])'
-'    LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
-'      LcsIndexSearchRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[*], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]], startRidParamId=[0], rowLimitParamId=[0])'
-'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, 2, _ISO-8859-1')', 1, 4 }]])'
+'  LcsNormalizerRel'
+'    LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 1, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, 2, _ISO-8859-1')', 1, 4 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> select * from multikey where a = 1 and b > 1;
@@ -1401,6 +1398,198 @@
 | 1  | 2  |
 | 1  | 3  |
 +----+----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> -- Tests of index only scans
+0: jdbc:farrago:> ----------------------------
+0: jdbc:farrago:> create table person(
+. . . . . . . . >     id int primary key,
+. . . . . . . . >     age int)
+. . . . . . . . > server sys_column_store_data_server
+. . . . . . . . > create index age_idx on person(age);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- index search
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select id from person where id = 30;
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                    |
+|   LcsNormalizerRel                                                                                                                                                                           |
+|     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[SYS$CONSTRAINT_INDEX$PERSON$SYS$PRIMARY_KEY], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|       FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])                                                                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- index search with merge
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select id from person where id > 30;
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                            |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                    |
+|   LcsNormalizerRel                                                                                                                                                                           |
+|     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[SYS$CONSTRAINT_INDEX$PERSON$SYS$PRIMARY_KEY], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|       FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 30, _ISO-8859-1'+', null }]])                                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- histogram type aggregate
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select age, count(*) from person group by age order by age;
++----------------------------------------------------------------------------------------------------------------+
+|                                                    column0                                                     |
++----------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                      |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                          |
+|     IteratorToFennelConverter                                                                                  |
+|       IterCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])                                                   |
+|         FennelToIteratorConverter                                                                              |
+|           LcsIndexAggRel(groupCount=[1], agg#0=[COUNT()])                                                      |
+|             FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                    |
+|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]])  |
++----------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- cardinality type aggregate
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select count(distinct(age)) from person;
++------------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                   |
++------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])                                                               |
+|   FennelToIteratorConverter                                                                                |
+|     FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])                                                         |
+|       LcsIndexAggRel(groupCount=[1])                                                                       |
+|         FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                    |
+|           LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]])  |
++------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- agg with index search
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select avg(age) from person where age > 30;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                                            |
+|   FennelToIteratorConverter                                                                                                                                  |
+|     LcsIndexAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                         |
+|       FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                        |
+|         LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|           FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 30, _ISO-8859-1'+', null }]])                                                                           |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- multikey
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select a from multikey where a = 1 and b > 1 group by a;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], A=[$t0])                                                                                                                                |
+|   FennelToIteratorConverter                                                                                                                                            |
+|     LcsIndexAggRel(groupCount=[1])                                                                                                                                     |
+|       FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                                  |
+|         LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])  |
+|           FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, 1, _ISO-8859-1'+', 1, null }]])                                                                                |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select b from multikey where a = 1;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                    |
+|   LcsNormalizerRel                                                                                                                                           |
+|     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[1, 2, 3, 4]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|       FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select b from multikey where a = 1 group by b;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0=[{inputs}], B=[$t0])                                                                                                                            |
+|   FennelToIteratorConverter                                                                                                                                        |
+|     LhxAggRel(groupCount=[1])                                                                                                                                      |
+|       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                          |
+|         LcsNormalizerRel                                                                                                                                           |
+|           LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[1, 2, 3, 4]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|             FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])                                                                                   |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- widening of an index search 
+0: jdbc:farrago:> create index multikey_a on multikey(a);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select a, b from multikey where a = 1;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                             column0                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                       |
+|   LcsNormalizerRel                                                                                                                                              |
+|     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 1, 2, 3, 4]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|       FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- negative test: row scan with child can't be converted
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select age, count(*) from person where id > 5 group by age;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                              column0                                                                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])                                                                                                                                                                            |
+|   FennelToIteratorConverter                                                                                                                                                                                                       |
+|     LhxAggRel(groupCount=[1], agg#0=[COUNT()])                                                                                                                                                                                    |
+|       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                         |
+|         LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$PERSON$AGE]])                                                                                                 |
+|           LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])                                                                                                                                 |
+|             LcsIndexSearchRel(table=[[LOCALDB, LBM, PERSON]], index=[SYS$CONSTRAINT_INDEX$PERSON$SYS$PRIMARY_KEY], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])  |
+|               FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 5, _ISO-8859-1'+', null }]])                                                                                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- negative test: index only scan produces wrong sort order for agg
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select a, b from multikey where a = 1 and b > 1 group by b, a;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                   column0                                                                                   |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], A=[$t1], B=[$t0])                                                                                                                         |
+|   FennelToIteratorConverter                                                                                                                                                 |
+|     LhxAggRel(groupCount=[2])                                                                                                                                               |
+|       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                                              |
+|         LcsNormalizerRel                                                                                                                                                    |
+|           LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[1, 0, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])  |
+|             FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, 1, _ISO-8859-1'+', 1, null }]])                                                                                   |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: implement interposed calc when we have sort order propagation
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select avg(age+1) from person;
++----------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                column0                                                                 |
++----------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                      |
+|   FennelToIteratorConverter                                                                                                            |
+|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                     |
+|       IteratorToFennelConverter                                                                                                        |
+|         IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                    |
+|           FennelToIteratorConverter                                                                                                    |
+|             LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$PERSON$AGE]])  |
++----------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for 
+. . . . . . . . > select avg(age+1) from person where age = 30;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                                                  |
+|   FennelToIteratorConverter                                                                                                                                        |
+|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                 |
+|       IteratorToFennelConverter                                                                                                                                    |
+|         IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                |
+|           FennelToIteratorConverter                                                                                                                                |
+|             LcsNormalizerRel                                                                                                                                       |
+|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|                 FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ----------------------------------------------------------
 0: jdbc:farrago:> -- Tests to exercise using startrid in bitmap index search

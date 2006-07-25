@@ -509,11 +509,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, co
 Was expecting:
     <UNSIGNED_INTEGER_LITERAL> ... (state=,code=0)
 0: jdbc:luciddb:> values cast (null as decimal(0,0));
-+---------+
-| EXPR$0  |
-+---------+
-|         |
-+---------+
+Error: From line 1, column 22 to line 1, column 28: Precision must be positive (state=,code=0)
 0: jdbc:luciddb:> values cast (null as decimal(-1,1));
 Error: org.eigenbase.sql.parser.SqlParseException: Encountered "-" at line 1, column 30.
 Was expecting:

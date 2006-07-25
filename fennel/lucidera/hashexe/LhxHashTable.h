@@ -809,7 +809,7 @@ public:
     inline bool isHashGroupBy() const;
 
     /**
-     * Print the content of the node associated with this accessor.
+     * Print the content of the hash table.
      *
      * @return the string representation of this hash table.
      */

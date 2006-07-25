@@ -32,26 +32,44 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 
 /**
- * LcsIndexSearchRel refines LcsIndexScanRel.  Instead of scanning an
- * entire index, it only searches for keys produced by its child.
+ * LcsIndexSearchRel is a relation for reading from an unclustered index. 
+ * It has two major modes. In the "full scan" mode, it has no input and 
+ * it scans an entire. In the "key search" mode, it has one input and 
+ * only searches for keys produced by its child. 
+ * 
+ * <p>
+ * 
+ * Key search relations, have two formats for input. A single key set 
+ * may be specified, in which case, exact matches for keys are returned. 
+ * The double key format is a more versatile format in which both points 
+ * and ranges can be represented. The input produces two sets of keys, one 
+ * for a lower bound and one for an upper bound. The upper and lower bounds 
+ * are described by directives as OPEN, or CLOSED, etc.
+ *
+ * <p>
+ * 
+ * The output of an index scan may be expanded with fields from its input,
+ * making it more useful for implementing an index-based join.
  *
  * @author Rushan Chen
  * @version $Id$
  */
-class LcsIndexSearchRel extends FennelSingleRel
+class LcsIndexSearchRel extends FennelOptionalRel
 {
     //~ Instance fields -------------------------------------------------------
     
     /** Index to use for access. */
     final FemLocalIndex index;
 
-    /** Refinement for super.table. */
+    /** The table containing the index to be scanned */
     final LcsTable lcsTable;
+
+    /** Whether to perform a full scan */
+    final boolean fullScan;
 
     /**
      * Array of 0-based flattened column ordinals to project; if null, project
-     * all columns.  Note that these ordinals are relative to the table, not
-     * the index.
+     * bitmap columns. These ordinals are relative to the index.
      */
     final Integer [] projectedColumns;
     
@@ -68,21 +86,33 @@ class LcsIndexSearchRel extends FennelSingleRel
     //~ Constructors ----------------------------------------------------------
     
     /**
-     * Creates a new LcsIndexSearchRel object.
+     * Creates a new LcsIndexSearchRel object. In general, parameters are 
+     * nullable if they do not apply to the search being specified.
      *
-     * @param indexScanRel underlying LcsIndexScanRel
+     * @param cluster the environment for the scan
      * @param child input which produces keys
-     * @param isUniqueKey whether keys are known to be unique
-     * @param isOuter whether nulls should be made up for unmatched inputs
-     * @param inputKeyProj TODO:  doc
-     * @param inputJoinProj TODO:  doc
-     * @param inputDirectiveProj TODO:  doc
+     * @param lcsTable the table containing the index
+     * @param fullScan whether to perform a full scan
+     * @param projectedColumns the columns to be projected from an index  
+     *   scan. If this parameter is null for a "key search", then the 
+     *   three bitmap fields are projected. This parameter cannot be null 
+     *   for a "full scan".
+     * @param isUniqueKey for a search, whether keys are known to be unique
+     * @param isOuter for a search with join, whether nulls should be made 
+     *   up for unmatched inputs
+     * @param inputKeyProj for a double key search, the projection of input 
+     *   fields to be used as search keys
+     * @param inputJoinProj for an index join, a projection of input fields 
+     *   to be added to the output
+     * @param inputDirectiveProj for a double key search, the projection of 
+     *   input fields describing search endpoints, such as OPEN or CLOSED
      */
     public LcsIndexSearchRel(
         RelOptCluster cluster,    		
         RelNode child,
         LcsTable lcsTable,
         FemLocalIndex index,
+        boolean fullScan,
         Integer [] projectedColumns,
         boolean isUniqueKey,
         boolean isOuter,
@@ -97,6 +127,10 @@ class LcsIndexSearchRel extends FennelSingleRel
             
         this.lcsTable = lcsTable;
         this.index = index;
+        this.fullScan = fullScan;
+        if (fullScan) {
+            assert (projectedColumns != null);
+        }
         this.projectedColumns = projectedColumns;
         this.isUniqueKey = isUniqueKey;
         this.isOuter = isOuter;
@@ -123,9 +157,10 @@ class LcsIndexSearchRel extends FennelSingleRel
     {
         LcsIndexSearchRel clone = new LcsIndexSearchRel(
             getCluster(),
-            RelOptUtil.clone(getChild()),
+            getChild(),
             lcsTable,
             index,
+            fullScan,
             projectedColumns,
             isUniqueKey,
             isOuter,
@@ -169,10 +204,9 @@ class LcsIndexSearchRel extends FennelSingleRel
     // implement RelNode
     protected RelDataType deriveRowType()
     {
-        // TODO: to handle the projection case where only the key fields are
-        // the output.
-    	RelDataType rowType =
-    		lcsTable.getIndexGuide().createUnclusteredBitmapRowType();
+        RelDataType rowType =
+            lcsTable.getIndexGuide()
+            .createUnclusteredRowType(index, projectedColumns);
     	
         if (inputJoinProj != null) {
             // TODO: this part is no implemented yet.
@@ -253,13 +287,13 @@ class LcsIndexSearchRel extends FennelSingleRel
                 (rowLimitParamId == null) ? (Integer)0 : rowLimitParamId
             });
     }
-    
+
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
     	FemExecutionStreamDef newStream;
     	
-    	if (projectedColumns == null) {
+    	if (!fullScan) {
             // index search use the default projection of:
             // [StartRID, BitmapDescriptor, BitmapSegment]
     	    newStream = 
@@ -271,18 +305,19 @@ class LcsIndexSearchRel extends FennelSingleRel
     	            inputKeyProj,
     	            inputJoinProj,
     	            inputDirectiveProj,
+                    projectedColumns,
     	            implementor.translateParamId(startRidParamId),
     	            implementor.translateParamId(rowLimitParamId));
+            
+            implementor.addDataFlowFromProducerToConsumer(
+                implementor.visitFennelChild((FennelRel) getChild()), 
+                newStream);
     	} else {
     	    // pure scan
     	    newStream =
     	        lcsTable.getIndexGuide().newIndexScan(this, index,
                     projectedColumns);
     	}
-    	
-        implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
-            newStream);
         
         return newStream;
     }
@@ -316,6 +351,21 @@ class LcsIndexSearchRel extends FennelSingleRel
     public Integer[] getInputDirectiveProj()
     {
         return inputDirectiveProj;
+    }
+    
+    public boolean isInputSingleKeyset()
+    {
+        return inputDirectiveProj == null;
+    }
+
+    public int getInputKeyCount()
+    {
+        if (inputDirectiveProj == null) {
+            // one key format
+            return index.getIndexedFeature().size();
+        }
+        // two key format
+        return inputKeyProj.length / 2;
     }
 }
 

@@ -35,6 +35,8 @@ import net.sf.farrago.catalog.*;
  */
 public class FennelAggRel extends AggregateRelBase implements FennelRel
 {
+    protected final FarragoRepos repos;
+
     public FennelAggRel(
         RelOptCluster cluster,
         RelNode child,
@@ -44,6 +46,7 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
         super(
             cluster, new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION),
             child, groupCount, aggCalls);
+        repos = FennelRelUtil.getRepos(this);
     }
 
     public Object clone()
@@ -75,8 +78,17 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
     // implement FennelRel
     public FemExecutionStreamDef toStreamDef(FennelRelImplementor implementor)
     {
-        final FarragoRepos repos = FennelRelUtil.getRepos(this);
         FemSortedAggStreamDef aggStream = repos.newFemSortedAggStreamDef();
+        defineAggStream(aggStream);
+        implementor.addDataFlowFromProducerToConsumer(
+            implementor.visitFennelChild((FennelRel) getChild()), 
+            aggStream);
+        
+        return aggStream;
+    }
+
+    protected void defineAggStream(FemAggStreamDef aggStream)
+    {
         aggStream.setGroupingPrefixSize(groupCount);
         for (int i = 0; i < aggCalls.length; ++i) {
             Call call = aggCalls[i];
@@ -94,11 +106,6 @@ public class FennelAggRel extends AggregateRelBase implements FennelRel
             }
             aggStream.getAggInvocation().add(aggInvocation);
         }
-        implementor.addDataFlowFromProducerToConsumer(
-            implementor.visitFennelChild((FennelRel) getChild()), 
-            aggStream);
-        
-        return aggStream;
     }
 
     public static AggFunction lookupAggFunction(

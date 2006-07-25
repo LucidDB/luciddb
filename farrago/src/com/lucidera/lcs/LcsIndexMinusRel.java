@@ -74,7 +74,8 @@ class LcsIndexMinusRel extends LcsIndexBitOpRel
         FemLbmMinusStreamDef minusStream = 
             lcsTable.getIndexGuide().newBitmapMinus(
                 implementor.translateParamId(startRidParamId),
-                implementor.translateParamId(rowLimitParamId));
+                implementor.translateParamId(rowLimitParamId),
+                inputs[0]);
         
         setBitOpChildStreams(implementor, minusStream);
         

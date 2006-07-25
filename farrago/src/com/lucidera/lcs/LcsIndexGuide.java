@@ -25,9 +25,11 @@ import java.util.*;
 import java.lang.Integer;
 
 import com.lucidera.farrago.*;
+import com.lucidera.query.*;
 
 import net.sf.farrago.catalog.FarragoCatalogUtil;
 import net.sf.farrago.catalog.FarragoRepos;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.core.VisibilityKindEnum;
 import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
@@ -42,6 +44,7 @@ import net.sf.farrago.type.*;
 import net.sf.farrago.util.JmiUtil;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
@@ -192,7 +195,6 @@ public class LcsIndexGuide
         }
         
         if (! requiredColumns.isEmpty()) {
-            // TODO: user error message
             throw Util.newInternal("unclustered index could not be covered");
         }
         
@@ -620,6 +622,46 @@ public class LcsIndexGuide
             repos, bitmapProj);
     }
     
+    /**
+     * Creates a row data type for a projection of an index. The projection
+     * may include both key columns and bitmap columns.
+     * 
+     * @param index the index to be projected
+     * @param proj a projection on the index
+     * 
+     * @see createUnclusteredBTreeTupleDesc
+     *
+     * @return row data type based on projections of an index
+     */
+    public RelDataType createUnclusteredRowType(
+        FemLocalIndex index,
+        Integer[] proj)
+    {
+        List indexFeatures = index.getIndexedFeature();
+        int nKeys = indexFeatures.size();
+        RelDataType bitmapRowType = createUnclusteredBitmapRowType();
+        
+        if (proj == null) {
+            return bitmapRowType;
+        }
+        
+        RelDataType[] types = new RelDataType[proj.length];
+        String[] names = new String[proj.length];
+        for (int i = 0; i < proj.length; i++) {
+            int j = proj[i];
+            if (j < nKeys) {
+                FemAbstractColumn column = (FemAbstractColumn)
+                    ((CwmIndexedFeature)indexFeatures.get(j)).getFeature();
+                names[i] = column.getName();
+                types[i] = typeFactory.createCwmElementType(column);
+            } else {
+                names[i] = bitmapRowType.getFields()[j-nKeys].getName();
+                types[i] = bitmapRowType.getFields()[j-nKeys].getType();
+            }
+        }
+        return typeFactory.createStructType(types, names);
+    }
+    
     //~ Exec Streams -------------------------------------------------------
     
     protected FemSplitterStreamDef newSplitter(SingleRel rel)
@@ -852,12 +894,13 @@ public class LcsIndexGuide
         Integer [] inputKeyProj,
         Integer [] inputJoinProj,
         Integer [] inputDirectiveProj,
+        Integer [] outputProj,
         FennelDynamicParamId startRidParamId,
         FennelDynamicParamId rowLimitParamId)
     {
         FemLbmSearchStreamDef searchStream =
             repos.newFemLbmSearchStreamDef();
-        defineIndexScan(searchStream, rel, index, null);
+        defineIndexScan(searchStream, rel, index, outputProj);
         
         searchStream.setStartRidParamId(startRidParamId.intValue());
         searchStream.setRowLimitParamId(rowLimitParamId.intValue());
@@ -1164,15 +1207,153 @@ public class LcsIndexGuide
     
     protected FemLbmMinusStreamDef newBitmapMinus(
         FennelDynamicParamId startRidParamId,
-        FennelDynamicParamId rowLimitParamId)
+        FennelDynamicParamId rowLimitParamId,
+        RelNode child)
     {
         FemLbmMinusStreamDef minusStream =
             repos.newFemLbmMinusStreamDef();
         
         setBitmapStreamParams(
             minusStream, startRidParamId, rowLimitParamId);
-        
+
+        // override the default output tuple
+        minusStream.setOutputDesc(
+            FennelRelUtil.createTupleDescriptorFromRowType(
+                repos, typeFactory, child.getRowType()));
+
         return minusStream;  
+    }
+
+    protected LcsIndexMinusRel createMinusOfDeletionIndex(
+        FennelRel rel, LcsTable lcsTable, RelNode input)
+    {
+        FennelRelImplementor implementor =
+            FennelRelUtil.getRelImplementor(rel);
+        FennelRelParamId startRidParamId = implementor.allocateRelParamId();
+        FennelRelParamId rowLimitParamId = implementor.allocateRelParamId();
+        LcsIndexSearchRel delIndexScan = 
+            createDeletionIndexScan(
+                rel, lcsTable, startRidParamId, rowLimitParamId, false);
+        RelNode[] minusInputs = new RelNode[2];
+        minusInputs[0] = input;
+        minusInputs[1] = delIndexScan;
+        LcsIndexMinusRel minus = new LcsIndexMinusRel(
+            rel.getCluster(), minusInputs, lcsTable, startRidParamId,
+            rowLimitParamId);
+        return minus;
+    }
+
+    /**
+     * Creates an index search on the deletion index corresponding to this
+     * lcs table. A deletion index is searched by RID.
+     * 
+     * @param rel the rel from which this scan is being generated
+     * @param lcsTable the table whose deletion index is to be scanned
+     * @param startRidParamId start rid parameter for the index search
+     * @param rowLimitParamId row limit parameter for the index search
+     * @param fullScan true if deletion index will be used with a full table
+     * scan
+     * 
+     * @return the created index search
+     */
+    protected LcsIndexSearchRel createDeletionIndexScan(
+        FennelRel rel, LcsTable lcsTable,
+        FennelRelParamId startRidParamId, FennelRelParamId rowLimitParamId,
+        boolean fullScan)
+    {
+        FemLocalIndex delIndex = FarragoCatalogUtil.getDeletionIndex(
+            repos, lcsTable.getCwmColumnSet());
+        
+        RelNode keyInput = createDelIndexScanInput(rel, fullScan);
+        
+        Integer [] inputDirectiveProj = { 0, 2 };
+        Integer [] inputKeyProj = { 1, 3 };
+        
+        LcsIndexSearchRel indexSearch = new LcsIndexSearchRel(
+            rel.getCluster(), keyInput, lcsTable, delIndex, 
+            false, null, true, false, inputKeyProj, null, inputDirectiveProj,
+            startRidParamId, rowLimitParamId);
+        
+        return indexSearch;
+    }
+    
+    /**
+     * Creates the RelNode that corresponds to the key input into the deletion
+     * index scan.  The type of input depends on whether or not a full scan
+     * is being done on the deletion index.
+     * 
+     * @param rel the original rel from which this rel is being generated
+     * @param fullScan true if a full scan will be done on the deletion index
+     * 
+     * @return the created RelNode
+     */
+    private RelNode createDelIndexScanInput(FennelRel rel, boolean fullScan)
+    {
+        // Search on the index using the rid as the key
+        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(rel);
+        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
+        RelDataType directiveType = typeFactory.createSqlType(
+            SqlTypeName.Char, 1);
+        RelDataType keyType = typeFactory.createTypeWithNullability(
+            typeFactory.createSqlType(SqlTypeName.Bigint), true);
+
+        // Setup the directives.  In the case of a full scan, setup an
+        // unbounded lower and upper search.  In the index scan case, setup
+        // a >= search on the rid key.
+        RelDataType keyRowType =
+            typeFactory.createStructType(
+                new RelDataType [] {
+                    directiveType,
+                    keyType,
+                    directiveType,
+                    keyType
+                },
+                new String [] {
+                    "lowerBoundDirective",
+                    "lowerBoundKey",
+                    "upperBoundDirective",
+                    "upperBoundKey"
+                });
+        
+        List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
+        List<RexNode> tuple = new ArrayList<RexNode>();
+        RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+        SargFactory sargFactory = new SargFactory(rexBuilder);
+        
+        SargMutableEndpoint lowerEndpoint = sargFactory.newEndpoint(keyType);
+        if (fullScan) {
+            lowerEndpoint.setInfinity(-1);
+        } else {
+            // for now, just set the actual search key value to null; this
+            // will get filled in at runtime with the value of the startRid
+            // dynamic parameter
+            lowerEndpoint.setFinite(
+                SargBoundType.LOWER, SargStrictness.CLOSED,
+                rexBuilder.constantNull());
+        }
+        RexLiteral lowerBoundDirective =
+            FennelRelUtil.convertEndpoint(rexBuilder, lowerEndpoint);
+        
+        SargMutableEndpoint upperEndpoint = sargFactory.newEndpoint(keyType);
+        upperEndpoint.setInfinity(1);
+        
+        RexLiteral upperBoundDirective =
+            FennelRelUtil.convertEndpoint(rexBuilder, upperEndpoint);
+        
+        tuple.add(lowerBoundDirective);
+        tuple.add(rexBuilder.constantNull());
+        tuple.add(upperBoundDirective);
+        tuple.add(rexBuilder.constantNull());
+        inputTuples.add(tuple);
+        
+        RelNode keyRel = new FennelValuesRel(
+            rel.getCluster(), keyRowType, (List) inputTuples);
+        
+        RelNode keyInput = RelOptRule.mergeTraitsAndConvert(
+            rel.getTraits(), FennelRel.FENNEL_EXEC_CONVENTION, keyRel);
+        assert (keyInput != null);    
+        
+        return keyInput;
     }
     
     public Map<CwmColumn, SargIntervalSequence> getCol2SeqMap(
@@ -1488,6 +1669,62 @@ public class LcsIndexGuide
             }
         }
         return bestIndex;
+    }
+    
+    /**
+     * Search for a projection of a bitmap index that satisfies a 
+     * row scan. If such a projection exists, return the projection, 
+     * with bitmap columns appended.
+     * 
+     * @param rowScan the row scan to be satisfied
+     * @param index the index which is to be projected
+     * @param rowScanProjection the projected columns to be satisfied
+     * 
+     * @return a projection on the index that satisfies the columns 
+     *   of the row scan and includes bitmap data, or null if a satisfying 
+     *   projection could not be found
+     */
+    public Integer[] findIndexOnlyProjection(
+        LcsRowScanRel rowScan,
+        FemLocalIndex index)
+    {
+        // determine columns to be satisfied
+        Integer[] proj = rowScan.projectedColumns;
+        if (proj == null) {
+            proj = FennelRelUtil.newIotaProjection(
+                rowScan.getRowType().getFieldCount());
+        }
+
+        // find available columns
+        List<FemAbstractColumn> idxCols = new LinkedList<FemAbstractColumn>();
+        for (Object o : index.getIndexedFeature()) {
+            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) o;
+            idxCols.add((FemAbstractColumn) indexedFeature.getFeature());
+        }
+
+        // find projection
+        List<Integer> indexProj = new ArrayList<Integer>();
+        for (int i = 0; i < proj.length; i++) {
+            // TODO: handle lcs rid
+            if (LucidDbSpecialOperators.isLcsRidColumnId(proj[i])) {
+                return null;
+            }
+            FemAbstractColumn keyCol = 
+                (FemAbstractColumn) table.getFeature().get(proj[i]);
+            int next = idxCols.indexOf(keyCol);
+            if (next == -1) {
+                return null;
+            }
+            indexProj.add(next);
+        }
+
+        // add bitmap columns (which follow the index key columns)
+        int nKeys = idxCols.size();
+        for (int i = nKeys; i < nKeys + 3; i++) {
+            indexProj.add(i);
+        }
+        Integer[] projArray = new Integer[indexProj.size()];
+        return indexProj.toArray(projArray);
     }
 }
 

@@ -280,20 +280,13 @@ public class LcsRowScanRel extends FennelMultipleRel
             RelNode[] oldInputs = new RelNode[inputs.length + 1];
             System.arraycopy(inputs, 0, oldInputs, 0, inputs.length);
             LcsIndexSearchRel delIndexScan =
-                createDeletionIndexScan(null, null, true);
+                indexGuide.createDeletionIndexScan(
+                    this, lcsTable, null, null, true);
             oldInputs[inputs.length] = delIndexScan;
             inputs = oldInputs;
         } else {  
-            FennelRelParamId startRidParamId = implementor.allocateRelParamId();
-            FennelRelParamId rowLimitParamId = implementor.allocateRelParamId();
-            LcsIndexSearchRel delIndexScan = createDeletionIndexScan(
-                startRidParamId, rowLimitParamId, false);
-            RelNode[] minusInputs = new RelNode[2];
-            minusInputs[0] = inputs[0];
-            minusInputs[1] = delIndexScan;
-            inputs[0] = new LcsIndexMinusRel(
-                getCluster(), minusInputs, lcsTable, startRidParamId,
-                rowLimitParamId);           
+            inputs[0] = indexGuide.createMinusOfDeletionIndex(
+                this, lcsTable, inputs[0]);
         }
         
         FemLcsRowScanStreamDef scanStream = 
@@ -308,115 +301,6 @@ public class LcsRowScanRel extends FennelMultipleRel
         }
 
         return scanStream;
-    }
-
-    /**
-     * Creates an index search on the deletion index corresponding to this
-     * lcs table.
-     * 
-     * @param startRidParamId start rid parameter for the index search
-     * @param rowLimitParamId row limit parameter for the index search
-     * @param fullScan true if deletion index will be used with a full table
-     * scan
-     * 
-     * @return the created index search
-     */
-    private LcsIndexSearchRel createDeletionIndexScan(
-        FennelRelParamId startRidParamId, FennelRelParamId rowLimitParamId,
-        boolean fullScan)
-    {
-        FemLocalIndex delIndex = FarragoCatalogUtil.getDeletionIndex(
-            repos, lcsTable.getCwmColumnSet());
-        
-        RelNode keyInput = createDelIndexScanInput(fullScan);
-        
-        Integer [] inputDirectiveProj = { 0, 2 };
-        Integer [] inputKeyProj = { 1, 3 };
-        
-        LcsIndexSearchRel indexSearch = new LcsIndexSearchRel(
-            getCluster(), keyInput, lcsTable, delIndex, null, true, false, 
-            inputKeyProj, null, inputDirectiveProj, startRidParamId,
-        rowLimitParamId);
-        
-        return indexSearch;
-    }
-    
-    /**
-     * Creates the RelNode that corresponds to the key input into the deletion
-     * index scan.  The type of input depends on whether or not a full scan
-     * is being done on the deletion index.
-     * 
-     * @param fullScan true if a full scan will be done on the deletion index
-     * 
-     * @return the created RelNode
-     */
-    private RelNode createDelIndexScanInput(boolean fullScan)
-    {
-        // Search on the index using the rid as the key
-        FarragoPreparingStmt stmt = FennelRelUtil.getPreparingStmt(this);
-        FarragoTypeFactory typeFactory = stmt.getFarragoTypeFactory();
-        RelDataType directiveType = typeFactory.createSqlType(
-            SqlTypeName.Char, 1);
-        RelDataType keyType = typeFactory.createTypeWithNullability(
-            typeFactory.createSqlType(SqlTypeName.Bigint), true);
-
-        // Setup the directives.  In the case of a full scan, setup an
-        // unbounded lower and upper search.  In the index scan case, setup
-        // a >= search on the rid key.
-        RelDataType keyRowType =
-            typeFactory.createStructType(
-                new RelDataType [] {
-                    directiveType,
-                    keyType,
-                    directiveType,
-                    keyType
-                },
-                new String [] {
-                    "lowerBoundDirective",
-                    "lowerBoundKey",
-                    "upperBoundDirective",
-                    "upperBoundKey"
-                });
-        
-        List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
-        List<RexNode> tuple = new ArrayList<RexNode>();
-        RexBuilder rexBuilder = getCluster().getRexBuilder();
-        SargFactory sargFactory = new SargFactory(rexBuilder);
-        
-        SargMutableEndpoint lowerEndpoint = sargFactory.newEndpoint(keyType);
-        if (fullScan) {
-            lowerEndpoint.setInfinity(-1);
-        } else {
-            // for now, just set the actual search key value to null; this
-            // will get filled in at runtime with the value of the startRid
-            // dynamic parameter
-            lowerEndpoint.setFinite(
-                SargBoundType.LOWER, SargStrictness.CLOSED,
-                rexBuilder.constantNull());
-        }
-        RexLiteral lowerBoundDirective =
-            FennelRelUtil.convertEndpoint(rexBuilder, lowerEndpoint);
-        
-        SargMutableEndpoint upperEndpoint = sargFactory.newEndpoint(keyType);
-        upperEndpoint.setInfinity(1);
-        
-        RexLiteral upperBoundDirective =
-            FennelRelUtil.convertEndpoint(rexBuilder, upperEndpoint);
-        
-        tuple.add(lowerBoundDirective);
-        tuple.add(rexBuilder.constantNull());
-        tuple.add(upperBoundDirective);
-        tuple.add(rexBuilder.constantNull());
-        inputTuples.add(tuple);
-        
-        RelNode keyRel = new FennelValuesRel(
-            getCluster(), keyRowType, (List) inputTuples);
-        
-        RelNode keyInput = RelOptRule.mergeTraitsAndConvert(
-            getTraits(), FennelRel.FENNEL_EXEC_CONVENTION, keyRel);
-        assert (keyInput != null);    
-        
-        return keyInput;
     }
     
     public LcsIndexGuide getIndexGuide()
