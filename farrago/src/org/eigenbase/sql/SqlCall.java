@@ -135,7 +135,18 @@ public class SqlCall
             operator.unparse(writer, operands, 0, 0);
             writer.endList(frame);
         } else {
-            operator.unparse(writer, operands, leftPrec, rightPrec);
+            if (functionQuantifier != null) {
+                // REVIEW jvs 24-July-2006:  This is currently the only
+                // way to get the quantifier through to the unparse
+                SqlUtil.unparseFunctionSyntax(
+                    operator,
+                    writer,
+                    operands,
+                    true,
+                    functionQuantifier);
+            } else {
+                operator.unparse(writer, operands, leftPrec, rightPrec);
+            }
         }
     }
 
