@@ -1,0 +1,16 @@
+-- TPC-D Parameter Substitution (Version 1.1.0D)
+-- using default substitutions
+
+set schema 'tpch';
+
+SELECT YYEAR, SUM(REVENUE) AS REV
+FROM
+    (SELECT SUBSTRING(CAST(O_ORDERDATE AS CHAR(10)) FROM 1 FOR 4) AS YYEAR,
+            L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS REVENUE
+    FROM LINEITEM, ORDERS
+    WHERE O_ORDERKEY = L_ORDERKEY
+        AND O_CLERK = 'Clerk#000000088'
+        AND L_RETURNFLAG = 'R'
+    ) AS PERFORMANCE
+GROUP BY YYEAR
+ORDER BY YYEAR;

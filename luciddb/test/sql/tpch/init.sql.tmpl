@@ -1,0 +1,61 @@
+-- TPCH Schema creation
+--SET ECHO=ON
+
+-- As ADMIN, create a TPCH schema and user
+--connect ADMIN ADMIN
+
+
+-- Create a role to be granted to user
+CREATE SCHEMA TPCH;
+CREATE ROLE TPCHROLE;
+
+-- Create a tablespace for TPCH tables and indexes
+--create tablespace TPCHTBS datafile 'tpcd01.dat' size 250m;
+
+-- set explain plan level
+--alter system set explainplandetail=3;
+
+-- other
+--GRANT ALL on *.* to TPCHROLE;
+
+-- create a user
+--CREATE USER TPCH IDENTIFIED by TPCH; 
+--GRANT TPCHROLE to TPCH;
+--ALTER USER TPCH default SCHEMA TPCH;
+--ALTER USER TPCH default TABLESPACE TPCHTBS;
+
+-- Connect as the new user
+--connect TPCH TPCH
+
+--create link TPCH_LNK using FILE_DRIVER
+--defined by '"R:/testdata/tpcd/data"',
+--'Link for TPCH table load'
+--/
+
+create server ff_tpch_server
+foreign data wrapper "FLAT FILE"
+options(
+    directory '@FFDIR@',
+    file_extension '.tbl',
+    ctrl_file_extension '.bcp',
+    field_delimiter '|',
+    line_delimiter '\n',
+    quote_char '"',
+    escape_char '',
+    with_header 'no',
+    num_rows_scan '1',
+    log_directory '@DIR@'
+);
+
+import foreign schema "BCP" from server ff_tpch_server into tpch;
+
+select count(*) from tpch."lineitem";
+select count(*) from tpch."nation";
+select count(*) from tpch."region";
+select count(*) from tpch."part";
+select count(*) from tpch."supplier";
+select count(*) from tpch."customer";
+select count(*) from tpch."orders";
+
+set schema 'tpch';
+

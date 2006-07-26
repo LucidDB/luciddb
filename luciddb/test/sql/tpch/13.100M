@@ -1,0 +1,26 @@
+0: jdbc:luciddb:> -- TPC-D Parameter Substitution (Version 1.1.0D)
+0: jdbc:luciddb:> -- using default substitutions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> SELECT YYEAR, SUM(REVENUE) AS REV
+. . . . . . . . > FROM
+. . . . . . . . >     (SELECT SUBSTRING(CAST(O_ORDERDATE AS CHAR(10)) FROM 1 FOR 4) AS YYEAR,
+. . . . . . . . >             L_EXTENDEDPRICE * (1 - L_DISCOUNT) AS REVENUE
+. . . . . . . . >     FROM LINEITEM, ORDERS
+. . . . . . . . >     WHERE O_ORDERKEY = L_ORDERKEY
+. . . . . . . . >         AND O_CLERK = 'Clerk#000000088'
+. . . . . . . . >         AND L_RETURNFLAG = 'R'
+. . . . . . . . >     ) AS PERFORMANCE
+. . . . . . . . > GROUP BY YYEAR
+. . . . . . . . > ORDER BY YYEAR;
++--------+---------------+
+| YYEAR  |      REV      |
++--------+---------------+
+| 1992   | 1274237.1105  |
+| 1993   | 984781.4950   |
+| 1994   | 1565676.4706  |
+| 1995   | 221863.3650   |
++--------+---------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

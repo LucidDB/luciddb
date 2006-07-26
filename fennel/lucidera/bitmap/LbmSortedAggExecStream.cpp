@@ -42,6 +42,8 @@ public:
     explicit LbmRepeatingAggComputer(AggComputer *pComputer);
     
     // implement AggComputer
+    virtual void setInputAttrIndex(uint iInputAttrIndex);
+
     virtual void clearAccumulator(
         TupleDatum &accumulatorDatum);
 
@@ -71,6 +73,12 @@ LbmRepeatingAggComputer::LbmRepeatingAggComputer(
     AggComputer *pComputer)
 {
     this->pComputer = pComputer;
+}
+
+void LbmRepeatingAggComputer::setInputAttrIndex(uint iInputAttrIndex)
+{
+    AggComputer::setInputAttrIndex(iInputAttrIndex);
+    pComputer->setInputAttrIndex(iInputAttrIndex);
 }
 
 void LbmRepeatingAggComputer::clearAccumulator(
@@ -118,13 +126,8 @@ void LbmRepeatingAggComputer::updateAccumulator(
     TupleDatum &accumulatorDatumDest,
     TupleData const &inputTuple)
 {
-    // FIXME: this sequence seems questionable since it does not follow
-    // the pattern of SUM aggregates. SUM aggregates seem to perform
-    // special case copies. (because the source datum is nullable?)
-    // yet this sequence seems reasonable since no allocated memory is
-    // associated with the datums
-    updateAccumulator(accumulatorDatumSrc, inputTuple);
-    accumulatorDatumDest.copyFrom(accumulatorDatumSrc);
+    // sorted aggregates never use this call
+    assert(false);
 }
 
 void LbmSortedAggExecStream::prepare(

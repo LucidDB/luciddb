@@ -1,0 +1,98 @@
+0: jdbc:luciddb:> -- TPCH Schema creation
+0: jdbc:luciddb:> --SET ECHO=ON
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- As ADMIN, create a TPCH schema and user
+0: jdbc:luciddb:> --connect ADMIN ADMIN
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Create a role to be granted to user
+0: jdbc:luciddb:> CREATE SCHEMA TPCH;
+0: jdbc:luciddb:> CREATE ROLE TPCHROLE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Create a tablespace for TPCH tables and indexes
+0: jdbc:luciddb:> --create tablespace TPCHTBS datafile 'tpcd01.dat' size 250m;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- set explain plan level
+0: jdbc:luciddb:> --alter system set explainplandetail=3;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- other
+0: jdbc:luciddb:> --GRANT ALL on *.* to TPCHROLE;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- create a user
+0: jdbc:luciddb:> --CREATE USER TPCH IDENTIFIED by TPCH; 
+0: jdbc:luciddb:> --GRANT TPCHROLE to TPCH;
+0: jdbc:luciddb:> --ALTER USER TPCH default SCHEMA TPCH;
+0: jdbc:luciddb:> --ALTER USER TPCH default TABLESPACE TPCHTBS;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Connect as the new user
+0: jdbc:luciddb:> --connect TPCH TPCH
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --create link TPCH_LNK using FILE_DRIVER
+0: jdbc:luciddb:> --defined by '"R:/testdata/tpcd/data"',
+0: jdbc:luciddb:> --'Link for TPCH table load'
+0: jdbc:luciddb:> --/
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ff_tpch_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >     directory '@FFDIR@',
+. . . . . . . . >     file_extension '.tbl',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter '|',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'no',
+. . . . . . . . >     num_rows_scan '1',
+. . . . . . . . >     log_directory '@DIR@'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema "BCP" from server ff_tpch_server into tpch;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select count(*) from tpch."lineitem";
++---------+
+| EXPR$0  |
++---------+
+| 600572  |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."nation";
++---------+
+| EXPR$0  |
++---------+
+| 25      |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."region";
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."part";
++---------+
+| EXPR$0  |
++---------+
+| 20000   |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."supplier";
++---------+
+| EXPR$0  |
++---------+
+| 1000    |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."customer";
++---------+
+| EXPR$0  |
++---------+
+| 15000   |
++---------+
+0: jdbc:luciddb:> select count(*) from tpch."orders";
++---------+
+| EXPR$0  |
++---------+
+| 150000  |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'tpch';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -1,4 +1,4 @@
-Farrago Source Release 0.5.0
+Farrago Source Release 0.6.0pre1
 
 ----------------------------------------------------------------------
 HOME PAGE
@@ -16,7 +16,7 @@ download the full Eigenbase binary release for your platform.
 ------------------------------------------------------------
 RELEASE NOTES
 
-This initial source release is intended for use by developers who want
+This source release is intended for use by developers who want
 to explore the Farrago codebase.  Farrago relies on a large number of
 third-party dependencies, so developers who want to build it should
 download a full Eigenbase source release.
@@ -29,14 +29,7 @@ officially frozen in future releases.
 ----------------------------------------------------------------------
 LICENSE
 
-Copyright (C) 2003-2005 The Eigenbase Project and others
+Copyright (C) 2003-2006 The Eigenbase Project and others
 
 This distribution of Farrago is licensed under the GNU General Public
 License; see file COPYING for details.
-
-------------------------------------------------------------
-ACKNOWLEDGEMENTS
-
-The project is hosted on Sourceforge
-
-http://sourceforge.net/projects/farrago

@@ -578,6 +578,16 @@ public abstract class JmiMemFactory
                 // Primitive values cannot be null. So, provide a value.
                 if (attrClass == int.class) {
                     return new Integer(0);
+                } else if (attrClass == long.class) {
+                    return new Long(0);
+                } else if (attrClass == boolean.class) {
+                    return new Boolean(false);
+                } else if (attrClass == double.class) {
+                    return new Double(0);
+                } else if (attrClass == float.class) {
+                    return new Float(0);
+                } else {
+                    throw Util.newInternal(attrClass.getName());
                 }
             }
             return o;

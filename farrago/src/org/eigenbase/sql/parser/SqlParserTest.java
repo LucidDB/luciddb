@@ -626,16 +626,12 @@ public class SqlParserTest
 
     public void testFunctionWithDistinct()
     {
-        checkExp("count(DISTINCT 1)", "COUNT(1)");
-        checkExp("count(ALL 1)", "COUNT(1)");
+        checkExp("count(DISTINCT 1)", "COUNT(DISTINCT 1)");
+        checkExp("count(ALL 1)", "COUNT(ALL 1)");
         checkExp("count(1)", "COUNT(1)");
-        /*
-                These are the correct tests when the unparse function is fixed
-         checkExp("count(DISTINCT 1)","COUNT('DISTINCT' 1)");
-         checkExp("count(ALL 1)","COUNT('ALL' 1)");     check("select count(1),
-         count(distinct 2) from emp",         "SELECT COUNT(1), COUNT('DISTINCT'
-         2)" + NL +         "FROM `EMP`");
-         */
+        check("select count(1), count(distinct 2) from emp",
+            "SELECT COUNT(1), COUNT(DISTINCT 2)" + NL +
+            "FROM `EMP`");
     }
 
     public void testFunctionInFunction()

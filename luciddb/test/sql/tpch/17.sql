@@ -1,0 +1,16 @@
+-- TPC-D Parameter Substitution (Version 1.1.0D)
+-- using default substitutions
+
+set schema 'tpch';
+
+SELECT SUM(L_EXTENDEDPRICE) / 7.0 AS AVG_YEARLY
+FROM LINEITEM L, PART,
+     (SELECT L1.L_PARTKEY, (0.2 * AVG(L_QUANTITY)) AS AVGQTY 
+      FROM LINEITEM L1
+      GROUP BY L1.L_PARTKEY) AS TEMP
+WHERE
+    P_PARTKEY = L.L_PARTKEY AND
+    P_BRAND = 'Brand#23' AND
+    P_CONTAINER = 'MED BOX' AND
+    P_PARTKEY = TEMP.L_PARTKEY AND
+    L.L_QUANTITY < TEMP.AVGQTY;

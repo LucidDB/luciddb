@@ -67,17 +67,21 @@
       </test>
 
       <test name="sqbm5" requiresSuccess="benchins1m">
+        <!-- TODO: LDB-121 -->
         <test-metadata>
           <runDuration>short medium</runDuration>
           <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5.sql"/>
       </test>
 
       <test name="sqbm6a" requiresSuccess="benchins1m">
+        <!-- TODO: LDB-121 -->
         <test-metadata>
           <runDuration>short medium</runDuration>
           <withIndex value="true"/>
+          <knownFailure value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
       </test>

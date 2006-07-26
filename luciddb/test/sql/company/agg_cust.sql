@@ -8,6 +8,7 @@ set schema 's';
 -- plain aggregates
 
 -- TODO:
+-- FNL-42
 select floor(sum(PRICE)) from SALES;
 
 select count(PRICE) from SALES;
