@@ -85,7 +85,7 @@ public class Rex2CalcPlanTest
         testContext.stmtValidator = farragoConn.getSession().newStmtValidator();
         testContext.stmt =
             (FarragoPreparingStmt) farragoConn.getSession().getPersonality()
-            .newPreparingStmt(testContext.stmtValidator);
+            .newPreparingStmt(null, testContext.stmtValidator);
     }
 
     protected void tearDown()

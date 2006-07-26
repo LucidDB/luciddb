@@ -147,6 +147,18 @@ public class FarragoDefaultSessionPersonality
     public FarragoSessionPreparingStmt newPreparingStmt(
         FarragoSessionStmtValidator stmtValidator)
     {
+        return newPreparingStmt(null, stmtValidator);
+    }
+
+    // implement FarragoSessionPersonality
+    public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        // NOTE: We don't use stmtContext here, and we don't pass it on to the
+        // preparing statement, because that doesn't need to be aware of its
+        // context. However, custom personalities may have a use for it, which
+        // is why it is provided in the interface.
         FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
         FarragoSessionPlanner planner =
             stmtValidator.getSession().getPersonality().newPlanner(stmt, true);

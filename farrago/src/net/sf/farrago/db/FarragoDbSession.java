@@ -864,6 +864,7 @@ public class FarragoDbSession
                         owner,
                         isExecDirect,
                         analyzedSql,
+                        stmtContext,
                         stmtValidator,
                         reposTxnContext,
                         pRollback);
@@ -898,6 +899,7 @@ public class FarragoDbSession
         FarragoAllocationOwner owner,
         boolean isExecDirect,
         FarragoSessionAnalyzedSql analyzedSql,
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator,
         FarragoReposTxnContext reposTxnContext,
         boolean [] pRollback)
@@ -932,6 +934,7 @@ public class FarragoDbSession
             personality.validate(stmtValidator, sqlNode);
             FarragoSessionExecutableStmt stmt =
                 database.prepareStmt(
+                    stmtContext,
                     stmtValidator,
                     sqlNode,
                     owner,

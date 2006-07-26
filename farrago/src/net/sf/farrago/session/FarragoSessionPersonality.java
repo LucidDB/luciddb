@@ -30,6 +30,7 @@ import org.eigenbase.resgen.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.resource.EigenbaseResource;
 
 
 /**
@@ -102,16 +103,26 @@ public interface FarragoSessionPersonality
         FarragoSession session);
 
     /**
-     * Creates a new preparing statement tied to this session and its underlying
-     * database. Used to construct and implement an internal query plan.
+     * Creates a new preparing statement tied to this session and its
+     * underlying database. Used to construct and implement an internal query
+     * plan.
      *
+     * @param stmtContext embracing stmt context, if any; otherwise, null.
      * @param stmtValidator generic stmt validator
      *
      * @return a new {@link FarragoSessionPreparingStmt}.
      */
     public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator);
 
+    /**
+     * @deprecated Use the two-arg version instead, passing null
+     * for stmtContext.
+     */
+    public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator);
+    
     /**
      * Creates a new validator for DDL commands.
      *
