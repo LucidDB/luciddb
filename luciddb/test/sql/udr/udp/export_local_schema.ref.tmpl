@@ -6,7 +6,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- basic export, no filters
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, null, '@EXPDIR@/local/basic', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, null, '@EXPDIR@/local/basic', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server exp_server
 . . . . . . . . > foreign data wrapper sys_file_wrapper
@@ -218,7 +218,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> --  include with table_list
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/local/include', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/local/include', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server exp_server
@@ -316,7 +316,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- include with table_pattern
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null , '%e%', '@EXPDIR@/local/include', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null , '%e%', '@EXPDIR@/local/include', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server exp_server
@@ -381,7 +381,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- exclude with table_list
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'TEMPUDP', true, 'bench100, EMP,types' , null, '@EXPDIR@/local/exclude', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'TEMPUDP', true, 'bench100, EMP,types' , null, '@EXPDIR@/local/exclude', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server exp_server2
@@ -442,7 +442,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- exclude with table pattern
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', true, null , '%S', '@EXPDIR@/local/exclude', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', true, null , '%S', '@EXPDIR@/local/exclude', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server exp_server2

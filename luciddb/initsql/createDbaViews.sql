@@ -291,7 +291,8 @@ create procedure export_schema_to_csv(
   in tlist varchar(65535),
   in tpattern varchar(65535),
   in dir varchar(65535),
-  in bcp boolean) 
+  in bcp boolean,
+  in delete_failed_file boolean) 
 language java
 reads sql data
 called on null input
@@ -304,7 +305,8 @@ create procedure export_foreign_schema_to_csv(
   in tlist varchar(65535),
   in tpattern varchar(65535),
   in dir varchar(65535),
-  in bcp boolean)
+  in bcp boolean,
+  in delete_failed_file boolean)
 language java
 modifies sql data
 called on null input
