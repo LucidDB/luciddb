@@ -1,7 +1,10 @@
 0: jdbc:luciddb:> -- $Id$
-0: jdbc:luciddb:> set schema 'udftest';
-0: jdbc:luciddb:> set path 'udftest';
+0: jdbc:luciddb:> create schema jdt;
+0: jdbc:luciddb:> set schema 'jdt';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- day_from_julian_start tests
+0: jdbc:luciddb:> --
 0: jdbc:luciddb:> values applib.day_from_julian_start(DATE'2005-10-30');
 +----------+
 |  EXPR$0  |
@@ -94,6 +97,26 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 | 3677918  |
 +----------+
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- current_date_in_julian test
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> values (applib.day_from_julian_start(current_date) = applib.current_date_in_julian());
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values (applib.current_date_in_julian() < applib.day_from_julian_start(DATE'2005-12-12'));
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- cleanup
 0: jdbc:luciddb:> drop view tempview;
+0: jdbc:luciddb:> drop schema jdt cascade;
 0: jdbc:luciddb:> !quit

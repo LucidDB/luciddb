@@ -234,6 +234,14 @@
 . . . . . . . . >   applib.day_number_overall(dt) + 2440588
 . . . . . . . . > );
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- define current_date_in_julian
+0: jdbc:luciddb:> create or replace function applib.current_date_in_julian()
+. . . . . . . . > returns integer
+. . . . . . . . > contains sql
+. . . . . . . . > return (
+. . . . . . . . >   applib.day_number_overall(CURRENT_DATE) + 2440588
+. . . . . . . . > );
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define padweeknumber
 0: jdbc:luciddb:> create function applib.padweeknumber(wk_num_as_yr integer)
 . . . . . . . . > returns varchar(16)

@@ -234,6 +234,14 @@ return (
   applib.day_number_overall(dt) + 2440588
 );
 
+-- define current_date_in_julian
+create or replace function applib.current_date_in_julian()
+returns integer
+contains sql
+return (
+  applib.day_number_overall(CURRENT_DATE) + 2440588
+);
+
 -- define padweeknumber
 create function applib.padweeknumber(wk_num_as_yr integer)
 returns varchar(16)
