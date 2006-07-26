@@ -78,8 +78,8 @@
 '      LhxJoinRel'
 '        LcsRowScanRel'
 '        FennelCalcRel'
-'          LcsRowScanRel'
-'            LcsIndexSearchRel'
+'          LcsNormalizerRel'
+'            LcsIndexOnlyScanRel'
 '              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for select emp.fname from emp,dept
@@ -92,10 +92,9 @@
 '      LhxJoinRel'
 '        LcsRowScanRel'
 '        FennelCalcRel'
-'          LcsRowScanRel'
-'            LcsIndexMergeRel'
-'              LcsIndexSearchRel'
-'                FennelValuesRel'
+'          LcsNormalizerRel'
+'            LcsIndexOnlyScanRel'
+'              FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- multiple dimension tables, filters on both
 0: jdbc:luciddb:> explain plan excluding attributes for select customers.lname, products.name, sales.price

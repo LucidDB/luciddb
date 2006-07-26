@@ -64,7 +64,7 @@
       </test>
 
       <test name="agg" requiresSuccess="download">
-        <!-- TODO: FRG-115, FRG-165 -->
+        <!-- TODO: FRG-115, FRG-165, LDB-121 -->
         <!-- FRG-52 -->
         <test-metadata>
           <knownFailure value="true"/>
@@ -88,7 +88,8 @@
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
-        <!-- TODO: FRG-165 -->
+        <!-- TODO: FRG-165, LDB-121 -->
+        <!-- FNL-42 -->
         <!-- to_number not supported yet, commented out -->
         <test-metadata>
           <knownFailure value="true"/>
@@ -121,7 +122,7 @@
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC not implemented yet -->
+        <!-- TODO: FRG-167 DESC not implemented yet, LDB-121 -->
         <test-metadata>
           <knownFailure value="true"/>
           <withIndex value="true"/>
