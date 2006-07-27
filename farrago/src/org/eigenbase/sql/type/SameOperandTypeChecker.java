@@ -70,9 +70,13 @@ public class SameOperandTypeChecker
         boolean throwOnFailure,
         SqlCallBinding callBinding)
     {
+        int nOperandsActual = nOperands;
+        if (nOperandsActual == -1) {
+            nOperandsActual = operatorBinding.getOperandCount();
+        }
         assert !(throwOnFailure && (callBinding == null));
-        RelDataType [] types = new RelDataType[nOperands];
-        for (int i = 0; i < nOperands; ++i) {
+        RelDataType [] types = new RelDataType[nOperandsActual];
+        for (int i = 0; i < nOperandsActual; ++i) {
             if (operatorBinding.isOperandNull(i, false)) {
                 if (throwOnFailure) {
                     throw callBinding.getValidator().newValidationError(
@@ -84,7 +88,7 @@ public class SameOperandTypeChecker
             }
             types[i] = operatorBinding.getOperandType(i);
         }
-        for (int i = 1; i < nOperands; ++i) {
+        for (int i = 1; i < nOperandsActual; ++i) {
             if (!checkTypePair(types[i], types[i - 1])) {
                 if (!throwOnFailure) {
                     return false;
@@ -159,14 +163,25 @@ public class SameOperandTypeChecker
     // implement SqlOperandTypeChecker
     public SqlOperandCountRange getOperandCountRange()
     {
-        return new SqlOperandCountRange(nOperands);
+        if (nOperands == -1) {
+            return SqlOperandCountRange.Variadic;
+        } else {
+            return new SqlOperandCountRange(nOperands);
+        }
     }
 
     // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        String [] array = new String[nOperands];
+        int nOperandsActual = nOperands;
+        if (nOperandsActual == -1) {
+            nOperandsActual = 3;
+        }
+        String [] array = new String[nOperandsActual];
         Arrays.fill(array, "EQUIVALENT_TYPE");
+        if (nOperands == -1) {
+            array[2] = "...";
+        }
         return SqlUtil.getAliasedSignature(
                 op,
                 opName,

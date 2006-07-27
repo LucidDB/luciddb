@@ -437,7 +437,31 @@
       </deny>
     </access-rule>
 
+    <pattern name="jdbc.param.deps">
+      <include pattern="fennel.tuple.deps" />
+      <include pattern="jdbc.param" />
+    </pattern>
+
+    <access-rule>
+      <message>jdbc.param dependency violation</message>
+      <deny>
+        <from pattern="jdbc.param" />
+        <to pattern="eigenbase" />
+        <allow>
+          <to pattern="util14" />
+        </allow>
+      </deny>
+      <deny>
+        <from pattern="jdbc.param" />
+        <to pattern="farrago" />
+        <allow>
+          <to pattern="jdbc.param.deps" />
+        </allow>
+      </deny>
+    </access-rule>
+
     <pattern name="runtime.deps">
+      <include pattern="jdbc.param.deps" />
       <include pattern="session.deps" />
       <include pattern="runtime" />
     </pattern>
@@ -590,29 +614,6 @@
         <to pattern="farrago" />
         <allow>
           <to pattern="jdbc.deps" />
-        </allow>
-      </deny>
-    </access-rule>
-
-    <pattern name="jdbc.param.deps">
-      <include pattern="fennel.tuple.deps" />
-      <include pattern="jdbc.param" />
-    </pattern>
-
-    <access-rule>
-      <message>jdbc.param dependency violation</message>
-      <deny>
-        <from pattern="jdbc.param" />
-        <to pattern="eigenbase" />
-        <allow>
-          <to pattern="util14" />
-        </allow>
-      </deny>
-      <deny>
-        <from pattern="jdbc.param" />
-        <to pattern="farrago" />
-        <allow>
-          <to pattern="jdbc.param.deps" />
         </allow>
       </deny>
     </access-rule>

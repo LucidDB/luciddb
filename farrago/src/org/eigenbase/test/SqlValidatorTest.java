@@ -3136,6 +3136,31 @@ public class SqlValidatorTest
             + "FROM `SALES`.`DEPT` AS `DEPT`");
     }
 
+    public void testCoalesceWithoutRewrite()
+    {
+        SqlValidator validator = tester.getValidator();
+        validator.setCallRewrite(false);
+        tester.checkRewrite(
+            validator,
+            "select coalesce(deptno, empno) from emp",
+            "SELECT COALESCE(`DEPTNO`, `EMPNO`)"
+            + NL
+            + "FROM `EMP`");
+    }
+
+    public void testCoalesceWithRewrite()
+    {
+        SqlValidator validator = tester.getValidator();
+        validator.setCallRewrite(true);
+        tester.checkRewrite(
+            validator,
+            "select coalesce(deptno, empno) from emp",
+            "SELECT CASE WHEN `DEPTNO` IS NOT NULL THEN `DEPTNO` "
+            + "ELSE `EMPNO` END"
+            + NL
+            + "FROM `EMP`");
+    }
+
     public void testNew()
     {
         // (To debug invidual statements, paste them into this method.)

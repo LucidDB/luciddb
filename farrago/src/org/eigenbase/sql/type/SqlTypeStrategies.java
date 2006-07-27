@@ -207,6 +207,13 @@ public abstract class SqlTypeStrategies
         new SameOperandTypeChecker(3);
 
     /**
+     * Operand type-checking strategy where any number of operands must all be
+     * in the same type family.
+     */
+    public static final SqlOperandTypeChecker otcSameVariadic =
+        new SameOperandTypeChecker(-1);
+
+    /**
      * Operand type-checking strategy where operand types must allow ordered
      * comparisons.
      */
@@ -658,7 +665,7 @@ public abstract class SqlTypeStrategies
      * Type-inference strategy whereby the result type of a call is using its
      * operands biggest type, using the SQL:1999 rules described in "Data types
      * of results of aggregations". These rules are used in union, except,
-     * intercept, case and other places.
+     * intersect, case and other places.
      *
      * @sql.99 Part 2 Section 9.3
      */

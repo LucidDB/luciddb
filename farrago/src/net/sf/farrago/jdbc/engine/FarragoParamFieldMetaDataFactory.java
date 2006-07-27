@@ -26,6 +26,7 @@ import java.sql.*;
 
 import java.util.*;
 
+import net.sf.farrago.runtime.*;
 import net.sf.farrago.jdbc.param.*;
 
 import org.eigenbase.reltype.*;
@@ -58,26 +59,7 @@ public class FarragoParamFieldMetaDataFactory
         RelDataType type,
         int mode)
     {
-        FarragoParamFieldMetaData fieldMeta = new FarragoParamFieldMetaData();
-
-        fieldMeta.nullable =
-            type.isNullable() ? ParameterMetaData.parameterNullable
-            : ParameterMetaData.parameterNoNulls;
-        fieldMeta.type = type.getSqlTypeName().getJdbcOrdinal();
-        fieldMeta.typeName = type.getSqlTypeName().getName();
-
-        // TODO: Get class name;
-        fieldMeta.className = "";
-        fieldMeta.precision = type.getPrecision();
-        fieldMeta.scale =
-            type.getSqlTypeName().allowsScale() ? type.getScale() : 0;
-
-        // TODO: treat all numerics as signed
-        fieldMeta.signed = SqlTypeUtil.isNumeric(type);
-        fieldMeta.mode = mode;
-        fieldMeta.paramTypeStr = type.toString();
-
-        return fieldMeta;
+        return FarragoRuntimeJdbcUtil.newParamFieldMetaData(type, mode);
     }
 
     /**

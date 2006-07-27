@@ -422,6 +422,13 @@ public interface SqlValidator
      */
     void setIdentifierExpansion(boolean expandIdentifiers);
 
+    /**
+     * Enables or disables rewrite of "macro-like" calls such as COALESCE.
+     *
+     * @param rewriteCalls new setting
+     */
+    void setCallRewrite(boolean rewriteCalls);
+
     RelDataType deriveConstructorType(
         SqlValidatorScope scope,
         SqlCall call,
