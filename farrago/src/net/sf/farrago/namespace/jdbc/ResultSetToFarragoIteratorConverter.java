@@ -24,6 +24,7 @@ package net.sf.farrago.namespace.jdbc;
 
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
+import net.sf.farrago.type.runtime.*;
 
 import openjava.mop.*;
 
@@ -157,13 +158,34 @@ class ResultSetToFarragoIteratorConverter
                 rhsExp =
                     new MethodCall(castResultSet, methodName, colPosExpList);
             }
+
+            // cast to target type, or narrow if necessary
+            boolean narrow = false;
+            if (type.getSqlTypeName() == SqlTypeName.Decimal
+                && type.getPrecision() >= SqlTypeName.MAX_NUMERIC_PRECISION) {
+                narrow = true;
+            }
+            if (narrow) {
+                ExpressionList args = 
+                    new ExpressionList(
+                        rhsExp,
+                        Literal.makeLiteral(type.getPrecision()),
+                        Literal.makeLiteral(type.getScale()));
+                rhsExp = new MethodCall(
+                    OJClass.forClass(EncodedSqlDecimal.class),
+                    "narrowCast",
+                    args);
+            }
             RexNode rhs =
                 javaRexBuilder.makeJava(
                     getCluster().getEnv(),
                     rhsExp);
-            rhs = javaRexBuilder.makeAbstractCast(
+            if (!narrow){
+                rhs = javaRexBuilder.makeAbstractCast(
                     field.getType(),
                     rhs);
+            }
+
             final RexToOJTranslator translator =
                 farragoImplementor.newStmtTranslator(
                     this,

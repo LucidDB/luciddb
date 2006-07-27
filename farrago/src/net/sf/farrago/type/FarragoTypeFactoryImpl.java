@@ -478,6 +478,17 @@ public class FarragoTypeFactoryImpl
                         typeName,
                         precision,
                         scale);
+
+                // When external types support greater precision than native 
+                // types we map them to nullable types. External data that 
+                // would otherwise overflow can then be replaced with null. 
+                // Note that we do not fully support our stated max precision.
+                if (precision == maxPrecision && !isNullable) {
+                    if (!substitute) {
+                        throw new UnsupportedOperationException();
+                    }
+                    isNullable = true;
+                }
             } else if (typeName.allowsScale()) {
                 // This is probably never used because Decimal is the
                 // only type which supports scale.

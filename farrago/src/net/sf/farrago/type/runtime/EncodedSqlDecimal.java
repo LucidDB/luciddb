@@ -44,6 +44,13 @@ import org.eigenbase.util14.*;
  * runtime. As usual, the method <code>getNullableData</code> returns an
  * external data type, conforming to SQL standards.
  *
+ * FIXME: this code is quite inefficient. First, it relies heavily on 
+ * Java libraries for decimal support. As a result it allocates memory 
+ * on a per row basis. Second, it is inefficient in other ways. 
+ * It relies on AssignableDecimal to assign values and NarrowedDecimal 
+ * to squeeze external data values. This should all be optimized, into 
+ * simple low-level operations.
+ *
  * @author jpham
  * @version $Id$
  * @since Dec 21, 2005
@@ -232,6 +239,52 @@ public abstract class EncodedSqlDecimal
                 super.assignFrom(obj);
             }
         }
+    }
+
+    /**
+     * Narrows an external BigDecimal value (potentially larger than the 
+     * database can handle) into a native value. Unsupported values are 
+     * replaced with null.
+     * 
+     * @param o the BigDecimal value
+     * @param prec the precision of the native type
+     * @param scale the scale of the native type
+     * 
+     * @return a new sql decimal value of the specified precision and scale
+     */
+    public static EncodedSqlDecimal narrowCast(Object o, int prec, int scale)
+    {
+        BigDecimal bd = (BigDecimal)o;
+        return new NarrowedDecimal(bd, prec, scale);
+    }
+
+    private static class NarrowedDecimal extends EncodedSqlDecimal 
+        implements NullableValue
+    {
+        static private BigInteger maxValue = 
+            BigInteger.valueOf(Long.MAX_VALUE);
+        
+        private int prec;
+        private int scale;
+
+        public NarrowedDecimal(BigDecimal bd, int prec, int scale) {
+            this.prec = prec;
+            this.scale = scale;
+            if (bd == null) {
+                setNull(true);
+            } else {
+                BigDecimal rounded = 
+                    bd.setScale(scale, BigDecimal.ROUND_HALF_UP);
+                if (rounded.unscaledValue().compareTo(maxValue) == 1) {
+                    setNull(true);
+                } else {
+                    value = bd.unscaledValue().longValue();
+                }
+            }
+        }
+        
+        protected int getPrecision() { return prec; }
+        protected int getScale() { return scale; }
     }
 }
 
