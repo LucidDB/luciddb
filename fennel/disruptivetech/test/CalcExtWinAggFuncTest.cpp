@@ -41,35 +41,41 @@ using namespace fennel;
 using namespace std;
 
 
-static const int64_t INT_TEST_MIN =  2;
-static const int64_t INT_TEST_MAX =  105;
-
-static const double DBL_TEST_MIN = 1.5;
-static const double DBL_TEST_MAX = 874.5;
-
 #define TEST_DATA_INDEX 0
 #define MIN_INDEX 1
 #define MAX_INDEX 2
 #define SUM_INDEX 3
+#define FV_INDEX 4
+#define LV_INDEX 5
 
 #define SAMPLE_SIZE 10
 
 
+static const int64_t INT_TEST_MIN =  2; // min data value below
+static const int64_t INT_TEST_MAX =  105; // max data value below
+
 static int64_t intTestData[][SAMPLE_SIZE] =
 {
-    {12,33,52,14,10,63,5,INT_TEST_MIN,49,INT_TEST_MAX},  // test data values
-    {12,12,12,12,10,10,5,2,2,2},                         // running MIN values
-    {12,33,52,52,52,63,63,63,63,105},                    // running MAX values
-    {12,45,97,111,121,184,189,191,240,345}               // running sum of test values
+    {12,  33, 52, 14, 10, 63,  5,  2, 49,105},  // test data values
+    {12,  12, 12, 12, 10, 10,  5,  2,  2,  2},  // running MIN values
+    {12,  33, 52, 52, 52, 63, 63, 63, 63,105},  // running MAX values
+    {12,  45, 97,111,121,184,189,191,240,345},  // running SUM of test values
+    {12,  12, 12, 12, 12, 12, 12, 12, 12, 12},  // running FIRST_VALUE values
+    {105,105,105,105,105,105,105,105,105,105},  // running LAST_VALUE values
 };
 
 
+static const double DBL_TEST_MIN = 1.5; // min data value below
+static const double DBL_TEST_MAX = 874.5; // max data value below
+
 static double dblTestData[][SAMPLE_SIZE] =
 {
-    {63.5,63.1,92.9,DBL_TEST_MIN,6.3,38.5,23.1,DBL_TEST_MAX,44.7,498.0},
-    {63.5,63.1,63.1,1.5,1.5,1.5,1.5,1.5,1.5,1.5},
-    {63.5,63.5,92.9,92.9,92.9,92.9,92.9,874.5,874.5,874.5},
-    {63.5,126.6,219.5,221.0,227.3,265.8,288.9,1163.4,1208.1,1706.1}
+    { 63.5, 63.1, 92.9,  1.5,  6.3, 38.5, 23.1, 874.5,  44.7, 498.0}, // data values
+    { 63.5, 63.1, 63.1,  1.5,  1.5,  1.5,  1.5,   1.5,   1.5,   1.5}, // running MIN
+    { 63.5, 63.5, 92.9, 92.9, 92.9, 92.9, 92.9, 874.5, 874.5, 874.5}, // running MAX
+    { 63.5,126.6,219.5,221.0,227.3,265.8,288.9,1163.4,1208.1,1706.1}, // running SUM
+    { 63.5, 63.5, 63.5, 63.5, 63.5, 63.5, 63.5,  63.5,  63.5,  63.5}, // running FIRST_VALUE
+    {498.0,498.0,490.0,498.0,498.0,498.0,498.0, 498.0, 498.0, 498.0}, // running LAST_VALUE
 };
 
 #define STR_SAMPLE_SIZE 4
@@ -81,23 +87,29 @@ static char *str4 = "noot";
 
 static char* strAddTestData[][STR_SAMPLE_SIZE] =
 {
-    {str1, str2, str3, str4},
-    {str1, str1, str3, str3},
-    {str1, str2, str2, str2}
+    {str1, str2, str3, str4},   // data values
+    {str1, str1, str3, str3},   // running MIN
+    {str1, str2, str2, str2},   // running MAX
+    {NULL, NULL, NULL, NULL},   // (not used)
+    {str1, str1, str1, str1},   // running FIRST_VALUE
+    {str1, str2, str3, str4},   // running LAST_VALUE
 };
 
 static char* strDropTestData[][STR_SAMPLE_SIZE] =
 {
-    {str1, str2, str3, str4},
-    {NULL, str1, str1, str3},
-    {NULL, str1, str2, str2}
+    {str1, str2, str3, str4},   // data values
+    {str3, str3, str4, NULL},   // running MIN
+    {str2, str4, str4, NULL},   // running MAX
+    {NULL, NULL, NULL, NULL},   // (not used)
+    {str2, str3, str4, NULL},   // running FIRST_VALUE
+    {str4, str4, str4, NULL},   // running LAST_VALUE
 };
 
 static vector<TupleData*>  testTuples;
 
 
 
-class CalcExtMinMaxTest : virtual public TestBase, public TraceSource
+class CalcExtWinAggFuncTest : virtual public TestBase, public TraceSource
 {
     void checkWarnings(Calculator& calc, string expected);
 
@@ -106,33 +118,36 @@ class CalcExtMinMaxTest : virtual public TestBase, public TraceSource
     void testCalcExtMinMaxStr();
     
     
-    void initWindowedAggDataBlock(TupleDataWithBuffer* outTuple,
+    void initWindowedAggDataBlock(
+        TupleDataWithBuffer* outTuple,
         StandardTypeDescriptorOrdinal dType);
 
-    void printOutput(TupleData const & tup,
-                     Calculator const & calc);
+    void printOutput(
+        TupleData const & tup,
+        Calculator const & calc);
     
 public:
-    explicit CalcExtMinMaxTest()
-        : TraceSource(shared_from_this(),"CalcExtMinMaxTest")
+    explicit CalcExtWinAggFuncTest()
+        : TraceSource(shared_from_this(),"CalcExtWinAggFuncTest")
     {
         srand(time(NULL));
         CalcInit::instance();
-        FENNEL_UNIT_TEST_CASE(CalcExtMinMaxTest, testCalcExtMinMaxInt);
-        FENNEL_UNIT_TEST_CASE(CalcExtMinMaxTest, testCalcExtMinMaxDbl);
-        FENNEL_UNIT_TEST_CASE(CalcExtMinMaxTest, testCalcExtMinMaxStr);
+        FENNEL_UNIT_TEST_CASE(CalcExtWinAggFuncTest, testCalcExtMinMaxInt);
+        FENNEL_UNIT_TEST_CASE(CalcExtWinAggFuncTest, testCalcExtMinMaxDbl);
+        FENNEL_UNIT_TEST_CASE(CalcExtWinAggFuncTest, testCalcExtMinMaxStr);
 
     }
      
-    virtual ~CalcExtMinMaxTest()
+    virtual ~CalcExtWinAggFuncTest()
     {
     }
 };
 
 // for nitty-gritty debugging. sadly, doesn't use BOOST_MESSAGE.
 void
-CalcExtMinMaxTest::printOutput(TupleData const & tup,
-                             Calculator const & calc)
+CalcExtWinAggFuncTest::printOutput(
+    TupleData const & tup,
+    Calculator const & calc)
 {
 #if 0
     TuplePrinter tuplePrinter;
@@ -143,7 +158,7 @@ CalcExtMinMaxTest::printOutput(TupleData const & tup,
 
 
 void 
-CalcExtMinMaxTest::checkWarnings(Calculator& calc, string expected)
+CalcExtWinAggFuncTest::checkWarnings(Calculator& calc, string expected)
 {
     try {
         calc.exec();
@@ -153,20 +168,20 @@ CalcExtMinMaxTest::checkWarnings(Calculator& calc, string expected)
     
     int i = calc.warnings().find(expected);
 
-    if ( i < 0) {
+    if (i < 0) {
         string msg ="Unexpected or no warning found\n";
         msg += "Expected: ";
         msg += expected;
         msg += "\nActual:  ";
         msg += calc.warnings();
-	
+
         BOOST_FAIL(msg);
     }   
 }
 
 
 void
-CalcExtMinMaxTest::initWindowedAggDataBlock(
+CalcExtWinAggFuncTest::initWindowedAggDataBlock(
     TupleDataWithBuffer* outTuple,
     StandardTypeDescriptorOrdinal dType)
 {
@@ -224,10 +239,10 @@ WinAggAddTest(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8;" << endl;
+        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
         pg << "I s8,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d;" << endl;
+        pg << "O s8,d,d,d,d,d,d;" << endl;
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -237,6 +252,8 @@ WinAggAddTest(
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
+    pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
+    pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -250,13 +267,14 @@ WinAggAddTest(
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
     
-    TupleDataWithBuffer outTuple( calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
-    for (int i=0; i < 10; i++){
-        TupleDataWithBuffer *inTuple = new TupleDataWithBuffer( calc.getInputRegisterDescriptor());
-        testTuples.push_back( inTuple);
+    for (int i=0; i < 10; i++) {
+        TupleDataWithBuffer *inTuple = 
+            new TupleDataWithBuffer(calc.getInputRegisterDescriptor());
+        testTuples.push_back(inTuple);
 
-        calc.bind( inTuple, &outTuple);
+        calc.bind(inTuple, &outTuple);
         
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
@@ -283,10 +301,10 @@ WinAggDropTest(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isExact(dType)) {
-        pg << "O s8,s8,s8,s8,s8;" << endl;
+        pg << "O s8,s8,s8,s8,s8,s8,s8;" << endl;
         pg << "I s8,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isApprox(dType)) {
-        pg << "O s8,d,d,d,d;" << endl;
+        pg << "O s8,d,d,d,d,d,d;" << endl;
         pg << "I d,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -296,6 +314,8 @@ WinAggDropTest(
     pg << "CALL 'WinAggAvg(O2,I1);" << endl;
     pg << "CALL 'WinAggMin(O3,I1);" << endl;
     pg << "CALL 'WinAggMax(O4,I1);" << endl;
+    pg << "CALL 'WinAggFirstValue(O5,I1);" << endl;
+    pg << "CALL 'WinAggLastValue(O6,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -310,15 +330,15 @@ WinAggDropTest(
     }
 
     // Alloc tuples and buffer space
-    TupleDataWithBuffer outTuple( calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
     // Step backwards through the data table and remove each entry
     // from the window checking the function returns along the way.
-    for (int i=SAMPLE_SIZE-1; i >=0 ; i--){
+    for (int i=SAMPLE_SIZE-1; i >=0 ; i--) {
         TupleData* inTuple = testTuples[i];
         TupleDatum* pTD = &(*inTuple)[0];
 
-        calc.bind( inTuple, &outTuple);
+        calc.bind(inTuple, &outTuple);
         
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
@@ -329,7 +349,7 @@ WinAggDropTest(
 
         (*check)(&outTuple, testData, i);
     }
-    assert( 0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
+    assert(0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
 }
 
 template <typename DTYPE>
@@ -343,10 +363,10 @@ WinAggAddTestStr(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isVariableLenArray(dType)) {
-        pg << "O s8, vc,4, vc,4;" << endl;
+        pg << "O s8, vc,4, vc,4, vc,4, vc,4;" << endl;
         pg << "I vc,4,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isArray(dType)) {
-        pg << "O s8, c,4, c,4;" << endl;
+        pg << "O s8, c,4, c,4, c,4, c,4;" << endl;
         pg << "I c,4,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -354,6 +374,8 @@ WinAggAddTestStr(
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggMin(O1,I1);" << endl;
     pg << "CALL 'WinAggMax(O2,I1);" << endl;
+    pg << "CALL 'WinAggFirstValue(O3,I1);" << endl;
+    pg << "CALL 'WinAggLastValue(O4,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -367,13 +389,13 @@ WinAggAddTestStr(
         BOOST_FAIL("Assemble exception " << ex.getMessage()<< pg.str());
     }
     
-    TupleDataWithBuffer outTuple( calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
-    for (int i=0; i < STR_SAMPLE_SIZE; i++){
-        TupleDataWithBuffer *inTuple = new TupleDataWithBuffer( calc.getInputRegisterDescriptor());
-        testTuples.push_back( inTuple);
+    for (int i=0; i < STR_SAMPLE_SIZE; i++) {
+        TupleDataWithBuffer *inTuple = new TupleDataWithBuffer(calc.getInputRegisterDescriptor());
+        testTuples.push_back(inTuple);
 
-        calc.bind( inTuple, &outTuple);
+        calc.bind(inTuple, &outTuple);
         
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
@@ -399,10 +421,10 @@ WinAggDropTestStr(
     ostringstream pg("");
 
     if (StandardTypeDescriptor::isVariableLenArray(dType)) {
-        pg << "O s8, vc,4, vc,4;" << endl;
+        pg << "O s8, vc,4, vc,4, vc,4, vc,4;" << endl;
         pg << "I vc,4,vb,4;" <<endl;
     } else if (StandardTypeDescriptor::isArray(dType)) {
-        pg << "O s8, c,4, c,4;" << endl;
+        pg << "O s8, c,4, c,4, c,4, c,4;" << endl;
         pg << "I c,4,vb,4;" <<endl;
     }
     pg << "T;" << endl;
@@ -410,6 +432,8 @@ WinAggDropTestStr(
     pg << "CALL 'WinAggCount(O0,I1);" << endl;
     pg << "CALL 'WinAggMin(O1,I1);" << endl;
     pg << "CALL 'WinAggMax(O2,I1);" << endl;
+    pg << "CALL 'WinAggFirstValue(O3,I1);" << endl;
+    pg << "CALL 'WinAggLastValue(O4,I1);" << endl;
 
     // Allocate
     Calculator calc(0);
@@ -424,15 +448,15 @@ WinAggDropTestStr(
     }
 
     // Alloc tuples and buffer space
-    TupleDataWithBuffer outTuple( calc.getOutputRegisterDescriptor());
+    TupleDataWithBuffer outTuple(calc.getOutputRegisterDescriptor());
 
-    // Step backwards through the data table and remove each entry
+    // Step forwards through the data table and remove each entry
     // from the window checking the function returns along the way.
-    for (int i=STR_SAMPLE_SIZE-1; i >=0 ; i--){
+    for (int i = 0; i < STR_SAMPLE_SIZE; i++) {
         TupleData* inTuple = testTuples[i];
         TupleDatum* pTD = &(*inTuple)[0];
 
-        calc.bind( inTuple, &outTuple);
+        calc.bind(inTuple, &outTuple);
         
         // copy the Agg data block pointer into the input tuple
         (*inTuple)[1] = (*winAggTuple)[0];
@@ -443,7 +467,7 @@ WinAggDropTestStr(
 
         (*check)(&outTuple, testData, i);
     }
-    assert( 0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
+    assert(0 == *(reinterpret_cast<const int64_t*>(outTuple[0].pData)));
 }
 
 void checkAddInt(
@@ -451,10 +475,12 @@ void checkAddInt(
     int64_t testData[][SAMPLE_SIZE],
     int index)
 {
-    BOOST_CHECK(index+1 == *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
-    BOOST_CHECK(testData[SUM_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
-    BOOST_CHECK(testData[MIN_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
-    BOOST_CHECK(testData[MAX_INDEX][index] == *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
+    BOOST_CHECK_EQUAL(index+1, *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
+    BOOST_CHECK_EQUAL(testData[SUM_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
+    BOOST_CHECK_EQUAL(testData[MIN_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
+    BOOST_CHECK_EQUAL(testData[MAX_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
+    BOOST_CHECK_EQUAL(testData[FV_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[5].pData)));
+    BOOST_CHECK_EQUAL(testData[TEST_DATA_INDEX][index], *(reinterpret_cast<const int64_t*>((*outTuple)[6].pData)));
 }
 
 void checkDropInt(
@@ -463,10 +489,12 @@ void checkDropInt(
     int index)
 {
     if (index > 0) {
-        BOOST_CHECK(index == *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
-        BOOST_CHECK(testData[SUM_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
-        BOOST_CHECK(testData[MIN_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
-        BOOST_CHECK(testData[MAX_INDEX][index-1] == *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
+        BOOST_CHECK_EQUAL(index, *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData)));
+        BOOST_CHECK_EQUAL(testData[SUM_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[1].pData)));
+        BOOST_CHECK_EQUAL(testData[MIN_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[3].pData)));
+        BOOST_CHECK_EQUAL(testData[MAX_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[4].pData)));
+        BOOST_CHECK_EQUAL(testData[TEST_DATA_INDEX][SAMPLE_SIZE - index], *(reinterpret_cast<const int64_t*>((*outTuple)[5].pData)));
+        BOOST_CHECK_EQUAL(testData[LV_INDEX][index-1], *(reinterpret_cast<const int64_t*>((*outTuple)[6].pData)));
     }
 }
 
@@ -476,7 +504,7 @@ void checkAddDbl(
     int index)
 {
     int64_t rowCount = *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData));
-    BOOST_CHECK(index+1 == rowCount);
+    BOOST_CHECK_EQUAL(index+1, rowCount);
     
     double tdSum = testData[SUM_INDEX][index];
     double calcSum = *(reinterpret_cast<const double*>((*outTuple)[1].pData));
@@ -484,11 +512,11 @@ void checkAddDbl(
     
     double tdMin = testData[MIN_INDEX][index];
     double calcMin = *(reinterpret_cast<const double*>((*outTuple)[3].pData));
-    BOOST_CHECK(tdMin == calcMin);
+    BOOST_CHECK_EQUAL(tdMin, calcMin);
     
     double tdMax = testData[MAX_INDEX][index];
     double calcMax = *(reinterpret_cast<const double*>((*outTuple)[4].pData));
-    BOOST_CHECK(tdMax == calcMax);
+    BOOST_CHECK_EQUAL(tdMax, calcMax);
 }
 
 void checkDropDbl(
@@ -498,7 +526,7 @@ void checkDropDbl(
 {
     if (index > 0) {
         int64_t calcRowCount = *(reinterpret_cast<const int64_t*>((*outTuple)[0].pData));
-        BOOST_CHECK(index == calcRowCount);
+        BOOST_CHECK_EQUAL(index, calcRowCount);
 
         double tdSum = testData[SUM_INDEX][index-1];
         double calcSum = *(reinterpret_cast<const double*>((*outTuple)[1].pData));
@@ -522,40 +550,42 @@ void checkDropStr(
     
 }
 
+/// Helper function to compare a tuple with an expected string value.
+void checkEqualStr(
+    TupleDatum const &tuple,
+    char *expected)
+{
+    char *rtnStr = reinterpret_cast<char*>(const_cast<PBuffer>(tuple.pData));
+    if (NULL != expected && NULL != rtnStr) {
+        char *rtnStrEnd = rtnStr + tuple.cbData;
+        char *expectedEnd = expected + strlen(expected);
+    
+        BOOST_CHECK_EQUAL_COLLECTIONS(rtnStr, rtnStrEnd, expected, expectedEnd);
+    } else {
+        BOOST_CHECK(expected == rtnStr);
+    }
+}
+
 void checkStr(
     TupleDataWithBuffer* outTuple,
     char* testData[][STR_SAMPLE_SIZE],
     int index)
 {
     // check the MIN return value
-    char *rtnStrEnd;
-    char *testStrEnd;
-    char *testStr = testData[MIN_INDEX][index];
-    char *rtnStr = reinterpret_cast<char*>(const_cast<PBuffer>((*outTuple)[1].pData));
-    if (NULL != testStr) {
-        rtnStrEnd = rtnStr + (*outTuple)[1].cbData;
-        testStrEnd = testStr + strlen(testStr);
-    
-        BOOST_CHECK_EQUAL_COLLECTIONS( testStr, testStrEnd, rtnStr, rtnStrEnd);
-    } else {
-        BOOST_CHECK( rtnStr == testStr);
-    }
-    
+    checkEqualStr((*outTuple)[1], testData[MIN_INDEX][index]);
+
     // check the MAX return value
-    rtnStr = reinterpret_cast<char*>(const_cast<PBuffer>((*outTuple)[2].pData));
-    testStr = testData[MAX_INDEX][index];
-    if (NULL != testStr) {
-        rtnStrEnd = rtnStr + (*outTuple)[2].cbData;
-        testStrEnd = testStr + strlen(testStr);
-    
-        BOOST_CHECK_EQUAL_COLLECTIONS( testStr, testStrEnd, rtnStr, rtnStrEnd);
-    } else {
-        BOOST_CHECK( rtnStr == testStr);
-    }
+    checkEqualStr((*outTuple)[2], testData[MAX_INDEX][index]);
+
+    // check the FIRST_VALUE return value
+    checkEqualStr((*outTuple)[3], testData[FV_INDEX][index]);
+
+    // check the LAST_VALUE return value
+    checkEqualStr((*outTuple)[4], testData[LV_INDEX][index]);
 }
 
 void
-CalcExtMinMaxTest::testCalcExtMinMaxInt()
+CalcExtWinAggFuncTest::testCalcExtMinMaxInt()
 {
     // Clear the vector that holds the TupleData for the simulated window.
     testTuples.clear();
@@ -568,7 +598,7 @@ CalcExtMinMaxTest::testCalcExtMinMaxInt()
 }
 
 void
-CalcExtMinMaxTest::testCalcExtMinMaxDbl()
+CalcExtWinAggFuncTest::testCalcExtMinMaxDbl()
 {
     // Clear the vector that holds the TupleData for the simulated window.
     testTuples.clear();
@@ -581,7 +611,7 @@ CalcExtMinMaxTest::testCalcExtMinMaxDbl()
 }
 
 void
-CalcExtMinMaxTest::testCalcExtMinMaxStr()
+CalcExtWinAggFuncTest::testCalcExtMinMaxStr()
 {
     testTuples.clear();
     
@@ -594,5 +624,5 @@ CalcExtMinMaxTest::testCalcExtMinMaxStr()
 
 
 
-FENNEL_UNIT_TEST_SUITE(CalcExtMinMaxTest);
+FENNEL_UNIT_TEST_SUITE(CalcExtWinAggFuncTest);
 

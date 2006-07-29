@@ -44,20 +44,23 @@ public:
 
     // Creates a typical instruction
     static Instruction*
-    createInstruction(string const & name,
-                      vector<RegisterReference*> & operands); // add const?
+    createInstruction(
+        string const &name,
+        vector<RegisterReference*> const &operands);
 
     // Creates a Jump instruction
     static Instruction*
-    createInstruction(string const & name, 
-                      TProgramCounter pc,
-                      RegisterReference* operand); // add const?
+    createInstruction(
+        string const &name, 
+        TProgramCounter pc,
+        RegisterReference* operand); // add const?
 
     // Creates an Extended instruction
     static Instruction*
-    createInstruction(string const & name, 
-                      string const & function,
-                      vector<RegisterReference*> & operands); // add const?
+    createInstruction(
+        string const &name, 
+        string const &function,
+        vector<RegisterReference*> const &operands);
 
     // debugging & tracing
     static string
