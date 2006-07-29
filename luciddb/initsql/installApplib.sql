@@ -226,6 +226,8 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 
 -- define dayFromJulianStart
+-- 2440588 is the number of days from the Julian Calendar start date to 
+-- the epoch Jan 1, 1970 
 create function applib.day_from_julian_start(dt Date)
 returns integer
 language sql
@@ -235,6 +237,8 @@ return (
 );
 
 -- define current_date_in_julian
+-- 2440588 is the number of days from the Julian Calendar start date to 
+-- the epoch Jan 1, 1970 
 create or replace function applib.current_date_in_julian()
 returns integer
 contains sql

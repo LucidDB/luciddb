@@ -311,3 +311,35 @@ language java
 modifies sql data
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
+
+create procedure export_schema_incremental_to_csv(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in last_mod_ts timestamp,
+  in last_mod_col varchar(128),
+  in dir varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean) 
+language java
+reads sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
+
+create procedure export_foreign_schema_incremental_to_csv(
+  in serv varchar(128),
+  in fschema varchar(128),
+  in exclude boolean,
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in last_mod_ts timestamp,
+  in last_mod_col varchar(128),
+  in dir varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean)
+language java
+modifies sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';

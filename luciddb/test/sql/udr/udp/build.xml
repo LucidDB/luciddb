@@ -95,6 +95,7 @@
     <delete>
       <fileset dir="${udp.dir}">
         <include name="*.err"/>
+        <include name="*.log"/>
       </fileset>
     </delete>
     <delete dir="${csv.copy.dir}"/>

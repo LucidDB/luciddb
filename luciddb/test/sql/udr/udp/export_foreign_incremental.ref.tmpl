@@ -1,0 +1,55 @@
+0: jdbc:luciddb:> -- EXPORT_FOREIGN_SCHEMA_INCREMENTAL_TO_CSV tests
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> set schema 'udptest';
+0: jdbc:luciddb:> set path 'udptest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic foreign incremental export
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE', null, cast(applib.get_var('udptest', 'startTs') as timestamp), 'LMTS', '@EXPDIR@/foreign/inc', true, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server fexp_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >   directory '@EXPDIR@/foreign/inc',
+. . . . . . . . >   file_extension '.txt',
+. . . . . . . . >   ctrl_file_extension '.bcp',
+. . . . . . . . >   field_delimiter '\t',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   escape_char '',
+. . . . . . . . >   with_header 'yes'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select cola from fexp_server.bcp.mytable;
++-------+
+| COLA  |
++-------+
+| 3     |
++-------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- returns no rows
+0: jdbc:luciddb:> -- TODO: FRG-176
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE', null, current_timestamp, 'LMTS', '@EXPDIR@/foreign/inc', true, true);
+Error: From line 1, column 95 to line 1, column 98: Illegal use of 'NULL' (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- incremental changes to full export if either last_modified 
+0: jdbc:luciddb:> -- or last_modified column are null
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE, BLAH', null, cast(applib.get_var('udptest', 'startTs') as timestamp), null, '@EXPDIR@/foreign/inc', true, true);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select cola from fexp_server.bcp.mytable order by 1;
++-------+
+| COLA  |
++-------+
+| 1     |
+| 2     |
+| 3     |
++-------+
+0: jdbc:luciddb:> select catalog_name, schema_name, view_name 
+. . . . . . . . > from fexp_server.bcp.blah 
+. . . . . . . . > order by 1,2,3;
++---------------+--------------+------------+
+| CATALOG_NAME  | SCHEMA_NAME  | VIEW_NAME  |
++---------------+--------------+------------+
+| LOCALDB       | UDPTEST      | BLAH       |
+| LOCALDB       | UDPTEST      | EMPVIEW    |
++---------------+--------------+------------+
+0: jdbc:luciddb:> !quit
