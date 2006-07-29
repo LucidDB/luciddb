@@ -4,7 +4,7 @@
 0: jdbc:luciddb:> -- EXPORT_FOREIGN_SCHEMA_TO_CSV tests
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- basic export, no filters
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, null, null, '@EXPDIR@/foreign/basic', true);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, null, null, '@EXPDIR@/foreign/basic', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server fexp_server
 . . . . . . . . > foreign data wrapper sys_file_wrapper
@@ -177,7 +177,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- include with table_list
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/foreign/include', true);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/foreign/include', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server fexp_server2
@@ -238,7 +238,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- include with table_pattern
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', false, null , '%e%', '@EXPDIR@/foreign/include', true);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', false, null , '%e%', '@EXPDIR@/foreign/include', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- import from exported schema
 0: jdbc:luciddb:> create schema tempudp;
@@ -303,7 +303,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- exclude with table_list
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', true, 'bench100,CUSTOMERS, DEPT, EMP, PRODUCTS,types' , null, '@EXPDIR@/foreign/exclude', true);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FEXP_SERVER', 'BCP', true, 'bench100,CUSTOMERS, DEPT, EMP, PRODUCTS,types' , null, '@EXPDIR@/foreign/exclude', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server fexp_server2
@@ -385,7 +385,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- exclude with table pattern
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', true, null, '%e%', '@EXPDIR@/foreign/exclude', true);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'BCP', true, null, '%e%', '@EXPDIR@/foreign/exclude', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create foreign server from exported schema
 0: jdbc:luciddb:> create server fexp_server2

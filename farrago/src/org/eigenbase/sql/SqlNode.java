@@ -77,6 +77,9 @@ public abstract class SqlNode
      */
     public SqlNode clone(SqlParserPos pos)
     {
+        // REVIEW jvs 26-July-2006:  shouldn't pos be used here?  Or are
+        // subclasses always supposed to override, in which case this
+        // method should probably be abstract?
         try {
             return (SqlNode) super.clone();
         } catch (CloneNotSupportedException e) {

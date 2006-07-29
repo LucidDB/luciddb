@@ -4,7 +4,7 @@ set path 'udptest';
 --
 -- no bcp
 --
-call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, 'types,bench100,EMP', null, '@EXPDIR@/misc/nobcp', false);
+call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, 'types,bench100,EMP', null, '@EXPDIR@/misc/nobcp', false, true);
 
 create server misc_server
 foreign data wrapper sys_file_wrapper
@@ -29,9 +29,9 @@ drop server misc_server cascade;
 set schema 'sys_boot.jdbc_metadata';
 
 -- negative test
-call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
 
-call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
 
 
 create server misc_server
@@ -58,26 +58,26 @@ set schema 'localdb.udptest';
 --
 
 -- table_list and table_pattern both not null
-call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true);
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true, true);
 
-call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false);
+call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false, true);
 
 -- incorrect table within table_list
-call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true);
+call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true, true);
  
-call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false);
+call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false, true);
 
 -- incorrect catalog name
-call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true);
+call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true, true);
 
 -- incorrect schema name
-call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true);
+call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true, true);
 
 -- incorrect server name
-call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
 
 -- incorrect foreign schema name
-call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
 
 -- check export directory
 create server neg_server

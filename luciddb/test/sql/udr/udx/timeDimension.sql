@@ -105,3 +105,32 @@ from
 group by periods.time_key
 having count(periods.time_key_seq) > 1
 order by 1;
+
+-- LER-1635
+create view CAL as
+SELECT
+"TIME_KEY_SEQ",
+"TIME_KEY",
+"DAY_OF_WEEK",
+"WEEKEND",
+"DAY_NUMBER_IN_WEEK",
+"DAY_NUMBER_IN_MONTH",
+"DAY_NUMBER_IN_YEAR",
+"DAY_NUMBER_OVERALL",
+"WEEK_NUMBER_IN_YEAR",
+"WEEK_NUMBER_OVERALL",
+"MONTH_NAME",
+"MONTH_NUMBER_IN_YEAR",
+"MONTH_NUMBER_OVERALL",
+"QUARTER",
+"YR",
+"CALENDAR_QUARTER",
+"FIRST_DAY_OF_WEEK"
+FROM TABLE(SPECIFIC "LOCALDB"."APPLIB"."TIME_DIMENSION"(
+    2004, 1, 1, 2005, 12, 31));
+
+select time_key, time_key_seq 
+from CAL where TIME_KEY_SEQ = 731;
+
+select time_key, time_key_seq 
+from CAL where TIME_KEY = CAST('2005-12-31' AS DATE);

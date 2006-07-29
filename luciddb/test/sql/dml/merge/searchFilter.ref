@@ -1,6 +1,7 @@
--------------------------------------------------
-pending design for filter conditions of ON clause
--------------------------------------------------
+--
+-- jira issues filed
+--
+
 0: jdbc:luciddb:> set schema 'mergetest';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
@@ -131,16 +132,6 @@ pending design for filter conditions of ON clause
 0: jdbc:luciddb:> create table t2 (m1 integer, m2 integer, m3 integer);
 0: jdbc:luciddb:> insert into t2 values (1,1,100), (2,2,200), (3,3,300), (4,4,400);
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- as of 6/27/06 this search condition is still buggy
-0: jdbc:luciddb:> -- Ex. search "on n1=m1 and n2=m2" and "on n1=m1 and not(n2<>m2)"
-0: jdbc:luciddb:> -- return different results
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --merge into t1 using t2 on n1=m1 and not(n2<>m2)
-0: jdbc:luciddb:> --when matched then update set n3=0
-0: jdbc:luciddb:> --when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --select * from t1;
-0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- join condition has 2 keys
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=m2
 . . . . . . . . > when matched then update set n3=0
@@ -201,111 +192,107 @@ pending design for filter conditions of ON clause
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2=1
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#8644:JoinRel.NONE(left=HepRelVertex#8633,right=HepRelVertex#8651,condition=AND(=($3, $0), =($1, 1)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 2   | 2   | 20   |
+| 3   | 3   | 30   |
+| 1   | 1   | 0    |
+| 2   | 2   | 200  |
+| 3   | 3   | 300  |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> delete from t1;
 0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2<>2
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#8783:JoinRel.NONE(left=HepRelVertex#8772,right=HepRelVertex#8790,condition=AND(=($3, $0), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 2   | 2   | 20   |
+| 1   | 1   | 0    |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> delete from t1;
 0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2>1 and m2<>2
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#8926:JoinRel.NONE(left=HepRelVertex#8911,right=HepRelVertex#8947,condition=AND(=($3, $0), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 1   | 10   |
+| 2   | 2   | 20   |
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> delete from t1;
 0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2>1 and m2<>2
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#9075:JoinRel.NONE(left=HepRelVertex#9064,right=HepRelVertex#9082,condition=AND(AND(=($3, $0), >($1, 1)), <>($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 1   | 10   |
+| 2   | 2   | 20   |
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> delete from t1;
 0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and n2=m2 and m2>2
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#9214:JoinRel.NONE(left=HepRelVertex#9203,right=HepRelVertex#9221,condition=AND(AND(=($3, $0), =($4, $1)), >($1, 2)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 1   | 10   |
+| 2   | 2   | 20   |
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> delete from t1;
 0: jdbc:luciddb:> insert into t1 values (1,1,10), (2,2,20), (3,3,30);
 0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and m2>2 and m2=n2
 . . . . . . . . > when matched then update set n3=0
 . . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
-Error: Optimizer failed to find a valid physical implementation for relational expression rel#9353:JoinRel.NONE(left=HepRelVertex#9342,right=HepRelVertex#9360,condition=AND(AND(=($3, $0), >($1, 2)), =($1, $4)),joinType=left); see trace for partially optimized plan (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from t1;
-+-----+-----+-----+
-| N1  | N2  | N3  |
-+-----+-----+-----+
-| 1   | 1   | 10  |
-| 2   | 2   | 20  |
-| 3   | 3   | 30  |
-+-----+-----+-----+
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> -- more than 1 result in search condition
-0: jdbc:luciddb:> --
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- ambiguity, should throw an exception (not yet handled as of 6/27/06)
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> --delete from t1;
-0: jdbc:luciddb:> --delete from t2;
-0: jdbc:luciddb:> --insert into t1 values (1,1,10),(2,2,20),(4,4,40);
-0: jdbc:luciddb:> --insert into t2 values (1,1,11),(1,2,12),(2,2,20),(3,3,30);
-0: jdbc:luciddb:> --merge into t1 using t2 on n1=m1
-0: jdbc:luciddb:> --when matched then update set n3=0
-0: jdbc:luciddb:> --when not matched then insert (n1,n2,n3) values (m1,m2,m3);
++-----+-----+------+
+| N1  | N2  |  N3  |
++-----+-----+------+
+| 1   | 1   | 10   |
+| 2   | 2   | 20   |
+| 1   | 1   | 100  |
+| 2   | 2   | 200  |
+| 3   | 3   | 0    |
+| 4   | 4   | 400  |
++-----+-----+------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --select * from t1;
 0: jdbc:luciddb:> 
@@ -327,6 +314,42 @@ Error: Optimizer failed to find a valid physical implementation for relational e
 | 2   | 2   | 0   |
 | 4   | 4   | 40  |
 +-----+-----+-----+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- negative tests
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- any inequality join condition should equally error out
+0: jdbc:luciddb:> -- (as of 7/28, the existence of "when not matched" clause
+0: jdbc:luciddb:> --  brings different behaviors)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1 and not(n2<>m2)
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#3919:JoinRel.NONE(left=HepRelVertex#3908,right=HepRelVertex#3926,condition=AND(=($3, $0), NOT(<>($4, $1))),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1>m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#3959:JoinRel.NONE(left=HepRelVertex#3948,right=HepRelVertex#3966,condition=>($3, $0),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1>m1
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+Error: Optimizer failed to find a valid physical implementation for relational expression rel#4009:JoinRel.NONE(left=HepRelVertex#3988,right=HepRelVertex#4016,condition=>($3, $0),joinType=left); see trace for partially optimized plan (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- more than 1 result in search: 
+0: jdbc:luciddb:> -- ambiguity, should throw an exception (not yet handled as of 6/27/06)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> delete from t1;
+0: jdbc:luciddb:> delete from t2;
+0: jdbc:luciddb:> insert into t1 values (1,1,10),(2,2,20),(4,4,40);
+0: jdbc:luciddb:> insert into t2 values (1,1,11),(1,2,12),(2,2,20),(3,3,30);
+0: jdbc:luciddb:> merge into t1 using t2 on n1=m1
+. . . . . . . . > when matched then update set n3=0
+. . . . . . . . > when not matched then insert (n1,n2,n3) values (m1,m2,m3);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> merge into t1 using t2 on n1>m1
+. . . . . . . . > when matched then update set n3=0;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 

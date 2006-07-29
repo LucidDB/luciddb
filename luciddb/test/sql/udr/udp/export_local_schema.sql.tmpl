@@ -6,7 +6,7 @@ set path 'udptest';
 --
 -- basic export, no filters
 --
-call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, null, '@EXPDIR@/local/basic', true);
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, null, '@EXPDIR@/local/basic', true, true);
 
 create server exp_server
 foreign data wrapper sys_file_wrapper
@@ -67,7 +67,7 @@ drop server exp_server cascade;
 --
 --  include with table_list
 --
-call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/local/include', true);
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'types, EMP, LOCATION ' , null, '@EXPDIR@/local/include', true, true);
 
 -- create foreign server from exported schema
 create server exp_server
@@ -108,7 +108,7 @@ drop server exp_server cascade;
 --
 -- include with table_pattern
 --
-call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null , '%e%', '@EXPDIR@/local/include', true);
+call sys_root.export_schema_to_csv(null, 'UDPTEST', false, null , '%e%', '@EXPDIR@/local/include', true, true);
 
 -- create foreign server from exported schema
 create server exp_server
@@ -145,7 +145,7 @@ select count(*) from tempudp."bench100";
 --
 -- exclude with table_list
 --
-call sys_root.export_schema_to_csv(null, 'TEMPUDP', true, 'bench100, EMP,types' , null, '@EXPDIR@/local/exclude', true);
+call sys_root.export_schema_to_csv(null, 'TEMPUDP', true, 'bench100, EMP,types' , null, '@EXPDIR@/local/exclude', true, true);
 
 -- create foreign server from exported schema
 create server exp_server2
@@ -187,7 +187,7 @@ drop server exp_server2 cascade;
 --
 -- exclude with table pattern
 --
-call sys_root.export_schema_to_csv(null, 'UDPTEST', true, null , '%S', '@EXPDIR@/local/exclude', true);
+call sys_root.export_schema_to_csv(null, 'UDPTEST', true, null , '%S', '@EXPDIR@/local/exclude', true, true);
 
 -- create foreign server from exported schema
 create server exp_server2

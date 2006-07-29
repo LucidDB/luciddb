@@ -84,7 +84,8 @@ public abstract class FarragoExportSchemaUDR
         String table_list,
         String table_pattern,
         String directory,
-        boolean with_bcp)
+        boolean with_bcp,
+        boolean delete_failed_files)
         throws SQLException
     {
         ResultSet rs = null;
@@ -210,7 +211,14 @@ public abstract class FarragoExportSchemaUDR
         }
 
         // create Csv files
-        toCsv(catalog, schema, directory, with_bcp, tableNames, conn);
+        toCsv(
+            catalog, 
+            schema, 
+            directory, 
+            with_bcp,
+            delete_failed_files, 
+            tableNames, 
+            conn);
     }
 
     /**
@@ -237,7 +245,8 @@ public abstract class FarragoExportSchemaUDR
         String table_list,
         String table_pattern,
         String directory,
-        boolean with_bcp)
+        boolean with_bcp,
+        boolean delete_failed_files)
         throws SQLException
     {
         StringBuilder importSql = new StringBuilder();
@@ -341,7 +350,14 @@ public abstract class FarragoExportSchemaUDR
             rs.close();
 
             // create Csv files
-            toCsv(null, tmpLocalSchema, directory, with_bcp, tableNames, conn);
+            toCsv(
+                null, 
+                tmpLocalSchema, 
+                directory, 
+                with_bcp, 
+                delete_failed_files,
+                tableNames, 
+                conn);
 
             // drop temp schema
             try {
@@ -408,7 +424,8 @@ public abstract class FarragoExportSchemaUDR
         String catalog,
         String schema,
         String directory,
-        Boolean with_bcp,
+        boolean with_bcp,
+        boolean delete_failed_files,
         HashSet<String> tableNames,
         Connection conn)
         throws SQLException
@@ -692,7 +709,7 @@ public abstract class FarragoExportSchemaUDR
                 }
 
                 // delete partial files if table export failed
-                if (tableFailed) {
+                if (tableFailed && delete_failed_files) {
                     if (csvFile != null) {
                         csvFile.delete();
                     }

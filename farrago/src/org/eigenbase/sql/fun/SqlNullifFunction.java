@@ -23,6 +23,7 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
@@ -41,11 +42,16 @@ public class SqlNullifFunction
 
     public SqlNullifFunction()
     {
+        // NOTE jvs 26-July-2006:  We fill in the type strategies here,
+        // but normally they are not used because the validator invokes
+        // rewriteCall to convert NULLIF into CASE early.  However,
+        // validator rewrite can optionally be disabled, in which case these
+        // strategies are used.
         super("NULLIF",
             SqlKind.Function,
+            SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
-            null,
-            null,
+            SqlTypeStrategies.otcComparableUnorderedX2,
             SqlFunctionCategory.System);
     }
 
@@ -61,9 +67,7 @@ public class SqlNullifFunction
             validator,
             getOperandTypeChecker(),
             call);
-        if (2 != operands.length) {
-            throw Util.newInternal("Invalid arg count: " + call);
-        }
+        assert(operands.length == 2);
 
         SqlNodeList whenList = new SqlNodeList(pos);
         SqlNodeList thenList = new SqlNodeList(pos);
@@ -74,13 +78,8 @@ public class SqlNullifFunction
                 operands[0],
                 whenList,
                 thenList,
-                operands[0],
+                operands[0].clone(operands[0].getParserPosition()),
                 pos);
-    }
-
-    public SqlOperandCountRange getOperandCountRange()
-    {
-        return SqlOperandCountRange.Two;
     }
 }
 

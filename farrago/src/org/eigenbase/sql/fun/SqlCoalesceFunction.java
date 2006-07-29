@@ -23,6 +23,7 @@ package org.eigenbase.sql.fun;
 
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
+import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
 
 
@@ -40,11 +41,16 @@ public class SqlCoalesceFunction
 
     public SqlCoalesceFunction()
     {
+        // NOTE jvs 26-July-2006:  We fill in the type strategies here,
+        // but normally they are not used because the validator invokes
+        // rewriteCall to convert COALESCE into CASE early.  However,
+        // validator rewrite can optionally be disabled, in which case these
+        // strategies are used.
         super("COALESCE",
             SqlKind.Function,
+            SqlTypeStrategies.rtiLeastRestrictive,
             null,
-            null,
-            null,
+            SqlTypeStrategies.otcSameVariadic,
             SqlFunctionCategory.System);
     }
 
@@ -68,7 +74,7 @@ public class SqlCoalesceFunction
                 SqlStdOperatorTable.isNotNullOperator.createCall(
                     operands[i],
                     pos));
-            thenList.add(operands[i]);
+            thenList.add(operands[i].clone(operands[i].getParserPosition()));
         }
         SqlNode elseExpr = operands[operands.length - 1];
         assert call.getFunctionQuantifier() == null;
@@ -80,13 +86,6 @@ public class SqlCoalesceFunction
                 elseExpr,
                 pos);
         return newCall;
-    }
-
-    // REVIEW jvs 1-Jan-2005:  should this be here?  It's
-    // not entirely accurate.
-    public SqlOperandCountRange getOperandCountRange()
-    {
-        return SqlOperandCountRange.Two;
     }
 }
 

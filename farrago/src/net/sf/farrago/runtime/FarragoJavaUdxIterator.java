@@ -30,6 +30,7 @@ import java.sql.*;
 import java.util.*;
 import java.util.concurrent.*;
 
+import net.sf.farrago.jdbc.param.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
@@ -99,7 +100,7 @@ public abstract class FarragoJavaUdxIterator
             (PreparedStatement) Proxy.newProxyInstance(
                 null,
                 new Class[] { PreparedStatement.class },
-                new PreparedStatementInvocationHandler());
+                new PreparedStatementInvocationHandler(rowType));
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -191,6 +192,25 @@ public abstract class FarragoJavaUdxIterator
     public class PreparedStatementInvocationHandler
         extends BarfingInvocationHandler
     {
+        private final FarragoJdbcParamDef [] dynamicParamDefs;
+        
+        PreparedStatementInvocationHandler(RelDataType paramRowType)
+        {
+            RelDataTypeField [] fields = paramRowType.getFields();
+            dynamicParamDefs = new FarragoJdbcParamDef[fields.length];
+            for (int i = 0; i < fields.length; ++i) {
+                FarragoParamFieldMetaData paramMetaData =
+                    FarragoRuntimeJdbcUtil.newParamFieldMetaData(
+                        fields[i].getType(),
+                        ParameterMetaData.parameterModeIn);
+                dynamicParamDefs[i] =
+                    FarragoJdbcParamDefFactory.newParamDef(
+                        fields[i].getName(),
+                        paramMetaData,
+                        false);
+            }
+        }
+        
         // implement PreparedStatement
         public int executeUpdate()
             throws SQLException
@@ -226,13 +246,14 @@ public abstract class FarragoJavaUdxIterator
         {
             int n = getCurrentRow().getFields().length;
             for (int i = 0; i < n; ++i) {
-                setDynamicParam(i + 1, null);
+                setDynamicParam(i + 1, null, null);
             }
         }
 
         private void setDynamicParam(
             int parameterIndex,
-            Object obj)
+            Object obj,
+            Calendar calendar)
             throws SQLException
         {
             int iField = parameterIndex - 1;
@@ -247,7 +268,8 @@ public abstract class FarragoJavaUdxIterator
             } else {
                 nullableValue.setNull(false);
                 AssignableValue assignableValue = (AssignableValue) fieldObj;
-                assignableValue.assignFrom(obj);
+                Object scrubbedValue = dynamicParamDefs[iField].scrubValue(obj);
+                assignableValue.assignFrom(scrubbedValue);
             }
         }
 
@@ -257,7 +279,7 @@ public abstract class FarragoJavaUdxIterator
             int sqlType)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, null);
+            setDynamicParam(parameterIndex, null, null);
         }
 
         // implement PreparedStatement
@@ -268,7 +290,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                Boolean.valueOf(x));
+                Boolean.valueOf(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -279,7 +302,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Byte(x));
+                new Byte(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -290,7 +314,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Short(x));
+                new Short(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -301,7 +326,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Integer(x));
+                new Integer(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -312,7 +338,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Long(x));
+                new Long(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -323,7 +350,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Float(x));
+                new Float(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -334,7 +362,8 @@ public abstract class FarragoJavaUdxIterator
         {
             setDynamicParam(
                 parameterIndex,
-                new Double(x));
+                new Double(x),
+                null);
         }
 
         // implement PreparedStatement
@@ -343,7 +372,7 @@ public abstract class FarragoJavaUdxIterator
             BigDecimal x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
         }
 
         // implement PreparedStatement
@@ -352,7 +381,7 @@ public abstract class FarragoJavaUdxIterator
             String x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
         }
 
         // implement PreparedStatement
@@ -361,7 +390,7 @@ public abstract class FarragoJavaUdxIterator
             byte [] x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
         }
 
         // implement PreparedStatement
@@ -370,7 +399,17 @@ public abstract class FarragoJavaUdxIterator
             java.sql.Date x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
+        }
+
+        // implement PreparedStatement
+        public void setDate(
+            int parameterIndex,
+            java.sql.Date x,
+            Calendar c)
+            throws SQLException
+        {
+            setDynamicParam(parameterIndex, x, c);
         }
 
         // implement PreparedStatement
@@ -379,7 +418,17 @@ public abstract class FarragoJavaUdxIterator
             Time x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
+        }
+
+        // implement PreparedStatement
+        public void setTime(
+            int parameterIndex,
+            Time x,
+            Calendar c)
+            throws SQLException
+        {
+            setDynamicParam(parameterIndex, x, c);
         }
 
         // implement PreparedStatement
@@ -388,7 +437,17 @@ public abstract class FarragoJavaUdxIterator
             Timestamp x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
+        }
+
+        // implement PreparedStatement
+        public void setTimestamp(
+            int parameterIndex,
+            Timestamp x,
+            Calendar c)
+            throws SQLException
+        {
+            setDynamicParam(parameterIndex, x, c);
         }
 
         // implement PreparedStatement
@@ -397,7 +456,7 @@ public abstract class FarragoJavaUdxIterator
             Object x)
             throws SQLException
         {
-            setDynamicParam(parameterIndex, x);
+            setDynamicParam(parameterIndex, x, null);
         }
     }
 }

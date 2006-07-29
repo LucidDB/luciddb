@@ -136,6 +136,8 @@ public class SqlValidatorImpl
     // this to a separate "parameter" class)
     protected boolean expandIdentifiers;
 
+    private boolean rewriteCalls;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -166,6 +168,8 @@ public class SqlValidatorImpl
         // parameters and null literals until a real type is imposed for them.
         unknownType = typeFactory.createSqlType(SqlTypeName.Null);
         booleanType = typeFactory.createSqlType(SqlTypeName.Boolean);
+
+        rewriteCalls = true;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -704,7 +708,9 @@ public class SqlValidatorImpl
                     }
                 }
             }
-            node = call.getOperator().rewriteCall(this, call);
+            if (rewriteCalls) {
+                node = call.getOperator().rewriteCall(this, call);
+            }
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
@@ -1269,6 +1275,12 @@ public class SqlValidatorImpl
     public void setIdentifierExpansion(boolean expandIdentifiers)
     {
         this.expandIdentifiers = expandIdentifiers;
+    }
+
+    // implement SqlValidator
+    public void setCallRewrite(boolean rewriteCalls)
+    {
+        this.rewriteCalls = rewriteCalls;
     }
 
     protected boolean shouldExpandIdentifiers()

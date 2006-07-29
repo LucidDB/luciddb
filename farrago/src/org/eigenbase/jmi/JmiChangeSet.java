@@ -98,6 +98,8 @@ public class JmiChangeSet
 
     private final JmiChangeDispatcher dispatcher;
 
+    private boolean singleLevelCascade;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -145,6 +147,17 @@ public class JmiChangeSet
     public void closeAllocation()
     {
         stopListening();
+    }
+
+    /**
+     * Controls cascaded delete behavior.  By default, cascades recursively.
+     *
+     * @param singleLevelCascade if true, only cascade to one level; if
+     * false, cascade recursively.
+     */
+    public void setSingleLevelCascade(boolean singleLevelCascade)
+    {
+        this.singleLevelCascade = singleLevelCascade;
     }
 
     /**
@@ -326,7 +339,8 @@ public class JmiChangeSet
         while (!deleteQueue.isEmpty()) {
             RefObject refObj = deleteQueue.iterator().next();
             deleteQueue.remove(refObj);
-            if (!schedulingMap.containsKey(refObj.refMofId())) {
+            JmiValidationAction action = schedulingMap.get(refObj.refMofId());
+            if (action != JmiValidationAction.DELETION) {
                 if (tracer.isLoggable(Level.FINE)) {
                     tracer.fine("probe deleting " + refObj);
                 }
@@ -490,7 +504,11 @@ public class JmiChangeSet
 
         if ((action == JmiDeletionAction.CASCADE)
             || (dispatcher.getDeletionAction() == JmiDeletionAction.CASCADE)) {
-            deleteQueue.add(otherEnd);
+            if (singleLevelCascade) {
+                scheduleDeletion(otherEnd);
+            } else {
+                deleteQueue.add(otherEnd);
+            }
             dispatcher.notifyDeleteEffect(
                 otherEnd,
                 JmiDeletionAction.CASCADE);
@@ -613,7 +631,11 @@ public class JmiChangeSet
             }
             RefObject refObj =
                 (RefObject) getMdrRepos().getByMofId(mapEntry.getKey());
-            setOrdinals(refObj);
+            // Check for null because object might have been deleted
+            // by a trigger.
+            if (refObj != null) {
+                setOrdinals(refObj);
+            }
         }
     }
 

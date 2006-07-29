@@ -4,7 +4,7 @@
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- no bcp
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, 'types,bench100,EMP', null, '@EXPDIR@/misc/nobcp', false);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, 'types,bench100,EMP', null, '@EXPDIR@/misc/nobcp', false, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server misc_server
 . . . . . . . . > foreign data wrapper sys_file_wrapper
@@ -46,10 +46,10 @@
 0: jdbc:luciddb:> set schema 'sys_boot.jdbc_metadata';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- negative test
-0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv(null, 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
 Error: No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false table_list=null table_pattern=t____ (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true);
+0: jdbc:luciddb:> call localdb.sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', false, null, 't____', '@EXPDIR@/misc/diffcat', true, true);
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server misc_server
@@ -93,33 +93,33 @@ Error: No tables to export for catalog=SYS_BOOT schema=UDPTEST exclude=false tab
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- table_list and table_pattern both not null
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv(null, 'UDPTEST', false, 'SALES', '%100', '@EXPDIR@/misc/neg', true, true);
 Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'SALES', '%100', '@EXPDIR@/misc/neg', false, true);
 Error: Parameter list invalid: Cannot specify both table_list and table_pattern parameters (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect table within table_list
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDPTEST', true, 'SALES, emp, PRODUCTS, nonexistant', null, '@EXPDIR@/misc/neg', true, true);
 Error: One or more tables in table_list not found: [emp, nonexistant] (state=,code=0)
 0: jdbc:luciddb:>  
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('MISC_SERVER', 'BCP', false, 'EMP, DEPT, types, nonexistant', null, '@EXPDIR@/misc/neg', false, true);
 Error: One or more tables not found while importing foreign schema "BCP":  [nonexistant, EMP, DEPT] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect catalog name
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCAL', 'UDPTEST', true, 'DEPT', null, '@EXPDIR@/misc/neg', true, true);
 Error: One or more tables in table_list not found: [DEPT] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect schema name
-0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true);
+0: jdbc:luciddb:> call sys_root.export_schema_to_csv('LOCALDB', 'UDP', true, 'bench', null, '@EXPDIR@/misc/neg', true, true);
 Error: One or more tables in table_list not found: [bench] (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect server name
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERV', 'BCP', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
 Error: DDL validation error near line 1, column 63: Reference to unknown data server "FF_SERV" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- incorrect foreign schema name
-0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false);
+0: jdbc:luciddb:> call sys_root.export_foreign_schema_to_csv('FF_SERVER', 'FILE', false, 'LOCATION', null, '@EXPDIR@/misc/neg', false, true);
 Error: Unknown foreign schema "FILE" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- check export directory

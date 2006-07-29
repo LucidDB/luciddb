@@ -261,7 +261,10 @@ require version '${required.ant.version}'."/>
       <include name="net/sf/farrago/jdbc/param/**/*.java" />
       <include name="net/sf/farrago/jdbc/rmi/**/*.java" />
     </farrago.javaCompileClient>
+    <!-- have to fork and bump up the heap because Farrago's getting fat! -->
     <farrago.javaCompile
+      fork="true"
+      memoryMaximumSize="512m"
       deprecation="off"
       srcdir="${farrago.src.dir}"
       destdir="${farrago.classes.dir}"
