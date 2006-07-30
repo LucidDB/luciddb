@@ -354,7 +354,11 @@ public class FarragoDdlGenerator
         CwmTable table,
         GeneratedDdlStmt stmt)
     {
-        drop(table, "TABLE", stmt);
+        StringBuffer sb = new StringBuffer();
+        sb.append("DROP TABLE ");
+        sb.append(quote(table.getName()));
+        sb.append(" CASCADE");
+        stmt.addStmt(sb.toString());
     }
 
     public void drop(
