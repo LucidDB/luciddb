@@ -265,7 +265,7 @@ public abstract class FarragoTestCase
     private static Connection newConnection()
         throws Exception
     {
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
 
         // create sessionName with connection counter to help
         // distinguish connections during debugging
@@ -484,7 +484,7 @@ public abstract class FarragoTestCase
      *
      * @throws Exception
      */
-    protected static FarragoJdbcEngineDriver newJdbcEngineDriver()
+    protected static FarragoUnregisteredJdbcEngineDriver newJdbcEngineDriver()
         throws Exception
     {
         String driverName =
@@ -493,13 +493,13 @@ public abstract class FarragoTestCase
             return new FarragoJdbcEngineDriver();
         }
         Class<?> clazz = Class.forName(driverName);
-        return (FarragoJdbcEngineDriver) clazz.newInstance();
+        return (FarragoUnregisteredJdbcEngineDriver) clazz.newInstance();
     }
 
     protected void runSqlLineTest(String sqlFile)
         throws Exception
     {
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
         assert (sqlFile.endsWith(".sql"));
         File sqlFileSansExt =
             new File(sqlFile.substring(0, sqlFile.length() - 4));

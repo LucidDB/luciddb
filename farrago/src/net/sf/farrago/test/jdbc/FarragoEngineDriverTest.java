@@ -58,7 +58,8 @@ public class FarragoEngineDriverTest
     public void testURIs()
         throws Exception
     {
-        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
 
         String uri = null;
         assertFalse(
@@ -159,7 +160,8 @@ public class FarragoEngineDriverTest
         tracer.info("loaded: " + uri);
 
         // test the driver's use of the connect string parser
-        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
         Properties parsedProps = new Properties();
         String strippedUri = driver.parseConnectionParams(uri, parsedProps);
 
@@ -237,7 +239,8 @@ public class FarragoEngineDriverTest
         final String sessQuery =
             "SELECT * FROM sys_boot.mgmt.sessions_view "
             + " WHERE session_name = '" + sessionName + "'";
-        FarragoJdbcEngineDriver driver = FarragoTestCase.newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver =
+            FarragoTestCase.newJdbcEngineDriver();
 
         Properties sessionProps = new Properties(newProperties());
         sessionProps.setProperty("sessionName", sessionName);

@@ -1,0 +1,6 @@
+This example code is for creating a Java UDF and installing it in
+LucidDB.  See
+
+http://docs.eigenbase.org/LucidDbUdfJavaHowto
+
+for further instructions.

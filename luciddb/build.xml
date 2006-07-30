@@ -928,10 +928,8 @@ ${farrago.test.jvmargs}
         <exclude name="applib/**"/>
       </fileset>
     </copy>
-
-<!-- TODO jvs 23-July-2006:  Eliminate this once no more dependencies.  -->
-    <copy todir="${release.lib.dir}/plugin">
-      <fileset dir="${release.plugin.dir}"/>
+    <copy todir="${dist.dir}/${lucidera.release.spec}/examples">
+      <fileset dir="${luciddb.dir}/examples"/>
     </copy>
 
     <copy file="${release.properties.source}"
