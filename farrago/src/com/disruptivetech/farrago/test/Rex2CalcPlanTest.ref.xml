@@ -76,4 +76,1244 @@ MOVE O0, C2 /* 0: SUM($t0) */;
 RETURN /* 1: */;]]>
         </Resource>
     </TestCase>
+    <TestCase name="testSimplePassThroughFilter">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4, s4;
+I s4;
+L bo, bo;
+S bo;
+C bo, bo, s4, vc,5;
+V 1, 0, 10, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t9) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ISNULL L1, I0 /* 5: */;
+JMPF @9, L1 /* 6: */;
+RAISE C3 /* 7: */;
+RETURN /* 8: */;
+REF O0, I0 /* 9: */;
+ISNULL L1, I0 /* 10: */;
+JMPF @14, L1 /* 11: */;
+RAISE C3 /* 12: */;
+RETURN /* 13: */;
+REF O1, I0 /* 14: */;
+RETURN /* 15: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimplyEqualsFilter">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo;
+S bo;
+C bo, bo, s4, vc,5;
+V 1, 0, 123, 0x3232303034 /* 22004 */;
+T;
+EQ L0, I0, C2 /* 0: =($t0, $t9) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ISNULL L1, I0 /* 5: */;
+JMPF @9, L1 /* 6: */;
+RAISE C3 /* 7: */;
+RETURN /* 8: */;
+REF O0, I0 /* 9: */;
+RETURN /* 10: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimplyEqualsFilterWithComments">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I vc,20, s4;
+L c,20, bo, s4, bo, bo, bo;
+S bo;
+C bo, bo, c,4, vc,48, s4, s4, s4, vc,5;
+V 1, 0, 0x5761656C /* Wael */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 123, 0, 0x3232303034 /* 22004 */;
+T;
+CALL 'castA(L0, I0) /* 0: */;
+CALL 'strCmpA(L2, L0, C2) /* 1: */;
+EQ L1, L2, C4 /* 2: =($t1, $t9) */;
+EQ L3, C5, C6 /* 3: =($t11, $t12) */;
+AND L4, L1, L3 /* 4: AND($t10, $t13) */;
+JMPT @8, L4 /* 5: */;
+MOVE S0, C0 /* 6: */;
+RETURN /* 7: */;
+MOVE S0, C1 /* 8: */;
+ISNULL L5, I1 /* 9: */;
+JMPF @13, L5 /* 10: */;
+RAISE C7 /* 11: */;
+RETURN /* 12: */;
+REF O0, I1 /* 13: */;
+RETURN /* 14: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimplyEqualsFilterShortCircuit">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo;
+S bo;
+C bo, bo, s4, vc,5;
+V 1, 0, 123, 0x3232303034 /* 22004 */;
+T;
+EQ L0, I0, C2 /* 0: =($t0, $t9) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ISNULL L1, I0 /* 5: */;
+JMPF @9, L1 /* 6: */;
+RAISE C3 /* 7: */;
+RETURN /* 8: */;
+REF O0, I0 /* 9: */;
+RETURN /* 10: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBooleanExpressions">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo, bo, bo, bo, bo;
+S bo;
+C bo, bo, vc,5;
+V 1, 0, 0x3232303034 /* 22004 */;
+T;
+NOT L0, C0 /* 0: NOT($t9) */;
+AND L1, C0, L0 /* 1: AND($t9, $t10) */;
+AND L2, L0, C0 /* 2: AND($t10, $t9) */;
+AND L3, C1, L2 /* 3: AND($t12, $t13) */;
+OR L4, L1, L3 /* 4: OR($t11, $t14) */;
+JMPT @8, L4 /* 5: */;
+MOVE S0, C0 /* 6: */;
+RETURN /* 7: */;
+MOVE S0, C1 /* 8: */;
+ISNULL L5, I0 /* 9: */;
+JMPF @13, L5 /* 10: */;
+RAISE C2 /* 11: */;
+RETURN /* 12: */;
+REF O0, I0 /* 13: */;
+RETURN /* 14: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testScalarExpression">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, s4, s4, s4, s4, s4, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 10, 2, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t15) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+MUL L1, C3, C3 /* 5: *($t9, $t9) */;
+SUB L2, C3, L1 /* 6: -($t9, $t10) */;
+DIV L3, C3, C3 /* 7: /($t9, $t9) */;
+ADD L4, L2, L3 /* 8: +($t11, $t12) */;
+SUB L5, L4, C3 /* 9: -($t13, $t9) */;
+ISNULL L6, L5 /* 10: */;
+JMPF @14, L6 /* 11: */;
+RAISE C4 /* 12: */;
+RETURN /* 13: */;
+REF O0, L5 /* 14: */;
+RETURN /* 15: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testMixedExpression">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O vc,20, s4;
+I vc,20, s4;
+L c,20, bo, s4, bo, bo, s4, bo;
+S bo;
+C bo, bo, c,4, vc,48, s4, s4, s4, vc,5;
+V 1, 0, 0x46726564 /* Fred */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 10, 2, 0x3232303034 /* 22004 */;
+T;
+CALL 'castA(L0, I0) /* 0: */;
+CALL 'strCmpA(L2, L0, C2) /* 1: */;
+EQ L1, L2, C4 /* 2: =($t1, $t11) */;
+GT L3, I1, C5 /* 3: >($t0, $t13) */;
+AND L4, L1, L3 /* 4: AND($t12, $t14) */;
+JMPT @8, L4 /* 5: */;
+MOVE S0, C0 /* 6: */;
+RETURN /* 7: */;
+MOVE S0, C1 /* 8: */;
+MUL L5, C6, C6 /* 9: *($t9, $t9) */;
+ISNULL L6, I0 /* 10: */;
+JMPF @14, L6 /* 11: */;
+RAISE C7 /* 12: */;
+RETURN /* 13: */;
+REF O0, I0 /* 14: */;
+ISNULL L6, L5 /* 15: */;
+JMPF @19, L6 /* 16: */;
+RAISE C7 /* 17: */;
+RETURN /* 18: */;
+REF O1, L5 /* 19: */;
+RETURN /* 20: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNumbers">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo, d;
+I s4;
+L bo, d, d, d, d, d, d, d, d, d, bo, d, d, d, bo;
+S bo;
+C bo, bo, s4, s4, s4, d, s8, d, s4, d, s8, vc,5;
+V 1, 0, 10, 1, -2, -3E-1, -4, 1E1, 5, 1E200, 4, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t29) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C4 /* 5: CAST($t10):DOUBLE NOT NULL */;
+MUL L2, L1, C5 /* 6: *($t10, $t11) */;
+CAST L3, C6 /* 7: CAST($t14):DOUBLE NOT NULL */;
+DIV L4, L3, C7 /* 8: /($t15, $t16) */;
+DIV L5, L2, L4 /* 9: /($t12, $t17) */;
+CAST L6, C3 /* 10: CAST($t9):DOUBLE NOT NULL */;
+ADD L7, L6, L5 /* 11: +($t9, $t18) */;
+NEG L8, L7 /* 12: -($t19) */;
+CAST L9, C8 /* 13: CAST($t21):DOUBLE NOT NULL */;
+GE L10, L8, L9 /* 14: >=($t20, $t21) */;
+CAST L11, C10 /* 15: CAST($t25):DOUBLE NOT NULL */;
+DIV L12, L11, C7 /* 16: /($t26, $t16) */;
+DIV L13, C9, L12 /* 17: /($t23, $t27) */;
+ISNULL L14, L10 /* 18: */;
+JMPF @22, L14 /* 19: */;
+RAISE C11 /* 20: */;
+RETURN /* 21: */;
+REF O0, L10 /* 22: */;
+ISNULL L14, L13 /* 23: */;
+JMPF @27, L14 /* 24: */;
+RAISE C11 /* 25: */;
+RETURN /* 26: */;
+REF O1, L13 /* 27: */;
+RETURN /* 28: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testHexBitBinaryString">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, vb,2, vb,3, s4, vc,5;
+V 1, 0, 10, 0x0001, 0xFFEEDD, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpOct(L2, C3, C4) /* 5: */;
+EQ L1, L2, C5 /* 6: =($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C6 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testStringLiterals">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O c,3, c,0, c,3;
+I s4;
+L bo, bo;
+S bo;
+C bo, bo, s4, c,3, c,0, c,3, vc,5;
+V 1, 0, 10, 0x614263 /* aBc */, 0x /*  */, 0x616263 /* abc */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ISNULL L1, C3 /* 5: */;
+JMPF @9, L1 /* 6: */;
+RAISE C6 /* 7: */;
+RETURN /* 8: */;
+REF O0, C3 /* 9: */;
+ISNULL L1, C4 /* 10: */;
+JMPF @14, L1 /* 11: */;
+RAISE C6 /* 12: */;
+RETURN /* 13: */;
+REF O1, C4 /* 14: */;
+ISNULL L1, C5 /* 15: */;
+JMPF @19, L1 /* 16: */;
+RAISE C6 /* 17: */;
+RETURN /* 18: */;
+REF O2, C5 /* 19: */;
+RETURN /* 20: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testSimpleCompare">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo, bo, bo, bo, bo, bo;
+I s4;
+L bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, s4, vc,5;
+V 1, 0, 10, 1, 2, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t21) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+NE L1, C3, C4 /* 5: <>($t9, $t10) */;
+EQ L2, C3, C4 /* 6: =($t9, $t10) */;
+EQ L3, L2, C0 /* 7: =($t12, true) IS TRUE($t12) */;
+EQ L4, L3, C1 /* 8: =($t13, false) IS FALSE($t13) */;
+ISNULL L5, L4 /* 9: IS NULL($t14) */;
+ISNULL L6, L5 /* 10: IS NULL($t15) */;
+EQ L7, C0, C0 /* 11: =($t17, true) */;
+NOT L8, L7 /* 12: NOT(=($t17, true)) IS NOT TRUE($t17) */;
+EQ L9, C0, C1 /* 13: =($t17, false) */;
+NOT L10, L9 /* 14: NOT(=($t17, false)) IS NOT FALSE($t17) */;
+ISNOTNULL L11, C0 /* 15: IS NOT NULL($t17) */;
+ISNULL L12, L1 /* 16: */;
+JMPF @20, L12 /* 17: */;
+RAISE C5 /* 18: */;
+RETURN /* 19: */;
+REF O0, L1 /* 20: */;
+ISNULL L12, L6 /* 21: */;
+JMPF @25, L12 /* 22: */;
+RAISE C5 /* 23: */;
+RETURN /* 24: */;
+REF O1, L6 /* 25: */;
+ISNULL L12, L8 /* 26: */;
+JMPF @30, L12 /* 27: */;
+RAISE C5 /* 28: */;
+RETURN /* 29: */;
+REF O2, L8 /* 30: */;
+ISNULL L12, L10 /* 31: */;
+JMPF @35, L12 /* 32: */;
+RAISE C5 /* 33: */;
+RETURN /* 34: */;
+REF O3, L10 /* 35: */;
+ISNULL L12, L11 /* 36: */;
+JMPF @40, L12 /* 37: */;
+RAISE C5 /* 38: */;
+RETURN /* 39: */;
+REF O4, L11 /* 40: */;
+ISNULL L12, L11 /* 41: */;
+JMPF @45, L12 /* 42: */;
+RAISE C5 /* 43: */;
+RETURN /* 44: */;
+REF O5, L11 /* 45: */;
+RETURN /* 46: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testArithmeticOperators">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O d, s4, s8, s4, s8, d, d;
+I s4;
+L bo, d, d, d, s4, s8, s8, s8, s4, s8, d, d, d, bo;
+S bo;
+C bo, bo, s4, s8, d, s4, s8, s8, vc,5;
+V 1, 0, 10, 10, 1E1, 1, 5000000000, 11, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t26) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C3 /* 5: CAST($t10):DOUBLE NOT NULL */;
+DIV L2, L1, C4 /* 6: /($t11, $t12) */;
+CALL 'POW(L3, L2, L2) /* 7: POW($t13, $t13) */;
+MOD L4, C5, C5 /* 8: MOD($t15, $t15) */;
+CALL 'ABS(L5, C6) /* 9: ABS($t17) */;
+CAST L6, C5 /* 10: CAST($t15):BIGINT NOT NULL */;
+CALL 'ABS(L7, L6) /* 11: ABS(CAST($t15):BIGINT NOT NULL) */;
+CAST L8, L7 /* 12: CAST(ABS(CAST($t15):BIGINT NOT NULL)):INTEGER NOT NULL ABS($t15) */;
+CALL 'ABS(L9, C7) /* 13: ABS($t21) Reinterpret($t22) */;
+CAST L10, C5 /* 14: CAST($t15):DOUBLE NOT NULL */;
+CALL 'LN(L11, L10) /* 15: LN($t15) */;
+CALL 'LOG10(L12, L10) /* 16: LOG10($t15) */;
+ISNULL L13, L3 /* 17: */;
+JMPF @21, L13 /* 18: */;
+RAISE C8 /* 19: */;
+RETURN /* 20: */;
+REF O0, L3 /* 21: */;
+ISNULL L13, L4 /* 22: */;
+JMPF @26, L13 /* 23: */;
+RAISE C8 /* 24: */;
+RETURN /* 25: */;
+REF O1, L4 /* 26: */;
+ISNULL L13, L5 /* 27: */;
+JMPF @31, L13 /* 28: */;
+RAISE C8 /* 29: */;
+RETURN /* 30: */;
+REF O2, L5 /* 31: */;
+ISNULL L13, L8 /* 32: */;
+JMPF @36, L13 /* 33: */;
+RAISE C8 /* 34: */;
+RETURN /* 35: */;
+REF O3, L8 /* 36: */;
+ISNULL L13, L9 /* 37: */;
+JMPF @41, L13 /* 38: */;
+RAISE C8 /* 39: */;
+RETURN /* 40: */;
+REF O4, L9 /* 41: */;
+ISNULL L13, L11 /* 42: */;
+JMPF @46, L13 /* 43: */;
+RAISE C8 /* 44: */;
+RETURN /* 45: */;
+REF O5, L11 /* 46: */;
+ISNULL L13, L12 /* 47: */;
+JMPF @51, L13 /* 48: */;
+RAISE C8 /* 49: */;
+RETURN /* 50: */;
+REF O6, L12 /* 51: */;
+RETURN /* 52: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testFunctionInFunction">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O d;
+I s4;
+L bo, d, d, s8, s8, s4, s4, d, d, bo;
+S bo;
+C bo, bo, s4, s8, d, s4, s4, vc,5;
+V 1, 0, 10, 30, 1E1, 2, 1, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t19) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C3 /* 5: CAST($t14):DOUBLE NOT NULL */;
+DIV L2, L1, C4 /* 6: /($t15, $t16) */;
+CAST L3, C5 /* 7: CAST($t10):BIGINT NOT NULL */;
+CALL 'ABS(L4, L3) /* 8: ABS(CAST($t10):BIGINT NOT NULL) */;
+CAST L5, L4 /* 9: CAST(ABS(CAST($t10):BIGINT NOT NULL)):INTEGER NOT NULL ABS($t10) */;
+ADD L6, L5, C6 /* 10: +($t11, $t12) */;
+CAST L7, L6 /* 11: CAST($t13):DOUBLE NOT NULL */;
+CALL 'POW(L8, L2, L7) /* 12: POW($t17, $t13) */;
+ISNULL L9, L8 /* 13: */;
+JMPF @17, L9 /* 14: */;
+RAISE C7 /* 15: */;
+RETURN /* 16: */;
+REF O0, L8 /* 17: */;
+RETURN /* 18: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCaseExpressions">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O c,11, s4;
+I s4;
+L bo, c,11, s4, bo, c,11, bo, c,11, s4, bo, s4, s4, bo;
+S bo;
+C bo, bo, s4, s4, c,4, s4, c,11, c,0, vc,5;
+V 1, 0, 10, 1, 0x7761656C /* wael */, 2, 0x7761656C7320636C6F6E65 /* waels clone */,  /* <NULL> */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t21) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ADD L2, C3, C3 /* 5: +($t9, $t9) */;
+EQ L3, L2, C3 /* 6: =($t10, $t9) */;
+JMPF @12, L3 /* 7: */;
+JMPN @12, L3 /* 8: */;
+CALL 'castA(L4, C4) /* 9: CAST($t12):CHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" */;
+MOVE L1, L4 /* 10: */;
+JMP @19 /* 11: */;
+EQ L5, L2, C5 /* 12: =($t10, $t13) */;
+JMPF @18, L5 /* 13: */;
+JMPN @18, L5 /* 14: */;
+CALL 'castA(L6, C6) /* 15: CAST($t15):CHAR(11) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" */;
+MOVE L1, L6 /* 16: */;
+JMP @19 /* 17: */;
+MOVE L1, C7 /* 18: CASE($t11, $t12, $t14, $t15, $t17) */;
+EQ L8, C3, C3 /* 19: =($t9, $t9) */;
+JMPF @25, L8 /* 20: */;
+JMPN @25, L8 /* 21: */;
+ADD L9, L2, C5 /* 22: +($t10, $t13) */;
+MOVE L7, L9 /* 23: */;
+JMP @27 /* 24: */;
+ADD L10, C5, C2 /* 25: +($t13, $t21) */;
+MOVE L7, L10 /* 26: CASE($t19, $t20, $t22) */;
+REF O0, L1 /* 27: */;
+ISNULL L11, L7 /* 28: */;
+JMPF @32, L11 /* 29: */;
+RAISE C8 /* 30: */;
+RETURN /* 31: */;
+REF O1, L7 /* 32: */;
+RETURN /* 33: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testNullifExpression">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, s4, bo, s4;
+S bo;
+C bo, bo, s4, s4, s4, s4;
+V 1, 0, 10, 1, 2,  /* <NULL> */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t15) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+EQ L2, C3, C4 /* 5: =($t9, $t10) */;
+JMPF @10, L2 /* 6: */;
+JMPN @10, L2 /* 7: */;
+MOVE L1, C5 /* 8: */;
+JMP @12 /* 9: */;
+CAST L3, C3 /* 10: CAST($t9):INTEGER */;
+MOVE L1, L3 /* 11: CASE($t11, $t13, $t9) */;
+REF O0, L1 /* 12: */;
+RETURN /* 13: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCoalesce">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, s4, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, s4, s4, vc,5;
+V 1, 0, 10, 1, 2, 3, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t15) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+ISNOTNULL L2, C3 /* 5: IS NOT NULL($t9) */;
+JMPF @10, L2 /* 6: */;
+JMPN @10, L2 /* 7: */;
+MOVE L1, C3 /* 8: */;
+JMP @16 /* 9: */;
+ISNOTNULL L3, C4 /* 10: IS NOT NULL($t11) */;
+JMPF @15, L3 /* 11: */;
+JMPN @15, L3 /* 12: */;
+MOVE L1, C4 /* 13: */;
+JMP @16 /* 14: */;
+MOVE L1, C5 /* 15: CASE($t10, $t9, $t12, $t11, $t13) */;
+ISNULL L4, L1 /* 16: */;
+JMPF @20, L4 /* 17: */;
+RAISE C6 /* 18: */;
+RETURN /* 19: */;
+REF O0, L1 /* 20: */;
+RETURN /* 21: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCase1">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, s4, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 10, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t13) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+MOVE L1, C3 /* 5: CASE($t9, $t10, $t11) */;
+ISNULL L2, L1 /* 6: */;
+JMPF @10, L2 /* 7: */;
+RAISE C4 /* 8: */;
+RETURN /* 9: */;
+REF O0, L1 /* 10: */;
+RETURN /* 11: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCase2">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4, bo;
+L bo, s4, bo;
+S bo;
+C bo, bo, s4, s4, s4, vc,5;
+V 1, 0, 10, 2, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t14) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+JMPF @9, I1 /* 5: */;
+JMPN @9, I1 /* 6: */;
+MOVE L1, C3 /* 7: */;
+JMP @11 /* 8: */;
+MOVE L1, C4 /* 9: */;
+JMP @11 /* 10: CASE($t8, $t9, $t10, $t11, $t12) */;
+ISNULL L2, L1 /* 11: */;
+JMPF @15, L2 /* 12: */;
+RAISE C5 /* 13: */;
+RETURN /* 14: */;
+REF O0, L1 /* 15: */;
+RETURN /* 16: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCase3">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, s4, bo, s4;
+S bo;
+C bo, bo, s4, s4, s4, s4;
+V 1, 0, 10, 1,  /* <NULL> */, 0;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t15) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+EQ L2, C3, C3 /* 5: =($t9, $t9) */;
+JMPF @10, L2 /* 6: */;
+JMPN @10, L2 /* 7: */;
+MOVE L1, C4 /* 8: */;
+JMP @12 /* 9: */;
+CAST L3, C5 /* 10: CAST($t13):INTEGER */;
+MOVE L1, L3 /* 11: CASE($t10, $t12, $t13) */;
+REF O0, L1 /* 12: */;
+RETURN /* 13: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharEq">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+EQ L1, L2, C6 /* 6: =($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharNe">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+NE L1, L2, C6 /* 6: <>($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharGt">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+GT L1, L2, C6 /* 6: >($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharLt">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+LT L1, L2, C6 /* 6: <($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharGe">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+GE L1, L2, C6 /* 6: >=($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCharLe">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, vc,48, s4, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x49534F2D383835392D3124656E5F5553247072696D617279 /* ISO-8859-1$en_US$primary */, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpA(L2, C3, C4) /* 5: */;
+LE L1, L2, C6 /* 6: <=($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C7 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBinaryGt">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo;
+I s4;
+L bo, bo, s4, bo;
+S bo;
+C bo, bo, s4, vb,1, vb,1, s4, vc,5;
+V 1, 0, 10, 0xFF, 0x01, 0, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strCmpOct(L2, C3, C4) /* 5: */;
+GT L1, L2, C5 /* 6: >($t9, $t10) */;
+ISNULL L3, L1 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C6 /* 9: */;
+RETURN /* 10: */;
+REF O0, L1 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testStringFunctions">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4, c,1, c,1, s4, vc,1, vc,2, vc,1, vc,2, vc,1, vc,1, c,3;
+I s4;
+L bo, s4, c,1, c,1, s4, vc,1, vc,2, vc,1, c,2, vc,2, vc,1, vc,1, c,3, c,2, bo;
+S bo;
+C bo, bo, s4, c,1, s4, s4, c,1, c,1, vc,5;
+V 1, 0, 10, 0x61 /* a */, 1, 1, 0x5C /* \ */, 0x62 /* b */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t21) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strLenCharA(L1, C3) /* 5: CHAR_LENGTH($t9) */;
+CALL 'strToUpperA(L2, C3) /* 6: UPPER($t9) */;
+CALL 'strToLowerA(L3, C3) /* 7: LOWER($t9) */;
+CALL 'strPosA(L4, C3, C3) /* 8: POSITION($t9, $t9) */;
+CALL 'strTrimA(L5, C3, C3, C4, C4) /* 9: TRIM($t14, $t9, $t9) */;
+CALL 'strOverlayA4(L6, C3, C3, C5) /* 10: OVERLAY($t9, $t9, $t16) */;
+CALL 'strSubStringA3(L7, C3, C5) /* 11: SUBSTRING($t9, $t16) */;
+CALL 'castA(L8, C3) /* 12: CAST($t9):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strSubStringA3(L9, L8, C5) /* 13: SUBSTRING($t19, $t16) */;
+CALL 'strSubStringA4(L10, C3, C5, C2) /* 14: SUBSTRING($t9, $t16, $t21) */;
+CALL 'strSubStringA4(L11, C3, C3, C6) /* 15: SUBSTRING($t9, $t9, $t23) */;
+CALL 'strCatA3(L13, C3, C3) /* 16: ||($t9, $t9) */;
+CALL 'strCatA3(L12, L13, C7) /* 17: ||($t25, $t26) */;
+ISNULL L14, L1 /* 18: */;
+JMPF @22, L14 /* 19: */;
+RAISE C8 /* 20: */;
+RETURN /* 21: */;
+REF O0, L1 /* 22: */;
+ISNULL L14, L2 /* 23: */;
+JMPF @27, L14 /* 24: */;
+RAISE C8 /* 25: */;
+RETURN /* 26: */;
+REF O1, L2 /* 27: */;
+ISNULL L14, L3 /* 28: */;
+JMPF @32, L14 /* 29: */;
+RAISE C8 /* 30: */;
+RETURN /* 31: */;
+REF O2, L3 /* 32: */;
+ISNULL L14, L4 /* 33: */;
+JMPF @37, L14 /* 34: */;
+RAISE C8 /* 35: */;
+RETURN /* 36: */;
+REF O3, L4 /* 37: */;
+ISNULL L14, L5 /* 38: */;
+JMPF @42, L14 /* 39: */;
+RAISE C8 /* 40: */;
+RETURN /* 41: */;
+REF O4, L5 /* 42: */;
+ISNULL L14, L6 /* 43: */;
+JMPF @47, L14 /* 44: */;
+RAISE C8 /* 45: */;
+RETURN /* 46: */;
+REF O5, L6 /* 47: */;
+ISNULL L14, L7 /* 48: */;
+JMPF @52, L14 /* 49: */;
+RAISE C8 /* 50: */;
+RETURN /* 51: */;
+REF O6, L7 /* 52: */;
+ISNULL L14, L9 /* 53: */;
+JMPF @57, L14 /* 54: */;
+RAISE C8 /* 55: */;
+RETURN /* 56: */;
+REF O7, L9 /* 57: */;
+ISNULL L14, L10 /* 58: */;
+JMPF @62, L14 /* 59: */;
+RAISE C8 /* 60: */;
+RETURN /* 61: */;
+REF O8, L10 /* 62: */;
+ISNULL L14, L11 /* 63: */;
+JMPF @67, L14 /* 64: */;
+RAISE C8 /* 65: */;
+RETURN /* 66: */;
+REF O9, L11 /* 67: */;
+ISNULL L14, L12 /* 68: */;
+JMPF @72, L14 /* 69: */;
+RAISE C8 /* 70: */;
+RETURN /* 71: */;
+REF O10, L12 /* 72: */;
+RETURN /* 73: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testPosition">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4, s4, s4;
+I s4;
+L bo, c,1, s4, c,2, s4, c,3, s4, bo;
+S bo;
+C bo, bo, s4, c,1, c,2, c,3, c,5, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x6261 /* ba */, 0x616263 /* abc */, 0x6262616263 /* bbabc */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t19) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'castA(L1, C3) /* 5: CAST($t9):CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strPosA(L2, C3, L1) /* 6: POSITION($t9, $t10) */;
+CALL 'castA(L3, C4) /* 7: CAST($t12):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strPosA(L4, C3, L3) /* 8: POSITION($t9, $t13) */;
+CALL 'castA(L5, C5) /* 9: CAST($t15):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strPosA(L6, L5, C6) /* 10: POSITION($t16, $t17) */;
+ISNULL L7, L2 /* 11: */;
+JMPF @15, L7 /* 12: */;
+RAISE C7 /* 13: */;
+RETURN /* 14: */;
+REF O0, L2 /* 15: */;
+ISNULL L7, L4 /* 16: */;
+JMPF @20, L7 /* 17: */;
+RAISE C7 /* 18: */;
+RETURN /* 19: */;
+REF O1, L4 /* 20: */;
+ISNULL L7, L6 /* 21: */;
+JMPF @25, L7 /* 22: */;
+RAISE C7 /* 23: */;
+RETURN /* 24: */;
+REF O2, L6 /* 25: */;
+RETURN /* 26: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverlay">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O vc,5, vc,6;
+I s4;
+L bo, c,3, vc,5, c,3, vc,6, bo;
+S bo;
+C bo, bo, s4, c,2, c,3, s4, vc,5;
+V 1, 0, 10, 0x3132 /* 12 */, 0x616263 /* abc */, 1, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t16) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'castA(L1, C4) /* 5: CAST($t10):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strOverlayA4(L2, C3, L1, C5) /* 6: OVERLAY($t9, $t11, $t12) */;
+CALL 'castA(L3, C3) /* 7: CAST($t9):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'strOverlayA4(L4, L3, C4, C5) /* 8: OVERLAY($t14, $t10, $t12) */;
+ISNULL L5, L2 /* 9: */;
+JMPF @13, L5 /* 10: */;
+RAISE C6 /* 11: */;
+RETURN /* 12: */;
+REF O0, L2 /* 13: */;
+ISNULL L5, L4 /* 14: */;
+JMPF @18, L5 /* 15: */;
+RAISE C6 /* 16: */;
+RETURN /* 17: */;
+REF O1, L4 /* 18: */;
+RETURN /* 19: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testLikeAndSimilar">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O bo, bo, bo, bo;
+I s4;
+L bo, bo, bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, c,1, c,1, c,1, vc,5;
+V 1, 0, 10, 0x61 /* a */, 0x62 /* b */, 0x63 /* c */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t16) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CALL 'strLikeA3(L1, C3, C4) /* 5: LIKE($t9, $t10) */;
+CALL 'strLikeA4(L2, C3, C4, C5) /* 6: LIKE($t9, $t10, $t12) */;
+CALL 'strSimilarA3(L3, C3, C3) /* 7: SIMILAR TO($t9, $t9) */;
+CALL 'strSimilarA4(L4, C3, C3, C5) /* 8: SIMILAR TO($t9, $t9, $t12) */;
+ISNULL L5, L1 /* 9: */;
+JMPF @13, L5 /* 10: */;
+RAISE C6 /* 11: */;
+RETURN /* 12: */;
+REF O0, L1 /* 13: */;
+ISNULL L5, L2 /* 14: */;
+JMPF @18, L5 /* 15: */;
+RAISE C6 /* 16: */;
+RETURN /* 17: */;
+REF O1, L2 /* 18: */;
+ISNULL L5, L3 /* 19: */;
+JMPF @23, L5 /* 20: */;
+RAISE C6 /* 21: */;
+RETURN /* 22: */;
+REF O2, L3 /* 23: */;
+ISNULL L5, L4 /* 24: */;
+JMPF @28, L5 /* 25: */;
+RAISE C6 /* 26: */;
+RETURN /* 27: */;
+REF O3, L4 /* 28: */;
+RETURN /* 29: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBetween1">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 40, 60, 0x3232303034 /* 22004 */;
+T;
+GE L0, I0, C2 /* 0: >=($t0, $t9) */;
+LE L1, I0, C3 /* 1: <=($t0, $t11) */;
+AND L2, L0, L1 /* 2: AND($t10, $t12) */;
+JMPT @6, L2 /* 3: */;
+MOVE S0, C0 /* 4: */;
+RETURN /* 5: */;
+MOVE S0, C1 /* 6: */;
+ISNULL L3, I0 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C4 /* 9: */;
+RETURN /* 10: */;
+REF O0, I0 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBetween2">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 40, 60, 0x3232303034 /* 22004 */;
+T;
+GE L0, I0, C2 /* 0: >=($t0, $t9) */;
+LE L1, I0, C3 /* 1: <=($t0, $t11) */;
+AND L2, L0, L1 /* 2: AND($t10, $t12) */;
+JMPT @6, L2 /* 3: */;
+MOVE S0, C0 /* 4: */;
+RETURN /* 5: */;
+MOVE S0, C1 /* 6: */;
+ISNULL L3, I0 /* 7: */;
+JMPF @11, L3 /* 8: */;
+RAISE C4 /* 9: */;
+RETURN /* 10: */;
+REF O0, I0 /* 11: */;
+RETURN /* 12: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBetween3">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 40, 60, 0x3232303034 /* 22004 */;
+T;
+GE L0, I0, C2 /* 0: >=($t0, $t9) */;
+LE L1, I0, C3 /* 1: <=($t0, $t11) */;
+AND L2, L0, L1 /* 2: AND($t10, $t12) */;
+NOT L3, L2 /* 3: NOT($t13) */;
+JMPT @7, L3 /* 4: */;
+MOVE S0, C0 /* 5: */;
+RETURN /* 6: */;
+MOVE S0, C1 /* 7: */;
+ISNULL L4, I0 /* 8: */;
+JMPF @12, L4 /* 9: */;
+RAISE C4 /* 10: */;
+RETURN /* 11: */;
+REF O0, I0 /* 12: */;
+RETURN /* 13: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testBetween4">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s4;
+I s4;
+L bo, bo, bo, bo, bo, bo, bo, bo;
+S bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 40, 60, 0x3232303034 /* 22004 */;
+T;
+GE L0, I0, C2 /* 0: >=($t0, $t9) */;
+LE L1, I0, C3 /* 1: <=($t0, $t11) */;
+AND L2, L0, L1 /* 2: AND($t10, $t12) */;
+GE L3, I0, C3 /* 3: >=($t0, $t11) */;
+LE L4, I0, C2 /* 4: <=($t0, $t9) */;
+AND L5, L3, L4 /* 5: AND($t14, $t15) */;
+OR L6, L2, L5 /* 6: OR($t13, $t16) */;
+JMPT @10, L6 /* 7: */;
+MOVE S0, C0 /* 8: */;
+RETURN /* 9: */;
+MOVE S0, C1 /* 10: */;
+ISNULL L7, I0 /* 11: */;
+JMPF @15, L7 /* 12: */;
+RAISE C4 /* 13: */;
+RETURN /* 14: */;
+REF O0, I0 /* 15: */;
+RETURN /* 16: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastNull">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O vc,1, s4;
+I s4;
+L bo;
+S bo;
+C bo, bo, s4, vc,0, s4;
+V 1, 0, 10,  /* <NULL> */,  /* <NULL> */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t12) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+REF O0, C3 /* 5: */;
+REF O1, C4 /* 6: */;
+RETURN /* 7: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testJdbcFunctionSyntax">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O d;
+I s4;
+L bo, d, d, d, bo;
+S bo;
+C bo, bo, s4, s8, d, vc,5;
+V 1, 0, 10, 10, 1E1, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t15) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C3 /* 5: CAST($t10):DOUBLE NOT NULL */;
+DIV L2, L1, C4 /* 6: /($t11, $t12) */;
+CALL 'LN(L3, L2) /* 7: LN($t13) */;
+ISNULL L4, L3 /* 8: */;
+JMPF @12, L4 /* 9: */;
+RAISE C5 /* 10: */;
+RETURN /* 11: */;
+REF O0, L3 /* 12: */;
+RETURN /* 13: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testMixingTypes">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O s8;
+I s4;
+L bo, s8, s8, s8, bo;
+S bo;
+C bo, bo, s4, s4, s8, vc,5;
+V 1, 0, 10, 1, 10, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t16) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C3 /* 5: CAST($t9):BIGINT NOT NULL */;
+MUL L2, L1, C4 /* 6: *($t9, $t11) */;
+ADD L3, L2, C4 /* 7: +($t12, $t13) Reinterpret($t14) */;
+ISNULL L4, L3 /* 8: */;
+JMPF @12, L4 /* 9: */;
+RAISE C5 /* 10: */;
+RETURN /* 11: */;
+REF O0, L3 /* 12: */;
+RETURN /* 13: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testCastCharTypesToNumbersAndBack">
+        <Resource name="expectedProgram">
+            <![CDATA[
+O vc,3, c,3, vc,3, c,3, s8, s1, d;
+I s4;
+L bo, s8, vc,3, c,3, vc,3, c,3, s8, s1, d, bo;
+S bo;
+C bo, bo, s4, s4, s8, s4, s4, c,3, vc,5;
+V 1, 0, 10, 123, 123, 3, 1, 0x313233 /* 123 */, 0x3232303034 /* 22004 */;
+T;
+GT L0, I0, C2 /* 0: >($t0, $t19) */;
+JMPT @4, L0 /* 1: */;
+MOVE S0, C0 /* 2: */;
+RETURN /* 3: */;
+MOVE S0, C1 /* 4: */;
+CAST L1, C3 /* 5: CAST($t9):BIGINT NOT NULL */;
+CALL 'castA(L2, L1) /* 6: CAST(CAST($t9):BIGINT NOT NULL):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CAST($t9):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'castA(L3, L1) /* 7: CAST(CAST($t9):BIGINT NOT NULL):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL CAST($t9):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'castA(L4, C4, C5, C6) /* 8: CAST($t12):VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'castA(L5, C4, C5, C6) /* 9: CAST($t12):CHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL */;
+CALL 'castA(L6, C7) /* 10: CAST($t15):BIGINT NOT NULL */;
+CAST L7, L6 /* 11: CAST(CAST($t15):BIGINT NOT NULL):TINYINT NOT NULL CAST($t15):TINYINT NOT NULL */;
+CALL 'castA(L8, C7) /* 12: CAST($t15):DOUBLE NOT NULL */;
+ISNULL L9, L2 /* 13: */;
+JMPF @17, L9 /* 14: */;
+RAISE C8 /* 15: */;
+RETURN /* 16: */;
+REF O0, L2 /* 17: */;
+ISNULL L9, L3 /* 18: */;
+JMPF @22, L9 /* 19: */;
+RAISE C8 /* 20: */;
+RETURN /* 21: */;
+REF O1, L3 /* 22: */;
+ISNULL L9, L4 /* 23: */;
+JMPF @27, L9 /* 24: */;
+RAISE C8 /* 25: */;
+RETURN /* 26: */;
+REF O2, L4 /* 27: */;
+ISNULL L9, L5 /* 28: */;
+JMPF @32, L9 /* 29: */;
+RAISE C8 /* 30: */;
+RETURN /* 31: */;
+REF O3, L5 /* 32: */;
+ISNULL L9, L6 /* 33: */;
+JMPF @37, L9 /* 34: */;
+RAISE C8 /* 35: */;
+RETURN /* 36: */;
+REF O4, L6 /* 37: */;
+ISNULL L9, L7 /* 38: */;
+JMPF @42, L9 /* 39: */;
+RAISE C8 /* 40: */;
+RETURN /* 41: */;
+REF O5, L7 /* 42: */;
+ISNULL L9, L8 /* 43: */;
+JMPF @47, L9 /* 44: */;
+RAISE C8 /* 45: */;
+RETURN /* 46: */;
+REF O6, L8 /* 47: */;
+RETURN /* 48: */;]]>
+        </Resource>
+    </TestCase>
 </Root>

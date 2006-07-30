@@ -22,14 +22,10 @@ package com.disruptivetech.farrago.test;
 
 import com.disruptivetech.farrago.calc.*;
 
-import java.io.*;
-
 import junit.framework.*;
 
-import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.test.*;
 
 import openjava.mop.*;
 
@@ -41,68 +37,224 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.validate.*;
-import org.eigenbase.sql2rel.*;
 import org.eigenbase.test.*;
 import org.eigenbase.util.*;
 
 
 /**
- * Validates that rex expressions get translated to the correct calculator
- * program.
+ * Validates that {@link RexNode} expressions get translated to the correct
+ * calculator program.
  *
  * @author Wael Chatila
  * @version $Id$
  * @since Feb 3, 2004
  */
-public class Rex2CalcPlanTest
-    extends FarragoTestCase
+public class Rex2CalcPlanTest extends TestCase
 {
 
-    //~ Static fields/initializers ---------------------------------------------
+    //~ Static fields/initializers --------------------------------------------
 
-    private static TestContext testContext;
+    protected final Tester tester = createTester();
 
-    //~ Constructors -----------------------------------------------------------
+    //~ Constructors ----------------------------------------------------------
 
     public Rex2CalcPlanTest(String testName)
-        throws Exception
     {
         super(testName);
     }
 
-    //~ Methods ----------------------------------------------------------------
+    //~ Classes ---------------------------------------------------------------
 
-    protected void setUp()
-        throws Exception
+    /**
+     * Test helper. The default implementation is {@link TesterImpl}, but
+     * sub-tests can customize behavior by creating their own Tester.
+     */
+    interface Tester extends SqlToRelTestBase.Tester
     {
-        super.setUp();
-        stmt.execute("set schema 'sales'");
-        FarragoJdbcEngineConnection farragoConn =
-            (FarragoJdbcEngineConnection) connection;
-        TestContext testContext = getTestContext();
-        testContext.stmtValidator = farragoConn.getSession().newStmtValidator();
-        testContext.stmt =
-            (FarragoPreparingStmt) farragoConn.getSession().getPersonality()
-            .newPreparingStmt(null, testContext.stmtValidator);
+
+        /**
+         * Compiles a SQL statement, and compares the generated calc program
+         * with the contents of a reference file with the same name as the
+         * current test.
+         *
+         * @param sql SQL statement. Must be of the form "<code>SELECT ...
+         *   FROM ... WHERE</code>".
+         * @param nullSemantics If true, adds logic to ensure that a <code>
+         * WHERE</code> clause which evalutes to <code>NULL</code> will filter
+         * out rows (as if it had evaluated to <code>FALSE</code>).
+         * @param shortCircuit Generate short-circuit logic to optimize logical
+         * operations such as <code>AND</code> and <code>OR</OR> conditions.
+         */
+        void check(
+            String sql,
+            boolean nullSemantics,
+            boolean shortCircuit);
+
+        /**
+         * This method is modeled after the check() method above. It performs
+         * the same function but targeted to the needs of checking Aggregation
+         * functions.
+         * Compiles a SQL statement, and compares the generated calc program
+         * with the contents of a reference file with the same name as the
+         * current test.
+         *
+         * @param sql SQL statement. Must be of the form "<code>SELECT ...
+         *   FROM ... WHERE ... GROUP BY ...</code>".
+         * @param shortCircuit Generate short-circuit logic to optimize logical
+         * operations such as <code>AND</code> and <code>OR</OR> conditions.
+         * @param expectedInit String holds the section name in the ref file to
+         * compare output against for the init function.
+         * @param expectedAdd String holds the section name in the ref file to
+         * compare output against for the add function.
+         * @param expectedDrop String holds the section name in the ref file to
+         * compare output against for the drop function.
+         */
+        void checkAgg(
+            String sql,
+            boolean shortCircuit,
+            String expectedInit,
+            String expectedAdd,
+            String expectedDrop);
     }
 
-    protected void tearDown()
-        throws Exception
+    /**
+     * Implementation of {@link Tester}.
+     */
+    class TesterImpl extends SqlToRelTestBase.TesterImpl implements Tester
     {
-        TestContext testContext = getTestContext();
-        testContext.stmt.closeAllocation();
-        testContext.stmt = null;
-        testContext.stmtValidator.closeAllocation();
-        testContext.stmtValidator = null;
-        super.tearDown();
+        public void check(
+            String sql,
+            boolean nullSemantics,
+            boolean shortCircuit)
+        {
+            boolean doComments = true;
+            RelNode rootRel = convertSqlToRel(sql);
+
+            RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
+            ProjectRel project = (ProjectRel) rootRel;
+            FilterRel filter = (FilterRel) project.getInput(0);
+
+            // Create a program builder, and add the project expressions.
+            final RexProgramBuilder programBuilder =
+                new RexProgramBuilder(
+                    filter.getInput(0).getRowType(),
+                    rexBuilder);
+            final RexNode [] projectExps = project.getProjectExps();
+            for (int i = 0; i < projectExps.length; i++) {
+                programBuilder.addProject(
+                    projectExps[i],
+                    project.getRowType().getFields()[i].getName());
+            }
+
+            // Add a condition, if any.
+            RexNode condition = filter.getCondition();
+            if (nullSemantics) {
+                condition =
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.isTrueOperator,
+                        condition);
+                condition =
+                    new RexTransformer(condition, rexBuilder)
+                    .transformNullSemantics();
+            }
+            if (condition != null) {
+                programBuilder.addCondition(condition);
+            }
+
+            RexProgram program = programBuilder.getProgram();
+
+            // rewrite decimals
+            ReduceDecimalsRule rule = new ReduceDecimalsRule();
+            RexShuttle shuttle = rule.new DecimalShuttle(rexBuilder);
+            RexProgramBuilder updater =
+                RexProgramBuilder.create(
+                    rexBuilder,
+                    program.getInputRowType(),
+                    program.getExprList(),
+                    program.getProjectList(),
+                    program.getCondition(),
+                    program.getOutputRowType(),
+                    shuttle,
+                    true);
+            program = updater.getProgram();
+
+            RexToCalcTranslator translator =
+                new RexToCalcTranslator(rexBuilder, rootRel);
+            translator.setGenerateShortCircuit(shortCircuit);
+            translator.setGenerateComments(doComments);
+            String actual = translator.generateProgram(null, program).trim();
+
+            final DiffRepository diffRepos = getDiffRepos();
+            diffRepos.assertEquals(
+                "expectedProgram",
+                "${expectedProgram}",
+                TestUtil.NL + actual);
+        }
+
+        public void checkAgg(
+            String sql,
+            boolean shortCircuit,
+            String expectedInit,
+            String expectedAdd,
+            String expectedDrop)
+        {
+            boolean doComments = true;
+            RelNode rootRel = convertSqlToRel(sql);
+
+            RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
+            ProjectRel project = (ProjectRel) rootRel;
+
+            AggregateRel aggregate = (AggregateRel) project.getInput(0);
+
+            // Create a program builder, and add the project expressions.
+            RelDataType inputRowType = aggregate.getInput(0).getRowType();
+            final RexProgramBuilder programBuilder =
+                new RexProgramBuilder(inputRowType, rexBuilder);
+            for (int i = 0; i < aggregate.getAggCalls().length; i++) {
+                AggregateRelBase.Call aggCall = aggregate.getAggCalls()[i];
+                RexNode [] exprs = new RexNode[aggCall.getArgs().length];
+                for (int j = 0; j < aggCall.getArgs().length; j++) {
+                    int argOperand = aggCall.getArgs()[j];
+                    exprs[j] =
+                        rexBuilder.makeInputRef(
+                            inputRowType.getFields()[argOperand].getType(),
+                            argOperand);
+                }
+                RexNode call =
+                    rexBuilder.makeCall((SqlOperator) aggCall.getAggregation(),
+                        exprs);
+                programBuilder.addProject(
+                    call,
+                    aggregate.getRowType().getFields()[i].getName());
+            }
+
+            final RexProgram program = programBuilder.getProgram();
+
+            RexToCalcTranslator translator =
+                new RexToCalcTranslator(rexBuilder, aggregate);
+            translator.setGenerateShortCircuit(shortCircuit);
+            translator.setGenerateComments(doComments);
+            String [] programs = new String[3];
+            translator.getAggProgram(program, programs);
+
+            DiffRepository diffRepos = getDiffRepos();
+            diffRepos.assertEquals("expectedInit",
+                expectedInit,
+                TestUtil.NL + programs[0]);
+            diffRepos.assertEquals("expectedAdd",
+                expectedAdd,
+                TestUtil.NL + programs[1]);
+            diffRepos.assertEquals("expectedDrop",
+                expectedDrop,
+                TestUtil.NL + programs[2]);
+        }
     }
 
-    // implement TestCase
-    public static Test suite()
+    //--- Helper Functions ----------------------------------------------------
+
+    protected Tester createTester()
     {
-        return wrappedSuite(Rex2CalcPlanTest.class);
+        return new TesterImpl();
     }
 
     protected DiffRepository getDiffRepos()
@@ -110,221 +262,21 @@ public class Rex2CalcPlanTest
         return DiffRepository.lookup(Rex2CalcPlanTest.class);
     }
 
-    //--- Helper Functions ------------------------------------------------
 
-    /**
-     * Compiles a SQL statement, and compares the generated calc program with
-     * the contents of a reference file with the same name as the current test.
-     *
-     * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
-     * WHERE</code>".
-     * @param nullSemantics If true, adds logic to ensure that a <code>
-     * WHERE</code> clause which evalutes to <code>NULL</code> will filter out
-     * rows (as if it had evaluated to <code>FALSE</code>).
-     * @param shortCircuit Generate short-circuit logic to optimize logical
-     * operations such as <code>AND</code> and <code>OR</OR> conditions.
-     */
-    private void check(
-        String sql,
-        boolean nullSemantics,
-        boolean shortCircuit)
-    {
-        boolean doComments = true;
-        RelNode rootRel = parseAndConvert(sql);
 
-        RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
-        ProjectRel project = (ProjectRel) rootRel;
-        FilterRel filter = (FilterRel) project.getInput(0);
-
-        // Create a program builder, and add the project expressions.
-        final RexProgramBuilder programBuilder =
-            new RexProgramBuilder(
-                filter.getInput(0).getRowType(),
-                rexBuilder);
-        final RexNode [] projectExps = project.getProjectExps();
-        for (int i = 0; i < projectExps.length; i++) {
-            programBuilder.addProject(
-                projectExps[i],
-                project.getRowType().getFields()[i].getName());
-        }
-
-        // Add a condition, if any.
-        RexNode condition = filter.getCondition();
-        if (nullSemantics) {
-            condition =
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.isTrueOperator,
-                    condition);
-            condition =
-                new RexTransformer(condition, rexBuilder)
-                .transformNullSemantics();
-        }
-        if (condition != null) {
-            programBuilder.addCondition(condition);
-        }
-
-        RexProgram program = programBuilder.getProgram();
-
-        // rewrite decimals
-        ReduceDecimalsRule rule = new ReduceDecimalsRule();
-        RexShuttle shuttle = rule.new DecimalShuttle(rexBuilder);
-        RexProgramBuilder updater =
-            RexProgramBuilder.create(
-                rexBuilder,
-                program.getInputRowType(),
-                program.getExprList(),
-                program.getProjectList(),
-                program.getCondition(),
-                program.getOutputRowType(),
-                shuttle,
-                true);
-        program = updater.getProgram();
-
-        RexToCalcTranslator translator =
-            new RexToCalcTranslator(rexBuilder, rootRel);
-        translator.setGenerateShortCircuit(shortCircuit);
-        translator.setGenerateComments(doComments);
-        String actual = translator.generateProgram(null, program).trim();
-
-        // dump the generated code
-        try {
-            Writer writer = openTestLog();
-            PrintWriter printWriter = new PrintWriter(writer);
-            printWriter.println(actual);
-            printWriter.close();
-
-            // and diff it against what we expect
-            diffTestLog();
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
-    }
-
-    /**
-     * This method is modeled after the check() method above. It performs the
-     * same function but targeted to the needs of checking Aggregation functions
-     * Compiles a SQL statement, and compares the generated calc program with
-     * the contents of a reference file with the same name as the current test.
-     *
-     * @param sql SQL statement. Must be of the form "<code>SELECT ... FROM ...
-     * WHERE</code>".
-     * @param shortCircuit Generate short-circuit logic to optimize logical
-     * operations such as <code>AND</code> and <code>OR</OR> conditions.
-     * @param expectedInit String holds the section name in the ref file to
-     * compare output against for the init function.
-     * @param expectedAdd String holds the section name in the ref file to
-     * compare output against for the add function.
-     * @param expectedDrop String holds the section name in the ref file to
-     * compare output against for the drop function.
-     */
-    private void checkAgg(
-        String sql,
-        boolean shortCircuit,
-        String expectedInit,
-        String expectedAdd,
-        String expectedDrop)
-    {
-        boolean doComments = true;
-        RelNode rootRel = parseAndConvert(sql);
-
-        RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
-        ProjectRel project = (ProjectRel) rootRel;
-
-        AggregateRel aggregate = (AggregateRel) project.getInput(0);
-
-        // Create a program builder, and add the project expressions.
-        RelDataType inputRowType = aggregate.getInput(0).getRowType();
-        final RexProgramBuilder programBuilder =
-            new RexProgramBuilder(inputRowType, rexBuilder);
-        for (int i = 0; i < aggregate.getAggCalls().length; i++) {
-            AggregateRelBase.Call aggCall = aggregate.getAggCalls()[i];
-            RexNode [] exprs = new RexNode[aggCall.getArgs().length];
-            for (int j = 0; j < aggCall.getArgs().length; j++) {
-                int argOperand = aggCall.getArgs()[j];
-                exprs[j] =
-                    rexBuilder.makeInputRef(
-                        inputRowType.getFields()[argOperand].getType(),
-                        argOperand);
-            }
-            RexNode call =
-                rexBuilder.makeCall((SqlOperator) aggCall.getAggregation(),
-                    exprs);
-            programBuilder.addProject(
-                call,
-                aggregate.getRowType().getFields()[i].getName());
-        }
-
-        final RexProgram program = programBuilder.getProgram();
-
-        RexToCalcTranslator translator =
-            new RexToCalcTranslator(rexBuilder, aggregate);
-        translator.setGenerateShortCircuit(shortCircuit);
-        translator.setGenerateComments(doComments);
-        String [] programs = new String[3];
-        translator.getAggProgram(program, programs);
-
-        DiffRepository diffRepos = getDiffRepos();
-        diffRepos.assertEquals("expectedInit",
-            expectedInit,
-            TestUtil.NL + programs[0]);
-        diffRepos.assertEquals("expectedAdd",
-            expectedAdd,
-            TestUtil.NL + programs[1]);
-        diffRepos.assertEquals("expectedDrop",
-            expectedDrop,
-            TestUtil.NL + programs[2]);
-    }
-
-    private RelNode parseAndConvert(String sql)
-    {
-        TestContext testContext = getTestContext();
-        final SqlNode sqlQuery;
-        try {
-            sqlQuery = new SqlParser(sql).parseQuery();
-        } catch (SqlParseException e) {
-            throw new AssertionFailedError(e.toString());
-        }
-        RelDataTypeFactory typeFactory =
-            testContext.stmt.getRelOptSchema().getTypeFactory();
-        final SqlValidator validator =
-            SqlValidatorUtil.newValidator(
-                SqlStdOperatorTable.instance(),
-                testContext.stmt,
-                typeFactory);
-        final JavaRexBuilder rexBuilder = new JavaRexBuilder(typeFactory);
-        final SqlToRelConverter converter =
-            new SqlToRelConverter(
-                validator,
-                testContext.stmt.getRelOptSchema(),
-                testContext.env,
-                testContext.stmt.getPlanner(),
-                testContext.stmt,
-                rexBuilder);
-        RelNode rootRel = converter.convertQuery(sqlQuery, true, true);
-        assertTrue(rootRel != null);
-        return rootRel;
-    }
-
-    public static TestContext getTestContext()
-    {
-        if (testContext == null) {
-            testContext = new TestContext();
-        }
-        return testContext;
-    }
 
     //--- Tests ------------------------------------------------
     public void testSimplePassThroughFilter()
     {
-        String sql = "SELECT empno,empno FROM emps WHERE empno > 10";
-        check(sql, false, false);
+        String sql = "SELECT empno,empno FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testAggCount()
     {
-        String sql = "SELECT COUNT(empno) FROM emps";
-        checkAgg(sql,
+        String sql = "SELECT COUNT(empno) FROM emp";
+        tester.checkAgg(
+            sql,
             false,
             "${expectedInit}",
             "${expectedAdd}",
@@ -333,7 +285,8 @@ public class Rex2CalcPlanTest
 
     public void testAggSum()
     {
-        checkAgg("SELECT SUM(empno+5) FROM emps",
+        tester.checkAgg(
+            "SELECT SUM(empno+5) FROM emp",
             false,
             "${expectedInit}",
             "${expectedAdd}",
@@ -342,9 +295,9 @@ public class Rex2CalcPlanTest
 
     public void _testAggSumExp()
     {
-        checkAgg(
+        tester.checkAgg(
             "SELECT empno, SUM(empno+deptno), COUNT(empno) "
-            + "FROM emps "
+            + "FROM emp "
             + "GROUP BY empno,deptno",
             false,
             "${expectedInit}",
@@ -354,7 +307,7 @@ public class Rex2CalcPlanTest
 
     public void _testAggMin()
     {
-        checkAgg("SELECT MIN(empno) FROM emps ",
+        tester.checkAgg("SELECT MIN(empno) FROM emp ",
             false,
             "${expectedInit}",
             "${expectedAdd}",
@@ -363,9 +316,9 @@ public class Rex2CalcPlanTest
 
     public void _testWindowedMinMax()
     {
-        checkAgg(
+        tester.checkAgg(
             "SELECT MIN(empno) OVER last3, MAX(empno) OVER last3 "
-            + "FROM emps WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            + "FROM emp WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
             false,
             "${expectedInit}",
             "${expectedAdd}",
@@ -374,41 +327,41 @@ public class Rex2CalcPlanTest
 
     public void testSimplyEqualsFilter()
     {
-        String sql = "select empno from emps where empno=123";
-        check(sql, true, false);
+        String sql = "select empno from emp where empno=123";
+        tester.check(sql, true, false);
     }
 
     public void testSimplyEqualsFilterWithComments()
     {
-        String sql = "select empno from emps where name='Wael' and 123=0";
-        check(sql, false, false);
+        String sql = "select empno from emp where ename='Wael' and 123=0";
+        tester.check(sql, false, false);
     }
 
     public void testSimplyEqualsFilterShortCircuit()
     {
-        String sql = "select empno from emps where empno=123";
-        check(sql, true, true);
+        String sql = "select empno from emp where empno=123";
+        tester.check(sql, true, true);
     }
 
     public void testBooleanExpressions()
     {
         //AND has higher precedence than OR
         String sql =
-            "SELECT empno FROM emps WHERE true and not true or false and (not true and true)";
-        check(sql, false, false);
+            "SELECT empno FROM emp WHERE true and not true or false and (not true and true)";
+        tester.check(sql, false, false);
     }
 
     public void testScalarExpression()
     {
-        String sql = "SELECT 2-2*2+2/2-2  FROM emps WHERE empno > 10";
-        check(sql, true, false);
+        String sql = "SELECT 2-2*2+2/2-2  FROM emp WHERE empno > 10";
+        tester.check(sql, true, false);
     }
 
     public void testMixedExpression()
     {
         String sql =
-            "SELECT name, 2*2  FROM emps WHERE name = 'Fred' AND  empno > 10";
-        check(sql, true, false);
+            "SELECT ename, 2*2  FROM emp WHERE ename = 'Fred' AND  empno > 10";
+        tester.check(sql, true, false);
     }
 
     public void testNumbers()
@@ -417,21 +370,21 @@ public class Rex2CalcPlanTest
             "SELECT "
             + "-(1+-2.*-3.e-1/-.4)>=+5, "
             + " 1e200 / 0.4"
-            + "FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + "FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testHexBitBinaryString()
     {
-        String sql = "SELECT X'0001'=x'FFeeDD' FROM emps WHERE empno > 10";
-        check(sql, false, false);
+        String sql = "SELECT X'0001'=x'FFeeDD' FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testStringLiterals()
     {
         String sql =
-            "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            "SELECT n'aBc',_iso_8859-1'', 'abc' FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testSimpleCompare()
@@ -444,22 +397,22 @@ public class Rex2CalcPlanTest
             + ",true is not false"
             + ",true is not null "
             + ",true is not unknown"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testArithmeticOperators()
     {
         String sql =
             "SELECT POW(1.0,1.0), MOD(1,1), ABS(5000000000), ABS(1), "
-            + "ABS(1.1), LN(1), LOG10(1) FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + "ABS(1.1), LN(1), LOG10(1) FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testFunctionInFunction()
     {
-        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emps WHERE empno > 10";
-        check(sql, false, false);
+        String sql = "SELECT POW(3.0, ABS(2)+1) FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testCaseExpressions()
@@ -467,48 +420,48 @@ public class Rex2CalcPlanTest
         String sql =
             "SELECT case 1+1 when 1 then 'wael' when 2 then 'waels clone' end"
             + ",case when 1=1 then 1+1+2 else 2+10 end"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testNullifExpression()
     {
         String sql = "SELECT nullif(1,2) "
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testCoalesce()
     {
-        String sql = "SELECT coalesce(1,2,3) FROM emps WHERE empno > 10";
+        String sql = "SELECT coalesce(1,2,3) FROM emp WHERE empno > 10";
 
         //CASE WHEN 1 IS NOT NULL THEN 1 ELSE (CASE WHEN 2 IS NOT NULL THEN 2
         //ELSE 3) END
-        check(sql, false, false);
+        tester.check(sql, false, false);
     }
 
     public void testCase1()
     {
         String sql =
             "SELECT CASE WHEN TRUE THEN 0 ELSE 1 END "
-            + "FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + "FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testCase2()
     {
         String sql1 =
             "SELECT CASE WHEN slacker then 2 when TRUE THEN 0 ELSE 1 END "
-            + "FROM emps WHERE empno > 10";
-        check(sql1, false, false);
+            + "FROM emp WHERE empno > 10";
+        tester.check(sql1, false, false);
     }
 
     public void testCase3()
     {
         String sql2 =
             "select CASE 1 WHEN 1 THEN cast(null as integer) else 0 END "
-            + "FROM emps WHERE empno > 10";
-        check(sql2, false, false);
+            + "FROM emp WHERE empno > 10";
+        tester.check(sql2, false, false);
     }
 
     public void testCharEq()
@@ -544,8 +497,8 @@ public class Rex2CalcPlanTest
     private void checkCharOp(final String op, final String instr)
     {
         String sql = "SELECT 'a' " + op
-            + "'b' FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + "'b' FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testBinaryGt()
@@ -556,8 +509,8 @@ public class Rex2CalcPlanTest
     private void checkBinaryOp(final String op, final String instr)
     {
         String sql = "SELECT x'ff' " + op
-            + "x'01' FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + "x'01' FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testStringFunctions()
@@ -575,8 +528,8 @@ public class Rex2CalcPlanTest
             + "substring('a' from 1 for 10),"
             + "substring('a' from 'a' for '\\' ),"
             + "'a'||'a'||'b'"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testPosition()
@@ -586,8 +539,8 @@ public class Rex2CalcPlanTest
             + "position('a' in  cast('a' as char(1))),"
             + "position('a' in  cast('ba' as char(2))),"
             + "position(cast('abc' as char(3)) in 'bbabc')"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testOverlay()
@@ -596,8 +549,8 @@ public class Rex2CalcPlanTest
             "SELECT "
             + "overlay('12' placing cast('abc' as char(3)) from 1),"
             + "overlay(cast('12' as char(3)) placing 'abc' from 1)"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testLikeAndSimilar()
@@ -608,35 +561,35 @@ public class Rex2CalcPlanTest
             + ",'a' like 'b' escape 'c'"
             + ",'a' similar to 'a'"
             + ",'a' similar to 'a' escape 'c'"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testBetween1()
     {
-        String sql1 = "select empno  from emps where empno between 40 and 60";
-        check(sql1, false, false);
+        String sql1 = "select empno  from emp where empno between 40 and 60";
+        tester.check(sql1, false, false);
     }
 
     public void testBetween2()
     {
         String sql2 =
-            "select empno  from emps where empno between asymmetric 40 and 60";
-        check(sql2, false, false);
+            "select empno  from emp where empno between asymmetric 40 and 60";
+        tester.check(sql2, false, false);
     }
 
     public void testBetween3()
     {
         String sql3 =
-            "select empno  from emps where empno not between 40 and 60";
-        check(sql3, false, false);
+            "select empno  from emp where empno not between 40 and 60";
+        tester.check(sql3, false, false);
     }
 
     public void testBetween4()
     {
         String sql4 =
-            "select empno  from emps where empno between symmetric 40 and 60";
-        check(sql4, false, false);
+            "select empno  from emp where empno between symmetric 40 and 60";
+        tester.check(sql4, false, false);
     }
 
     public void testCastNull()
@@ -645,8 +598,8 @@ public class Rex2CalcPlanTest
             "SELECT "
             + "cast(null as varchar(1))"
             + ", cast(null as integer)"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testJdbcFunctionSyntax()
@@ -654,16 +607,16 @@ public class Rex2CalcPlanTest
         String sql =
             "SELECT "
             + "{fn log(1.0)}"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testMixingTypes()
     {
         String sql = "SELECT "
             + "1+1.0"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     public void testCastCharTypesToNumbersAndBack()
@@ -677,14 +630,16 @@ public class Rex2CalcPlanTest
             + ",cast('123' as bigint)"
             + ",cast('123' as tinyint)"
             + ",cast('123' as double)"
-            + " FROM emps WHERE empno > 10";
-        check(sql, false, false);
+            + " FROM emp WHERE empno > 10";
+        tester.check(sql, false, false);
     }
 
     //~ Inner Classes ----------------------------------------------------------
 
     /**
      * Contains context shared between unit tests.
+     *
+     * @see Util#deprecated
      *
      * <p>Lots of nasty stuff to set up the Openjava environment, should be
      * removed when we're not dependent upon Openjava.</p>

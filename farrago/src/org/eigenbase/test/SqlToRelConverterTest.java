@@ -27,7 +27,9 @@ import java.io.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlCaseOperator;
 import org.eigenbase.util.*;
+import org.eigenbase.sql2rel.SqlToRelConverter;
 
 
 /**
