@@ -40,6 +40,18 @@ struct LbmMinusExecStreamParams : public LbmBitOpExecStreamParams
  * LbmMinusExecStream is the execution stream that subtracts from the first
  * bitmap input stream, the bitmap streams from the remaining inputs
  *
+ * <p>A minus stream is generally used to subtract an ordered bitmap input
+ * streams. In a special case, however, the first input (the "minuend") may
+ * contain fields in addition to bitmap fields. The additional fields are
+ * considered to be "key fields" and are required to be the first fields.
+ * Key fields are propagated to the output stream and allow index only scans
+ * to return a result set. A side effect is that the minuend input is only
+ * partially ordered when using key fields.
+ *
+ * <p>To support a partially ordered minuend input, the streams to be
+ * subtracted (the "subtrahends") are restarted when the minuend is out of
+ * order.
+ *
  * @author Zelaine Fong
  * @version $Id$
  */
@@ -139,11 +151,11 @@ class LbmMinusExecStream : public LbmBitOpExecStream
      *     current segment
      * </ul>
      */
-    ExecStreamResult readInputAndRestart(
-        uint iInput, LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
+    ExecStreamResult readMinuendInputAndRestart(
+        LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
 
     /**
-     * Reads the minuend input as a sequential stream.
+     * Reads the minuend input as a random sequence of segments
      */
     ExecStreamResult readMinuendInput(
         LcsRid &currRid, PBuffer &currByteSeg, uint &currLen);
