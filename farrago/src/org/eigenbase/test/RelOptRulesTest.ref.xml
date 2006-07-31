@@ -39,7 +39,7 @@ ProjectRel(EXPR$0=[1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  FilterRel(condition=[=($7, $8)])
+  FilterRel(condition=[=($7, $9)])
     JoinRel(condition=[true], joinType=[inner])
       TableAccessRel(table=[[SALES, EMP]])
       TableAccessRel(table=[[SALES, DEPT]])
@@ -61,8 +61,8 @@ ProjectRel(EXPR$0=[1])
         <Resource name="planAfter">
             <![CDATA[
 ProjectRel(EXPR$0=[1])
-  JoinRel(condition=[=($7, $8)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
-    SemiJoinRel(condition=[=($7, $8)], joinType=[inner])
+  JoinRel(condition=[=($7, $9)], joinType=[inner], semiJoinDone=[true], multiJoinDone=[false])
+    SemiJoinRel(condition=[=($7, $9)], joinType=[inner])
       TableAccessRel(table=[[SALES, EMP]])
       TableAccessRel(table=[[SALES, DEPT]])
     TableAccessRel(table=[[SALES, DEPT]])

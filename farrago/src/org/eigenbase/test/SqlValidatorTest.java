@@ -1065,7 +1065,8 @@ public class SqlValidatorTest
             + " TIMESTAMP(0) NOT NULL HIREDATE,"
             + " INTEGER NOT NULL SAL,"
             + " INTEGER NOT NULL COMM,"
-            + " INTEGER NOT NULL DEPTNO) NOT NULL MULTISET NOT NULL");
+            + " INTEGER NOT NULL DEPTNO,"
+            + " BOOLEAN NOT NULL SLACKER) NOT NULL MULTISET NOT NULL");
     }
 
     public void testMultisetSetOperators()
@@ -3031,7 +3032,8 @@ public class SqlValidatorTest
             + " TIMESTAMP(0) NOT NULL HIREDATE,"
             + " INTEGER NOT NULL SAL,"
             + " INTEGER NOT NULL COMM,"
-            + " INTEGER NOT NULL DEPTNO) NOT NULL";
+            + " INTEGER NOT NULL DEPTNO,"
+            + " BOOLEAN NOT NULL SLACKER) NOT NULL";
         checkResultType("select * from (table emp)", empRecordType);
         checkResultType("table emp", empRecordType);
         checkFails("table ^nonexistent^",
