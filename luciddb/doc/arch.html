@@ -18,8 +18,7 @@ architecture:
 <br>
 
 The core consists of a top-half implemented in Java and a bottom half
-implemented in C++.  This hybrid approach yields the best of both
-worlds:
+implemented in C++.  This hybrid approach yields a number of advantages:
 
 <ul>
 
@@ -31,7 +30,7 @@ memory
 low-level operating system, network, and file system resources
 
 <li>the Java runtime system enables machine-code evaluation of SQL
-expressions via a combination of Java code generation and just-it-time
+expressions via a combination of Java code generation and just-in-time
 compilation (as part of query execution)
 
 </ul>
@@ -65,15 +64,12 @@ traditional uncompressed representation.
 
 Vertical partitioning also means that a query that only accesses a
 subset of the columns of the referenced tables can avoid reading the
-other columns entirely.
-
-<p>
-
-The net effect of vertical partitioning is greatly improved
-performance due to reduced disk I/O and more effective caching (data
-compression allows a greater logical dataset size to fit into physical
-memory).  Compression also allows disk storage to be used more
-effectively (e.g. for maintaining more indexes).
+other columns entirely.  The net effect of vertical partitioning is
+greatly improved performance due to reduced disk I/O and more
+effective caching (data compression allows a greater logical dataset
+size to fit into physical memory).  Compression also allows disk
+storage to be used more effectively (e.g. for maintaining more
+indexes).
 
 <p>
 
@@ -175,12 +171,12 @@ e.g. a calendar table generator.
 
 <h2>OLAP Integration</h2>
 
-Because LucidDB has a Java top-half, it can be deployed into J2EE
+Because LucidDB has a Java top-half, it can be deployed into a J2EE
 application server.  This means it is very easy to make it run
 side-by-side with the <a target="_top"
 href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
 enabling direct in-process JDBC calls from Mondrian into LucidDB with no
-communications overhead.  The SQL queries issued by Mondrian for
+communications overhead.  And the SQL queries issued by Mondrian for
 implementing MDX statements from an OLAP client are of exactly the
 form LucidDB's optimizer was designed for.
 

@@ -558,6 +558,8 @@ ${farrago.test.jvmargs}
         <include 
           name="net/sf/farrago/jdbc/client/FarragoVjdbcClientDriver.class"/>
         <include 
+          name="net/sf/farrago/jdbc/client/FarragoUnregisteredVjdbcClientDriver.class"/>
+        <include 
           name="net/sf/farrago/jdbc/FarragoAbstractJdbcDriver.class"/>
         <include 
           name="net/sf/farrago/release/*"/>
