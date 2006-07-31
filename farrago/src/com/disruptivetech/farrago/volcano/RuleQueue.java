@@ -441,7 +441,7 @@ class RuleQueue
         }
     }
 
-    static int compareRels(RelNode [] rels0, RelNode [] rels1)
+    static int compareRels(RelNode[] rels0, RelNode[] rels1)
     {
         int c = rels0.length - rels1.length;
         if (c != 0) {
@@ -453,7 +453,7 @@ class RuleQueue
                 return c;
             }
         }
-        return c;
+        return 0;
     }
 
     //~ Inner Classes ----------------------------------------------------------

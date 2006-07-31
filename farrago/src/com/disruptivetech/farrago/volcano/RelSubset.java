@@ -189,15 +189,16 @@ public class RelSubset
         return set.rel.isDistinct();
     }
 
-    Set<RelSubset> getParentSubsets()
+    Collection<RelSubset> getParentSubsets()
     {
-        Set<RelSubset> set = new HashSet<RelSubset>();
+        List<RelSubset> list = new ArrayList<RelSubset>(parents.size());
+                
         for (RelNode rel : parents) {
             final RelSubset subset =
                 ((VolcanoPlanner) getCluster().getPlanner()).getSubset(rel);
-            set.add(subset);
+            list.add(subset);
         }
-        return set;
+        return list;
     }
 
     RelSet getSet()
