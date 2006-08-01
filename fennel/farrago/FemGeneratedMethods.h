@@ -26,7 +26,7 @@ jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = 0;
 jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
-jmethodID ProxyCmdSetParams::meth_getParams = 0;
+jmethodID ProxyCmdSetParam::meth_getParam = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isEstimate = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isIncludeTuples = 0;
 jmethodID ProxyCorrelation::meth_getId = 0;
@@ -239,9 +239,9 @@ jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdSavepoint");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdSavepoint>));
 ProxyCmdSavepoint::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemSvptHandle;");
 
-jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdSetParams");
-visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdSetParams>));
-ProxyCmdSetParams::meth_getParams = pEnv->GetMethodID(jClass,"getParams","()Ljava/util/Collection;");
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdSetParam");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdSetParam>));
+ProxyCmdSetParam::meth_getParam = pEnv->GetMethodID(jClass,"getParam","()Lnet/sf/farrago/fem/fennel/FemDatabaseParam;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdTruncateIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdTruncateIndex>));
@@ -737,13 +737,12 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-SharedProxyDatabaseParam ProxyCmdSetParams::getParams()
+SharedProxyDatabaseParam ProxyCmdSetParam::getParam()
 {
 SharedProxyDatabaseParam p;
 p->pEnv = pEnv;
-p->jObject = pEnv->CallObjectMethod(jObject,meth_getParams);
-p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
-++p;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getParam);
+if (!p->jObject) p.reset();
 return p;
 }
 
