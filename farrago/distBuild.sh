@@ -140,6 +140,7 @@ cp sqlline.jar $LIB_DIR
 cp sqlline/LICENSE $LIB_DIR/sqlline.license
 cp jline.jar $LIB_DIR
 cp jgrapht/jgrapht-*.jar $LIB_DIR
+cp jgrapht7/jgrapht7-jdk1.5.jar $LIB_DIR
 cp jgrapht/license-LGPL.txt $LIB_DIR/jgrapht.license.txt
 cp hsqldb/doc/hypersonic_lic.txt $LIB_DIR/hsqldb.license.txt
 cp hsqldb/lib/hsqldb.jar $LIB_DIR
