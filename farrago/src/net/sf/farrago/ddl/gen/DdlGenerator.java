@@ -108,8 +108,6 @@ public abstract class DdlGenerator
      * @param str String to escape
      *
      * @return escapes version of <code>str</code>
-     *
-     * @see com.sqlstream.plugin.impl.DdlGenerator.
      */
     protected static String escapeApostrophesAndQuotes(String str)
     {
@@ -132,8 +130,6 @@ public abstract class DdlGenerator
      * @param str String to escape
      *
      * @return escapes version of <code>str</code>
-     *
-     * @see com.sqlstream.plugin.impl.DdlGenerator.
      */
     protected static String escapeQuotes(String str)
     {
@@ -153,11 +149,13 @@ public abstract class DdlGenerator
         return buf.toString();
     }
 
-    protected static String quote(String str)
+    /** Returns double-quoted string with embedded double quotes escaped. */
+    public static String quote(String str)
     {
         return "\"" + escapeQuotes(str) + "\"";
     }
 
+    // TODO: fix to escape apostrophes and then make public
     protected static String literal(String str)
     {
         return "\'" + escapeQuotes(str) + "\'";
