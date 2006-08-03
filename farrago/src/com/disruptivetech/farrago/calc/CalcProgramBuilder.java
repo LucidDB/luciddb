@@ -22,11 +22,6 @@ package com.disruptivetech.farrago.calc;
 
 import java.io.*;
 
-import java.math.*;
-
-import java.nio.*;
-import java.nio.charset.*;
-
 import java.util.*;
 import java.util.logging.*;
 
@@ -34,9 +29,7 @@ import net.sf.farrago.fennel.tuple.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.trace.*;
 
-import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
-import org.eigenbase.util14.*;
 
 
 /**
@@ -91,7 +84,7 @@ public class CalcProgramBuilder
         new InstructionDef(addInstruction, 3) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -110,7 +103,7 @@ public class CalcProgramBuilder
         new NativeInstructionDef("DIV", 3) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 builder.assertNotDivideByZero(regs[2]);
                 super.add(builder, regs);
@@ -164,7 +157,7 @@ public class CalcProgramBuilder
         new IntegralNativeInstructionDef("MOD", 3) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 //check if divide by zero if op2 is a constant
                 builder.assertNotDivideByZero(regs[2]);
@@ -175,7 +168,7 @@ public class CalcProgramBuilder
         new InstructionDef(moveInstruction, 2) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 builder.compilationAssert(
                     regs[0].getOpType() == regs[1].getOpType(),
@@ -193,7 +186,7 @@ public class CalcProgramBuilder
         new InstructionDef(moveInstruction, 2) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 builder.assertRegisterNotConstant(regs[0]);
                 builder.assertRegisterIsPointer(regs[0]);
@@ -221,7 +214,7 @@ public class CalcProgramBuilder
         new InstructionDef("RAISE", 1) {
             void add(
                 CalcProgramBuilder builder,
-                Register [] regs)
+                CalcReg [] regs)
             {
                 builder.assertRegisterLiteral(regs[0]);
                 builder.assertIsVarchar(regs[0]);
@@ -245,10 +238,13 @@ public class CalcProgramBuilder
 
     /* Member variables */
     protected String separator = SEPARATOR_SEMICOLON_NEWLINE;
-    protected final ArrayList instructions = new ArrayList();
+    protected final List<Instruction> instructions =
+        new ArrayList<Instruction>();
     protected RegisterSets registerSets = new RegisterSets();
-    protected final HashMap literals = new HashMap();
-    protected final HashMap labels = new HashMap();
+    protected final Map<LiteralPair,CalcReg> literals =
+        new HashMap<LiteralPair, CalcReg>();
+    protected final Map<String,Integer> labels =
+        new HashMap<String, Integer>();
     private boolean outputComments = false;
 
     //~ Constructors -----------------------------------------------------------
@@ -318,8 +314,6 @@ public class CalcProgramBuilder
      * <"\n"><br>
      * <Instruction set> See {@link #getInstructions}<br>
      * <br>
-     *
-     * @return
      */
     public String getProgram()
     {
@@ -356,13 +350,12 @@ public class CalcProgramBuilder
     /**
      * Returns the register of a given ordinal and type.
      */
-    CalcProgramBuilder.Register getRegister(
+    CalcReg getRegister(
         int ordinal,
         CalcProgramBuilder.RegisterSetType registerType)
     {
-        ArrayList registerSet = registerSets.getSet(registerType.getOrdinal());
-        Register register = (Register) registerSet.get(ordinal);
-        return register;
+        List<CalcReg> registerSet = registerSets.getSet(registerType.getOrdinal());
+        return registerSet.get(ordinal);
     }
 
     /**
@@ -370,10 +363,10 @@ public class CalcProgramBuilder
      */
     private void bindReferences()
     {
-        Iterator it = instructions.iterator();
+        Iterator<Instruction> it = instructions.iterator();
         for (int i = 0; it.hasNext(); i++) {
             //Look for instructions that have Line as operands
-            Instruction instruction = (Instruction) it.next();
+            Instruction instruction = it.next();
             instruction.setLineNumber(i);
             Operand [] operands = instruction.getOperands();
             for (int j = 0; (null != operands) && (j < operands.length); j++) {
@@ -387,7 +380,7 @@ public class CalcProgramBuilder
                         compilationAssert(null == line.getLine(),
                             "Line has already been bind.");
                         java.lang.Integer lineNumberFromLabel =
-                            (java.lang.Integer) labels.get(line.getLabel());
+                            labels.get(line.getLabel());
                         if (null == lineNumberFromLabel) {
                             throw FarragoResource.instance()
                             .ProgramCompilationError.ex(
@@ -403,8 +396,6 @@ public class CalcProgramBuilder
 
     /**
      * Returns the number of existing lines of instructions - 1
-     *
-     * @return
      */
     public int getCurrentLineNumber()
     {
@@ -440,7 +431,7 @@ public class CalcProgramBuilder
         PrintWriter writer,
         RegisterSetType registerSetType)
     {
-        ArrayList list = registerSets.getSet(registerSetType.getOrdinal());
+        List<CalcReg> list = registerSets.getSet(registerSetType.getOrdinal());
         if (null == list) {
             return;
         }
@@ -452,7 +443,7 @@ public class CalcProgramBuilder
             if (j > 0) {
                 writer.print(", ");
             }
-            Register reg = (Register) list.get(j);
+            CalcReg reg = list.get(j);
             assert reg.getRegisterType() == registerSetType;
             writer.print(reg.getOpType().getName());
             switch (reg.getOpType().getOrdinal()) {
@@ -469,7 +460,7 @@ public class CalcProgramBuilder
             if (false) {
                 // Assembler doesn't support this.
                 writer.print('[');
-                writer.print(((Register) list.get(j)).getIndex());
+                writer.print(reg.getIndex());
                 writer.print(']');
             }
 
@@ -483,7 +474,7 @@ public class CalcProgramBuilder
 
     private void generateRegValues(PrintWriter writer)
     {
-        ArrayList list = registerSets.getSet(RegisterSetType.LiteralORDINAL);
+        List<CalcReg> list = registerSets.getSet(RegisterSetType.LiteralORDINAL);
         if (null == list) {
             return;
         }
@@ -492,11 +483,11 @@ public class CalcProgramBuilder
             if (j > 0) {
                 writer.print(", ");
             }
-            Register reg = (Register) list.get(j);
+            CalcReg reg = list.get(j);
 
             //final Object value = reg.getValue();
             //assert value != null;
-            reg.printValue(writer);
+            reg.printValue(writer, outputComments);
         }
         writer.print(separator);
     }
@@ -508,9 +499,8 @@ public class CalcProgramBuilder
      */
     protected void getInstructions(PrintWriter writer)
     {
-        Iterator it = instructions.iterator();
-        while (it.hasNext()) {
-            ((Instruction) it.next()).print(writer);
+        for (Instruction instruction : instructions) {
+            instruction.print(writer);
         }
     }
 
@@ -536,9 +526,9 @@ public class CalcProgramBuilder
      */
     private void validate()
     {
-        Iterator it = instructions.iterator();
+        Iterator<Instruction> it = instructions.iterator();
         for (int i = 0; it.hasNext(); i++) {
-            Instruction inst = (Instruction) it.next();
+            Instruction inst = it.next();
             String op = inst.getOpCode();
 
             //this try-catch clause will pick up any compiler excpetions
@@ -613,7 +603,7 @@ public class CalcProgramBuilder
     /**
      * Generates a reference to an output register.
      */
-    public Register newOutput(
+    public CalcReg newOutput(
         OpType type,
         int storageBytes)
     {
@@ -627,7 +617,7 @@ public class CalcProgramBuilder
     /**
      * Generates a reference to an output register.
      */
-    public Register newOutput(RegisterDescriptor desc)
+    public CalcReg newOutput(RegisterDescriptor desc)
     {
         return newOutput(
                 desc.getType(),
@@ -635,82 +625,23 @@ public class CalcProgramBuilder
     }
 
     /**
-     * Genererates a reference to a constant register. If the the constant value
+     * Generates a reference to a constant register. If the the constant value
      * already has been defined, the existing reference for that value will
      * silently be returned instead of creating a new one
      *
      * @param type {@link OpType} Type of value
      * @param value Value
-     *
-     * @return
      */
-    private Register newLiteral(
+    private CalcReg newLiteral(
         OpType type,
         Object value,
         int storageBytes)
     {
-        /**
-         * A key-value pair class to hold<br>
-         * 1) Value of a literal and<br>
-         * 2) Type of a literal<br>
-         * For use in a hashtable
-         */
-        class LiteralPair
-        {
-            OpType type;
-            Object value;
 
-            /**
-             * @pre type!=null
-             */
-            LiteralPair(
-                OpType type,
-                Object value)
-            {
-                Util.pre(type != null, "type!=null");
-                this.type = type;
-                this.value = value;
-            }
-
-            public int hashCode()
-            {
-                int valueHash;
-                if (null == value) {
-                    valueHash = 0;
-                } else {
-                    valueHash = value.hashCode();
-                }
-                return
-                    (valueHash * (OpType.enumeration.getMax() + 2))
-                    + type.getOrdinal();
-            }
-
-            public boolean equals(Object o)
-            {
-                if (o instanceof LiteralPair) {
-                    LiteralPair that = (LiteralPair) o;
-
-                    if ((null == this.value) && (null == that.value)) {
-                        return this.type.getOrdinal() == that.type.getOrdinal();
-                    }
-
-                    if (null != this.value) {
-                        return
-                            this.value.equals(that.value)
-                            && (
-                                this.type.getOrdinal()
-                                == that.type.getOrdinal()
-                               );
-                    }
-                }
-                return false;
-            }
-        }
-
-        Register ret;
+        CalcReg ret;
         LiteralPair key = new LiteralPair(type, value);
         if (literals.containsKey(key)) {
-            ret = (Register) literals.get(key);
+            ret = literals.get(key);
         } else {
             ret =
                 registerSets.newRegister(type,
@@ -722,7 +653,7 @@ public class CalcProgramBuilder
         return ret;
     }
 
-    public Register newLiteral(
+    public CalcReg newLiteral(
         RegisterDescriptor desc,
         Object value)
     {
@@ -732,7 +663,7 @@ public class CalcProgramBuilder
                 desc.getBytes());
     }
 
-    public Register newBoolLiteral(boolean b)
+    public CalcReg newBoolLiteral(boolean b)
     {
         return newLiteral(
                 OpType.Bool,
@@ -740,7 +671,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newInt4Literal(int i)
+    public CalcReg newInt4Literal(int i)
     {
         return newLiteral(
                 OpType.Int4,
@@ -748,7 +679,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newInt8Literal(int i) //REVIEW shouldnt this be a long type?
+    public CalcReg newInt8Literal(int i) //REVIEW shouldnt this be a long type?
 
     {
         return newLiteral(
@@ -757,7 +688,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newUint4Literal(int i)
+    public CalcReg newUint4Literal(int i)
     {
         compilationAssert(i >= 0,
             "Unsigned value was found to be negative. Value=" + i);
@@ -767,7 +698,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newUint8Literal(int i) //REVIEW shouldnt this be a long
+    public CalcReg newUint8Literal(int i) //REVIEW shouldnt this be a long
                                            //type?
 
     {
@@ -779,7 +710,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newFloatLiteral(float f)
+    public CalcReg newFloatLiteral(float f)
     {
         return newLiteral(
                 OpType.Real,
@@ -787,7 +718,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newDoubleLiteral(double d)
+    public CalcReg newDoubleLiteral(double d)
     {
         return newLiteral(
                 OpType.Double,
@@ -795,7 +726,7 @@ public class CalcProgramBuilder
                 -1);
     }
 
-    public Register newVarbinaryLiteral(byte [] bytes)
+    public CalcReg newVarbinaryLiteral(byte [] bytes)
     {
         return newLiteral(OpType.Varbinary, bytes, bytes.length);
     }
@@ -804,7 +735,7 @@ public class CalcProgramBuilder
      * Generates a reference to a string literal. The actual value will be a
      * pointer to an array of bytes.
      */
-    public Register newVarcharLiteral(String s)
+    public CalcReg newVarcharLiteral(String s)
     {
         return newLiteral(
                 OpType.Varchar,
@@ -820,7 +751,7 @@ public class CalcProgramBuilder
      * specific code where you know for a dead fact the string is the right
      * length.
      */
-    public Register newVarcharLiteral(
+    public CalcReg newVarcharLiteral(
         String s,
         int length)
     {
@@ -851,7 +782,7 @@ public class CalcProgramBuilder
     /**
      * Creates a register in the input set and returns its reference
      */
-    public Register newInput(
+    public CalcReg newInput(
         OpType type,
         int storageBytes)
     {
@@ -862,7 +793,7 @@ public class CalcProgramBuilder
                 storageBytes);
     }
 
-    public Register newInput(RegisterDescriptor desc)
+    public CalcReg newInput(RegisterDescriptor desc)
     {
         return newInput(
                 desc.getType(),
@@ -872,7 +803,7 @@ public class CalcProgramBuilder
     /**
      * Creates a register in the local set and returns its reference
      */
-    public Register newLocal(
+    public CalcReg newLocal(
         OpType type,
         int storageBytes)
     {
@@ -886,7 +817,7 @@ public class CalcProgramBuilder
     /**
      * Creates a register in the local set and returns its reference
      */
-    public Register newLocal(RegisterDescriptor desc)
+    public CalcReg newLocal(RegisterDescriptor desc)
     {
         return newLocal(
                 desc.getType(),
@@ -896,7 +827,7 @@ public class CalcProgramBuilder
     /**
      * Creates a register in the status set and returns its reference
      */
-    public Register newStatus(
+    public CalcReg newStatus(
         OpType type,
         int storageBytes)
     {
@@ -985,7 +916,7 @@ public class CalcProgramBuilder
      * If comment contains the character sequences '&#47;*' or '*&#47' they will
      * be replace by \* and *\ respectively.
      */
-    private String formatComment(String comment)
+    static String formatComment(String comment)
     {
         return
             " /* "
@@ -1004,7 +935,7 @@ public class CalcProgramBuilder
      *
      * @param result
      */
-    protected void assertRegisterNotConstant(Register result)
+    protected void assertRegisterNotConstant(CalcReg result)
     {
         compilationAssert(
             (
@@ -1023,7 +954,7 @@ public class CalcProgramBuilder
      *
      * @param result
      */
-    protected void assertRegisterLiteral(Register result)
+    protected void assertRegisterLiteral(CalcReg result)
     {
         compilationAssert(
             result.getRegisterType().getOrdinal()
@@ -1036,7 +967,7 @@ public class CalcProgramBuilder
      *
      * @param reg
      */
-    protected void assertRegisterBool(Register reg)
+    protected void assertRegisterBool(CalcReg reg)
     {
         compilationAssert(reg.getOpType().getOrdinal() == OpType.Bool_ordinal,
             "Expected a register of Boolean type. " + "Found "
@@ -1049,7 +980,7 @@ public class CalcProgramBuilder
      *
      * @param reg
      */
-    protected void assertRegisterIsPointer(Register reg)
+    protected void assertRegisterIsPointer(CalcReg reg)
     {
         compilationAssert(
             (reg.getOpType().getOrdinal() == OpType.Varbinary_ordinal)
@@ -1064,7 +995,7 @@ public class CalcProgramBuilder
      *
      * @param reg
      */
-    protected void assertRegisterInteger(Register reg)
+    protected void assertRegisterInteger(CalcReg reg)
     {
         compilationAssert(
             (reg.getOpType().getOrdinal() == OpType.Int4_ordinal)
@@ -1085,7 +1016,7 @@ public class CalcProgramBuilder
      *
      * @param reg
      */
-    protected void assertNotDivideByZero(Register reg)
+    protected void assertNotDivideByZero(CalcReg reg)
     {
         if ((
                 reg.getRegisterType().getOrdinal()
@@ -1103,7 +1034,7 @@ public class CalcProgramBuilder
      *
      * @param register
      */
-    protected void assertIsNativeType(Register register)
+    protected void assertIsNativeType(CalcReg register)
     {
         compilationAssert(
             (register.getOpType().getOrdinal() == OpType.Int1_ordinal)
@@ -1124,7 +1055,7 @@ public class CalcProgramBuilder
      *
      * @param register
      */
-    protected void assertIsVarchar(Register register)
+    protected void assertIsVarchar(CalcReg register)
     {
         compilationAssert(
             register.getOpType().getOrdinal() == OpType.Varchar_ordinal,
@@ -1152,20 +1083,20 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addMove(
-        Register target,
-        Register src)
+        CalcReg target,
+        CalcReg src)
     {
         move.add(
             this,
-            new Register[] { target, src });
+            new CalcReg[] { target, src });
     }
 
     /**
      * Adds a REF instruction.
      */
     public void addRef(
-        Register outputRegister,
-        Register src)
+        CalcReg outputRegister,
+        CalcReg src)
     {
         compilationAssert(outputRegister.getOpType() == src.getOpType(),
             "Type Mismatch. Tried to MOVE " + src.getOpType().getName()
@@ -1195,7 +1126,7 @@ public class CalcProgramBuilder
     protected void addJumpBooleanWithCondition(
         String op,
         int line,
-        Register reg)
+        CalcReg reg)
     {
         compilationAssert(line >= 0, "Line can not be negative. Value=" + line);
         addJumpBooleanWithCondition(
@@ -1207,7 +1138,7 @@ public class CalcProgramBuilder
     protected void addJumpBooleanWithCondition(
         String op,
         Line line,
-        Register reg)
+        CalcReg reg)
     {
         assertRegisterBool(reg);
 
@@ -1225,28 +1156,28 @@ public class CalcProgramBuilder
      */
     public void addJumpTrue(
         int line,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(jumpTrueInstruction, line, reg);
     }
 
     public void addJumpFalse(
         int line,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(jumpFalseInstruction, line, reg);
     }
 
     public void addJumpNull(
         int line,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(jumpNullInstruction, line, reg);
     }
 
     public void addJumpNotNull(
         int line,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(jumpNotNullInstruction, line, reg);
     }
@@ -1265,7 +1196,7 @@ public class CalcProgramBuilder
 
     public void addLabelJumpTrue(
         String label,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(
             jumpTrueInstruction,
@@ -1275,7 +1206,7 @@ public class CalcProgramBuilder
 
     public void addLabelJumpFalse(
         String label,
-        Register reg)
+        CalcReg reg)
     {
         addJumpBooleanWithCondition(
             jumpFalseInstruction,
@@ -1285,7 +1216,7 @@ public class CalcProgramBuilder
 
     public void addLabelJumpNull(
         String label,
-        Register reg)
+        CalcReg reg)
     {
         addInstruction(
             jumpNullInstruction,
@@ -1295,7 +1226,7 @@ public class CalcProgramBuilder
 
     public void addLabelJumpNotNull(
         String label,
-        Register reg)
+        CalcReg reg)
     {
         addInstruction(
             jumpNotNullInstruction,
@@ -1319,126 +1250,126 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addBoolAnd(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolAnd.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolOr(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolOr.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNotEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNotEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolGreaterThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolGreaterThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolLessThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolLessThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNot(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolNot.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolMove(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolMove.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolIsNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolIsNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolIsNotNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolIsNotNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     // Native instructions----------------------
@@ -1447,64 +1378,64 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addNativeAdd(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         nativeAdd.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addNativeSub(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         nativeMinus.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addNativeDiv(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         //smart check, check if divide by zero if op2 is a constant
         nativeDiv.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addNativeNeg(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         nativeNeg.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addNativeMove(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         nativeMove.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     //Integral Native Instructions ---------------------------------
@@ -1513,78 +1444,78 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addIntegralNativeMod(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeMod.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addIntegralNativeShiftLeft(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeShiftLeft.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addIntegralNativeShiftRight(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeShiftRight.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addIntegralNativeAnd(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeAnd.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addIntegralNativeOr(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeOr.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addIntegralNativeXor(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         integralNativeXor.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     //Bool Native Instructions --------------------------------
@@ -1593,102 +1524,102 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addBoolNativeEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeNotEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeNotEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeGreaterThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeGreaterThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeGreaterOrEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeGreaterOrEqualThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeLessThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeLessThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeLessOrEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         boolNativeLessOrEqualThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeIsNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolNativeIsNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addBoolNativeIsNotNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         boolNativeIsNotNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     //Pointer Instructions --------------------------------
@@ -1697,127 +1628,127 @@ public class CalcProgramBuilder
      * @deprecated
      */
     public void addPointerMove(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         pointerMove.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerAdd(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerAdd.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerNotEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolNotEqual.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerGreaterThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolGreaterThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerGreaterOrEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolGreaterOrEqualThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerLessThan(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolLessThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerLessOrEqual(
-        Register result,
-        Register op1,
-        Register op2)
+        CalcReg result,
+        CalcReg op1,
+        CalcReg op2)
     {
         pointerBoolLessOrEqualThan.add(
             this,
-            new Register[] { result, op1, op2 });
+            new CalcReg[] { result, op1, op2 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerIsNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         pointerBoolIsNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     /**
      * @deprecated
      */
     public void addPointerIsNotNull(
-        Register result,
-        Register op1)
+        CalcReg result,
+        CalcReg op1)
     {
         pointerBoolIsNotNull.add(
             this,
-            new Register[] { result, op1 });
+            new CalcReg[] { result, op1 });
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -1847,17 +1778,17 @@ public class CalcProgramBuilder
         implements Operand
     {
         private String functionName;
-        private Register [] registers;
-        private Register result;
+        private CalcReg [] registers;
+        private CalcReg result;
 
         /**
          * @param functionName e.g. <code>SUBSTR</code>
          * @param registers arguments for the function, must not be null
          */
         FunctionCall(
-            Register result,
+            CalcReg result,
             String functionName,
-            Register [] registers)
+            CalcReg [] registers)
         {
             assert registers != null;
             this.result = result;
@@ -1884,121 +1815,6 @@ public class CalcProgramBuilder
                 registers[i].print(writer);
             }
             writer.print(')');
-        }
-    }
-
-    /**
-     * Represents a virtual register. Each register lives in a register set of
-     * type {@link RegisterSetType}<br>
-     * Each register is of type {@link OpType}
-     */
-    public class Register
-        implements Operand
-    {
-        final OpType opType;
-        final Object value;
-        RegisterSetType registerType;
-
-        /**
-         * Number of bytes storage to allocate for this value.
-         */
-        int storageBytes;
-        int index;
-
-        Register(
-            OpType opType,
-            Object value,
-            RegisterSetType registerType,
-            int storageBytes,
-            int index)
-        {
-            this.opType = opType;
-            this.value = value;
-            this.registerType = registerType;
-            this.storageBytes = storageBytes;
-            this.index = index;
-        }
-
-        final public OpType getOpType()
-        {
-            return opType;
-        }
-
-        final RegisterSetType getRegisterType()
-        {
-            return registerType;
-        }
-
-        final int getIndex()
-        {
-            return index;
-        }
-
-        final Object getValue()
-        {
-            return value;
-        }
-
-        /**
-         * Serializes the {@link #value} in the virtual register if not null<br>
-         * <b>NOTE</b> See also {@link #print} which serializes the "identity"
-         * of the register
-         *
-         * @param writer
-         */
-        void printValue(PrintWriter writer)
-        {
-            if (null == value) {
-                if (outputComments) {
-                    writer.print(formatComment("<NULL>"));
-                }
-            } else if (value instanceof String) {
-                // Convert the string to an array of bytes assuming (TODO:
-                // don's assume!) latin1 encoding, then hex-encode.
-                final String s = (String) value;
-                final Charset charset = Charset.forName("ISO-8859-1");
-                assert charset != null;
-                final ByteBuffer buf = charset.encode(s);
-                writer.print("0x");
-                writer.print(
-                    ConversionUtil.toStringFromByteArray(
-                        buf.array(),
-                        16));
-                if (outputComments) {
-                    writer.print(formatComment(s));
-                }
-            } else if (value instanceof byte []) {
-                writer.print("0x");
-                writer.print(
-                    ConversionUtil.toStringFromByteArray((byte []) value, 16));
-            } else if (value instanceof Boolean) {
-                writer.print(((Boolean) value).booleanValue() ? "1" : "0");
-            } else if (value instanceof SqlLiteral) {
-                writer.print(((SqlLiteral) value).toValue());
-            } else if (value instanceof BigDecimal) {
-                if (opType.isExact()) {
-                    writer.print(value.toString());
-                } else {
-                    writer.print(
-                        Util.toScientificNotation((BigDecimal) value));
-                }
-            } else {
-                writer.print(value.toString());
-            }
-        }
-
-        /**
-         * Serializes the identity of the register. It does not attempt to
-         * serialize its value; see {@link #printValue} for that.
-         *
-         * @param writer
-         */
-        final public void print(PrintWriter writer)
-        {
-            writer.print(registerType.prefix);
-
-            //writer.print(type.getTypeCode());
-            writer.print(index);
         }
     }
 
@@ -2318,7 +2134,7 @@ public class CalcProgramBuilder
      */
     protected class RegisterSets
     {
-        private final ArrayList [] sets =
+        private final List<CalcReg> [] sets =
             new ArrayList[RegisterSetType.enumeration.getSize()];
 
         public void clear()
@@ -2330,7 +2146,7 @@ public class CalcProgramBuilder
             }
         }
 
-        public final ArrayList getSet(int set)
+        public final List<CalcReg> getSet(int set)
         {
             return sets[set];
         }
@@ -2345,7 +2161,7 @@ public class CalcProgramBuilder
          *
          * @return the newly created Register
          */
-        public Register newRegister(
+        public CalcReg newRegister(
             OpType opType,
             Object initValue,
             RegisterSetType registerType,
@@ -2357,12 +2173,11 @@ public class CalcProgramBuilder
 
             int set = registerType.getOrdinal();
             if (null == sets[set]) {
-                sets[set] = new ArrayList();
+                sets[set] = new ArrayList<CalcReg>();
             }
 
-            Register newReg =
-                new Register(
-                    opType,
+            CalcReg newReg =
+                new CalcReg(opType,
                     initValue,
                     registerType,
                     storageBytes,
@@ -2393,45 +2208,45 @@ public class CalcProgramBuilder
 
         /**
          * Convenience method which converts the register list into an array and
-         * calls the {@link #add(CalcProgramBuilder,Register[])} method.
+         * calls the {@link #add(CalcProgramBuilder,CalcReg[])} method.
          */
         final void add(
             CalcProgramBuilder builder,
-            List registers)
+            List<CalcReg> registers)
         {
             add(builder,
-                (Register []) registers.toArray(
-                    new Register[registers.size()]));
+                (CalcReg []) registers.toArray(
+                    new CalcReg[registers.size()]));
         }
 
         final void add(
             CalcProgramBuilder builder,
-            Register reg0)
+            CalcReg reg0)
         {
             add(
                 builder,
-                new Register[] { reg0 });
+                new CalcReg[] { reg0 });
         }
 
         final void add(
             CalcProgramBuilder builder,
-            Register reg0,
-            Register reg1)
+            CalcReg reg0,
+            CalcReg reg1)
         {
             add(
                 builder,
-                new Register[] { reg0, reg1 });
+                new CalcReg[] { reg0, reg1 });
         }
 
         final void add(
             CalcProgramBuilder builder,
-            Register reg0,
-            Register reg1,
-            Register reg2)
+            CalcReg reg0,
+            CalcReg reg1,
+            CalcReg reg2)
         {
             add(
                 builder,
-                new Register[] { reg0, reg1, reg2 });
+                new CalcReg[] { reg0, reg1, reg2 });
         }
 
         /**
@@ -2439,7 +2254,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert regs.length == regCount : "Wrong number of params for instruction "
                 + name;
@@ -2460,7 +2275,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -2484,7 +2299,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2517,7 +2332,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2549,7 +2364,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert (this.regCount == regs.length);
             builder.assertRegisterNotConstant(regs[0]);
@@ -2577,7 +2392,7 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert (this.regCount == regs.length);
             assert (this.regCount > 1);
@@ -2608,7 +2423,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             assert this.regCount == regs.length : "Wrong number of params for instruction "
                 + name
@@ -2618,11 +2433,11 @@ public class CalcProgramBuilder
 
         protected void add(
             CalcProgramBuilder builder,
-            Register [] regs,
+            CalcReg [] regs,
             String funName)
         {
-            Register result = regs[0];
-            Register [] registers = new Register[regs.length - 1];
+            CalcReg result = regs[0];
+            CalcReg [] registers = new CalcReg[regs.length - 1];
             System.arraycopy(regs, 1, registers, 0, registers.length);
             builder.compilationAssert(result != null, "Result can not be null");
             builder.assertOperandsNotNull(registers);
@@ -2646,7 +2461,7 @@ public class CalcProgramBuilder
 
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             add(builder, regs, name + regs.length);
         }
@@ -2668,10 +2483,10 @@ public class CalcProgramBuilder
          */
         void add(
             CalcProgramBuilder builder,
-            Register [] regs)
+            CalcReg [] regs)
         {
             builder.assertRegisterNotConstant(regs[0]);
-            Register op2 = regs[2];
+            CalcReg op2 = regs[2];
 
             //second operand can only be either long or ulong
             builder.assertRegisterInteger(op2);
@@ -2694,6 +2509,64 @@ public class CalcProgramBuilder
                     + ((java.lang.Integer) op2.getValue()).intValue());
             }
             super.add(builder, regs);
+        }
+    }
+
+    /**
+     * A key-value pair class to hold<br>
+     * 1) Value of a literal and<br>
+     * 2) Type of a literal<br>
+     * For use in a hashtable
+     */
+    private static class LiteralPair
+    {
+        OpType type;
+        Object value;
+
+        /**
+         * @pre type!=null
+         */
+        LiteralPair(
+            OpType type,
+            Object value)
+        {
+            Util.pre(type != null, "type!=null");
+            this.type = type;
+            this.value = value;
+        }
+
+        public int hashCode()
+        {
+            int valueHash;
+            if (null == value) {
+                valueHash = 0;
+            } else {
+                valueHash = value.hashCode();
+            }
+            return
+                (valueHash * (OpType.enumeration.getMax() + 2))
+                + type.getOrdinal();
+        }
+
+        public boolean equals(Object o)
+        {
+            if (o instanceof LiteralPair) {
+                LiteralPair that = (LiteralPair) o;
+
+                if ((null == this.value) && (null == that.value)) {
+                    return this.type.getOrdinal() == that.type.getOrdinal();
+                }
+
+                if (null != this.value) {
+                    return
+                        this.value.equals(that.value)
+                        && (
+                            this.type.getOrdinal()
+                            == that.type.getOrdinal()
+                           );
+                }
+            }
+            return false;
         }
     }
 }

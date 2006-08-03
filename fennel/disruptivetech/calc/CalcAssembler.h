@@ -72,18 +72,21 @@ public:
 
     // Functions for creating objects for the calculator
     static TupleData*
-    createTupleData(TupleDescriptor const& tupleDes,
-                    FixedBuffer** buf);
+    createTupleData(
+        TupleDescriptor const& tupleDes,
+        FixedBuffer** buf);
 
     static RegisterReference* 
-    createRegisterReference(RegisterReference::ERegisterSet setIndex,
-                            TRegisterIndex                  regIndex,
-                            StandardTypeDescriptorOrdinal   regType);
+    createRegisterReference(
+        RegisterReference::ERegisterSet setIndex,
+        TRegisterIndex                  regIndex,
+        StandardTypeDescriptorOrdinal   regType);
 
     static Instruction*
-    createInstruction(string& name,
-                      vector<RegisterReference*>& operands,
-                      CalcYYLocType& location)
+    createInstruction(
+        string& name,
+        vector<RegisterReference*> const &operands,
+        CalcYYLocType& location)
     {
         Instruction* inst = NULL;
         try {
@@ -113,11 +116,12 @@ public:
         return inst;
     }
 
-    static Instruction* createInstruction(string& name,
-                                          RegisterReference* result,
-                                          RegisterReference* operand1,
-                                          RegisterReference* operand2,
-                                          CalcYYLocType& location)
+    static Instruction* createInstruction(
+        string& name,
+        RegisterReference* result,
+        RegisterReference* operand1,
+        RegisterReference* operand2,
+        CalcYYLocType& location)
     {
         vector<RegisterReference*> operands;
         operands.push_back(result);
@@ -127,10 +131,11 @@ public:
     }
 
 
-    static Instruction* createInstruction(string& name,
-                                          RegisterReference* result,
-                                          RegisterReference* operand1,
-                                          CalcYYLocType& location )
+    static Instruction* createInstruction(
+        string& name,
+        RegisterReference* result,
+        RegisterReference* operand1,
+        CalcYYLocType& location)
     {
         vector<RegisterReference*> operands;
         operands.push_back(result);
@@ -138,34 +143,38 @@ public:
         return createInstruction(name, operands, location);
     }
 
-    static Instruction* createInstruction(string& name,
-                                          RegisterReference* result,
-                                          CalcYYLocType& location)
+    static Instruction* createInstruction(
+        string& name,
+        RegisterReference* result,
+        CalcYYLocType& location)
     {
         vector<RegisterReference*> operands;
         operands.push_back(result);
         return createInstruction(name, operands, location);
     }
 
-    static Instruction* createInstruction(string& name,
-                                          CalcYYLocType& location)
+    static Instruction* createInstruction(
+        string& name,
+        CalcYYLocType& location)
     {
         vector<RegisterReference*> operands;
         return createInstruction(name, operands, location);
     }
 
-    static Instruction* createInstruction(string& name,
-                                          TProgramCounter pc,
-                                          CalcYYLocType& location)
+    static Instruction* createInstruction(
+        string& name,
+        TProgramCounter pc,
+        CalcYYLocType& location)
     {
         return createInstruction(name, pc, NULL, location);
     }
 
 
-    static Instruction* createInstruction(string& name,
-                                          TProgramCounter pc,
-                                          RegisterReference* operand,
-                                          CalcYYLocType& location)
+    static Instruction* createInstruction(
+        string& name,
+        TProgramCounter pc,
+        RegisterReference* operand,
+        CalcYYLocType& location)
     {
         Instruction* inst = NULL;
 
@@ -190,10 +199,11 @@ public:
         return inst;
     }
 
-    Instruction* createInstruction(string& name,
-                                   string& function,
-                                   vector<RegisterReference*>& operands,
-                                   CalcYYLocType& location)
+    Instruction* createInstruction(
+        string& name,
+        string& function,
+        vector<RegisterReference*>& operands,
+        CalcYYLocType& location)
     {
         Instruction* inst = NULL;
 

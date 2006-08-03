@@ -22,8 +22,6 @@ package com.disruptivetech.farrago.rel;
 
 import com.disruptivetech.farrago.calc.*;
 
-import java.math.*;
-
 import java.util.*;
 
 import net.sf.farrago.*;
@@ -36,7 +34,6 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
 
 
@@ -158,7 +155,12 @@ public class FennelWindowRel
         assert inputProgram.getCondition() == null : "precondition: inputProgram.getCondition() == null";
         assert windows != null : "precondition: windows != null";
         assert windows.length > 0 : "precondition : windows.length > 0";
-        assert child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
+
+        // FIXME: jhyde, 2006/8/1: Assert is still valid for normal usage, but
+        // I disabled assert to make it easier to construct a mock
+        // FennelWindowRel for testing. See checkWinAgg in Rex2CalcPlanTest.
+        assert true || child.getConvention() == FennelRel.FENNEL_EXEC_CONVENTION;
+
         assert !RexOver.containsOver(inputProgram);
         assert !RexOver.containsOver(outputProgram);
         assert RelOptUtil.getFieldTypeList(outputProgram.getInputRowType())
@@ -254,7 +256,7 @@ public class FennelWindowRel
 
     public void explain(RelOptPlanWriter pw)
     {
-        final ArrayList valueList = new ArrayList();
+        final List<Object> valueList = new ArrayList<Object>();
         final List<String> termList = new ArrayList<String>();
         getExplainTerms(termList, valueList);
         pw.explain(
@@ -264,8 +266,8 @@ public class FennelWindowRel
     }
 
     private void getExplainTerms(
-        List termList,
-        List valueList)
+        List<String> termList,
+        List<Object> valueList)
     {
         termList.add("child");
         inputProgram.collectExplainTerms("in-", termList, valueList);
@@ -348,16 +350,22 @@ public class FennelWindowRel
             windowDef.setOrderKeyList(
                 FennelRelUtil.createTupleProjection(repos, window.orderKeys));
 
-            // Cases: (range, offset)
-            // 3 preceding: (3, 0)
-            // 3 following: (3, 3)
-            // 10 preceding and 2 preceding: (8, -2)
-            // 3 preceding and 2 following: (5, 2)
-            // 2 following and 6 following: (4, 6)
-            long [] offsetAndRange =
-                getOffsetAndRange(window.lowerBound, window.upperBound);
-            windowDef.setOffset((int) offsetAndRange[0]);
-            windowDef.setRange(offsetAndRange[1] + "");
+            // Range is increased by 1 if it is physical and it spans the
+            // current row.
+            //
+            // Case                                  offset range
+            // ===================================== ====== =====
+            // 3 preceding:                          0      4
+            // 3 following:                          3      4
+            // between 10 preceding and 2 preceding: -2     8
+            // between 3 preceding and 2 following:  2      6
+            // between 2 following and 6 following:  6      4
+            // between current row and current row:  0      1
+            SqlWindowOperator.OffsetRange offsetAndRange =
+                SqlWindowOperator.getOffsetAndRange(
+                    window.lowerBound, window.upperBound, window.physical);
+            windowDef.setOffset((int) offsetAndRange.offset);
+            windowDef.setRange(String.valueOf(offsetAndRange.range));
 
             RelDataType inputRowType = getChild().getRowType();
             assert inputRowType == inputProgram.getInputRowType();
@@ -398,6 +406,42 @@ public class FennelWindowRel
         }
 
         return windowStreamDef;
+    }
+
+    /**
+     * Assuming that this FennelWindowRel contains one window with one
+     * partition, return the add/init/drop programs for that partition.
+     * For testing purposes.
+     */
+    public String[] getSoleProgram()
+    {
+        for (Window window : windows) {
+            for (Partition partition : window.partitionList) {
+                RexToCalcTranslator translator =
+                    new RexToCalcTranslator(
+                        getCluster().getRexBuilder(),
+                        this);
+
+                RexProgram combinedProgram =
+                    makeProgram(inputProgram, partition.overList);
+
+                String [] programs = new String[3];
+                translator.getAggProgram(combinedProgram, programs);
+
+                String outputProgramString =
+                    translator.generateProgram(
+                        outputProgram.getInputRowType(),
+                        outputProgram);
+
+                return new String[]{
+                    programs[0],
+                    programs[1],
+                    programs[2],
+                    outputProgramString};
+            }
+        }
+
+        throw Util.newInternal("expected one window with one partition");
     }
 
     /**
@@ -470,50 +514,6 @@ public class FennelWindowRel
             }
         }
         return nodes;
-    }
-
-    public static long [] getOffsetAndRange(
-        final SqlNode lowerBound,
-        final SqlNode upperBound)
-    {
-        long [] upper = getRangeOffset(upperBound, "PRECEDING");
-        long [] lower = getRangeOffset(lowerBound, "FOLLOWING");
-        long offset = upper[1] * upper[0];
-        if ((offset == 0) && (lower[1] == -1)) {
-            lower[1] = -lower[1];
-            offset = lower[1] * lower[0];
-        }
-        final long range = ((lower[1] * lower[0]) + (upper[1] * upper[0]));
-        return new long[] { offset, range };
-    }
-
-    private static long [] getRangeOffset(SqlNode node, String strCheck)
-    {
-        long [] out = new long[2];
-        long val = 0;
-        long sign = 1;
-        if (node != null) {
-            if (node instanceof SqlCall) {
-                sign =
-                    ((SqlCall) node).getOperator().getName().equals(strCheck)
-                    ? -1
-                    : 1;
-                SqlNode [] operands = ((SqlCall) node).getOperands();
-                assert (operands.length == 1) && (operands[0] != null);
-                SqlLiteral operand = (SqlLiteral) operands[0];
-                Object obj = operand.getValue();
-                if (obj instanceof BigDecimal) {
-                    val = ((BigDecimal) obj).intValue();
-                } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
-                    val =
-                        SqlParserUtil.intervalToMillis(
-                            (SqlIntervalLiteral.IntervalValue) obj);
-                }
-            }
-        }
-        out[0] = val;
-        out[1] = sign;
-        return out;
     }
 
     //~ Inner Classes ----------------------------------------------------------

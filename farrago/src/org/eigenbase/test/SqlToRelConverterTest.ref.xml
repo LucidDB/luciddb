@@ -282,7 +282,7 @@ ProjectRel(EXPR$0=[_ISO-8859-1'a'], EXPR$1=[$SLICE($2)])
     <TestCase name="testMultisetOfColumns">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($8)])
+ProjectRel(EXPR$0=[_ISO-8859-1'abc'], EXPR$1=[$SLICE($9)])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7, var1=offset5]])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
@@ -317,7 +317,7 @@ ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])
     TableAccessRel(table=[[SALES, DEPT]])
     CollectRel
-      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+      ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
         FilterRel(condition=[=($7, $cor0.DEPTNO)])
           TableAccessRel(table=[[SALES, EMP]])
 ]]>
@@ -340,8 +340,8 @@ ProjectRel(DEPTNO=[$0], NAME=[$1], EMPSET=[$2])
     <TestCase name="testExists">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-  FilterRel(condition=[IS TRUE($9)])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+  FilterRel(condition=[IS TRUE($10)])
     JoinRel(condition=[true], joinType=[left])
       TableAccessRel(table=[[SALES, EMP]])
       ProjectRel(EXPR$0=[$0], $indicator=[true])
@@ -369,8 +369,8 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
     <TestCase name="testExistsCorrelated">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
-  FilterRel(condition=[IS TRUE($9)])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
+  FilterRel(condition=[IS TRUE($10)])
     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])
       TableAccessRel(table=[[SALES, EMP]])
       ProjectRel(EXPR$0=[$0], $indicator=[true])
@@ -431,7 +431,7 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testLateral">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7]])
     TableAccessRel(table=[[SALES, EMP]])
     ProjectRel(DEPTNO=[$0], NAME=[$1])
@@ -456,7 +456,7 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
     <TestCase name="testElement">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[ELEMENT($SLICE($8))])
+ProjectRel(EXPR$0=[ELEMENT($SLICE($9))])
   JoinRel(condition=[true], joinType=[inner])
     TableAccessRel(table=[[SALES, EMP]])
     CollectRel
@@ -707,8 +707,8 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testOverMultiple">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS 3 PRECEDING)])
-  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 999)])
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$2=[SUM($7) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 3 PRECEDING AND CURRENT ROW)])
+  FilterRel(condition=[>(SUM(-($7, $5)) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 999)])
     TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -752,7 +752,7 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testOverAvg">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)))])
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)))])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -772,7 +772,7 @@ ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)],
     <TestCase name="testOverCountStar">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS 2 PRECEDING)])
+ProjectRel(EXPR$0=[COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[COUNT() OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -832,7 +832,7 @@ AggregateRel(groupCount=[1])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -868,7 +868,7 @@ ProjectRel(EMPNO=[$0])
             <![CDATA[
 ProjectRel(EMPNO=[$0])
   FilterRel(condition=[IS TRUE(true)])
-    FilterRel(condition=[=($7, $8)])
+    FilterRel(condition=[=($7, $9)])
       JoinRel(condition=[true], joinType=[inner])
         TableAccessRel(table=[[SALES, EMP]])
         AggregateRel(groupCount=[1])
@@ -884,7 +884,7 @@ ProjectRel(EMPNO=[$0])
             <![CDATA[
 ProjectRel(EMPNO=[$0])
   FilterRel(condition=[IS TRUE(true)])
-    FilterRel(condition=[=($7, $8)])
+    FilterRel(condition=[=($7, $9)])
       JoinRel(condition=[true], joinType=[inner])
         TableAccessRel(table=[[SALES, EMP]])
         AggregateRel(groupCount=[1])
@@ -1121,7 +1121,7 @@ SortRel(sort0=[$1], dir0=[Ascending])
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
   FilterRel(condition=[>($0, 5)])
     TableAccessRel(table=[[SALES, EMP:DATASET1]])
 ]]>
@@ -1137,12 +1137,38 @@ where empno > 5]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
+ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
   FilterRel(condition=[>($0, 5)])
-    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], DEPTNO0=[$8], NAME=[$9])
-      JoinRel(condition=[=($7, $8)], joinType=[inner])
+    ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
+      JoinRel(condition=[=($7, $9)], joinType=[inner])
         TableAccessRel(table=[[SALES, EMP:DATASET1]])
         TableAccessRel(table=[[SALES, DEPT:DATASET2]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverOrderWindow">
+        <Resource name="sql">
+            <![CDATA[select last_value(deptno) over w
+from emp
+window w as (order by empno)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($7):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER NOT NULL])
+  TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverOrderFollowingWindow">
+        <Resource name="sql">
+            <![CDATA[select last_value(deptno) over (order by empno rows 2 following)
+from emp
+]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($7):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING))):INTEGER NOT NULL])
+  TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>

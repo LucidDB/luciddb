@@ -144,15 +144,7 @@ public class SqlAdvisorTest
         throws Exception
     {
         String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
+        List<String> expected = empColumns();
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
@@ -188,15 +180,7 @@ public class SqlAdvisorTest
         throws Exception
     {
         String sql;
-        List<String> expected = new ArrayList<String>();
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
+        List<String> expected = empColumns();
 
         sql =
             "select a.empno, b.deptno from sales.emp a, sales.dept b "
@@ -220,6 +204,7 @@ public class SqlAdvisorTest
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
+        expected.add("SLACKER");
 
         sql =
             "select a.empno, b.deptno from sales.emp a, sales.dept b "
@@ -248,6 +233,7 @@ public class SqlAdvisorTest
         expected.add("COMM");
         expected.add("DEPTNO");
         expected.add("NAME");
+        expected.add("SLACKER");
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
@@ -260,14 +246,7 @@ public class SqlAdvisorTest
         assertComplete(sql, expected); // where list
 
         expected.clear();
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
+        expected.addAll(empColumns());
 
         sql =
             "select a.empno, b.deptno from sales.emp a join sales.dept b "
@@ -287,14 +266,7 @@ public class SqlAdvisorTest
         List<String> expected = new ArrayList<String>();
         expected.add("SALES.EMP");
         expected.add("SALES.DEPT");
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
+        expected.addAll(empColumns());
         expected.add("NAME");
 
         sql =
@@ -322,14 +294,7 @@ public class SqlAdvisorTest
         assertComplete(sql, expected); // select list
 
         expected.clear();
-        expected.add("EMPNO");
-        expected.add("ENAME");
-        expected.add("JOB");
-        expected.add("MGR");
-        expected.add("HIREDATE");
-        expected.add("SAL");
-        expected.add("COMM");
-        expected.add("DEPTNO");
+        expected.addAll(empColumns());
 
         sql = "select ^emp.dummy from sales.emp";
         assertHint(sql, expected); // select list
@@ -482,6 +447,21 @@ public class SqlAdvisorTest
         sql = "select count(1) from sales.emp a where ^";
         expected = "select count(1) from sales.emp a where _suggest_";
         assertSimplify(sql, expected);
+    }
+
+    private static List<String> empColumns()
+    {
+        List<String> expected = new ArrayList<String>();
+        expected.add("EMPNO");
+        expected.add("ENAME");
+        expected.add("JOB");
+        expected.add("MGR");
+        expected.add("HIREDATE");
+        expected.add("SAL");
+        expected.add("COMM");
+        expected.add("DEPTNO");
+        expected.add("SLACKER");
+        return expected;
     }
 
     /**

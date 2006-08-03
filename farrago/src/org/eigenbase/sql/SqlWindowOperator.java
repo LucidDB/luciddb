@@ -22,6 +22,7 @@
 package org.eigenbase.sql;
 
 import java.util.*;
+import java.math.BigDecimal;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -61,7 +62,7 @@ public class SqlWindowOperator
     /**
      * The FOLLOWING operator used exclusively in a window specification.
      */
-    private final SqlPostfixOperator followingOperator =
+    static final SqlPostfixOperator followingOperator =
         new SqlPostfixOperator(
             "FOLLOWING",
             SqlKind.Following,
@@ -73,10 +74,10 @@ public class SqlWindowOperator
     /**
      * The PRECEDING operator used exclusively in a window specification.
      */
-    private final SqlPostfixOperator precedingOperator =
+    static final SqlPostfixOperator precedingOperator =
         new SqlPostfixOperator(
             "PRECEDING",
-            SqlKind.Following,
+            SqlKind.Preceding,
             20,
             null,
             null,
@@ -116,6 +117,14 @@ public class SqlWindowOperator
         SqlNode upperBound,
         SqlParserPos pos)
     {
+        // If there's only one bound and it's 'FOLLOWING', make it the upper
+        // bound.
+        if (upperBound == null &&
+            lowerBound != null &&
+            lowerBound.getKind().equals(SqlKind.Following)) {
+            upperBound = lowerBound;
+            lowerBound = null;
+        }
         return
             (SqlWindow) createCall(
                 new SqlNode[] {
@@ -222,7 +231,7 @@ public class SqlWindowOperator
         SqlIdentifier refName =
             (SqlIdentifier) operands[SqlWindow.RefName_OPERAND];
         if (refName != null) {
-            SqlWindow win = validator.resolveWindow(call, operandScope);
+            SqlWindow win = validator.resolveWindow(call, operandScope, false);
             operands = win.operands;
         }
 
@@ -325,7 +334,7 @@ public class SqlWindowOperator
                 operandScope);
 
             // Validate across boundries. 7.10 Rule 8 a-d
-            checkSpecialLiterals(lowerBound, upperBound, validator);
+            checkSpecialLiterals(window, validator);
         } else if ((null == orderList) && !isTableSorted(scope)) {
             throw validator.newValidationError(
                 call,
@@ -413,10 +422,11 @@ public class SqlWindowOperator
     }
 
     private static void checkSpecialLiterals(
-        SqlNode lowerBound,
-        SqlNode upperBound,
+        SqlWindow window,
         SqlValidator validator)
     {
+        final SqlNode lowerBound = window.getLowerBound();
+        final SqlNode upperBound = window.getUpperBound();
         Object lowerLitType = null;
         Object upperLitType = null;
         SqlOperator lowerOp = null;
@@ -448,7 +458,7 @@ public class SqlWindowOperator
 
         if (Bound.CurrentRow == lowerLitType) {
             if (null != upperOp) {
-                if (upperOp.getName().equals("PRECEDING")) {
+                if (upperOp == precedingOperator) {
                     throw validator.newValidationError(
                         upperBound,
                         EigenbaseResource.instance().CurrentRowPrecedingError
@@ -456,9 +466,9 @@ public class SqlWindowOperator
                 }
             }
         } else if (null != lowerOp) {
-            if (lowerOp.getName().equals("FOLLOWING")) {
+            if (lowerOp == followingOperator) {
                 if (null != upperOp) {
-                    if (upperOp.getName().equals("PRECEDING")) {
+                    if (upperOp == precedingOperator) {
                         throw validator.newValidationError(
                             upperBound,
                             EigenbaseResource.instance()
@@ -473,6 +483,17 @@ public class SqlWindowOperator
                     }
                 }
             }
+        }
+
+        // Check that window size is non-negative. I would prefer to allow
+        // negative windows and return NULL (as Oracle does) but this is
+        // expedient.
+        final OffsetRange offsetAndRange =
+            getOffsetAndRange(lowerBound, upperBound, false);
+        if (offsetAndRange.range < 0) {
+            throw validator.newValidationError(
+                window,
+                EigenbaseResource.instance().WindowHasNegativeSize.ex());
         }
     }
 
@@ -513,34 +534,106 @@ public class SqlWindowOperator
                 SqlParserPos.ZERO);
     }
 
-    public SqlNode createCurrentRow(SqlParserPos pos)
+    public static SqlNode createCurrentRow(SqlParserPos pos)
     {
         return SqlLiteral.createSymbol(Bound.CurrentRow, pos);
     }
 
-    public SqlNode createUnboundedFollowing(SqlParserPos pos)
+    public static SqlNode createUnboundedFollowing(SqlParserPos pos)
     {
         return SqlLiteral.createSymbol(Bound.UnboundedFollowing, pos);
     }
 
-    public SqlNode createUnboundedPreceding(SqlParserPos pos)
+    public static SqlNode createUnboundedPreceding(SqlParserPos pos)
     {
         return SqlLiteral.createSymbol(Bound.UnboundedPreceding, pos);
     }
 
-    public SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos)
+    public static SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos)
     {
         return followingOperator.createCall(literal, pos);
     }
 
-    public SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos)
+    public static SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos)
     {
         return precedingOperator.createCall(literal, pos);
     }
 
-    public SqlNode createBound(SqlLiteral range)
+    public static SqlNode createBound(SqlLiteral range)
     {
         return range;
+    }
+
+    /**
+     * Returns whether an expression represents the "CURRENT ROW" bound.
+     */
+    public static boolean isCurrentRow(SqlNode node)
+    {
+        return node instanceof SqlLiteral &&
+            SqlLiteral.symbolValue(node) == Bound.CurrentRow;
+    }
+
+    /**
+     * Returns whether an expression represents the "UNBOUNDED PRECEDING"
+     * bound.
+     */
+    public static boolean isUnboundedPreceding(SqlNode node)
+    {
+        return node instanceof SqlLiteral &&
+            SqlLiteral.symbolValue(node) == Bound.UnboundedPreceding;
+    }
+
+    /**
+     * Returns whether an expression represents the "UNBOUNDED FOLLOWING"
+     * bound.
+     */
+    public static boolean isUnboundedFollowing(SqlNode node)
+    {
+        return node instanceof SqlLiteral &&
+            SqlLiteral.symbolValue(node) == Bound.UnboundedFollowing;
+    }
+
+    public static OffsetRange getOffsetAndRange(
+        final SqlNode lowerBound,
+        final SqlNode upperBound,
+        boolean physical)
+    {
+        ValSign upper =
+            getRangeOffset(upperBound, precedingOperator);
+        ValSign lower =
+            getRangeOffset(lowerBound, followingOperator);
+        long offset = upper.signedVal();
+        long range = lower.signedVal()  + upper.signedVal();
+        if (physical &&
+            (lower.sign != upper.sign || lower.val == 0 || upper.val == 0)) {
+            ++range;
+        }
+        return new OffsetRange(offset, range);
+    }
+
+    private static ValSign getRangeOffset(SqlNode node, SqlPostfixOperator op)
+    {
+        if (node == null || !(node instanceof SqlCall)) {
+            return new ValSign(0, 1);
+        }
+        final SqlCall call = (SqlCall) node;
+        long sign = call.getOperator() == op
+            ? -1
+            : 1;
+        SqlNode [] operands = call.getOperands();
+        assert (operands.length == 1) && (operands[0] != null);
+        SqlLiteral operand = (SqlLiteral) operands[0];
+        Object obj = operand.getValue();
+        long val;
+        if (obj instanceof BigDecimal) {
+            val = ((BigDecimal) obj).intValue();
+        } else if (obj instanceof SqlIntervalLiteral.IntervalValue) {
+            val = SqlParserUtil.intervalToMillis(
+                (SqlIntervalLiteral.IntervalValue) obj);
+        } else {
+            val = 0;
+        }
+        return new ValSign(val, sign);
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -561,6 +654,31 @@ public class SqlWindowOperator
         private Bound(String name, int ordinal)
         {
             super(name, ordinal, null);
+        }
+    }
+
+    public static class OffsetRange {
+        public long offset;
+        public long range;
+
+        OffsetRange(long offset, long range) {
+            this.offset = offset;
+            this.range = range;
+        }
+    }
+
+    private static class ValSign {
+        long val;
+        long sign;
+
+        ValSign(long val, long sign) {
+            this.val = val;
+            this.sign = sign;
+            assert sign == 1 || sign == -1;
+        }
+
+        long signedVal() {
+            return val * sign;
         }
     }
 }

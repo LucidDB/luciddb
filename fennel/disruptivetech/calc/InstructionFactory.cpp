@@ -29,8 +29,9 @@ ExtendedInstructionTable InstructionFactory::extendedTable;
 
 // Create a typical instruction
 Instruction*
-InstructionFactory::createInstruction(string const & name,
-                                      vector<RegisterReference*>& operands)
+InstructionFactory::createInstruction(
+    string const & name,
+    vector<RegisterReference*> const &operands)
 {
     InstructionSignature signature(name, operands);
     return createInstructionHelper(signature);
@@ -38,9 +39,10 @@ InstructionFactory::createInstruction(string const & name,
 
 // Create a Jump instruction
 Instruction*
-InstructionFactory::createInstruction(string const & name, 
-                                      TProgramCounter pc,
-                                      RegisterReference* operand)
+InstructionFactory::createInstruction(
+    string const & name, 
+    TProgramCounter pc,
+    RegisterReference* operand)
 {
     vector<RegisterReference*>v;
     if (operand) {
@@ -65,9 +67,10 @@ InstructionFactory::createInstructionHelper(InstructionSignature const &sig)
 
 // Create an Extended instruction
 Instruction*
-InstructionFactory::createInstruction(string const & name, 
-                                      string const & function,
-                                      vector<RegisterReference*> & operands)
+InstructionFactory::createInstruction(
+    string const & name, 
+    string const & function,
+    vector<RegisterReference*> const &operands)
 {
     InstructionSignature signature(function, operands);
     ExtendedInstructionDef* instDef = extendedTable[signature.compute()];

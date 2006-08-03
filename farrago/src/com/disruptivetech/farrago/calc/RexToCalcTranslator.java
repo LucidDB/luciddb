@@ -44,7 +44,7 @@ import org.eigenbase.util.*;
  * @since Feb 5, 2004
  */
 public class RexToCalcTranslator
-    implements RexVisitor<CalcProgramBuilder.Register>
+    implements RexVisitor<CalcReg>
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -52,8 +52,8 @@ public class RexToCalcTranslator
     // The following 3 fields comprise the program; they are reset each time a
     // new program is started.
     final CalcProgramBuilder builder = new CalcProgramBuilder();
-    CalcProgramBuilder.Register trueReg = builder.newBoolLiteral(true);
-    CalcProgramBuilder.Register falseReg = builder.newBoolLiteral(false);
+    CalcReg trueReg = builder.newBoolLiteral(true);
+    CalcReg falseReg = builder.newBoolLiteral(false);
     private int nullRegOrdinal = -1;
 
     protected final CalcRexImplementorTable implementorTable;
@@ -61,7 +61,7 @@ public class RexToCalcTranslator
     /**
      * Eliminates common-subexpressions, by mapping every expression (the key is
      * generated from a {@link RexNode} using {@link #getKey(RexNode)}) to the
-     * {@link CalcProgramBuilder.Register} which holds its value.
+     * {@link CalcReg} which holds its value.
      */
     private ExpressionScope scope = new ExpressionScope();
 
@@ -331,9 +331,9 @@ public class RexToCalcTranslator
         return node.toString() + node.getType().toString();
     }
 
-    public CalcProgramBuilder.Register setResult(
+    public CalcReg setResult(
         RexNode node,
-        CalcProgramBuilder.Register register)
+        CalcReg register)
     {
         final String key = getKey(node);
         scope.set(key, register);
@@ -351,11 +351,11 @@ public class RexToCalcTranslator
      * #containsResult(RexNode)}, or pass in <code>failIfNotFound =
      * false</code>.
      */
-    CalcProgramBuilder.Register getResult(RexNode node,
+    CalcReg getResult(RexNode node,
         boolean failIfNotFound)
     {
         final String key = getKey(node);
-        CalcProgramBuilder.Register found = scope.get(key);
+        CalcReg found = scope.get(key);
         if ((found == null) && failIfNotFound) {
             throw Util.newInternal(
                 "Expression " + node
@@ -434,13 +434,13 @@ public class RexToCalcTranslator
 
         // Step 1: implement all the filtering logic
         if (conditionRef != null) {
-            CalcProgramBuilder.Register filterResult =
+            CalcReg filterResult =
                 implementNode(conditionRef);
             assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() : "Condition must be boolean: "
                 + conditionRef;
 
             // Step 2: report the status of the filtering
-            CalcProgramBuilder.Register statusReg =
+            CalcReg statusReg =
                 builder.newStatus(CalcProgramBuilder.OpType.Bool, -1);
 
             // Step 2-1: figure out the status
@@ -463,11 +463,11 @@ public class RexToCalcTranslator
         }
 
         // all outputs calculated, now assign results to outputs by reference
-        CalcProgramBuilder.Register isNullRes = null;
+        CalcReg isNullRes = null;
         for (RexLocalRef projectRef : projectRefList) {
             CalcProgramBuilder.RegisterDescriptor desc =
                 getCalcRegisterDescriptor(projectRef);
-            CalcProgramBuilder.Register res = getResult(projectRef, true);
+            CalcReg res = getResult(projectRef, true);
 
             // check and assert that if type was declared as NOT NULLABLE, value
             // is not null
@@ -491,7 +491,7 @@ public class RexToCalcTranslator
             }
 
             // if ok, assign result to output by reference
-            CalcProgramBuilder.Register outReg = builder.newOutput(desc);
+            CalcReg outReg = builder.newOutput(desc);
             builder.addRef(outReg, res);
         }
 
@@ -576,8 +576,8 @@ public class RexToCalcTranslator
             // Additional inputs for the aggregate functions.
             switch (aggOp.getOrdinal()) {
             case AggOp.None_ordinal:
-                ArrayList al = new ArrayList(1);
-                HashMap dups = new HashMap();
+                List<RexNode> al = new ArrayList<RexNode>(1);
+                Map<String,RexNode> dups = new HashMap<String, RexNode>();
 
                 // Change the projectExprs to map to the correct input refs.
                 fixOutputExps(al,
@@ -596,7 +596,7 @@ public class RexToCalcTranslator
                         dups);
                 }
                 for (int i = 0; i < al.size(); i++) {
-                    implementNode((RexNode) al.get(i));
+                    implementNode(al.get(i));
                 }
                 break;
             default:
@@ -606,13 +606,13 @@ public class RexToCalcTranslator
 
         // Step 1: implement all the filtering logic
         if (conditionExp != null) {
-            CalcProgramBuilder.Register filterResult =
+            CalcReg filterResult =
                 implementNode(conditionExp);
-            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() : "Condition must be boolean: "
-                + conditionExp;
+            assert CalcProgramBuilder.OpType.Bool == filterResult.getOpType() :
+                "Condition must be boolean: " + conditionExp;
 
             //step 2: report the status of the filtering
-            CalcProgramBuilder.Register statusReg =
+            CalcReg statusReg =
                 builder.newStatus(CalcProgramBuilder.OpType.Bool, -1);
 
             //step 2-1: figure out the status
@@ -640,10 +640,10 @@ public class RexToCalcTranslator
                 RexNode node = projectExprs[i];
                 CalcProgramBuilder.RegisterDescriptor desc =
                     getCalcRegisterDescriptor(node);
-                CalcProgramBuilder.Register res = getResult(node, true);
+                CalcReg res = getResult(node, true);
 
                 //if ok, assign result to output by reference
-                CalcProgramBuilder.Register outReg = builder.newOutput(desc);
+                CalcReg outReg = builder.newOutput(desc);
                 builder.addRef(outReg, res);
             }
             break;
@@ -656,12 +656,12 @@ public class RexToCalcTranslator
     }
 
     private void fixOutputExps(
-        ArrayList extInputs,
+        List<RexNode> extInputs,
         int start,
         RexNode [] inputExps,
         RexNode [] aggs,
         RexNode [] outputExps,
-        HashMap dups)
+        Map<String,RexNode> dups)
     {
         // Review (murali 2005/08/03): Notice that we are changing the contents
         // of the outputExps here. It may be better to pass a copy of the
@@ -682,9 +682,9 @@ public class RexToCalcTranslator
                 } else if (aggNode instanceof RexOver) {
                     // This should be aggregate input. Create a new input ref
                     // with the next location.
-                    Object key = getKey(aggNode);
+                    String key = getKey(aggNode);
                     if (dups.containsKey(key)) {
-                        outputExps[i] = (RexNode) dups.get(key);
+                        outputExps[i] = dups.get(key);
                         continue;
                     }
                     RexNode extInput =
@@ -721,7 +721,7 @@ public class RexToCalcTranslator
      * @post result != null
      * @post result == getResult(node)
      */
-    public CalcProgramBuilder.Register implementNode(RexNode node)
+    public CalcReg implementNode(RexNode node)
     {
         return implementNode(node, true);
     }
@@ -743,11 +743,11 @@ public class RexToCalcTranslator
      * @post result != null
      * @post result == getResult(node)
      */
-    public CalcProgramBuilder.Register implementNode(
+    public CalcReg implementNode(
         RexNode node,
         boolean useCache)
     {
-        CalcProgramBuilder.Register result;
+        CalcReg result;
         if (useCache) {
             result = getResult(node, false);
             if (result != null) {
@@ -767,28 +767,28 @@ public class RexToCalcTranslator
         return result;
     }
 
-    public CalcProgramBuilder.Register visitInputRef(RexInputRef inputRef)
+    public CalcReg visitInputRef(RexInputRef inputRef)
     {
         return implement(inputRef);
     }
 
-    public CalcProgramBuilder.Register visitLocalRef(RexLocalRef localRef)
+    public CalcReg visitLocalRef(RexLocalRef localRef)
     {
         return implement(localRef);
     }
 
-    public CalcProgramBuilder.Register visitLiteral(RexLiteral literal)
+    public CalcReg visitLiteral(RexLiteral literal)
     {
-        final CalcProgramBuilder.Register register = scope.get(getKey(literal));
+        final CalcReg register = scope.get(getKey(literal));
         if (register != null) {
             return register;
         }
         return implement(literal);
     }
 
-    public CalcProgramBuilder.Register visitCall(RexCall call)
+    public CalcReg visitCall(RexCall call)
     {
-        CalcProgramBuilder.Register register = scope.get(getKey(call));
+        CalcReg register = scope.get(getKey(call));
         if (register != null) {
             return register;
         }
@@ -802,32 +802,32 @@ public class RexToCalcTranslator
         return register;
     }
 
-    public CalcProgramBuilder.Register visitOver(RexOver over)
+    public CalcReg visitOver(RexOver over)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + over);
     }
 
-    public CalcProgramBuilder.Register visitCorrelVariable(
+    public CalcReg visitCorrelVariable(
         RexCorrelVariable correlVariable)
     {
         return implement(correlVariable);
     }
 
-    public CalcProgramBuilder.Register visitDynamicParam(
+    public CalcReg visitDynamicParam(
         RexDynamicParam dynamicParam)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + dynamicParam);
     }
 
-    public CalcProgramBuilder.Register visitRangeRef(RexRangeRef rangeRef)
+    public CalcReg visitRangeRef(RexRangeRef rangeRef)
     {
         throw FarragoResource.instance().ProgramImplementationError.ex(
             "Don't know how to implement rex node=" + rangeRef);
     }
 
-    public CalcProgramBuilder.Register visitFieldAccess(
+    public CalcReg visitFieldAccess(
         RexFieldAccess fieldAccess)
     {
         final RexNode expr = fieldAccess.getReferenceExpr();
@@ -838,7 +838,7 @@ public class RexToCalcTranslator
             "Don't know how to implement rex node=" + fieldAccess);
     }
 
-    private CalcProgramBuilder.Register implementShortCircuit(RexCall call)
+    private CalcReg implementShortCircuit(RexCall call)
     {
         assert (call.operands.length == 2) : "not a binary operator";
         if (containsResult(call)) {
@@ -850,7 +850,7 @@ public class RexToCalcTranslator
 
         if (op.getKind().isA(SqlKind.And) || (op.getKind().isA(SqlKind.Or))) {
             //first operand of AND/OR
-            CalcProgramBuilder.Register reg0 = implementNode(call.operands[0]);
+            CalcReg reg0 = implementNode(call.operands[0]);
             String shortCut = newLabel();
 
             //Check if we can make a short cut
@@ -861,8 +861,8 @@ public class RexToCalcTranslator
             }
 
             //second operand
-            CalcProgramBuilder.Register reg1 = implementNode(call.operands[1]);
-            CalcProgramBuilder.Register result =
+            CalcReg reg1 = implementNode(call.operands[1]);
+            CalcReg result =
                 builder.newLocal(CalcProgramBuilder.OpType.Bool, -1);
             assert result.getOpType().getOrdinal()
                 == getCalcRegisterDescriptor(call).getType().getOrdinal();
@@ -890,7 +890,7 @@ public class RexToCalcTranslator
         }
     }
 
-    private CalcProgramBuilder.Register implement(RexCall call)
+    private CalcReg implement(RexCall call)
     {
         if (containsResult(call)) {
             throw new AssertionError(
@@ -910,7 +910,7 @@ public class RexToCalcTranslator
         // Do table-driven implementation if possible.
         // TODO: Put ALL operator implementation code in this table, except
         //   perhaps for the most fundamental and idiosyncratic operators.
-        CalcProgramBuilder.Register resultOfCall = null;
+        CalcReg resultOfCall = null;
         CalcProgramBuilder.RegisterDescriptor resultDesc =
             getCalcRegisterDescriptor(call);
 
@@ -920,10 +920,10 @@ public class RexToCalcTranslator
          * against varchars
          */
         if (isStrCmp(call)) {
-            CalcProgramBuilder.Register reg1 = implementNode(call.operands[0]);
-            CalcProgramBuilder.Register reg2 = implementNode(call.operands[1]);
+            CalcReg reg1 = implementNode(call.operands[0]);
+            CalcReg reg2 = implementNode(call.operands[1]);
 
-            CalcProgramBuilder.Register [] convRegs = { reg1, reg2 };
+            CalcReg [] convRegs = { reg1, reg2 };
             implementConversionIfNeeded(call.operands[0],
                 call.operands[1],
                 convRegs,
@@ -934,33 +934,32 @@ public class RexToCalcTranslator
             resultOfCall = builder.newLocal(resultDesc);
 
             assert resultDesc.getType() == CalcProgramBuilder.OpType.Bool;
-            CalcProgramBuilder.Register strCmpResult =
+            CalcReg strCmpResult =
                 builder.newLocal(CalcProgramBuilder.OpType.Int4, -1);
             if (SqlTypeUtil.inCharFamily(call.operands[0].getType())) {
                 String collationToUse =
                     SqlCollation.getCoercibilityDyadicComparison(
                         call.operands[0].getType().getCollation(),
                         call.operands[1].getType().getCollation());
-                CalcProgramBuilder.Register colReg =
-                    builder.newVarcharLiteral(collationToUse);
+                CalcReg colReg = builder.newVarcharLiteral(collationToUse);
 
                 // TODO: this is only for ascii cmp. Need to pump in colReg
                 // when a fennel function that can take it is born.
                 ExtInstructionDefTable.strCmpA.add(
                     builder,
-                    new CalcProgramBuilder.Register[] {
+                    new CalcReg[] {
                         strCmpResult, reg1, reg2
                     });
             } else {
                 ExtInstructionDefTable.strCmpOct.add(
                     builder,
-                    new CalcProgramBuilder.Register[] {
+                    new CalcReg[] {
                         strCmpResult, reg1, reg2
                     });
             }
 
-            CalcProgramBuilder.Register zero = builder.newInt4Literal(0);
-            CalcProgramBuilder.Register [] regs =
+            CalcReg zero = builder.newInt4Literal(0);
+            CalcReg [] regs =
                 {
                     resultOfCall, strCmpResult, zero
                 };
@@ -988,7 +987,7 @@ public class RexToCalcTranslator
         // There are some special cases: see above and below.
         CalcRexImplementor implementor = implementorTable.get(op);
         if ((implementor != null) && implementor.canImplement(call)) {
-            CalcProgramBuilder.Register reg = implementor.implement(call, this);
+            CalcReg reg = implementor.implement(call, this);
             setResult(call, reg);
             return reg;
         }
@@ -1002,7 +1001,7 @@ public class RexToCalcTranslator
                 // Create an output register to be the accumulator. We want to
                 // avoid creating local registers and moving them into output
                 // registers.
-                CalcProgramBuilder.Register register =
+                CalcReg register =
                     builder.newOutput(getCalcRegisterDescriptor(call));
                 switch (aggOp.getOrdinal()) {
                 case AggOp.None_ordinal:
@@ -1074,7 +1073,7 @@ public class RexToCalcTranslator
     void implementConversionIfNeeded(
         RexNode op1,
         RexNode op2,
-        CalcProgramBuilder.Register [] regs,
+        CalcReg [] regs,
         boolean keepVartypes)
     {
         if (SqlTypeUtil.inCharFamily(op1.getType())
@@ -1083,7 +1082,7 @@ public class RexToCalcTranslator
                 .getSqlTypeName()
                )) {
             // Need to perform a cast.
-            CalcProgramBuilder.Register newReg;
+            CalcReg newReg;
             SqlTypeName replaceType =
                 (keepVartypes) ? SqlTypeName.Char : SqlTypeName.Varchar;
             if (op1.getType().getSqlTypeName() == replaceType) {
@@ -1099,7 +1098,7 @@ public class RexToCalcTranslator
 
                 ExtInstructionDefTable.castA.add(
                     builder,
-                    new CalcProgramBuilder.Register[] { newReg, regs[0] });
+                    new CalcReg[] { newReg, regs[0] });
 
                 regs[0] = newReg;
             } else {
@@ -1115,7 +1114,7 @@ public class RexToCalcTranslator
 
                 ExtInstructionDefTable.castA.add(
                     builder,
-                    new CalcProgramBuilder.Register[] { newReg, regs[1] });
+                    new CalcReg[] { newReg, regs[1] });
 
                 regs[1] = newReg;
             }
@@ -1125,7 +1124,7 @@ public class RexToCalcTranslator
         // probably needs to be done for BINARY vs. VARBINARY.
     }
 
-    private CalcProgramBuilder.Register implement(RexLiteral node)
+    private CalcReg implement(RexLiteral node)
     {
         if (containsResult(node)) {
             throw new AssertionError(
@@ -1136,15 +1135,15 @@ public class RexToCalcTranslator
         Object value = node.getValue2();
         CalcProgramBuilder.RegisterDescriptor desc =
             getCalcRegisterDescriptor(node);
-        final CalcProgramBuilder.Register register =
+        final CalcReg register =
             builder.newLiteral(desc, value);
         setResult(node, register);
         return register;
     }
 
-    private CalcProgramBuilder.Register implement(RexInputRef node)
+    private CalcReg implement(RexInputRef node)
     {
-        CalcProgramBuilder.Register register = scope.get(getKey(node));
+        CalcReg register = scope.get(getKey(node));
         if (register != null) {
             return register; // this method is idempotent
         }
@@ -1155,7 +1154,7 @@ public class RexToCalcTranslator
         return register;
     }
 
-    private CalcProgramBuilder.Register implement(RexLocalRef node)
+    private CalcReg implement(RexLocalRef node)
     {
         assert !containsResult(node) : "Shouldn't call this function directly;"
             + " use implementNode(RexNode) instead";
@@ -1164,12 +1163,12 @@ public class RexToCalcTranslator
         final int index = node.getIndex();
         final RexNode expr = program.getExprList().get(index);
         expr.accept(this);
-        final CalcProgramBuilder.Register result = getResult(expr, true);
+        final CalcReg result = getResult(expr, true);
         setResult(node, result);
         return result;
     }
 
-    private CalcProgramBuilder.Register implement(RexFieldAccess node)
+    private CalcReg implement(RexFieldAccess node)
     {
         if (containsResult(node)) {
             throw new AssertionError(
@@ -1182,15 +1181,15 @@ public class RexToCalcTranslator
         return implement(accessedNode);
     }
 
-    private CalcProgramBuilder.Register implement(RexCorrelVariable node)
+    private CalcReg implement(RexCorrelVariable node)
     {
         final int id = RelOptQuery.getCorrelOrdinal(node.getName());
-        CalcProgramBuilder.Register idReg = builder.newInt4Literal(id);
-        CalcProgramBuilder.Register result =
+        CalcReg idReg = builder.newInt4Literal(id);
+        CalcReg result =
             builder.newLocal(getCalcRegisterDescriptor(node));
         ExtInstructionDefTable.dynamicVariable.add(
             builder,
-            new CalcProgramBuilder.Register[] { result, idReg });
+            new CalcReg[] { result, idReg });
         setResult(node, result);
         return result;
     }
@@ -1273,8 +1272,7 @@ public class RexToCalcTranslator
     {
         expr = resolve(expr);
         assert expr instanceof RexLiteral : expr;
-        final RexLiteral literal = (RexLiteral) expr;
-        return literal;
+        return (RexLiteral) expr;
     }
 
     public RexNode resolve(RexNode expr)
@@ -1311,8 +1309,8 @@ public class RexToCalcTranslator
     public class ExpressionScope
     {
         private final ExpressionScope parent;
-        private final Map<String, CalcProgramBuilder.Register> results =
-            new HashMap<String, CalcProgramBuilder.Register>();
+        private final Map<String, CalcReg> results =
+            new HashMap<String, CalcReg>();
 
         private ExpressionScope(ExpressionScope parent)
         {
@@ -1345,16 +1343,16 @@ public class RexToCalcTranslator
             return parent;
         }
 
-        public CalcProgramBuilder.Register get(String key)
+        public CalcReg get(String key)
         {
-            CalcProgramBuilder.Register result = results.get(key);
+            CalcReg result = results.get(key);
             if ((result == null) && (parent != null)) {
                 result = parent.get(key);
             }
             return result;
         }
 
-        public void set(String key, CalcProgramBuilder.Register result)
+        public void set(String key, CalcReg result)
         {
             results.put(key, result);
         }

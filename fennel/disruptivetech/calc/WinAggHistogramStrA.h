@@ -35,8 +35,11 @@
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * This object provides the support structure for calculating various windowed
- * aggregation functions (count,sum,avg,min,max).  Each row entry is held in
+ * Support structure for calculating various windowed aggregation
+ * functions (COUNT, SUM, AVG, MIN, MAX, FIRST_VALUE, LAST_VALUE)
+ * against character data.
+ *
+ * Each row entry is held in
  * a tree structure to make finding new min/max functions easy as values
  * are added/removed from the window.  Running sum is also kept up to date
  * as rows enter and exit the window.
@@ -59,7 +62,6 @@ struct StringDesc : public TupleDatum
     {
         copyFrom(other);
     }
-    
 
     StringDesc& operator = (StringDesc const &other)
     {
@@ -68,7 +70,7 @@ struct StringDesc : public TupleDatum
     }
     
 
-    void copyFrom( StringDesc const &other)
+    void copyFrom(StringDesc const &other)
     {
         TupleDatum::copyFrom( other);
         cbStorage = other.cbStorage;
@@ -84,9 +86,10 @@ class WinAggHistogramStrA
 {
 
 public:
-    WinAggHistogramStrA():
-        currentWindow(),
-        nullRows(0)
+    WinAggHistogramStrA()
+        : currentWindow(),
+          nullRows(0),
+          queue()
     {}
                        
     ~WinAggHistogramStrA()
@@ -97,9 +100,9 @@ public:
         bool operator () (const StringDesc& str1, const StringDesc& str2) const
         {
             if (!str1.isNull() && !str2.isNull()) {
-                int32_t result = (SqlStrCmp<1,1>(
-                                  str1.pointer(), str1.stringLength(),
-                                  str2.pointer(), str2.stringLength()));
+                int32_t result = SqlStrCmp<1,1>(
+                    str1.pointer(), str1.stringLength(),
+                    str2.pointer(), str2.stringLength());
                 return result < 0;
             } else {
                 return str2.isNull();
@@ -107,7 +110,10 @@ public:
         }
     } StringDescCompare;
 
+    // REVIEW: jhyde, 2006/6/14: Use initcaps for type names.
     typedef multiset<StringDesc,StringDescCompare> winAggData;
+
+    typedef deque<StringDesc> WinAggQueue;
 
     //! addRow - Adds new value to tree and updates
     //! the running sum for current values.
@@ -132,10 +138,23 @@ public:
     //!
     //! Returns NULL if the window is empty.
     void getMax(RegisterRef<char*>* node);
-    
+
+    //! getFirstValue - returns the first value which entered the tree
+    //!
+    //! Returns NULL if the window is empty.
+    void getFirstValue(RegisterRef<char*>* node);
+
+    //! getLastValue - returns the last value which entered the tree
+    //!
+    //! Returns NULL if the window is empty.
+    void getLastValue(RegisterRef<char*>* node);
+
 private:
     winAggData currentWindow;   // Holds the values currently in the window.
     int64_t nullRows;           // Couunt of null entries
+
+    /// FIFO queue of values, to enable FIRST_VALUE/LAST_VALUE support.
+    WinAggQueue queue;
 };
 
 FENNEL_END_NAMESPACE

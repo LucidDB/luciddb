@@ -63,6 +63,8 @@ public class MockCatalogReader
             typeFactory.createSqlType(SqlTypeName.Varchar, 20);
         final RelDataType timestampType =
             typeFactory.createSqlType(SqlTypeName.Timestamp);
+        final RelDataType booleanType =
+            typeFactory.createSqlType(SqlTypeName.Boolean);
         final RelDataType rectilinearCoordType =
             typeFactory.createStructType(
                 new RelDataType[] { intType, intType },
@@ -97,6 +99,7 @@ public class MockCatalogReader
         empTable.addColumn("SAL", intType);
         empTable.addColumn("COMM", intType);
         empTable.addColumn("DEPTNO", intType);
+        empTable.addColumn("SLACKER", booleanType);
         registerTable(empTable);
 
         // Register "DEPT" table.
