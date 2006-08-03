@@ -52,17 +52,17 @@ void WinAggHistogramStrA::addRow(RegisterRef<char*>* node)
         desc.pData = new FixedBuffer[desc.cbStorage];
         desc.memCopyFrom(*( node->getBinding()));
         
+        // Insert the value into the window
         (void) currentWindow.insert(desc);
+
+        // Add to the FIFO queue. Another copy of the StringDesc is
+        // created, but it points to the same memory.
+        queue.push_back(desc);
     } else {
         ++nullRows;
     }
 }
 
-//! dropRow - Removes a value from the tree and updates
-//! the running sum..
-//!
-//! Input - Value to be removed from the tree
-//
 void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
 {
     if (!node->isNull()) {
@@ -89,15 +89,15 @@ void WinAggHistogramStrA::dropRow(RegisterRef<char*>* node)
             }
             currentWindow.erase(entries.first);
         }
+
+        // Remove from the FIFO queue.
+        queue.pop_front();
     } else {
         assert(0 != nullRows);
         --nullRows;
     }
 }
 
-//! getMin - Returns the current MIN() value for the window.
-//!
-//! Returns NULL if the window is empty.
 void WinAggHistogramStrA::getMin(RegisterRef<char*>* node)
 {
     if (0 != currentWindow.size()) {
@@ -111,9 +111,6 @@ void WinAggHistogramStrA::getMin(RegisterRef<char*>* node)
     }
 }
 
-//! getMax - Returns the current MAX() value for the window.
-//!
-//! Returns NULL if the window is empty.
 void WinAggHistogramStrA::getMax(RegisterRef<char*>* node)
 {
     if (0 != currentWindow.size()) {
@@ -124,6 +121,27 @@ void WinAggHistogramStrA::getMax(RegisterRef<char*>* node)
         // entries or there are no rows in the window.  Either
         // way the function returns NULL.
         node->toNull();
+    }
+}
+
+void WinAggHistogramStrA::getFirstValue(RegisterRef<char*>* node)
+{
+    if (queue.empty()) {
+        node->toNull();
+    } else {
+        StringDesc const &str = queue.front();
+        node->getBinding(false)->memCopyFrom(str);
+    }
+}
+
+
+void WinAggHistogramStrA::getLastValue(RegisterRef<char*>* node)
+{
+    if (queue.empty()) {
+        node->toNull();
+    } else {
+        StringDesc const &str = queue.back();
+        node->getBinding(false)->memCopyFrom(str);
     }
 }
 

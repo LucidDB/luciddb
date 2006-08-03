@@ -158,7 +158,7 @@ ProjectRel(EXPR$0=[UPPER($0)])
         </Resource>
         <Resource name="planAfter">
             <![CDATA[
-CalcRel(expr#0..7=[{inputs}], expr#8=[LOWER($t1)], expr#9=[UPPER($t8)], EXPR$0=[$t9])
+CalcRel(expr#0..8=[{inputs}], expr#9=[LOWER($t1)], expr#10=[UPPER($t9)], EXPR$0=[$t10])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>

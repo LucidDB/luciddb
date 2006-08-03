@@ -103,6 +103,10 @@ public class ExtInstructionDefTable
         new CalcProgramBuilder.ExtInstrDef("WinAggMax", 2);
     public static final CalcProgramBuilder.ExtInstrDef histogramGetMin =
         new CalcProgramBuilder.ExtInstrDef("WinAggMin", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramGetFirstValue =
+        new CalcProgramBuilder.ExtInstrDef("WinAggFirstValue", 2);
+    public static final CalcProgramBuilder.ExtInstrDef histogramGetLastValue =
+        new CalcProgramBuilder.ExtInstrDef("WinAggLastValue", 2);
 }
 
 // End ExtInstructionDefTable.java

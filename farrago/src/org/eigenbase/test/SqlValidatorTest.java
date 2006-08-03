@@ -1065,7 +1065,8 @@ public class SqlValidatorTest
             + " TIMESTAMP(0) NOT NULL HIREDATE,"
             + " INTEGER NOT NULL SAL,"
             + " INTEGER NOT NULL COMM,"
-            + " INTEGER NOT NULL DEPTNO) NOT NULL MULTISET NOT NULL");
+            + " INTEGER NOT NULL DEPTNO,"
+            + " BOOLEAN NOT NULL SLACKER) NOT NULL MULTISET NOT NULL");
     }
 
     public void testMultisetSetOperators()
@@ -1646,6 +1647,25 @@ public class SqlValidatorTest
             + "order by deptno "
             + "rows between unbounded preceding and CURRENT ROW)",
             null);
+
+        // logical current row/current row
+        checkWinFuncExp(
+            "sum(sal) over ("
+            + "order by deptno "
+            + "rows between CURRENT ROW and CURRENT ROW)",
+            null);
+        // physical current row/current row
+        checkWinFuncExp(
+            "sum(sal) over ("
+            + "order by deptno "
+            + "range between CURRENT ROW and CURRENT ROW)",
+            null);
+
+        checkWinFuncExp(
+            "sum(sal) over ("
+            + "order by deptno "
+            + "rows between 2 preceding and CURRENT ROW)",
+            null);
         checkWinFuncExpWithWinClause("sum(sal) OVER (w "
             + "rows 2 preceding )",
             null);
@@ -1874,6 +1894,33 @@ public class SqlValidatorTest
             + "w2 as (partition by deptno order by empno rows 2 preceding)"
             + NL,
             "Duplicate window specification not allowed in the same window clause");
+    }
+
+    public void testWindowNegative()
+    {
+        checkNegWindow("rows between 2 preceding and 4 preceding", true);
+        checkNegWindow("rows between 2 preceding and 3 preceding", true);
+        checkNegWindow("rows between 2 preceding and 2 preceding", false);
+        checkNegWindow("rows between unbounded preceding and current row", false);
+        checkNegWindow("rows between unbounded preceding and unbounded following", false);
+        checkNegWindow("rows between current row and unbounded following", false);
+        checkNegWindow("rows between current row and 2 following", false);
+        checkNegWindow("range between 2 preceding and 2 following", false);
+        checkNegWindow("range between 2 preceding and -2 preceding", false);
+        checkNegWindow("range between 4 following and 3 following", true);
+        checkNegWindow("range between 4 following and 5 following", false);
+        checkNegWindow("rows between 1 following and 0 following", true);
+        checkNegWindow("rows between 0 following and 0 following", false);
+    }
+
+    private void checkNegWindow(String s, boolean fail)
+    {
+        String sql = "select sum(deptno) over ^(order by empno "
+            + s
+            + ")^ from emp";
+        checkFails(
+            sql,
+            fail ? "Window has negative size" : null);
     }
 
     public void testOneWinFunc()
@@ -3031,7 +3078,8 @@ public class SqlValidatorTest
             + " TIMESTAMP(0) NOT NULL HIREDATE,"
             + " INTEGER NOT NULL SAL,"
             + " INTEGER NOT NULL COMM,"
-            + " INTEGER NOT NULL DEPTNO) NOT NULL";
+            + " INTEGER NOT NULL DEPTNO,"
+            + " BOOLEAN NOT NULL SLACKER) NOT NULL";
         checkResultType("select * from (table emp)", empRecordType);
         checkResultType("table emp", empRecordType);
         checkFails("table ^nonexistent^",

@@ -147,9 +147,19 @@ public class SqlWindow
         return operands[LowerBound_OPERAND];
     }
 
+    public void setLowerBound(SqlNode bound)
+    {
+        operands[LowerBound_OPERAND] = bound;
+    }
+
     public SqlNode getUpperBound()
     {
         return operands[UpperBound_OPERAND];
+    }
+
+    public void setUpperBound(SqlNode bound)
+    {
+        operands[UpperBound_OPERAND] = bound;
     }
 
     public boolean isRows()
@@ -305,6 +315,12 @@ public class SqlWindow
             }
         }
         return true;
+    }
+
+    public SqlWindowOperator.OffsetRange getOffsetAndRange()
+    {
+        return SqlWindowOperator.getOffsetAndRange(
+            getLowerBound(), getUpperBound(), isRows());
     }
 }
 

@@ -581,6 +581,28 @@ public class SqlStdOperatorTable
             SqlTypeStrategies.otcNumericOrString,
             SqlFunctionCategory.Numeric);
 
+    /**
+     * <code>HISTOGRAM_FIRST_VALUE</code> window aggregate function.
+     */
+    public static final SqlFunction histogramFirstValueFunction =
+        new SqlFunction("$HISTOGRAM_FIRST_VALUE",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableFirstArgType,
+            null,
+            SqlTypeStrategies.otcNumericOrString,
+            SqlFunctionCategory.Numeric);
+
+    /**
+     * <code>HISTOGRAM_LAST_VALUE</code> window aggregate function.
+     */
+    public static final SqlFunction histogramLastValueFunction =
+        new SqlFunction("$HISTOGRAM_LAST_VALUE",
+            SqlKind.Function,
+            SqlTypeStrategies.rtiNullableFirstArgType,
+            null,
+            SqlTypeStrategies.otcNumericOrString,
+            SqlFunctionCategory.Numeric);
+
     //-------------------------------------------------------------
     // WINDOW Rank Functions
     //-------------------------------------------------------------

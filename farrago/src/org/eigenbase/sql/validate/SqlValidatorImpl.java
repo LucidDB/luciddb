@@ -2105,16 +2105,15 @@ public class SqlValidatorImpl
         }
 
         // 7.10 rule 2
-        if (2 <= windowList.size()) {
-            SqlNode [] winArr = windowList.toArray();
-
-            for (int i = 0; i < (windowList.size() - 1); i++) {
-                for (int j = i + 1; j < windowList.size(); j++) {
-                    if (winArr[i].equalsDeep(winArr[j], false)) {
-                        throw newValidationError(
-                            winArr[j],
-                            EigenbaseResource.instance().DupWindowSpec.ex());
-                    }
+        // Check for pairs of windows which are equivalent.
+        for (int i = 0; i < windowList.size(); i++) {
+            SqlNode window1 = windowList.get(i);
+            for (int j = i + 1; j < windowList.size(); j++) {
+                SqlNode window2 = windowList.get(j);
+                if (window1.equalsDeep(window2, false)) {
+                    throw newValidationError(
+                        window2,
+                        EigenbaseResource.instance().DupWindowSpec.ex());
                 }
             }
         }
@@ -2746,7 +2745,8 @@ public class SqlValidatorImpl
 
     public SqlWindow resolveWindow(
         SqlNode windowOrRef,
-        SqlValidatorScope scope)
+        SqlValidatorScope scope,
+        boolean populateBounds)
     {
         SqlWindow window;
         if (windowOrRef instanceof SqlIdentifier) {
@@ -2757,7 +2757,7 @@ public class SqlValidatorImpl
         while (true) {
             final SqlIdentifier refId = window.getRefName();
             if (refId == null) {
-                return window;
+                break;
             }
             final String refName = refId.getSimple();
             SqlWindow refWindow = scope.lookupWindow(refName);
@@ -2768,6 +2768,18 @@ public class SqlValidatorImpl
             }
             window = window.overlay(refWindow, this);
         }
+        // Fill in missing bounds.
+        if (populateBounds) {
+            if (window.getLowerBound() == null) {
+                window.setLowerBound(
+                    SqlWindowOperator.createCurrentRow(SqlParserPos.ZERO));
+            }
+            if (window.getUpperBound() == null) {
+                window.setUpperBound(
+                    SqlWindowOperator.createCurrentRow(SqlParserPos.ZERO));
+            }
+        }
+        return window;
     }
 
     public SqlNode getOriginal(SqlNode expr)

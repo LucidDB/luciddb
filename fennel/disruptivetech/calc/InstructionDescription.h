@@ -80,13 +80,14 @@ private:
     // TODO: Move to instruction.h?
     //! InstructionCreateFunction is a pointer to the create()
     //! public member function supported by all Instructions.
-    typedef Instruction*(*InstructionCreateFunction)
-        (vector<RegisterReference*>);
+    typedef Instruction *(*InstructionCreateFunction)(
+        vector<RegisterReference*> const &);
 public:
     explicit
-    InstructionDescription(const string& nameArg,
-                           const vector<RegDesc> registerdescArg,
-                           InstructionCreateFunction createFnArg) :
+    InstructionDescription(
+        string const &nameArg,
+        vector<RegDesc> const &registerdescArg,
+        InstructionCreateFunction createFnArg) :
         name(nameArg),
         registerdesc(registerdescArg),
         createFn(createFnArg)
