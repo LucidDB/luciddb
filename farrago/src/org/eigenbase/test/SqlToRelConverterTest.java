@@ -442,9 +442,9 @@ public class SqlToRelConverterTest
     {
         // union with values
         check(
-            "values (10), (20)" + NL
-            + "union all" + NL
-            + "select 34 from emp" + NL
+            "values (10), (20)\n"
+            + "union all\n"
+            + "select 34 from emp\n"
             + "union all values (30), (45 + 10)",
             "${plan}");
     }
@@ -453,9 +453,9 @@ public class SqlToRelConverterTest
     {
         // union of subquery, inside from list, also values
         check(
-            "select deptno from emp as emp0 cross join" + NL
-            + " (select empno from emp union all " + NL
-            + "  select deptno from dept where deptno > 20 union all" + NL
+            "select deptno from emp as emp0 cross join\n"
+            + " (select empno from emp union all \n"
+            + "  select deptno from dept where deptno > 20 union all\n"
             + "  values (45), (67))",
             "${plan}");
     }
@@ -482,11 +482,11 @@ public class SqlToRelConverterTest
     public void testOverMultiple()
     {
         check(
-            "select sum(sal) over w1," + NL
-            + "  sum(deptno) over w1," + NL
-            + "  sum(deptno) over w2" + NL
-            + "from emp" + NL
-            + "where sum(deptno - sal) over w1 > 999" + NL
+            "select sum(sal) over w1,\n"
+            + "  sum(deptno) over w1,\n"
+            + "  sum(deptno) over w2\n"
+            + "from emp\n"
+            + "where sum(deptno - sal) over w1 > 999\n"
             + "window w1 as (partition by job order by hiredate rows 2 preceding),"
             + NL
             + "  w2 as (partition by job order by hiredate rows 3 preceding),"
@@ -520,9 +520,9 @@ public class SqlToRelConverterTest
     public void testOverAvg()
     {
         check(
-            "select sum(sal) over w1," + NL
-            + "  avg(sal) over w1" + NL
-            + "from emp" + NL
+            "select sum(sal) over w1,\n"
+            + "  avg(sal) over w1\n"
+            + "from emp\n"
             + "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
             "${plan}");
@@ -531,11 +531,49 @@ public class SqlToRelConverterTest
     public void testOverCountStar()
     {
         check(
-            "select count(sal) over w1," + NL
-            + "  count(*) over w1" + NL
-            + "from emp" + NL
+            "select count(sal) over w1,\n"
+            + "  count(*) over w1\n"
+            + "from emp\n"
             + "window w1 as (partition by job order by hiredate rows 2 preceding)",
 
+            "${plan}");
+    }
+
+    /**
+     * Tests that a window containing only ORDER BY is implicitly CURRENT ROW.
+     */
+    public void testOverOrderWindow()
+    {
+        check(
+            "select last_value(deptno) over w\n"
+            + "from emp\n"
+            + "window w as (order by empno)",
+            "${plan}");
+
+        // Same query using inline window
+        check(
+            "select last_value(deptno) over (order by empno)\n"
+            + "from emp\n",
+            "${plan}");
+    }
+
+    /**
+     * Tests that a window with a FOLLOWING bound becomes BETWEEN CURRENT ROW
+     * AND FOLLOWING.
+     */
+    public void testOverOrderFollowingWindow()
+    {
+        // Window contains only ORDER BY (implicitly CURRENT ROW).
+        check(
+            "select last_value(deptno) over w\n"
+            + "from emp\n"
+            + "window w as (order by empno rows 2 following)",
+            "${plan}");
+
+        // Same query using inline window
+        check(
+            "select last_value(deptno) over (order by empno rows 2 following)\n"
+            + "from emp\n",
             "${plan}");
     }
 

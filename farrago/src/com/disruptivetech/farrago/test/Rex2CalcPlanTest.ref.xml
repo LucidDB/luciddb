@@ -67,13 +67,36 @@ RETURN /* 1: */;]]>
     <TestCase name="testAggSumExp">
         <Resource name="expectedInit">
             <![CDATA[
-O s4;
-I s4;
-C bo, bo, s4;
-V 1, 0, 0;
+O s4, s8;
+I s4, s4, s4;
+C bo, bo, s4, s8;
+V 1, 0, 0, 0;
 T;
-MOVE O0, C2 /* 0: SUM($t0) */;
-RETURN /* 1: */;]]>
+MOVE O0, C2 /* 0: SUM($t2) */;
+MOVE O1, C3 /* 1: COUNT($t0) */;
+RETURN /* 2: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O s4, s8;
+I s4, s4, s4;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+ADD O0, O0, I2 /* 0: SUM($t2) */;
+ADD O1, O1, C2 /* 1: COUNT($t0) */;
+RETURN /* 2: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O s4, s8;
+I s4, s4, s4;
+C bo, bo, s8;
+V 1, 0, 1;
+T;
+SUB O0, O0, I2 /* 0: SUM($t2) */;
+SUB O1, O1, C2 /* 1: COUNT($t0) */;
+RETURN /* 2: */;]]>
         </Resource>
     </TestCase>
     <TestCase name="testSimplePassThroughFilter">
@@ -1314,6 +1337,143 @@ RAISE C8 /* 45: */;
 RETURN /* 46: */;
 REF O6, L8 /* 47: */;
 RETURN /* 48: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testWindowedMinMax">
+        <Resource name="expectedInit">
+            <![CDATA[
+O vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8;
+C bo, bo;
+V 1, 0;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggInit(O0, L0) /* 1: $HISTOGRAM($t9) */;
+RETURN /* 2: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8;
+C bo, bo;
+V 1, 0;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggAdd(L0, O0) /* 1: $HISTOGRAM($t9) */;
+RETURN /* 2: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8;
+C bo, bo;
+V 1, 0;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggDrop(L0, O0) /* 1: $HISTOGRAM($t9) */;
+RETURN /* 2: */;]]>
+        </Resource>
+        <Resource name="expectedOutput">
+            <![CDATA[
+O s4, s4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,4;
+L s8, s4, s8, s4;
+C bo, bo;
+V 1, 0;
+T;
+CALL 'WinAggMin(L0, I9) /* 0: $HISTOGRAM_MIN($t9) */;
+CAST L1, L0 /* 1: CAST($t10):INTEGER */;
+CALL 'WinAggMax(L2, I9) /* 2: $HISTOGRAM_MAX($t9) */;
+CAST L3, L2 /* 3: CAST($t12):INTEGER */;
+REF O0, L1 /* 4: */;
+REF O1, L3 /* 5: */;
+RETURN /* 6: */;]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testWindowedFirstLastValue">
+        <Resource name="expectedInit">
+            <![CDATA[
+O vb,4, vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8, s4, s8;
+C bo, bo, s4;
+V 1, 0, 1;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggInit(O0, L0) /* 1: $HISTOGRAM($t9) */;
+ADD L1, I0, C2 /* 2: +($t0, $t10) */;
+CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
+CALL 'WinAggInit(O1, L2) /* 4: $HISTOGRAM($t12) */;
+RETURN /* 5: */;]]>
+        </Resource>
+        <Resource name="expectedAdd">
+            <![CDATA[
+O vb,4, vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8, s4, s8;
+C bo, bo, s4;
+V 1, 0, 1;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggAdd(L0, O0) /* 1: $HISTOGRAM($t9) */;
+ADD L1, I0, C2 /* 2: +($t0, $t10) */;
+CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
+CALL 'WinAggAdd(L2, O1) /* 4: $HISTOGRAM($t12) */;
+RETURN /* 5: */;]]>
+        </Resource>
+        <Resource name="expectedDrop">
+            <![CDATA[
+O vb,4, vb,4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo;
+L s8, s4, s8;
+C bo, bo, s4;
+V 1, 0, 1;
+T;
+CAST L0, I0 /* 0: CAST($t0):BIGINT NOT NULL */;
+CALL 'WinAggDrop(L0, O0) /* 1: $HISTOGRAM($t9) */;
+ADD L1, I0, C2 /* 2: +($t0, $t10) */;
+CAST L2, L1 /* 3: CAST($t11):BIGINT NOT NULL */;
+CALL 'WinAggDrop(L2, O1) /* 4: $HISTOGRAM($t12) */;
+RETURN /* 5: */;]]>
+        </Resource>
+        <Resource name="expectedOutput">
+            <![CDATA[
+O s4, s4, s4, s4;
+I s4, vc,20, vc,10, s4, s8, s4, s4, s4, bo, vb,4, vb,4;
+L s8, s4, s8, s4, s8, s4, s4, s8, s4, s4, bo;
+C bo, bo, s4, s4, vc,5;
+V 1, 0, 2, 3, 0x3232303034 /* 22004 */;
+T;
+CALL 'WinAggFirstValue(L0, I9) /* 0: $HISTOGRAM_FIRST_VALUE($t9) */;
+CAST L1, L0 /* 1: CAST($t13):INTEGER NOT NULL */;
+CALL 'WinAggLastValue(L2, I9) /* 2: $HISTOGRAM_LAST_VALUE($t9) */;
+CAST L3, L2 /* 3: CAST($t15):INTEGER NOT NULL */;
+CALL 'WinAggFirstValue(L4, I10) /* 4: $HISTOGRAM_FIRST_VALUE($t10) */;
+CAST L5, L4 /* 5: CAST($t17):INTEGER NOT NULL */;
+ADD L6, L5, C2 /* 6: +($t18, $t11) */;
+CALL 'WinAggMin(L7, I10) /* 7: $HISTOGRAM_MIN($t10) */;
+CAST L8, L7 /* 8: CAST($t20):INTEGER */;
+ADD L9, C3, L8 /* 9: +($t12, $t21) */;
+ISNULL L10, L1 /* 10: */;
+JMPF @14, L10 /* 11: */;
+RAISE C4 /* 12: */;
+RETURN /* 13: */;
+REF O0, L1 /* 14: */;
+ISNULL L10, L3 /* 15: */;
+JMPF @19, L10 /* 16: */;
+RAISE C4 /* 17: */;
+RETURN /* 18: */;
+REF O1, L3 /* 19: */;
+ISNULL L10, L6 /* 20: */;
+JMPF @24, L10 /* 21: */;
+RAISE C4 /* 22: */;
+RETURN /* 23: */;
+REF O2, L6 /* 24: */;
+REF O3, L9 /* 25: */;
+RETURN /* 26: */;]]>
         </Resource>
     </TestCase>
 </Root>

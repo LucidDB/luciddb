@@ -41,7 +41,7 @@ public interface CalcRexImplementor
      * Generates instructions to implement this call, and returns the register
      * which holds the result.
      */
-    CalcProgramBuilder.Register implement(
+    CalcReg implement(
         RexCall call,
         RexToCalcTranslator translator);
 

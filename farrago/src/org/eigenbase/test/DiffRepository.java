@@ -480,6 +480,80 @@ public class DiffRepository
     }
 
     /**
+     * As {@link #assertEquals(String, String, String)}, but checks multiple
+     * values in parallel.
+     *
+     * <p>If any of the values do not match, throws an {@link AssertFailure},
+     * but still updates the other values. This is convenient, because if a
+     * unit test needs to check N values, you can correct the logfile in 1
+     * pass through the test rather than N.
+     *
+     * @param tags Array of tags
+     * @param expecteds Array of expected values
+     * @param actuals Array of actual values
+     * @param ignoreNulls Whether to ignore entries for which expected[i] ==
+     *            null
+     */
+    public void assertEqualsMulti(
+        String[] tags,
+        String[] expecteds,
+        String[] actuals,
+        boolean ignoreNulls)
+    {
+        final int count = tags.length;
+        assert expecteds.length == count;
+        assert actuals.length == count;
+
+        AssertionFailedError e0 = null;
+        final String testCaseName = getCurrentTestCaseName(true);
+        for (int i = 0; i < count; i++) {
+            String tag = tags[i];
+            String expected = expecteds[i];
+            String actual = actuals[i];
+
+            if (ignoreNulls) {
+                if (expected == null) {
+                    continue;
+                }
+            }
+            String expected2 = expand(tag, expected);
+            if (expected2 == null) {
+                update(testCaseName, expected, actual);
+                AssertionFailedError e = new AssertionFailedError(
+                    "reference file does not contain resource '" + expected
+                        + "' for testcase '" + testCaseName
+                        + "'");
+                if (e0 == null) {
+                    e0 = e;
+                }
+            } else {
+                try {
+                    // TODO jvs 25-Apr-2006:  reuse bulk of
+                    // DiffTestCase.diffTestLog here; besides newline
+                    // insensitivity, it can report on the line
+                    // at which the first diff occurs, which is useful
+                    // for largish snippets
+                    String expected2Canonical =
+                        expected2.replace(Util.lineSeparator, "\n");
+                    String actualCanonical =
+                        actual.replace(Util.lineSeparator, "\n");
+                    Assert.assertEquals(
+                        expected2Canonical,
+                        actualCanonical);
+                } catch (ComparisonFailure e) {
+                    amend(expected, actual);
+                    if (e0 == null) {
+                        e0 = e;
+                    }
+                }
+            }
+        }
+        if (e0 != null) {
+            throw e0;
+        }
+    }
+
+    /**
      * Creates a new document with a given resource.
      *
      * <p>This method is synchronized, in case two threads are running test

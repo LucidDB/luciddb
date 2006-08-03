@@ -20,25 +20,25 @@
 */
 package com.disruptivetech.farrago.test;
 
-import com.disruptivetech.farrago.calc.*;
+import com.disruptivetech.farrago.calc.RexToCalcTranslator;
+import com.disruptivetech.farrago.rel.FennelWindowRel;
+import com.disruptivetech.farrago.rel.FennelWindowRule;
+import com.disruptivetech.farrago.rel.WindowedAggSplitterRule;
 
-import junit.framework.*;
+import junit.framework.TestCase;
 
-import net.sf.farrago.query.*;
-import net.sf.farrago.session.*;
-
-import openjava.mop.*;
-
-import openjava.ptree.*;
-
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.RelOptRule;
+import org.eigenbase.relopt.RelOptRuleCall;
+import org.eigenbase.relopt.RelOptRuleOperand;
+import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.sql.fun.*;
-import org.eigenbase.test.*;
-import org.eigenbase.util.*;
+import org.eigenbase.sql.SqlOperator;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.test.DiffRepository;
+import org.eigenbase.test.SqlToRelTestBase;
+import org.eigenbase.util.TestUtil;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -71,7 +71,6 @@ public class Rex2CalcPlanTest extends TestCase
      */
     interface Tester extends SqlToRelTestBase.Tester
     {
-
         /**
          * Compiles a SQL statement, and compares the generated calc program
          * with the contents of a reference file with the same name as the
@@ -91,30 +90,32 @@ public class Rex2CalcPlanTest extends TestCase
             boolean shortCircuit);
 
         /**
-         * This method is modeled after the check() method above. It performs
-         * the same function but targeted to the needs of checking Aggregation
-         * functions.
-         * Compiles a SQL statement, and compares the generated calc program
-         * with the contents of a reference file with the same name as the
-         * current test.
+         * Compiles a SQL statement containing windowed aggregation, and
+         * compares the generated programs (for init, add, drop and output)
+         * with the contents of a reference file.
+         *
+         * @param sql SQL statement. Must be of the form "<code>SELECT agg OVER
+         *   window, agg OVER window ... FROM ... WINDOW decl</code>".
+         * @param shortCircuit Generate short-circuit logic to optimize logical
+         * operations such as <code>AND</code> and <code>OR</OR> conditions.
+         */
+        void checkWinAgg(
+            String sql,
+            boolean shortCircuit);
+
+        /**
+         * Compiles a SQL statement containing aggregation, and compares the
+         * generated programs (init, add, drop) with the contents of a
+         * reference file.
          *
          * @param sql SQL statement. Must be of the form "<code>SELECT ...
          *   FROM ... WHERE ... GROUP BY ...</code>".
          * @param shortCircuit Generate short-circuit logic to optimize logical
          * operations such as <code>AND</code> and <code>OR</OR> conditions.
-         * @param expectedInit String holds the section name in the ref file to
-         * compare output against for the init function.
-         * @param expectedAdd String holds the section name in the ref file to
-         * compare output against for the add function.
-         * @param expectedDrop String holds the section name in the ref file to
-         * compare output against for the drop function.
          */
         void checkAgg(
             String sql,
-            boolean shortCircuit,
-            String expectedInit,
-            String expectedAdd,
-            String expectedDrop);
+            boolean shortCircuit);
     }
 
     /**
@@ -132,12 +133,21 @@ public class Rex2CalcPlanTest extends TestCase
 
             RexBuilder rexBuilder = rootRel.getCluster().getRexBuilder();
             ProjectRel project = (ProjectRel) rootRel;
-            FilterRel filter = (FilterRel) project.getInput(0);
+            RelNode input = project.getInput(0);
+
+            RexNode condition;
+            if (input instanceof FilterRel) {
+                FilterRel filter = (FilterRel) project.getInput(0);
+                condition = filter.getCondition();
+                input = filter.getInput(0);
+            } else {
+                condition = null;
+            }
 
             // Create a program builder, and add the project expressions.
             final RexProgramBuilder programBuilder =
                 new RexProgramBuilder(
-                    filter.getInput(0).getRowType(),
+                    input.getRowType(),
                     rexBuilder);
             final RexNode [] projectExps = project.getProjectExps();
             for (int i = 0; i < projectExps.length; i++) {
@@ -147,8 +157,7 @@ public class Rex2CalcPlanTest extends TestCase
             }
 
             // Add a condition, if any.
-            RexNode condition = filter.getCondition();
-            if (nullSemantics) {
+            if (condition != null && nullSemantics) {
                 condition =
                     rexBuilder.makeCall(
                         SqlStdOperatorTable.isTrueOperator,
@@ -191,12 +200,78 @@ public class Rex2CalcPlanTest extends TestCase
                 TestUtil.NL + actual);
         }
 
+        public void checkWinAgg(
+            String sql,
+            boolean shortCircuit)
+        {
+            RelNode rootRel = convertSqlToRel(sql);
+
+            ProjectRel project = (ProjectRel) rootRel;
+            RelNode input = project.getInput(0);
+
+            RexNode condition;
+            if (input instanceof FilterRel) {
+                FilterRel filter = (FilterRel) project.getInput(0);
+                condition = filter.getCondition();
+                input = filter.getInput(0);
+            } else {
+                condition = null;
+            }
+
+            // Convert project to calc.
+            CalcRel calcRel =
+                (CalcRel) callRule(
+                    ProjectToCalcRule.instance, new RelNode[]{project});
+
+            // Convert calc to calc/winagg/calc.
+            CalcRel calcRel2 = (CalcRel) callRule(
+                WindowedAggSplitterRule.instance, new RelNode[]{calcRel});
+            final WindowedAggregateRel winAggRel =
+                (WindowedAggregateRel) calcRel2.getInput(0);
+
+            // Convert calc/winagg/calc to fennelwindow.
+            FennelWindowRel windowRel = (FennelWindowRel)
+                callRule(
+                    FennelWindowRule.CalcOnWinOnCalc,
+                    new RelNode[]{calcRel2, winAggRel, winAggRel.getInput(0)});
+            Util.discard(windowRel);
+
+            final String[] programs = windowRel.getSoleProgram();
+            DiffRepository diffRepos = getDiffRepos();
+            diffRepos.assertEqualsMulti(
+                new String[] {
+                    "expectedInit",
+                    "expectedAdd",
+                    "expectedDrop",
+                    "expectedOutput",
+                },
+                new String[] {
+                    "${expectedInit}",
+                    "${expectedAdd}",
+                    "${expectedDrop}",
+                    "${expectedOutput}",
+                },
+                new String[] {
+                    TestUtil.NL + programs[0],
+                    TestUtil.NL + programs[1],
+                    TestUtil.NL + programs[2],
+                    TestUtil.NL + programs[3],
+                }, false);
+        }
+
+        private RelNode callRule(
+            final RelOptRule rule, final RelNode[] rels)
+        {
+            final MyRelOptRuleCall ruleCall =
+                new MyRelOptRuleCall(rule.getOperand(), rels);
+            rule.onMatch(ruleCall);
+            return ruleCall.rel;
+        }
+
         public void checkAgg(
             String sql,
-            boolean shortCircuit,
-            String expectedInit,
-            String expectedAdd,
-            String expectedDrop)
+            boolean shortCircuit
+        )
         {
             boolean doComments = true;
             RelNode rootRel = convertSqlToRel(sql);
@@ -238,15 +313,38 @@ public class Rex2CalcPlanTest extends TestCase
             translator.getAggProgram(program, programs);
 
             DiffRepository diffRepos = getDiffRepos();
-            diffRepos.assertEquals("expectedInit",
-                expectedInit,
-                TestUtil.NL + programs[0]);
-            diffRepos.assertEquals("expectedAdd",
-                expectedAdd,
-                TestUtil.NL + programs[1]);
-            diffRepos.assertEquals("expectedDrop",
-                expectedDrop,
-                TestUtil.NL + programs[2]);
+            diffRepos.assertEqualsMulti(
+                new String[] {
+                    "expectedInit",
+                    "expectedAdd",
+                    "expectedDrop",
+                },
+                new String[] {
+                    "${expectedInit}",
+                    "${expectedAdd}",
+                    "${expectedDrop}",
+                },
+                new String[] {
+                    TestUtil.NL + programs[0],
+                    TestUtil.NL + programs[1],
+                    TestUtil.NL + programs[2],
+                }, false);
+        }
+
+        private class MyRelOptRuleCall extends RelOptRuleCall
+        {
+            private RelNode rel;
+
+            public MyRelOptRuleCall(
+                RelOptRuleOperand operand, final RelNode[] rels)
+            {
+                super(null, operand, rels);
+            }
+
+            public void transformTo(RelNode rel)
+            {
+                this.rel = rel;
+            }
         }
     }
 
@@ -262,9 +360,6 @@ public class Rex2CalcPlanTest extends TestCase
         return DiffRepository.lookup(Rex2CalcPlanTest.class);
     }
 
-
-
-
     //--- Tests ------------------------------------------------
     public void testSimplePassThroughFilter()
     {
@@ -275,54 +370,45 @@ public class Rex2CalcPlanTest extends TestCase
     public void testAggCount()
     {
         String sql = "SELECT COUNT(empno) FROM emp";
-        tester.checkAgg(
-            sql,
-            false,
-            "${expectedInit}",
-            "${expectedAdd}",
-            "${expectedDrop}");
+        tester.checkAgg(sql, false);
     }
 
     public void testAggSum()
     {
-        tester.checkAgg(
-            "SELECT SUM(empno+5) FROM emp",
-            false,
-            "${expectedInit}",
-            "${expectedAdd}",
-            "${expectedDrop}");
+        tester.checkAgg("SELECT SUM(empno+5) FROM emp", false);
     }
 
-    public void _testAggSumExp()
+    public void testAggSumExp()
     {
         tester.checkAgg(
             "SELECT empno, SUM(empno+deptno), COUNT(empno) "
             + "FROM emp "
             + "GROUP BY empno,deptno",
-            false,
-            "${expectedInit}",
-            "${expectedAdd}",
-            "${expectedDrop}");
+            false);
     }
 
-    public void _testAggMin()
+    public void testWindowedMinMax()
     {
-        tester.checkAgg("SELECT MIN(empno) FROM emp ",
-            false,
-            "${expectedInit}",
-            "${expectedAdd}",
-            "${expectedDrop}");
+        tester.checkWinAgg(
+            "SELECT\n" +
+                " MIN(empno) OVER last3,\n" +
+                " MAX(empno) OVER last3\n" +
+                "FROM emp\n" +
+                "WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            true);
     }
 
-    public void _testWindowedMinMax()
+    public void testWindowedFirstLastValue()
     {
-        tester.checkAgg(
-            "SELECT MIN(empno) OVER last3, MAX(empno) OVER last3 "
-            + "FROM emp WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
-            false,
-            "${expectedInit}",
-            "${expectedAdd}",
-            "${expectedDrop}");
+        tester.checkWinAgg(
+            "SELECT\n" +
+                " FIRST_VALUE(empno) OVER last3,\n" +
+                " LAST_VALUE(empno) OVER last3,\n" +
+                " FIRST_VALUE(empno + 1) OVER last3 + 2,\n" +
+                " 3 + MIN(empno + 1) OVER last3\n" +
+                "FROM emp\n" +
+                "WINDOW last3 AS (ORDER BY empno ROWS 3 PRECEDING)",
+            true);
     }
 
     public void testSimplyEqualsFilter()
@@ -632,69 +718,6 @@ public class Rex2CalcPlanTest extends TestCase
             + ",cast('123' as double)"
             + " FROM emp WHERE empno > 10";
         tester.check(sql, false, false);
-    }
-
-    //~ Inner Classes ----------------------------------------------------------
-
-    /**
-     * Contains context shared between unit tests.
-     *
-     * @see Util#deprecated
-     *
-     * <p>Lots of nasty stuff to set up the Openjava environment, should be
-     * removed when we're not dependent upon Openjava.</p>
-     */
-    public static class TestContext
-    {
-        private FarragoSessionStmtValidator stmtValidator;
-        private FarragoPreparingStmt stmt;
-        Environment env;
-        private int executionCount;
-
-        TestContext()
-        {
-            // Nasty OJ stuff
-            env = OJSystem.env;
-
-            String packageName = getTempPackageName();
-            String className = getTempClassName();
-            env = new FileEnvironment(env, packageName, className);
-            ClassDeclaration decl =
-                new ClassDeclaration(
-                    new ModifierList(ModifierList.PUBLIC),
-                    className,
-                    null,
-                    null,
-                    new MemberDeclarationList());
-            OJClass clazz = new OJClass(env, null, decl);
-            env.record(
-                clazz.getName(),
-                clazz);
-            env = new ClosedEnvironment(clazz.getEnvironment());
-            OJUtil.threadDeclarers.set(clazz);
-        }
-
-        protected static String getClassRoot()
-        {
-            return SaffronProperties.instance().classDir.get(true);
-        }
-
-        protected String getTempClassName()
-        {
-            return
-                "Dummy_"
-                + Integer.toHexString(this.hashCode() + executionCount++);
-        }
-
-        protected static String getJavaRoot()
-        {
-            return SaffronProperties.instance().javaDir.get(getClassRoot());
-        }
-
-        protected String getTempPackageName()
-        {
-            return SaffronProperties.instance().packageName.get();
-        }
     }
 }
 

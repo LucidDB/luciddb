@@ -422,6 +422,10 @@ relevant standard code.  See IllegalIntervalLiteral for an example.
     <text>Ordinal out of range</text>
 </exception>
 
+<exception id="120670" name="WindowHasNegativeSize" className="org.eigenbase.sql.validate.SqlValidatorException">
+    <text>Window has negative size</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Eigenbase Generic resources 130,000 - 140,000 -->
 <!-- ====================================================================== -->

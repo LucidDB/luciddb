@@ -50,7 +50,7 @@ public interface CalcRexAggImplementor
      */
     void implementInitialize(
         RexCall call,
-        CalcProgramBuilder.Register accumulatorRegister,
+        CalcReg accumulatorRegister,
         RexToCalcTranslator translator);
 
     /**
@@ -65,7 +65,7 @@ public interface CalcRexAggImplementor
      */
     void implementAdd(
         RexCall call,
-        CalcProgramBuilder.Register accumulatorRegister,
+        CalcReg accumulatorRegister,
         RexToCalcTranslator translator);
 
     /**
@@ -81,7 +81,7 @@ public interface CalcRexAggImplementor
      */
     void implementDrop(
         RexCall call,
-        CalcProgramBuilder.Register accumulatorRegister,
+        CalcReg accumulatorRegister,
         RexToCalcTranslator translator);
 
     /**

@@ -264,11 +264,18 @@ public interface SqlValidator
      * or a window specification (a {@link SqlWindow}).
      * @param scope Scope in which to resolve window names
      *
+     * @param populateBounds Whether to populate bounds. Doing so may alter the
+     *   definition of the window. It is recommended that populate bounds when
+     *   translating to physical algebra, but not when validating.
+     *
      * @return A window
      *
      * @throws RuntimeException Validation exception if window does not exist
      */
-    SqlWindow resolveWindow(SqlNode windowOrRef, SqlValidatorScope scope);
+    SqlWindow resolveWindow(
+        SqlNode windowOrRef,
+        SqlValidatorScope scope,
+        boolean populateBounds);
 
     /**
      * Finds the namespace corresponding to a given node.
