@@ -498,7 +498,10 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 void LhxAggExecStream::closeImpl()
 {
     hashTable.releaseResources();
-    rootPlan->close();
+    if (rootPlan) {
+        rootPlan->close();
+        rootPlan.reset();
+    }
     ConduitExecStream::closeImpl();
 }
 
