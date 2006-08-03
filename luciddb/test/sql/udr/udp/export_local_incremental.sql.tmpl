@@ -1,0 +1,83 @@
+-- EXPORT_LOCAL_SCHEMA_INCREMENTAL_TO_CSV tests
+
+set schema 'udptest';
+set path 'udptest';
+
+
+-- create app variable with current time
+call applib.create_var('udptest', null, 'appvars for udptest');
+call applib.create_var('udptest', 'startTs', 'current timestamp taken before tests');
+call applib.set_var('udptest', 'startTs', cast(current_timestamp as varchar(25)));
+
+call applib.flush_var('udptest', 'startTs');
+
+-- sleep 1 sec to ensure create time is after
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
+-- create view
+create view blah as 
+select * from sys_root.dba_views
+where schema_name='UDPTEST';
+
+-- basic incremental export
+call sys_root.export_schema_incremental_to_csv('LOCALDB', 'SYS_ROOT', false, 'DBA_VIEWS', null, cast(applib.get_var('udptest', 'startTs') as timestamp), 'LAST_MODIFICATION_TIMESTAMP', '@EXPDIR@/local/inc', true, true);
+
+create server exp_server
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@EXPDIR@/local/inc',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes'
+);
+
+-- check table
+-- TODO: FRG-172, FRG-175 (right now not returning anything since creation 
+-- timestamps are currently in PDT time and casting timestamps to varchar is
+-- one hour off)
+select catalog_name, schema_name, view_name from exp_server.BCP.DBA_VIEWS;
+
+
+create table mytable(cola int, lmts timestamp);
+
+insert into mytable values
+(1, current_timestamp),
+(2, current_timestamp);
+
+-- sleep 1 sec to ensure timestamp is after
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
+-- update appvar
+call applib.set_var('udptest', 'startTs', cast(current_timestamp as varchar(25)));
+call applib.flush_var('udptest', 'startTs');
+
+-- sleep 1 sec to ensure timestamp is after
+select sys_boot.mgmt.sleep(1000) from (values(0));
+
+-- TODO: uncomment after FRG-175 is fixed
+insert into mytable values
+-- (3, current_timestamp),
+-- (4, current_timestamp);
+(3, cast(applib.get_var('udptest', 'startTs') as timestamp));
+
+-- export incremental returns some rows
+call sys_root.export_schema_incremental_to_csv(null, 'UDPTEST', false, 'MYTABLE', null, cast(applib.get_var('udptest', 'startTs') as timestamp), 'LMTS', '@EXPDIR@/local/inc', true, true);
+
+select cola from exp_server.BCP.MYTABLE;
+
+-- update incremental return no rows
+-- TODO: FRG-176
+call sys_root.export_schema_incremental_to_csv('LOCALDB', 'UDPTEST', false, 'MYTABLE', null, current_timestamp, 'LMTS', '@EXPDIR@/local/inc', true, true);
+
+select cola from exp_server.BCP.MYTABLE;
+
+-- incremental changes to full export if either last_modified or 
+-- last_modified_column are null
+call sys_root.export_schema_incremental_to_csv('LOCALDB', 'UDPTEST', false, 'MYTABLE,BLAH', null, TIMESTAMP'2001-12-12 12:00:00', null, '@EXPDIR@/local/inc', true, true);
+
+select cola from exp_server.BCP.MYTABLE order by 1;
+select catalog_name, schema_name, view_name from exp_server.BCP.BLAH order by 1,2,3;

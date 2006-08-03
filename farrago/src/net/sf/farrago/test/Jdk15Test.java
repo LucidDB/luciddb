@@ -25,8 +25,8 @@ import java.util.*;
 
 import junit.framework.*;
 
-import org._3pq.jgrapht.*;
-import org._3pq.jgrapht.graph.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
 
 
 /**
@@ -87,8 +87,8 @@ public class Jdk15Test
 
     public void testGraphGenerics()
     {
-        Graph<String, Edge<String>> graph =
-            new SimpleGraph<String, Edge<String>>();
+        Graph<String, DefaultEdge> graph =
+            new SimpleGraph<String, DefaultEdge>(DefaultEdge.class);
         graph.addVertex("Absalom");
         graph.addVertex("Achitophel");
         graph.addEdge("Absalom", "Achitophel");

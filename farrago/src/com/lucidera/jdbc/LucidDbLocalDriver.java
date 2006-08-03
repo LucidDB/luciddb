@@ -20,7 +20,10 @@
 */
 package com.lucidera.jdbc;
 
+import com.lucidera.farrago.*;
+
 import net.sf.farrago.jdbc.engine.*;
+import net.sf.farrago.session.*;
 
 
 /**
@@ -31,13 +34,19 @@ import net.sf.farrago.jdbc.engine.*;
  * @version $Id$
  */
 public class LucidDbLocalDriver
-    extends FarragoJdbcEngineDriver
+    extends FarragoUnregisteredJdbcEngineDriver
 {
 
     //~ Static fields/initializers ---------------------------------------------
 
     static {
         new LucidDbLocalDriver().register();
+    }
+    
+    // implement FarragoJdbcServerDriver
+    public FarragoSessionFactory newSessionFactory()
+    {
+        return new LucidDbSessionFactory();
     }
 }
 

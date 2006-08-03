@@ -79,6 +79,7 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     if (copyPrefixPending) {
         copyPrefix();
         copyPrefixPending = false;
+        needToRead = false;
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
@@ -86,7 +87,7 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
         // read a segment from the anchor if we've finished processing the
         // previous segment
         if (needToRead) {
-            rc = readInputAndRestart(0, baseRid, baseByteSeg, baseLen);
+            rc = readMinuendInputAndRestart(baseRid, baseByteSeg, baseLen);
             if (rc != EXECRC_YIELD) {
                 return rc;
             }
@@ -139,22 +140,22 @@ ExecStreamResult LbmMinusExecStream::execute(ExecStreamQuantum const &quantum)
     return EXECRC_QUANTUM_EXPIRED;
 }
 
-ExecStreamResult LbmMinusExecStream::readInputAndRestart(
-    uint iInput, LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
+ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
+    LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
 {
     ExecStreamResult rc = EXECRC_YIELD;
-    if (nFields && iInput == 0) {
-        rc = readMinuendInput(currRid, currByteSeg, currLen);
-    } else {
-        rc = readInput(iInput, currRid, currByteSeg, currLen);
-    }
-    if (rc != EXECRC_YIELD || nFields == 0) {
+
+    // If there are no keys, read as the minuend as an ordered input
+    if (!nFields) {
+        rc = readInput(0, currRid, currByteSeg, currLen);
         return rc;
     }
 
-    // If there are prefixes, and the tuple changes, then the first input's
-    // (the minuend's) RIDs may start all over. Restart the inputs to be
-    // subtracted (the subtrahends) so all of their data can be minused
+    // Otherwise, read the minuend as a random sequence of segments
+    rc = readMinuendInput(currRid, currByteSeg, currLen);
+
+    // When a minuend's bitmap tuple changes, the RIDs may be unordered.
+    // Restart the subtrahends so all of their data can be minused
     // from the next minuend input.
     //
     // Also flush the segment writer's current tuple. If it cannot be

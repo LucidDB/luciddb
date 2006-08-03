@@ -751,7 +751,10 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
 void LhxJoinExecStream::closeImpl()
 {
     hashTable.releaseResources();
-    rootPlan->close();
+    if (rootPlan) {
+        rootPlan->close();
+        rootPlan.reset();
+    }
     ConfluenceExecStream::closeImpl();
 }
 

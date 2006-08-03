@@ -1,0 +1,183 @@
+<html>
+
+<head>
+<title>LucidDB Architecture</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" />
+</head>
+
+<body>
+
+The diagram below illustrates the main components of the LucidDB
+architecture:
+
+<br>
+<br>
+
+<img src="LucidDbArch.png">
+
+<br>
+
+The core consists of a top-half implemented in Java and a bottom half
+implemented in C++.  This hybrid approach yields a number of advantages:
+
+<ul>
+
+<li>the Java portion provides ease of development, extensibility, and
+integration, with less chance for security exploits due to managed
+memory
+
+<li>the C++ portion provides high performance and direct access to
+low-level operating system, network, and file system resources
+
+<li>the Java runtime system enables machine-code evaluation of SQL
+expressions via a combination of Java code generation and just-in-time
+compilation (as part of query execution)
+
+</ul>
+
+The sections below provide high-level overviews of some of the most
+innovative components.
+
+<hr>
+
+<h2>Column Store and Bitmap Indexes</h2>
+
+Recent research has established the superiority of a "column-store"
+architecture for read-mostly databases.  LucidDB's architecture is
+similar in concept to that of the <a
+href="http://db.lcs.mit.edu/projects/cstore">C-Store</a> research
+project.
+
+<p>
+
+In LucidDB, database tables are vertically partitioned and stored in a
+highly compressed form.  Vertical partitioning means that each block
+on disk stores values from only one column rather than entire rows; as
+a result, compression algorithms are much more effective because they
+can operate on homogeneous value domains, often with only a few
+distinct values.  For example, a column storing the state component of
+a US address only has 50 possible values, so each value can be stored
+using only 6 bits instead of the 2-byte character strings used in a
+traditional uncompressed representation.
+
+<p>
+
+Vertical partitioning also means that a query that only accesses a
+subset of the columns of the referenced tables can avoid reading the
+other columns entirely.  The net effect of vertical partitioning is
+greatly improved performance due to reduced disk I/O and more
+effective caching (data compression allows a greater logical dataset
+size to fit into physical memory).  Compression also allows disk
+storage to be used more effectively (e.g. for maintaining more
+indexes).
+
+<p>
+
+The companion to column store is bitmap indexing, which has well-known
+advantages for data warehousing.  LucidDB's bitmap index
+implementation takes advantage of column store features; for example,
+bitmaps are built directly off of the compressed representation,
+reducing load time significantly.  All access paths support
+asynchronous I/O intelligent prefetch for optimal use of disk bandwidth.
+
+<p>
+
+It should be noted that LucidDB is <em>not</em> suitable for use as a
+transactional database; unlike C-Store, it does not maintain separate
+read-optimized and write-optimized storage areas, and only supports
+table-level locking.  LucidDB is very fast at bulk-loading or updating
+large amounts of data at once, but it is not intended to work well for
+the single-row operations typical of transactional systems.  Best
+practice is to separate analytical systems from transactional systems;
+LucidDB can be used as a data warehouse, data mart, or operational
+data store in tandem with the traditional transactional systems used
+as data sources.
+
+<hr>
+
+<h2>Query Optimization and Execution</h2>
+
+LucidDB's optimizer is designed with the assumptions of a data
+warehousing environment in mind, so no hints are needed to get it to
+choose the best plan for typical analytical query patterns.  In
+particular, it supports star joins based on bitmap indexes via a
+well-known <a
+href="http://www.cs.brown.edu/courses/cs227/Papers/Indexing/O'NeilGraefe.pdf">
+semijoin technique</a>, meaning that usually the only fact table rows
+accessed are those actually needed to compute query results.  The
+optimizer uses a mix of heuristics and cost-based analysis to achieve
+hint-free planning.
+
+<p>
+
+The query executor includes a high-performance sorter, hash join, and
+hash aggregation.  All of these execution algorithms are optimized to
+take best advantage of available memory, but are also capable of
+multi-level disk-based partitioning for handling even the largest data
+sets.  The hash-based algorithms include adaptive skew-resistance and
+early filtering.  The only limit on data size is available temp disk space.
+
+<hr>
+
+<h2>Built-in ETL</h2>
+
+LucidDB is capable of executing extract/transform/load processes
+directly as pipelined SQL statements, without any external ETL engine
+required.  Tihs is made possible via a number of features:
+
+<ul>
+
+<li>Extraction of external metadata and data via SQL/MED: LucidDB
+comes with out-of-the-box support for extracting from flat files and
+JDBC data sources.  Additional foreign data wrappers can be plugged in
+to make any data source look like a schema of relational tables.  For
+example, a wrapper has been written for access to Salesforce.com web
+services; each Salesforce object can be queried as a table, with SQL
+expressions such as filters pushed down into the webservice call via
+an optimizer rule.
+
+<li>Pipelined Java transformations (a.k.a. UDX): LucidDB supports the
+creation of "table functions" implemented as Java routines; these
+functions take one or more cursors as input and produce a new cursor
+as output, meaning they can be incorporated directly into SQL
+statements.  For example, a data clustering algorithm can be
+implemented in Java and invoked as a pipelined operator in a SQL
+query, allowing complex ETL functions such as name and address
+matching to be executed without the need to materialize intermediate
+temporary tables.  LucidDB's hybrid Java/C++ architecture is optimized
+for efficient batching of tuples back and forth across the JNI
+boundary between managed and unmanaged memory.  All threads run in a
+single process and Java virtual machine, and calls across the JNI
+boundary do not require extra threads, so there is no inter-process
+communication overhead.
+
+<li>Bulk-load via INSERT and UPSERT: no separate bulk-load utility is
+required; instead, the SQL INSERT statement does the job directly,
+selecting from a query consisting of SQL operators such as join and
+minus, Java transformations, and SQL/MED sources.  LucidDB also
+supports the SQL:2003 standard MERGE statement for implementing
+upsert.  Both DML operations (as well as DELETE) are fully recoverable
+via page-level logging; for efficiency, no record-level logging or
+locking is needed.  Errors due to constraint violations can be written
+to a reject file without aborting the load.
+
+<li>Application library: LucidDB comes with <em>applib</em>, a library
+of commonly used ETL and analytical functions and transformation,
+e.g. a calendar table generator.
+
+</ul>
+
+<hr>
+
+<h2>OLAP Integration</h2>
+
+Because LucidDB has a Java top-half, it can be deployed into a J2EE
+application server.  This means it is very easy to make it run
+side-by-side with the <a target="_top"
+href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
+enabling direct in-process JDBC calls from Mondrian into LucidDB with no
+communications overhead.  And the SQL queries issued by Mondrian for
+implementing MDX statements from an OLAP client are of exactly the
+form LucidDB's optimizer was designed for.
+
+</body>

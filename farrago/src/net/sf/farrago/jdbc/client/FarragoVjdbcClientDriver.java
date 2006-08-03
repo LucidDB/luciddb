@@ -21,15 +21,6 @@
 */
 package net.sf.farrago.jdbc.client;
 
-import de.simplicit.vjdbc.*;
-
-import java.sql.*;
-
-import java.util.*;
-
-import net.sf.farrago.jdbc.*;
-import net.sf.farrago.release.*;
-
 
 /**
  * FarragoJdbcClientDriver implements the Farrago client side of the {@link
@@ -39,77 +30,13 @@ import net.sf.farrago.release.*;
  * @version $Id$
  */
 public class FarragoVjdbcClientDriver
-    extends FarragoAbstractJdbcDriver
+    extends FarragoUnregisteredVjdbcClientDriver
 {
 
     //~ Static fields/initializers ---------------------------------------------
 
     static {
         new FarragoVjdbcClientDriver().register();
-    }
-
-    //~ Constructors -----------------------------------------------------------
-
-    /**
-     * Creates a new FarragoVjdbcClientDriver object.
-     */
-    public FarragoVjdbcClientDriver()
-    {
-    }
-
-    //~ Methods ----------------------------------------------------------------
-
-    /**
-     * @return the prefix for JDBC URL's understood by this driver; subclassing
-     * drivers can override this to customize the URL scheme
-     */
-    public String getUrlPrefix()
-    {
-        return getBaseUrl() + "rmi://";
-    }
-
-    // implement Driver
-    public Connection connect(
-        String url,
-        Properties info)
-        throws SQLException
-    {
-        if (!acceptsURL(url)) {
-            return null;
-        }
-
-        // connection property precedence:
-        // connect string (URI), info props, connection defaults
-
-        // don't modify user's properties:
-        //  copy input props backed by connection defaults,
-        //  move any params from the URI to the properties
-        Properties driverProps = applyDefaultConnectionProps(info);
-        String driverUrl = parseConnectionParams(url, driverProps);
-
-        Driver rmiDriver;
-        try {
-            rmiDriver = new VirtualDriver();
-        } catch (Exception ex) {
-            // TODO: use FarragoJdbcUtil.newSqlException, see Jira FRG-122
-            throw new SQLException(ex.getMessage());
-        }
-
-        // transform the URL into a form understood by VJDBC
-        String urlRmi = driverUrl.substring(getUrlPrefix().length());
-        String [] split = urlRmi.split(":");
-        if (split.length == 1) {
-            // no port number, so append default
-            FarragoReleaseProperties props =
-                FarragoReleaseProperties.instance();
-            urlRmi = urlRmi + ":" + props.jdbcUrlPortDefault.get();
-        }
-        urlRmi = "jdbc:vjdbc:rmi://" + urlRmi + "/VJdbc,FarragoDBMS";
-
-        // NOTE:  can't call DriverManager.connect here, because that
-        // would deadlock in the case where client and server are
-        // running in the same VM
-        return rmiDriver.connect(urlRmi, driverProps);
     }
 }
 

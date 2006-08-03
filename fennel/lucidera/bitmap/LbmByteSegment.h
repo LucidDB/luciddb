@@ -123,7 +123,7 @@ public:
      */
     static uint countBits(TupleDatum const &datum)
     {
-        if (! datum.pData) {
+        if (datum.pData == NULL || datum.cbData == 0) {
             return 1;
         }
         return countBits(datum.pData, datum.cbData);

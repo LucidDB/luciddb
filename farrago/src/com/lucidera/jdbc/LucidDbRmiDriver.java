@@ -31,7 +31,7 @@ import net.sf.farrago.jdbc.client.*;
  * @version $Id$
  */
 public class LucidDbRmiDriver
-    extends FarragoVjdbcClientDriver
+    extends FarragoUnregisteredVjdbcClientDriver
 {
 
     //~ Static fields/initializers ---------------------------------------------

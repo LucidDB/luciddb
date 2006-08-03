@@ -1,0 +1,37 @@
+-- EXPORT_FOREIGN_SCHEMA_INCREMENTAL_TO_CSV tests
+
+set schema 'udptest';
+set path 'udptest';
+
+-- basic foreign incremental export
+call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE', null, cast(applib.get_var('udptest', 'startTs') as timestamp), 'LMTS', '@EXPDIR@/foreign/inc', true, true);
+
+create server fexp_server
+foreign data wrapper "FLAT FILE"
+options(
+  directory '@EXPDIR@/foreign/inc',
+  file_extension '.txt',
+  ctrl_file_extension '.bcp',
+  field_delimiter '\t',
+  line_delimiter '\n',
+  quote_char '"',
+  escape_char '',
+  with_header 'yes'
+);
+
+select cola from fexp_server.bcp.mytable;
+
+-- returns no rows
+-- TODO: FRG-176
+call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE', null, current_timestamp, 'LMTS', '@EXPDIR@/foreign/inc', true, true);
+
+select cola from fexp_server.bcp.mytable;
+
+-- incremental changes to full export if either last_modified 
+-- or last_modified column are null
+call sys_root.export_foreign_schema_incremental_to_csv('EXP_SERVER', 'BCP', false, 'MYTABLE, BLAH', null, cast(applib.get_var('udptest', 'startTs') as timestamp), null, '@EXPDIR@/foreign/inc', true, true);
+
+select cola from fexp_server.bcp.mytable order by 1;
+select catalog_name, schema_name, view_name 
+from fexp_server.bcp.blah 
+order by 1,2,3;

@@ -327,6 +327,9 @@ ${farrago.test.jvmargs}
       <include name="jgrapht-jdk1.4.jar" if="farrago.jre.14"/>
       <include name="jgrapht-jdk1.5.jar" unless="farrago.jre.14"/>
     </fileset>
+    <fileset dir="${jgrapht7.dir}">
+      <include name="jgrapht7-jdk1.5.jar" />
+    </fileset>
     <pathelement location="${farrago.classes.dir}"/>
     <pathelement location="${farrago.catalog.src.dir}"/>
   </path>

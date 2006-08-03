@@ -24,6 +24,8 @@ import java.io.*;
 
 import net.sf.farrago.server.*;
 
+import com.lucidera.jdbc.*;
+
 
 /**
  * LucidDbServer is a wrapper to insulate LucidDB scripts from direct
@@ -38,10 +40,25 @@ public class LucidDbServer
 
     //~ Constructors -----------------------------------------------------------
 
+    public LucidDbServer()
+        throws Exception
+    {
+        super();
+    }
+
     public LucidDbServer(PrintWriter pw)
         throws Exception
     {
         super(pw);
+    }
+
+    // override FarragoVjdbcServer
+    public static void main(String [] args)
+        throws Exception
+    {
+        LucidDbServer server = new LucidDbServer();
+        server.start(new LucidDbLocalDriver());
+        server.runConsole();
     }
 }
 

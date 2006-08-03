@@ -26,6 +26,7 @@ jmethodID ProxyCmdOpenDatabase::meth_isCreateDatabase = 0;
 jmethodID ProxyCmdOpenDatabase::meth_getParams = 0;
 jmethodID ProxyCmdPrepareExecutionStreamGraph::meth_getStreamDefs = 0;
 jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
+jmethodID ProxyCmdSetParam::meth_getParam = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isEstimate = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isIncludeTuples = 0;
 jmethodID ProxyCorrelation::meth_getId = 0;
@@ -237,6 +238,10 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdSavepoint");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdSavepoint>));
 ProxyCmdSavepoint::meth_getResultHandle = pEnv->GetMethodID(jClass,"getResultHandle","()Lnet/sf/farrago/fem/fennel/FemSvptHandle;");
+
+jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdSetParam");
+visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdSetParam>));
+ProxyCmdSetParam::meth_getParam = pEnv->GetMethodID(jClass,"getParam","()Lnet/sf/farrago/fem/fennel/FemDatabaseParam;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCmdTruncateIndex");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyCmdTruncateIndex>));
@@ -728,6 +733,15 @@ SharedProxySvptHandle ProxyCmdSavepoint::getResultHandle()
 SharedProxySvptHandle p;
 p->pEnv = pEnv;
 p->jObject = pEnv->CallObjectMethod(jObject,meth_getResultHandle);
+if (!p->jObject) p.reset();
+return p;
+}
+
+SharedProxyDatabaseParam ProxyCmdSetParam::getParam()
+{
+SharedProxyDatabaseParam p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getParam);
 if (!p->jObject) p.reset();
 return p;
 }

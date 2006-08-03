@@ -64,7 +64,7 @@ public abstract class FarragoTestConcurrentScriptedTestCase
     protected void runScript(String mtsqlFile)
         throws Exception
     {
-        FarragoJdbcEngineDriver driver = newJdbcEngineDriver();
+        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
         assert (mtsqlFile.endsWith(".mtsql"));
 
         File mtsqlFileSansExt =

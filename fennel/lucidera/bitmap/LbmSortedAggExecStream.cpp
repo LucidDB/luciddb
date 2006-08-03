@@ -55,6 +55,7 @@ public:
         TupleDatum &outputDatum,
         TupleDatum const &accumulatorDatum);
 
+    // unused...
     virtual void initAccumulator(
         TupleDatum &accumulatorDatumDest,
         TupleData const &inputTuple);
@@ -111,14 +112,16 @@ void LbmRepeatingAggComputer::initAccumulator(
     TupleDatum &accumulatorDatumDest,
     TupleData const &inputTuple)
 {
-    pComputer->initAccumulator(accumulatorDatumDest, inputTuple);
+    // sorted aggregates never use this call
+    assert(false);
 }
 
 void LbmRepeatingAggComputer::initAccumulator(
     TupleDatum &accumulatorDatumSrc,
     TupleDatum &accumulatorDatumDest)
 {
-    pComputer->initAccumulator(accumulatorDatumSrc, accumulatorDatumDest);
+    // sorted aggregates never use this call
+    assert(false);
 }
 
 void LbmRepeatingAggComputer::updateAccumulator(
