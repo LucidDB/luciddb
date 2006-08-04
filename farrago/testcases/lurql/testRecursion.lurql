@@ -27,13 +27,56 @@ from class "Class" where name='ModelElement' then (
     )
 );
 
-# Test recursion with THEN
+# Test recursion without GATHER:  finds all superclass attributes
 EXPLAIN AND EXECUTE
 select a
-from class "Class" where name='Exception' then (
+from class "Class" where name='Package' then (
     recursively (
         follow association Generalizes forward
     ) then (
         follow association Contains destination class Attribute as a
     )
 );
+
+# Test recursion with GATHER outside:  equivalent to previous query
+EXPLAIN AND EXECUTE
+select a
+from class "Class" where name='Package' then (
+    recursively (
+        follow association Generalizes forward
+    )
+) gather with parent then (
+    follow association Contains destination class Attribute as a
+);
+
+# Test recursion with GATHER at same level: finds only attributes for
+# start class because of confusing syntax; this syntax is deprecated
+# and will be removed soon
+EXPLAIN AND EXECUTE
+select a
+from class "Class" where name='Package' then (
+    recursively (
+        follow association Generalizes forward
+    ) gather with parent then (
+        follow association Contains destination class Attribute as a
+    )
+);
+
+# Test recursion with GATHER inside:  this makes the GATHER
+# part of the recursion
+EXPLAIN AND EXECUTE
+select a
+from class "Class" where name='Package' then (
+    recursively (
+        (
+            follow association Generalizes forward
+            union
+            follow association DependsOn forward
+        ) gather then (
+            follow association Generalizes backward
+        )
+    )
+) gather with parent then (
+    follow association Contains destination class Attribute as a
+);
+
