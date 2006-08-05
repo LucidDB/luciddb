@@ -161,7 +161,8 @@ fi
 
 if $remove_debug; then
     rm -f $LIB_DIR/fennel/*debug*
-    rm -f $LIB_DIR/fennel/*gdp*
+# TODO jvs 5-Aug-2006:  re-enable this    
+#    rm -f $LIB_DIR/fennel/*gdp*
 fi
 cp boost/LICENSE_1_0.txt $LIB_DIR/fennel/boost.license.txt
 
