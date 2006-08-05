@@ -30,6 +30,8 @@ import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import org.eigenbase.sql.SqlDialect;
+import org.eigenbase.sql.SqlUtil;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
@@ -49,6 +51,7 @@ public abstract class DdlGenerator
 
     //~ Static fields/initializers ---------------------------------------------
 
+    protected static SqlDialect sqlDialect = SqlUtil.eigenbaseDialect;
     protected static String VALUE_NULL = "NULL";
     protected static String NL = System.getProperty("line.separator");
 
@@ -59,7 +62,7 @@ public abstract class DdlGenerator
         if (schemaName != null) {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
-            sb.append(DdlGenerator.apostropheAndQuote(schemaName));
+            sb.append(DdlGenerator.literal(schemaName));
             stmt.addStmt(sb.toString());
         }
     }
@@ -96,71 +99,21 @@ public abstract class DdlGenerator
         }
     }
 
-    protected static String apostropheAndQuote(String str)
-    {
-        return "'\"" + escapeApostrophesAndQuotes(str) + "\"'";
-    }
-
-    /**
-     * Escape strings for SQL. Converts quotes (") into double quotes ("") and
-     * apostrophes (') into double apostrophes ('').
-     *
-     * @param str String to escape
-     *
-     * @return escapes version of <code>str</code>
-     */
-    protected static String escapeApostrophesAndQuotes(String str)
-    {
-        StringBuffer buf = new StringBuffer(str);
-        for (int i = 0; i < buf.length(); i++) {
-            if (buf.charAt(i) == '\"') {
-                buf.insert(i, '\"');
-                i++;
-            } else if (buf.charAt(i) == '\'') {
-                buf.insert(i, '\'');
-                i++;
-            }
-        }
-        return buf.toString();
-    }
-
-    /**
-     * Escape strings for SQL. Converts quotes (") into double quotes ("").
-     *
-     * @param str String to escape
-     *
-     * @return escapes version of <code>str</code>
-     */
-    protected static String escapeQuotes(String str)
-    {
-        if (str == null) {
-            return "";
-        }
-
-        StringBuffer buf = new StringBuffer(str);
-        for (int i = 0; i < buf.length(); i++) {
-            switch (buf.charAt(i)) {
-            case '\"':
-                buf.insert(i, '\"');
-                i++;
-                break;
-            }
-        }
-        return buf.toString();
-    }
-
-    /** Returns double-quoted string with embedded double quotes escaped. */
     public static String quote(String str)
     {
-        return "\"" + escapeQuotes(str) + "\"";
+        return sqlDialect.quoteIdentifier(str);
     }
 
-    // TODO: fix to escape apostrophes and then make public
-    protected static String literal(String str)
+    public static String literal(String str)
     {
-        return "\'" + escapeQuotes(str) + "\'";
+        return sqlDialect.quoteStringLiteral(str);
     }
 
+    public static String unquoteLiteral(String str)
+    {
+        return sqlDialect.unquoteStringLiteral(str);        
+    }
+    
     protected static SqlTypeName getSqlTypeName(CwmClassifier classifier)
     {
         //REVIEW: make this work for UDTs
