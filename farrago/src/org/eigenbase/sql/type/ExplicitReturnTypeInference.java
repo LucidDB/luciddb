@@ -53,6 +53,9 @@ public class ExplicitReturnTypeInference
      * type object made using {@link RelDataTypeFactory#copyType(RelDataType)}
      * within the requesting type factory.
      *
+     * <p>REVIEW jvs 6-Aug-2006:  Under what circumstances is a copy of
+     * the type required?
+     *
      * @param type Type object
      */
     public ExplicitReturnTypeInference(RelDataType type)
@@ -124,6 +127,11 @@ public class ExplicitReturnTypeInference
             return opBinding.getTypeFactory().copyType(type);
         }
         return createType(opBinding.getTypeFactory());
+    }
+
+    protected RelDataType getExplicitType()
+    {
+        return type;
     }
 
     private RelDataType createType(RelDataTypeFactory typeFactory)

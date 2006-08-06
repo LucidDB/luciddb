@@ -1763,10 +1763,20 @@ void ReturnsClause(FemRoutine function) :
 void TableFunctionColumnListElement(FemRoutine function) :
 {
     FemViewColumn column = getRepos().newFemViewColumn();
+    SqlIdentifier inputCursorName;
 }
 {
-    BasicColumnDefinition(function, column)
+    LOOKAHEAD(2) BasicColumnDefinition(function, column)
     {
+    }
+    |
+    inputCursorName = SimpleIdentifier() <DOT> <STAR>
+    {
+        farragoParser.getDdlValidator().setSqlDefinition(
+            column,
+            new SqlIdentifier("CURSOR", getPos()));
+        function.getFeature().add(column);
+        column.setName(inputCursorName.getSimple());
     }
 }
 

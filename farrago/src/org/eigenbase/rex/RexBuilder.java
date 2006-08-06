@@ -180,6 +180,21 @@ public class RexBuilder
     }
 
     /**
+     * Creates a call with an array of arguments and a predetermined
+     * type.
+     */
+    public RexNode makeCall(
+        RelDataType returnType,
+        SqlOperator op,
+        RexNode [] exprs)
+    {
+        return new RexCall(
+            returnType,
+            op,
+            exprs);
+    }
+
+    /**
      * Creates a call with an array of arguments.
      *
      * <p>This is the fundamental method called by all of the other <code>

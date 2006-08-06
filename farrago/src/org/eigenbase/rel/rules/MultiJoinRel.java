@@ -76,7 +76,7 @@ public final class MultiJoinRel
                 getCluster(),
                 RelOptUtil.clone(inputs),
                 RexUtil.clone(joinFilter),
-                getCluster().getTypeFactory().copyType(rowType));
+                rowType);
         clone.inheritTraitsFrom(this);
         return clone;
     }

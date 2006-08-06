@@ -195,6 +195,32 @@ public abstract class FarragoTestUDR
         }
     }
 
+    public static void digest(
+        ResultSet inputSet,
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        int nInput = inputSet.getMetaData().getColumnCount();
+        int nOutput = resultInserter.getParameterMetaData().getParameterCount();
+        assert (nOutput == nInput + 1);            
+
+        // NOTE jvs 6-Aug-2006: This is just an example.  It's a terrible
+        // digest; don't use it for anything real!
+        
+        while (inputSet.next()) {
+            int digest = 0;
+            for (int i = 0; i < nInput; ++i) {
+                Object obj = inputSet.getObject(i + 1);
+                resultInserter.setObject(i + 1, obj);
+                if (obj != null) {
+                    digest += obj.hashCode();
+                }
+            }
+            resultInserter.setInt(nInput + 1, digest);
+            resultInserter.executeUpdate();
+        }
+    }
+
     public static void longerRamp(int n, PreparedStatement resultInserter)
         throws SQLException
     {
