@@ -66,12 +66,13 @@ void LhxPartitionWriter::open(
     uint savedNumCachePages = hashInfo.numCachePages;
     hashInfo.numCachePages = numWriterCachePages;
 
-    hashTable.init(partitionLevel, hashInfo, aggList);
-    hashTableReader.init(&hashTable, hashInfo);
+    hashTable.init(partitionLevel, hashInfo, aggList,
+        destPartition->inputIndex);
+    hashTableReader.init(&hashTable, hashInfo, destPartition->inputIndex);
 
     hashInfo.numCachePages = savedNumCachePages;
     
-    uint cndKeys = hashInfo.cndKeys;
+    uint cndKeys = hashInfo.cndKeys.back();
     uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
@@ -252,40 +253,40 @@ bool LhxPartitionReader::demandData()
     }
 }
 
-void LhxPartitionInfo::init(
-    uint numInputInit,
-    LhxHashInfo *hashInfoInit)
+void LhxPartitionInfo::init(LhxHashInfo *hashInfoInit)
 {
-    numInput     = numInputInit;
+    hashInfo = hashInfoInit;
+    numInputs = (hashInfo->inputDesc).size();
 
     writerList.clear();
     /*
      * writerList is shared across iterations of partitioning. At each
      * iteration, writerList is initialized with new destination partitions.
      */
-    for (uint i = 0; i < numInput * LhxPlan::LhxChildPartCount; i ++) {
+    for (uint i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
         writerList.push_back(
             SharedLhxPartitionWriter(new LhxPartitionWriter()));
     }
     
-    hashInfo = hashInfoInit;
+    filteredRowCountList.reset(
+        new uint[numInputs * LhxPlan::LhxChildPartCount]);
 }
 
 void LhxPartitionInfo::open(
     LhxHashTableReader *hashTableReaderInit,
     LhxPartitionReader *buildReader,
     TupleData &buildTupleInit,
-    SharedLhxPartition probePartition)
+    SharedLhxPartition probePartition,
+    uint buildInputIndex)
 {
     uint i, j;
-    uint buildIndex = numInput - 1;
 
     probeReader.open(probePartition, *hashInfo);
 
     /*
      * Start partitioning from the build side.
      */
-    curInputIndex = buildIndex;
+    curInputIndex = buildInputIndex;
 
     hashTableReader = hashTableReaderInit;
     /*
@@ -307,15 +308,18 @@ void LhxPartitionInfo::open(
     destPartitionList.clear();
     subPartStatList.clear();
     joinFilterList.clear();
+    shared_array<uint> curSubPartStat;
 
-    for (i = 0; i < numInput * LhxPlan::LhxChildPartCount; i ++) {
+    for (i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
         destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
         destPartitionList[i]->inputIndex = (i / LhxPlan::LhxChildPartCount);
         subPartStatList.push_back(
             shared_array<uint>(new uint[LhxPlan::LhxSubPartCount]));
 
+        curSubPartStat = subPartStatList[i];
+
         for (j = 0; j < LhxPlan::LhxSubPartCount; j ++) {
-            (subPartStatList[i])[j] = 0;
+            curSubPartStat[j] = 0;
         }
 
         /*
@@ -325,6 +329,7 @@ void LhxPartitionInfo::open(
         joinFilterList.push_back(shared_ptr<dynamic_bitset<> >());
 
         writerList[i]->open(destPartitionList[i], *hashInfo);
+        filteredRowCountList[i] = 0;
     }
 
     /*
@@ -340,8 +345,8 @@ void LhxPartitionInfo::open(
     AggComputerList *aggList)
 {
     uint i, j;
-    assert (numInput == 1);
-    uint buildIndex = numInput - 1;
+    assert (numInputs == 1);
+    uint buildIndex = numInputs - 1;
 
     curInputIndex = buildIndex;
 
@@ -372,15 +377,18 @@ void LhxPartitionInfo::open(
     destPartitionList.clear();
     subPartStatList.clear();
     joinFilterList.clear();
+    shared_array<uint> curSubPartStat;
     
-    for (i = 0; i < numInput * LhxPlan::LhxChildPartCount; i ++) {
+    for (i = 0; i < numInputs * LhxPlan::LhxChildPartCount; i ++) {
         destPartitionList.push_back(SharedLhxPartition(new LhxPartition()));
         destPartitionList[i]->inputIndex = (i / LhxPlan::LhxChildPartCount);
         subPartStatList.push_back(
             shared_array<uint>(new uint[LhxPlan::LhxSubPartCount]));
 
+        curSubPartStat = subPartStatList[i];
+
         for (j = 0; j < LhxPlan::LhxSubPartCount; j ++) {
-            (subPartStatList[i])[j] = 0;
+            curSubPartStat[j] = 0;
         }
 
         /*
@@ -391,6 +399,7 @@ void LhxPartitionInfo::open(
 
         writerList[i]->open(destPartitionList[i], *hashInfo, aggList,
                             numWriterCachePages);
+        filteredRowCountList[i] = 0;
     }
 
     /*
@@ -411,10 +420,10 @@ void LhxPartitionInfo::close()
 }
 
 void LhxPlan::init(
+    LhxPlan *parentPlanInit,
     uint partitionLevelInit,
     vector<SharedLhxPartition> &partitionsInit,
-    LhxPlan *parentPlanInit,
-    bool useSubPartStatInit)
+    bool enableSubPartStat)
 {
     /*
      * No filter for this plan.
@@ -422,44 +431,38 @@ void LhxPlan::init(
     shared_ptr<dynamic_bitset<> > joinFilterInit =
         shared_ptr<dynamic_bitset<> >();
     vector<shared_array<uint> > subPartStatsInit;
-
-    vector<bool> useJoinFilter;
+    vector<uint> filteredRows;
 
     for (uint i = 0; i < partitionsInit.size(); i ++) {
-        useJoinFilter.push_back(false);
         subPartStatsInit.push_back(shared_array<uint>());
+        filteredRows.push_back(0);
     }
 
-    useSubPartStat = useSubPartStatInit;
-
-    init(partitionLevelInit, partitionsInit, useSubPartStat, subPartStatsInit,
-        parentPlanInit, useJoinFilter, joinFilterInit);
+    init(parentPlanInit, partitionLevelInit, partitionsInit,
+        subPartStatsInit, joinFilterInit, filteredRows,
+        enableSubPartStat, false);
 }
 
 void LhxPlan::init(
+    LhxPlan *parentPlanInit,
     uint partitionLevelInit,
     vector<SharedLhxPartition> &partitionsInit,
-    bool useSubPartStatInit,
     vector<shared_array<uint> > &subPartStats,
-    LhxPlan *parentPlanInit,
-    vector<bool> useJoinFilterInit,
-    shared_ptr<dynamic_bitset<> > joinFilterInit)
+    shared_ptr<dynamic_bitset<> > joinFilterInit,
+    vector<uint> &filteredRowsInit,
+    bool enableSubPartStat,
+    bool enableSwing)
 {
+    uint numInputs = partitionsInit.size();
+
     partitionLevel = partitionLevelInit;
-    useJoinFilter = useJoinFilterInit;
     joinFilter = joinFilterInit;
-    uint numInput = partitionsInit.size();
+    parentPlan   = parentPlanInit;
 
-    useSubPartStat = useSubPartStatInit;
-
-    uint buildIndex =  numInput - 1;
-    shared_array<uint> buildSubPartStat = subPartStats[buildIndex];
-    
-    if (useSubPartStat && buildSubPartStat) {
-        mapSubPartToChild(buildSubPartStat);
-    } else {
-        subPartToChildMap.reset();
-    }
+    filteredRowCount.reset(new uint[numInputs]);
+    inputSize.reset(new uint[numInputs]);
+    joinSideToInputMap.reset(new uint[numInputs]);
+    subPartToChildMap.reset();
 
     /*
      * After support is added for repartitioning using stats(gathered during
@@ -467,20 +470,399 @@ void LhxPlan::init(
      * keep in memory some subpartitions and output the rest to child
      * partitions of similar size.
      */
-    for (int i = 0; i < numInput; i ++) {
+    for (int i = 0; i < numInputs; i ++) {
         partitions.push_back(partitionsInit[i]);
+        filteredRowCount[i] = filteredRowsInit[i];
+        joinSideToInputMap[i] = i;
+
+        inputSize[i] = 0;
+        shared_array<uint> inputSubPartStat = subPartStats[i];
+
+        if (inputSubPartStat) {
+            for (int k = 0; k < LhxSubPartCount; k ++) {
+                inputSize[i] += inputSubPartStat[k];
+            }
+        }
     }
-    parentPlan   = parentPlanInit;
+
+    /**
+     * Map join side to input, using partitions stats associated with each
+     * input. The input with the smaller side witll be the build side for the
+     * join: joinSide for the build will map to the index of this input.
+     */
+    if (enableSwing && 
+        (numInputs == 2) && (inputSize[0] < inputSize[1])) {
+        joinSideToInputMap[0] = 1;
+        joinSideToInputMap[1] = 0;
+    }
+
+    subPartToChildMap.reset();
+    
+    if (enableSubPartStat) {
+        /*
+         * Use build side sub part stat to divide both inputs into child
+         * partitions. Needs to be called after the join sides have been
+         * assigned.
+         */
+        mapSubPartToChild(subPartStats);        
+    }
 }
 
-void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
+void LhxPlan::mapSubPartToChild(
+    vector<shared_array<uint> > &subPartStats)
+{
+    uint numInputs = partitions.size();
+    uint buildIndex =  getBuildInput();
+    shared_array<uint> buildSubPartStat = subPartStats[buildIndex];
+
+    if (!buildSubPartStat) {
+        return;
+    }
+
+    uint i, j, k;
+
+    subPartToChildMap.reset(new uint[LhxSubPartCount]);
+
+    for (i = 0; i < numInputs; i ++) {
+        childPartSize.push_back(
+            shared_array<uint>(new uint[LhxChildPartCount]));
+    }
+
+    shared_array<uint> buildChildPartSize = childPartSize[buildIndex];
+    
+    for (i = 0; i < LhxChildPartCount; i ++) {
+        buildChildPartSize[i] = 0;
+    }
+
+    j = 0;
+    for (i = 0; i < LhxSubPartCount; i ++) {
+        buildChildPartSize[j] += buildSubPartStat[i];
+        subPartToChildMap[i] = j;
+
+        k = 1;
+        while ((buildChildPartSize[j] > buildChildPartSize[(j + k) % LhxChildPartCount])
+            && k < LhxChildPartCount) {
+            k ++;
+        }
+
+        if (k == LhxChildPartCount) {
+            // If current child partition is bigger than all other child
+            // partitions, move to the next child
+            j = (j + 1) % LhxChildPartCount;
+        }
+    }
+
+    /*
+     * This is simply stats keeping for the probe side child partitions.
+     */
+    if (numInputs == 2) {
+        uint probeIndex = getProbeInput();
+        shared_array<uint> probeChildPartSize = childPartSize[probeIndex];
+        shared_array<uint> probeSubPartStat = subPartStats[probeIndex];
+        
+        for (i = 0; i < LhxChildPartCount; i ++) {
+            probeChildPartSize[i] = 0;
+        }
+
+        for (i = 0; i < LhxSubPartCount; i ++) {
+            probeChildPartSize[subPartToChildMap[i]] += probeSubPartStat[i];
+        }
+    }
+}
+
+uint LhxPlan::calculateChildIndex(uint hashKey, uint curInputIndex)
+{
+    if (subPartToChildMap) {
+        return (subPartToChildMap[hashKey % LhxSubPartCount] +
+            curInputIndex * LhxChildPartCount);
+    } else {
+        return (hashKey % LhxChildPartCount +
+            curInputIndex * LhxChildPartCount);
+    }
+}
+
+LhxPartitionState LhxPlan::generatePartitions(
+    LhxHashInfo const &hashInfo,
+    LhxPartitionInfo  &partInfo)
+{
+    uint filterSize = 4096;
+    bool isAggregate = (partInfo.numInputs == 1);
+
+    LhxHashGenerator hashGenPrev;
+    LhxHashGenerator hashGen;
+    LhxHashGenerator hashGenNext;
+
+    hashGenPrev.init(partitionLevel);
+    hashGen.init(partitionLevel + 1);
+    hashGenNext.init(partitionLevel + 2);
+
+    LhxPartitionReader *&reader = partInfo.reader;
+    vector<SharedLhxPartitionWriter> &writerList = partInfo.writerList;
+    vector<shared_ptr<dynamic_bitset<> > > &joinFilterList =
+        partInfo.joinFilterList;
+    vector<shared_array<uint> > &subPartStatList = partInfo.subPartStatList;
+    shared_array<uint> &filteredRowCountList = partInfo.filteredRowCountList;
+
+    uint &curInputIndex = partInfo.curInputIndex;
+    uint otherInputIndex = partInfo.numInputs - curInputIndex - 1;
+
+    TupleData inputTuple;
+    TupleDescriptor inputTupleDesc = reader->getTupleDesc();
+    inputTuple.compute(inputTupleDesc);
+    
+    uint prevHashKey;
+    uint hashKey;
+    uint nextHashKey;
+
+    uint childPartIndex;
+    bool writeToPartition;
+
+    uint statIndex;
+    shared_array<uint> curSubPartStat;
+
+    /*
+     * If partition source is from memory,
+     * i.e. there's hash table to read from.
+     */
+    if (partInfo.partitionMemory) {
+        TupleData hashTableTuple;
+        TupleDescriptor hashTableTupleDesc = hashInfo.inputDesc[curInputIndex];
+
+        hashTableTuple.compute(hashTableTupleDesc);
+
+        while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
+
+            writeToPartition = false;
+
+            hashKey = hashGen.hash(hashTableTuple,
+                hashInfo.keyProj[curInputIndex],
+                hashInfo.isKeyColVarChar[curInputIndex]);
+            
+            childPartIndex = calculateChildIndex(hashKey, curInputIndex);
+
+            if (hashInfo.useJoinFilter[curInputIndex]) {
+                /*
+                 * Use input filter if there is one. Note top level build input
+                 * does not have input filter.
+                 */
+                if (partitionLevel == 0) {
+                    writeToPartition = true;
+                } else {
+                    prevHashKey =
+                        hashGenPrev.hash(hashTableTuple,
+                            hashInfo.keyProj[curInputIndex],
+                            hashInfo.isKeyColVarChar[curInputIndex]);
+                    if (joinFilter &&
+                        joinFilter->test(prevHashKey % filterSize)) {
+                        writeToPartition = true;
+                    } else {
+                        filteredRowCountList[childPartIndex]++;
+                    }
+                }
+            } else {
+                /*
+                 * Not using filter.
+                 */
+                writeToPartition = true;
+            }
+            
+            if (writeToPartition) {
+                writerList[childPartIndex]->marshalTuple(hashTableTuple);
+
+                nextHashKey = hashGenNext.hash(hashTableTuple,
+                    hashInfo.keyProj[curInputIndex],
+                    hashInfo.isKeyColVarChar[curInputIndex]);
+
+                statIndex = nextHashKey % LhxSubPartCount;
+                curSubPartStat = subPartStatList[childPartIndex];
+                curSubPartStat[statIndex]++;
+
+                /*
+                 * Set output filter for the other input.
+                 * Note: if the filter is used on the next level, "the other
+                 * input" could be the same if join sides are switched.
+                 */
+                if (!joinFilterList[childPartIndex]) {
+                    /*
+                     * Filter not allocated yet.
+                     */
+                    joinFilterList[childPartIndex].reset(
+                        new dynamic_bitset<>(filterSize));
+                }
+                joinFilterList[childPartIndex]->set(hashKey % filterSize);
+            }
+        }
+        
+        if (isAggregate) {
+            /*
+             * release the hash table scratch pages
+             * and initialize writer scratch pages.
+             */
+            ((partInfo.hashTableReader)->getHashTable())->releaseResources();
+            for (int i = 0; i < writerList.size();i ++) {
+                writerList[i]->allocateResources();
+            }
+        }
+
+        /*
+         * Done with tuples in the hash table. Next tuples will come from a
+         * partition(stream or disk).
+         */
+        partInfo.partitionMemory = false;
+
+        /*
+         * The tuple for which hash table full is detected is not in the hash
+         * table yet.
+         */
+        inputTuple = partInfo.buildTuple;
+    }
+
+    for (;;) {
+        /*
+         * Note that partInfo.buildTuple is an unconsumed tuple from the
+         * reader. So when first time in this loop, isTupleConsumptionPending
+         * returns true.
+         */
+        if (!reader->isTupleConsumptionPending()) {
+            if (reader->getState() == EXECBUF_EOS) {
+                if (curInputIndex == getProbeInput()) {
+                    /*
+                     * Done with partitioning the 0th input.
+                     * The current plan is completely partitioned.
+                     */
+                    return PartitionEndOfData;
+                } else {
+                    curInputIndex = getProbeInput();
+                    otherInputIndex = partInfo.numInputs - curInputIndex - 1;
+                    reader->close();
+                    reader = &partInfo.probeReader;
+                    inputTupleDesc = reader->getTupleDesc();
+                    inputTuple.compute(inputTupleDesc);
+                    continue;
+                }
+            }
+            
+            if (!reader->demandData()) {
+                if (partitionLevel == 0) {
+                    /*
+                     * Reading from a stream: indicate underflow to producer.
+                     */
+                    return PartitionUnderflow;
+                } else {
+                    if (curInputIndex == getProbeInput()) {
+                        /*
+                         * Done with partitioning the 0th input.
+                         * The current plan is completely partitioned.
+                         */
+                        return PartitionEndOfData;
+                    } else {
+                        curInputIndex = getProbeInput();
+                        reader->close();
+                        reader = &partInfo.probeReader;
+                        inputTupleDesc = reader->getTupleDesc();
+                        inputTuple.compute(inputTupleDesc);
+                        continue;
+                    }
+                }
+            }
+            
+            reader->unmarshalTuple(inputTuple);
+        }
+        
+        writeToPartition = false;
+
+        hashKey = hashGen.hash(inputTuple,
+            hashInfo.keyProj[curInputIndex],
+            hashInfo.isKeyColVarChar[curInputIndex]);
+        
+        childPartIndex = calculateChildIndex(hashKey, curInputIndex);
+
+        nextHashKey = hashGenNext.hash(inputTuple,
+            hashInfo.keyProj[curInputIndex],
+            hashInfo.isKeyColVarChar[curInputIndex]);
+        
+        statIndex = nextHashKey % LhxSubPartCount;
+
+        if (!isAggregate) {
+            if (hashInfo.useJoinFilter[curInputIndex]) {
+                /*
+                 * Use input filter if there exists one
+                 */                
+                if (isBuildChildPart(childPartIndex)) {
+                    /*
+                     * Build input.
+                     * Note top level build input does not have input filter.
+                     */
+                    if (partitionLevel == 0) {
+                        writeToPartition = true;
+                    } else {
+                        prevHashKey =
+                            hashGenPrev.hash(inputTuple,
+                                hashInfo.keyProj[curInputIndex],
+                                hashInfo.isKeyColVarChar[curInputIndex]);
+                        if (joinFilter &&
+                            joinFilter->test(prevHashKey % filterSize)) {
+                            writeToPartition = true;
+                        } else {
+                            filteredRowCountList[childPartIndex]++;
+                        }
+                    }
+                } else {
+                    /*
+                     * Probe input
+                     */
+                    if (joinFilterList[getBuildChildPart(childPartIndex)] &&
+                        joinFilterList[getBuildChildPart(childPartIndex)]->
+                        test(hashKey % filterSize)) {
+                        writeToPartition = true;
+                    } else {
+                        filteredRowCountList[childPartIndex]++;
+                    }
+                }
+            } else {
+                /*
+                 * Not using filter.
+                 */
+                writeToPartition = true;
+            }
+
+            if (writeToPartition) {
+                writerList[childPartIndex]->marshalTuple(inputTuple);
+                curSubPartStat = subPartStatList[childPartIndex];
+                curSubPartStat[statIndex]++;
+
+                /*
+                 * Set output filter to be used by the other input.
+                 * Note: if the filter is used on the next level, "the other
+                 * input" could be the same if join sides are switched.
+                 */
+                if (!joinFilterList[childPartIndex]) {
+                    /*
+                     * Filter not allocated yet.
+                     */
+                    joinFilterList[childPartIndex].reset(
+                        new dynamic_bitset<>(filterSize));
+                }
+                joinFilterList[childPartIndex]->set(hashKey % filterSize);
+            }
+        } else {
+            writerList[childPartIndex]->aggAndMarshalTuple(inputTuple);
+            (subPartStatList[childPartIndex])[statIndex]++;
+        }
+
+        reader->consumeTuple();
+    }
+}
+
+void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
+    bool enableSubPartStat)
 {
     LhxHashGenerator hashGen;
     hashGen.init(partitionLevel + 1);
 
-    uint numInput = hashInfo.inputDesc.size();
+    uint numInputs = hashInfo.inputDesc.size();
 
-    vector<SharedLhxPartition> destPartitionList(LhxChildPartCount * numInput);
+    vector<SharedLhxPartition> destPartitionList(LhxChildPartCount * numInputs);
 
     LhxPartitionReader reader;
     LhxPartitionWriter writerList[LhxChildPartCount];
@@ -490,7 +872,7 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
     /*
      * Generate partitions for each input.
      */
-    for (j = 0; j < numInput; j ++) {
+    for (j = 0; j < numInputs; j ++) {
         reader.open(partitions[j], hashInfo);
         outputTuple.compute(hashInfo.inputDesc[j]);
     
@@ -539,317 +921,18 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo)
         partitionList.push_back(destPartitionList[i + LhxChildPartCount]);
 
         newChildPlan->init(
+            this,
             partitionLevel + 1,
             partitionList,
-            this, useSubPartStat);
+            enableSubPartStat);
 
         newChildPlan->addSibling(firstChildPlan);     
         firstChildPlan = newChildPlan;
     }
 }
 
-void LhxPlan::mapSubPartToChild(
-    shared_array<uint> subPartStat)
-{
-    subPartToChildMap.reset(new uint[LhxSubPartCount]);
-    childPartSize.reset(new uint[LhxChildPartCount]);
-
-    uint i, j, k;
-
-    for (i = 0; i < LhxChildPartCount; i ++) {
-        childPartSize[i] = 0;
-    }
-
-    j = 0;
-    for (i = 0; i < LhxSubPartCount; i ++) {
-        childPartSize[j] += subPartStat[i];
-        subPartToChildMap[i] = j;
-
-        k = 1;
-        while ((childPartSize[j] > childPartSize[(j + k) % LhxChildPartCount])
-            && k < LhxChildPartCount) {
-            k ++;
-        }
-
-        if (k == LhxChildPartCount) {
-            // If current child partition is bigger than all other child
-            // partitions, move to the next child
-            j = (j + 1) % LhxChildPartCount;
-        }
-    }
-}
-
-uint LhxPlan::calculateChildIndex(uint hashKey, uint curInputIndex)
-{
-    if (subPartToChildMap) {
-        return (subPartToChildMap[hashKey % LhxSubPartCount] +
-            curInputIndex * LhxChildPartCount);
-    } else {
-        return (hashKey % LhxChildPartCount +
-            curInputIndex * LhxChildPartCount);
-    }
-}
-
-LhxPartitionState LhxPlan::generatePartitions(
-    LhxHashInfo const &hashInfo,
-    LhxPartitionInfo  &partInfo)
-{
-    uint filterSize = 4096;
-    bool isAggregate = (partInfo.numInput == 1);
-
-    LhxHashGenerator hashGenPrev;
-    LhxHashGenerator hashGen;
-    LhxHashGenerator hashGenNext;
-
-    hashGenPrev.init(partitionLevel);
-    hashGen.init(partitionLevel + 1);
-    hashGenNext.init(partitionLevel + 2);
-
-    LhxPartitionReader *&reader = partInfo.reader;
-    vector<SharedLhxPartitionWriter> &writerList = partInfo.writerList;
-    vector<shared_ptr<dynamic_bitset<> > > &joinFilterList =
-        partInfo.joinFilterList;
-    vector<shared_array<uint> > &subPartStatList = partInfo.subPartStatList;
-
-    uint &curInputIndex = partInfo.curInputIndex;
-
-    TupleData inputTuple;
-    inputTuple.compute(reader->getTupleDesc());
-    
-    uint prevHashKey;
-    uint hashKey;
-    uint nextHashKey;
-
-    uint writerIndex;
-    bool writeToPartition;
-
-    uint statIndex;
-    
-    /*
-     * If partition source is from memory,
-     * i.e. there's hash table to read from.
-     */
-    if (partInfo.partitionMemory) {
-        TupleData hashTableTuple;
-        TupleDescriptor hashTableTupleDesc = hashInfo.inputDesc[curInputIndex];
-
-        hashTableTuple.compute(hashTableTupleDesc);
-
-        while ((partInfo.hashTableReader)->getNext(hashTableTuple)) {
-
-            writeToPartition = false;
-
-            if (useJoinFilter[curInputIndex]) {
-                /*
-                 * Use input filter if there is one. Note top level build input
-                 * does not have input filter.
-                 */
-                if (partitionLevel == 0) {
-                    writeToPartition = true;
-                } else {
-                    prevHashKey =
-                        hashGenPrev.hash(hashTableTuple,
-                            hashInfo.keyProj[curInputIndex],
-                            hashInfo.isKeyColVarChar[curInputIndex]);
-                    if (joinFilter && joinFilter->test(prevHashKey % filterSize)) {
-                        writeToPartition = true;
-                    }
-                }
-            } else {
-                /*
-                 * Not using filter.
-                 */
-                writeToPartition = true;
-            }
-            
-            if (writeToPartition) {
-                hashKey = hashGen.hash(hashTableTuple,
-                    hashInfo.keyProj[curInputIndex],
-                    hashInfo.isKeyColVarChar[curInputIndex]);
-                
-                writerIndex = calculateChildIndex(hashKey, curInputIndex);
-
-                writerList[writerIndex]->marshalTuple(hashTableTuple);
-
-                nextHashKey = hashGenNext.hash(hashTableTuple,
-                    hashInfo.keyProj[curInputIndex],
-                    hashInfo.isKeyColVarChar[curInputIndex]);
-
-                statIndex = nextHashKey % LhxSubPartCount;
-
-                (subPartStatList[writerIndex])[statIndex]++;
-
-                if (useJoinFilter[partInfo.numInput - curInputIndex - 1]) {
-                    /*
-                     * Set output filter for the other input.
-                     */
-                    if (!joinFilterList[writerIndex]) {
-                        /*
-                         * Filter not allocated yet.
-                         */
-                        joinFilterList[writerIndex].reset(
-                            new dynamic_bitset<>(filterSize));
-                    }
-                    joinFilterList[writerIndex]->set(hashKey % filterSize);
-                }
-            }
-        }
-        
-        if (isAggregate) {
-            /*
-             * release the hash table scratch pages
-             * and initialize writer scratch pages.
-             */
-            ((partInfo.hashTableReader)->getHashTable())->releaseResources();
-            for (int i = 0; i < writerList.size();i ++) {
-                writerList[i]->allocateResources();
-            }
-        }
-
-        /*
-         * Done with tuples in the hash table. Next tuples will come from a
-         * partition(stream or disk).
-         */
-        partInfo.partitionMemory = false;
-
-        /*
-         * The tuple for which hash table full is detected is not in the hash
-         * table yet.
-         */
-        inputTuple = partInfo.buildTuple;
-    }
-
-    for (;;) {
-        /*
-         * Note that partInfo.buildTuple is an unconsumed tuple from the
-         * reader. So when first time in this loop, isTupleConsumptionPending
-         * returns true.
-         */
-        if (!reader->isTupleConsumptionPending()) {
-            if (reader->getState() == EXECBUF_EOS) {
-                if (curInputIndex == 0) {
-                    /*
-                     * Done with partitioning the 0th input.
-                     * The current plan is completely partitioned.
-                     */
-                    return PartitionEndOfData;
-                } else {
-                    curInputIndex = 0;
-                    reader->close();
-                    reader = &partInfo.probeReader;
-                    inputTuple.compute(reader->getTupleDesc());
-                    continue;
-                }
-            }
-            
-            if (!reader->demandData()) {
-                if (partitionLevel == 0) {
-                    /*
-                     * Reading from a stream: indicate underflow to producer.
-                     */
-                    return PartitionUnderflow;
-                } else {
-                    if (curInputIndex == 0) {
-                        /*
-                         * Done with partitioning the 0th input.
-                         * The current plan is completely partitioned.
-                         */
-                        return PartitionEndOfData;
-                    } else {
-                        curInputIndex = 0;
-                        reader->close();
-                        reader = &partInfo.probeReader;
-                        inputTuple.compute(reader->getTupleDesc());
-                        continue;
-                    }
-                }
-            }
-            
-            reader->unmarshalTuple(inputTuple);
-        }
-        
-        writeToPartition = false;
-
-        hashKey = hashGen.hash(inputTuple,
-            hashInfo.keyProj[curInputIndex],
-            hashInfo.isKeyColVarChar[curInputIndex]);
-        
-        writerIndex = calculateChildIndex(hashKey, curInputIndex);
-
-        nextHashKey = hashGenNext.hash(inputTuple,
-            hashInfo.keyProj[curInputIndex],
-            hashInfo.isKeyColVarChar[curInputIndex]);
-        
-        statIndex = nextHashKey % LhxSubPartCount;
-
-        if (!isAggregate) {
-            if (useJoinFilter[curInputIndex]) {
-                /*
-                 * Use input filter if there exists one
-                 */                
-                if (writerIndex >= LhxChildPartCount) {
-                    /*
-                     * Build input.
-                     * Note top level build input does not have input filter.
-                     */
-                    if (partitionLevel == 0) {
-                        writeToPartition = true;
-                    } else {
-                        prevHashKey =
-                            hashGenPrev.hash(inputTuple,
-                                hashInfo.keyProj[curInputIndex],
-                                hashInfo.isKeyColVarChar[curInputIndex]);
-                        if (joinFilter &&
-                            joinFilter->test(prevHashKey % filterSize)) {
-                            writeToPartition = true;
-                        }
-                    }
-                } else {
-                    /*
-                     * Probe input
-                     */
-                    if (joinFilterList[writerIndex + LhxChildPartCount] &&
-                        joinFilterList[writerIndex + LhxChildPartCount]->
-                        test(hashKey % filterSize)) {
-                        writeToPartition = true;
-                    }
-                }
-            } else {
-                /*
-                 * Not using filter.
-                 */
-                writeToPartition = true;
-            }
-
-            if (writeToPartition) {
-                writerList[writerIndex]->marshalTuple(inputTuple);
-
-                (subPartStatList[writerIndex])[statIndex]++;
-
-                if (useJoinFilter[partInfo.numInput - curInputIndex - 1]) {
-                    /*
-                     * Set output filter for the other input.
-                     */
-                    if (!joinFilterList[writerIndex]) {
-                        /*
-                         * Filter not allocated yet.
-                         */
-                        joinFilterList[writerIndex].reset(
-                            new dynamic_bitset<>(filterSize));
-                    }
-                    joinFilterList[writerIndex]->set(hashKey % filterSize);
-                }
-            }
-        } else {
-            writerList[writerIndex]->aggAndMarshalTuple(inputTuple);
-            (subPartStatList[writerIndex])[statIndex]++;
-        }
-
-        reader->consumeTuple();
-    }
-}
-
-void LhxPlan::createChildren(LhxPartitionInfo &partInfo)
+void LhxPlan::createChildren(LhxPartitionInfo &partInfo,
+    bool enableSubPartStat, bool enableSwing)
 {
     uint i, j;
 
@@ -857,20 +940,24 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo)
         SharedLhxPlan newChildPlan = SharedLhxPlan(new LhxPlan());
         vector<SharedLhxPartition> partitionList;
         vector<shared_array<uint> > subPartStats;
-        for (j = 0; j < partInfo.numInput; j ++) {
+        vector<uint> filteredRows;
+        for (j = 0; j < partInfo.numInputs; j ++) {
             partitionList.push_back(
                 partInfo.destPartitionList[i + LhxChildPartCount * j]);
             subPartStats.push_back(
                 partInfo.subPartStatList[i + LhxChildPartCount * j]);
+            filteredRows.push_back(
+                partInfo.filteredRowCountList[i + LhxChildPartCount * j]);
         }
         newChildPlan->init(
+            this,
             partitionLevel + 1,
             partitionList,
-            useSubPartStat,
             subPartStats,
-            this,
-            useJoinFilter,
-            partInfo.joinFilterList[i]);
+            partInfo.joinFilterList[getProbeChildPart(i)],
+            filteredRows,
+            enableSubPartStat,
+            enableSwing);
 
         newChildPlan->addSibling(firstChildPlan);     
         firstChildPlan = newChildPlan;
@@ -934,25 +1021,29 @@ string LhxPlan::toString()
     /*
      * Print out the partitions.
      */
-    for (uint i = 0; i < partitions.size(); i ++) {
-        planTrace << "[Partition(" << i << ")]\n"
-                  << "[       inputIndex     = " << partitions[i]->inputIndex << "]\n"
-                  << "[       useJoinFilter  = " << useJoinFilter[i]             << "]\n";
-    }
-
     planTrace << "[joinFilter = ";
     if (joinFilter) {
         planTrace << joinFilter.get();
     }
-    planTrace <<"]\n";
+    planTrace << "]\n";
 
-    planTrace << "[childPartSize = ";
-    if (childPartSize) {
-        for (uint i = 0; i < LhxChildPartCount; i ++) {
-            planTrace << childPartSize[i] << " ";
+    for (uint i = 0; i < partitions.size(); i ++) {
+        planTrace << "[Partition(" << i << ")]\n"
+                  << "[       inputIndex     = " << partitions[i]->inputIndex << "]\n"
+                  << "[       join side      = " << getJoinSide(partitions[i]->inputIndex) << "]\n"
+                  << "[       filteredRows   = " << filteredRowCount[i] << "]\n"
+                  << "[       inputSize      = " << inputSize[i] << "]\n";
+        planTrace << "[       childPartSize  = ";
+        if (childPartSize.size() > i) {
+            shared_array<uint> oneChildPartSize = childPartSize[i];
+            if (oneChildPartSize) {
+                for (uint j = 0; j < LhxChildPartCount; j ++) {
+                    planTrace << oneChildPartSize[j] << " ";
+                }
+            }
         }
+        planTrace << "]\n";
     }
-    planTrace <<"]\n";
 
     planTrace << "[subPartToChildMap = ";
     if (subPartToChildMap) {
@@ -960,7 +1051,7 @@ string LhxPlan::toString()
             planTrace << subPartToChildMap[i] << " ";
         }
     }
-    planTrace <<"]\n";
+    planTrace << "]\n";
 
     SharedLhxPlan childPlan = firstChildPlan;
 

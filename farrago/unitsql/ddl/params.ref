@@ -25,4 +25,26 @@ Error: Type mismatch in value ''a bunch'' for system parameter "cachePagesMax" (
 0: jdbc:farrago:> alter system set "charlie" = 'horse';
 Error: Reference to unknown system parameter "charlie" (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work
+0: jdbc:farrago:> alter system set "cachePagesInit" = 10;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should work -- set it back to original value of 1000
+0: jdbc:farrago:> alter system set "cachePagesInit" = 1000;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> alter system set "cachePagesInit" = 0;
+Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> alter system set "cachePagesInit" = -1;
+Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail -- cachePagesMax is 1000
+0: jdbc:farrago:> alter system set "cachePagesInit" = 1001;
+Error: Invalid parameter setting.  Setting must be between 1 and 'cachePagesMax'. (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> alter system set "cachePagesInit" = 'abc';
+Error: Type mismatch in value ''abc'' for system parameter "cachePagesInit" (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

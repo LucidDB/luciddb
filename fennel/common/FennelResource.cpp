@@ -49,6 +49,7 @@ FennelResource::FennelResource(Locale locale)
       _internalError(this, "internalError"),
       _executionAborted(this, "executionAborted"),
       _rowTooLong(this, "rowTooLong"),
+      _invalidParam(this, "invalidParam"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -83,6 +84,10 @@ string FennelResource::executionAborted() const
 string FennelResource::rowTooLong(int p0, int p1, const std::string &p2) const
 {
     return _rowTooLong.format(p0, p1, p2);
+}
+string FennelResource::invalidParam(const std::string &p0, const std::string &p1) const
+{
+    return _invalidParam.format(p0, p1);
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {

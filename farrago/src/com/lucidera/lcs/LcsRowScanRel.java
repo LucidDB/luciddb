@@ -296,9 +296,10 @@ public class LcsRowScanRel
         // modify the input to the scan to either scan the deletion index
         // (in the case of a full table scan) or to minus off the deletion
         // index (in the case of an index scan)
+        RelNode[] newInputs;
         if (isFullScan) {
-            RelNode [] oldInputs = new RelNode[inputs.length + 1];
-            System.arraycopy(inputs, 0, oldInputs, 0, inputs.length);
+            newInputs = new RelNode[inputs.length + 1];
+            System.arraycopy(inputs, 0, newInputs, 1, inputs.length);
             LcsIndexSearchRel delIndexScan =
                 indexGuide.createDeletionIndexScan(
                     this,
@@ -306,10 +307,10 @@ public class LcsRowScanRel
                     null,
                     null,
                     true);
-            oldInputs[inputs.length] = delIndexScan;
-            inputs = oldInputs;
+            newInputs[0] = delIndexScan;
         } else {
-            inputs[0] =
+            newInputs = new RelNode[1];
+            newInputs[0] =
                 indexGuide.createMinusOfDeletionIndex(
                     this,
                     lcsTable,
@@ -319,9 +320,9 @@ public class LcsRowScanRel
         FemLcsRowScanStreamDef scanStream =
             indexGuide.newRowScan(this, projectedColumns);
 
-        for (int i = 0; i < inputs.length; i++) {
+        for (int i = 0; i < newInputs.length; i++) {
             FemExecutionStreamDef inputStream =
-                implementor.visitFennelChild((FennelRel) inputs[i]);
+                implementor.visitFennelChild((FennelRel) newInputs[i]);
             implementor.addDataFlowFromProducerToConsumer(
                 inputStream,
                 scanStream);

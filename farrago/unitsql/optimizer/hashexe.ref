@@ -762,6 +762,43 @@
 'Leo                 ',''
 'Wilma               ','Wilma               '
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- semi/anti join types
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lhxemps3 intersect select * from lhxemps4
+. . . . . . . . > order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[LEFTSEMI], setop=[true])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+'      FennelRenameRel(fieldNames=[[ENAMEB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps3 intersect select * from lhxemps4
+. . . . . . . . > order by 1;
+'ENAMEB'
+''
+'Eric                '
+'Fred                '
+'John                '
+'Wilma               '
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from lhxemps3 except select * from lhxemps4
+. . . . . . . . > order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHTANTI], setop=[true])'
+'      FennelRenameRel(fieldNames=[[ENAMEB]])'
+'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from lhxemps3 except select * from lhxemps4
+. . . . . . . . > order by 1;
+'ENAMEB'
+'Leo                 '
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Use an explicit cast operator will make the joinkeys
 0: jdbc:farrago:> -- have same data types. HashJoin can be used.
 0: jdbc:farrago:> 

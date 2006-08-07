@@ -327,6 +327,7 @@ class ExecStreamSubFactory_lu
         params.forcePartitionLevel = 0;
         params.enableJoinFilter    = true;
         params.enableSubPartStat   = true;
+        params.enableSwing         = true;
 
         CmdInterpreter::readTupleProjection(
             params.leftKeyProj, streamDef.getLeftKeyProj());
@@ -462,6 +463,6 @@ Java_com_lucidera_farrago_fennel_LucidEraJni_registerStreamFactory(
     }
 }
 
-FENNEL_END_CPPFILE("$Id$");
+FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/farrago/NativeMethods_lu.cpp#24 $");
 
 // End NativeMethods_lu.cpp

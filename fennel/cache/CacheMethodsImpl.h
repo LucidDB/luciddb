@@ -29,6 +29,7 @@
 #include "fennel/cache/CacheParams.h"
 #include "fennel/cache/CacheStats.h"
 #include "fennel/common/CompoundId.h"
+#include "fennel/common/InvalidParamExcn.h"
 #include "fennel/cache/VMAllocator.h"
 
 // NOTE:  don't include this file directly; include CacheImpl.h instead
@@ -107,6 +108,12 @@ uint CacheImpl<PageT,VictimPolicyT>::getAllocatedPageCount()
 {
     SXMutexSharedGuard guard(unallocatedBucket.mutex);
     return pages.size() - unallocatedBucket.pageList.size();
+}
+
+template <class PageT,class VictimPolicyT>
+uint CacheImpl<PageT,VictimPolicyT>::getMaxAllocatedPageCount()
+{
+    return pages.size();
 }
 
 template <class PageT,class VictimPolicyT>

@@ -31,6 +31,8 @@
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxPartition.h"
 
+using namespace boost;
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -124,20 +126,25 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * whether to use sub partition stats.
      */
     bool enableSubPartStat;
+    
+    /**
+     * Whether to use swing based on input sizes.
+     */
+    bool enableSwing;
 };
 
 class LhxJoinExecStream : public ConfluenceExecStream
 {
-    enum LhxJoinInputIndex {
-        LeftInputIndex=0, RightInputIndex=1
+    enum LhxDefaultJoinInputIndex {
+        DefaultProbeInputIndex=0, DefaultBuildInputIndex=1
     };
 
     enum LhxJoinState {
-        Build, GetNextPlan, Partition, Probe, CreateChildPlan, ProduceInner,
-        ProduceLeftOuter, ProduceRightOuter, ProduceRightAnti, ProduceLeftSemi,
-        ProducePending, ForcePartitionBuild, Done
+        ForcePartitionBuild, Build, Probe,
+        ProduceBuild, ProducePending,
+        Partition, CreateChildPlan, GetNextPlan, Done
     };
-  
+    
     /**
      * Hash join info.
      */
@@ -146,13 +153,14 @@ class LhxJoinExecStream : public ConfluenceExecStream
     /**
      * Input tuple.
      */
-    TupleData leftTuple;
-    TupleData rightTuple;
+    shared_array<TupleData> inputTuple;
+    shared_array<uint> inputTupleSize;
 
     /**
      * TupleData to assemble the output tuple.
      */
     TupleData outputTuple;
+    uint outputTupleSize;
 
     /**
      * HashTable to use.
@@ -178,41 +186,13 @@ class LhxJoinExecStream : public ConfluenceExecStream
     /**
      * The next state of the JoinExecStream
      */
-    LhxJoinState nextState;
+    vector<LhxJoinState> nextState;
 
     /*
      * Join semantics
      */
 
-    /**
-     * Return non-matching rows from the left.
-     */
-    bool leftOuter;
-
-    /**
-     * Return non-matching rows from the right.
-     */
-    bool rightOuter;
-
-    /**
-     * Inner join: only return matching rows.
-     */
-    bool innerJoin;
-
-    /**
-     * Return non-matching rows from both sides.
-     */
-    bool fullOuter;
-
-    /**
-     * Return matching rows from the left.
-     */
-    bool leftSemi;
-
-    /**
-     * Return non-matching rows from the right.
-     */
-    bool rightAnti;
+    shared_ptr<dynamic_bitset<> > joinType;
 
     /**
      * regularJoin:   do not match NULLs,
@@ -225,19 +205,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
     bool setopDistinct;
     bool setopAll;
 
-    /**
-     * Whether this join filters null key values(when they are not already
-     * filtered at the input)
-     */
-    bool leftFilterNull;
-    bool rightFilterNull;
-
-    /*
-     * Related to set match semantics
-     */
-    bool removeDuplicateProbe;
-    bool removeDuplicateBuild;
-
     /*
      * Some temporary variables.
      */
@@ -247,21 +214,15 @@ class LhxJoinExecStream : public ConfluenceExecStream
      */
     uint numTuplesProduced;
 
-    /**
-     * tuple size
-     */
-    uint leftTupleSize;
-    uint rightTupleSize;
-
     /*
      * Temporary variables used.
      *
      */
-    SharedLhxPartition leftPart;
-    SharedLhxPartition rightPart;
+    SharedLhxPartition probePart;
+    SharedLhxPartition buildPart;
 
-    LhxPartitionReader leftReader;
-    LhxPartitionReader rightReader;
+    LhxPartitionReader probeReader;
+    LhxPartitionReader buildReader;
 
     bool isTopPartition;
     SharedLhxPlan rootPlan;
@@ -279,21 +240,65 @@ class LhxJoinExecStream : public ConfluenceExecStream
     uint forcePartitionLevel;
 
     /**
-     * Whether to use join filters.
-     */
-    bool enableJoinFilter;
-
-    /**
      * whether to use sub partition stats.
      */
     bool enableSubPartStat;
+
+    /**
+     * Whether to use swing based on input sizes.
+     */
+    bool enableSwing;
 
     /**
      * implement ExecStream
      */
     virtual void closeImpl();
 
+    /*
+     * Decide the join and setop semantics from exec stream parameters.
+     */
     void setJoinType(LhxJoinExecStreamParams const &params);
+
+    /*
+     * Set up hashInfo from exec stream parameters.
+     */
+    void setHashInfo(LhxJoinExecStreamParams const &params);
+
+    /*
+     * Plan returns matched tuples from the probe side.
+     * If curPlan is NULL, uses the default probe side where inputIndex == 0.
+     */
+    inline bool returnProbeInner(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns matched tuples from the build side.
+     */
+    inline bool returnBuildInner(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns non-matched tuples from the probe side.
+     */
+    inline bool returnProbeOuter(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns non-matched tuples from the build side.
+     */
+    inline bool returnBuildOuter(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns matched tuples from both join sides.
+     */
+    inline bool returnInner(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns tuples, matched or non-matched, from the probe side.
+     */
+    inline bool returnProbe(LhxPlan *curPlan=NULL);
+
+    /*
+     * Plan returns tuples, matched or non-matched, from the build side.
+     */
+    inline bool returnBuild(LhxPlan *curPlan=NULL);
 
 public:
     /*
@@ -312,6 +317,45 @@ public:
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);
 };
+
+inline bool LhxJoinExecStream::returnProbeInner(LhxPlan *curPlan)
+{
+    uint probeInput = (curPlan == NULL) ? 0 : curPlan->getProbeInput();
+    return joinType->test(probeInput * 2 + 0);
+}
+
+inline bool LhxJoinExecStream::returnBuildInner(LhxPlan *curPlan)
+{
+    uint buildInput = (curPlan == NULL) ? 1 : curPlan->getBuildInput();
+    return joinType->test(buildInput * 2 + 0);
+}
+
+inline bool LhxJoinExecStream::returnProbeOuter(LhxPlan *curPlan)
+{
+    uint probeInput = (curPlan == NULL) ? 0 : curPlan->getProbeInput();
+    return joinType->test(probeInput * 2 + 1);
+}
+
+inline bool LhxJoinExecStream::returnBuildOuter(LhxPlan *curPlan)
+{
+    uint buildInput = (curPlan == NULL)? 1 : curPlan->getBuildInput();
+    return joinType->test(buildInput * 2 + 1);
+}
+
+inline bool LhxJoinExecStream::returnInner(LhxPlan *curPlan)
+{
+    return (returnProbeInner(curPlan) && returnBuildInner(curPlan));
+}
+
+inline bool LhxJoinExecStream::returnProbe(LhxPlan *curPlan)
+{
+    return (returnProbeInner(curPlan) || returnProbeOuter(curPlan));
+}
+
+inline bool LhxJoinExecStream::returnBuild(LhxPlan *curPlan)
+{
+    return (returnBuildInner(curPlan) || returnBuildOuter(curPlan));
+}
 
 FENNEL_END_NAMESPACE
 

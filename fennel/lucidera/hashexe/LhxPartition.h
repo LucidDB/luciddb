@@ -75,12 +75,12 @@ class LhxPartitionWriter
     SharedLhxPartition destPartition;
 
     /**
-     * Helper used for writing a partition
+     * Stream used for writing to a partition
      */
     SharedSegOutputStream pSegOutputStream;
     
     /**
-     * Tuple accessor to marshal the inputTuple.
+     * Tuple accessor to marshal the tuple from join inputs.
      */
     TupleAccessor tupleAccessor;
 
@@ -108,10 +108,6 @@ public:
     void close();
 };
 
-enum LhxPartitionReaderState {
-    ReadingFromStream, ReadingFromHashTable, ReadingFromPartition 
-};
-
 class LhxPartitionReader
 {
     /**
@@ -134,7 +130,6 @@ class LhxPartitionReader
      */
     uint tupleStorageLength;
 
-    LhxPartitionReaderState readerState;
     bool srcIsInputStream;
     ExecStreamBufState bufState;
     TupleDescriptor outputTupleDesc;
@@ -190,7 +185,7 @@ struct LhxPartitionInfo
      * Child partitions for both inputs have to be complete before child plans
      * can be created.
      *     writerList.size() == destPartitionList.size() ==
-     *           numInput * LhxPlan::LhxChildPartCount
+     *           numInputs * LhxPlan::LhxChildPartCount
      *
      * Input filters are used to filter only one input(the build input) of each
      * child partition.
@@ -200,17 +195,17 @@ struct LhxPartitionInfo
     vector<SharedLhxPartitionWriter> writerList;
     vector<SharedLhxPartition> destPartitionList;
     vector<shared_ptr<dynamic_bitset<> > > joinFilterList;
-
+    shared_array<uint> filteredRowCountList;
 
     /*
      * Stats associated with the subpartitions. One set of subpartitions for
      * each input partition.
-     * subPartStatList.size() == numInput * LhxPlan::LhxChildPartCount
+     * subPartStatList.size() == numInputs * LhxPlan::LhxChildPartCount
      * and each item in the list contains LhxPlan::LhxSubPartCount elements.
      */
     vector<shared_array<uint> > subPartStatList;
 
-    uint numInput;
+    uint numInputs;
     uint curInputIndex;
 
     LhxHashInfo *hashInfo;
@@ -220,15 +215,13 @@ struct LhxPartitionInfo
      * memory(i.e. from the hash table).
      */
     bool partitionMemory;
-
+    
     LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
 
     /**
      * Set up the recursive partitioning context.
      */
-    void init(
-        uint numInputInit,
-        LhxHashInfo *hashInfoInit);
+    void init(LhxHashInfo *hashInfoInit);
 
     /**
      * Prepare to partition the inputs:
@@ -241,7 +234,8 @@ struct LhxPartitionInfo
         LhxHashTableReader *hashTableReaderInit,
         LhxPartitionReader *buildReader,
         TupleData &buildTuple,
-        SharedLhxPartition probePartition);
+        SharedLhxPartition probePartition,
+        uint buildInputIndex);
 
     /**
      * Prepare to aggregate and partition the (build) input which reads from both
@@ -265,17 +259,20 @@ class LhxPlan
 {
     uint partitionLevel;
     vector<SharedLhxPartition> partitions;
-    vector<bool>               useJoinFilter;
+    shared_array<uint> joinSideToInputMap;
+
     shared_ptr<dynamic_bitset<> > joinFilter;
-    
+    shared_array<uint> filteredRowCount;
+
     /*
      * Map sub partitions to child partitions, based on hash key.
      * The mapping algorithm tries to put similar amount of data to each child
      * partition.
      */
-    bool useSubPartStat;
     shared_array<uint> subPartToChildMap;
-    shared_array<uint> childPartSize;
+    vector<shared_array<uint> > childPartSize;
+
+    shared_array<uint> inputSize;
 
     /*
      * Plan linkage.
@@ -296,7 +293,21 @@ class LhxPlan
      * sub partitions to child partitions. The objective is to come up with
      * child partitions of similar size.
      */
-    void mapSubPartToChild(shared_array<uint> subPartStats);
+    void mapSubPartToChild(vector<shared_array<uint> > &subPartStats);
+
+    /**
+     * Calculate the target child partition index based on the hashkey of a
+     * tuple.
+     */
+    uint calculateChildIndex(uint hashKey, uint curInputIndex);
+
+    inline bool isBuildChildPart(uint childPartIndex);
+
+    inline bool isProbeChildPart(uint childPartIndex);
+
+    inline uint getBuildChildPart(uint childPartIndex);
+
+    inline uint getProbeChildPart(uint childPartIndex);
 
 public:
     /*
@@ -311,29 +322,24 @@ public:
      * Initialize a plan, with its input partitions and parent plan.
      */
     void init(
+        LhxPlan *parentPlanInit,
         uint partitionLevelInit,
         vector<SharedLhxPartition> &partitionsInit,
-        LhxPlan *parentPlanInit,
-        bool useSubPartStat);
+        bool enableSubPartStat);
 
     /**
      * Initialize a plan.
      */
     void init(
+        LhxPlan *parentPlanInit,
         uint partitionLevelInit,
         vector<SharedLhxPartition> &partitionsInit,
-        bool useSubPartStat,
         vector<shared_array<uint> > &subPartStats,
-        LhxPlan *parentPlanInit,
-        vector<bool> useJoinFilterInit,
-        shared_ptr<dynamic_bitset<> > filterInit =
-                shared_ptr<dynamic_bitset<> >());
+        shared_ptr<dynamic_bitset<> > filterInit,
+        vector<uint> &filteredRowsInit,
+        bool enableSubPartStat,
+        bool enableSwing);
 
-    /**
-     * Calculate the atrget child partition index based on the hashkey of a
-     * tuple.
-     */
-    uint calculateChildIndex(uint hashKey, uint curInputIndex);
     
     /**
      * Generate partitions for the child plans.
@@ -346,12 +352,13 @@ public:
      * Partition this plan and create child plan.
      * This is used in testing only.
      */
-    void createChildren(LhxHashInfo const &hashInfo);
+    void createChildren(LhxHashInfo const &hashInfo, bool enableSubPartStat);
 
     /**
      * Create child plan from partitions provided via partInfo.
      */
-    void createChildren(LhxPartitionInfo &partInfo);
+    void createChildren(LhxPartitionInfo &partInfo, bool enableSubPartStat,
+        bool enableSwing);
     
     /**
      * Get the partition level of this plan.
@@ -361,7 +368,23 @@ public:
     /**
      * Get the partition corresponding to inputIndex.
      */
+    inline SharedLhxPartition getBuildPartition();
+    inline SharedLhxPartition getProbePartition();
     inline SharedLhxPartition getPartition(uint inputIndex);
+
+    /*
+     * Get the input index corresponding to the probe or the build side of the
+     * join for this plan.
+     */
+    inline uint getBuildInput();
+    inline uint getProbeInput();
+
+    /*
+     * Get the join side corresponding to the input index.
+     * 0 : probe side
+     * 1 : build side 
+     */
+    inline uint getJoinSide(uint inputIndex);
 
     /**
      * Get the first child plan.
@@ -390,6 +413,8 @@ public:
      * @return the string representation of this plan tree.
      */
     string toString();
+
+    inline bool inputSwinged();
 };
 
 inline ExecStreamBufState LhxPartitionReader::getState() const
@@ -417,9 +442,34 @@ inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)
     siblingPlan = siblingPlanInit;
 }
 
+inline SharedLhxPlan LhxPlan::getFirstChild()
+{
+    return firstChildPlan;
+}
+
 inline uint LhxPlan::getPartitionLevel()
 {
     return partitionLevel;
+}
+
+inline uint LhxPlan::getProbeInput()
+{
+    return joinSideToInputMap[0];
+}
+
+inline uint LhxPlan::getBuildInput()
+{
+    return joinSideToInputMap[partitions.size() - 1];
+}
+
+inline SharedLhxPartition LhxPlan::getProbePartition()
+{
+    return partitions[getProbeInput()];
+}
+
+inline SharedLhxPartition LhxPlan::getBuildPartition()
+{
+    return partitions[getBuildInput()];
 }
 
 inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
@@ -427,9 +477,44 @@ inline SharedLhxPartition LhxPlan::getPartition(uint inputIndex)
     return partitions[inputIndex];
 }
 
-inline SharedLhxPlan LhxPlan::getFirstChild()
+inline uint LhxPlan::getJoinSide(uint inputIndex)
 {
-    return firstChildPlan;
+    uint i = 0;
+    while ((joinSideToInputMap[i] != inputIndex) 
+        && (i < partitions.size())) {
+        i ++;
+    }
+    
+    return i;
+}
+
+inline bool LhxPlan::inputSwinged()
+{
+    uint numInputs = partitions.size();
+    uint i = 0;
+    return (joinSideToInputMap[i] == numInputs - i - 1);
+}
+
+inline bool LhxPlan::isBuildChildPart(uint childPartIndex)
+{
+    return ((childPartIndex / LhxChildPartCount) == getBuildInput());
+}
+
+inline bool LhxPlan::isProbeChildPart(uint childPartIndex)
+{
+    return ((childPartIndex / LhxChildPartCount) == getProbeInput());
+}
+
+inline uint LhxPlan::getBuildChildPart(uint childPartIndex)
+{
+    return ((childPartIndex % LhxChildPartCount) +
+            getBuildInput() * LhxChildPartCount);
+}
+
+inline uint LhxPlan::getProbeChildPart(uint childPartIndex)
+{
+    return ((childPartIndex % LhxChildPartCount) +
+            getProbeInput() * LhxChildPartCount);
 }
 
 FENNEL_END_NAMESPACE

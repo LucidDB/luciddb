@@ -287,17 +287,18 @@ PBuffer *LhxHashBlockAccessor::getSlot(uint slotNum)
 void LhxHashTable::init(
     uint partitionLevelInit,
     LhxHashInfo const &hashInfo,
-    AggComputerList *aggList)
+    AggComputerList *aggList,
+    uint buildInputIndex)
 {
-    LhxHashTable::init(partitionLevelInit, hashInfo);
+    init(partitionLevelInit, hashInfo, buildInputIndex);
 
     aggComputers = aggList;
     /*
      * The last input is the build side. In the group by case, there is only
      * one input.
      */
-    aggWorkingTuple.compute(hashInfo.inputDesc.back());
-    aggResultTuple.computeAndAllocate(hashInfo.inputDesc.back());
+    aggWorkingTuple.compute(hashInfo.inputDesc[buildInputIndex]);
+    aggResultTuple.computeAndAllocate(hashInfo.inputDesc[buildInputIndex]);
 
     isGroupBy = true;
     
@@ -310,7 +311,8 @@ void LhxHashTable::init(
 
 void LhxHashTable::init(
     uint partitionLevelInit,
-    LhxHashInfo const &hashInfo)
+    LhxHashInfo const &hashInfo,
+    uint buildInputIndex)
 {
     maxBlockCount = hashInfo.numCachePages;
     assert (maxBlockCount > 1);
@@ -324,8 +326,8 @@ void LhxHashTable::init(
     /*
      * special hash table properties.
      */
-    filterNull = hashInfo.filterNull;
-    removeDuplicate = hashInfo.removeDuplicate;
+    filterNull = hashInfo.filterNull[buildInputIndex];
+    removeDuplicate = hashInfo.removeDuplicate[buildInputIndex];
 
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     blockAccessor.init(usablePageSize);
@@ -340,18 +342,16 @@ void LhxHashTable::init(
     /*
      * The last input is the build side.
      */
-    TupleDescriptor const &buildTupleDesc =
-        hashInfo.inputDesc.back();
-    keyColsProj = hashInfo.keyProj.back();
+    TupleDescriptor const &buildTupleDesc = hashInfo.inputDesc[buildInputIndex];
+    keyColsProj = hashInfo.keyProj[buildInputIndex];
 
     /*
      * Initialize varchar type indicator for the build side. (Assumed to be the
      * last input.)
      */
-    isKeyColVarChar = hashInfo.isKeyColVarChar.back();
-
+    isKeyColVarChar = hashInfo.isKeyColVarChar[buildInputIndex];
     aggsProj = hashInfo.aggsProj;
-    dataProj = hashInfo.dataProj;
+    dataProj = hashInfo.dataProj[buildInputIndex];
 
     isGroupBy = false;
 
@@ -537,42 +537,6 @@ void LhxHashTable::releaseResources(bool reuse)
     currentBlock = NULL;
 }
 
-uint LhxHashTable::blocksNeeded(
-    double numRows,
-    double cndKeys,
-    TupleDescriptor &keyDesc,
-    TupleDescriptor &dataDesc,
-    uint usablePageSize)
-{
-    if (usablePageSize == 0) {
-        usablePageSize = blockAccessor.getUsableSize();
-    } else {
-        usablePageSize -= sizeof(PBuffer);
-    }
-
-    LhxHashKeyAccessor tmpKey;
-    LhxHashDataAccessor tmpData;
-
-    TupleProjection keyColsProj;
-    TupleProjection aggsProj;
-
-    /*
-     * Pretend there is no aggregate fields.
-     */
-    for (int i = 0; i < keyDesc.size(); i ++) {
-        keyColsProj.push_back(i);
-    }
-
-    tmpKey.init(keyDesc, keyColsProj, aggsProj);
-    tmpData.init(dataDesc);
-
-    double totalBytes = 
-        slotsNeeded(cndKeys) * sizeof(PBuffer)
-        + cndKeys * tmpKey.getMaxStorageSize()
-        + numRows * tmpData.getMaxStorageSize();
-    return (uint)ceil(totalBytes / usablePageSize);
-}
-
 void LhxHashTable::calculateNumSlots(
     double cndKeys,
     uint usablePageSize,
@@ -591,30 +555,53 @@ void LhxHashTable::calculateNumSlots(
 }
 
 void LhxHashTable::calculateSize(
-    double numRows,
-    double cndKeys,
-    TupleDescriptor &keyDesc,
-    TupleDescriptor &dataDesc,
-    uint usablePageSizeInit,
-    uint cacheBlocksLimit,
+    LhxHashInfo const &hashInfo,
+    uint inputIndex,
     uint &numBlocks)
 {
-    uint usablePageSize = usablePageSizeInit - sizeof(PBuffer);
+    uint usablePageSize = 
+        (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize()
+        - sizeof(PBuffer);
+
+    TupleDescriptor &inputDesc  =
+        (TupleDescriptor &)hashInfo.inputDesc[inputIndex];
+
+    TupleProjection &keyProj  =
+        (TupleProjection &)hashInfo.keyProj[inputIndex];
+
+    TupleProjection &dataProj  =
+        (TupleProjection &)hashInfo.dataProj[inputIndex];
+
+    uint cndKeys = hashInfo.cndKeys[inputIndex];
+    uint numRows = hashInfo.numRows[inputIndex];
+
+    /*
+     * Let hash table use at most 50% os the total cache size.
+     */
+    uint cacheBlocksLimit =
+        (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache()
+        ->getMaxLockedPages() / 2;
+
+    TupleDescriptor keyDesc;
+    keyDesc.projectFrom(inputDesc, keyProj);
+    
+    TupleDescriptor dataDesc;
+    dataDesc.projectFrom(inputDesc, dataProj);
 
     LhxHashKeyAccessor tmpKey;
     LhxHashDataAccessor tmpData;
 
-    TupleProjection keyColsProj;
-    TupleProjection aggsProj;
+    TupleProjection tmpKeyProj;
+    TupleProjection tmpAggsProj;
 
     /*
      * Pretend there is no aggregate fields.
      */
     for (int i = 0; i < keyDesc.size(); i ++) {
-        keyColsProj.push_back(i);
+        tmpKeyProj.push_back(i);
     }
 
-    tmpKey.init(keyDesc, keyColsProj, aggsProj);
+    tmpKey.init(keyDesc, tmpKeyProj, tmpAggsProj);
     tmpData.init(dataDesc);
 
     double totalBytes = 
@@ -631,18 +618,7 @@ void LhxHashTable::calculateSize(
         min(max((uint32_t)10000, numBlocks),
             cacheBlocksLimit);
 
-    calculateNumSlots(cndKeys, usablePageSizeInit, numBlocks);
-}
-
-uint LhxHashTable::bytesNeeded(
-    double numRows,
-    double cndKeys,
-    TupleDescriptor &keyDesc,
-    TupleDescriptor &dataDesc)
-{
-    return 
-        (blocksNeeded(numRows, cndKeys, keyDesc, dataDesc) 
-            * blockAccessor.getUsableSize());
+    calculateNumSlots(cndKeys, usablePageSize, numBlocks);
 }
 
 PBuffer *LhxHashTable::getSlot(uint slotNum)
@@ -665,12 +641,12 @@ PBuffer *LhxHashTable::getSlot(uint slotNum)
 
 PBuffer LhxHashTable::findKeyLocation(
     TupleData const &inputTuple,
-    TupleProjection const &keyColsProj,
+    TupleProjection const &inputKeyProj,
     bool isProbing,
     bool removeDuplicateProbe)
 {
     uint slotNum =
-        (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
+        (hashGen.hash(inputTuple, inputKeyProj, isKeyColVarChar)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
     assert (slot);
@@ -685,7 +661,7 @@ PBuffer LhxHashTable::findKeyLocation(
          * same slot.
          */
         hashKeyAccessor.setCurrent(firstKey, true);
-        while (!hashKeyAccessor.matches(inputTuple, keyColsProj)) {
+        while (!hashKeyAccessor.matches(inputTuple, inputKeyProj)) {
             nextKey = hashKeyAccessor.getNext();
             keyLocation = hashKeyAccessor.getNextLocation();
 
@@ -950,23 +926,14 @@ bool LhxHashTable::addTuple(TupleData const &inputTuple)
 
 PBuffer LhxHashTable::findKey(
     TupleData const &inputTuple,
-    TupleProjection const &keyColsProj,
-    bool filterNullProbe,
+    TupleProjection const &inputKeyProj,
     bool removeDuplicateProbe)
 {
-    if (filterNullProbe && inputTuple.containsNull(keyColsProj)) {
-        /*
-         * If filter null and incoming tuple contains NULL,
-         * there is no match in the hash table.
-         */
-        return false;
-    }
-
     PBuffer destKey;
     PBuffer destKeyLoc;
     bool isProbing = true;
     destKeyLoc =
-        findKeyLocation(inputTuple, keyColsProj, isProbing,
+        findKeyLocation(inputTuple, inputKeyProj, isProbing,
             removeDuplicateProbe);
     
     if (destKeyLoc) {
@@ -1135,17 +1102,18 @@ void LhxHashTableReader::produceTuple(TupleData &outputTuple)
 
 void LhxHashTableReader::init(
     LhxHashTable *hashTableInit,
-    LhxHashInfo const &hashInfo)
+    LhxHashInfo const &hashInfo,
+    uint buildInputIndex)
 {
     /*
      * The last input is the build side.
      */
     TupleDescriptor const &outputTupleDesc =
-        hashInfo.inputDesc.back();
-    TupleProjection const &keyColsProj = hashInfo.keyProj.back();
+        hashInfo.inputDesc[buildInputIndex];
+    TupleProjection const &keyColsProj = hashInfo.keyProj[buildInputIndex];
     TupleProjection const &aggsProj = hashInfo.aggsProj;
 
-    dataProj = hashInfo.dataProj;
+    dataProj = hashInfo.dataProj[buildInputIndex];
 
     /*
      * These steps initialize the keyColsProjInKey and aggsProjInKey which are

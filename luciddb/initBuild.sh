@@ -63,9 +63,9 @@ while [ -n "$1" ]; do
             FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
 
         --with-fennel)
-            with_fenne=true;;
+            with_fennel=true;;
         --without-fennel)
-            with_fenne=false;;
+            with_fennel=false;;
             
         --with?(out)-optimization) FARRAGO_FLAGS="${FARRAGO_FLAGS} $1";;
         --with?(out)-debug) 

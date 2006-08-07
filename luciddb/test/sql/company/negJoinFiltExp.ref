@@ -111,7 +111,7 @@
 '          LcsIndexSearchRel'
 '            FennelValuesRel'
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- can't handle non-simple equi join case
+0: jdbc:luciddb:> -- join conditions may contain some simple expressions
 0: jdbc:luciddb:> explain plan excluding attributes for select * from emp,dept
 . . . . . . . . > where emp.deptno+1=dept.deptno+1 and dept.dname='Marketing';
 'column0'

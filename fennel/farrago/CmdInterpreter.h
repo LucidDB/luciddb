@@ -146,6 +146,7 @@ protected:
     virtual void visit(ProxyCmdOpenDatabase &);
     virtual void visit(ProxyCmdCloseDatabase &);
     virtual void visit(ProxyCmdCheckpoint &);
+    virtual void visit(ProxyCmdSetParam &);
     virtual void visit(ProxyCmdBeginTxn &);
     virtual void visit(ProxyCmdSavepoint &);
     virtual void visit(ProxyCmdCommit &);

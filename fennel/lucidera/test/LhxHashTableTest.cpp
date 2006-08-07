@@ -41,6 +41,7 @@ class LhxHashTableTest : virtual public SegStorageTestBase
 {
     StandardTypeDescriptorFactory stdTypeFactory;
     LhxHashInfo hashInfo;
+    uint buildInputIndex;
 
     uint writeHashTable(LhxHashInfo const &hashInfo, LhxHashTable &hashTable, 
         SharedLhxPartition destPartition);
@@ -109,7 +110,7 @@ uint LhxHashTableTest::writeHashTable(LhxHashInfo const &hashInfo,
     LhxPartitionWriter writer;
 
     LhxHashTableReader hashTableReader;
-    hashTableReader.init(&hashTable, hashInfo);
+    hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
     hashTableReader.bindKey(NULL);
     TupleData outputTuple;
         
@@ -194,6 +195,7 @@ void LhxHashTableTest::testInsert(
 
     TupleDescriptor inputDesc;
     TupleProjection keyProj;
+    TupleProjection dataProj;
     std::vector<bool> isKeyVarChar;
 
     for (i = 0; i < numCols; i ++) {
@@ -205,20 +207,26 @@ void LhxHashTableTest::testInsert(
         } else if (i < numKeyCols + numAggs) {
             hashInfo.aggsProj.push_back(i);
         } else {
-            hashInfo.dataProj.push_back(i);
+            dataProj.push_back(i);
         }
     }
 
-    for (i = 0; i < 2; i ++) {
+    uint numInputs = 2;
+    buildInputIndex = numInputs - 1;
+    for (i = 0; i < numInputs; i ++) {
         hashInfo.inputDesc.push_back(inputDesc);
         hashInfo.keyProj.push_back(keyProj);
         hashInfo.isKeyColVarChar.push_back(isKeyVarChar);
+        hashInfo.dataProj.push_back(dataProj);
+        hashInfo.useJoinFilter.push_back(false);
+        hashInfo.filterNull.push_back(false);
+        hashInfo.removeDuplicate.push_back(false);
     }
 
     TupleDescriptor &inputTupleDesc = hashInfo.inputDesc.back();
     TupleProjection &keyColsProj = hashInfo.keyProj.back();
 
-    hashTable.init(partitionLevel, hashInfo);
+    hashTable.init(partitionLevel, hashInfo, buildInputIndex);
 
     /*
      * Calculate key cardinality, assuming there's no correlation between key
@@ -258,7 +266,7 @@ void LhxHashTableTest::testInsert(
     }
         
     LhxHashTableReader hashTableReader;
-    hashTableReader.init(&hashTable, hashInfo);
+    hashTableReader.init(&hashTable, hashInfo, buildInputIndex);
     TupleData outputTuple;
     
     outputTuple.compute(inputTupleDesc);
@@ -297,7 +305,7 @@ void LhxHashTableTest::testInsert(
         }
         
         PBuffer matchingKey =
-            hashTable.findKey(inputTuple, keyColsProj, true, true);
+            hashTable.findKey(inputTuple, keyColsProj, true);
 
         if (matchingKey) {
             hashTableReader.bindKey(matchingKey);
@@ -376,7 +384,7 @@ void LhxHashTableTest::testInsert(
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
 
-        plan->init(0, partitions, NULL, false);
+        plan->init(NULL, 0, partitions, false);
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;
@@ -389,7 +397,7 @@ void LhxHashTableTest::testInsert(
 
             //create leaf plans for the next level
             while (leafPlan) {
-                leafPlan->createChildren(hashInfo);
+                leafPlan->createChildren(hashInfo, false);
                 //skip the next numChildPart leaves as they are newly
                 //created children
                 leafPlan = leafPlan->getFirstLeaf();

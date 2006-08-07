@@ -74,9 +74,10 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
 class LhxAggExecStream : public ConduitExecStream
 {
     enum LhxAggState {
-        Build, GetNextPlan, Partition, Produce, ProducePending,
-        CreateChildPlan, ForcePartitionBuild, Done
+        ForcePartitionBuild, Build, Produce, ProducePending,
+        Partition, CreateChildPlan, GetNextPlan, Done
     };
+
     /**
      * Hash join info.
      */
@@ -171,16 +172,19 @@ class LhxAggExecStream : public ConduitExecStream
      */
     virtual void closeImpl();
 
-    /**
-     * Change oroginal agg computers to compute based on partial
-     * aggregates.
+    /*
+     * Set up hashInfo from exec stream parameters.
      */
-    void getPartialAggComputers(
-        AggComputerList &aggComputers,
-        AggInvocationList const &aggInvocations,        
-        TupleDescriptor const &keyDesc,
-        TupleProjection const &aggsProj);
-        
+    void setHashInfo(LhxAggExecStreamParams const &params);
+
+    /*
+     * set up the aggregate computers and partial aggregate computers used by
+     * the hash table.
+     */
+    void setAggComputers(
+        LhxHashInfo &hashInfo,
+        AggInvocationList const &aggInvocations);
+
 public:
     /*
      * implement ExecStream

@@ -29,6 +29,7 @@
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
 #include "fennel/common/FennelExcn.h"
+#include "fennel/common/InvalidParamExcn.h"
 #include "fennel/common/Backtrace.h"
 #include "fennel/btree/BTreeBuilder.h"
 #include "fennel/db/Database.h"
@@ -42,6 +43,8 @@
 #include "fennel/farrago/ExecStreamFactory.h"
 #include "fennel/ftrs/FtrsTableWriterFactory.h"
 #include "fennel/btree/BTreeVerifier.h"
+
+#include <boost/lexical_cast.hpp>
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -214,6 +217,23 @@ void CmdInterpreter::visit(ProxyCmdCheckpoint &cmd)
         cmd.isFuzzy() ? CHECKPOINT_FLUSH_FUZZY : CHECKPOINT_FLUSH_ALL,
         cmd.isAsync());
 }
+
+void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
+{
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedProxyDatabaseParam pParam = cmd.getParam();
+
+    // currently this command only sets the cachePagesInit parameter
+    if (pParam->getName().compare("cachePagesInit") == 0) {
+        int pageCount = boost::lexical_cast<int>(pParam->getValue());
+        SharedCache pCache = pDbHandle->pDb->getCache();
+        if (pageCount <= 0 || pageCount > pCache->getMaxAllocatedPageCount()) {
+            throw InvalidParamExcn("1", "'cachePagesMax'");
+        }
+        pCache->setAllocatedPageCount(pageCount);
+    }
+}
+
     
 void CmdInterpreter::getBTreeForIndexCmd(
     ProxyIndexCmd &cmd,PageId rootPageId,BTreeDescriptor &treeDescriptor)
