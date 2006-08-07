@@ -187,11 +187,19 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
 
+-- UDX with input from which output row type is derived
+create function digest(c cursor)
+returns table(c.*, row_digest int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
+
 create view ramp_view as select * from table(ramp(3));
 
 create view stringified_view as 
 select * 
-from table(udftest.stringify(
+from table(stringify(
     cursor(select * from sales.depts where deptno=20 order by 1),
     '|'));
 
@@ -358,13 +366,19 @@ select count(*) from sales.depts, table(ramp(5));
 
 -- udx invocation with input
 select upper(v)
-from table(udftest.stringify(
+from table(stringify(
     cursor(select * from sales.depts order by 1),
     '|'))
 order by 1;
 
 -- udx invocation with input via view
 select * from stringified_view;
+
+-- udx invocation with input auto-propagated to output
+select * 
+from table(digest(cursor(select * from sales.depts)))
+order by row_digest;
+
 
 set path 'crypto2';
 

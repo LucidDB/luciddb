@@ -429,7 +429,7 @@ return 20;
 
 -- UDX
 
--- should succeed
+-- should succeed:  simple case
 create function ramp(n int)
 returns table(i int)
 language java
@@ -451,7 +451,7 @@ returns table(i int)
 contains sql
 return n;
 
--- should succeed
+-- should succeed:  cursor input
 create function stringify(c cursor, delimiter varchar(128))
 returns table(v varchar(65535))
 language java
@@ -466,3 +466,11 @@ language java
 parameter style java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
+
+-- should succeed:  cursor input from which output row is derived
+create function digest(c cursor)
+returns table(c.*, row_digest int)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.digest';

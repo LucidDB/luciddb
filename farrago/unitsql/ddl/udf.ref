@@ -490,7 +490,7 @@ Error: DDL validation error near line 1, column 8: Invocation name and parameter
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- UDX
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> -- should succeed:  simple case
 0: jdbc:farrago:> create function ramp(n int)
 . . . . . . . . > returns table(i int)
 . . . . . . . . > language java
@@ -514,7 +514,7 @@ Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for 
 . . . . . . . . > return n;
 Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for routine "UDFTEST"."RAMP_BAD_LANGUAGE"; can only be used with language JAVA and parameter style SYSTEM DEFINED JAVA (state=,code=0)
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- should succeed
+0: jdbc:farrago:> -- should succeed:  cursor input
 0: jdbc:farrago:> create function stringify(c cursor, delimiter varchar(128))
 . . . . . . . . > returns table(v varchar(65535))
 . . . . . . . . > language java
@@ -530,5 +530,13 @@ Error: DDL validation error near line 1, column 8: RETURNS TABLE is illegal for 
 . . . . . . . . > no sql
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.stringify';
 Error: DDL validation error near line 1, column 8: Non-table routine "UDFTEST"."SCALAR_STRINGIFY" cannot take routine parameter "C" of type CURSOR (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should succeed:  cursor input from which output row is derived
+0: jdbc:farrago:> create function digest(c cursor)
+. . . . . . . . > returns table(c.*, row_digest int)
+. . . . . . . . > language java
+. . . . . . . . > parameter style system defined java
+. . . . . . . . > no sql
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
