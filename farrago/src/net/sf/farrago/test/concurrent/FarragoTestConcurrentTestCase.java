@@ -130,7 +130,8 @@ public abstract class FarragoTestConcurrentTestCase
      */
     protected void executeTest(
         FarragoTestConcurrentCommandGenerator commandGenerator,
-        boolean synchronizeClockTicks)
+        boolean synchronizeClockTicks,
+        String jdbcUrl)
         throws Exception
     {
         if (synchronizeClockTicks) {
@@ -144,7 +145,6 @@ public abstract class FarragoTestConcurrentTestCase
         FarragoTestConcurrentCommandExecutor.Sync sync =
             new FarragoTestConcurrentCommandExecutor.Sync(threadIds.size());
 
-        String jdbcURL = newJdbcEngineDriver().getUrlPrefix();
 
         // initialize command executors
         FarragoTestConcurrentCommandExecutor [] threads =
@@ -167,7 +167,7 @@ public abstract class FarragoTestConcurrentTestCase
                 new FarragoTestConcurrentCommandExecutor(
                     threadId.intValue(),
                     commandGenerator.getThreadName(threadId),
-                    jdbcURL,
+                    jdbcUrl,
                     commands,
                     sync,
                     debug ? printStream : null);
