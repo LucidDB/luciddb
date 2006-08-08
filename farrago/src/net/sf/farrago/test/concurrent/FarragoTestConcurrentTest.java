@@ -107,14 +107,24 @@ public class FarragoTestConcurrentTest
             + (rt.totalMemory() - rt.freeMemory()));
     }
 
+    protected void runTest(String jdbcUrl)
+        throws Exception
+    {
+        // mask out source control Id
+        addDiffMask("\\$Id.*\\$");
+
+        runScript(getName(), jdbcUrl);
+    }
+
     protected void runTest()
         throws Exception
     {
         // mask out source control Id
         addDiffMask("\\$Id.*\\$");
 
-        runScript(getName());
+        runScript(getName(), newJdbcEngineDriver().getUrlPrefix());
     }
+
 
     //~ Inner Interfaces -------------------------------------------------------
 
