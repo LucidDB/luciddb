@@ -204,7 +204,7 @@ public class SqlTest extends TestCase {
         LucidDbTestHarness.startupEngine(
             urlPrefix, username, passwd);
         MtsqlTestCase testCase = new MtsqlTestCase(sqlFile);
-        testCase.go();
+        testCase.go(urlPrefix);
     }
 
     /**
@@ -407,10 +407,10 @@ public class SqlTest extends TestCase {
             super(name);
         }
         
-        public void go()
+        public void go(String jdbcUrl)
             throws Exception
         {
-            runTest();
+            runTest(jdbcUrl);
         }
     }
 }
