@@ -65,6 +65,7 @@ class CartesianJoinExecStream : public ConfluenceExecStream
 public:
     // implement ExecStream
     virtual void prepare(CartesianJoinExecStreamParams const &params);
+    virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 };
 
