@@ -23,12 +23,8 @@
 #define Fennel_LhxJoinExecStream_Included
 
 #include "fennel/exec/ConfluenceExecStream.h"
-#include "fennel/tuple/TupleAccessor.h"
-#include "fennel/tuple/TupleData.h"
-#include "fennel/tuple/TupleDataWithBuffer.h"
-#include "fennel/tuple/TupleDescriptor.h"
-#include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
+#include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/lucidera/hashexe/LhxPartition.h"
 
 using namespace boost;
@@ -48,6 +44,29 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      * Segment to use for storing partition pages.
      */
     SharedSegment pTempSegment;
+
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
+
+    /**
+     * This parameter is used only in tests.
+     * Force partitioning level.
+     */
+    uint forcePartitionLevel;
+
+    /**
+     * Initial stats provided by the optimizer for resource allocation.
+     * cndKeys: key cardinality of the initial built input chosen by the
+     * optimizer. For Hash Aggregate, this is the estimated number of groups.
+     */
+    uint cndKeys;
+
+    /**
+     * numRows: number of rows from the build input.
+     */
+    uint numRows;
 
     /**
      * Return matching rows from the left.
@@ -97,36 +116,10 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     bool setopAll;
 
     /**
-     * Initial stats provided by the optimizer for resource allocation.
-     * cndKeys: key cardinality of the initial built input chosen by the
-     * optimizer.
-     */
-    uint cndKeys;
-
-    /**
-     * numRows: number of rows of the initial built input.
-     */
-    uint numRows;
-
-    /**
-     * The following are testing parameters.
-     */
-
-    /**
-     * Force partitioning level. Only set in tests.
-     */
-    uint forcePartitionLevel;
-
-    /**
      * Whether to use join filters.
      */
     bool enableJoinFilter;
 
-    /**
-     * whether to use sub partition stats.
-     */
-    bool enableSubPartStat;
-    
     /**
      * Whether to use swing based on input sizes.
      */
@@ -146,11 +139,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
     };
     
     /**
-     * Hash join info.
-     */
-    LhxHashInfo hashInfo;
-
-    /**
      * Input tuple.
      */
     shared_array<TupleData> inputTuple;
@@ -160,7 +148,16 @@ class LhxJoinExecStream : public ConfluenceExecStream
      * TupleData to assemble the output tuple.
      */
     TupleData outputTuple;
-    uint outputTupleSize;
+
+    /**
+     * Number of tuples produced within the current quantum.
+     */
+    uint numTuplesProduced;
+
+    /**
+     * Hash join info.
+     */
+    LhxHashInfo hashInfo;
 
     /**
      * HashTable to use.
@@ -179,6 +176,47 @@ class LhxJoinExecStream : public ConfluenceExecStream
     uint numMiscCacheBlocks;
 
     /*
+     * Plan
+     */
+    bool isTopPlan;
+    SharedLhxPlan rootPlan;
+    LhxPlan *curPlan;
+
+    /**
+     * Partition context used in recursive partitioning.
+     *
+     */
+    LhxPartitionInfo partInfo;
+
+    /**
+     * The build partition(which is also the only partition)
+     */
+    SharedLhxPartition buildPart;
+    SharedLhxPartition probePart;
+
+    /**
+     * Partition reader
+     */
+    LhxPartitionReader buildReader;
+    LhxPartitionReader probeReader;
+
+    /**
+     * whether to use sub partition stats.
+     */
+    bool enableSubPartStat;
+
+    /**
+     * Whether to use swing based on input sizes.
+     */
+    bool enableSwing;
+
+    /**
+     * This is set only in tests.
+     * Force partitioning level.
+     */
+    uint forcePartitionLevel;
+
+    /*
      * State of the JoinExecStream
      */
     LhxJoinState joinState;
@@ -191,7 +229,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
     /*
      * Join semantics
      */
-
     shared_ptr<dynamic_bitset<> > joinType;
 
     /**
@@ -204,50 +241,6 @@ class LhxJoinExecStream : public ConfluenceExecStream
     bool regularJoin;
     bool setopDistinct;
     bool setopAll;
-
-    /*
-     * Some temporary variables.
-     */
-
-    /**
-     * Number of tuples produced within the current quantum.
-     */
-    uint numTuplesProduced;
-
-    /*
-     * Temporary variables used.
-     *
-     */
-    SharedLhxPartition probePart;
-    SharedLhxPartition buildPart;
-
-    LhxPartitionReader probeReader;
-    LhxPartitionReader buildReader;
-
-    bool isTopPartition;
-    SharedLhxPlan rootPlan;
-    LhxPlan *curPlan;
-
-    /**
-     * Temporary variable used in recursive partitioning.
-     *
-     */
-    LhxPartitionInfo partInfo;
-
-    /**
-     * Force partitioning level. Only set in tests.
-     */
-    uint forcePartitionLevel;
-
-    /**
-     * whether to use sub partition stats.
-     */
-    bool enableSubPartStat;
-
-    /**
-     * Whether to use swing based on input sizes.
-     */
-    bool enableSwing;
 
     /**
      * implement ExecStream

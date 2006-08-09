@@ -86,6 +86,7 @@ public:
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testConstPartitionStat);
 */
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testSequentialPartitionFilterStat);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
@@ -96,7 +97,6 @@ public:
             testConstPartitionFilterStat);
 
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
-
     }
     
     /*
@@ -114,7 +114,7 @@ public:
      *  left:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
      * right:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      *
-     * result: 0, 0, 0, .. 1, 1, 1, .. 2, 2, 2, ..
+     * result: 0, 0, 0, 0, 0, 0, .. 1, 1, 1, 1, 1, 1, .. 2, 2, 2, 2, 2, 2, ..
      */
     void testDup1();
 
@@ -128,7 +128,7 @@ public:
      *  left:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      * right:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
      *
-     * result: 0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     * result: 0, 0, 0, 0, 0, 0, .. 1, 1, 1, 1, 1, 1, .. 2, 2, 2, 2, 2, 2, ..
      */
     void testDup2();
 

@@ -287,41 +287,22 @@ PBuffer *LhxHashBlockAccessor::getSlot(uint slotNum)
 void LhxHashTable::init(
     uint partitionLevelInit,
     LhxHashInfo const &hashInfo,
-    AggComputerList *aggList,
-    uint buildInputIndex)
-{
-    init(partitionLevelInit, hashInfo, buildInputIndex);
-
-    aggComputers = aggList;
-    /*
-     * The last input is the build side. In the group by case, there is only
-     * one input.
-     */
-    aggWorkingTuple.compute(hashInfo.inputDesc[buildInputIndex]);
-    aggResultTuple.computeAndAllocate(hashInfo.inputDesc[buildInputIndex]);
-
-    isGroupBy = true;
-    
-    if (aggList->size() > 0) {
-        hasAggregates = true;
-    } else {
-        hasAggregates = false;
-    }
-}
-
-void LhxHashTable::init(
-    uint partitionLevelInit,
-    LhxHashInfo const &hashInfo,
     uint buildInputIndex)
 {
     maxBlockCount = hashInfo.numCachePages;
     assert (maxBlockCount > 1);
     scratchAccessor = hashInfo.memSegmentAccessor;
-
     partitionLevel = partitionLevelInit;
-
     bufferLock.accessSegment(scratchAccessor);
     currentBlockCount = 0;
+
+    /*
+     * Recompute num slots based on hashInfo.numCachePages
+     */
+    uint cndKeys = hashInfo.cndKeys[buildInputIndex];
+    uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
+    
+    calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);    
 
     /*
      * special hash table properties.
@@ -329,7 +310,6 @@ void LhxHashTable::init(
     filterNull = hashInfo.filterNull[buildInputIndex];
     removeDuplicate = hashInfo.removeDuplicate[buildInputIndex];
 
-    uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     blockAccessor.init(usablePageSize);
     nodeBlockAccessor.init(usablePageSize);
     maxBufferSize = nodeBlockAccessor.getUsableSize();
@@ -384,6 +364,31 @@ void LhxHashTable::init(
     }
 
     hashDataAccessor.init(dataDesc);
+}
+
+void LhxHashTable::init(
+    uint partitionLevelInit,
+    LhxHashInfo const &hashInfo,
+    AggComputerList *aggList,
+    uint buildInputIndex)
+{
+    init(partitionLevelInit, hashInfo, buildInputIndex);
+
+    aggComputers = aggList;
+    /*
+     * The last input is the build side. In the group by case, there is only
+     * one input.
+     */
+    aggWorkingTuple.compute(hashInfo.inputDesc[buildInputIndex]);
+    aggResultTuple.computeAndAllocate(hashInfo.inputDesc[buildInputIndex]);
+
+    isGroupBy = true;
+    
+    if (aggList->size() > 0) {
+        hasAggregates = true;
+    } else {
+        hasAggregates = false;
+    }
 }
 
 PBuffer LhxHashTable::allocBlock()
@@ -543,7 +548,8 @@ void LhxHashTable::calculateNumSlots(
     uint numBlocks)
 {
     /*
-     * Use at least 1%, but no more than 10% of cache pages to store slots.
+     * Use at least 1%, but no more than 10% of hash table cache pages to store
+     * slots.
      */
     uint slotsLow = numBlocks * usablePageSize / sizeof(PBuffer) / 100;
     uint slotsHigh = numBlocks * usablePageSize / sizeof(PBuffer) / 10;
@@ -577,6 +583,9 @@ void LhxHashTable::calculateSize(
 
     /*
      * Let hash table use at most 50% os the total cache size.
+     *
+     * TODO(rchen 2006-08-08): remove the limit of cacheBlocksLimit
+     * once stream graph resource manager is in place.
      */
     uint cacheBlocksLimit =
         (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache()
@@ -611,14 +620,13 @@ void LhxHashTable::calculateSize(
     numBlocks = (uint)ceil(totalBytes / usablePageSize);
 
     /*
-     * Cache pages requirement: at least 10000 blocks
-     * (or 40M for blocksize of 4K)
+     * In case the stats are incorrect and numBlocks comes out really low, make
+     * sure hash table still claim some minimum mount of memory: at least 10000
+     * blocks (or 40M for blocksize of 4K)
      */
     numBlocks =
         min(max((uint32_t)10000, numBlocks),
             cacheBlocksLimit);
-
-    calculateNumSlots(cndKeys, usablePageSize, numBlocks);
 }
 
 PBuffer *LhxHashTable::getSlot(uint slotNum)

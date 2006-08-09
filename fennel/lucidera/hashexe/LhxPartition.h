@@ -103,6 +103,7 @@ public:
         AggComputerList *aggList,
         uint numWriterCachePages);
     inline void allocateResources();
+    inline void releaseResources();
     void marshalTuple(TupleData const &inputTuple);
     void aggAndMarshalTuple(TupleData const &inputTuple);
     void close();
@@ -435,6 +436,11 @@ inline void LhxPartitionWriter::allocateResources()
 {
     bool status = hashTable.allocateResources();
     assert(status);
+}
+
+inline void LhxPartitionWriter::releaseResources()
+{
+    hashTable.releaseResources();
 }
 
 inline void LhxPlan::addSibling(SharedLhxPlan siblingPlanInit)

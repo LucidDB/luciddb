@@ -23,10 +23,7 @@
 #define Fennel_LhxAggExecStream_Included
 
 #include "fennel/exec/ConduitExecStream.h"
-#include "fennel/exec/AggInvocation.h"
-#include "fennel/exec/AggComputer.h"
 #include "fennel/exec/SortedAggExecStream.h"
-#include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/hashexe/LhxHashBase.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/lucidera/hashexe/LhxPartition.h"
@@ -42,25 +39,29 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
      * Segment to use for storing partition pages.
      */
     SharedSegment pTempSegment;
-    /**
-     * Initial stats provided by the optimizer for resource allocation.
-     * cndGroupByKeys: optimizer estimated cardinality of the groupby key
-     */
-    uint cndGroupByKeys;
 
-    /**
-     * numRows: number of input rows.
-     */
-    uint numRows;
-
-    /**
-     * Force partitioning level. Only set in tests.
-     */
-    uint forcePartitionLevel;
     /**
      * whether to use sub partition stats.
      */
     bool enableSubPartStat;
+
+    /**
+     * This parameter is used only in tests.
+     * Force partitioning level.
+     */
+    uint forcePartitionLevel;
+
+    /**
+     * Initial stats provided by the optimizer for resource allocation.
+     * cndKeys: key cardinality of the initial built input chosen by the
+     * optimizer. For Hash Aggregate, this is the estimated number of groups.
+     */
+    uint cndGroupByKeys;
+
+    /**
+     * numRows: number of rows from the build input.
+     */
+    uint numRows;
 };
 
 /**
@@ -79,11 +80,6 @@ class LhxAggExecStream : public ConduitExecStream
     };
 
     /**
-     * Hash join info.
-     */
-    LhxHashInfo hashInfo;
-
-    /**
      * Input tuple.
      */
     TupleData inputTuple;
@@ -92,6 +88,17 @@ class LhxAggExecStream : public ConduitExecStream
      * TupleData to assemble the output tuple.
      */
     TupleData outputTuple;
+
+    /**
+     * Number of tuples produced within the current quantum.
+     */
+    uint numTuplesProduced;
+
+
+    /**
+     * Hash join info.
+     */
+    LhxHashInfo hashInfo;
 
     /**
      * HashTable to use.
@@ -109,28 +116,23 @@ class LhxAggExecStream : public ConduitExecStream
      */
     uint numMiscCacheBlocks;
 
-    /**
-     * State of the AggExecStream
+    /*
+     * Plan
      */
-    LhxAggState aggState;
-
-    /**
-     * The next state of the AggExecStream
-     */
-    LhxAggState nextState;
-  
-    bool isTopPartition;
+    bool isTopPlan;
     SharedLhxPlan rootPlan;
     LhxPlan *curPlan;
 
-    /*
-     * Some temporary variables.
+    /**
+     * Index of build input(should be 0 for agg)
      */
-    uint groupByKeyCount;
-
-    AggComputerList aggComputers;
-    AggComputerList partialAggComputers;
-
+    uint buildInputIndex;
+  
+    /**
+     * Partition context used in recursive partitioning.
+     *
+     */
+    LhxPartitionInfo partInfo;
     /**
      * The build partition(which is also the only partition)
      */
@@ -142,30 +144,34 @@ class LhxAggExecStream : public ConduitExecStream
     LhxPartitionReader buildReader;
 
     /**
-     * Number of tuples produced within the current quantum.
+     * whether to use sub partition stats.
      */
-    uint numTuplesProduced;
+    bool enableSubPartStat;
 
     /**
-     * Index of build input(should be 0 for agg)
-     */
-    uint buildInputIndex;
-  
-    /**
-     * Temporary variable used in recursive partitioning.
-     *
-     */
-    LhxPartitionInfo partInfo;
-
-    /**
-     * Force partitioning level. Only set in tests.
+     * This is set only in tests.
+     * Force partitioning level.
      */
     uint forcePartitionLevel;
 
     /**
-     * whether to use sub partition stats.
+     * State of the AggExecStream
      */
-    bool enableSubPartStat;
+    LhxAggState aggState;
+
+    /**
+     * The next state of the AggExecStream
+     */
+    LhxAggState nextState;
+  
+
+    /*
+     * Some temporary variables.
+     */
+    uint groupByKeyCount;
+
+    AggComputerList aggComputers;
+    AggComputerList partialAggComputers;
 
     /**
      * implement ExecStream

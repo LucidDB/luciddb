@@ -98,6 +98,7 @@ void LhxPartitionWriter::close()
     }
     destPartition->segStream->endWrite();
     pSegOutputStream->close();
+    releaseResources();
 }
 
 void LhxPartitionWriter::marshalTuple(TupleData const &inputTuple)
@@ -456,8 +457,15 @@ void LhxPlan::init(
     uint numInputs = partitionsInit.size();
 
     partitionLevel = partitionLevelInit;
-    joinFilter = joinFilterInit;
     parentPlan   = parentPlanInit;
+
+    /*
+     * REVIEW(rchen 2006-08-08): if input sides swing, then the new build could
+     * be the same as the probe input of the previous partition. This filter
+     * will not filter any tuple as it tries to filter the very input the
+     * filter is built on.
+     */
+    joinFilter = joinFilterInit;
 
     filteredRowCount.reset(new uint[numInputs]);
     inputSize.reset(new uint[numInputs]);
@@ -485,7 +493,7 @@ void LhxPlan::init(
         }
     }
 
-    /**
+    /*
      * Map join side to input, using partitions stats associated with each
      * input. The input with the smaller side witll be the build side for the
      * join: joinSide for the build will map to the index of this input.
@@ -695,7 +703,7 @@ LhxPartitionState LhxPlan::generatePartitions(
         
         if (isAggregate) {
             /*
-             * release the hash table scratch pages
+             * release the agg exec stream hash table scratch pages
              * and initialize writer scratch pages.
              */
             ((partInfo.hashTableReader)->getHashTable())->releaseResources();
@@ -792,6 +800,7 @@ LhxPartitionState LhxPlan::generatePartitions(
                     /*
                      * Build input.
                      * Note top level build input does not have input filter.
+                     * Use joinfilter from the probe input of the previous level.
                      */
                     if (partitionLevel == 0) {
                         writeToPartition = true;
@@ -809,7 +818,9 @@ LhxPartitionState LhxPlan::generatePartitions(
                     }
                 } else {
                     /*
-                     * Probe input
+                     * Probe input.
+                     * Use join filter from build input of the same
+                     * partitioning level.
                      */
                     if (joinFilterList[getBuildChildPart(childPartIndex)] &&
                         joinFilterList[getBuildChildPart(childPartIndex)]->

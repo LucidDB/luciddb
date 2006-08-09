@@ -46,7 +46,7 @@ void LhxAggExecStream::prepare(
     buildInputIndex = hashInfo.inputDesc.size() - 1;
 
     /* 
-     * number of block and slots required to perform the join in memory,
+     * number of block and slots required to perform the aggregatin in memory,
      * using estimates from the optimizer.
      */
     hashTable.calculateSize(hashInfo, buildInputIndex, numBlocksHashTable);
@@ -63,9 +63,10 @@ void LhxAggExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
-     * Set aside 10 cache blocks for I/O.
+     * Set aside 1 cache block per child partition writer for I/O.
      */
-    numMiscCacheBlocks = 10;
+    uint numInputs = 1;
+    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs;
 }
 
 void LhxAggExecStream::getResourceRequirements(
@@ -74,9 +75,14 @@ void LhxAggExecStream::getResourceRequirements(
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
     
-    minQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
-
-    optQuantity = minQuantity;
+    minQuantity.nCachePages += 
+        LhxHashTable::LhxHashTableMinPages * LhxPlan::LhxChildPartCount
+        + numMiscCacheBlocks;
+    optQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
+    /*
+     * TODO(rchen 2006-08-08): use the real min above.
+     */
+    minQuantity.nCachePages = optQuantity.nCachePages;
 }
 
 void LhxAggExecStream::setResourceAllocation(
@@ -123,13 +129,14 @@ void LhxAggExecStream::open(bool restart)
     /*
      * initialize recursive partitioning context.
      */
-    isTopPartition = true;
     partInfo.init(&hashInfo);
 
     /*
      * Now starts at the first (root) plan.
      */
     curPlan = rootPlan.get();
+    isTopPlan = true;
+
     buildReader.open(curPlan->getPartition(buildInputIndex), hashInfo);
 
     aggState = (forcePartitionLevel > 0) ? ForcePartitionBuild : Build;
@@ -159,7 +166,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         }
 
                         if (!buildReader.demandData()) {
-                            if (isTopPartition) {
+                            if (isTopPlan) {
                                 /*
                                  * Top level: request more data from stream producer.
                                  */
@@ -184,7 +191,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      */
                     if (curPlan->getPartitionLevel() < forcePartitionLevel ||
                         !hashTable.addTuple(inputTuple)) {
-                        if (isTopPartition) {
+                        if (isTopPlan) {
                             partInfo.open(&hashTableReader,
                                           &buildReader, inputTuple,
                                           &aggComputers);
@@ -219,7 +226,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         }
 
                         if (!buildReader.demandData()) {
-                            if (isTopPartition) {
+                            if (isTopPlan) {
                                 /*
                                  * Top level: request more data from stream producer.
                                  */
@@ -240,7 +247,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                      * Add tuple to hash table.
                      */
                     if (!hashTable.addTuple(inputTuple)) {
-                        if (isTopPartition) {
+                        if (isTopPlan) {
                             partInfo.open(&hashTableReader,
                                           &buildReader, inputTuple,
                                           &aggComputers);
@@ -290,8 +297,8 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                  * now recurse down the plan tree to get the first leaf plan.
                  */
                 curPlan = curPlan->getFirstChild().get();
+                isTopPlan = false;
 
-                isTopPartition = false;
                 hashTable.releaseResources();
 
                 /*
@@ -316,10 +323,10 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
             }
         case GetNextPlan:
             {
+                hashTable.releaseResources();
                 curPlan = curPlan->getNextLeaf();
-                if (curPlan) {
-                    hashTable.releaseResources();
 
+                if (curPlan) {
                     /*
                      * At recursive level, the input tuple shape is
                      * different. Inputs are all partial aggregates now.
@@ -386,7 +393,6 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
         case Done:
             {
                 pOutAccessor->markEOS();
-                hashTable.releaseResources();
                 return EXECRC_EOS;
             }
         }

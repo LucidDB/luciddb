@@ -211,6 +211,15 @@ void LhxHashTableTest::testInsert(
         }
     }
 
+    /*
+     * Calculate key cardinality, assuming there's no correlation between key
+     * cols.
+     */
+    uint cndKeys = 1;    
+    for (i = 0; i < numKeyCols; i ++) {
+        cndKeys *= repeatSeqValues[i];
+    }
+
     uint numInputs = 2;
     buildInputIndex = numInputs - 1;
     for (i = 0; i < numInputs; i ++) {
@@ -221,6 +230,8 @@ void LhxHashTableTest::testInsert(
         hashInfo.useJoinFilter.push_back(false);
         hashInfo.filterNull.push_back(false);
         hashInfo.removeDuplicate.push_back(false);
+        hashInfo.numRows.push_back(numRows);
+        hashInfo.cndKeys.push_back(cndKeys);
     }
 
     TupleDescriptor &inputTupleDesc = hashInfo.inputDesc.back();
@@ -228,20 +239,10 @@ void LhxHashTableTest::testInsert(
 
     hashTable.init(partitionLevel, hashInfo, buildInputIndex);
 
-    /*
-     * Calculate key cardinality, assuming there's no correlation between key
-     * cols.
-     */
-    uint cndKeys = 1;    
-    for (i = 0; i < numKeyCols; i ++) {
-        cndKeys *= repeatSeqValues[i];
-    }
-
     uint usablePageSize =
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize();
 
     hashTable.calculateNumSlots(cndKeys, usablePageSize, hashInfo.numCachePages);
-
 
     bool status = hashTable.allocateResources();
 

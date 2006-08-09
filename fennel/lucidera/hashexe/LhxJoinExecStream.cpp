@@ -62,32 +62,45 @@ void LhxJoinExecStream::prepare(
     enableSubPartStat = params.enableSubPartStat;
     
     /*
-     * NOTE: currently RightAnti join can not switch join sides(join then
-     * effectively becomes LeftAnti) because the hash table is used to keep
-     * track of non-matched tuples with duplicates removed. Without hash table
-     * on the probe side, it is difficult, thought not impossible,
-     * to remove duplicates of nono-matched tuples from the probe side.
+     * NOTE: currently anti joins that need to remove duplicates can not
+     * switch join sides(join then
+     * effectively becomes LeftAnti) because the hash table is used to remove
+     * duplicated non-matched tuples. The "Anti" side has to be the build side.
+     * It is difficult, thought not impossible,
+     * to remove duplicates of non-matched tuples from the probe side.
      *
      * One approach to solve this is to insert the non-matched probe tuple into
      * the hash table, mark it as matched, and return this tuple. Subsequent
      * identical probe tuple will see the tuple as a "match" and will not
      * return the tuple(hence satisfy the anti join semantics).
-     * This scheme also works when the hash table overflows. Tuples in the new
-     * hash table will be partitioned as child parttitions of ine input. The
-     * remaining probe input, as well as the matched tuples from the new hash
-     * table, will be partitioned to disk as the other input. Note matched
-     * tuples are stored in the other input to make the resulting partitioned
-     * data set equivalent to the original data set.
+     * This scheme also works when the hash table overflows. Tuples in the
+     * hash table, including the probe tuples inserted, will be partitioned 
+     * as child partitions of the build input.
+     * The remaining probe input, together with all the matched tuples from the
+     * hash table, will be partitioned to disk as the children of the probe
+     * input. Note matched tuples are stored in both input.
      *
      * This partitioning scheme makes sure that the join result is correct
      * using the above described LeftAnti join algorithm or the already
      * implemented RightAnti join algorithm, regardless of input assignment for
      * the next partition level.
      *
+     * RightAnti join without duplicate removal can use swing.
+     * LeftAnti join without duplicate removal can use swing.
+     *
+     * RightAnti join with duplicate removal cannot use swing.
+     * LeftAnti join with duplicate removal is not supported(see setJoinType())
+     *
      */
-    bool rightAnti =
+    bool leftAntiJoin =
+        (returnProbeOuter() && !returnProbeInner() && !returnBuild());
+
+    bool rightAntiJoin =
         (returnBuildOuter() && !returnBuildInner() && !returnProbe());
-    enableSwing = params.enableSwing && !rightAnti;
+
+    bool antiJoin = leftAntiJoin || rightAntiJoin;
+
+    enableSwing = params.enableSwing && (!(antiJoin && setopDistinct));
 
     /* 
      * Calculate the number of blocks required to perform the join, as given by
@@ -113,9 +126,9 @@ void LhxJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
-     * Set aside 10 cache blocks for I/O.
+     * Set aside 1 cache block per child partition writer for I/O.
      */
-    numMiscCacheBlocks = 10;
+    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs;
 }
 
 void LhxJoinExecStream::getResourceRequirements(
@@ -124,9 +137,13 @@ void LhxJoinExecStream::getResourceRequirements(
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
 
-    minQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
-
-    optQuantity = minQuantity;
+    minQuantity.nCachePages += 
+        LhxHashTable::LhxHashTableMinPages + numMiscCacheBlocks;
+    optQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
+    /*
+     * TODO(rchen 2006-08-08): use the real min above.
+     */
+    minQuantity.nCachePages = optQuantity.nCachePages;
 }
 
 void LhxJoinExecStream::setResourceAllocation(
@@ -187,10 +204,10 @@ void LhxJoinExecStream::open(bool restart)
     /*
      * Initialize recursive partitioning context.
      */
-    isTopPartition = true;
     partInfo.init(&hashInfo);
 
     curPlan = rootPlan.get();
+    isTopPlan = true;
 
     hashTable.init(curPlan->getPartitionLevel(), hashInfo,
         curPlan->getBuildInput());
@@ -233,7 +250,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         }
 
                         if (!buildReader.demandData()) {
-                            if (isTopPartition) {
+                            if (isTopPlan) {
                                 /*
                                  * Top level: request more data from producer.
                                  */
@@ -296,7 +313,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                         }
 
                         if (!buildReader.demandData()) {
-                            if (isTopPartition) {
+                            if (isTopPlan) {
                                 /*
                                  * Top level: request more data from producer.
                                  */
@@ -368,8 +385,8 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                  * now recursice down the plan tree to get the first leaf plan.
                  */
                 curPlan = curPlan->getFirstChild().get();
+                isTopPlan = false;
 
-                isTopPartition = false;
                 hashTable.releaseResources();
 
                 hashTable.init(curPlan->getPartitionLevel(), hashInfo,
@@ -467,7 +484,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                             break;
                         }
                         if (!probeReader.demandData()) {
-                            if (isTopPartition) {
+                            if (isTopPlan) {
                                 /*
                                  * Top level: request more data from producer.
                                  */
@@ -525,7 +542,7 @@ ExecStreamResult LhxJoinExecStream::execute(ExecStreamQuantum const &quantum)
                              * Join types that return (distinct) matching
                              * tuples from the probe input: LeftSemiJoin
                              *
-                             * Currently LeftSemiJoin is only used only in set
+                             * Currently LeftSemiJoin is only used in set
                              * matching semantics producing one output tuple
                              * per matched tuple from the left side.
                              *
@@ -708,7 +725,17 @@ void LhxJoinExecStream::setJoinType(
     setopDistinct =  params.setopDistinct && !params.setopAll;
     setopAll      = !params.setopDistinct &&  params.setopAll;
 
-    assert (!setopAll && (regularJoin || setopDistinct));    
+    assert (!setopAll && (regularJoin || setopDistinct));
+    
+    /*
+     * Anit joins with duplicate removal needs to use hash table to remove
+     * duplicated non-matching tuples. Hence the anti side needs to be the
+     * build input(original right side).
+     */
+    bool leftAnti =
+        (returnProbeOuter() && !returnProbeInner() && !returnBuild());
+
+    assert (!(leftAnti && setopDistinct));
 }
 
 void LhxJoinExecStream::setHashInfo(

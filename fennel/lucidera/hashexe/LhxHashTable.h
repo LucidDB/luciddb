@@ -649,6 +649,9 @@ class LhxHashTable
         bool isProbing,
         bool removeDuplicateProbe);
 public:
+
+    static const uint LhxHashTableMinPages = 2;
+
     /**
      * Initialize the hash table.
      *
