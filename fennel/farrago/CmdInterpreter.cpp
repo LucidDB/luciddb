@@ -425,13 +425,8 @@ void CmdInterpreter::visit(ProxyCmdRollback &cmd)
         if (!readOnly && pDb->shouldForceTxns()) {
             // implement rollback by simulating crash recovery,
             // reverting all pages modified by transaction
-
-            // TODO jvs 6-Mar-2006:  this actually discards all
-            // log pages from the cache, forcing us to re-read them
-            // during recoverPhysical.  Keep them around instead.
-            pDb->checkpointImpl(CHECKPOINT_DISCARD);
+            pDb->recoverOnline();
             
-            pDb->recoverPhysical();
             // release the checkpoint lock acquired at BeginTxn
             pDb->getCheckpointThread()->getActionMutex().release(
                 LOCKMODE_S);

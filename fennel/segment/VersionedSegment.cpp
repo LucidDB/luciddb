@@ -84,6 +84,7 @@ VersionedSegment::VersionedSegment(
     oldestLogPageId = NULL_PAGE_ID;
     newestLogPageId = NULL_PAGE_ID;
     lastCheckpointLogPageId = NULL_PAGE_ID;
+    inRecovery = false;
 }
 
 VersionedSegment::~VersionedSegment()
@@ -161,6 +162,13 @@ void VersionedSegment::deallocatePageRange(
 void VersionedSegment::notifyPageDirty(CachePage &page,bool bDataValid)
 {
     DelegatingSegment::notifyPageDirty(page,bDataValid);
+
+    if (inRecovery) {
+        // REVIEW jvs 8-Aug-2006: It would be nice to assert instead.  But we
+        // can get here in online recovery when we replace pages which were
+        // abandoned but not discarded.
+        return;
+    }
     
     VersionedPageFooter *pDataFooter = reinterpret_cast<VersionedPageFooter *>(
         getWritableFooter(page));
@@ -250,11 +258,29 @@ bool VersionedSegment::canFlushPage(CachePage &page)
     return DelegatingSegment::canFlushPage(page);
 }
 
+void VersionedSegment::prepareOnlineRecovery()
+{
+
+    // For simplicity, force entire log out to disk first, but don't discard
+    // it, since we're about to read it during recovery.
+    logSegment->checkpoint(CHECKPOINT_FLUSH_ALL);
+    
+    StrictMutexGuard mutexGuard(mutex);
+    
+    dataToLogMap.clear();
+    oldestLogPageId = NULL_PAGE_ID;
+
+    // REVIEW jvs 8-Aug-2006:  This is probably superfluous.
+    ++versionNumber;
+}
+
 void VersionedSegment::recover(
     PageId firstLogPageId,SegVersionNum versionNumberInit)
 {
     assert(dataToLogMap.empty());
     assert(pWALSegment->getMinDirtyPageId() == NULL_PAGE_ID);
+
+    inRecovery = true;
 
     if (!isMAXU(versionNumberInit)) {
         versionNumber = versionNumberInit;
@@ -310,6 +336,8 @@ void VersionedSegment::recover(
             getFullPageSize());
         recoveredPageSet.insert(pLogFooter->dataPageId);
     }
+    
+    inRecovery = false;
 }
 
 SegVersionNum VersionedSegment::getPageVersion(CachePage &page)

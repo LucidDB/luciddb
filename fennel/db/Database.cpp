@@ -654,10 +654,28 @@ void Database::writeHeader()
     pCache->flushPage(headerPageLock.getPage(),false);
 }
 
+void Database::recoverOnline()
+{
+    // REVIEW jvs 8-Aug-2006:  This procedure has one questionable aspect,
+    // which is that it leaves images of newly allocated pages in cache.
+    // Updated pages are handled by recovery from the log, but newly allocated
+    // pages are not.  They will be clean, so they shouldn't really cause any
+    // trouble, but their presence could be, at a minimum, confusing.
+    
+    assert(forceTxns);
+    header.shadowRecoveryPageId =
+        pVersionedSegment->getOnlineRecoveryPageId();
+    pVersionedSegment->prepareOnlineRecovery();
+    recoveryRequired = true;
+
+    // after recovery, flush recovered data pages; no need to discard them
+    recoverPhysical(CHECKPOINT_FLUSH_ALL);
+}
+
 void Database::recover(
     LogicalTxnParticipantFactory &txnParticipantFactory)
 {
-    recoverPhysical();
+    recoverPhysical(CHECKPOINT_FLUSH_AND_UNMAP);
 
     // REVIEW:  are shadows being correctly logged during recovery?  They have
     // to be, otherwise we can't re-recover after a failed recovery.
@@ -691,7 +709,7 @@ void Database::recover(
     openSegments();
 }
 
-void Database::recoverPhysical()
+void Database::recoverPhysical(CheckpointType checkpointType)
 {
     assert(!openMode.create);
     assert(isRecoveryRequired());
@@ -705,7 +723,7 @@ void Database::recoverPhysical()
     if (header.shadowRecoveryPageId != NULL_PAGE_ID) {
         pVersionedSegment->recover(
             header.shadowRecoveryPageId, header.versionNumber);
-        pVersionedSegment->checkpoint(CHECKPOINT_FLUSH_AND_UNMAP);
+        pVersionedSegment->checkpoint(checkpointType);
         header.versionNumber = pVersionedSegment->getVersionNumber();
         header.shadowRecoveryPageId = NULL_PAGE_ID;
         writeHeader();

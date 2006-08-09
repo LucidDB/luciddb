@@ -60,7 +60,7 @@ class DatabaseTest
     
     SharedCache pCache;
     SharedDatabase pDatabase;
-    PageId pageId;
+    PageId persistentPageId;
 
     void loadDatabase();
     void executeIncrementAction(int i);
@@ -69,6 +69,7 @@ class DatabaseTest
     void executeCheckpointedTxn(
         int i,int j,bool commit,CheckpointType = CHECKPOINT_FLUSH_ALL);
     void verifyData(uint x);
+    PageId writeData(uint x);
     void addTxnParticipant(SharedLogicalTxn);
     
 public:
@@ -163,11 +164,7 @@ void DatabaseTest::testCreateEmpty()
 void DatabaseTest::testCreateData()
 {
     testCreateEmpty();
-    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
-    TestPageLock pageLock(segmentAccessor);
-    pageId = pageLock.allocatePage();
-    pageLock.getNodeForWrite().x = 0;
-    pageLock.unlock();
+    persistentPageId = writeData(0);
     pDatabase->checkpointImpl();
     executeIncrementTxn(5);
 }
@@ -267,8 +264,19 @@ void DatabaseTest::testForceTxns()
     testCreateData();
     pDatabase->checkpointImpl();
     verifyData(5);
+
+    // Allocate an extra page for use below.
+    PageId extraPageId = writeData(42);
+    
     pDatabase.reset();
     loadDatabase();
+
+    // Pin the extra page to make sure that doesn't cause problems
+    // for rollback on unrelated data.
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    TestPageLock pageLock(segmentAccessor);
+    pageLock.lockShared(extraPageId);
+    
     SharedLogicalTxn pTxn = pDatabase->getTxnLog()->newLogicalTxn(pCache);
     addTxnParticipant(pTxn);
     executeIncrementAction(10, ACTION_INCREMENT_FORCE);
@@ -277,9 +285,11 @@ void DatabaseTest::testForceTxns()
     pTxn.reset();
     // Give the background flush thread time to flush the data page
     snooze(3);
-    pDatabase->checkpointImpl(CHECKPOINT_DISCARD);
-    pDatabase->recoverPhysical();
+    pDatabase->recoverOnline();
     verifyData(5);
+
+    pageLock.unlock();
+    
     pDatabase.reset();
 }
 
@@ -313,7 +323,7 @@ void DatabaseTest::undoLogicalAction(
     assert(actionType == ACTION_INCREMENT);
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
-    pageLock.lockExclusive(pageId);
+    pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x -= i;
 }
 
@@ -329,7 +339,7 @@ void DatabaseTest::redoLogicalAction(
     assert(actionType == ACTION_INCREMENT);
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
-    pageLock.lockExclusive(pageId);
+    pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x += i;
 }
 
@@ -355,7 +365,7 @@ void DatabaseTest::executeIncrementAction(int i, LogicalActionType action)
     getLogicalTxn()->endLogicalAction();
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
-    pageLock.lockExclusive(pageId);
+    pageLock.lockExclusive(persistentPageId);
     pageLock.getNodeForWrite().x += i;
 }
 
@@ -393,8 +403,18 @@ void DatabaseTest::verifyData(uint x)
 {
     SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
     TestPageLock pageLock(segmentAccessor);
-    pageLock.lockShared(pageId);
+    pageLock.lockShared(persistentPageId);
     BOOST_CHECK_EQUAL(pageLock.getNodeForRead().x,x);
+}
+
+PageId DatabaseTest::writeData(uint x)
+{
+    SegmentAccessor segmentAccessor(pDatabase->getDataSegment(),pCache);
+    TestPageLock pageLock(segmentAccessor);
+    PageId pageId = pageLock.allocatePage();
+    pageLock.getNodeForWrite().x = x;
+    pageLock.unlock();
+    return pageId;
 }
 
 FENNEL_UNIT_TEST_SUITE(DatabaseTest);
