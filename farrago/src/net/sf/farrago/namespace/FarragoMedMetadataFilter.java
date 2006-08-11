@@ -26,8 +26,8 @@ import java.util.*;
 
 /**
  * FarragoMedMetadataFilter represents a filter on a {@link
- * FarragoMedMetadataQuery}. A filter may be expressed as either an explicit
- * name roster or a name pattern.
+ * FarragoMedMetadataQuery}. A filter may be expressed either as an explicit
+ * name roster or as a name pattern (but not both at once).
  *
  * @author John V. Sichi
  * @version $Id$
