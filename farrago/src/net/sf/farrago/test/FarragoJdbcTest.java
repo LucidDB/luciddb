@@ -293,8 +293,20 @@ public class FarragoJdbcTest
     public void testJavaQueryAsynchronousCancelRepeated()
         throws Exception
     {
+        // use a seeded generator to make debugging more predictable
+        final long seed = 1013L;
+        Random rand = new Random(seed);
+
+        // test nearly immediate cancellation
         for (int i = 0; i < 10; i++) {
-            int millis = (int) (Math.random() * 5);
+            int millis = (int) (rand.nextDouble() * 5);
+            testQueryCancel(millis, "JAVA");
+        }
+
+        // test more "reasonable" cancellation intervals
+        rand.setSeed(seed);
+        for (int i = 0; i < 10; i++) {
+            int millis = (int) (rand.nextDouble() * 5000);
             testQueryCancel(millis, "JAVA");
         }
     }
@@ -415,6 +427,9 @@ public class FarragoJdbcTest
                         Thread thread = Thread.currentThread();
                         thread.setName("FarragoJdbcCancelThread");
                         try {
+                            tracer.fine("TimerTask "
+                                + toStringThreadInfo(thread)
+                                + " will cancel " + stmt);
                             stmt.cancel();
                         } catch (SQLException ex) {
                             Assert.fail(
@@ -423,6 +438,7 @@ public class FarragoJdbcTest
                         }
                     }
                 };
+            tracer.fine("scheduling cancel task with delay=" +waitMillis);
             timer.schedule(task, waitMillis);
         }
         try {
@@ -887,6 +903,21 @@ public class FarragoJdbcTest
             return buf.toString();
         }
         return String.valueOf(o);
+    }
+
+    /** Returns string representation of thread info. */
+    protected String toStringThreadInfo(Thread thread)
+    {
+        if (thread == null) {
+            thread = Thread.currentThread();
+        }
+        StringBuffer buf = new StringBuffer();
+        buf.append("thread[");
+        buf.append(thread.isInterrupted()? "INT":"!int");
+        buf.append(",").append(thread.getId());
+        buf.append(",").append(thread.getName());
+        buf.append("]");
+        return buf.toString();
     }
 
     private void checkSet(
