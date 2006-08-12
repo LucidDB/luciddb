@@ -1310,6 +1310,18 @@ column type family is {1} but default value type family is {2}</text>
 <text>FileWriter error for file {0}: {1}</text>
 </exception>
 
+<exception id="520010" name="ExportSchemaSpecifyLastModified">
+<text>Parameter list invalid: last modified timestamp and column name must be specified</text>
+</exception>
+
+<exception id="520011" name="ExportSchemaInvalidExpType">
+<text>Invalid Export type: {0}</text>
+</exception>
+
+<exception id="520012" name="ExportSchemaMergeTablesDiffer">
+<text>Tables differ in schemas to be merged</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

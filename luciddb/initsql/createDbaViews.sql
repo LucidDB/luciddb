@@ -283,7 +283,8 @@ create view dba_foreign_table_options as
 grant select on dba_foreign_table_options to public;
 
 
--- Export schema to csv files UDP
+-- Export schema to csv files UDP. Standard version always creates bcp files
+-- and deletes incomplete files for a failed table export
 create procedure export_schema_to_csv(
   in cat varchar(128),
   in schma varchar(128),
@@ -295,9 +296,25 @@ create procedure export_schema_to_csv(
   in delete_failed_file boolean) 
 language java
 reads sql data
+specific export_schema_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
 
+create procedure export_schema_to_csv(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535)) 
+language java
+reads sql data
+specific export_schema_standard
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToCsv';
+
+-- Export foreign schema to csv files UDP. Standard version always creates bcp
+-- files and deletes incomplete files for a failed table export
 create procedure export_foreign_schema_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
@@ -309,9 +326,26 @@ create procedure export_foreign_schema_to_csv(
   in delete_failed_file boolean)
 language java
 modifies sql data
+specific export_foreign_schema_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
 
+create procedure export_foreign_schema_to_csv(
+  in serv varchar(128),
+  in fschema varchar(128),
+  in exclude boolean,
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in dir varchar(65535))
+language java
+modifies sql data
+specific export_foreign_schema_standard
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaToCsv';
+
+-- Incremental export for local schema, gets rows where 
+-- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
+-- deletes incomplete files for a failed table export
 create procedure export_schema_incremental_to_csv(
   in cat varchar(128),
   in schma varchar(128),
@@ -325,9 +359,28 @@ create procedure export_schema_incremental_to_csv(
   in delete_failed_file boolean) 
 language java
 reads sql data
+specific export_schema_incremental_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
 
+create procedure export_schema_incremental_to_csv(
+  in cat varchar(128),
+  in schma varchar(128),
+  in exclude boolean, 
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in last_mod_ts timestamp,
+  in last_mod_col varchar(128),
+  in dir varchar(65535)) 
+language java
+reads sql data
+specific export_schema_incremental_standard
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaIncrementalToCsv';
+
+-- Incremental export for foreign schema, gets rows where 
+-- last_mod_col > last_mod_ts.  Standard version always creates bcp files and
+-- deletes incomplete files for a failed table export
 create procedure export_foreign_schema_incremental_to_csv(
   in serv varchar(128),
   in fschema varchar(128),
@@ -341,5 +394,60 @@ create procedure export_foreign_schema_incremental_to_csv(
   in delete_failed_file boolean)
 language java
 modifies sql data
+specific export_foreign_schema_incremental_with_options
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';
+
+create procedure export_foreign_schema_incremental_to_csv(
+  in serv varchar(128),
+  in fschema varchar(128),
+  in exclude boolean,
+  in tlist varchar(65535),
+  in tpattern varchar(65535),
+  in last_mod_ts timestamp,
+  in last_mod_col varchar(128),
+  in dir varchar(65535))
+language java
+modifies sql data
+specific export_foreign_schema_incremental_standard
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportForeignSchemaIncrementalToCsv';
+
+-- Export csv files for tables combined from two schemas.  The tables in the 
+-- two schemas must have the same structure. Data from the original schema 
+-- which has been deleted will not be seen, only updates and new records 
+-- from the incremental schema.  Standard version always creates bcp files and
+-- deletes incomplete files for a failed table export
+create procedure export_merged_schemas_to_csv(
+  in orig_catalog varchar(128),
+  in orig_schema varchar(128),
+  in incr_catalog varchar(128),
+  in incr_schema varchar(128),
+  in exclude boolean,
+  in table_list varchar(65535),
+  in table_pattern varchar(65535),
+  in id_column varchar(128),
+  in dir varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean)
+language java
+contains sql
+specific export_merged_schema_with_options
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
+
+create procedure export_merged_schemas_to_csv(
+  in orig_catalog varchar(128),
+  in orig_schema varchar(128),
+  in incr_catalog varchar(128),
+  in incr_schema varchar(128),
+  in exclude boolean,
+  in table_list varchar(65535),
+  in table_pattern varchar(65535),
+  in id_column varchar(128),
+  in dir varchar(65535))
+language java
+contains sql
+specific export_merged_schema_standard
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
