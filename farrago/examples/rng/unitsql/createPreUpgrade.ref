@@ -1,0 +1,12 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test creation of objects which are to survive plugin installation
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- before catalog upgrade, save a copy of the catalog with some objects in it
+0: jdbc:farrago:> -- so that we can verify that catalog can be restored after upgrade;
+0: jdbc:farrago:> -- we put stuff in sys_boot so that it won't be dropped by test cleanup
+0: jdbc:farrago:> create schema sys_boot.old_stuff;
+0: jdbc:farrago:> create table sys_boot.old_stuff.t(i int not null primary key);
+0: jdbc:farrago:> call sys_boot.mgmt.export_catalog_xmi(
+. . . . . . . . >     '${FARRAGO_HOME}/testgen/upgrade/FarragoCatalogDump.xmi');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

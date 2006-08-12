@@ -255,6 +255,8 @@ DdlStmt DdlStmtEof() :
                 <SET> ddlStmt = SystemParamAssignment()
                 |
                 <ADD> ddlStmt = CatalogExtension()
+                |
+                <REPLACE> ddlStmt = CatalogReplace()
             )
             |
             <SESSION>
@@ -1367,6 +1369,16 @@ DdlStmt CatalogExtension() :
     <CATALOG> <JAR> jarName = CompoundIdentifier3()
     {
         return new DdlExtendCatalogStmt(jarName);
+    }
+}
+
+DdlStmt CatalogReplace() :
+{
+}
+{
+    <CATALOG>
+    {
+        return new DdlReplaceCatalogStmt();
     }
 }
 

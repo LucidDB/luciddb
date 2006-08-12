@@ -1,0 +1,41 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test that catalog contents can be restored via 
+0: jdbc:farrago:> -- ALTER SYSTEM REPLACE CATALOG, while preserving upgraded plugin metamodel
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure old catalog contents were restored
+0: jdbc:farrago:> select * from sys_boot.old_stuff.t;
++----+
+| I  |
++----+
++----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure plugin metamodel still works
+0: jdbc:farrago:> create schema rngtest;
+0: jdbc:farrago:> set schema 'rngtest';
+0: jdbc:farrago:> set path 'rngtest';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- have to re-register jar since ALTER SYSTEM REPLACE CATALOG nuked it
+0: jdbc:farrago:> create jar sys_boot.sys_boot.rngplugin 
+. . . . . . . . > library 'file:${FARRAGO_HOME}/examples/rng/plugin/FarragoRng.jar' 
+. . . . . . . . > options(0);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.rngplugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- NOTE jvs 12-Aug-2006:  we can parse CREATE RNG now, but don't
+0: jdbc:farrago:> -- actually try to use new RNG, because CREATE JAR above didn't
+0: jdbc:farrago:> -- mark the model extension
+0: jdbc:farrago:> create rng rng5 external '${FARRAGO_HOME}/testgen/rng5.dat' seed 999;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- drop our old stuff since test cleanup won't do it for us
+0: jdbc:farrago:> drop schema sys_boot.old_stuff cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- drop plugin too
+0: jdbc:farrago:> drop rng rng5 cascade;
+0: jdbc:farrago:> alter session implementation set default;
+0: jdbc:farrago:> drop jar sys_boot.sys_boot.rngplugin options(0) cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this one WILL get dropped by the test framework, but that will
+0: jdbc:farrago:> -- cause a "negative catalog leak", so delete it explicitly here instead
+0: jdbc:farrago:> drop schema rngtest cascade;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit

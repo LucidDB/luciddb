@@ -96,6 +96,13 @@ create procedure kill_statement_match(in s varchar(256))
   parameter style java
   no sql
   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+
+-- exports the catalog to an XMI file
+create procedure export_catalog_xmi(in filename varchar(65535))
+  language java
+  parameter style java
+  no sql
+  external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
             
 --
 -- Statistics
