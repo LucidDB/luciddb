@@ -113,6 +113,7 @@ public class FarragoJavaUdxRel
                 serverMofId,
                 RelOptUtil.clone(inputs));
         clone.inheritTraitsFrom(this);
+        clone.setColumnMappings(getColumnMappings());
         return clone;
     }
 

@@ -192,6 +192,34 @@ public class RelMdColumnOrigins
                 iOutputColumn);
     }
 
+    public Set<RelColumnOrigin> getColumnOrigins(
+        TableFunctionRelBase rel,
+        int iOutputColumn)
+    {
+        Set<RelColumnMapping> mappings = rel.getColumnMappings();
+        if (mappings == null) {
+            return null;
+        }
+        Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
+        for (RelColumnMapping mapping : mappings) {
+            if (mapping.iOutputColumn != iOutputColumn) {
+                continue;
+            }
+            Set<RelColumnOrigin> origins = 
+                RelMetadataQuery.getColumnOrigins(
+                    rel.getInputs()[mapping.iInputRel],
+                    mapping.iInputColumn);
+            if (origins == null) {
+                return null;
+            }
+            if (mapping.isDerived) {
+                origins = createDerivedColumnOrigins(origins);
+            }
+            set.addAll(origins);
+        }
+        return set;
+    }
+    
     // Catch-all rule when none of the others apply.
     public Set<RelColumnOrigin> getColumnOrigins(
         RelNode rel,

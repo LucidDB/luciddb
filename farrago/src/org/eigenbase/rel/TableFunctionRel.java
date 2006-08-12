@@ -75,6 +75,7 @@ public class TableFunctionRel
                 getRowType(),
                 RelOptUtil.clone(inputs));
         clone.inheritTraitsFrom(this);
+        clone.setColumnMappings(getColumnMappings());
         return clone;
     }
 

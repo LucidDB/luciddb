@@ -21,6 +21,7 @@
 */
 package org.eigenbase.sql.type;
 
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 
@@ -38,6 +39,8 @@ public class TableFunctionReturnTypeInference
     extends ExplicitReturnTypeInference
 {
     private final List<String> paramNames;
+
+    private Set<RelColumnMapping> columnMappings;
     
     public TableFunctionReturnTypeInference(
         RelDataType unexpandedOutputType,
@@ -46,10 +49,16 @@ public class TableFunctionReturnTypeInference
         super(unexpandedOutputType);
         this.paramNames = paramNames;
     }
+
+    public Set<RelColumnMapping> getColumnMappings()
+    {
+        return columnMappings;
+    }
     
     public RelDataType inferReturnType(
         SqlOperatorBinding opBinding)
     {
+        columnMappings = new HashSet<RelColumnMapping>();
         RelDataType unexpandedOutputType = getExplicitType();
         List<RelDataType> expandedOutputTypes = new ArrayList<RelDataType>();
         List<String> expandedFieldNames = new ArrayList<String>();
@@ -62,13 +71,36 @@ public class TableFunctionReturnTypeInference
                 continue;
             }
             // Look up position of cursor parameter with same name as output
-            // field.
-            int paramOrdinal = paramNames.indexOf(fieldName);
+            // field, also counting how many cursors appear before it
+            // (need this for correspondence with RelNode child position).
+            int paramOrdinal = -1;
+            int iCursor = 0;
+            for (int i = 0; i < paramNames.size(); ++i) {
+                if (paramNames.get(i).equals(fieldName)) {
+                    paramOrdinal = i;
+                    break;
+                }
+                RelDataType cursorType = opBinding.getCursorOperand(i);
+                if (cursorType != null) {
+                    ++iCursor;
+                }
+            }
             assert(paramOrdinal != -1);
             // Translate to actual argument type.
             RelDataType cursorType = opBinding.getCursorOperand(paramOrdinal);
             // And expand (function output is always nullable).
+            int iInputColumn = -1;
             for (RelDataTypeField cursorField : cursorType.getFieldList()) {
+                ++iInputColumn;
+                RelColumnMapping columnMapping = new RelColumnMapping();
+                columnMapping.iOutputColumn = expandedFieldNames.size();
+                columnMapping.iInputColumn = iInputColumn;
+                columnMapping.iInputRel = iCursor;
+                // we don't have any metadata on transformation effect,
+                // so assume the worst
+                columnMapping.isDerived = true;
+                columnMappings.add(columnMapping);
+                
                 RelDataType nullableType =
                     opBinding.getTypeFactory().createTypeWithNullability(
                         cursorField.getType(),
