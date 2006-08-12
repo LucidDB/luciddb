@@ -196,11 +196,20 @@ public class RelMdColumnOrigins
         TableFunctionRelBase rel,
         int iOutputColumn)
     {
+        Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
         Set<RelColumnMapping> mappings = rel.getColumnMappings();
         if (mappings == null) {
-            return null;
+            if (rel.getInputs().length > 0) {
+                // This is a non-leaf transformation:  say we don't
+                // know about origins, because there are probably
+                // columns below.
+                return null;
+            } else {
+                // This is a leaf transformation: say there are fer sure no
+                // column origins.
+                return set;
+            }
         }
-        Set<RelColumnOrigin> set = new HashSet<RelColumnOrigin>();
         for (RelColumnMapping mapping : mappings) {
             if (mapping.iOutputColumn != iOutputColumn) {
                 continue;
