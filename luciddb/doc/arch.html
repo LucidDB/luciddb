@@ -7,11 +7,7 @@
 
 <body>
 
-The diagram below illustrates the main components of the LucidDB
-architecture:
-
-<br>
-<br>
+<h2>LucidDB Architecture</h2>
 
 <img src="LucidDbArch.png">
 
@@ -144,7 +140,8 @@ for efficient batching of tuples back and forth across the JNI
 boundary between managed and unmanaged memory.  All threads run in a
 single process and Java virtual machine, and calls across the JNI
 boundary do not require extra threads, so there is no inter-process
-communication overhead.
+communication overhead.  For more information, see <a target="_top"
+href="http://docs.eigenbase.org/LucidDbUdxJavaHowto">the UDX HOWTO</a>.
 
 <li>Bulk-load via INSERT and UPSERT: no separate bulk-load utility is
 required; instead, the SQL INSERT statement does the job directly,
@@ -155,6 +152,9 @@ upsert.  All DML operations (including DELETE) are fully recoverable
 via table-level locking and page-level logging; for efficiency, no
 record-level logging or locking is needed.  Errors due to constraint
 violations can be written to a reject file without aborting the load.
+
+<li>Sequence support: via the GENERATED clause in surrogate key
+column definitions.
 
 <li>Application library: LucidDB comes with <em>applib</em>, a library
 of commonly used ETL and analytical functions and transformation,
@@ -170,9 +170,11 @@ Because LucidDB has a Java top-half, it can be deployed into a J2EE
 application server.  This means it is very easy to make it run
 side-by-side with the <a target="_top"
 href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
-enabling direct in-process JDBC calls from Mondrian into LucidDB with no
-communications overhead.  And the SQL queries issued by Mondrian for
-implementing MDX statements from an OLAP client are of exactly the
-form LucidDB's optimizer was designed for.
+enabling direct in-process JDBC calls from Mondrian into LucidDB with
+no communications overhead.  And the SQL queries issued by Mondrian
+for implementing MDX statements from an OLAP client are of exactly the
+form LucidDB's optimizer was designed for.  And the LucidDB roadmap
+includes proposed features for tighter integration, such as DDL
+statements for cube creation.
 
 </body>
