@@ -61,7 +61,7 @@ public class FarragoSqlOperatorsSuite
 
     //~ Constructors -----------------------------------------------------------
 
-    private FarragoSqlOperatorsSuite()
+    protected FarragoSqlOperatorsSuite()
     {
     }
 
@@ -85,24 +85,32 @@ public class FarragoSqlOperatorsSuite
      * Implementation of {@link AbstractSqlTester}, leveraging connection setup
      * and result set comparison from the class {@link FarragoTestCase}.
      */
-    private static class FarragoSqlTester
+    protected static class FarragoSqlTester
         extends AbstractSqlTester
     {
         /**
          * Helper.
          */
-        private final MyFarragoTestCase farragoTest;
+        private final FarragoTestCase farragoTest;
 
         /**
          * The virtual machine this test is targeted at.
          */
         private final FarragoCalcSystemTest.VirtualMachine vm;
 
-        FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm)
+        private FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm)
             throws Exception
         {
             this.vm = vm;
             this.farragoTest = new MyFarragoTestCase();
+        }
+
+        protected FarragoSqlTester(FarragoCalcSystemTest.VirtualMachine vm,
+            FarragoTestCase farragoTest)
+            throws Exception
+        {
+            this.vm = vm;
+            this.farragoTest = farragoTest;
         }
 
         public void checkInvalid(
@@ -111,7 +119,7 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.checkFails(vm, expression, expectedError, false);
+                checkFails(vm, expression, expectedError, false);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -127,7 +135,7 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.checkFails(vm, expression, expectedError, true);
+                checkFails(vm, expression, expectedError, true);
             } catch (Exception e) {
                 throw wrap(e);
             } finally {
@@ -145,7 +153,7 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.checkType(
+                checkType(
                     vm,
                     getFor(),
                     expression,
@@ -169,7 +177,7 @@ public class FarragoSqlOperatorsSuite
         {
             try {
                 farragoTest.setUp();
-                farragoTest.check(
+                check(
                     vm,
                     getFor(),
                     query,
@@ -185,6 +193,164 @@ public class FarragoSqlOperatorsSuite
                     throw wrap(e);
                 }
             }
+        }
+
+        /**
+         * Checks that a scalar expression fails at validate time or runtime on
+         * a given virtual machine.
+         */
+        void checkFails(
+            FarragoCalcSystemTest.VirtualMachine vm,
+            String expression,
+            String expectedError,
+            boolean runtime)
+            throws SQLException
+        {
+            farragoTest.stmt.execute(vm.getAlterSystemCommand());
+            String query = buildQuery(expression);
+            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(query);
+            if (!runtime) {
+                Assert.assertNotNull(
+                    "negative validation tests must contain an error location",
+                    sap.pos);
+            }
+
+            Throwable thrown = null;
+            try {
+                farragoTest.resultSet = farragoTest.stmt.executeQuery(sap.sql);
+                if (runtime) {
+                    // If we're expecting a runtime error, we may need to ask
+                    // for the row before the error occurs.
+                    boolean hasNext = farragoTest.resultSet.next();
+                    Util.discard(hasNext);
+                }
+            } catch (FarragoJdbcUtil.FarragoSqlException ex) {
+                // The exception returned by the JDBC driver is dumbed down,
+                // and doesn't contain the full position information.
+                // Use the undiluted error instead.
+                thrown = ex.getOriginalThrowable();
+            } catch (Throwable ex) {
+                thrown = ex;
+            }
+
+            SqlValidatorTestCase.checkEx(thrown, expectedError, sap);
+        }
+
+        void check(
+            FarragoCalcSystemTest.VirtualMachine vm,
+            SqlOperator operator,
+            String query,
+            SqlTester.TypeChecker typeChecker,
+            Object result,
+            double delta)
+            throws Exception
+        {
+            farragoTest.assertNotNull("Test must call isFor() first", operator);
+            if (!vm.canImplement(operator)) {
+                return;
+            }
+            farragoTest.stmt.execute(vm.getAlterSystemCommand());
+            farragoTest.resultSet = farragoTest.stmt.executeQuery(query);
+            if (result instanceof Pattern) {
+                farragoTest.compareResultSetWithPattern((Pattern) result);
+            } else if (delta != 0) {
+                Assert.assertTrue(result instanceof Number);
+                farragoTest.compareResultSetWithDelta(
+                    ((Number) result).doubleValue(),
+                    delta);
+            } else {
+                Set refSet = new HashSet();
+                refSet.add((result == null) ? null : result.toString());
+                farragoTest.compareResultSet(refSet);
+            }
+
+            // Check result type
+            ResultSetMetaData md = farragoTest.resultSet.getMetaData();
+            int count = md.getColumnCount();
+            Assert.assertEquals("query must return one column", count, 1);
+            BasicSqlType type = getColumnType(md, 1);
+
+            typeChecker.checkType(type);
+
+            farragoTest.stmt.close();
+            farragoTest.stmt = farragoTest.connection.createStatement();
+        }
+
+        private BasicSqlType getColumnType(
+            ResultSetMetaData md,
+            int column)
+            throws SQLException
+        {
+            String actualTypeName = md.getColumnTypeName(column);
+            int actualTypeOrdinal = md.getColumnType(column);
+            SqlTypeName actualSqlTypeName =
+                SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
+            farragoTest.assertNotNull(actualSqlTypeName);
+            farragoTest.assertEquals(
+                actualSqlTypeName.getName(),
+                actualTypeName);
+            BasicSqlType sqlType;
+            final int actualNullable = md.isNullable(column);
+            if (actualSqlTypeName.allowsScale()) {
+                sqlType =
+                    new BasicSqlType(
+                        actualSqlTypeName,
+                        md.getPrecision(column),
+                        md.getScale(column));
+            } else if (actualSqlTypeName.allowsPrecNoScale()) {
+                sqlType =
+                    new BasicSqlType(
+                        actualSqlTypeName,
+                        md.getPrecision(column));
+            } else {
+                sqlType = new BasicSqlType(actualSqlTypeName);
+            }
+            if (actualNullable == ResultSetMetaData.columnNullable) {
+                sqlType =
+                    (BasicSqlType) sqlTypeFactory.createTypeWithNullability(
+                        sqlType,
+                        true);
+            }
+            return sqlType;
+        }
+
+        void checkType(
+            FarragoCalcSystemTest.VirtualMachine vm,
+            SqlOperator operator,
+            String expression,
+            String type)
+            throws SQLException
+        {
+            farragoTest.assertNotNull("Test must call isFor() first", operator);
+            if (!vm.canImplement(operator)) {
+                return;
+            }
+            farragoTest.stmt.execute(vm.getAlterSystemCommand());
+
+            String query = buildQuery(expression);
+            farragoTest.resultSet = farragoTest.stmt.executeQuery(query);
+
+            // Check type
+            ResultSetMetaData md = farragoTest.resultSet.getMetaData();
+            int count = md.getColumnCount();
+            Assert.assertEquals(count, 1);
+            String columnType = md.getColumnTypeName(1);
+            if (type.indexOf('(') > 0) {
+                columnType += "(" + md.getPrecision(1);
+                if (type.indexOf(',') >= 0) {
+                    columnType += ", " + md.getScale(1);
+                }
+                columnType += ")";
+            }
+            if (md.isNullable(1) == ResultSetMetaData.columnNoNulls) {
+                columnType += " NOT NULL";
+            }
+            Assert.assertEquals(type, columnType);
+        }
+
+        protected String buildQuery(String expression)
+        {
+            return "values (" + expression + ")";
         }
 
         private static RuntimeException wrap(Exception e)
@@ -308,165 +474,8 @@ public class FarragoSqlOperatorsSuite
             getSession().setOptRuleDescExclusionFilter(
                 FarragoReduceExpressionsRule.EXCLUSION_PATTERN);
         }
-
-        /**
-         * Checks that a scalar expression fails at validate time or runtime on
-         * a given virtual machine.
-         */
-        void checkFails(
-            FarragoCalcSystemTest.VirtualMachine vm,
-            String expression,
-            String expectedError,
-            boolean runtime)
-            throws SQLException
-        {
-            stmt.execute(vm.getAlterSystemCommand());
-            String query = buildQuery(expression);
-            SqlParserUtil.StringAndPos sap = SqlParserUtil.findPos(query);
-            if (!runtime) {
-                Assert.assertNotNull(
-                    "negative validation tests must contain an error location",
-                    sap.pos);
-            }
-
-            Throwable thrown = null;
-            try {
-                resultSet = stmt.executeQuery(sap.sql);
-                if (runtime) {
-                    // If we're expecting a runtime error, we may need to ask
-                    // for the row before the error occurs.
-                    boolean hasNext = resultSet.next();
-                    Util.discard(hasNext);
-                }
-            } catch (FarragoJdbcUtil.FarragoSqlException ex) {
-                // The exception returned by the JDBC driver is dumbed down,
-                // and doesn't contain the full position information.
-                // Use the undiluted error instead.
-                thrown = ex.getOriginalThrowable();
-            } catch (Throwable ex) {
-                thrown = ex;
-            }
-
-            SqlValidatorTestCase.checkEx(thrown, expectedError, sap);
-        }
-
-        void check(
-            FarragoCalcSystemTest.VirtualMachine vm,
-            SqlOperator operator,
-            String query,
-            SqlTester.TypeChecker typeChecker,
-            Object result,
-            double delta)
-            throws Exception
-        {
-            assertNotNull("Test must call isFor() first", operator);
-            if (!vm.canImplement(operator)) {
-                return;
-            }
-            stmt.execute(vm.getAlterSystemCommand());
-            resultSet = stmt.executeQuery(query);
-            if (result instanceof Pattern) {
-                compareResultSetWithPattern((Pattern) result);
-            } else if (delta != 0) {
-                Assert.assertTrue(result instanceof Number);
-                compareResultSetWithDelta(
-                    ((Number) result).doubleValue(),
-                    delta);
-            } else {
-                Set refSet = new HashSet();
-                refSet.add((result == null) ? null : result.toString());
-                compareResultSet(refSet);
-            }
-
-            // Check result type
-            ResultSetMetaData md = resultSet.getMetaData();
-            int count = md.getColumnCount();
-            Assert.assertEquals("query must return one column", count, 1);
-            BasicSqlType type = getColumnType(md, 1);
-
-            typeChecker.checkType(type);
-
-            stmt.close();
-            stmt = connection.createStatement();
-        }
-
-        private BasicSqlType getColumnType(
-            ResultSetMetaData md,
-            int column)
-            throws SQLException
-        {
-            String actualTypeName = md.getColumnTypeName(column);
-            int actualTypeOrdinal = md.getColumnType(column);
-            SqlTypeName actualSqlTypeName =
-                SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
-            assertNotNull(actualSqlTypeName);
-            assertEquals(
-                actualSqlTypeName.getName(),
-                actualTypeName);
-            BasicSqlType sqlType;
-            final int actualNullable = md.isNullable(column);
-            if (actualSqlTypeName.allowsScale()) {
-                sqlType =
-                    new BasicSqlType(
-                        actualSqlTypeName,
-                        md.getPrecision(column),
-                        md.getScale(column));
-            } else if (actualSqlTypeName.allowsPrecNoScale()) {
-                sqlType =
-                    new BasicSqlType(
-                        actualSqlTypeName,
-                        md.getPrecision(column));
-            } else {
-                sqlType = new BasicSqlType(actualSqlTypeName);
-            }
-            if (actualNullable == ResultSetMetaData.columnNullable) {
-                sqlType =
-                    (BasicSqlType) sqlTypeFactory.createTypeWithNullability(
-                        sqlType,
-                        true);
-            }
-            return sqlType;
-        }
-
-        void checkType(
-            FarragoCalcSystemTest.VirtualMachine vm,
-            SqlOperator operator,
-            String expression,
-            String type)
-            throws SQLException
-        {
-            assertNotNull("Test must call isFor() first", operator);
-            if (!vm.canImplement(operator)) {
-                return;
-            }
-            stmt.execute(vm.getAlterSystemCommand());
-
-            String query = buildQuery(expression);
-            resultSet = stmt.executeQuery(query);
-
-            // Check type
-            ResultSetMetaData md = resultSet.getMetaData();
-            int count = md.getColumnCount();
-            Assert.assertEquals(count, 1);
-            String columnType = md.getColumnTypeName(1);
-            if (type.indexOf('(') > 0) {
-                columnType += "(" + md.getPrecision(1);
-                if (type.indexOf(',') >= 0) {
-                    columnType += ", " + md.getScale(1);
-                }
-                columnType += ")";
-            }
-            if (md.isNullable(1) == ResultSetMetaData.columnNoNulls) {
-                columnType += " NOT NULL";
-            }
-            Assert.assertEquals(type, columnType);
-        }
-
-        protected String buildQuery(String expression)
-        {
-            return "values (" + expression + ")";
-        }
     }
+
 }
 
 // End FarragoSqlOperatorsSuite.java

@@ -133,6 +133,10 @@ public class OJRexImplementorTableImpl
             SqlStdOperatorTable.minusOperator,
             BinaryExpression.MINUS);
 
+        registerOperator(
+            SqlStdOperatorTable.minusDateOperator,
+            new OJRexBinaryExpressionImplementor(BinaryExpression.MINUS));
+
         registerBinaryOperator(
             SqlStdOperatorTable.multiplyOperator,
             BinaryExpression.TIMES);

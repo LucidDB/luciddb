@@ -162,6 +162,11 @@ public class RexToCalcTranslator
                     fac.createSqlType(SqlTypeName.Timestamp),
                     CalcProgramBuilder.OpType.Int8),
 
+
+                new TypePair(
+                    fac.createSqlType(SqlTypeName.Symbol),
+                    CalcProgramBuilder.OpType.Int4),
+
                 new TypePair(
                     fac.createJavaType(Byte.class),
                     CalcProgramBuilder.OpType.Int1), new TypePair(
@@ -192,7 +197,8 @@ public class RexToCalcTranslator
                     fac.createJavaType(Boolean.class),
                     CalcProgramBuilder.OpType.Bool), new TypePair(
                     fac.createJavaType(boolean.class),
-                    CalcProgramBuilder.OpType.Bool), };
+                    CalcProgramBuilder.OpType.Bool),
+        };
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -1135,6 +1141,11 @@ public class RexToCalcTranslator
         Object value = node.getValue2();
         CalcProgramBuilder.RegisterDescriptor desc =
             getCalcRegisterDescriptor(node);
+        if (node.getTypeName().getOrdinal() == SqlTypeName.Symbol_ordinal) {
+            EnumeratedValues.BasicValue ord =
+                (EnumeratedValues.BasicValue) value;
+            value = ord.getOrdinal();
+        }
         final CalcReg register =
             builder.newLiteral(desc, value);
         setResult(node, register);

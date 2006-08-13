@@ -549,6 +549,11 @@ public class CalcRexImplementorTableImpl
                 CalcProgramBuilder.nativeMinus));
 
         register(
+            SqlStdOperatorTable.minusDateOperator,
+            new BinaryNumericMakeSametypeImplementor(
+                CalcProgramBuilder.nativeMinus));
+
+        register(
             SqlStdOperatorTable.modFunc,
             new BinaryNumericMakeSametypeImplementor(
                 CalcProgramBuilder.integralNativeMod,
