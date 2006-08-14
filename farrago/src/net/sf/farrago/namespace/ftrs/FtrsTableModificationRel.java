@@ -116,7 +116,7 @@ class FtrsTableModificationRel
     {
         int n = getUpdateColumnList().size();
         List<CwmColumn> list = new ArrayList<CwmColumn>();
-        Collection<CwmColumn> columns =
+        Collection<CwmColumn> columns = (List)
             ftrsTable.getCwmColumnSet().getFeature();
         for (int i = 0; i < n; i++) {
             String columnName = getUpdateColumnList().get(i);

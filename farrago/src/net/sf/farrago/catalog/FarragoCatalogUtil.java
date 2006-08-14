@@ -435,7 +435,7 @@ public abstract class FarragoCatalogUtil
      * @return CwmModelElement found, or null if not found
      */
     public static <T extends CwmModelElement> T getModelElementByNameAndType(
-        Collection<CwmModelElement> collection,
+        Collection<? extends CwmModelElement> collection,
         String name,
         Class<T> clazz)
     {

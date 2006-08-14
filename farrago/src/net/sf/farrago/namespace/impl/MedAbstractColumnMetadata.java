@@ -73,7 +73,7 @@ public abstract class MedAbstractColumnMetadata
             addKeyCols(
                 rel,
                 repos,
-                primKey.getFeature(),
+                (List) primKey.getFeature(),
                 false,
                 retSet);
         }
@@ -87,7 +87,7 @@ public abstract class MedAbstractColumnMetadata
             addKeyCols(
                 rel,
                 repos,
-                uniqueConstraint.getFeature(),
+                (List) uniqueConstraint.getFeature(),
                 true,
                 retSet);
         }

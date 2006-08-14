@@ -1040,7 +1040,7 @@ public class DdlValidator
         }
 
         for (Object supplier : suppliers) {
-            dependency.getSupplier().add(supplier);
+            dependency.getSupplier().add((CwmModelElement) supplier);
         }
 
         return dependency;

@@ -166,7 +166,7 @@ class LcsDataServer
         // we don't support those...yet.
         Set<CwmColumn> uncoveredColumns =
             new HashSet<CwmColumn>(
-                table.getFeature());
+                (List) table.getFeature());
         for (CwmColumn col : uncoveredColumns) {
             if (col.getType() instanceof FemSqlcollectionType) {
                 throw Util.needToImplement(
