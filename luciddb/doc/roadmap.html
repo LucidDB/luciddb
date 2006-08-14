@@ -9,6 +9,8 @@
 
 <h2>LucidDB Roadmap</h2>
 
+<hr>
+
 <h3>First Release</h3>
 
 We are currently wrapping up the very first open-source release (0.6).
@@ -23,30 +25,34 @@ are some of the major limitations you should be aware of:
 
 <li>security features are incomplete
 
-<li>concurrency control supports only one database-wide writer at a
-time, and writers block readers on the same table
+<li>concurrency control supports at most one database-wide writer at a
+time; writer blocks readers on the same table
 
 <li>all transactions are autocommit
 
 <li>unions, aggregates, and most forms of outer join work but are not
 yet optimized
 
-<li>only a single database-wide tablespace is supported
+<li>one single database-wide auto-extend tablespace
 
 <li>FOREIGN KEY and CHECK constraints are not supported
 
 <li>system views and management procedures are minimal
 
-<li>only single-byte character sets are supported, along with only
-a default case-sensitive collation sequence
+<li>only single-byte character sets are supported; collation is always
+case-sensitive
 
 <li>no support for timezones and time intervals
 
 <li>no ODBC driver is provided (JDBC must be used to connect to LucidDB)
 
-<li>user-defined routines must be written in Java
+<li>external user-defined routines must be written in Java
+
+<li>UNIQUE and PRIMARY KEY constraints can be declared but are not enforced
 
 </ul>
+
+<hr>
 
 <h3>Planned for Follow-on Releases</h3>
 
@@ -54,6 +60,8 @@ a default case-sensitive collation sequence
 listed here or items of your own.)
 
 <ul>
+
+<li>UNIQUE and PRIMARY KEY constraint enforcement
 
 <li>complete subquery support</li>
 
@@ -69,7 +77,7 @@ including parallelism</li>
 
 <li>UNICODE, collations, timezones, and time intervals</li>
 
-<li>SQL/J support for convenience in writing user-defined routines</li>
+<li>SQL/J support</li>
 
 <li>ALTER TABLE</li>
 
@@ -80,6 +88,8 @@ including parallelism</li>
 <li>more connectors (e.g. XLS via POI) and ETL functions</li>
 
 </ul>
+
+<hr>
 
 <h3>Eventually...</h3>
 
@@ -104,6 +114,8 @@ including parallelism</li>
 <li>support for both row-store and column-store tables in the same database
 
 </ul>
+
+<hr>
 
 <h3>Maybe One Day...</h3>
 
