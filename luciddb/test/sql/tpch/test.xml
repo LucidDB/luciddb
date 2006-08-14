@@ -64,6 +64,7 @@
       </test>
 
       <test name="10" requiresRun="createIndexes">
+        <!-- TODO: LDB-64 -->
         <!-- ref file too large, not added until find way to reduce size -->
         <test-metadata>
           <knownFailure value="true"/>

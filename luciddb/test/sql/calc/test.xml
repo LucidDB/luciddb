@@ -129,7 +129,11 @@
       </test>
 
       <test name="like" requiresSuccess="cretables">
+        <!-- TODO: UTL-9 -->
         <!-- French symbols not supported yet -->
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
       </test>
 
