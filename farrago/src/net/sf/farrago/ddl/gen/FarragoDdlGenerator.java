@@ -535,7 +535,7 @@ public class FarragoDdlGenerator
         if ((desc != null) && (desc.length() > 0)) {
             sb.append(NL);
             sb.append(" DESCRIPTION ");
-            sb.append(literal(escapeApostrophesAndQuotes(desc)));
+            sb.append(literal(desc));
             sb.append(NL);
         }
     }

@@ -2411,10 +2411,10 @@ public class CalcProgramBuilder
     /**
      * Defines an extended instruction.
      */
-    static class ExtInstrDef
+    public static class ExtInstrDef
         extends InstructionDef
     {
-        ExtInstrDef(
+        public ExtInstrDef(
             String name,
             int regCount)
         {

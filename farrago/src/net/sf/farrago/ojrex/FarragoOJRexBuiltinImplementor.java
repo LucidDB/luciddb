@@ -72,7 +72,7 @@ public class FarragoOJRexBuiltinImplementor
 
     //~ Instance fields --------------------------------------------------------
 
-    int builtinFunction;
+    protected int builtinFunction;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -262,7 +262,7 @@ public class FarragoOJRexBuiltinImplementor
         stmtList.add(ifStmt);
     }
 
-    private void implementFloorCeil(
+    protected void implementFloorCeil(
         FarragoRexToOJTranslator translator,
         RexCall call,
         Expression [] operands,
