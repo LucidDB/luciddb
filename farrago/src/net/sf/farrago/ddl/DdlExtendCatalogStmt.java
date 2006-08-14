@@ -38,7 +38,7 @@ import org.eigenbase.util.*;
 
 
 /**
- * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG LIBRARY
+ * DdlExtendCatalogStmt represents an ALTER SYSTEM ADD CATALOG JAR
  * statement.
  *
  * @author John V. Sichi

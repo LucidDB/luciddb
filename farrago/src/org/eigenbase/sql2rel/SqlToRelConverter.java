@@ -29,6 +29,7 @@ import java.util.*;
 import openjava.mop.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
@@ -1089,7 +1090,25 @@ public class SqlToRelConverter
                 rexCall,
                 validator.getValidatedNodeType(call),
                 inputs);
+        Set<RelColumnMapping> columnMappings =
+            getColumnMappings(call.getOperator());
+        callRel.setColumnMappings(columnMappings);
         bb.setRoot(callRel, true);
+    }
+
+    private Set<RelColumnMapping> getColumnMappings(SqlOperator op)
+    {
+        SqlReturnTypeInference rti = op.getReturnTypeInference();
+        if (rti == null) {
+            return null;
+        }
+        if (rti instanceof TableFunctionReturnTypeInference) {
+            TableFunctionReturnTypeInference tfrti =
+                (TableFunctionReturnTypeInference) rti;
+            return tfrti.getColumnMappings();
+        } else {
+            return null;
+        }
     }
 
     private JoinRelBase createJoin(

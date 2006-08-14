@@ -45,7 +45,8 @@ class WALSegment;
 class VersionedSegment : public DelegatingSegment
 {
     friend class SegmentFactory;
-    
+
+    bool inRecovery;
     PseudoUuid onlineUuid;
     SegVersionNum versionNumber;
     PageId oldestLogPageId;
@@ -84,6 +85,12 @@ public:
      * to use current version number
      */
     void recover(PageId firstLogPageId, SegVersionNum versionNumber = MAXU);
+
+    /**
+     * Prepares for "online" recovery, meaning a revert back to the last
+     * checkpointed version.  Call getOnlineRecoveryPageId() first.
+     */
+    void prepareOnlineRecovery();
 
     /**
      * @return the PageId of the oldest log page still needed for recovery

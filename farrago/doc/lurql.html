@@ -183,9 +183,12 @@ underlying metamodel as follows:
 
 <li>for a composite association, "forward" means "from container to contained"
 
-<li>for a 1-to-many association, "forward" means "from one to many"
+<li>otherwise, for a 1-to-many association, "forward" means "from one to many"
 
-<li>for other associations, "forward" means "from first end to second
+<li>otherwise, for an ordered association, "forward" means "from
+non-ordered end to ordered end"
+
+<li>as a fallback, "forward" means "from first end to second
 end" (end assignment is somewhat arbitrary in many UML models, so this isn't
 guaranteed to be useful)
 
@@ -516,13 +519,16 @@ exists [ &lt;select-list&gt; in ] &lt;path-spec&gt;
 '?' &lt;id&gt;
 
 &lt;path-spec&gt; ::=
-'(' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] ')'
+&lt;path-spec-without-gather&gt; 
 [ gather [ with parent ] then &lt;path-spec&gt; ]
+
+&lt;path-spec-without-gather&gt; ::=
+'(' &lt;path-branch&gt; [ union &lt;path-branch&gt; ... ] ')'
 
 &lt;path-branch&gt; ::=
 &lt;follow&gt;
 |
-&lt;recurse&gt;
+&lt;recursion&gt;
 
 &lt;follow&gt; ::=
 follow [ &lt;association-filter&gt; ... ]
@@ -538,8 +544,8 @@ follow [ &lt;association-filter&gt; ... ]
 | forward
 | backward
 
-&lt;recurse&gt; ::=
-recursively &lt;path-spec&gt;
+&lt;recursion&gt; ::=
+recursively ( &lt;path-spec-without-gather&gt; | '(' &lt;path-spec&gt; ')' )
 [ then &lt;path-spec&gt; ]
 
 &lt;id&gt; ::= 
@@ -552,7 +558,7 @@ recursively &lt;path-spec&gt;
 
 <ul>
 
-<li>Unlike SQL, identifiers are always case sensitive.
+<li>Unlike in SQL, identifiers are always case sensitive.
 
 <li>Identifiers only need to be quoted if they are keywords, contain
 non-alphanumeric characters, or start with a number.

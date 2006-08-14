@@ -41,13 +41,18 @@ void CartesianJoinExecStream::prepare(
     pRightBufAccessor = inAccessors[1];
     assert(pRightBufAccessor);
 
+    leftOuter = params.leftOuter;
+    
     SharedExecStream pLeftInput = pGraph->getStreamInput(getStreamId(), 0);
     assert(pLeftInput);
     pRightInput = pGraph->getStreamInput(getStreamId(), 1);
     assert(pRightInput);
-    FENNEL_TRACE(TRACE_FINE,
-                 "left input " << pLeftInput->getStreamId() << ' ' << pLeftInput->getName() <<
-                 ", right input " << pRightInput->getStreamId() << ' ' << pRightInput->getName());
+    FENNEL_TRACE(
+        TRACE_FINE,
+        "left input " << pLeftInput->getStreamId() <<
+        ' ' << pLeftInput->getName() <<
+        ", right input " << pRightInput->getStreamId() <<
+        ' ' << pRightInput->getName());
 
    
     TupleDescriptor const &leftDesc = pLeftBufAccessor->getTupleDesc();
@@ -55,23 +60,40 @@ void CartesianJoinExecStream::prepare(
     
     TupleDescriptor outputDesc;
     outputDesc.insert(outputDesc.end(),leftDesc.begin(),leftDesc.end());
+    uint iFirstRight = outputDesc.size();
     outputDesc.insert(outputDesc.end(),rightDesc.begin(),rightDesc.end());
+    if (leftOuter) {
+        // Right side is null-generating; have to adjust tuple descriptor
+        // accordingly.
+        for (uint i = iFirstRight; i < outputDesc.size(); ++i) {
+            outputDesc[i].isNullable = true;
+        }
+    }
+    if (params.outputTupleDesc.size()) {
+        assert(params.outputTupleDesc == outputDesc);
+    }
     outputData.compute(outputDesc);
     pOutAccessor->setTupleShape(outputDesc);
 
     nLeftAttributes = leftDesc.size();
-    leftOuter = params.leftOuter;
-    rightInputEmpty = true;
     
     ConfluenceExecStream::prepare(params);
 }
 
+void CartesianJoinExecStream::open(bool restart)
+{
+    ConfluenceExecStream::open(restart);
+    rightInputEmpty = true;
+}
+
 // trace buffer state
-inline std::ostream& operator<< (std::ostream& os, SharedExecStreamBufAccessor buf)
+inline std::ostream& operator<< (
+    std::ostream& os, SharedExecStreamBufAccessor buf)
 {
     os << ExecStreamBufState_names[buf->getState()];
-    if (buf->hasPendingEOS())
+    if (buf->hasPendingEOS()) {
         os << "(EOS pending)";
+    }
     return os;
 }
 
@@ -86,6 +108,10 @@ ExecStreamResult CartesianJoinExecStream::execute(
     // average number of rows in a buffer from the left input.  However,  the
     // output ordering would also be affected, so we might want to provide a
     // parameter to control this behavior.
+
+    // Also, for outer join, once we know the right input is empty, it's always
+    // going to be empty for every left row, so we could just stop trying to
+    // re-execute the right hand side.
 
     uint nTuplesProduced = 0;
     
@@ -108,9 +134,12 @@ ExecStreamResult CartesianJoinExecStream::execute(
             if (!pRightBufAccessor->isTupleConsumptionPending()) {
                 if (pRightBufAccessor->getState() == EXECBUF_EOS) {
                     if (leftOuter && rightInputEmpty) {
-                        // put null in outputdata to the right of nLeftAttributes
-                        for (int i = nLeftAttributes; i < outputData.size(); ++i) {
-                            outputData[i].pData = 0;
+                        // put null in outputdata to the right of
+                        // nLeftAttributes
+                        for (int i = nLeftAttributes;
+                             i < outputData.size(); ++i)
+                        {
+                            outputData[i].pData = NULL;
                         }
 
                         if (pOutAccessor->produceTuple(outputData)) {
@@ -127,8 +156,9 @@ ExecStreamResult CartesianJoinExecStream::execute(
                     pLeftBufAccessor->consumeTuple();
                     // restart right input stream
                     pRightInput->open(true);
-                    FENNEL_TRACE_THREAD(TRACE_FINE, "re-opened right input " << pRightBufAccessor);
-                    rightInputEmpty = true;
+                    FENNEL_TRACE_THREAD(
+                        TRACE_FINE,
+                        "re-opened right input " << pRightBufAccessor);
                     // NOTE: break out of the inner for loop, which will take
                     // us back to the top of the outer for loop
                     break;

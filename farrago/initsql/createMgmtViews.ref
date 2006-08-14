@@ -96,6 +96,13 @@
 . . . . . . . . >   parameter style java
 . . . . . . . . >   no sql
 . . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- exports the catalog to an XMI file
+0: jdbc:farrago:> create procedure export_catalog_xmi(in filename varchar(65535))
+. . . . . . . . >   language java
+. . . . . . . . >   parameter style java
+. . . . . . . . >   no sql
+. . . . . . . . >   external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 0: jdbc:farrago:>             
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- Statistics

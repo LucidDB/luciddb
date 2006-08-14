@@ -16,6 +16,10 @@ select emps.name as ename,d.dnoplus
 from emps,(select deptno+1 as dnoplus from depts) d
 order by 1,2;
 
+-- weird cross product used for uncorrelated subqueries
+select depts.name from emps left outer join depts on TRUE 
+order by 1;
+
 -- verify plans
 !set outputformat csv
 
@@ -29,3 +33,6 @@ order by 1,2;
 explain plan for
 select emps.name as ename,d.dnoplus 
 from emps,(select deptno+1 as dnoplus from depts) d;
+
+explain plan for
+select depts.name from emps left outer join depts on TRUE;

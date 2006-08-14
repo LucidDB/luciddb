@@ -92,13 +92,13 @@ Class: TypedElement
 
 ****
 
-# Test recursion with THEN
+# Test recursion without GATHER:  finds all superclass attributes
 PARSE RESULT:
 select "a"
 from
 class "Class"
 where
-    "name" = 'Exception'
+    "name" = 'Package'
 then (
     recursively (
         follow association "Generalizes" forward
@@ -110,7 +110,7 @@ then (
 
 EXPLANATION:
 a_4 { Attribute }
-anon_1 { Class } where "name" = 'Exception'
+anon_1 { Class } where "name" = 'Package'
 anon_1:subtype->Generalizes->anon_2:supertype
 anon_2 { GeneralizableElement }
 anon_2:container->Contains->a_4:containedElement { Attribute }
@@ -119,9 +119,152 @@ anon_3 { GeneralizableElement } recursively to anon_2
 
 EXECUTION RESULT:
 Attribute: annotation
+Attribute: isAbstract
+Attribute: isLeaf
+Attribute: isRoot
 Attribute: name
 Attribute: qualifiedName
+Attribute: visibility
+
+****
+
+# Test recursion with GATHER outside:  equivalent to previous query
+PARSE RESULT:
+select "a"
+from
+class "Class"
+where
+    "name" = 'Package'
+then (
+    recursively (
+        follow association "Generalizes" forward
+    )
+) gather with parent then (
+    follow association "Contains" destination class "Attribute" as "a"
+);
+
+EXPLANATION:
+a_4 { Attribute }
+anon_1 { Class } where "name" = 'Package'
+anon_1:container->Contains->a_4:containedElement { Attribute }
+anon_1:subtype->Generalizes->anon_2:supertype
+anon_2 { GeneralizableElement }
+anon_2:container->Contains->a_4:containedElement { Attribute }
+anon_2:subtype->Generalizes->anon_3:supertype
+anon_3 { GeneralizableElement } recursively to anon_2
+
+EXECUTION RESULT:
+Attribute: annotation
+Attribute: isAbstract
+Attribute: isLeaf
+Attribute: isRoot
+Attribute: name
+Attribute: qualifiedName
+Attribute: visibility
+
+****
+
+# Test recursion with GATHER at same level: finds only attributes for
+# start class because of confusing syntax; this syntax is deprecated
+# and will be removed soon
+PARSE RESULT:
+select "a"
+from
+class "Class"
+where
+    "name" = 'Package'
+then (
+    recursively (
+        follow association "Generalizes" forward
+    ) gather with parent then (
+        follow association "Contains" destination class "Attribute" as "a"
+    )
+);
+
+EXPLANATION:
+a_3 { Attribute }
+anon_1 { Class } where "name" = 'Package'
+anon_1:container->Contains->a_3:containedElement { Attribute }
+anon_1:subtype->Generalizes->anon_2:supertype
+anon_2 { GeneralizableElement }
+anon_2:container->Contains->a_3:containedElement { Attribute }
+
+EXECUTION RESULT:
+Attribute: isAbstract
+Attribute: isLeaf
+Attribute: isRoot
+Attribute: visibility
+
+****
+
+# Test recursion with GATHER inside:  this makes the GATHER
+# part of the recursion
+PARSE RESULT:
+select "a"
+from
+class "Class"
+where
+    "name" = 'Package'
+then (
+    recursively (
+        follow association "Generalizes" forward
+        union
+        follow association "DependsOn" forward
+    ) gather then (
+        follow association "Generalizes" backward
+    )
+) gather with parent then (
+    follow association "Contains" destination class "Attribute" as "a"
+);
+
+EXPLANATION:
+a_8 { Attribute }
+anon_1 { Class } where "name" = 'Package'
+anon_1:container->Contains->a_8:containedElement { Attribute }
+anon_1:dependent->DependsOn->anon_3:provider
+anon_1:subtype->Generalizes->anon_2:supertype
+anon_2 { GeneralizableElement }
+anon_2:supertype->Generalizes->anon_4:subtype
+anon_3 { ModelElement }
+anon_3:supertype->Generalizes->anon_4:subtype
+anon_4 { GeneralizableElement }
+anon_4:container->Contains->a_8:containedElement { Attribute }
+anon_4:dependent->DependsOn->anon_6:provider
+anon_4:subtype->Generalizes->anon_5:supertype
+anon_5 { GeneralizableElement }
+anon_5:supertype->Generalizes->anon_7:subtype
+anon_6 { ModelElement }
+anon_6:supertype->Generalizes->anon_7:subtype
+anon_7 { GeneralizableElement } recursively to anon_4
+
+EXECUTION RESULT:
+Attribute: aggregation
+Attribute: direction
+Attribute: evaluationPolicy
+Attribute: expression
+Attribute: isAbstract
+Attribute: isChangeable
+Attribute: isChangeable
+Attribute: isClustered
+Attribute: isDerived
+Attribute: isDerived
+Attribute: isLeaf
+Attribute: isNavigable
+Attribute: isQuery
+Attribute: isRoot
+Attribute: isSingleton
+Attribute: labels
+Attribute: language
+Attribute: multiplicity
+Attribute: multiplicity
+Attribute: multiplicity
+Attribute: multiplicity
 Attribute: scope
+Attribute: tagId
+Attribute: value
+Attribute: values
+Attribute: visibility
+Attribute: visibility
 Attribute: visibility
 
 ****

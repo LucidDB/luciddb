@@ -109,6 +109,11 @@ ExecStreamResult BTreeSortExecStream::execute(
 
 void BTreeSortExecStream::truncateTree(bool rootless)
 {
+    if (treeDescriptor.rootPageId == NULL_PAGE_ID) {
+        // nothing to do
+        assert(!rootless);
+        return;
+    }
     BTreeBuilder builder(
         treeDescriptor,
         treeDescriptor.segmentAccessor.pSegment);

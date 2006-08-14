@@ -41,7 +41,7 @@ where emp.hobby=dept.dname and dept.dname='Marketing';
 explain plan excluding attributes for select emp.* from emp,location
 where emp.fname=location.state and location.locid='00';
 
--- can't handle non-simple equi join case
+-- join conditions may contain some simple expressions
 explain plan excluding attributes for select * from emp,dept
 where emp.deptno+1=dept.deptno+1 and dept.dname='Marketing';
 

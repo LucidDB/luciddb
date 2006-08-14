@@ -490,23 +490,10 @@ public class DdlRoutineHandler
             dependencies);
     }
 
+    
+
     public void validateRoutineParam(FemRoutineParameter param)
     {
-        Object obj = validator.getSqlDefinition(param);
-        if (obj == null) {
-            if (param.getType().getName().equals("CURSOR")) {
-                // previously validated
-                return;
-            }
-        }
-        if (obj instanceof SqlIdentifier) {
-            SqlIdentifier id = (SqlIdentifier) obj;
-            assert (id.getSimple().equals("CURSOR"));
-            param.setType(validator.getStmtValidator().findSqldataType(id));
-            param.setCollationName("");
-            param.setCharacterSetName("");
-            return;
-        }
         validateTypedElement(param, (FemRoutine) param.getBehavioralFeature());
     }
 

@@ -61,11 +61,9 @@ public abstract class FarragoTestConcurrentScriptedTestCase
     /**
      * Executes the given multi-threaded test script.
      */
-    protected void runScript(String mtsqlFile)
+    protected void runScript(String mtsqlFile, String jdbcUrl)
         throws Exception
     {
-        FarragoUnregisteredJdbcEngineDriver driver = newJdbcEngineDriver();
-        assert (mtsqlFile.endsWith(".mtsql"));
 
         File mtsqlFileSansExt =
             new File(mtsqlFile.substring(0, mtsqlFile.length() - 6));
@@ -77,19 +75,22 @@ public abstract class FarragoTestConcurrentScriptedTestCase
             return;
         }
 
-        cmdGen.executeSetup(newJdbcEngineDriver().getUrlPrefix());
+        cmdGen.executeSetup(jdbcUrl);
 
         executeTest(
-            cmdGen,
-            cmdGen.useLockstep());
+            cmdGen, 
+            cmdGen.useLockstep(),
+            jdbcUrl);
 
         Map results = cmdGen.getResults();
+
 
         OutputStream outStream = openTestLogOutputStream(mtsqlFileSansExt);
 
         BufferedWriter out =
             new BufferedWriter(new OutputStreamWriter(outStream));
 
+ 
         for (Iterator i = results.entrySet().iterator(); i.hasNext();) {
             Map.Entry entry = (Map.Entry) i.next();
 

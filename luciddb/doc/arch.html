@@ -7,11 +7,7 @@
 
 <body>
 
-The diagram below illustrates the main components of the LucidDB
-architecture:
-
-<br>
-<br>
+<h2>LucidDB Architecture</h2>
 
 <img src="LucidDbArch.png">
 
@@ -23,8 +19,7 @@ implemented in C++.  This hybrid approach yields a number of advantages:
 <ul>
 
 <li>the Java portion provides ease of development, extensibility, and
-integration, with less chance for security exploits due to managed
-memory
+integration, with managed memory reducing the likelihood of security exploits
 
 <li>the C++ portion provides high performance and direct access to
 low-level operating system, network, and file system resources
@@ -42,11 +37,9 @@ innovative components.
 
 <h2>Column Store and Bitmap Indexes</h2>
 
-Recent research has established the superiority of a "column-store"
-architecture for read-mostly databases.  LucidDB's architecture is
-similar in concept to that of the <a
-href="http://db.lcs.mit.edu/projects/cstore">C-Store</a> research
-project.
+<a href="http://db.lcs.mit.edu/projects/cstore/vldb.pdf">Recent
+DBMS research</a> has established the superiority of a "column-store"
+architecture for read-mostly databases such as LucidDB.
 
 <p>
 
@@ -83,15 +76,13 @@ asynchronous I/O intelligent prefetch for optimal use of disk bandwidth.
 <p>
 
 It should be noted that LucidDB is <em>not</em> suitable for use as a
-transactional database; unlike C-Store, it does not maintain separate
-read-optimized and write-optimized storage areas, and only supports
-table-level locking.  LucidDB is very fast at bulk-loading or updating
-large amounts of data at once, but it is not intended to work well for
-the single-row operations typical of transactional systems.  Best
-practice is to separate analytical systems from transactional systems;
-LucidDB can be used as a data warehouse, data mart, or operational
-data store in tandem with the traditional transactional systems used
-as data sources.
+transactional database.  LucidDB is very fast at bulk-loading or
+updating large amounts of data at once, but it is not intended to work
+well for the single-row operations typical of transactional systems.
+Best practice is to separate analytical systems from transactional
+systems; LucidDB can be used as a data warehouse, data mart, or
+operational data store in tandem with the traditional transactional
+systems used as data sources.
 
 <hr>
 
@@ -123,7 +114,7 @@ early filtering.  The only limit on data size is available temp disk space.
 
 LucidDB is capable of executing extract/transform/load processes
 directly as pipelined SQL statements, without any external ETL engine
-required.  Tihs is made possible via a number of features:
+required.  This is made possible via a number of features:
 
 <ul>
 
@@ -149,17 +140,21 @@ for efficient batching of tuples back and forth across the JNI
 boundary between managed and unmanaged memory.  All threads run in a
 single process and Java virtual machine, and calls across the JNI
 boundary do not require extra threads, so there is no inter-process
-communication overhead.
+communication overhead.  For more information, see <a target="_top"
+href="http://docs.eigenbase.org/LucidDbUdxJavaHowto">the UDX HOWTO</a>.
 
 <li>Bulk-load via INSERT and UPSERT: no separate bulk-load utility is
 required; instead, the SQL INSERT statement does the job directly,
 selecting from a query consisting of SQL operators such as join and
 minus, Java transformations, and SQL/MED sources.  LucidDB also
 supports the SQL:2003 standard MERGE statement for implementing
-upsert.  Both DML operations (as well as DELETE) are fully recoverable
-via page-level logging; for efficiency, no record-level logging or
-locking is needed.  Errors due to constraint violations can be written
-to a reject file without aborting the load.
+upsert.  All DML operations (including DELETE) are fully recoverable
+via table-level locking and page-level logging; for efficiency, no
+record-level logging or locking is needed.  Errors due to constraint
+violations can be written to a reject file without aborting the load.
+
+<li>Sequence support: via the GENERATED clause in surrogate key
+column definitions.
 
 <li>Application library: LucidDB comes with <em>applib</em>, a library
 of commonly used ETL and analytical functions and transformation,
@@ -175,9 +170,11 @@ Because LucidDB has a Java top-half, it can be deployed into a J2EE
 application server.  This means it is very easy to make it run
 side-by-side with the <a target="_top"
 href="http://mondrian.sf.net">Mondrian</a> pure-Java OLAP engine,
-enabling direct in-process JDBC calls from Mondrian into LucidDB with no
-communications overhead.  And the SQL queries issued by Mondrian for
-implementing MDX statements from an OLAP client are of exactly the
-form LucidDB's optimizer was designed for.
+enabling direct in-process JDBC calls from Mondrian into LucidDB with
+no communications overhead.  And the SQL queries issued by Mondrian
+for implementing MDX statements from an OLAP client are of exactly the
+form LucidDB's optimizer was designed for.  And the LucidDB roadmap
+includes proposed features for tighter integration, such as DDL
+statements for cube creation.
 
 </body>

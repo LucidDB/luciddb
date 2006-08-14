@@ -153,6 +153,8 @@ class Database
     
     void prepareForRecovery();
 
+    void recoverPhysical(CheckpointType);
+
     void readDeviceParams(
         std::string paramNamePrefix,
         DeviceMode deviceMode,
@@ -210,7 +212,7 @@ public:
 
     bool shouldForceTxns() const;
 
-    void recoverPhysical();
+    void recoverOnline();
 
     void recover(
         LogicalTxnParticipantFactory &txnParticipantFactory);

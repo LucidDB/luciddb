@@ -126,8 +126,9 @@ public class FarragoRexBuilder
         } else {
             // leave calls to external functions alone
             returnNode = super.makeCall(
-                    op,
-                    invocation.getArgCastExprs());
+                routine.getReturnType(),
+                op,
+                invocation.getArgCastExprs());
         }
 
         RelDataType [] paramTypes = routine.getParamTypes();

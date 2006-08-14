@@ -73,18 +73,30 @@ struct LhxHashInfo
      */
     vector< vector<bool> > isKeyColVarChar;
 
+    /*
+     * In hash join, if an input can be filtered using bitmap saved from
+     * previous round of partitioning.
+     */
+    vector<bool> useJoinFilter;
+
     /**
      * Projections of aggs and data fields out of the RHS.
      */
     TupleProjection aggsProj;
-    TupleProjection dataProj;
-    
+    vector<TupleProjection> dataProj;
+
     /**
-     * Build key cardinality estimate from the optimizer.
-     * Used to estimate the size of the hash table(to build partial aggregates)
-     * during recursive partitioning for aggregate operations.
+     * Estimated number of rows from the inputs.
      */
-    uint cndKeys;
+    vector<uint> numRows;
+
+    /**
+     * Key cardinality estimate from the optimizer.
+     *
+     * It is also used to estimate the size of the hash table(to build partial
+     * aggregates) during recursive partitioning for aggregate operations.
+     */
+    vector<uint> cndKeys;
 
     /**
      * ExecStream buf accessors.
@@ -95,15 +107,15 @@ struct LhxHashInfo
      * Special hash table properties:
      *
      * filterNull: do not add null keys to hash table
-     * in join sementics: nulls do not match; however, in set matching
+     * In join sementics, nulls do not match; however, in set matching
      * sementics, nulls are considered equal.
      *
      * removeDuplicate: do not add duplicatekeys to hash table
-     * note: removeDuplicate is used only in set matching joins where
-     * all inputDesc and keyProj have the same size.
+     * removeDuplicate is only used in set matching joins where
+     * inputDesc and keyProj have the same size for both inputs.
      */
-    bool filterNull;
-    bool removeDuplicate; 
+    vector<bool> filterNull;
+    vector<bool> removeDuplicate;
 };
 
 FENNEL_END_NAMESPACE

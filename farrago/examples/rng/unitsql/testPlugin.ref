@@ -396,4 +396,9 @@ Was expecting one of:
 | 120    |
 +--------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- last thing we do is to prepare for a restore of pre-upgrade catalog contents
+0: jdbc:farrago:> -- NOTE:  this will shut down the system, so don't add any commands
+0: jdbc:farrago:> -- after it
+0: jdbc:farrago:> alter system replace catalog;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

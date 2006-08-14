@@ -22,10 +22,12 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 
+import java.util.*;
 
 /**
  * <code>TableFunctionRelBase</code> is an abstract base class for
@@ -45,6 +47,8 @@ public abstract class TableFunctionRelBase
     private final RelDataType rowType;
 
     protected final RelNode [] inputs;
+
+    private Set<RelColumnMapping> columnMappings;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -108,6 +112,28 @@ public abstract class TableFunctionRelBase
         terms[inputs.length] = "invocation";
 
         pw.explain(this, terms);
+    }
+
+    /**
+     * @return set of mappings known for this table function, or
+     * null if unknown (not the same as empty!)
+     */
+    public Set<RelColumnMapping> getColumnMappings()
+    {
+        return columnMappings;
+    }
+
+    /**
+     * Declares the column mappings associated with this function.
+     *
+     * REVIEW jvs 11-Aug-2006:  Should this be set only on construction,
+     * made part of digest, etc?
+     *
+     * @param columnMappings new mappings to set
+     */
+    public void setColumnMappings(Set<RelColumnMapping> columnMappings)
+    {
+        this.columnMappings = columnMappings;
     }
 
     protected RelDataType deriveRowType()

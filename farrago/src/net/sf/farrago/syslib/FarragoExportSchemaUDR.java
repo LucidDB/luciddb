@@ -58,6 +58,16 @@ public abstract class FarragoExportSchemaUDR
 
     private static final String LOGFILE_PREFIX = "Export_";
 
+    private static final int FULL_EXPORT = 0;
+    private static final int INCR_EXPORT = 1;
+    private static final int MERGE_EXPORT = 2;
+    private static final String [] EXPORT_TYPES =
+    {
+        "Full",
+        "Incremental",
+        "Merge"
+    };
+    
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -68,26 +78,26 @@ public abstract class FarragoExportSchemaUDR
      * @param schema name of local schema
      * @param exclude if true, tables matching either the table_list of the
      * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
+     * @param tableList comma separated list of tables or null value if
      * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param tablePattern table name pattern where '_' represents any single
      * character
      * @param directory the directory in which to place the exported CSV and 
      * BCP files
-     * @param with_bcp indicates whether BCP files should be created. If true,
+     * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      */
     public static void exportSchemaToCsv(
         String catalog,
         String schema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
+        String tableList,
+        String tablePattern,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files)
+        boolean withBcp,
+        boolean deleteFailedFiles)
         throws SQLException
     {
         Connection conn =
@@ -97,66 +107,118 @@ public abstract class FarragoExportSchemaUDR
             catalog, 
             schema, 
             exclude, 
-            table_list,
-            table_pattern,
+            tableList,
+            tablePattern,
             conn);
 
         // create Csv files
         toCsv(
+            FULL_EXPORT,
             catalog, 
             schema, 
-            null,  
-            null,
+            null,  // lastModified  
+            null,  // columnName
+            null,  // incrCatalog
+            null,  // incrSchema
             directory, 
-            with_bcp,
-            delete_failed_files, 
+            withBcp,
+            deleteFailedFiles, 
             tableNames, 
             conn);
+    }
+
+    /** 
+     * Standard version of local schema export which always creates 
+     * bcp files and deletes any leftover files from failed table exports
+     */
+    public static void exportSchemaToCsv(
+        String catalog,
+        String schema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        String directory)
+        throws SQLException
+    {
+        exportSchemaToCsv(
+            catalog,
+            schema,
+            exclude,
+            tableList,
+            tablePattern,
+            directory,
+            true,  // withBcp
+            true); // deleteFailedFiles
     }
 
     /**
      * Exports tables within a foreign schema to CSV/BCP files
      *
-     * @param foreign_server name of the foreign server
-     * @param foreign_schema name of the foreign schema
-     * @param exclude if true, tables matching either the table_list of the
-     * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
-     * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param foreignServer name of the foreign server
+     * @param foreignSchema name of the foreign schema
+     * @param exclude if true, tables matching either the tableList of the
+     * tablePattern will be excluded. if false, tables will be included
+     * @param tableList comma separated list of tables or null value if
+     * tablePattern is being used
+     * @param tablePattern table name pattern where '_' represents any single
      * character and '%' represents any sequence of zero or more characters. Set
-     * to null value if table_list is being used
+     * to null value if tableList is being used
      * @param directory the directory in which to place the exported CSV and 
      * BCP files
-     * @param with_bcp indicates whether bcp files should be created. if true,
+     * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      */
     public static void exportForeignSchemaToCsv(
-        String foreign_server,
-        String foreign_schema,
+        String foreignServer,
+        String foreignSchema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
+        String tableList,
+        String tablePattern,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files)
+        boolean withBcp,
+        boolean deleteFailedFiles)
         throws SQLException
     {
         exportForeignSchemaHelper(
-            foreign_server,
-            foreign_schema,
+            FULL_EXPORT,
+            foreignServer,
+            foreignSchema,
             exclude,
-            table_list,
-            table_pattern,
-            null,
-            null,
+            tableList,
+            tablePattern,
+            null,   // lastModified
+            null,   // lastModifiedColumn
             directory,
-            with_bcp,
-            delete_failed_files);
+            withBcp,
+            deleteFailedFiles);
     }
 
+
+    /**
+     * Standard version of foreign schema export which always creates 
+     * bcp files and deletes any leftover files from failed table exports
+     */
+    public static void exportForeignSchemaToCsv(
+        String foreignServer,
+        String foreignSchema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        String directory)
+        throws SQLException
+    {
+        exportForeignSchemaToCsv(
+            foreignServer,
+            foreignSchema,
+            exclude,
+            tableList,
+            tablePattern,
+            directory,
+            true, // withBcp
+            true); // deleteFailedFiles
+    }
 
     /**
      * Exports tables within a schema to CSV/BCP files for rows modified
@@ -165,35 +227,35 @@ public abstract class FarragoExportSchemaUDR
      * @param catalog name of the catalog where schema resides, if null, 
      * default catalog
      * @param schema name of local schema
-     * @param exclude if true, tables matching either the table_list of the
-     * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
-     * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param exclude if true, tables matching either the tableList of the
+     * tablePattern will be excluded. if false, tables will be included
+     * @param tableList comma separated list of tables or null value if
+     * tablePattern is being used
+     * @param tablePattern table name pattern where '_' represents any single
      * character
-     * @param last_modified if specified, only rows which were modified after 
-     * this timestamp will be written to the csv file; last_modified_column 
+     * @param lastModified if specified, only rows which were modified after 
+     * this timestamp will be written to the csv file; lastModifiedColumn 
      * must be valid for this field to be used
-     * @param last_modified_column name of the column for last modified
+     * @param lastModifiedColumn name of the column for last modified
      * timestamp, if not specified then all rows will be written
      * @param directory the directory in which to place the exported CSV and 
      * BCP files
-     * @param with_bcp indicates whether BCP files should be created. If true,
+     * @param withBcp indicates whether BCP files should be created. If true,
      * BCP files will be created. If false, they will not be created
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      */
     public static void exportSchemaIncrementalToCsv(
         String catalog,
         String schema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
-        Timestamp last_modified,
-        String last_modified_column,
+        String tableList,
+        String tablePattern,
+        Timestamp lastModified,
+        String lastModifiedColumn,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files)
+        boolean withBcp,
+        boolean deleteFailedFiles)
         throws SQLException
     {
         Connection conn =
@@ -203,88 +265,257 @@ public abstract class FarragoExportSchemaUDR
             catalog, 
             schema, 
             exclude, 
-            table_list,
-            table_pattern,
+            tableList,
+            tablePattern,
             conn);
 
+
+        if ((lastModified == null) || (lastModifiedColumn == null)) {
+            throw FarragoResource.instance()
+                .ExportSchemaSpecifyLastModified.ex();
+        }
+
         // create Csv files
-        // TODO: Warn that if either last_modified or last_modified_column is
-        // null, all rows will be exported
         toCsv(
+            INCR_EXPORT,
             catalog, 
             schema, 
-            last_modified,
-            last_modified_column,
+            lastModified,
+            lastModifiedColumn,
+            null,      // incrCatalog
+            null,      // incrSchema
             directory, 
-            with_bcp,
-            delete_failed_files, 
+            withBcp,
+            deleteFailedFiles, 
             tableNames, 
             conn);
     }
 
+    /**
+     * Standard version of incremental local schema export which 
+     * always creates bcp files and deletes any leftover files from failed
+     * table exports
+     */
+    public static void exportSchemaIncrementalToCsv(
+        String catalog,
+        String schema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        Timestamp lastModified,
+        String lastModifiedColumn,
+        String directory)
+        throws SQLException
+    {
+        exportSchemaIncrementalToCsv(
+            catalog,
+            schema,
+            exclude,
+            tableList,
+            tablePattern,
+            lastModified,
+            lastModifiedColumn,
+            directory,
+            true,   // withBcp
+            true);  // deleteFailedFiles
+    }
 
     /**
      * Exports tables within a foreign schema to CSV/BCP files for rows 
      * modified after a specified timestamp
      *
-     * @param foreign_server name of the foreign server
-     * @param foreign_schema name of the foreign schema
-     * @param exclude if true, tables matching either the table_list of the
-     * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
-     * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param foreignServer name of the foreign server
+     * @param foreignSchema name of the foreign schema
+     * @param exclude if true, tables matching either the tableList of the
+     * tablePattern will be excluded. if false, tables will be included
+     * @param tableList comma separated list of tables or null value if
+     * tablePattern is being used
+     * @param tablePattern table name pattern where '_' represents any single
      * character and '%' represents any sequence of zero or more characters. 
-     * Set to null value if table_list is being used
-     * @param last_modified if specified, only rows which were modified after
-     * this timestamp will be returned; last_modified_column must be valid
-     * for this field to be used
-     * @param last_modified_column name of the column for last modified
-     * timestamp, if not specified all rows will be returned
+     * Set to null value if tableList is being used
+     * @param lastModified only rows which were modified after
+     * this timestamp will be returned
+     * @param lastModifiedColumn name of the column for last modified
+     * timestamp; if not valid for a table, all rows will be returned
      * @param directory the directory in which to place the exported CSV and
      * BCP files
-     * @param with_bcp indicates whether bcp files should be created. if true,
+     * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      */
     public static void exportForeignSchemaIncrementalToCsv(
-        String foreign_server,
-        String foreign_schema,
+        String foreignServer,
+        String foreignSchema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
-        Timestamp last_modified,
-        String last_modified_column,
+        String tableList,
+        String tablePattern,
+        Timestamp lastModified,
+        String lastModifiedColumn,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files)
+        boolean withBcp,
+        boolean deleteFailedFiles)
         throws SQLException
     {
         exportForeignSchemaHelper(
-            foreign_server,
-            foreign_schema,
+            INCR_EXPORT,
+            foreignServer,
+            foreignSchema,
             exclude,
-            table_list,
-            table_pattern,
-            last_modified,
-            last_modified_column,
+            tableList,
+            tablePattern,
+            lastModified,
+            lastModifiedColumn,
             directory,
-            with_bcp,
-            delete_failed_files);
+            withBcp,
+            deleteFailedFiles);
     }
-            
+
+    /**
+     * Standard version of incremental foreign schema export which 
+     * always creates bcp files and deletes any leftover files from failed 
+     * table exports
+     */
+    public static void exportForeignSchemaIncrementalToCsv(
+        String foreignServer,
+        String foreignSchema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        Timestamp lastModified,
+        String lastModifiedColumn,
+        String directory)
+        throws SQLException
+    {
+        exportForeignSchemaIncrementalToCsv(
+            foreignServer,
+            foreignSchema,
+            exclude,
+            tableList,
+            tablePattern,
+            lastModified,
+            lastModifiedColumn,
+            directory,
+            true,  // withBcp
+            true); // deleteFailedFiles
+    }
+
+    /** 
+     * Used to combine original data and incremental data.  The data from 
+     * the original schema which has been deleted will not be updated.  Only
+     * updates and new records from the incremental schema will be.  The 
+     * tables in the schemas must have the same structure.
+     *
+     * @param origCatalog name of catalog where original data tables reside
+     * @param origSchema name of schema where original data tables reside
+     * @param incrCatalog name of catalog where incremental data tables reside
+     * @param incrSchema name of schema where incremental data tables reside
+     * @param idColumn name of the id column used to join tables
+     * @param directory the directory in which to place the exported CSV and
+     * BCP files
+     * @param withBcp indicates whether bcp files should be created. if true,
+     * bcp files will be created. If false, they will not be created
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
+     * fail during export will be deleted, otherwise they will remain
+     */
+    public static void exportMergedSchemas(
+        String origCatalog,
+        String origSchema,
+        String incrCatalog,
+        String incrSchema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        String idColumn,
+        String directory,
+        boolean withBcp,
+        boolean deleteFailedFiles)
+        throws SQLException
+    {
+        Connection conn = 
+            DriverManager.getConnection("jdbc:default:connection");
+        
+        // get tables from first schema with original data
+        HashSet<String> origTblNames = getLocalTableNames(
+            origCatalog,
+            origSchema,
+            exclude,
+            tableList,
+            tablePattern,
+            conn);
+        
+        // get tables from the 2nd schema with incremental data
+        HashSet<String> incrTblNames = getLocalTableNames(
+            incrCatalog,
+            incrSchema,
+            exclude,
+            tableList,
+            tablePattern,
+            conn);
+        
+        // check that they match
+        if (!incrTblNames.equals(origTblNames)) {
+            throw FarragoResource.instance()
+                .ExportSchemaMergeTablesDiffer.ex();
+        }
+
+        // call toCsv
+        toCsv(
+            MERGE_EXPORT,
+            origCatalog,
+            origSchema,
+            null,   // last modified timestamp
+            idColumn,
+            incrCatalog,
+            incrSchema,
+            directory,
+            withBcp,
+            deleteFailedFiles,
+            incrTblNames,
+            conn);
+    }
+
+    /** 
+     * Standard version of local merge schema export which always 
+     * creates bcp files and deletes any leftover files from failed table 
+     * exports
+     */
+    public static void exportMergedSchemas(
+        String origCatalog,
+        String origSchema,
+        String incrCatalog,
+        String incrSchema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        String idColumn,
+        String directory)
+        throws SQLException
+    {
+        exportMergedSchemas(
+            origCatalog,
+            origSchema,
+            incrCatalog,
+            incrSchema,
+            exclude,
+            tableList,
+            tablePattern,
+            idColumn,
+            directory,
+            true,   // withBcp
+            true);  // deleteFailedFiles
+    }
 
     /** 
      * Helper function which gets the set of local table names to be exported
      *
      * @param catalog name of catalog
      * @param schema name of local schema
-     * @param exclude if true, tables matching either the table_list of the
-     * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
-     * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param exclude if true, tables matching either the tableList of the
+     * tablePattern will be excluded. if false, tables will be included
+     * @param tableList comma separated list of tables or null value if
+     * tablePattern is being used
+     * @param tablePattern table name pattern where '_' represents any single
      * character
      * @param conn connection to the database
      * @return HashSet of types String with the names of all the tables to be
@@ -294,14 +525,14 @@ public abstract class FarragoExportSchemaUDR
         String catalog,
         String schema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
+        String tableList,
+        String tablePattern,
         Connection conn)
         throws SQLException
     {
         ResultSet rs = null;
         HashSet<String> tableNames = new HashSet<String>();
-        HashSet<String> tableList = null;
+        HashSet<String> tempTables = null;
 
         try {
             // get default catalog if catalog isn't set
@@ -310,16 +541,16 @@ public abstract class FarragoExportSchemaUDR
             }
 
             // query db for the table names
-            if ((table_list != null) && (table_pattern != null)) {
+            if ((tableList != null) && (tablePattern != null)) {
                 throw FarragoResource.instance()
                 .ExportSchemaSpecifyListOrPattern.ex();
-            } else if ((table_list == null) && (table_pattern != null)) {
-                // use table_pattern to retrieve table names
+            } else if ((tableList == null) && (tablePattern != null)) {
+                // use tablePattern to retrieve table names
                 rs =
                     conn.getMetaData().getTables(
                         catalog,
                         schema,
-                        table_pattern,
+                        tablePattern,
                         TABLE_TYPES);
 
                 // filter out the excluded table names
@@ -343,13 +574,13 @@ public abstract class FarragoExportSchemaUDR
                     }
                     tempRs.close();
                 } else {
-                    // get table names matching table_pattern
+                    // get table names matching tablePattern
                     while (rs.next()) {
                         tableNames.add(rs.getString(3));
                     }
                 }
             } else {
-                // either table_list is being used or there is no filtering
+                // either tableList is being used or there is no filtering
                 // retrive all the table names in the schema.
                 rs =
                     conn.getMetaData().getTables(
@@ -361,11 +592,11 @@ public abstract class FarragoExportSchemaUDR
                     tableNames.add(rs.getString(3));
                 }
 
-                // using table_list, verify table names from table_list
-                if (table_list != null) {
+                // using tableList, verify table names from tableList
+                if (tableList != null) {
                     StringTokenizer strTok =
                         new StringTokenizer(
-                            table_list,
+                            tableList,
                             ",");
                     StringBuilder incorrectTables = null;
                     while (strTok.hasMoreTokens()) {
@@ -374,13 +605,13 @@ public abstract class FarragoExportSchemaUDR
                             if (exclude) {
                                 tableNames.remove(tblInList);
                             } else {
-                                if (tableList == null) {
-                                    tableList = new HashSet<String>();
+                                if (tempTables == null) {
+                                    tempTables = new HashSet<String>();
                                 }
-                                tableList.add(tblInList);
+                                tempTables.add(tblInList);
                             }
                         } else {
-                            // a table in the table_list is incorrect
+                            // a table in the tableList is incorrect
                             if (incorrectTables == null) {
                                 incorrectTables = new StringBuilder();
                                 incorrectTables.append(tblInList);
@@ -398,7 +629,7 @@ public abstract class FarragoExportSchemaUDR
                     }
 
                     if (!exclude) {
-                        tableNames = tableList;
+                        tableNames = tempTables;
                     }
                 }
             }
@@ -409,8 +640,8 @@ public abstract class FarragoExportSchemaUDR
                     catalog,
                     schema,
                     String.valueOf(exclude),
-                    table_list,
-                    table_pattern);
+                    tableList,
+                    tablePattern);
             }
         } finally {
             if (rs != null) {
@@ -425,38 +656,40 @@ public abstract class FarragoExportSchemaUDR
      * Helper function for full and incremental exports of tables within a 
      * foreign schema
      *
-     * @param foreign_server name of the foreign server
-     * @param foreign_schema name of the foreign schema
-     * @param exclude if true, tables matching either the table_list of the
-     * table_pattern will be excluded. if false, tables will be included
-     * @param table_list comma separated list of tables or null value if
-     * table_pattern is being used
-     * @param table_pattern table name pattern where '_' represents any single
+     * @param extType type of export 
+     * @param foreignServer name of the foreign server
+     * @param foreignSchema name of the foreign schema
+     * @param exclude if true, tables matching either the tableList of the
+     * tablePattern will be excluded. if false, tables will be included
+     * @param tableList comma separated list of tables or null value if
+     * tablePattern is being used
+     * @param tablePattern table name pattern where '_' represents any single
      * character and '%' represents any sequence of zero or more characters. 
-     * Set to null value if table_list is being used
-     * @param last_modified if specified, only rows which were modified after
-     * this timestamp will be returned; last_modified_column must be valid
+     * Set to null value if tableList is being used
+     * @param lastModified if specified, only rows which were modified after
+     * this timestamp will be returned; lastModifiedColumn must be valid
      * for this field to be used
-     * @param last_modified_column name of the column for last modified
+     * @param lastModifiedColumn name of the column for last modified
      * timestamp, if not specified all rows will be returned
      * @param directory the directory in which to place the exported CSV and
      * BCP files
-     * @param with_bcp indicates whether bcp files should be created. if true,
+     * @param withBcp indicates whether bcp files should be created. if true,
      * bcp files will be created. If false, they will not be created
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      */
     private static void exportForeignSchemaHelper(
-        String foreign_server,
-        String foreign_schema,
+        int expType,
+        String foreignServer,
+        String foreignSchema,
         boolean exclude,
-        String table_list,
-        String table_pattern,
-        Timestamp last_modified,
-        String last_modified_column,
+        String tableList,
+        String tablePattern,
+        Timestamp lastModified,
+        String lastModifiedColumn,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files)
+        boolean withBcp,
+        boolean deleteFailedFiles)
         throws SQLException
     {
         String tmpLocalSchema =
@@ -465,7 +698,7 @@ public abstract class FarragoExportSchemaUDR
 
         boolean tmpSchemaExists = false;
 
-        if ((table_list != null) && (table_pattern != null)) {
+        if ((tableList != null) && (tablePattern != null)) {
             throw FarragoResource.instance().ExportSchemaSpecifyListOrPattern
             .ex();
         }
@@ -490,10 +723,10 @@ public abstract class FarragoExportSchemaUDR
             tmpSchemaExists = true;
 
             String importSql = buildImportForeignSchemaSql(
-                foreign_server,
-                foreign_schema,
-                table_list,
-                table_pattern,
+                foreignServer,
+                foreignSchema,
+                tableList,
+                tablePattern,
                 exclude,
                 tmpLocalSchema);
 
@@ -520,11 +753,11 @@ public abstract class FarragoExportSchemaUDR
                 // no tables to export
                 throw FarragoResource.instance().ExportSchemaNoTablesImported
                 .ex(
-                    foreign_server,
-                    foreign_schema,
+                    foreignServer,
+                    foreignSchema,
                     String.valueOf(exclude),
-                    table_list,
-                    table_pattern,
+                    tableList,
+                    tablePattern,
                     tmpLocalSchema);
             } else {
                 tableNames = new HashSet<String>();
@@ -537,13 +770,16 @@ public abstract class FarragoExportSchemaUDR
 
             // create Csv files
             toCsv(
+                expType,
                 null, 
                 tmpLocalSchema, 
-                last_modified,
-                last_modified_column,
+                lastModified,
+                lastModifiedColumn, 
+                null,  // incrCatalog
+                null,  // incrSchema
                 directory, 
-                with_bcp, 
-                delete_failed_files,
+                withBcp, 
+                deleteFailedFiles,
                 tableNames, 
                 conn);
 
@@ -553,29 +789,14 @@ public abstract class FarragoExportSchemaUDR
                     "drop schema " + QUOTE + tmpLocalSchema
                     + QUOTE + " cascade");
             } catch (SQLException se) {
-                throw FarragoResource.instance().ExportSchemaDropTempSchemaError
-                .ex(
-                    tmpLocalSchema,
-                    se.getMessage());
+                throw FarragoResource.instance()
+                    .ExportSchemaDropTempSchemaError.ex(
+                        tmpLocalSchema,
+                        se.getMessage());
             }
 
             tmpSchemaExists = false;
-        } catch (EigenbaseException ee) {
-            if (tmpSchemaExists) {
-                try {
-                    stmt.executeUpdate(
-                        "drop schema " + QUOTE + tmpLocalSchema
-                        + QUOTE + " cascade");
-                } catch (SQLException se) {
-                    throw FarragoResource.instance()
-                    .ExportSchemaDropTempSchemaError.ex(
-                        tmpLocalSchema,
-                        se.getMessage(),
-                        ee);
-                }
-                tmpSchemaExists = false;
-            }
-            throw ee;
+
         } finally {
             if (tmpSchemaExists) {
                 try {
@@ -601,28 +822,36 @@ public abstract class FarragoExportSchemaUDR
     /**
      * Helper function which creates and writes data to CSV and BCP files
      *
+     * @param expType type of export
      * @param catalog name of catalog
      * @param schema name of local schema
-     * @param last_modified if specified, only rows which were modified after 
-     * this timestamp will be written to the csv file; last_modified_column 
-     * must be valid for this field to be used
-     * @param last_modified_column name of the column for last modified
-     * timestamp, if not specified then all rows will be written
+     * @param lastModified only used for incremental export, rows which were 
+     * modified after this timestamp will be written to the csv file
+     * lastModifiedColumn must be valid for this field to be used
+     * @param columnName for incremental export, name of the last modified
+     * timestamp column, for merge export, name of the id column
+     * @param incrCatalog only valid for merge export; name of catalog for 
+     * incremental data
+     * @param incrSchema only valid for merge export; name of schema for 
+     * incremental data
      * @param directory location to write CSV and BCP files
-     * @param with_bcp if true creates BCP files, if false, doesn't
-     * @param delete_failed_files if true, csv and bcp files for tables which
+     * @param withBcp if true creates BCP files, if false, doesn't
+     * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      * @param tableNames HashSet with names of the table to export
      * @param conn connection to the database
      */
     private static void toCsv(
+        int expType,
         String catalog,
         String schema,
-        Timestamp last_modified,
-        String last_modified_column,
+        Timestamp lastModified,
+        String columnName,
+        String incrCatalog,
+        String incrSchema,
         String directory,
-        boolean with_bcp,
-        boolean delete_failed_files,
+        boolean withBcp,
+        boolean deleteFailedFiles,
         HashSet<String> tableNames,
         Connection conn)
         throws SQLException
@@ -651,8 +880,8 @@ public abstract class FarragoExportSchemaUDR
 
         // create export log file
         String logFileName =
-            directory + File.separator + LOGFILE_PREFIX
-            + getTimestampString() + ".log";
+            directory + File.separator + LOGFILE_PREFIX + EXPORT_TYPES[expType]
+            + "_" + getTimestampString() + ".log";
         logFile = new File(logFileName);
         try {
             logOut = new FileWriter(logFile, false);
@@ -681,10 +910,11 @@ public abstract class FarragoExportSchemaUDR
                 logOut.close();
                 logFile.delete();
             } catch (IOException ie2) {
-                throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
-                    logFileName,
-                    ie.getMessage() + ie2.getMessage(),
-                    ie);
+                throw FarragoResource.instance()
+                    .ExportSchemaFileWriterError.ex(
+                        logFileName,
+                        ie.getMessage() + ie2.getMessage(),
+                        ie);
             }
             throw FarragoResource.instance().ExportSchemaFileWriterError.ex(
                 logFileName,
@@ -699,28 +929,32 @@ public abstract class FarragoExportSchemaUDR
             try {
                 logOut.write(tblName + TAB + getTimestampString() + TAB);
 
-                StringBuilder querySql = new StringBuilder(
-                    "select * from " + QUOTE);
+                // if column doesn't exist in table, does a full export
+                // for incremental, for merge table won't be merged
+                // but will be logged in log file
+                int export = checkColumnName(
+                    expType,
+                    catalog,
+                    schema,
+                    incrCatalog,
+                    incrSchema,
+                    tblName,
+                    columnName,
+                    conn);
 
-                if (catalog != null) {
-                    querySql.append(catalog + QUOTE + "." + QUOTE);
-                }
-                
-                querySql.append(schema + QUOTE + "." + QUOTE + tblName + 
-                    QUOTE);
+                String querySql = buildQuerySql(
+                    export,
+                    catalog,
+                    schema,
+                    tblName,
+                    lastModified,
+                    columnName,
+                    incrCatalog,
+                    incrSchema);
 
-                // where clause to filter out incremental data here
-                if ((last_modified != null) && (last_modified_column != null))
-                {
-                    querySql.append(" where " + QUOTE + last_modified_column
-                        + QUOTE + " >= TIMESTAMP'" + last_modified.toString() 
-                        + "'");
-                    logOut.write("Incremental" + TAB);
-                } else {
-                    logOut.write("Full" + TAB);
-                }
+                logOut.write(EXPORT_TYPES[export] + TAB);
 
-                tblData = stmt.executeQuery(querySql.toString());
+                tblData = stmt.executeQuery(querySql);
                 tblMeta = tblData.getMetaData();
             } catch (SQLException se) {
                 try {
@@ -760,7 +994,7 @@ public abstract class FarragoExportSchemaUDR
                 csvFile = new File(csvName);
                 csvOut = new FileWriter(csvFile, false);
                 int numCols = tblMeta.getColumnCount();
-                if (with_bcp) {
+                if (withBcp) {
                     // write BCP header
                     bcpFile = new File(bcpName);
                     bcpOut = new FileWriter(bcpFile, false);
@@ -780,12 +1014,12 @@ public abstract class FarragoExportSchemaUDR
                     }
 
                     // write bcp file
-                    if (with_bcp) {
+                    if (withBcp) {
                         bcpOut.write(getBcpLine(i, tblMeta));
                     }
                 }
 
-                if (with_bcp) {
+                if (withBcp) {
                     bcpOut.flush();
                 }
 
@@ -831,11 +1065,11 @@ public abstract class FarragoExportSchemaUDR
                             ie.getMessage() + ie2.getMessage(),
                             ie);
                     }
-                    throw FarragoResource.instance().ExportSchemaFileWriterError
-                    .ex(
-                        logFileName,
-                        ie.getMessage(),
-                        ie);
+                    throw FarragoResource.instance()
+                        .ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage(),
+                            ie);
                 }
             } catch (SQLException se) {
                 tableFailed = true;
@@ -855,11 +1089,11 @@ public abstract class FarragoExportSchemaUDR
                             ie.getMessage() + ie2.getMessage(),
                             ie);
                     }
-                    throw FarragoResource.instance().ExportSchemaFileWriterError
-                    .ex(
-                        logFileName,
-                        ie.getMessage(),
-                        ie);
+                    throw FarragoResource.instance()
+                        .ExportSchemaFileWriterError.ex(
+                            logFileName,
+                            ie.getMessage(),
+                            ie);
                 }
                 continue;
             } catch (IOException ie) {
@@ -915,7 +1149,7 @@ public abstract class FarragoExportSchemaUDR
                 }
 
                 // delete partial files if table export failed
-                if (tableFailed && delete_failed_files) {
+                if (tableFailed && deleteFailedFiles) {
                     if (csvFile != null) {
                         csvFile.delete();
                     }
@@ -1074,53 +1308,196 @@ public abstract class FarragoExportSchemaUDR
         return formatter.format(new java.util.Date());
     }
 
+    /** 
+     * Helper function to build sql to query tables
+     */
+    private static String buildQuerySql(
+        int expType,
+        String catalog,
+        String schema,
+        String tblName,
+        Timestamp lastModifiedTs,
+        String colName,
+        String incrCatalog,
+        String incrSchema)
+    {
+        String oldQualifiedTable;
+
+        if (catalog != null) { 
+            oldQualifiedTable = QUOTE + catalog + QUOTE + "." + QUOTE + schema 
+                + QUOTE + "." + QUOTE + tblName + QUOTE;
+        } else {
+            oldQualifiedTable = QUOTE + schema + QUOTE + "." + QUOTE + tblName 
+                + QUOTE;
+        }
+
+        StringBuilder querySql = new StringBuilder("select * from " 
+            + oldQualifiedTable); 
+                
+        switch (expType) {
+        case FULL_EXPORT:
+            // does nothing, sql complete
+            break;
+        case INCR_EXPORT:
+            // appends where clause to filter out incremental data here
+            querySql.append(" where " + QUOTE + colName + QUOTE 
+                + " >= TIMESTAMP'" + lastModifiedTs.toString() + "'");
+            break;
+        case MERGE_EXPORT:
+            // gets all records which haven't been changed in the old schema
+            // and all the new and updated records from the new/incr schema
+            String incrQualifiedTable;
+            String tempTableName1 = QUOTE + UUID.randomUUID().toString() 
+                + QUOTE; 
+            String tempTableName2 = QUOTE + UUID.randomUUID().toString()
+                + QUOTE;
+
+            if (incrCatalog != null) {
+                incrQualifiedTable = QUOTE + incrCatalog + QUOTE + "." + QUOTE 
+                    + incrSchema + QUOTE + "." + QUOTE + tblName + QUOTE;
+            } else {
+                incrQualifiedTable = QUOTE + incrSchema + QUOTE + "." + QUOTE
+                    + tblName + QUOTE;
+            }
+
+            // select out one set of columns only
+            querySql.insert(7, tempTableName1 + ".");
+
+            querySql.append(" " + tempTableName1 + " inner join ( select "
+                 + QUOTE + colName + QUOTE + " from " + oldQualifiedTable 
+                + " except select " + QUOTE + colName + QUOTE + " from " 
+                + incrQualifiedTable + ") " + tempTableName2 + " on " 
+                + tempTableName1 + "." + colName + "=" + tempTableName2 
+                + "." + QUOTE + colName + QUOTE + ")");
+
+            // put incremental first in union all so resulting column names 
+            // will be the same as the columns in incremental table
+            querySql.insert(0, "select * from " + incrQualifiedTable + 
+                " union all (");
+            break;
+        default:
+            // should never get here
+            throw FarragoResource.instance().ExportSchemaInvalidExpType.ex(
+                String.valueOf(expType));
+
+        }
+        return querySql.toString();
+    }
+
     /**
      * Helper function to build the import foreign schema SQL used in exporting
      * from a foreign schema
-     *
-     * @param 
      */
     private static String buildImportForeignSchemaSql(
-        String foreign_server,
-        String foreign_schema,
-        String table_list,
-        String table_pattern,
+        String foreignServer,
+        String foreignSchema,
+        String tableList,
+        String tablePattern,
         boolean exclude,
         String tempSchema)
     {
         StringBuilder importSql = new StringBuilder();
         
         importSql.append(
-            "import foreign schema " + QUOTE + foreign_schema + QUOTE + " ");
+            "import foreign schema " + QUOTE + foreignSchema + QUOTE + " ");
      
         // if there is filtering
-        if (!((table_list == null) && (table_pattern == null))) {
+        if (!((tableList == null) && (tablePattern == null))) {
             if (exclude) {
                 importSql.append("except ");
             } else {
                 importSql.append("limit to ");
             }
             
-            if (table_list != null) {
+            if (tableList != null) {
                 // remove all spaces in table list
                 // this means we can't have table names with spaces
-                table_list = table_list.replaceAll("\\s*", "");
+                tableList = tableList.replaceAll("\\s*", "");
                 importSql.append(
                     "(" + QUOTE
-                    + table_list.replaceAll(",", QUOTE + "," + QUOTE)
+                    + tableList.replaceAll(",", QUOTE + "," + QUOTE)
                     + QUOTE
                     + ") ");
             } else {
                 importSql.append(
-                    "table_name like '" + table_pattern
+                    "table_name like '" + tablePattern
                     + "' ");
             }
         }
         importSql.append(
-            "from server " + QUOTE + foreign_server + QUOTE + " into "
+            "from server " + QUOTE + foreignServer + QUOTE + " into "
             + QUOTE + tempSchema + QUOTE);
-
+        
         return importSql.toString();
+    }
+
+    /**
+     * Checks the column names passed in are valid for a table; last modified 
+     * column for incremental export and id column for merge export
+     * 
+     * @return export type to attempt, same as the export type passed in if
+     * column exists, full export otherwise
+     */
+    private static int checkColumnName(int expType, String catalog, 
+        String schema, String incrCatalog, String incrSchema, String tableName,
+        String columnName, Connection conn)
+        throws SQLException
+    {
+        ResultSet rs;
+        int exportType = expType;
+
+        switch (expType) {
+        case FULL_EXPORT:
+            // does nothing, export type doesn't change for full export
+            break;
+        case INCR_EXPORT:
+            rs = conn.getMetaData().getColumns(
+                catalog,
+                schema,
+                tableName,
+                columnName);
+            if (rs.next() == false) {
+                // last modified column doesn't exist in table
+                exportType = FULL_EXPORT;
+            }
+            rs.close();
+            break;
+        case MERGE_EXPORT:
+            rs = conn.getMetaData().getColumns(
+                catalog,
+                schema,
+                tableName,
+                columnName);
+            if (rs.next() == false) {
+                // id column doesn't exist in first table
+                rs.close();
+                throw new SQLException("ID column not found in table: " 
+                    + "catalog=" + catalog + ",schema=" + schema + ",table="
+                    + tableName + ",column=" + columnName);
+            }
+            rs.close();
+            // Merge export does a column check for the 2nd table
+            rs = conn.getMetaData().getColumns(
+                incrCatalog,
+                incrSchema,
+                tableName,
+                columnName);
+            if (rs.next() == false) {
+                // id column doesn't exist in 2nd table
+                rs.close();
+                throw new SQLException("ID column not found in table: " 
+                    + "catalog=" + incrCatalog + ",schema=" + incrSchema 
+                    + ",table=" + tableName + ",column=" + columnName);
+            }
+            rs.close();
+            break;
+        default:
+            // should never get here
+            throw FarragoResource.instance().ExportSchemaInvalidExpType.ex(
+                String.valueOf(expType));
+        }
+
+        return exportType;
     }
 }
 

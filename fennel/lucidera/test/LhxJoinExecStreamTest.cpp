@@ -56,20 +56,46 @@ public:
     explicit LhxJoinExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testSequential);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
+
+/*
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testSequentialPartition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup1Partition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup2Partition);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testConstPartition);
+
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testSequentialPartitionFilter);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup1PartitionFilter);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup2PartitionFilter);
+
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testSequentialPartitionStat);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup1PartitionStat);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testDup2PartitionStat);
+        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
+            testConstPartitionStat);
+*/
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testSequentialPartitionFilterStat);
-
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup1);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testDup1PartitionFilterStat);
-
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testDup2);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testDup2PartitionFilterStat);
-
-        FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConst);
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,
             testConstPartitionFilterStat);
+
         FENNEL_UNIT_TEST_CASE(LhxJoinExecStreamTest,testConstCleanup);
     }
     
@@ -88,7 +114,7 @@ public:
      *  left:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
      * right:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      *
-     * result: 0, 0, 0, .. 1, 1, 1, .. 2, 2, 2, ..
+     * result: 0, 0, 0, 0, 0, 0, .. 1, 1, 1, 1, 1, 1, .. 2, 2, 2, 2, 2, 2, ..
      */
     void testDup1();
 
@@ -102,7 +128,7 @@ public:
      *  left:  0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
      * right:  0, 0  0, .. 1, 1, 1, .. 2, 2, 2, ..
      *
-     * result: 0, 0, .. 1, 1, .. 2, 2, .. 3, 3, ..
+     * result: 0, 0, 0, 0, 0, 0, .. 1, 1, 1, 1, 1, 1, .. 2, 2, 2, 2, 2, 2, ..
      */
     void testDup2();
 
@@ -427,6 +453,7 @@ void LhxJoinExecStreamTest::testImpl(
     joinParams.forcePartitionLevel = forcePartitionLevel;
     joinParams.enableJoinFilter = enableJoinFilter;
     joinParams.enableSubPartStat = enableSubPartStat;
+    joinParams.enableSwing = true;
 
     joinParams.outputProj = outputProj;
     joinParams.cndKeys = cndKeys;

@@ -125,7 +125,9 @@ public class SqlCallBinding
     public RelDataType getCursorOperand(int ordinal)
     {
         final SqlNode operand = call.operands[ordinal];
-        assert SqlUtil.isCallTo(operand, SqlStdOperatorTable.cursorConstructor) : operand;
+        if (!SqlUtil.isCallTo(operand, SqlStdOperatorTable.cursorConstructor)) {
+            return null;
+        }
         final SqlCall cursorCall = (SqlCall) operand;
         final SqlNode query = cursorCall.operands[0];
         return validator.deriveType(scope, query);

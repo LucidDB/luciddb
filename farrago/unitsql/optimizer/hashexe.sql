@@ -313,6 +313,21 @@ select * from lhxemps3 full outer join lhxemps4
 on lhxemps3.enameB = lhxemps4.enameC
 order by 1, 2;
 
+-- semi/anti join types
+explain plan for
+select * from lhxemps3 intersect select * from lhxemps4
+order by 1;
+
+select * from lhxemps3 intersect select * from lhxemps4
+order by 1;
+
+explain plan for
+select * from lhxemps3 except select * from lhxemps4
+order by 1;
+
+select * from lhxemps3 except select * from lhxemps4
+order by 1;
+
 -- Use an explicit cast operator will make the joinkeys
 -- have same data types. HashJoin can be used.
 

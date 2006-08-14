@@ -917,6 +917,10 @@ public class FarragoDatabase
             codeCache.setMaxBytes(
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
+        
+        if (paramName.equals("cachePagesInit")) {
+            executeFennelSetParam(paramName, ddlStmt.getParamValue());
+        }
     }
 
     private long getCodeCacheMaxBytes(FemFarragoConfig config)
@@ -926,6 +930,26 @@ public class FarragoDatabase
             codeCacheMaxBytes = Long.MAX_VALUE;
         }
         return codeCacheMaxBytes;
+    }
+    
+    private void executeFennelSetParam(String paramName, SqlLiteral paramValue)
+    {
+        if (!systemRepos.isFennelEnabled()) {
+            return;
+        }
+
+        systemRepos.beginTransientTxn();
+        try {
+            FemCmdSetParam cmd = systemRepos.newFemCmdSetParam();
+            cmd.setDbHandle(fennelDbHandle.getFemDbHandle(systemRepos));
+            FemDatabaseParam param = systemRepos.newFemDatabaseParam();
+            param.setName(paramName);
+            param.setValue(paramValue.toString());
+            cmd.setParam(param);
+            fennelDbHandle.executeCmd(cmd);
+        } finally {
+            systemRepos.endTransientTxn();
+        }
     }
 
     public void requestCheckpoint(

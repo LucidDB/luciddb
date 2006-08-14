@@ -22,6 +22,8 @@
 */
 package net.sf.farrago.syslib;
 
+import java.io.*;
+
 import java.sql.*;
 
 import java.util.*;
@@ -30,6 +32,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
@@ -203,6 +206,30 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Exports the catalog repository contents as an XMI file.
+     *
+     * @param xmiFile name of file to create
+     */
+    public static void exportCatalog(String xmiFile)
+        throws Exception
+    {
+        xmiFile = FarragoProperties.instance().expandProperties(xmiFile);
+        File file = new File(xmiFile);
+        FarragoModelLoader modelLoader = getModelLoader();
+        FarragoReposUtil.exportExtent(
+            modelLoader.getMdrRepos(),
+            file,
+            "FarragoCatalog");
+    }
+
+    private static FarragoModelLoader getModelLoader()
+    {
+        FarragoSession callerSession = FarragoUdrRuntime.getSession();
+        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
+        return db.getSystemRepos().getModelLoader();
+    }
+
+    /**
      * Populates a table of properties of the current repository connection.
      *
      * @param resultInserter
@@ -212,9 +239,7 @@ public abstract class FarragoManagementUDR
     public static void repositoryProperties(PreparedStatement resultInserter)
         throws SQLException
     {
-        FarragoSession callerSession = FarragoUdrRuntime.getSession();
-        FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
-        FarragoModelLoader loader = db.getSystemRepos().getModelLoader();
+        FarragoModelLoader loader = getModelLoader();
         if (loader != null) {
             Properties props = loader.getStorageProperties();
             int i = 0;

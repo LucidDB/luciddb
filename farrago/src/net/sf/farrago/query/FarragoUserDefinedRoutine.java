@@ -30,6 +30,7 @@ import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
+import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.ojrex.*;
@@ -68,13 +69,15 @@ public class FarragoUserDefinedRoutine
 
     private final FemRoutine routine;
 
-    private final RelDataType returnType;
-
     private final FarragoSessionStmtValidator stmtValidator;
 
     private final FarragoPreparingStmt preparingStmt;
 
     private FemJar femJar;
+
+    // NOTE jvs 6-Aug-2006:  This is non-final because it may be expanded
+    // by UDX type derivation.
+    private RelDataType returnType;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -87,7 +90,11 @@ public class FarragoUserDefinedRoutine
     {
         super(
             FarragoCatalogUtil.getQualifiedName(routine),
-            new ExplicitReturnTypeInference(returnType),
+            FarragoCatalogUtil.isTableFunction(routine)
+            ? new TableFunctionReturnTypeInference(
+                returnType,
+                getRoutineParamNames(routine))
+            : new ExplicitReturnTypeInference(returnType),
             new ExplicitOperandTypeInference(paramTypes),
             new AssignableOperandTypeChecker(paramTypes),
             paramTypes,
@@ -106,6 +113,20 @@ public class FarragoUserDefinedRoutine
 
     //~ Methods ----------------------------------------------------------------
 
+    private static List<String> getRoutineParamNames(FemRoutine femRoutine)
+    {
+        List<String> list = new ArrayList<String>();
+        Iterator paramIter = femRoutine.getParameter().iterator();
+        while (paramIter.hasNext()) {
+            FemRoutineParameter param = (FemRoutineParameter) paramIter.next();
+            if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
+                continue;
+            }
+            list.add(param.getName());
+        }
+        return list;
+    }
+    
     public FarragoPreparingStmt getPreparingStmt()
     {
         return preparingStmt;
@@ -527,6 +548,15 @@ public class FarragoUserDefinedRoutine
     {
         return getFemRoutine().isDeterministic();
     }
+    
+    // override SqlOperator
+    public RelDataType inferReturnType(
+        SqlOperatorBinding opBinding)
+    {
+        returnType = super.inferReturnType(opBinding);
+        return returnType;
+    }
+    
 }
 
 // End FarragoUserDefinedRoutine.java

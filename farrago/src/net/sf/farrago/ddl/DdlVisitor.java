@@ -109,6 +109,11 @@ public class DdlVisitor
     }
 
     // visitor dispatch
+    public void visit(DdlReplaceCatalogStmt stmt)
+    {
+    }
+
+    // visitor dispatch
     public void visit(DdlSetSessionImplementationStmt stmt)
     {
     }

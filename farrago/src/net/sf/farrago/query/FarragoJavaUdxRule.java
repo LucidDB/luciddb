@@ -77,6 +77,7 @@ public class FarragoJavaUdxRule
                 callRel.getRowType(),
                 null,
                 RelOptUtil.clone(callRel.getInputs()));
+        javaTableFunctionRel.setColumnMappings(callRel.getColumnMappings());
         call.transformTo(javaTableFunctionRel);
     }
 }

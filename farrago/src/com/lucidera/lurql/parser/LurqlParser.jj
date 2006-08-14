@@ -369,9 +369,16 @@ LurqlRecurse Recurse() :
 {
     LurqlPathSpec pathSpec;
     LurqlPathSpec thenSpec = null;
+    // TODO jvs 4-Aug-2006:  acceptance of path-spec-with-gather without
+    // enclosing parens is for backwards compatibility; eliminate it after
+    // a while
 }
 {
-    <RECURSIVELY> pathSpec = PathSpec()
+    <RECURSIVELY>
+    (
+        LOOKAHEAD(2) (pathSpec = PathSpec())
+        | (<LPAREN> pathSpec = PathSpec() <RPAREN>)
+    )
     [
         <THEN> thenSpec = PathSpec()
     ]

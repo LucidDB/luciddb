@@ -107,6 +107,12 @@ public:
     virtual void setAllocatedPageCount(uint nMemPages) = 0;
 
     /**
+     * @return maximum number of pages that can be allocated; i.e., the value
+     * of the cachePagesMax parameter
+     */
+    virtual uint getMaxAllocatedPageCount() = 0;
+
+    /**
      * Gets a count of how many pages currently have allocated buffers.
      *
      * @return the current count

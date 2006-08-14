@@ -133,3 +133,8 @@ drop schema rngtest cascade;
 
 -- verify that SELECT DISTINCT is working again
 select distinct empno from sales.emps order by empno;
+
+-- last thing we do is to prepare for a restore of pre-upgrade catalog contents
+-- NOTE:  this will shut down the system, so don't add any commands
+-- after it
+alter system replace catalog;

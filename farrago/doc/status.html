@@ -153,7 +153,9 @@ type references.</li>
 individually.
 
 <li>ALTER SYSTEM SET "parameterName" = value; change a system
-parameter (TODO: documentation for parameters).
+parameter (see <a
+href="http://wiki.eigenbase.org/FarragoSystemParameters">documentation
+for all parameters</a>).
 
 <li>CHECKPOINT:  force an immediate checkpoint.
 
@@ -170,6 +172,10 @@ to savepoint x.
 ALTER SYSTEM ADD CATALOG JAR and ALTER SESSION IMPLEMENTATION {SET|ADD} JAR</a>:
 Farrago-specific mechanisms for system extensibility
 
+<li>
+ALTER SYSTEM REPLACE CATALOG:
+Farrago-specific catalog upgrade mechanism
+
 </ul>
 
 <h2>Queries</h2>
@@ -182,7 +188,7 @@ Farrago-specific mechanisms for system extensibility
 
 <li>FROM clause may contain tables, views, multi-row VALUES,
 LEFT/RIGHT/INNER/CROSS JOIN, old-style comma list, nested queries,
-and explicit TABLE references.
+UDX invocations, and explicit TABLE references.
 
 <li>EXPLAIN PLAN [ { EXCLUDING | INCLUDING [ ALL ] } ATTRIBUTES ]
 [{WITH|WITHOUT} IMPLEMENTATION] [AS XML] FOR
@@ -207,6 +213,8 @@ additional attributes such as cost.
 <li>UPDATE
 
 <li>DELETE
+
+<li>MERGE (FTRS support not yet available)
 
 <li>CALL
 
@@ -304,8 +312,7 @@ features listed above:
 invalid request will result in ugly internal errors, printer
 spontaneous combustion, etc.
 
-<li>ORDER BY descending is not supported (nor is the non-standard
-ORDER BY a+b).
+<li>ORDER BY descending is not supported (but ORDER BY expression is).
 
 <li>Subqueries and IN predicates are parsed and maybe validated but
 don't actually work yet.  Same for INTERSECT and EXCEPT.

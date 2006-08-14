@@ -186,7 +186,7 @@ public abstract class FarragoReposUtil
         }
     }
 
-    private static void exportExtent(
+    public static void exportExtent(
         MDRepository mdrRepos,
         File file,
         String extentName)

@@ -33,6 +33,7 @@ import org.eigenbase.util.*;
 
 import org.netbeans.api.xmi.*;
 import org.netbeans.lib.jmi.util.*;
+import org.netbeans.mdr.handlers.*;
 
 
 /**
@@ -466,9 +467,12 @@ public abstract class JmiObjUtil
     public static Class<? extends RefObject> getClassForRefClass(
         RefClass refClass)
     {
+        // NOTE jvs 8-Aug-2006:  default to MDR's classloader, otherwise
+        // we get visibility problems with generated MDR classes in
+        // some contexts
         return
             getClassForRefClass(
-                ClassLoader.getSystemClassLoader(),
+                BaseObjectHandler.getDefaultClassLoader(),
                 refClass,
                 false);
     }

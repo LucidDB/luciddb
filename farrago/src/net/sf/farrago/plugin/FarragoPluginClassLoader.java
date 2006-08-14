@@ -76,7 +76,9 @@ public class FarragoPluginClassLoader
 
     public FarragoPluginClassLoader()
     {
-        super(new URL[0]);
+        // NOTE jvs 8-Aug-2006:  use context classloader to make
+        // Farrago work correctly within a J2EE app server.
+        super(new URL[0], Thread.currentThread().getContextClassLoader());
         urlSet = new HashSet();
     }
 

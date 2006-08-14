@@ -229,9 +229,9 @@ public class FarragoStmtValidator
         CwmNamedColumnSet namedColumnSet,
         String columnName)
     {
-        CwmColumn column =
+        CwmColumn column = (CwmColumn)
             FarragoCatalogUtil.getModelElementByName(
-                (List<CwmColumn>) namedColumnSet.getFeature(),
+                (List) namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
             throw newPositionalError(

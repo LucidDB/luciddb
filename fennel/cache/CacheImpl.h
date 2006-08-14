@@ -465,6 +465,7 @@ public:
         CacheAllocator * = NULL);
     virtual void setAllocatedPageCount(uint nMemPages);
     virtual uint getAllocatedPageCount();
+    virtual uint getMaxAllocatedPageCount();
     virtual PageT *lockPage(
         BlockId blockId,LockMode lockMode,bool readIfUnmapped,
         MappedPageListener *pMappedPageListener,TxnId txnId);

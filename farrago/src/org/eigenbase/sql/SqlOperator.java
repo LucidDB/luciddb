@@ -31,6 +31,7 @@ import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
@@ -731,6 +732,15 @@ public abstract class SqlOperator
         for (int i = 0; i < operands.length; i++) {
             argHandler.visitChild(visitor, call, i, operands[i]);
         }
+    }
+
+    /**
+     * @return the return type inference strategy for this operator, or
+     * null if return type inference is implemented by a subclass override
+     */
+    public SqlReturnTypeInference getReturnTypeInference()
+    {
+        return returnTypeInference;
     }
 
     /**

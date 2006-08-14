@@ -57,6 +57,10 @@
     <text>Row size ({0,number,#} bytes) exceeds maximum ({1,number,#} bytes); row data:  {2}</text>
   </message>
 
+  <message id="440060" name="invalidParam">
+    <text>Invalid parameter setting.  Setting must be between {0} and {1}.</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

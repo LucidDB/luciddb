@@ -228,9 +228,27 @@ public abstract class DdlHandler
     {
         final FemAbstractTypedElement abstractElement =
             element.getModelElement();
-        SqlDataTypeSpec dataType =
-            (SqlDataTypeSpec) validator.getSqlDefinition(abstractElement);
 
+        Object typeObj = validator.getSqlDefinition(abstractElement);
+
+        // Special handling for cursor types
+        if (typeObj == null) {
+            if (element.getType().getName().equals("CURSOR")) {
+                // previously validated
+                return;
+            }
+        }
+        if (typeObj instanceof SqlIdentifier) {
+            SqlIdentifier id = (SqlIdentifier) typeObj;
+            assert (id.getSimple().equals("CURSOR"));
+            element.setType(
+                validator.getStmtValidator().findSqldataType(id));
+            element.setCollationName("");
+            element.setCharacterSetName("");
+            return;
+        }
+        
+        SqlDataTypeSpec dataType = (SqlDataTypeSpec) typeObj;
         if (dataType != null) {
             convertSqlToCatalogType(dataType, element);
 

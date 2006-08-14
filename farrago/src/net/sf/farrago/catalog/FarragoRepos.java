@@ -236,8 +236,6 @@ public interface FarragoRepos
      * @param tagName name of tag to create; if a tag with this name already
      * exists, it will be updated
      * @param tagValue value to set
-     *
-     * @deprecated use setTagAnnotationValue instead
      */
     public void setTagAnnotationValue(
         FemAnnotatedElement element,
@@ -251,8 +249,6 @@ public interface FarragoRepos
      * @param tagName name of tag to find
      *
      * @return tag value, or null if not found
-     *
-     * @deprecated use getTagAnnotationValue instead
      */
     public String getTagAnnotationValue(
         FemAnnotatedElement element,

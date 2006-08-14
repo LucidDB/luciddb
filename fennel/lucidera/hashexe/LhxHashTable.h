@@ -623,29 +623,61 @@ class LhxHashTable
      */
     bool aggData(PBuffer destKeyLoc, TupleData const &inputTuple);
 
-public:
     /**
-     * Initialize the hash table.
+     * Compute the number of slots required to hold "cndKeys" keys without
+     * significant collisions.
      *
-     * @param[in] partitionLevelInit recursive partitioning level
-     * @param[in] hashInfo
-     * @param[in] aggList pointer to list of agg computers.
+     * @param[in] cndKeys number of distinct keys
      *
+     * @return number of slots needed.
      */
-    void init(
-        uint partitionLevelInit,
-        LhxHashInfo const &hashInfo,
-        AggComputerList *aggList);
+    static inline uint slotsNeeded(double cndKeys);
+
+    /**
+     * Find location that stores the key node based on key cols.
+     *
+     * @param[in] inputTuple
+     * @param[in] inputKeyColsProj key columns from the inputTuple.
+     * @param[in] isProbing whether the hash table is being probed.
+     * @param[in] removeDuplicate
+     *
+     * @return the buffer which stored the address of the key
+     */
+    PBuffer findKeyLocation(
+        TupleData const &inputTuple,
+        TupleProjection const &inputKeyProj,
+        bool isProbing,
+        bool removeDuplicateProbe);
+public:
+
+    static const uint LhxHashTableMinPages = 2;
 
     /**
      * Initialize the hash table.
      *
      * @param[in] partitionLevelInit recursive partitioning level
      * @param[in] hashInfo
+     * @param[in] aggList pointer to list of agg computers.
+     * @param[in] buildInputIndex which input is the build side.
+     *
      */
     void init(
         uint partitionLevelInit,
-        LhxHashInfo const &hashInfo);
+        LhxHashInfo const &hashInfo,
+        AggComputerList *aggList,
+        uint buildInputIndex);
+
+    /**
+     * Initialize the hash table.
+     *
+     * @param[in] partitionLevelInit recursive partitioning level
+     * @param[in] hashInfo
+     * @param[in] buildInputIndex which input is the build side.
+     */
+    void init(
+        uint partitionLevelInit,
+        LhxHashInfo const &hashInfo,
+        uint buildInputIndex);
 
     /**
      * Allocate blocks to hold the number of slots needed for this hash table.
@@ -666,74 +698,18 @@ public:
     void releaseResources(bool reuse=false);
 
     /**
-     * Compute the number of slots required to hold "cndKeys" keys without
-     * significant collisions.
-     *
-     * @param[in] cndKeys number of distinct keys
-     *
-     * @return number of slots needed.
-     */
-    uint slotsNeeded(double cndKeys);
-
-    /**
-     * Compute the number of bytes required by the hash table and its contents
-     * for "nRows" rows with "cndKeys" distinct key values, for the specified
-     * key(aggs included) and data descriptions.
-     *
-     * @param[in] numRows
-     * @param[in] cndKeys
-     * @param[in] keyDesc shape of key and agg cols
-     * @param[in] dataDesc shape of data cols
-     *
-     * @return bytes required
-     */
-    uint bytesNeeded(
-        double numRows,
-        double cndKeys,
-        TupleDescriptor &keyDesc,
-        TupleDescriptor &dataDesc);
-    
-    /**
-     * Compute the number of blocks required by the hash table and its contents
-     * for "nRows" rows with "cndKeys" distinct key values, for the specified
-     * key(aggs included) and data descriptions.
-     *
-     * @param[in] numRows
-     * @param[in] cndKeys
-     * @param[in] keyDesc shape of key and agg cols
-     * @param[in] dataDesc shape of data cols
-     * @params[in] is specified indicate the usable page size.
-     *
-     * @return blocks required
-     */
-    uint blocksNeeded(
-        double numRows,
-        double cndKeys,
-        TupleDescriptor &keyDesc,
-        TupleDescriptor &dataDesc,
-        uint usablePageSize = 0);
-
-    /**
      * Compute the number of blocks and slots required by the hash table and
      * its contents for "nRows" rows with "cndKeys" distinct key values, for
      * the specified key(aggs included) and data descriptions.
      *
-     * @param[in] numRows
-     * @param[in] cndKeys
-     * @param[in] keyDesc shape of key and agg cols
-     * @param[in] dataDesc shape of data cols
-     * @param[in] usablePageSize indicate the usable page size.
-     * @param[in] cacheBlocksLimit maximum number of blocks in the cache.
+     * @param[in] hashInfo
+     * @param[in] inputIndex which input is the the hash table building on
      *
      * @param[out] numBlocks max number of blocks for this hash table.
      */
     void calculateSize(
-        double numRows,
-        double cndKeys,
-        TupleDescriptor &keyDesc,
-        TupleDescriptor &dataDesc,
-        uint usablePageSizeInit,
-        uint cacheBlocksLimit,
+        LhxHashInfo const &hashInfo,
+        uint inputIndex,
         uint &numBlocks);
 
     /**
@@ -751,35 +727,17 @@ public:
         uint numBlocks);
     
     /**
-     * Find location that stores the key node based on key cols.
-     *
-     * @param[in] inputTuple
-     * @param[in] keyColsProj key columns from the inputTuple.
-     * @param[in] isProbing whether the hash table is being probed.
-     * @param[in] removeDuplicate
-     *
-     * @return the buffer which stored the address of the key
-     */
-    PBuffer findKeyLocation(
-        TupleData const &inputTuple,
-        TupleProjection const &keyColsProj,
-        bool isProbing,
-        bool removeDuplicateProbe);
-
-    /**
      * Find key node based on key cols.
      *
      * @param[in] inputTuple
      * @param[in] keyColsProj key columns from the inputTuple.
-     * @param[in] filterNull
-     * @param[in] removeDuplicate
+     * @param[in] removeDuplicateProbe
      *
      * @return the buffer which stored the address of the key
      */
     PBuffer findKey(
         TupleData const &inputTuple,
-        TupleProjection const &keyColsProj,
-        bool filterNullProbe,
+        TupleProjection const &inputKeyProj,
         bool removeDuplicateProbe);
 
     /**
@@ -908,10 +866,12 @@ public:
      *
      * @param[in] hashTableInit the underlying hash table to read from
      * @param[in] hashInfo
+     * @param[in] buildInputIndex which input is the build side.
      */
     void init(
         LhxHashTable *hashTableInit,
-        LhxHashInfo const &hashInfo);
+        LhxHashInfo const &hashInfo,
+        uint buildInputIndex);
 
     /**
      * Bind this reader to a certain key. Only tuples with the same key are

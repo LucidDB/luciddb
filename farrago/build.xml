@@ -470,6 +470,8 @@ require version '${required.ant.version}'."/>
       extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
+    <!-- TODO jvs 13-Aug-2006:  Enable this once all dependencies fixed.  -->
+    <!-- farrago.uncommentGenerics javadir="${farrago.catalog.src.dir}"/ -->
     <farrago.javaCompile
       srcdir="${farrago.catalog.src.dir}"
       destdir="${farrago.catalog.src.dir}"
@@ -940,10 +942,32 @@ please disable it and try again.
 
   <!-- NOTE:  these have to run forked in specific order -->
   <target name="testRngPlugin">
+    <delete dir="${farrago.dir}/testgen/upgrade" quiet="true"/>
+    <mkdir dir="${farrago.dir}/testgen/upgrade/backup"/>
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/rng/unitsql/createPreUpgrade.sql"/>
+    <!-- backup pre-upgrade catalog -->
+    <farrago.backupCatalog backupDir="${farrago.dir}/testgen/upgrade/backup"/>
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/installPlugin.sql"/>
     <farrago.runSqlTest
       file="${farrago.dir}/examples/rng/unitsql/testPlugin.sql"/>
+    <!-- restore from pre-upgrade catalog -->
+    <delete quiet="true">
+      <fileset dir="${farrago.catalog.dir}" 
+        includes="*.dat,FarragoCatalogDump.xmi"/>
+    </delete>
+    <copy todir="${farrago.catalog.dir}">
+      <fileset dir="${farrago.dir}/testgen/upgrade/backup"
+        includes="*.dat"/>
+    </copy>
+    <copy todir="${farrago.catalog.dir}">
+      <fileset dir="${farrago.dir}/testgen/upgrade"
+        includes="FarragoCatalogDump.xmi"/>
+    </copy>
+    <!-- this will import pre-upgrade catalog contents -->
+    <farrago.runSqlTest
+      file="${farrago.dir}/examples/rng/unitsql/verifyReplaceCatalog.sql"/>
   </target>
 
   <target name="testCleanup">

@@ -34,6 +34,7 @@ FennelExcn.cpp \
 FennelResource.cpp \
 FileSystem.cpp \
 FileStatsTarget.cpp \
+InvalidParamExcn.cpp \
 Locale.cpp \
 Memory.cpp \
 PseudoUuid.cpp \
