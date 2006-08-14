@@ -62,7 +62,7 @@ public abstract class DdlGenerator
         if (schemaName != null) {
             StringBuilder sb = new StringBuilder();
             sb.append("SET SCHEMA ");
-            sb.append(DdlGenerator.literal(schemaName));
+            sb.append(DdlGenerator.literal(quote(schemaName)));
             stmt.addStmt(sb.toString());
         }
     }
