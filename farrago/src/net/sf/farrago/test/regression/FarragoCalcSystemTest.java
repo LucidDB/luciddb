@@ -292,7 +292,7 @@ public class FarragoCalcSystemTest
         public static final VirtualMachine Auto = new VirtualMachine("AUTO");
         private final String name;
 
-        private VirtualMachine(String name)
+        public VirtualMachine(String name)
         {
             this.name = name;
         }

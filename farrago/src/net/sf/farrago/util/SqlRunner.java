@@ -45,7 +45,6 @@ public class SqlRunner
     //~ Static fields/initializers ---------------------------------------------
 
     private static SqlRunner singleton = null;
-    private static final String JDBC_DRIVER = "com.sqlstream.jdbc.Driver";
 
     protected static Logger logger =
         Logger.getLogger(SqlRunner.class.getName());
@@ -54,11 +53,6 @@ public class SqlRunner
 
     static {
         quitStream = new ByteArrayInputStream("\n!quit\n".getBytes());
-        try { // register the driver class
-            Class.forName(JDBC_DRIVER); // $NON-NLS$
-        } catch (ClassNotFoundException e) {
-            logger.log(Level.SEVERE, "Error invoking JDBC driver class", e);
-        }
     }
 
     //~ Constructors -----------------------------------------------------------

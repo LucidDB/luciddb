@@ -23,7 +23,6 @@
 package org.eigenbase.sql;
 
 import java.sql.*;
-
 import java.util.regex.*;
 
 import org.eigenbase.util.*;
@@ -35,13 +34,12 @@ import org.eigenbase.util.*;
  */
 public class SqlDialect
 {
-
-    //~ Instance fields --------------------------------------------------------
+    //~ Instance fields -------------------------------------------------------
 
     String databaseProductName;
     String identifierQuoteString;
 
-    //~ Constructors -----------------------------------------------------------
+    //~ Constructors ----------------------------------------------------------
 
     /**
      * Creates a <code>SqlDialect</code>
@@ -67,7 +65,7 @@ public class SqlDialect
         }
     }
 
-    //~ Methods ----------------------------------------------------------------
+    //~ Methods ---------------------------------------------------------------
 
     public boolean isAccess()
     {
@@ -121,7 +119,9 @@ public class SqlDialect
      *
      * @return The buffer
      */
-    public StringBuffer quoteIdentifier(StringBuffer buf, String val)
+    public StringBuffer quoteIdentifier(
+        StringBuffer buf,
+        String val)
     {
         if (identifierQuoteString == null) {
             buf.append(val); // quoting is not supported
@@ -154,6 +154,25 @@ public class SqlDialect
         return "'" + val + "'";
     }
 
+    /**
+     * Converts a string literal back into a string. For example, <code>'can''t
+     * run'</code> becomes <code>can't run</code>.
+     */
+    public String unquoteStringLiteral(String val)
+    {
+        if ((val != null) && (val.charAt(0) == '\'')
+                && (val.charAt(val.length() - 1) == '\'')) {
+            if (val.length() > 2) {
+                val = Util.replace(val, "''", "'");
+                return val.substring(1, val.length() - 1);
+            } else {
+                // zero length string
+                return "";
+            }
+        }
+        return val;
+    }
+
     protected boolean allowsAs()
     {
         return !isOracle();
@@ -165,5 +184,4 @@ public class SqlDialect
         return isPostgres();
     }
 }
-
 // End SqlDialect.java

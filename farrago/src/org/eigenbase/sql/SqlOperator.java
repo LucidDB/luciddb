@@ -395,6 +395,9 @@ public abstract class SqlOperator
         if (!(obj instanceof SqlOperator)) {
             return false;
         }
+        if (!obj.getClass().equals(this.getClass())) {
+            return false;
+        }
         SqlOperator other = (SqlOperator) obj;
         return name.equals(other.name) && kind.equals(other.kind);
     }
