@@ -362,3 +362,29 @@ language java
 deterministic
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
+
+-- Flatten hierarchical data
+create function applib.flatten(c cursor)
+returns table(
+    maxdepth integer,
+    multipath boolean,
+    level1 varchar(65535),
+    level2 varchar(65535),
+    level3 varchar(65535),
+    level4 varchar(65535),
+    level5 varchar(65535),
+    level6 varchar(65535),
+    level7 varchar(65535),
+    level8 varchar(65535),
+    level9 varchar(65535),
+    level10 varchar(65535),
+    level11 varchar(65535),
+    level12 varchar(65535),
+    level13 varchar(65535),
+    level14 varchar(65535),
+    level15 varchar(65535))
+
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.Flatten.execute';
