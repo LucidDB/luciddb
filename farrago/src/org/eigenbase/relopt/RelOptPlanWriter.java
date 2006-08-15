@@ -53,7 +53,7 @@ public class RelOptPlanWriter
 
     public RelOptPlanWriter(java.io.PrintWriter pw)
     {
-        this(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
+        this(pw, SqlExplainLevel.EXPPLAN_ATTRIBUTES);
     }
 
     public RelOptPlanWriter(

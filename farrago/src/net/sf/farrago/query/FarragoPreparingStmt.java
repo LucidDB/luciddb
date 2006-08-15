@@ -656,7 +656,7 @@ public class FarragoPreparingStmt
                     "Plan before flattening",
                     rootRel,
                     false,
-                    SqlExplainLevel.DIGEST_ATTRIBUTES));
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));
         }
         originalRowType = rowType;
         rootRel = flattenTypes(rootRel, true);
@@ -666,7 +666,7 @@ public class FarragoPreparingStmt
                     "Plan after flattening",
                     rootRel,
                     false,
-                    SqlExplainLevel.DIGEST_ATTRIBUTES));
+                    SqlExplainLevel.EXPPLAN_ATTRIBUTES));
         }
 
         // Now that all plugins have been seen (flattening above expanded

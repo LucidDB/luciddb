@@ -27,6 +27,7 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -259,7 +260,7 @@ public class RexProgram
         List termList = new ArrayList();
         List valueList = new ArrayList();
         termList.add("child");
-        collectExplainTerms("", termList, valueList);
+        collectExplainTerms("", termList, valueList, pw.getDetailLevel());
         String [] terms =
             (String []) termList.toArray(new String[termList.size()]);
         Object [] values =
@@ -271,6 +272,15 @@ public class RexProgram
         pw.explain(rel, terms, values);
     }
 
+    public void collectExplainTerms(
+        String prefix,
+        List termList,
+        List valueList)
+    {
+        collectExplainTerms(prefix, termList, valueList, 
+            SqlExplainLevel.EXPPLAN_ATTRIBUTES);
+    }
+    
     /**
      * Collects the expressions in this program into a list of terms and values.
      *
@@ -282,7 +292,8 @@ public class RexProgram
     public void collectExplainTerms(
         String prefix,
         List termList,
-        List valueList)
+        List valueList,
+        SqlExplainLevel level)
     {
         final RelDataTypeField [] inFields = inputRowType.getFields();
         final RelDataTypeField [] outFields = outputRowType.getFields();
@@ -300,7 +311,14 @@ public class RexProgram
 
         // If a lot of the fields are simply projections of the underlying
         // expression, try to be a bit less verbose.
-        int trivialCount = countTrivial(projects);
+        int trivialCount = 0;
+        
+        // Do not use the trivialCount optimization if computing digest for the optimizer
+        // (as opposed to doing an explain plan).
+        if (level != SqlExplainLevel.DIGEST_ATTRIBUTES) {
+            trivialCount = countTrivial(projects);
+        }
+        
         switch (trivialCount) {
         case 0:
             break;

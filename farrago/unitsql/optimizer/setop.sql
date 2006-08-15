@@ -130,6 +130,18 @@ intersect select ename1, ename1 from emps1 order by 1;
 select ename1, ename1 from emps1 except select ename2, ename2 from emps2
 intersect select ename1, ename1 from emps1 order by 1;
 
+-------------------------------------------------------
+-- http://jirahost.eigenbase.org:8081/browse/FRG-182 --
+-------------------------------------------------------
+create table s1 (a int, b int);
+create table s2 (a int, bb int);
+
+explain plan without implementation for
+select * from s1 union all (select * from s2 where a = 1);
+
+-- make sure this does not fail during physical plan generation
+explain plan for select * from s1 union all (select * from s2 where a = 1);
+
 --------------
 -- Clean up --
 --------------

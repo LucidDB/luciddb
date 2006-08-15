@@ -133,8 +133,8 @@ public class SqlExplain
         switch (getDetailLevel()) {
         case NO_ATTRIBUTES:
             writer.keyword("EXCLUDING ATTRIBUTES");
-            break;
-        case DIGEST_ATTRIBUTES:
+            break;  
+        case EXPPLAN_ATTRIBUTES:
             writer.keyword("INCLUDING ATTRIBUTES");
             break;
         case ALL_ATTRIBUTES:
