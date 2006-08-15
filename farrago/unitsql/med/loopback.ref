@@ -1,0 +1,96 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test SQL/MED loopback link support
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a server which will loop back to the default catalog (localdb)
+0: jdbc:farrago:> create server loopback_localdb
+. . . . . . . . > foreign data wrapper sys_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver',
+. . . . . . . . >     url 'jdbc:farrago:',
+. . . . . . . . >     user_name 'sa');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- create a server which will loop back to a specific catalog (sys_boot)
+0: jdbc:farrago:> create server loopback_sys_boot
+. . . . . . . . > foreign data wrapper sys_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     driver_class 'net.sf.farrago.jdbc.engine.FarragoJdbcEngineDriver',
+. . . . . . . . >     url 'jdbc:farrago:',
+. . . . . . . . >     user_name 'sa',
+. . . . . . . . >     qualifying_catalog_name 'SYS_BOOT');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test loopback queries
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from loopback_localdb.sales.depts order by deptno;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 10      | Sales      |
+| 20      | Marketing  |
+| 30      | Accounts   |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from loopback_sys_boot.jdbc_metadata.catalogs_view order by table_cat;
++-------------------------------+
+|           TABLE_CAT           |
++-------------------------------+
+| HSQLDB_DEMO                   |
+| LOCALDB                       |
+| LOOPBACK_LOCALDB              |
+| LOOPBACK_SYS_BOOT             |
+| SYS_BOOT                      |
+| SYS_COLUMN_STORE_DATA_SERVER  |
+| SYS_CWM                       |
+| SYS_FEM                       |
+| SYS_FTRS_DATA_SERVER          |
+| SYS_MOCK_DATA_SERVER          |
+| SYS_MOCK_FOREIGN_DATA_SERVER  |
+| SYS_MOF                       |
++-------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select emps.name as ename, depts.name as dname from 
+. . . . . . . . > loopback_localdb.sales.emps inner join loopback_localdb.sales.depts
+. . . . . . . . > on emps.deptno=depts.deptno
+. . . . . . . . > order by ename;
++--------+------------+
+| ENAME  |   DNAME    |
++--------+------------+
+| Eric   | Marketing  |
+| Fred   | Sales      |
+| Wilma  | Marketing  |
++--------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should fail due to non-existent table
+0: jdbc:farrago:> select * from loopback_localdb.sales.fudge order by deptno;
+Error: From line 1, column 15 to line 1, column 29: Table 'SALES.FUDGE' not found (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- verify loopback via EXPLAIN PLAN
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan excluding attributes for 
+. . . . . . . . > select * from loopback_localdb.sales.depts order by deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FtrsIndexScanRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan excluding attributes for
+. . . . . . . . > select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
+'column0'
+'IterCalcRel'
+'  MedMdrClassExtentRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan excluding attributes for
+. . . . . . . . > select emps.name as ename, depts.name as dname from 
+. . . . . . . . > loopback_localdb.sales.emps inner join loopback_localdb.sales.depts
+. . . . . . . . > on emps.deptno=depts.deptno
+. . . . . . . . > order by ename;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel'
+'    FennelCalcRel'
+'      FtrsIndexSearchRel'
+'        FtrsIndexScanRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit
