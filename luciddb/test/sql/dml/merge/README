@@ -1,0 +1,7 @@
+If running for the first time, mount //raksha so that
+/mnt/raksha/engineering/testdata/csv_BENCH on local machine exists.
+
+(See http://redsquare.jot.com/WikiHome/HomeDirectories
+for instructions on how to do this)
+
+Otherwise, if raksha is not available, a local copy of raksha's csv files will be used.
