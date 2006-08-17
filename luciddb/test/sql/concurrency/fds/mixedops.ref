@@ -1,0 +1,1964 @@
+-- setup
+-- end of setup
+
+-- thread cleanup
+> set schema 'local_schema';
+0 rows affected.
+> select count(*) from bench100;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 736                 |
++---------------------+
+
+> select count(*) from bench100 where "kseq">100;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 636                 |
++---------------------+
+
+> delete from bench100 where "kseq">100;
+636 rows affected.
+-- end of thread cleanup
+
+-- thread local1
+> set schema 'local_schema';
+0 rows affected.
+> insert into bench100("kseq","k2","k1k","k500k")
+> select 101,"k2","k1k","k500k" from ff_schema1."bench100" where "k2"=1
+> union all
+> select 102,"k2","k1k","k500k" from orcl_schema1."bench100" where "k2"=1
+> union all
+> select 103,"k2","k1k","k500k" from mssql_schema1."bench100" where "k2"=1
+> union all
+> select 104,"k2","k1k","k500k" from csv_schema1."bench100" where "k2"=1;
+212 rows affected.
+> delete from bench100
+> where "kseq">100 and
+> (("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3));
+0 rows affected.
+> insert into bench100("kseq","k2","k1k","k500k")
+> select 101,"k2","k1k","k500k" from ff_schema1."bench100" where "k2"=1
+> union all
+> select 102,"k2","k1k","k500k" from orcl_schema1."bench100" where "k2"=1
+> union all
+> select 103,"k2","k1k","k500k" from mssql_schema1."bench100" where "k2"=1
+> union all
+> select 104,"k2","k1k","k500k" from csv_schema1."bench100" where "k2"=1;
+212 rows affected.
+> delete from bench100
+> where "kseq">100 and
+> (("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3));
+0 rows affected.
+> insert into bench100("kseq","k2","k1k","k500k")
+> select 101,"k2","k1k","k500k" from ff_schema1."bench100" where "k2"=1
+> union all
+> select 102,"k2","k1k","k500k" from orcl_schema1."bench100" where "k2"=1
+> union all
+> select 103,"k2","k1k","k500k" from mssql_schema1."bench100" where "k2"=1
+> union all
+> select 104,"k2","k1k","k500k" from csv_schema1."bench100" where "k2"=1;
+212 rows affected.
+> delete from bench100
+> where "kseq">100 and
+> (("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3));
+0 rows affected.
+-- end of thread local1
+
+-- thread flatfile1
+> set schema 'ff_schema1';
+0 rows affected.
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread flatfile1
+
+-- thread flatfile1direct
+> select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from ff_server."BCP"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread flatfile1direct
+
+-- thread csv1
+> set schema 'csv_schema1';
+0 rows affected.
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread csv1
+
+-- thread csv1direct
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or
+> cast("k100" as bigint)=1 or
+> cast("k2" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and
+> cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100"
+> where (cast("k100" as bigint) = 1) or
+> (cast("k500k" as bigint) < 1) or
+> (cast("k2" as bigint) is null) or
+> (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or
+> cast("k100" as bigint)=1 or
+> cast("k2" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and
+> cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100"
+> where (cast("k100" as bigint) = 1) or
+> (cast("k500k" as bigint) < 1) or
+> (cast("k2" as bigint) is null) or
+> (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or
+> cast("k100" as bigint)=1 or
+> cast("k2" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and
+> cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100"
+> where (cast("k100" as bigint) = 1) or
+> (cast("k500k" as bigint) < 1) or
+> (cast("k2" as bigint) is null) or
+> (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or
+> cast("k100" as bigint)=1 or
+> cast("k2" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and
+> cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100"
+> where (cast("k100" as bigint) = 1) or
+> (cast("k500k" as bigint) < 1) or
+> (cast("k2" as bigint) is null) or
+> (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or
+> cast("k100" as bigint)=1 or
+> cast("k2" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and
+> cast("k500k" as bigint)=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from csv_server.testdata."bench100"
+> where (cast("k100" as bigint) = 1) or
+> (cast("k500k" as bigint) < 1) or
+> (cast("k2" as bigint) is null) or
+> (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread csv1direct
+
+-- thread oracle1
+> set schema 'orcl_schema1';
+0 rows affected.
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread oracle1
+
+-- thread oracle1direct
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from orcl_server."SCHOI"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread oracle1direct
+
+-- thread sqlserver1
+> set schema 'mssql_schema1';
+0 rows affected.
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from "bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from "bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from "bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread sqlserver1
+
+-- thread sqlserver1direct
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 53                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 49                  |
++---------------------+
+
+> select count(*) from mssql_server."dbo"."bench100"
+> where ("k100" = 1) or
+> ("k500k" < 1) or
+> ("k2" is null) or
+> ("k2" + "k4" < 3);
++---------------------+
+| EXPR$0              |
++---------------------+
+| 13                  |
++---------------------+
+
+-- end of thread sqlserver1direct
+

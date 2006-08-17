@@ -1,0 +1,42 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+@end
+
+
+
+@thread reader1
+  set schema 's';
+
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k2"=1;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader2
+  set schema 's';
+
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k100"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader3
+  set schema 's';
+
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k500k"=1;
+  @end
+
+@end

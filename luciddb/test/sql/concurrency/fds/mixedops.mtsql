@@ -1,0 +1,249 @@
+@nolockstep
+
+@setup
+--
+-- tests concurrent reading from fds and local
+-- uses tables created in creforeigntbl.mtsql
+--
+-- Notes: commented out parts cause deadlocks; LDB-118 may fix them
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread cleanup
+  set schema 'local_schema';
+  @sync
+  @sync
+
+  -- query local tables
+  select count(*) from bench100;
+  select count(*) from bench100 where "kseq">100;
+  delete from bench100 where "kseq">100;
+
+  -- query newly created tables
+--  select count(*) from ff_schema11."bench100";
+--  select count(*) from orcl_schema11."bench100";
+--  select count(*) from mssql_schema11."bench100";
+
+  -- drop created schema
+--  drop schema ff_schema11 cascade;
+--  drop schema orcl_schema11 cascade;
+--  drop schema mssql_schema11 cascade;
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread local1
+  set schema 'local_schema';
+
+  @sync
+  @repeat 3
+    insert into bench100("kseq","k2","k1k","k500k")
+    select 101,"k2","k1k","k500k" from ff_schema1."bench100" where "k2"=1
+    union all
+    select 102,"k2","k1k","k500k" from orcl_schema1."bench100" where "k2"=1
+    union all
+    select 103,"k2","k1k","k500k" from mssql_schema1."bench100" where "k2"=1
+    union all
+    select 104,"k2","k1k","k500k" from csv_schema1."bench100" where "k2"=1;
+
+    delete from bench100 
+    where "kseq">100 and
+      (("k100" = 1) or 
+       ("k500k" < 1) or 
+       ("k2" is null) or
+       ("k2" + "k4" < 3));
+
+  @end
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread flatfile1
+  set schema 'ff_schema1';
+
+  @sync
+
+--  create schema ff_schema11;
+--  import foreign schema "BCP" 
+--  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+--  from server ff_server into ff_schema11;  
+
+  @repeat 5
+    select count(*) from "bench100" where "kseq"=1;
+    select count(*) from "bench100" where "k500k"=1;
+    select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from "bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from "bench100" where "kseq"<50;
+    select count(*) from "bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread flatfile1direct
+
+  @sync
+  @repeat 5
+    select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
+    select count(*) from ff_server."BCP"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread csv1
+  set schema 'csv_schema1';
+
+  @sync
+  @repeat 5
+    select count(*) from "bench100" where "kseq"=1;
+    select count(*) from "bench100" where "k500k"=1;
+    select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from "bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from "bench100" where "kseq"<50;
+    select count(*) from "bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread csv1direct
+
+  @sync
+  @repeat 5
+    select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or 
+                                                              cast("k100" as bigint)=1 or 
+                                                              cast("k2" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and 
+                                                              cast("k500k" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
+    select count(*) from csv_server.testdata."bench100"
+    where (cast("k100" as bigint) = 1) or 
+          (cast("k500k" as bigint) < 1) or 
+          (cast("k2" as bigint) is null) or
+          (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
+  @end
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread oracle1
+  set schema 'orcl_schema1';
+
+  @sync
+
+--  create schema orcl_schema11;
+--  import foreign schema "SCHOI" 
+--  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+--  from server orcl_server into orcl_schema11;
+
+  @repeat 5
+    select count(*) from "bench100" where "kseq"=1;
+    select count(*) from "bench100" where "k500k"=1;
+    select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from "bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from "bench100" where "kseq"<50;
+    select count(*) from "bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread oracle1direct
+
+  @sync
+  @repeat 5
+    select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
+    select count(*) from orcl_server."SCHOI"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread sqlserver1
+  set schema 'mssql_schema1';
+
+  @sync
+
+  @repeat 5
+    select count(*) from "bench100" where "kseq"=1;
+    select count(*) from "bench100" where "k500k"=1;
+    select count(*) from "bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from "bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from "bench100" where "kseq"<50;
+    select count(*) from "bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+
+--  create schema mssql_schema11;
+--  import foreign schema "dbo" 
+--  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+--  from server mssql_server into mssql_schema11;
+
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread sqlserver1direct
+
+  @sync
+  @repeat 5
+    select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
+    select count(*) from mssql_server."dbo"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+  @sync
+@end

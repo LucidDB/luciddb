@@ -1,0 +1,102 @@
+0: jdbc:luciddb:> create foreign data wrapper orcl_jdbc
+. . . . . . . . > library '/home/kvu/open/luciddb/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server orcl_server
+. . . . . . . . > foreign data wrapper orcl_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:oracle:thin:@akela.lucidera.com:1521:XE',
+. . . . . . . . >     user_name 'schoi',
+. . . . . . . . >     password 'schoi',
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     driver_class 'oracle.jdbc.driver.OracleDriver'
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> create foreign data wrapper mssql_jdbc
+. . . . . . . . > library '/home/kvu/open/luciddb/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server mssql_server
+. . . . . . . . > foreign data wrapper mssql_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:jtds:sqlserver://akela.lucidera.com:1433',
+. . . . . . . . >     user_name 'sa',
+. . . . . . . . >     password 'ketajo',
+. . . . . . . . > 
+. . . . . . . . >     qualifying_catalog_name 'BENCHMARK',
+. . . . . . . . >     table_types 'TABLE',
+. . . . . . . . >     driver_class 'net.sourceforge.jtds.jdbc.Driver'
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> create foreign data wrapper ff_jdbc
+. . . . . . . . > library 'class com.lucidera.farrago.namespace.flatfile.FlatFileDataWrapper'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server ff_server
+. . . . . . . . > foreign data wrapper ff_jdbc
+. . . . . . . . > options(
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     directory '/home/kvu/open/luciddb/test/sql/concurrency/csv-copy',
+. . . . . . . . >     file_extension '.csv',
+. . . . . . . . >     ctrl_file_extension '.bcp',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     line_delimiter '\n',
+. . . . . . . . >     quote_char '"',
+. . . . . . . . >     escape_char '',
+. . . . . . . . >     with_header 'yes',
+. . . . . . . . >     num_rows_scan '1'
+. . . . . . . . > );
+0: jdbc:luciddb:> create foreign data wrapper csv_jdbc
+. . . . . . . . > library '/home/kvu/open/luciddb/plugin/FarragoMedJdbc3p.jar'
+. . . . . . . . > language java;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server csv_server
+. . . . . . . . > foreign data wrapper csv_jdbc
+. . . . . . . . > options(
+. . . . . . . . >     url 'jdbc:relique:csv:/home/kvu/open/luciddb/test/sql/concurrency/csv-copy',
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     schema_name 'TESTDATA',
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . >     driver_class 'org.relique.jdbc.csv.CsvDriver'
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > 
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

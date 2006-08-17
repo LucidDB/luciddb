@@ -1,0 +1,68 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+  set schema 's';
+  create table t1k      ("kseq" bigint primary key,
+                         "k2" bigint,
+                         "k4" bigint,
+                         "k5" bigint,
+                         "k10" bigint,
+                         "k25" bigint,
+                         "k100" bigint,
+                         "k1k" bigint,
+                         "k10k" bigint,
+                         "k40k" bigint,
+                         "k100k" bigint,
+                         "k250k" bigint,
+                         "k500k" bigint);
+  insert into t1k select * from bench10k where "kseq"<=1000;
+@end
+
+-----------------------------------------------------------------------------
+@thread comp
+  set schema 's';
+  
+  @sync
+  @sync
+  @sync
+  @sync
+  drop index k2idx;
+  drop table t1k;
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w1
+  set schema 's';
+
+  @sync
+  @sync
+  @sleep 500
+  create index k2idx on t1k("k2");
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w2
+  set schema 's';
+
+  @sync
+  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+  select count(*) from t1k where "k2"=1;
+  @sync
+  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+  insert into t1k select * from t1k where "k2"=1;
+  select count(*) from t1k;
+  @sync
+  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+  select count(*) from t1k where "k2"=1;
+  @sync
+
+@end

@@ -38,6 +38,17 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${concurrency.dir}/testlog" />
 
+  <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
+  <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
+  
+  <!-- directory where sql is generated -->
+  <property name="gensql.dir" value="${concurrency.dir}/gen" />
+
+  <!-- directory of csv files -->
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csv.dir" value="${concurrency.dir}/csv" />
+  <property name="csv.copy.dir" value="${concurrency.dir}/csv-copy" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -47,15 +58,119 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="test">
+   <target name="gen-sql">
+    <filter token="open.dir" value="${open.dir}"/>
+    <filter token="csv.dir" value="${csv.copy.dir}"/>
+
+    <!-- generate config.properties file -->
+    <copy tofile="config.properties"
+      overwrite="true" filtering="true">
+      <fileset dir="${concurrency.dir}/fds">
+        <include name="prop.${prop.source}"/>
+      </fileset>
+      <filterset>
+        <filtersfile file="${concurrency.dir}/fds/prop.${prop.source}"/>
+      </filterset>
+    </copy>
+
+    <!-- generate all sql files -->
+    <copy todir="${gensql.dir}tmp" overwrite="true"
+      filtering="true">
+      <fileset dir="${concurrency.dir}/fds">
+        <include name="**/*.tmpl"/>
+      </fileset>
+      <mapper type="glob" from="*.tmpl" to="*"/>
+      <filterset>
+        <filtersfile file="config.properties"/>
+      </filterset>
+    </copy>
+
+    <concat destfile="${concurrency.dir}/fds/creserver.sql" append="true">
+      <fileset dir="${gensql.dir}tmp"/>
+      <filterchain>
+        <tokenfilter>
+          <replaceregex pattern="^.*. . >.*@.*@.*" replace=". . . . . . . . > " flags="s"/>
+          <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
+        </tokenfilter>
+      </filterchain>
+    </concat>
+
+    <delete dir="${gensql.dir}tmp" quiet="true"/> 
+
+
+  </target>
+  
+  <target name="gen-all-sql">
+    <available file="${concurrency.dir}/fds/creserver.sql" type="file"
+      property="sql.generated"/>
+    <if>
+      <isset property="sql.generated"/>
+      <then/>
+      <else>
+        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
+          param="prop.source"
+          target="gen-sql"/>
+      </else>
+    </if>
+  </target>
+  
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork 
       basedir="${concurrency.dir}" 
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
   
+  <target name="copy-csv">
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}" 
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}"/>
+        </sync>
+      </then>
+    </if>
+    <available file="${csv.dir}" type="dir"
+      property="csv.available"/>
+    <if>
+      <isset property="csv.available"/>
+      <then> 
+        <!-- sync csv.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${csv.dir}"/>
+        </sync>
+        <!-- copy bcp -->
+        <copy todir="${csv.copy.dir}" overwrite="true">
+           <fileset dir="${concurrency.dir}">
+            <include name="**/*.bcp"/>
+          </fileset>
+        </copy>
+      </then>
+      <else>
+        <echo message="!! NO CSV FILES !!"/>
+      </else>
+    </if>
+  </target>
+  
   <target name="clean">
+    <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
+    <delete dir="${csv.copy.dir}"/>
+    <delete file="${concurrency.dir}/fds/creserver.sql"/>
+  </target>
+
+  <target name="clean-csv">
+    <antcall target="clean"/>
+    <delete dir="${csv.dir}"/>
   </target>
 
 </project>

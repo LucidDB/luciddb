@@ -208,7 +208,6 @@ ${farrago.test.jvmargs}
           <exclude name="conv_types/**"/>
           <exclude name="numerics/build.xml"/>
           <exclude name="txn/build.xml"/>
-          <exclude name="concurrency/build.xml"/>
           <exclude name="udr/udx/**"/>
           <exclude name="udr/udf/**"/>
           <exclude name="VI/recovery/build.xml"/>

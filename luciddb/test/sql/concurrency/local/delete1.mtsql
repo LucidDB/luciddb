@@ -1,0 +1,59 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+-- use only 100 rows
+  set schema 's';
+  create table t100     ("kseq" bigint primary key,
+                         "k2" bigint,
+                         "k4" bigint,
+                         "k5" bigint,
+                         "k10" bigint,
+                         "k25" bigint,
+                         "k100" bigint,
+                         "k1k" bigint,
+                         "k10k" bigint,
+                         "k40k" bigint,
+                         "k100k" bigint,
+                         "k250k" bigint,
+                         "k500k" bigint);
+  insert into t100 select * from bench10k where "kseq"<=100;
+@end
+
+-----------------------------------------------------------------------------
+
+@thread comp
+  set schema 's';
+
+  @sync
+  select count(*) from t100;
+  @sync
+  @sync
+  select count(*) from t100;
+  drop table t100;
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w1
+  set schema 's';
+
+  @sync
+  @sync
+  delete from t100 where "kseq"=1+sys_boot.mgmt.sleep(2000);
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w2,w3,w4,w5,w6,w7,w8,w9,w10
+  set schema 's';
+
+  @sync
+  @sync
+  @sleep 500
+  @err delete from t100 where "kseq"=1;
+  @sync
+@end

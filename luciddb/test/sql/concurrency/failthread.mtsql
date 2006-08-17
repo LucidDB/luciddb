@@ -1,0 +1,48 @@
+@nolockstep
+
+
+@setup
+-- tests that a failed thread does not hold the lock
+
+  SET SCHEMA 'concurrency';
+  delete from t1;
+  delete from t2;
+
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+  delete from concurrency.t1;
+  delete from concurrency.t2;
+@end
+
+------------------------------------------------------------
+
+@thread fail
+  SET SCHEMA 'concurrency';
+  
+  @sync
+  insert into t1 values(1);
+  insert into t1 values(2);
+  @err insert into t1 values("this should fail");
+  @sync
+  @sync
+
+@end
+
+------------------------------------------------------------
+
+@thread w1
+  SET SCHEMA 'concurrency';
+  
+  @sync
+  @sync
+  insert into t1 values(3);
+  select * from t1;
+  @sync
+
+@end

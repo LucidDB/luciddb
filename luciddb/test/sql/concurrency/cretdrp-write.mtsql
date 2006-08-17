@@ -1,0 +1,218 @@
+@nolockstep
+
+
+@setup
+-- tests ddl vs read and write
+-- a part of thread w1 is commented out; fixed by LDB-118
+
+  SET SCHEMA 'concurrency';
+  delete from t1;
+  delete from t2;
+
+@end
+
+---------------------------------------------------------
+
+@thread cleanup
+  set schema 'concurrency';
+
+  @sync
+  @sync
+  select * from t1;
+  select * from t2;
+
+  delete from t1;
+  delete from t2;
+
+  select * from t11;
+  select * from t12;
+  select * from t13;
+  select * from t14;
+  select * from t15;
+  select * from t21;
+  select * from t22;
+  select * from t23;
+  select * from t24;
+  select * from t25;
+  select * from t31;
+  select * from t32;
+  select * from t33;
+  select * from t34;
+  select * from t35;
+  select * from t41;
+  select * from t42;
+  select * from t43;
+  select * from t44;
+  select * from t45;
+  select * from t51;
+  select * from t52;
+  select * from t53;
+  select * from t54;
+  select * from t55;
+
+  drop index t11idx;
+  drop index t12idx;
+  drop index t13idx;
+  drop index t14idx;
+  drop index t15idx;
+  drop index t21idx;
+  drop index t22idx;
+  drop index t23idx;
+  drop index t24idx;
+  drop index t25idx;
+  drop index t31idx;
+  drop index t32idx;
+  drop index t33idx;
+  drop index t34idx;
+  drop index t35idx;
+  drop index t41idx;
+  drop index t42idx;
+  drop index t43idx;
+  drop index t44idx;
+  drop index t45idx;
+  drop index t51idx;
+  drop index t52idx;
+  drop index t53idx;
+  drop index t54idx;
+  drop index t55idx;
+
+  drop table t11;
+  drop table t12;
+  drop table t13;
+  drop table t14;
+  drop table t15;
+  drop table t21;
+  drop table t22;
+  drop table t23;
+  drop table t24;
+  drop table t25;
+  drop table t31;
+  drop table t32;
+  drop table t33;
+  drop table t34;
+  drop table t35;
+  drop table t41;
+  drop table t42;
+  drop table t43;
+  drop table t44;
+  drop table t45;
+  drop table t51;
+  drop table t52;
+  drop table t53;
+  drop table t54;
+  drop table t55;
+
+@end
+
+---------------------------------------------------------
+
+@thread w1
+  set schema 'concurrency';
+  
+  @sync
+--  insert into t1 values (1),(2),(3);
+--  insert into t2 select * from t1;
+  @sync
+
+@end
+
+---------------------------------------------------------
+
+@thread ddl1
+  SET SCHEMA 'concurrency';
+
+  @sync
+  create table t11 (n integer);
+  create table t12 (n integer);
+  create table t13 (n integer);
+  create table t14 (n integer);  
+  create table t15 (n integer);
+  create index t11idx on t11(n);
+  create index t12idx on t12(n);
+  create index t13idx on t13(n);
+  create index t14idx on t14(n);
+  create index t15idx on t15(n);
+  @sync
+
+@end
+
+---------------------------------------------------------
+
+@thread ddl2
+  SET SCHEMA 'concurrency';
+
+  @sync
+  create table t21 (n integer);
+  create table t22 (n integer);
+  create table t23 (n integer);
+  create table t24 (n integer);  
+  create table t25 (n integer);
+  create index t21idx on t21(n);
+  create index t22idx on t22(n);
+  create index t23idx on t23(n);
+  create index t24idx on t24(n);
+  create index t25idx on t25(n);
+  @sync
+
+@end
+
+---------------------------------------------------------
+
+@thread ddl3
+  SET SCHEMA 'concurrency';
+
+  @sync
+  create table t31 (n integer);
+  create table t32 (n integer);
+  create table t33 (n integer);
+  create table t34 (n integer);  
+  create table t35 (n integer);
+  create index t31idx on t31(n);
+  create index t32idx on t32(n);
+  create index t33idx on t33(n);
+  create index t34idx on t34(n);
+  create index t35idx on t35(n);
+  @sync
+
+@end
+
+---------------------------------------------------------
+
+@thread ddl4
+  SET SCHEMA 'concurrency';
+
+  @sync
+  create table t41 (n integer);
+  create table t42 (n integer);
+  create table t43 (n integer);
+  create table t44 (n integer);  
+  create table t45 (n integer);
+  create index t41idx on t41(n);
+  create index t42idx on t42(n);
+  create index t43idx on t43(n);
+  create index t44idx on t44(n);
+  create index t45idx on t45(n);
+  @sync
+
+@end
+
+---------------------------------------------------------
+
+@thread ddl5
+  SET SCHEMA 'concurrency';
+
+  @sync
+  create table t51 (n integer);
+  create table t52 (n integer);
+  create table t53 (n integer);
+  create table t54 (n integer);  
+  create table t55 (n integer);
+  create index t51idx on t51(n);
+  create index t52idx on t52(n);
+  create index t53idx on t53(n);
+  create index t54idx on t54(n);
+  create index t55idx on t55(n);
+  @sync
+
+@end
+

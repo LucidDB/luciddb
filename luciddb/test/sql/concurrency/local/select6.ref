@@ -1,0 +1,123 @@
+-- setup
+-- end of setup
+
+-- thread reader1
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m where "kseq"<=100000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq"<=100000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq"<=100000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq"<=100000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq"<=100000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100000              |
++---------------------+
+
+-- end of thread reader1
+
+-- thread reader2
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m where "kseq" between 100001 and 900000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 800000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq" between 100001 and 900000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 800000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq" between 100001 and 900000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 800000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq" between 100001 and 900000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 800000              |
++---------------------+
+
+> select count(*) from bench1m where "kseq" between 100001 and 900000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 800000              |
++---------------------+
+
+-- end of thread reader2
+
+-- thread reader3
+> set schema 's';
+0 rows affected.
+> select count(*) from bench1m where "kseq">9000000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from bench1m where "kseq">9000000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from bench1m where "kseq">9000000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from bench1m where "kseq">9000000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+> select count(*) from bench1m where "kseq">9000000;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 0                   |
++---------------------+
+
+-- end of thread reader3
+

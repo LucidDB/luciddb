@@ -1,0 +1,59 @@
+@nolockstep
+
+
+@setup
+-- test concurrent select from table(s)
+
+  set schema 'concurrency';
+  delete from t1;
+  insert into t1 values (2),(6);
+  delete from t2;
+  insert into t2 values (5);
+@end
+
+----------------------------------------
+
+@thread cleanup
+  set schema 'concurrency';
+
+  @sync
+  @sync
+  select * from t1;
+  select * from t2;
+  delete from t1;
+  delete from t2;
+
+@end
+
+----------------------------------------
+
+@thread reader1
+  set schema 'concurrency';
+
+  @sync
+  select * from t1;
+  @sync
+
+@end
+
+----------------------------------------
+
+@thread reader2
+  set schema 'concurrency';
+
+  @sync
+  select * from t2;
+  @sync
+
+@end
+
+----------------------------------------
+
+@thread reader3
+  set schema 'concurrency2';
+
+  @sync
+  select * from t1;
+  @sync
+
+@end

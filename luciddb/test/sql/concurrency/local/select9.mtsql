@@ -1,0 +1,135 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+@end
+
+-----------------------------------------------------------------------------
+@thread comp
+  set schema 's';
+
+  @sync
+    select count(*) from bench1m where "k2"=1;
+    select count(*) from bench100k 
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+    select count(*) from bench100k 
+    where ("k100" = 1) and
+          ("k2" <> 1) and
+          (not("k4" in (1,2,3)));
+    select "kseq","k500k" from bench10k where "k500k"<1000;
+  @sync
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r111,r112,r113,r114,r115,r116,r117,r118,r119,r110
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k2"=1;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r121,r122,r123,r124,r125,r126,r127,r128,r129,r120
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k2"<2;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r131,r132,r133,r134,r135,r136,r137,138,r139,r130
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r211,r212,r213,r214,r215,r216,r217,r218,r219,r210
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench100k 
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r221,r222,r223,r224,r225,r226,r227,r228,r229,r220
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench100k;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r231,r232,r233,r234,r235,r236,r237,r238,r239,r230
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench100k 
+    where ("k100" = 1) and
+          ("k2" <> 1) and
+          (not("k4" in (1,2,3)));
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r311,r312,r313,r314,r315,r316,r317,r318,r319
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select "kseq","k500k" from bench10k where ("k500k"<1000) and ("kseq" <> 0);
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r321,r322,r323,r324,r325,r326,r327,r328,r329,r320
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select "kseq","k500k" from bench10k where (not("k500k">=1000)) and ("k4" in (1,2,3,4));
+  @end
+
+@end
+

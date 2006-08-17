@@ -1,0 +1,87 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+@end
+
+-----------------------------------------------------------------------------
+
+@thread comp
+  set schema 's';
+
+  @sync
+  select count(*) from bench1m where "k2"=1;
+  select count(*) from bench1m where "k4"=1;
+  select count(*) from bench1m where "k100"<50;
+  select count(*) from bench1m where "k250k"=1;
+  select count(*) from bench1m where "k500k" between 250000 and 750000;
+  @sync
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader1
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k2"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader2
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k4"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader3
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k100"<50;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader4
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k250k"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader5
+  set schema 's';
+
+  @sync
+  @sync
+  @repeat 5
+    select count(*) from bench1m where "k500k" between 250000 and 750000;
+  @end
+
+@end

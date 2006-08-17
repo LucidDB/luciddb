@@ -1,0 +1,319 @@
+@nolockstep
+
+@setup
+-- test concurrent create foreign table
+
+@end
+
+----------------------
+
+@thread cleanup
+  
+  @sync
+  @sync
+  
+  select count(*) from csv_schema1."bench100";
+  select count(*) from csv_schema2."bench100";
+  select count(*) from csv_schema3."bench100";
+
+  select count(*) from ff_schema1."bench100";
+  select count(*) from ff_schema2."bench100";
+  select count(*) from ff_schema3."bench100";
+
+  select count(*) from orcl_schema1."bench100";
+  select count(*) from orcl_schema2."bench100";
+  select count(*) from orcl_schema3."bench100";
+
+  select count(*) from mssql_schema1."bench100";
+  select count(*) from mssql_schema2."bench100";
+  select count(*) from mssql_schema3."bench100";
+
+--  drop schema csv_schema1 cascade;
+--  drop schema csv_schema2 cascade;
+--  drop schema csv_schema3 cascade;
+
+--  drop schema ff_schema1 cascade;
+--  drop schema ff_schema2 cascade;
+--  drop schema ff_schema3 cascade;
+
+--  drop schema mssql_schema1 cascade;
+--  drop schema mssql_schema2 cascade;
+--  drop schema mssql_schema3 cascade;
+
+--  drop schema orcl_schema1 cascade;
+--  drop schema orcl_schema2 cascade;
+--  drop schema orcl_schema3 cascade;
+
+@end
+
+----------------------
+
+@thread csv
+  
+  @sync
+
+  create schema csv_schema1;
+  create schema csv_schema2;
+  create schema csv_schema3;
+
+  create foreign table csv_schema1."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server csv_server
+  options (table_name 'bench100');
+
+  create foreign table csv_schema2."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server csv_server
+  options (table_name 'bench100');
+
+  create foreign table csv_schema3."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server csv_server
+  options (table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread flatfile
+  
+  @sync
+
+  create schema ff_schema1;
+  create schema ff_schema2;
+  create schema ff_schema3;
+
+  create foreign table ff_schema1."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server ff_server
+  options (schema_name 'BCP', table_name 'bench100');
+
+  create foreign table ff_schema2."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server ff_server
+  options (schema_name 'BCP', table_name 'bench100');
+
+  create foreign table ff_schema3."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server ff_server
+  options (schema_name 'BCP', table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread oracle
+  
+  @sync
+
+  create schema orcl_schema1;
+  create schema orcl_schema2;
+  create schema orcl_schema3;
+
+  create foreign table orcl_schema1."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server orcl_server
+  options (schema_name 'SCHOI', table_name 'bench100');
+
+  create foreign table orcl_schema2."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server orcl_server
+  options (schema_name 'SCHOI', table_name 'bench100');
+
+  create foreign table orcl_schema3."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server orcl_server
+  options (schema_name 'SCHOI', table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread sqlserver
+  
+  @sync
+
+  create schema mssql_schema1;
+  create schema mssql_schema2;
+  create schema mssql_schema3;
+
+  create foreign table mssql_schema1."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server mssql_server
+  options (schema_name 'dbo', table_name 'bench100');
+
+  create foreign table mssql_schema2."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server mssql_server
+  options (schema_name 'dbo', table_name 'bench100');
+
+  create foreign table mssql_schema3."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server mssql_server
+  options (schema_name 'dbo', table_name 'bench100');
+
+  @sync
+
+@end
