@@ -221,6 +221,13 @@ public abstract class EncodedSqlDecimal
             }
         }
 
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            // TODO jvs 18-Aug-2006:  optimize
+            setNumber(n);
+        }
+        
         // implement AssignableValue
         public void assignFrom(Object obj)
         {
