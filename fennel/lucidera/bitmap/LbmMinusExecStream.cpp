@@ -136,6 +136,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
     LcsRid &currRid, PBuffer &currByteSeg, uint &currLen)
 {
     ExecStreamResult rc;
+    bool unordered = false;
 
     // If there are no keys, read as the minuend as an ordered input.
     // Otherwise, read the minuend as a random sequence of segments.
@@ -143,6 +144,9 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
         rc = readInput(0, currRid, currByteSeg, currLen);
     } else {
         rc = readMinuendInput(currRid, currByteSeg, currLen);
+        if (currRid < startRid) {
+            unordered = true;
+        }
     }
     if (rc != EXECRC_YIELD) {
         return rc;
@@ -181,7 +185,7 @@ ExecStreamResult LbmMinusExecStream::readMinuendInputAndRestart(
         if (minuendReader.getTupleChange()) {
             minuendReader.resetChangeListener();
             int keyComp = comparePrefixes();
-            if (keyComp != 0 || currRid < startRid) {
+            if (keyComp != 0 || unordered) {
                 restartSubtrahends();
                 if (!flush()) {
                     copyPrefixPending = true;
