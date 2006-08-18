@@ -79,13 +79,13 @@
       <fileset dir="${concurrency.dir}/fds">
         <include name="**/*.tmpl"/>
       </fileset>
-      <mapper type="glob" from="*.tmpl" to="*"/>
+      <mapper type="glob" from="*.tmpl" to="${prop.source}*"/>
       <filterset>
         <filtersfile file="config.properties"/>
       </filterset>
     </copy>
-
-    <concat destfile="${concurrency.dir}/fds/creserver.sql" append="true">
+    <copy todir="${concurrency.dir}/fds" overwrite="true"
+      filtering="true">
       <fileset dir="${gensql.dir}tmp"/>
       <filterchain>
         <tokenfilter>
@@ -93,16 +93,20 @@
           <replaceregex pattern="^.*@.*@.*" replace="" flags="s"/>
         </tokenfilter>
       </filterchain>
-    </concat>
-
-    <delete dir="${gensql.dir}tmp" quiet="true"/> 
-
+    </copy>
+    <delete dir="${gensql.dir}tmp" quiet="true"/>
 
   </target>
   
   <target name="gen-all-sql">
-    <available file="${concurrency.dir}/fds/creserver.sql" type="file"
-      property="sql.generated"/>
+    <condition property="sql.generated">
+      <and>
+        <available file="${concurrency.dir}/fds/oraclecreserver.sql" type="file"/>
+        <available file="${concurrency.dir}/fds/sqlservercreserver.sql" type="file"/>
+        <available file="${concurrency.dir}/fds/flatfilecreserver.sql" type="file"/>
+        <available file="${concurrency.dir}/fds/csvjdbccreserver.sql" type="file"/>
+      </and>
+    </condition>
     <if>
       <isset property="sql.generated"/>
       <then/>
@@ -165,7 +169,14 @@
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-    <delete file="${concurrency.dir}/fds/creserver.sql"/>
+    <foreach list="oracle,sqlserver,flatfile,csvjdbc"
+       param="prop.source"
+       target="clean-each"/>
+  </target>
+
+  <target name="clean-each">
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.sql"/>
+    <delete file="${concurrency.dir}/fds/${prop.source}creserver.ref"/>
   </target>
 
   <target name="clean-csv">

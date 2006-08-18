@@ -111,7 +111,7 @@
 
 <!-- test cases for large local data set -->
 
-     <test name="preparedata" requiresSuccess="setup,creserver">
+     <test name="preparedata" requiresSuccess="setup,oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/local/preparedata.sql"/>
      </test>       
@@ -207,15 +207,27 @@
 
 <!-- test cases for foreign data sources -->
 
-      <test name="creserver">
-        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/creserver.sql"/>
+      <test name="oraclecreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/oraclecreserver.sql"/>
       </test>
- 
-      <test name="importschema" requiresSuccess="creserver">
+
+      <test name="sqlservercreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/sqlservercreserver.sql"/>
+      </test>
+
+      <test name="flatfilecreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/flatfilecreserver.sql"/>
+      </test>
+
+      <test name="csvjdbccreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/csvjdbccreserver.sql"/>
+      </test>
+
+      <test name="importschema" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/importschema.mtsql"/>
       </test>
 
-     <test name="creforeigntbl" requiresSuccess="creserver">
+     <test name="creforeigntbl" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/creforeigntbl.mtsql"/>
       </test>
 
