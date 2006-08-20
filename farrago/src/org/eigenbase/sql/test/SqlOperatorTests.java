@@ -235,6 +235,10 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("1.2 between 1.1 and 1.3", Boolean.TRUE);
         getTester().checkBoolean("1.5 between 2 and 3", Boolean.FALSE);
         getTester().checkBoolean("1.5 between 1.6 and 1.7", Boolean.FALSE);
+        getTester().checkBoolean("1.2e1 between 1.1 and 1.3", Boolean.FALSE);
+        getTester().checkBoolean("1.2e0 between 1.1 and 1.3", Boolean.TRUE);
+        getTester().checkBoolean("1.5e0 between 2 and 3", Boolean.FALSE);
+        getTester().checkBoolean("1.5e0 between 2e0 and 3e0", Boolean.FALSE);
         getTester().checkBoolean("1.5e1 between 1.6e1 and 1.7e1",
             Boolean.FALSE);
         getTester().checkBoolean("x'' between x'' and x''", Boolean.TRUE);
@@ -251,9 +255,10 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("2 not between 1 and 3", Boolean.FALSE);
         getTester().checkBoolean("3 not between 1 and 3", Boolean.FALSE);
         getTester().checkBoolean("4 not between 1 and 3", Boolean.TRUE);
-        getTester().checkBoolean("1.2e0 between 1.1 and 1.3", Boolean.FALSE);
-        getTester().checkBoolean("1.5e0 between 2 and 3", Boolean.TRUE);
-        getTester().checkBoolean("1.5e0 between 2e0 and 3e0", Boolean.TRUE);
+        getTester().checkBoolean("1.2e0 not between 1.1 and 1.3", Boolean.FALSE);
+        getTester().checkBoolean("1.2e1 not between 1.1 and 1.3", Boolean.TRUE);
+        getTester().checkBoolean("1.5e0 not between 2 and 3", Boolean.TRUE);
+        getTester().checkBoolean("1.5e0 not between 2e0 and 3e0", Boolean.TRUE);
     }
 
     private String getCastString(String value, String targetType)
@@ -1122,6 +1127,7 @@ public abstract class SqlOperatorTests
 
         // check return type on scalar subquery in select list.  Note return
         // type is always nullable even if subquery select value is NOT NULL.
+        if (Bug.Frg189Fixed) {
         getTester().checkType(
             "SELECT *,(SELECT * FROM (VALUES(1))) FROM (VALUES(2))",
             "RecordType(INTEGER NOT NULL EXPR$0, INTEGER EXPR$1) NOT NULL");
@@ -1148,6 +1154,7 @@ public abstract class SqlOperatorTests
             + "  (SELECT * FROM (VALUES(TIMESTAMP '2006-01-01 12:00:05'))) "
             + "FROM (VALUES(TIMESTAMP '2006-01-01 12:00:05'))",
             "RecordType(TIMESTAMP(0) NOT NULL EXPR$0, TIMESTAMP(0) EXPR$1) NOT NULL");
+        }
     }
 
     public void testLiteralChain()
@@ -1370,6 +1377,7 @@ public abstract class SqlOperatorTests
     public void testOverlapsOperator()
     {
         getTester().setFor(SqlStdOperatorTable.overlapsOperator);
+        if (Bug.Frg187Fixed) {
         getTester().checkBoolean(
             "(date '1-2-3', date '1-2-3') overlaps (date '1-2-3', interval '1' year)",
             Boolean.TRUE);
@@ -1408,6 +1416,7 @@ public abstract class SqlOperatorTests
             "(timestamp '1-2-3 4:5:6', cast(null as interval day) ) overlaps (timestamp '1-2-3 4:5:6', interval '1 2:3:4.5' day to second)");
         getTester().checkNull(
             "(timestamp '1-2-3 4:5:6', timestamp '1-2-3 4:5:6' ) overlaps (cast(null as timestamp), interval '1 2:3:4.5' day to second)");
+        }
     }
 
     public void testLessThanOperator()
@@ -2130,16 +2139,14 @@ public abstract class SqlOperatorTests
             "DECIMAL(2, 1)",
             1.5,
             0);
-        getTester().checkScalarApprox("nullif(3, 1.5e0)", "INTEGER", 3, 0);
-        getTester().checkScalarApprox("nullif(3, cast(1.5e0 as REAL))",
+        getTester().checkScalarExact("nullif(3, 1.5e0)", "INTEGER", "3");
+        getTester().checkScalarExact("nullif(3, cast(1.5e0 as REAL))",
             "INTEGER",
-            3,
-            0);
+            "3");
         getTester().checkScalarApprox("nullif(1.5e0, 3.4)", "DOUBLE", 1.5, 0);
-        getTester().checkScalarApprox("nullif(3.4, 1.5e0)",
+        getTester().checkScalarExact("nullif(3.4, 1.5e0)",
             "DECIMAL(2, 1)",
-            3.4,
-            0);
+            "3.4");
         getTester().checkString("nullif('a','bc')",
             "a",
             "todo: VARCHAR(2) NOT NULL");
@@ -2339,11 +2346,13 @@ public abstract class SqlOperatorTests
     public void testWindow()
     {
         getTester().setFor(SqlStdOperatorTable.windowOperator);
+        if (Bug.Frg188Fixed) {
         getTester().check(
             "select sum(1) over (order by x) from (select 1 as x, 2 as y from (values (true)))",
             new AbstractSqlTester.StringTypeChecker("INTEGER"),
             "1",
             0);
+        }
     }
 
     public void testElementFunc()
@@ -2466,6 +2475,7 @@ public abstract class SqlOperatorTests
 
     public void testCountFunc()
     {
+        if (Bug.Frg188Fixed) {
         getTester().setFor(SqlStdOperatorTable.countOperator);
         getTester().checkType("count(*)", "BIGINT NOT NULL");
         getTester().checkType("count('name')", "BIGINT NOT NULL");
@@ -2516,10 +2526,12 @@ public abstract class SqlOperatorTests
             stringValues,
             new Integer(1),
             0);
+        }
     }
 
     public void testSumFunc()
     {
+        if (Bug.Frg188Fixed) {
         getTester().setFor(SqlStdOperatorTable.sumOperator);
         getTester().checkInvalid("sum(^*^)",
             "Unknown identifier '\\*'");
@@ -2555,10 +2567,12 @@ public abstract class SqlOperatorTests
             values,
             new Integer(2),
             0);
+        }
     }
 
     public void testAvgFunc()
     {
+        if (Bug.Frg188Fixed) {
         getTester().setFor(SqlStdOperatorTable.avgOperator);
         getTester().checkInvalid("avg(^*^)",
             "Unknown identifier '\\*'");
@@ -2582,10 +2596,12 @@ public abstract class SqlOperatorTests
             values,
             new Integer(-1),
             0);
+        }
     }
 
     public void testLastValueFunc()
     {
+        if (Bug.Frg188Fixed) {
         getTester().setFor(SqlStdOperatorTable.lastValueOperator);
         getTester().checkScalarExact("last_value(1)", "1");
         getTester().checkScalarExact("last_value(1.2)",
@@ -2595,10 +2611,12 @@ public abstract class SqlOperatorTests
         getTester().checkString("last_value('name')",
             "name",
             "todo: CHAR(4) NOT NULL");
+        }
     }
 
     public void testFirstValueFunc()
     {
+        if (Bug.Frg188Fixed) {
         getTester().setFor(SqlStdOperatorTable.firstValueOperator);
         getTester().checkScalarExact("first_value(1)", "1");
         getTester().checkScalarExact("first_value(1.2)",
@@ -2608,6 +2626,7 @@ public abstract class SqlOperatorTests
         getTester().checkString("first_value('name')",
             "name",
             "todo: CHAR(4) NOT NULL");
+        }
     }
 }
 

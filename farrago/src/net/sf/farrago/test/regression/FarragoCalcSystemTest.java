@@ -58,6 +58,32 @@ public class FarragoCalcSystemTest
     private static CalcRexImplementorTable fennelTab =
         CalcRexImplementorTableImpl.std();
 
+    // Table of operators to be tested using auto VM that
+    // may not have been explicitly registered in the java and fennel calcs
+    private static Map<SqlOperator,Boolean> autoTab =
+        new HashMap<SqlOperator,Boolean>();
+
+    static {
+        autoTab.put(SqlStdOperatorTable.betweenOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.notBetweenOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.selectOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.literalChainOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.isDistinctFromOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.isNotDistinctFromOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.overlapsOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.isUnknownOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.isNotUnknownOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.valuesOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.nullIfFunc, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.coalesceFunc, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.windowOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.countOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.sumOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.avgOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.firstValueOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.lastValueOperator, Boolean.TRUE);
+    }
+
     //~ Instance fields --------------------------------------------------------
 
     String sqlToExecute;
@@ -318,6 +344,13 @@ public class FarragoCalcSystemTest
             if (((this == Fennel) || (this == Auto))
                 && (fennelTab.get(op) != null)) {
                 return true;
+            }
+            if (this == Auto)  {
+                if (autoTab.get(op) != null) {
+                    return true;
+                }
+                // This operator cannot be implemented at all!
+                assert(false) : op + " cannot be implemented";
             }
             return false;
         }
