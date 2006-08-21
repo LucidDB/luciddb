@@ -48,11 +48,3 @@ public enum JmiDeletionAction {
 }
 
 // End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java
-// End JmiDeletionAction.java

@@ -1,0 +1,74 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency select and insert statements
+--
+-- use only 100 rows
+  set schema 's';
+  create table t1       ("kseq" bigint primary key,
+                         "k2" bigint,
+                         "k4" bigint,
+                         "k5" bigint,
+                         "k10" bigint,
+                         "k25" bigint,
+                         "k100" bigint,
+                         "k1k" bigint,
+                         "k10k" bigint,
+                         "k40k" bigint,
+                         "k100k" bigint,
+                         "k250k" bigint,
+                         "k500k" bigint);
+  create table t2       ("kseq" bigint primary key,
+                         "k2" bigint,
+                         "k4" bigint,
+                         "k5" bigint,
+                         "k10" bigint,
+                         "k25" bigint,
+                         "k100" bigint,
+                         "k1k" bigint,
+                         "k10k" bigint,
+                         "k40k" bigint,
+                         "k100k" bigint,
+                         "k250k" bigint,
+                         "k500k" bigint);
+  insert into t1 select * from bench10k where "kseq"<=100;
+  select count(*) from t1 where "k2"=1;
+@end
+
+-----------------------------------------------------------------------------
+
+@thread comp
+  set schema 's';
+
+  @sync
+  @sync
+  select count(*) from t1;
+  select count(*) from t2;
+  drop table t1;
+  drop table t2;
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w1
+  set schema 's';
+
+  @sync
+  insert into t2 select * from t1 where "k2"=1+sys_boot.mgmt.sleep(500);
+  @sync
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread r3
+  set schema 's';
+
+  @sync
+  @sleep 500
+  @err create view v2 as select * from t2 where "k2"<=1;
+--@err select * from t2 where "k2"<=1;
+  @sync
+
+@end

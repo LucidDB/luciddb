@@ -1,0 +1,410 @@
+-- setup
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> delete from t1;
+0 rows affected.
+> delete from t2;
+0 rows affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'concurrency';
+0 rows affected.
+> select * from t1;
++------------+
+| C          |
++------------+
++------------+
+
+> select * from t2;
++------------+
+| C          |
++------------+
++------------+
+
+> delete from t1;
+0 rows affected.
+> delete from t2;
+0 rows affected.
+> select * from t11;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t12;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t13;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t14;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t15;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t21;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t22;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t23;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t24;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t25;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t31;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t32;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t33;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t34;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t35;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t41;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t42;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t43;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t44;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t45;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t51;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t52;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t53;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t54;
++------------+
+| N          |
++------------+
++------------+
+
+> select * from t55;
++------------+
+| N          |
++------------+
++------------+
+
+> drop index t11idx;
+0 rows affected.
+> drop index t12idx;
+0 rows affected.
+> drop index t13idx;
+0 rows affected.
+> drop index t14idx;
+0 rows affected.
+> drop index t15idx;
+0 rows affected.
+> drop index t21idx;
+0 rows affected.
+> drop index t22idx;
+0 rows affected.
+> drop index t23idx;
+0 rows affected.
+> drop index t24idx;
+0 rows affected.
+> drop index t25idx;
+0 rows affected.
+> drop index t31idx;
+0 rows affected.
+> drop index t32idx;
+0 rows affected.
+> drop index t33idx;
+0 rows affected.
+> drop index t34idx;
+0 rows affected.
+> drop index t35idx;
+0 rows affected.
+> drop index t41idx;
+0 rows affected.
+> drop index t42idx;
+0 rows affected.
+> drop index t43idx;
+0 rows affected.
+> drop index t44idx;
+0 rows affected.
+> drop index t45idx;
+0 rows affected.
+> drop index t51idx;
+0 rows affected.
+> drop index t52idx;
+0 rows affected.
+> drop index t53idx;
+0 rows affected.
+> drop index t54idx;
+0 rows affected.
+> drop index t55idx;
+0 rows affected.
+> drop table t11;
+0 rows affected.
+> drop table t12;
+0 rows affected.
+> drop table t13;
+0 rows affected.
+> drop table t14;
+0 rows affected.
+> drop table t15;
+0 rows affected.
+> drop table t21;
+0 rows affected.
+> drop table t22;
+0 rows affected.
+> drop table t23;
+0 rows affected.
+> drop table t24;
+0 rows affected.
+> drop table t25;
+0 rows affected.
+> drop table t31;
+0 rows affected.
+> drop table t32;
+0 rows affected.
+> drop table t33;
+0 rows affected.
+> drop table t34;
+0 rows affected.
+> drop table t35;
+0 rows affected.
+> drop table t41;
+0 rows affected.
+> drop table t42;
+0 rows affected.
+> drop table t43;
+0 rows affected.
+> drop table t44;
+0 rows affected.
+> drop table t45;
+0 rows affected.
+> drop table t51;
+0 rows affected.
+> drop table t52;
+0 rows affected.
+> drop table t53;
+0 rows affected.
+> drop table t54;
+0 rows affected.
+> drop table t55;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread w1
+> set schema 'concurrency';
+0 rows affected.
+-- end of thread w1
+
+-- thread ddl1
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> create table t11 (n integer);
+0 rows affected.
+> create table t12 (n integer);
+0 rows affected.
+> create table t13 (n integer);
+0 rows affected.
+> create table t14 (n integer);
+0 rows affected.
+> create table t15 (n integer);
+0 rows affected.
+> create index t11idx on t11(n);
+0 rows affected.
+> create index t12idx on t12(n);
+0 rows affected.
+> create index t13idx on t13(n);
+0 rows affected.
+> create index t14idx on t14(n);
+0 rows affected.
+> create index t15idx on t15(n);
+0 rows affected.
+-- end of thread ddl1
+
+-- thread ddl2
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> create table t21 (n integer);
+0 rows affected.
+> create table t22 (n integer);
+0 rows affected.
+> create table t23 (n integer);
+0 rows affected.
+> create table t24 (n integer);
+0 rows affected.
+> create table t25 (n integer);
+0 rows affected.
+> create index t21idx on t21(n);
+0 rows affected.
+> create index t22idx on t22(n);
+0 rows affected.
+> create index t23idx on t23(n);
+0 rows affected.
+> create index t24idx on t24(n);
+0 rows affected.
+> create index t25idx on t25(n);
+0 rows affected.
+-- end of thread ddl2
+
+-- thread ddl3
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> create table t31 (n integer);
+0 rows affected.
+> create table t32 (n integer);
+0 rows affected.
+> create table t33 (n integer);
+0 rows affected.
+> create table t34 (n integer);
+0 rows affected.
+> create table t35 (n integer);
+0 rows affected.
+> create index t31idx on t31(n);
+0 rows affected.
+> create index t32idx on t32(n);
+0 rows affected.
+> create index t33idx on t33(n);
+0 rows affected.
+> create index t34idx on t34(n);
+0 rows affected.
+> create index t35idx on t35(n);
+0 rows affected.
+-- end of thread ddl3
+
+-- thread ddl4
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> create table t41 (n integer);
+0 rows affected.
+> create table t42 (n integer);
+0 rows affected.
+> create table t43 (n integer);
+0 rows affected.
+> create table t44 (n integer);
+0 rows affected.
+> create table t45 (n integer);
+0 rows affected.
+> create index t41idx on t41(n);
+0 rows affected.
+> create index t42idx on t42(n);
+0 rows affected.
+> create index t43idx on t43(n);
+0 rows affected.
+> create index t44idx on t44(n);
+0 rows affected.
+> create index t45idx on t45(n);
+0 rows affected.
+-- end of thread ddl4
+
+-- thread ddl5
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> create table t51 (n integer);
+0 rows affected.
+> create table t52 (n integer);
+0 rows affected.
+> create table t53 (n integer);
+0 rows affected.
+> create table t54 (n integer);
+0 rows affected.
+> create table t55 (n integer);
+0 rows affected.
+> create index t51idx on t51(n);
+0 rows affected.
+> create index t52idx on t52(n);
+0 rows affected.
+> create index t53idx on t53(n);
+0 rows affected.
+> create index t54idx on t54(n);
+0 rows affected.
+> create index t55idx on t55(n);
+0 rows affected.
+-- end of thread ddl5
+

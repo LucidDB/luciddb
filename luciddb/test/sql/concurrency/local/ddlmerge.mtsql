@@ -1,0 +1,87 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+  set schema 's';
+  create table t1m      ("kseq" bigint primary key,
+                         "k2" bigint,
+                         "k4" bigint,
+                         "k5" bigint,
+                         "k10" bigint,
+                         "k25" bigint,
+                         "k100" bigint,
+                         "k1k" bigint,
+                         "k10k" bigint,
+                         "k40k" bigint,
+                         "k100k" bigint,
+                         "k250k" bigint,
+                         "k500k" bigint);
+  insert into t1m select * from bench1m;
+@end
+
+-----------------------------------------------------------------------------
+@thread comp
+  set schema 's';
+  
+  @sync
+  @sync
+  @sync
+  @sync
+  drop index k2idx;
+  drop table t1m;
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w1
+  set schema 's';
+
+  @sync
+  @sync
+  create index k2idx on t1m("k2");
+  @sync
+  @sync
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread w2
+  set schema 's';
+
+  @sync
+  explain plan for
+    merge into t1m as tr
+    using (select * from t1m where "k2"=1) as rf
+    on rf."kseq" = tr."kseq"
+    when matched then update set "k2"=-1
+    when not matched then insert ("kseq") values(0);
+  select count(*) from t1m where "k2"=1;
+  @sync
+  @sleep 50
+  explain plan for
+    merge into t1m as tr
+    using (select * from t1m where "k2"=1) as rf
+    on rf."kseq" = tr."kseq"
+    when matched then update set "k2"=-1
+    when not matched then insert ("kseq") values(0);
+  merge into t1m as tr
+  using (select * from t1m where "k2"=1) as rf
+  on rf."kseq" = tr."kseq"
+  when matched then update set "k2"=-1
+  when not matched then insert ("kseq") values(0); 
+  select count(*) from t1m;
+  @sync
+  explain plan for
+    merge into t1m as tr
+    using (select * from t1m where "k2"=1) as rf
+    on rf."kseq" = tr."kseq"
+    when matched then update set "k2"=-1
+    when not matched then insert ("kseq") values(0);
+  select count(*) from t1m where "k2"=1;
+  @sync
+
+@end

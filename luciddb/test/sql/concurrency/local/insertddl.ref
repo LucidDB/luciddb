@@ -1,0 +1,101 @@
+-- setup
+> set schema 's';
+0 rows affected.
+> create table t1k      ("kseq" bigint primary key,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint);
+0 rows affected.
+> insert into t1k select * from bench10k where "kseq"<=1000;
+1000 rows affected.
+-- end of setup
+
+-- thread comp
+> set schema 's';
+0 rows affected.
+> drop index k2idx;
+0 rows affected.
+> drop table t1k;
+0 rows affected.
+-- end of thread comp
+
+-- thread w1
+> set schema 's';
+0 rows affected.
+> create index k2idx on t1k("k2");
+0 rows affected.
+-- end of thread w1
+
+-- thread w2
+> set schema 's';
+0 rows affected.
+> explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1K]]) |
+|     IteratorToFennelConverter |
+|       IterCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[5000], expr#15=[CAST($t14):BIGINT], expr#16=[SLEEP($t15)], expr#17=[CAST($t16):INTEGER], expr#18=[+($t13, $t17)], expr#19=[=($t1, $t18)], proj#0..12=[{exprs}], $condition=[$t19]) |
+|         FennelToIteratorConverter |
+|           LcsRowScanRel(table=[[LOCALDB, S, T1K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1K$k10, SYS$CLUSTERED_INDEX$S$T1K$k100, SYS$CLUSTERED_INDEX$S$T1K$k100k, SYS$CLUSTERED_INDEX$S$T1K$k10k, SYS$CLUSTERED_INDEX$S$T1K$k1k, SYS$CLUSTERED_INDEX$S$T1K$k2, SYS$CLUSTERED_INDEX$S$T1K$k25, SYS$CLUSTERED_INDEX$S$T1K$k250k, SYS$CLUSTERED_INDEX$S$T1K$k4, SYS$CLUSTERED_INDEX$S$T1K$k40k, SYS$CLUSTERED_INDEX$S$T1K$k5, SYS$CLUSTERED_INDEX$S$T1K$k500k, SYS$CLUSTERED_INDEX$S$T1K$kseq]]) |
++---------+
+
+> select count(*) from t1k where "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 471                 |
++---------------------+
+
+> explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1K]]) |
+|     IteratorToFennelConverter |
+|       IterCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[5000], expr#15=[CAST($t14):BIGINT], expr#16=[SLEEP($t15)], expr#17=[CAST($t16):INTEGER], expr#18=[+($t13, $t17)], expr#19=[=($t1, $t18)], proj#0..12=[{exprs}], $condition=[$t19]) |
+|         FennelToIteratorConverter |
+|           LcsRowScanRel(table=[[LOCALDB, S, T1K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1K$k10, SYS$CLUSTERED_INDEX$S$T1K$k100, SYS$CLUSTERED_INDEX$S$T1K$k100k, SYS$CLUSTERED_INDEX$S$T1K$k10k, SYS$CLUSTERED_INDEX$S$T1K$k1k, SYS$CLUSTERED_INDEX$S$T1K$k2, SYS$CLUSTERED_INDEX$S$T1K$k25, SYS$CLUSTERED_INDEX$S$T1K$k250k, SYS$CLUSTERED_INDEX$S$T1K$k4, SYS$CLUSTERED_INDEX$S$T1K$k40k, SYS$CLUSTERED_INDEX$S$T1K$k5, SYS$CLUSTERED_INDEX$S$T1K$k500k, SYS$CLUSTERED_INDEX$S$T1K$kseq]]) |
++---------+
+
+> insert into t1k select * from t1k where "k2"=1;
+471 rows affected.
+> select count(*) from t1k;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1471                |
++---------------------+
+
+> explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1K]]) |
+|     IteratorToFennelConverter |
+|       IterCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[5000], expr#15=[CAST($t14):BIGINT], expr#16=[SLEEP($t15)], expr#17=[CAST($t16):INTEGER], expr#18=[+($t13, $t17)], expr#19=[=($t1, $t18)], proj#0..12=[{exprs}], $condition=[$t19]) |
+|         FennelToIteratorConverter |
+|           LcsRowScanRel(table=[[LOCALDB, S, T1K]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1K$k10, SYS$CLUSTERED_INDEX$S$T1K$k100, SYS$CLUSTERED_INDEX$S$T1K$k100k, SYS$CLUSTERED_INDEX$S$T1K$k10k, SYS$CLUSTERED_INDEX$S$T1K$k1k, SYS$CLUSTERED_INDEX$S$T1K$k2, SYS$CLUSTERED_INDEX$S$T1K$k25, SYS$CLUSTERED_INDEX$S$T1K$k250k, SYS$CLUSTERED_INDEX$S$T1K$k4, SYS$CLUSTERED_INDEX$S$T1K$k40k, SYS$CLUSTERED_INDEX$S$T1K$k5, SYS$CLUSTERED_INDEX$S$T1K$k500k, SYS$CLUSTERED_INDEX$S$T1K$kseq]]) |
++---------+
+
+> select count(*) from t1k where "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 942                 |
++---------------------+
+
+-- end of thread w2
+

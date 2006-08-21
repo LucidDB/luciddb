@@ -584,7 +584,7 @@ public class SqlToRelConverterTest
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         RelOptXmlPlanWriter planWriter =
-            new RelOptXmlPlanWriter(pw, SqlExplainLevel.DIGEST_ATTRIBUTES);
+            new RelOptXmlPlanWriter(pw, SqlExplainLevel.EXPPLAN_ATTRIBUTES);
         rel.explain(planWriter);
         pw.flush();
         TestUtil.assertEqualsVerbose(

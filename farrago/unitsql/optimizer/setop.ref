@@ -401,6 +401,39 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 | def     | def      |
 +---------+----------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -------------------------------------------------------
+0: jdbc:farrago:> -- http://jirahost.eigenbase.org:8081/browse/FRG-182 --
+0: jdbc:farrago:> -------------------------------------------------------
+0: jdbc:farrago:> create table s1 (a int, b int);
+0: jdbc:farrago:> create table s2 (a int, bb int);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * from s1 union all (select * from s2 where a = 1);
++---------------------------------------------------+
+|                      column0                      |
++---------------------------------------------------+
+| UnionRel(all=[true])                              |
+|   ProjectRel(A=[$0], B=[$1])                      |
+|     TableAccessRel(table=[[LOCALDB, LHX, S1]])    |
+|   ProjectRel(A=[$0], BB=[$1])                     |
+|     FilterRel(condition=[=($0, 1)])               |
+|       TableAccessRel(table=[[LOCALDB, LHX, S2]])  |
++---------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- make sure this does not fail during physical plan generation
+0: jdbc:farrago:> explain plan for select * from s1 union all (select * from s2 where a = 1);
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                         column0                                                                         |
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                               |
+|   FennelMergeRel                                                                                                                                        |
+|     LcsRowScanRel(table=[[LOCALDB, LHX, S1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S1$A, SYS$CLUSTERED_INDEX$LHX$S1$B]])         |
+|     IteratorToFennelConverter                                                                                                                           |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])                                        |
+|         FennelToIteratorConverter                                                                                                                       |
+|           LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S2$A, SYS$CLUSTERED_INDEX$LHX$S2$BB]])  |
++---------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Clean up --
 0: jdbc:farrago:> --------------

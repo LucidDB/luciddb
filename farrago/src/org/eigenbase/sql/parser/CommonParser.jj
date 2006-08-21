@@ -627,7 +627,7 @@ SqlSelect SqlSelect() :
 SqlNode SqlExplain() :
 {
     SqlNode stmt;
-    SqlExplainLevel detailLevel = SqlExplainLevel.DIGEST_ATTRIBUTES;
+    SqlExplainLevel detailLevel = SqlExplainLevel.EXPPLAN_ATTRIBUTES;
     SqlExplain.Depth depth;
     SqlParserPos pos;
     boolean asXml;
@@ -699,7 +699,7 @@ SqlExplain.Depth ExplainDepth() :
  */
 SqlExplainLevel ExplainDetailLevel() :
 {
-    SqlExplainLevel level = SqlExplainLevel.DIGEST_ATTRIBUTES;
+    SqlExplainLevel level = SqlExplainLevel.EXPPLAN_ATTRIBUTES;
 }
 {
     (

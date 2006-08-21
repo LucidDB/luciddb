@@ -1,0 +1,121 @@
+<project name="bh" default="concurrency">
+  <target name="concurrency">
+    <test-suite name="concurrency">
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="concurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
+
+      <test name="setup">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/setup.sql"/>
+      </test>
+
+
+      <test name="sameTableReadRead" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableReadRead.mtsql"/>
+      </test>
+
+      <test name="sameTableReadWrite" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableReadWrite.mtsql"/>
+      </test>
+
+      <test name="sameTableWriteRead" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/sameTableWriteRead.mtsql"/>
+
+      </test>
+
+<!-- basic tests -->
+
+      <test name="select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select.mtsql"/>
+      </test>
+
+      <test name="select-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select-delete.mtsql"/>
+      </test>
+
+      <test name="delete-select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-select.mtsql"/>
+      </test>
+
+      <test name="delete-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-delete.mtsql"/>
+      </test>
+
+      <test name="select-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select-insert.mtsql"/>
+      </test>
+
+      <test name="insert-select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-select.mtsql"/>
+      </test>
+
+      <test name="insert-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert.mtsql"/>
+      </test>
+
+      <test name="insert-insert1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert1.mtsql"/>
+      </test>
+
+      <test name="insert-insert2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert2.mtsql"/>
+      </test>
+
+      <test name="insert-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-delete.mtsql"/>
+      </test>
+
+      <test name="delete-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-insert.mtsql"/>
+      </test>
+
+      <test name="cretdrp-read" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
+      </test>
+
+      <test name="cretdrp-write" requiresSuccess="setup">
+        <!-- partly commented out; fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>
+      </test>
+
+      <test name="failthread" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/failthread.mtsql"/>
+      </test>
+
+
+      <cleanup-hook>
+        <test-suite name="cleanup">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tdone.xml">
+            <test-suite-modifier value="concurrency"/>
+          </test-suite-call>
+        </test-suite>
+      </cleanup-hook>
+
+    </test-suite>
+  </target>
+</project>

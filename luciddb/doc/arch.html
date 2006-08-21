@@ -39,7 +39,7 @@ innovative components.
 
 <a href="http://db.lcs.mit.edu/projects/cstore/vldb.pdf">Recent
 DBMS research</a> has established the superiority of a "column-store"
-architecture for read-mostly databases such as LucidDB.
+architecture for read-mostly database systems such as LucidDB.
 
 <p>
 
@@ -60,9 +60,9 @@ subset of the columns of the referenced tables can avoid reading the
 other columns entirely.  The net effect of vertical partitioning is
 greatly improved performance due to reduced disk I/O and more
 effective caching (data compression allows a greater logical dataset
-size to fit into physical memory).  Compression also allows disk
-storage to be used more effectively (e.g. for maintaining more
-indexes).
+size to fit into a given amount of physical memory).  Compression also
+allows disk storage to be used more effectively (e.g. for maintaining
+more indexes).
 
 <p>
 
@@ -106,7 +106,8 @@ hash aggregation.  All of these execution algorithms are optimized to
 take best advantage of available memory, but are also capable of
 multi-level disk-based partitioning for handling even the largest data
 sets.  The hash-based algorithms include adaptive skew-resistance and
-early filtering.  The only limit on data size is available temp disk space.
+pre-filtering.  The only limit on the data size that can be
+processed is available temp disk space.
 
 <hr>
 
@@ -162,6 +163,10 @@ e.g. a calendar table generator.
 
 </ul>
 
+To learn more about the LucidDB approach to ETL, try the <a
+target="_top" href="http://docs.eigenbase.org/LucidDbEtlTutorial">ETL
+tutorial</a>
+
 <hr>
 
 <h2>OLAP Integration</h2>
@@ -174,7 +179,7 @@ enabling direct in-process JDBC calls from Mondrian into LucidDB with
 no communications overhead.  And the SQL queries issued by Mondrian
 for implementing MDX statements from an OLAP client are of exactly the
 form LucidDB's optimizer was designed for.  And the LucidDB roadmap
-includes proposed features for tighter integration, such as DDL
-statements for cube creation.
+includes proposed features for tighter integration, such as unified
+metadata management and DDL statements for cube creation.
 
 </body>

@@ -155,11 +155,18 @@ public class SargSetExpr
         // example, [4, 6] and [5, 7) are combined to form [4, 7).  (7, 8] is
         // not merged with the new range because neither range contains the
         // value 7.
-        //
-        // Input:          1  2  3  4  5  6  7  8  9 1 [1, 3] [-----] 2 [4, 6]
-        // [-----] 3 [5, 7)             [-----) 4 (7, 8] (--]
-        //
-        // Output: 1 [1, 3] [-----] 2 [4, 7)          [--------) 3 (7, 8] (--]
+	//
+	// Input:
+	//          1  2  3  4  5  6  7  8  9
+	// 1 [1, 3] [-----]
+	// 2 [4, 6]          [-----]
+	// 3 [5, 7)             [-----)
+	// 4 (7, 8]                   (--]
+	// 
+	// Output:
+	// 1 [1, 3] [-----]
+	// 2 [4, 7)          [--------)
+	// 3 (7, 8]                   (--]
         SargInterval accumulator = null;
         for (SargInterval interval : intervals) {
             // Empty intervals should have been previously filtered out.
@@ -314,6 +321,12 @@ public class SargSetExpr
                     source.getUpperBound().getCoordinate(),
                     source.getUpperBound().getStrictnessComplement());
 
+                if (target.getUpperBound().isFinite()) {
+                    newTarget.setUpper(
+                        target.getUpperBound().getCoordinate(),
+                        target.getUpperBound().getStrictness());
+                }
+                
                 // Trim current target to exclude the part of the range
                 // which will move to newTarget.
                 target.setUpper(
@@ -324,11 +337,14 @@ public class SargSetExpr
                 // into previous().
                 targetIter.add(newTarget);
 
-                // Next time through, work on newTarget.  By doing it
-                // this way, we work around the fact that remove() can't
-                // be called after add() without an intervening
-                // call to next/previous().
+                // Next time through, work on newTarget.
+                // targetIter.previous() is pointing at the newTarget.
                 target = targetIter.previous();
+                
+                // now targetIter.next() is also pointing at the newTarget
+                // need to do this redundant step to get targetIter in sync 
+                // with target
+                target = targetIter.next();
 
                 // Advance source.
                 if (!sourceIter.hasNext()) {

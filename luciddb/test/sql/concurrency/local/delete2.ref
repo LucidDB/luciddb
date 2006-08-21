@@ -1,0 +1,289 @@
+-- setup
+> set schema 's';
+0 rows affected.
+> create table t100     ("kseq" bigint primary key,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint);
+0 rows affected.
+> insert into t100 select * from bench10k where "kseq"<=100;
+100 rows affected.
+-- end of setup
+
+-- thread comp
+> set schema 's';
+0 rows affected.
+> select count(*) from t100;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from t100;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 46                  |
++---------------------+
+
+> drop table t100;
+0 rows affected.
+-- end of thread comp
+
+-- thread w1
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1+sys_boot.mgmt.sleep(2000)) or ("k4"=2) or ("k10" in (3,4,5));
+46 rows affected.
+> delete from t100 where "k10"=6;
+8 rows affected.
+-- end of thread w1
+
+-- thread w2
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w2
+
+-- thread w3
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w3
+
+-- thread w4
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w4
+
+-- thread w5
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w5
+
+-- thread w6
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w6
+
+-- thread w7
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w7
+
+-- thread w8
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w8
+
+-- thread w9
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w9
+
+-- thread w10
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq"=1) or ("k4"=2) or ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w10
+
+-- thread w11
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w11
+
+-- thread w12
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w12
+
+-- thread w13
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w13
+
+-- thread w14
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w14
+
+-- thread w15
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w15
+
+-- thread w16
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w16
+
+-- thread w17
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w17
+
+-- thread w18
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w18
+
+-- thread w19
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w19
+
+-- thread w20
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k10" in (3,4,5));
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w20
+
+-- thread w21
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w21
+
+-- thread w22
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w22
+
+-- thread w23
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w23
+
+-- thread w24
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w24
+
+-- thread w25
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w25
+
+-- thread w26
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w26
+
+-- thread w27
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w27
+
+-- thread w28
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w28
+
+-- thread w29
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w29
+
+-- thread w30
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w30
+
+-- thread w31
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("kseq" = 100);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w31
+
+-- thread w32
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k2" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w32
+
+-- thread w32
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k100" = 1);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w32
+
+-- thread w33
+> set schema 's';
+0 rows affected.
+> delete from t100 where ("k100" > 10) and ("k4" <= 2);
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w33
+
+-- thread w34
+> set schema 's';
+0 rows affected.
+> delete from t100;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB
+-- end of thread w34
+

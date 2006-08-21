@@ -1,0 +1,157 @@
+@nolockstep
+
+@setup
+-- test concurrent import schema
+
+@end
+
+----------------------
+
+@thread cleanup
+  
+  @sync
+  @sync
+
+  select count(*) from ff_schema1."bench100";
+  select count(*) from ff_schema2."bench100";
+  select count(*) from ff_schema3."bench100";
+  select count(*) from ff_schema4."bench100";
+  select count(*) from ff_schema5."bench100";
+
+  select count(*) from orcl_schema1."bench100";
+  select count(*) from orcl_schema2."bench100";
+  select count(*) from orcl_schema3."bench100";
+  select count(*) from orcl_schema4."bench100";
+  select count(*) from orcl_schema5."bench100";
+
+  select count(*) from mssql_schema1."bench100";
+  select count(*) from mssql_schema2."bench100";
+  select count(*) from mssql_schema3."bench100";
+  select count(*) from mssql_schema4."bench100";
+  select count(*) from mssql_schema5."bench100";
+
+  drop schema ff_schema1 cascade;
+  drop schema ff_schema2 cascade;
+  drop schema ff_schema3 cascade;
+  drop schema ff_schema4 cascade;
+  drop schema ff_schema5 cascade;
+
+  drop schema orcl_schema1 cascade;
+  drop schema orcl_schema2 cascade;
+  drop schema orcl_schema3 cascade;
+  drop schema orcl_schema4 cascade;
+  drop schema orcl_schema5 cascade;
+
+  drop schema mssql_schema1 cascade;
+  drop schema mssql_schema2 cascade;
+  drop schema mssql_schema3 cascade;
+  drop schema mssql_schema4 cascade;
+  drop schema mssql_schema5 cascade;
+
+@end
+
+----------------------
+
+@thread flatfile
+
+  @sync
+
+  create schema ff_schema1;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema1;
+
+  create schema ff_schema2;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema2;
+
+  create schema ff_schema3;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema3;
+
+  create schema ff_schema4;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema4;
+
+  create schema ff_schema5;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema5;
+
+  @sync
+
+@end
+
+----------------------
+
+@thread oracle
+
+  @sync
+
+  create schema orcl_schema1;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema1;
+
+  create schema orcl_schema2;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema2;
+
+  create schema orcl_schema3;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema3;
+
+  create schema orcl_schema4;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema4;
+
+  create schema orcl_schema5;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema5;
+
+  @sync
+
+@end
+
+----------------------
+
+@thread sqlserver
+
+  @sync
+
+  create schema mssql_schema1;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema1;
+
+  create schema mssql_schema2;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema2;
+
+  create schema mssql_schema3;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema3;
+
+  create schema mssql_schema4;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema4;
+
+  create schema mssql_schema5;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema5;
+
+  @sync
+
+@end
+

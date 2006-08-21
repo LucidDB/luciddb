@@ -1,0 +1,342 @@
+-- setup
+-- end of setup
+
+-- thread cleanup
+> select count(*) from csv_schema1."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from csv_schema2."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from csv_schema3."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from ff_schema1."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from ff_schema2."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from ff_schema3."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from orcl_schema1."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from orcl_schema2."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from orcl_schema3."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from mssql_schema1."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from mssql_schema2."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+> select count(*) from mssql_schema3."bench100";
++---------------------+
+| EXPR$0              |
++---------------------+
+| 100                 |
++---------------------+
+
+-- end of thread cleanup
+
+-- thread csv
+> create schema csv_schema1;
+0 rows affected.
+> create schema csv_schema2;
+0 rows affected.
+> create schema csv_schema3;
+0 rows affected.
+> create foreign table csv_schema1."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server csv_server
+> options (table_name 'bench100');
+0 rows affected.
+> create foreign table csv_schema2."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server csv_server
+> options (table_name 'bench100');
+0 rows affected.
+> create foreign table csv_schema3."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server csv_server
+> options (table_name 'bench100');
+0 rows affected.
+-- end of thread csv
+
+-- thread flatfile
+> create schema ff_schema1;
+0 rows affected.
+> create schema ff_schema2;
+0 rows affected.
+> create schema ff_schema3;
+0 rows affected.
+> create foreign table ff_schema1."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server ff_server
+> options (schema_name 'BCP', table_name 'bench100');
+0 rows affected.
+> create foreign table ff_schema2."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server ff_server
+> options (schema_name 'BCP', table_name 'bench100');
+0 rows affected.
+> create foreign table ff_schema3."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server ff_server
+> options (schema_name 'BCP', table_name 'bench100');
+0 rows affected.
+-- end of thread flatfile
+
+-- thread oracle
+> create schema orcl_schema1;
+0 rows affected.
+> create schema orcl_schema2;
+0 rows affected.
+> create schema orcl_schema3;
+0 rows affected.
+> create foreign table orcl_schema1."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server orcl_server
+> options (schema_name 'SCHOI', table_name 'bench100');
+0 rows affected.
+> create foreign table orcl_schema2."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server orcl_server
+> options (schema_name 'SCHOI', table_name 'bench100');
+0 rows affected.
+> create foreign table orcl_schema3."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server orcl_server
+> options (schema_name 'SCHOI', table_name 'bench100');
+0 rows affected.
+-- end of thread oracle
+
+-- thread sqlserver
+> create schema mssql_schema1;
+0 rows affected.
+> create schema mssql_schema2;
+0 rows affected.
+> create schema mssql_schema3;
+0 rows affected.
+> create foreign table mssql_schema1."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server mssql_server
+> options (schema_name 'dbo', table_name 'bench100');
+0 rows affected.
+> create foreign table mssql_schema2."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server mssql_server
+> options (schema_name 'dbo', table_name 'bench100');
+0 rows affected.
+> create foreign table mssql_schema3."bench100" (
+> "kseq" bigint,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint
+> )
+> server mssql_server
+> options (schema_name 'dbo', table_name 'bench100');
+0 rows affected.
+-- end of thread sqlserver
+

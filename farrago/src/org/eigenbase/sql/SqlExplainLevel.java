@@ -34,22 +34,19 @@ public enum SqlExplainLevel {
     NO_ATTRIBUTES,
 
     /**
+     * Display only attributes which contribute to the plan output.
+     */
+    EXPPLAN_ATTRIBUTES,
+    
+    /**
      * Display only attributes which contribute to an expression's digest.
      */
     DIGEST_ATTRIBUTES,
-
+    
     /**
      * Display all attributes, including cost.
      */
     ALL_ATTRIBUTES
 }
 
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
-// End SqlExplainLevel.java
 // End SqlExplainLevel.java

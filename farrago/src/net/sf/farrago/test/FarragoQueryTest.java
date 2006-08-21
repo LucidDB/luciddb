@@ -432,6 +432,8 @@ public class FarragoQueryTest
         assertEquals(
             0,
             rcoSet.size());
+        sql = "drop schema udx cascade";
+        stmt.executeUpdate(sql);
     }
 
     /**

@@ -116,9 +116,9 @@ public class FarragoMdrReposImpl
             }
         }
 
-        if (FarragoReposUtil.isReloadNeeded()) {
+        if (FarragoReposUtil.isReloadNeeded(modelLoader)) {
             try {
-                FarragoReposUtil.reloadRepository();
+                FarragoReposUtil.reloadRepository(modelLoader);
             } catch (Exception ex) {
                 throw FarragoResource.instance().CatalogReloadFailed.ex(ex);
             }

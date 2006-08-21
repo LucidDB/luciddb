@@ -1,0 +1,536 @@
+@nolockstep
+
+@setup
+--
+-- test concurrent creating local table and 
+-- reading from foreign tables, importing foreign schemas, creating foreign tables
+-- this script depends on successful creating of schemas in creforeigntbl.mtsql
+-- the result of creating local table should be maintained for succeeding tests
+--
+
+@end
+
+----------------------
+
+@thread comp
+
+@sync
+@sync
+
+-- select from local tables
+select count(*) from local_schema.bench100;
+select count(*) from local_schema.bench10k;
+select count(*) from local_schema.bench100k;
+select count(*) from local_schema.bench1m;
+
+-- select from newly created foreign tables or imported schema
+select count (*) from ff_schema6."bench100";
+select count (*) from ff_schema7."bench100";
+select count (*) from ff_schema8."bench100";
+select count (*) from ff_schema9."bench100";
+select count (*) from ff_schema10."bench100";
+select count (*) from orcl_schema6."bench100";
+select count (*) from orcl_schema7."bench100";
+select count (*) from orcl_schema8."bench100";
+select count (*) from orcl_schema9."bench100";
+select count (*) from orcl_schema10."bench100";
+select count (*) from mssql_schema6."bench100";
+select count (*) from mssql_schema7."bench100";
+select count (*) from mssql_schema8."bench100";
+select count (*) from mssql_schema9."bench100";
+select count (*) from mssql_schema10."bench100";
+select count (*) from csv_schema9."bench100";
+select count (*) from csv_schema10."bench100";
+
+-- drop newly created schemas and tables
+drop schema ff_schema6 cascade;
+drop schema ff_schema7 cascade;
+drop schema ff_schema8 cascade;
+drop schema ff_schema9 cascade;
+drop schema ff_schema10 cascade;
+drop schema orcl_schema6 cascade;
+drop schema orcl_schema7 cascade;
+drop schema orcl_schema8 cascade;
+drop schema orcl_schema9 cascade;
+drop schema orcl_schema10 cascade;
+drop schema mssql_schema6 cascade;
+drop schema mssql_schema7 cascade;
+drop schema mssql_schema8 cascade;
+drop schema mssql_schema9 cascade;
+drop schema mssql_schema10 cascade;
+drop schema csv_schema9 cascade;
+drop schema csv_schema10 cascade;
+
+@end
+
+----------------------
+
+@thread local
+-- create and pouplate local tables
+
+@sync
+
+create schema local_schema;
+set schema 'local_schema';
+
+
+create table BENCH100 (
+"kseq" bigint primary key,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint)
+server sys_column_store_data_server;
+
+create table BENCH10K (
+"kseq" bigint primary key,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint)
+server sys_column_store_data_server;
+
+create table BENCH100K (
+"kseq" bigint primary key,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint)
+server sys_column_store_data_server;
+
+create table BENCH1M (
+"kseq" bigint primary key,
+"k2" bigint,
+"k4" bigint,
+"k5" bigint,
+"k10" bigint,
+"k25" bigint,
+"k100" bigint,
+"k1k" bigint,
+"k10k" bigint,
+"k40k" bigint,
+"k100k" bigint,
+"k250k" bigint,
+"k500k" bigint)
+server sys_column_store_data_server;
+
+
+
+INSERT INTO local_schema.BENCH100
+SELECT "kseq","k2","k4","k5","k10","k25","k100","k1k","k10k","k40k","k100k","k250k","k500k"
+FROM ff_schema1."bench100";
+
+
+analyze table bench100 compute statistics for all columns;
+
+
+@sync
+
+@end
+
+----------------------
+
+@thread flatfile
+
+@sync
+
+@repeat 5
+  select count(*) from ff_schema1."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread flatfiledirect
+
+@sync
+
+@repeat 5
+  select count(*) from ff_server."BCP"."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread csv
+
+@sync
+
+@repeat 5
+  select count(*) from csv_schema1."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread csvdirect
+
+@sync
+
+@repeat 5
+  select count(*) from csv_server.testdata."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread sqlserver
+
+@sync
+
+@repeat 5
+  select count(*) from mssql_schema1."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread sqlserverdirect
+
+@sync
+
+@repeat 5
+  select count(*) from mssql_server."dbo"."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread oracle
+
+@sync
+
+@repeat 5
+  select count(*) from orcl_schema1."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread oracledirect
+
+@sync
+
+@repeat 5
+  select count(*) from orcl_server.schoi."bench100";
+@end
+
+@sync
+
+@end
+
+----------------------
+
+@thread flatfileimport
+
+  @sync
+
+  create schema ff_schema6;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema6;
+
+  create schema ff_schema7;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema7;
+
+  create schema ff_schema8;
+  import foreign schema "BCP" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server ff_server into ff_schema8;
+
+  @sync
+
+@end
+
+----------------------
+
+@thread oracleimport
+
+  @sync
+
+  create schema orcl_schema6;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema6;
+
+  create schema orcl_schema7;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema7;
+
+  create schema orcl_schema8;
+  import foreign schema "SCHOI" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server orcl_server into orcl_schema8;
+
+  @sync
+
+@end
+
+----------------------
+
+@thread sqlserverimport
+
+  @sync
+
+  create schema mssql_schema6;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema6;
+
+  create schema mssql_schema7;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema7;
+
+  create schema mssql_schema8;
+  import foreign schema "dbo" 
+  limit to ("bench100", "bench10K", "bench100K", "bench1M")
+  from server mssql_server into mssql_schema8;
+
+  @sync
+
+@end
+
+----------------------
+
+@thread csvcretforeigntbl
+  
+  @sync
+
+  create schema csv_schema9;
+  create schema csv_schema10;
+
+  create foreign table csv_schema9."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server csv_server
+  options (table_name 'bench100');
+
+  create foreign table csv_schema10."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server csv_server
+  options (table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread flatfilecretforeigntbl
+  
+  @sync
+
+  create schema ff_schema9;
+  create schema ff_schema10;
+
+  create foreign table ff_schema9."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server ff_server
+  options (schema_name 'BCP', table_name 'bench100');
+
+  create foreign table ff_schema10."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server ff_server
+  options (schema_name 'BCP', table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread oraclecretforeigntbl
+  
+  @sync
+
+  create schema orcl_schema9;
+  create schema orcl_schema10;
+
+  create foreign table orcl_schema9."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server orcl_server
+  options (schema_name 'SCHOI', table_name 'bench100');
+
+  create foreign table orcl_schema10."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server orcl_server
+  options (schema_name 'SCHOI', table_name 'bench100');
+
+  @sync
+
+@end
+
+----------------------
+
+@thread sqlservercretforeigntbl
+  
+  @sync
+
+  create schema mssql_schema9;
+  create schema mssql_schema10;
+
+  create foreign table mssql_schema9."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server mssql_server
+  options (schema_name 'dbo', table_name 'bench100');
+
+  create foreign table mssql_schema10."bench100" (
+    "kseq" bigint,
+    "k2" bigint,
+    "k4" bigint,
+    "k5" bigint,
+    "k10" bigint,
+    "k25" bigint,
+    "k100" bigint,
+    "k1k" bigint,
+    "k10k" bigint,
+    "k40k" bigint,
+    "k100k" bigint,
+    "k250k" bigint,
+    "k500k" bigint
+  )
+  server mssql_server
+  options (schema_name 'dbo', table_name 'bench100');
+
+  @sync
+
+@end

@@ -178,5 +178,11 @@ public class FarragoModelLoader
     {
         return JdbcStorageFactory.class.getName();
     }
+
+    public FarragoProperties getFarragoProperties()
+    {
+        return farragoProperties;
+    }
 }
+
 // End FarragoModelLoader.java

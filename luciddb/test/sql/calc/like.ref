@@ -51,10 +51,5 @@ Error: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- The following sequence was inspired by bug 6633,
 0: jdbc:luciddb:> -- which I could not reproduce in 2.0.
-0: jdbc:luciddb:> -- DROP TABLE french;
-0: jdbc:luciddb:> -- CREATE TABLE french (c VARCHAR(100));
-0: jdbc:luciddb:> -- INSERT INTO french (c) VALUES ('SociÃ©tÃ© TitanitÃ©');
-0: jdbc:luciddb:> -- SELECT * FROM french;
-0: jdbc:luciddb:> -- SELECT * FROM french WHERE c LIKE '%Ti%';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

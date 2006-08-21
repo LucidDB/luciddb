@@ -42,6 +42,8 @@
   <!-- directories for csv data files -->
   <property name="csv.copy.dir" value="${dml_merge.dir}/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
+  <property name="csv.dir" value="${dml_merge.dir}/csv" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -80,21 +82,53 @@
   </target>
 
   <target name="copy-csv">
-    <sync todir="${csv.copy.dir}"
-      overwrite="true"
-      verbose="true"
-      failonerror="true">
-      <fileset dir="${data.dir}">
-        <include name="DEPT.csv"/>
-        <include name="EMP.csv"/>
-        <include name="PRODUCTS.csv"/>
-        <include name="SALES.csv"/>
-        <include name="LOCATION.csv"/>
-        <include name="CUSTOMERS.csv"/>
-        <include name="SALES.bcp"/>
-        <include name="PRODUCTS.bcp"/>
-      </fileset>
-    </sync>
+    <available file="${csvsource.dir}" type="dir"
+      property="raksha.available"/>
+    <if>
+      <isset property="raksha.available"/>
+      <then>
+        <!-- sync raksha <-> csv.dir -->
+        <sync todir="${csv.dir}" 
+          overwrite="false"
+          failonerror="false"
+          verbose="true">
+          <fileset dir="${csvsource.dir}"/>
+        </sync>
+      </then>
+    </if>
+    <available file="${csv.dir}" type="dir"
+      property="csv.available"/>
+    <if>
+      <isset property="csv.available"/>
+      <then> 
+        <!-- sync csv.dir <-> csv-copy.dir -->
+        <sync todir="${csv.copy.dir}"
+          overwrite="true"
+          verbose="true"
+          failonerror="true">
+          <fileset dir="${csv.dir}"/>
+          <fileset dir="${data.dir}">
+            <include name="DEPT.csv"/>
+            <include name="EMP.csv"/>
+            <include name="PRODUCTS.csv"/>
+            <include name="SALES.csv"/>
+            <include name="LOCATION.csv"/>
+            <include name="CUSTOMERS.csv"/>
+            <include name="SALES.bcp"/>
+            <include name="PRODUCTS.bcp"/>
+          </fileset>
+        </sync>
+        <!-- copy bcp -->
+        <copy todir="${csv.copy.dir}" overwrite="true">
+           <fileset dir="${dml_merge.dir}">
+            <include name="*.bcp"/>
+          </fileset>
+        </copy>
+      </then>
+      <else>
+        <echo message="!! NO CSV FILES !!"/>
+      </else>
+    </if>
   </target>
 
   <target name="clean">
@@ -107,6 +141,11 @@
         <include name="download.sql"/>
       </fileset>
     </delete>
+  </target>
+
+  <target name="clean-csv">
+    <antcall target="clean"/>
+    <delete dir="${csv.dir}"/>
   </target>
 
 </project>

@@ -53,11 +53,3 @@ public enum JmiAssocMapping {
 }
 
 // End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java
-// End JmiAssocMapping.java

@@ -1,0 +1,99 @@
+-- setup
+> set schema 's';
+0 rows affected.
+> create table t1m      ("kseq" bigint primary key,
+> "k2" bigint,
+> "k4" bigint,
+> "k5" bigint,
+> "k10" bigint,
+> "k25" bigint,
+> "k100" bigint,
+> "k1k" bigint,
+> "k10k" bigint,
+> "k40k" bigint,
+> "k100k" bigint,
+> "k250k" bigint,
+> "k500k" bigint);
+0 rows affected.
+> insert into t1m select * from bench1m;
+1000000 rows affected.
+-- end of setup
+
+-- thread comp
+> set schema 's';
+0 rows affected.
+> drop index k2idx;
+0 rows affected.
+> drop table t1m;
+0 rows affected.
+-- end of thread comp
+
+-- thread w1
+> set schema 's';
+0 rows affected.
+> create index k2idx on t1m("k2");
+0 rows affected.
+-- end of thread w1
+
+-- thread w2
+> set schema 's';
+0 rows affected.
+> explain plan for insert into t1m select * from t1m where "k2"=1;
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1M]]) |
+|     FennelCalcRel(expr#0..12=[{inputs}], expr#13=[1], expr#14=[=($t1, $t13)], proj#0..12=[{exprs}], $condition=[$t14]) |
+|       LcsRowScanRel(table=[[LOCALDB, S, T1M]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1M$k10, SYS$CLUSTERED_INDEX$S$T1M$k100, SYS$CLUSTERED_INDEX$S$T1M$k100k, SYS$CLUSTERED_INDEX$S$T1M$k10k, SYS$CLUSTERED_INDEX$S$T1M$k1k, SYS$CLUSTERED_INDEX$S$T1M$k2, SYS$CLUSTERED_INDEX$S$T1M$k25, SYS$CLUSTERED_INDEX$S$T1M$k250k, SYS$CLUSTERED_INDEX$S$T1M$k4, SYS$CLUSTERED_INDEX$S$T1M$k40k, SYS$CLUSTERED_INDEX$S$T1M$k5, SYS$CLUSTERED_INDEX$S$T1M$k500k, SYS$CLUSTERED_INDEX$S$T1M$kseq]]) |
++---------+
+
+> select count(*) from t1m where "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 499598              |
++---------------------+
+
+> explain plan for insert into t1m select * from t1m where "k2"=1;
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1M]]) |
+|     FennelRenameRel(fieldNames=[[$f0, $f1, $f2, $f3, $f4, $f5, $f6, $f7, $f8, $f9, $f10, $f11, $f12]]) |
+|       LcsRowScanRel(table=[[LOCALDB, S, T1M]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1M$k10, SYS$CLUSTERED_INDEX$S$T1M$k100, SYS$CLUSTERED_INDEX$S$T1M$k100k, SYS$CLUSTERED_INDEX$S$T1M$k10k, SYS$CLUSTERED_INDEX$S$T1M$k1k, SYS$CLUSTERED_INDEX$S$T1M$k2, SYS$CLUSTERED_INDEX$S$T1M$k25, SYS$CLUSTERED_INDEX$S$T1M$k250k, SYS$CLUSTERED_INDEX$S$T1M$k4, SYS$CLUSTERED_INDEX$S$T1M$k40k, SYS$CLUSTERED_INDEX$S$T1M$k5, SYS$CLUSTERED_INDEX$S$T1M$k500k, SYS$CLUSTERED_INDEX$S$T1M$kseq]]) |
+|         LcsIndexSearchRel(table=[[LOCALDB, S, T1M]], index=[K2IDX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]) |
+|           FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]]) |
++---------+
+
+> insert into t1m select * from t1m where "k2"=1;
+499598 rows affected.
+> select count(*) from t1m;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 1499598             |
++---------------------+
+
+> explain plan for insert into t1m select * from t1m where "k2"=1;
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   LcsTableAppendRel(table=[[LOCALDB, S, T1M]]) |
+|     FennelRenameRel(fieldNames=[[$f0, $f1, $f2, $f3, $f4, $f5, $f6, $f7, $f8, $f9, $f10, $f11, $f12]]) |
+|       LcsRowScanRel(table=[[LOCALDB, S, T1M]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]], clustered indexes=[[SYS$CLUSTERED_INDEX$S$T1M$k10, SYS$CLUSTERED_INDEX$S$T1M$k100, SYS$CLUSTERED_INDEX$S$T1M$k100k, SYS$CLUSTERED_INDEX$S$T1M$k10k, SYS$CLUSTERED_INDEX$S$T1M$k1k, SYS$CLUSTERED_INDEX$S$T1M$k2, SYS$CLUSTERED_INDEX$S$T1M$k25, SYS$CLUSTERED_INDEX$S$T1M$k250k, SYS$CLUSTERED_INDEX$S$T1M$k4, SYS$CLUSTERED_INDEX$S$T1M$k40k, SYS$CLUSTERED_INDEX$S$T1M$k5, SYS$CLUSTERED_INDEX$S$T1M$k500k, SYS$CLUSTERED_INDEX$S$T1M$kseq]]) |
+|         LcsIndexSearchRel(table=[[LOCALDB, S, T1M]], index=[K2IDX], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0]) |
+|           FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]]) |
++---------+
+
+> select count(*) from t1m where "k2"=1;
++---------------------+
+| EXPR$0              |
++---------------------+
+| 999196              |
++---------------------+
+
+-- end of thread w2
+

@@ -1,0 +1,73 @@
+-- setup
+> set schema 'concurrency';
+0 rows affected.
+> delete from t1;
+0 rows affected.
+> insert into t1 values (2),(6);
+2 rows affected.
+> delete from t2;
+0 rows affected.
+> insert into t2 values (5);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> set schema 'concurrency';
+0 rows affected.
+> select * from t1;
++------------+
+| C          |
++------------+
+| 2          |
+| 6          |
++------------+
+
+> select * from t2;
++------------+
+| C          |
++------------+
+| 5          |
++------------+
+
+> delete from t1;
+2 rows affected.
+> delete from t2;
+1 row affected.
+-- end of thread cleanup
+
+-- thread reader1
+> set schema 'concurrency';
+0 rows affected.
+> select * from t1;
++------------+
+| C          |
++------------+
+| 2          |
+| 6          |
++------------+
+
+-- end of thread reader1
+
+-- thread reader2
+> set schema 'concurrency';
+0 rows affected.
+> select * from t2;
++------------+
+| C          |
++------------+
+| 5          |
++------------+
+
+-- end of thread reader2
+
+-- thread reader3
+> set schema 'concurrency2';
+0 rows affected.
+> select * from t1;
++------------+
+| C          |
++------------+
++------------+
+
+-- end of thread reader3
+

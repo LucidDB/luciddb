@@ -117,11 +117,18 @@ public abstract class FarragoReposUtil
     public static void dumpRepository()
         throws Exception
     {
-        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        dumpRepository(new FarragoModelLoader());
+    }
+    
+    public static void dumpRepository(
+        FarragoModelLoader modelLoader)
+        throws Exception
+    {
+        FarragoProperties farragoProps = modelLoader.getFarragoProperties();
+        File catalogDir = farragoProps.getCatalogDir();
         File metamodelDump = new File(catalogDir, "FarragoMetamodelDump.xmi");
         File catalogDump = new File(catalogDir, "FarragoCatalogDump.xmi");
 
-        FarragoModelLoader modelLoader = new FarragoModelLoader();
         boolean success = false;
         try {
             FarragoPackage farragoPackage =
@@ -145,21 +152,36 @@ public abstract class FarragoReposUtil
         }
     }
 
+    /**
+     * @deprecated pass FarragoModelLoader parameter
+     */
     public static boolean isReloadNeeded()
     {
-        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        return isReloadNeeded(new FarragoModelLoader());
+    }
+    
+    public static boolean isReloadNeeded(FarragoModelLoader modelLoader)
+    {
+        File catalogDir = modelLoader.getFarragoProperties().getCatalogDir();
         return new File(catalogDir, "FarragoMetamodelDump.xmi").exists();
     }
 
+    /**
+     * @deprecated pass FarragoModelLoader parameter
+     */
     public static void reloadRepository()
         throws Exception
     {
-        File catalogDir = FarragoProperties.instance().getCatalogDir();
+        reloadRepository(new FarragoModelLoader());
+    }
+    
+    public static void reloadRepository(FarragoModelLoader modelLoader)
+        throws Exception
+    {
+        File catalogDir = modelLoader.getFarragoProperties().getCatalogDir();
         File metamodelDump = new File(catalogDir, "FarragoMetamodelDump.xmi");
         File catalogDump = new File(catalogDir, "FarragoCatalogDump.xmi");
 
-        FarragoModelLoader modelLoader = new FarragoModelLoader();
-        modelLoader = new FarragoModelLoader();
         try {
             modelLoader.initStorage(false);
 

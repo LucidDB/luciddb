@@ -31,6 +31,7 @@ import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.sql.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
@@ -403,7 +404,7 @@ public abstract class AbstractRelNode
     {
         StringWriter sw = new StringWriter();
         RelOptPlanWriter pw =
-            new RelOptPlanWriter(new PrintWriter(sw)) {
+            new RelOptPlanWriter(new PrintWriter(sw), SqlExplainLevel.DIGEST_ATTRIBUTES) {
                 public void explain(
                     RelNode rel,
                     String [] terms,

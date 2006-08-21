@@ -1,0 +1,73 @@
+@nolockstep
+
+@setup
+-- test write & read on different tables and on same table
+
+  set schema 'concurrency';
+  delete from t1;
+  insert into t1 values (1);
+  delete from t2;
+  insert into t2 values (5);
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+  @sync
+  select * from concurrency.t1;
+  delete from concurrency.t1;
+  delete from concurrency.t2;
+  delete from concurrency2.t1;
+  delete from concurrency2.t2;
+@end
+
+-----------------------------------------------------------
+
+@thread reader
+  set schema 'concurrency';
+
+  @sync
+  @sleep 1000
+  select * from t1 where c=1;
+  @sync
+  select * from t2;
+  @sync
+  @sleep 1000
+  @err select * from t1 where c=1;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread reader2
+  set schema 'concurrency2';
+
+  @sync
+  @sleep 1000
+  select * from t1;
+  @sync
+  @sync
+  @sleep 1000
+  select * from t2;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writer
+  set schema 'concurrency';
+
+  @sync
+  insert into t2 values (sys_boot.mgmt.sleep(5000));
+  @sync
+  @sync
+  insert into t1 values (sys_boot.mgmt.sleep(5000));
+  @sync
+
+@end
+

@@ -1,0 +1,295 @@
+0: jdbc:luciddb:> -- EXPORT_MERGED_SCHEMAS_TO_CSV tests
+0: jdbc:luciddb:> set schema 'udptest';
+0: jdbc:luciddb:> set path 'udptest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- setup schemas/tables
+0: jdbc:luciddb:> create schema orig;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table orig.types (
+. . . . . . . . > id char(10),
+. . . . . . . . > c_varchar varchar(10),
+. . . . . . . . > c_decimal decimal(10,3),
+. . . . . . . . > c_tinyint tinyint,
+. . . . . . . . > c_smallint smallint,
+. . . . . . . . > c_integer integer,
+. . . . . . . . > c_bigint bigint,
+. . . . . . . . > c_real real,
+. . . . . . . . > c_double double,
+. . . . . . . . > c_boolean boolean,
+. . . . . . . . > c_date date,
+. . . . . . . . > c_time time,
+. . . . . . . . > c_timestamp timestamp)
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into orig.types(id, c_varchar, c_decimal, c_tinyint, c_smallint, c_integer, c_bigint, c_real, c_double, c_boolean, c_date, c_time, c_timestamp)
+. . . . . . . . > select * from ff_server.bcp."types";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table orig.bench100(
+. . . . . . . . > id int,
+. . . . . . . . > k2 int,
+. . . . . . . . > k4 int,
+. . . . . . . . > k5 int,
+. . . . . . . . > k10 int,
+. . . . . . . . > k25 int,
+. . . . . . . . > k100 int,
+. . . . . . . . > k1k int,
+. . . . . . . . > k10k int,
+. . . . . . . . > k40k int,
+. . . . . . . . > k100k int,
+. . . . . . . . > k250k int,
+. . . . . . . . > k500k int) 
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into orig.bench100 (id, k2, k4, k5, k10, k25, k100, k1k, k10k, k40k, k100k, k250k, k500k) 
+. . . . . . . . > select * from ff_server.bcp."bench100";
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema inc;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table inc.types (
+. . . . . . . . > id char(10),
+. . . . . . . . > c_varchar varchar(10),
+. . . . . . . . > c_decimal decimal(10,3),
+. . . . . . . . > c_tinyint tinyint,
+. . . . . . . . > c_smallint smallint,
+. . . . . . . . > c_integer integer,
+. . . . . . . . > c_bigint bigint,
+. . . . . . . . > c_real real,
+. . . . . . . . > c_double double,
+. . . . . . . . > c_boolean boolean,
+. . . . . . . . > c_date date,
+. . . . . . . . > c_time time,
+. . . . . . . . > c_timestamp timestamp)
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into inc.types(id, c_varchar, c_timestamp) values
+. . . . . . . . > ('newChar01','new-01',TIMESTAMP'2006-12-12 12:24:34'),
+. . . . . . . . > ('thisChar03','changed-03',TIMESTAMP'2006-10-10 2:29:01'),
+. . . . . . . . > ('thisChar05','changed-05',TIMESTAMP'2006-5-5 5:55:55');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tables are mismatched in schemas
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv('LOCALDB', 'ORIG', 'LOCALDB', 'INC', false, null, null, 'ID', '@EXPDIR@/merge/validate', true, true);
+Error: Tables differ in schemas to be merged (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tables match, columns type mismatch 
+0: jdbc:luciddb:> -- Should complain about k100k and not k10
+0: jdbc:luciddb:> create table inc.bench100 (
+. . . . . . . . > id int,
+. . . . . . . . > k2 int,
+. . . . . . . . > k4 int,
+. . . . . . . . > k5 int,
+. . . . . . . . > k10 bigint, 
+. . . . . . . . > k25 int,
+. . . . . . . . > k100 int,
+. . . . . . . . > k1k int,
+. . . . . . . . > k10k int,
+. . . . . . . . > k40k int,
+. . . . . . . . > k100k varchar(10),
+. . . . . . . . > k250k int,
+. . . . . . . . > k500k int) 
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv('LOCALDB', 'ORIG', 'LOCALDB', 'INC', false, 'BENCH100', null, 'ID', '@EXPDIR@/merge/validate');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- server to check exported files for validation
+0: jdbc:luciddb:> create server fexp_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options (
+. . . . . . . . >   directory '@EXPDIR@/merge/validate',
+. . . . . . . . >   file_extension '.txt',
+. . . . . . . . >   ctrl_file_extension '.bcp',
+. . . . . . . . >   field_delimiter '\t',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   escape_char '',
+. . . . . . . . >   with_header 'yes'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema chk;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema bcp
+. . . . . . . . > from server fexp_server
+. . . . . . . . > into chk;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select catalog_name, schema_name, table_name, column_name 
+. . . . . . . . > from sys_root.dba_columns 
+. . . . . . . . > where schema_name='CHK'
+. . . . . . . . > order by 1,2,3,4;
++---------------+--------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  | COLUMN_NAME  |
++---------------+--------------+-------------+--------------+
++---------------+--------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema chk cascade;
+0: jdbc:luciddb:> drop table inc.bench100 cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tables match, columns mismatch for column name
+0: jdbc:luciddb:> create table inc.bench100 (
+. . . . . . . . > id int,
+. . . . . . . . > k2 tinyint,
+. . . . . . . . > k4 int,
+. . . . . . . . > k5 int,
+. . . . . . . . > k10 bigint, 
+. . . . . . . . > k25 int,
+. . . . . . . . > k100 int,
+. . . . . . . . > k1k int,
+. . . . . . . . > k10k int,
+. . . . . . . . > k40k int,
+. . . . . . . . > blah int,
+. . . . . . . . > k250k int,
+. . . . . . . . > k500k int) 
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv('LOCALDB', 'ORIG', null, 'INC', false, null, null, 'ID', '@EXPDIR@/merge/validate');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema chk;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema bcp
+. . . . . . . . > from server fexp_server
+. . . . . . . . > into chk;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select catalog_name, schema_name, table_name, column_name 
+. . . . . . . . > from sys_root.dba_columns 
+. . . . . . . . > where schema_name='CHK' and table_name='BENCH100'
+. . . . . . . . > order by 1,2,3,4;
++---------------+--------------+-------------+--------------+
+| CATALOG_NAME  | SCHEMA_NAME  | TABLE_NAME  | COLUMN_NAME  |
++---------------+--------------+-------------+--------------+
+| LOCALDB       | CHK          | BENCH100    | BLAH         |
+| LOCALDB       | CHK          | BENCH100    | ID           |
+| LOCALDB       | CHK          | BENCH100    | K10          |
+| LOCALDB       | CHK          | BENCH100    | K100         |
+| LOCALDB       | CHK          | BENCH100    | K10K         |
+| LOCALDB       | CHK          | BENCH100    | K1K          |
+| LOCALDB       | CHK          | BENCH100    | K2           |
+| LOCALDB       | CHK          | BENCH100    | K25          |
+| LOCALDB       | CHK          | BENCH100    | K250K        |
+| LOCALDB       | CHK          | BENCH100    | K4           |
+| LOCALDB       | CHK          | BENCH100    | K40K         |
+| LOCALDB       | CHK          | BENCH100    | K5           |
+| LOCALDB       | CHK          | BENCH100    | K500K        |
++---------------+--------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop schema chk cascade;
+0: jdbc:luciddb:> drop table inc.bench100 cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- tables match, column numbers mismatch
+0: jdbc:luciddb:> create table inc.bench100 (
+. . . . . . . . > id int,
+. . . . . . . . > k2 int,
+. . . . . . . . > k4 int,
+. . . . . . . . > k5 int,
+. . . . . . . . > k10 int, 
+. . . . . . . . > k25 int,
+. . . . . . . . > k100 int,
+. . . . . . . . > k10k int,
+. . . . . . . . > k40k int,
+. . . . . . . . > blah int,
+. . . . . . . . > k250k int,
+. . . . . . . . > k500k int) 
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv('LOCALDB', 'ORIG', 'LOCALDB', 'INC', false, null, null, 'ID', '@EXPDIR@/merge/validate');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- id column doesn't exist
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv(null, 'ORIG', null, 'INC', false, 'TYPES', null, 'JUNK', '@EXPDIR@/merge/validate');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> drop table inc.bench100 cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- incremental data repeated from original data
+0: jdbc:luciddb:> create table inc.bench100 (
+. . . . . . . . > id int,
+. . . . . . . . > k2 int,
+. . . . . . . . > k4 int,
+. . . . . . . . > k5 int,
+. . . . . . . . > k10 int, 
+. . . . . . . . > k25 int,
+. . . . . . . . > k100 int,
+. . . . . . . . > k1k int,
+. . . . . . . . > k10k int,
+. . . . . . . . > k40k int,
+. . . . . . . . > k100kmwah int,
+. . . . . . . . > k250k int,
+. . . . . . . . > k500k int) 
+. . . . . . . . > server sys_column_store_data_server;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into inc.bench100 
+. . . . . . . . > select * from orig.bench100 
+. . . . . . . . > where id between 95 and 100;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into inc.bench100 (id, k2) values
+. . . . . . . . > (92, 11), (93, 1);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> call sys_root.export_merged_schemas_to_csv(null, 'ORIG', null, 'INC', false, null, null, 'ID', '@EXPDIR@/merge/validate');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from fexp_server.bcp.bench100 where id > 90 order by 1;
++------+-----+-----+-----+------+------+-------+------+-------+--------+--------+---------+---------+
+|  ID  | K2  | K4  | K5  | K10  | K25  | K100  | K1K  | K10K  |  K40K  |  BLAH  |  K250K  |  K500K  |
++------+-----+-----+-----+------+------+-------+------+-------+--------+--------+---------+---------+
+| 91   | 1   | 2   | 2   | 3    | 22   | 6     | 800  | 8635  | 1784   | 78531  | 48880   | 372522  |
+| 92   | 1   | 1   | 2   | 2    | 9    | 93    | 993  | 1081  | 20010  | 56448  | 95403   | 141592  |
+| 93   | 1   | 3   | 3   | 3    | 25   | 51    | 524  | 5727  | 7699   | 21887  | 86515   | 190112  |
+| 94   | 2   | 1   | 2   | 2    | 16   | 85    | 617  | 6521  | 4730   | 60081  | 225954  | 250392  |
+| 95   | 1   | 4   | 5   | 6    | 21   | 27    | 948  | 6223  | 6291   | 86079  | 162131  | 18336   |
+| 96   | 2   | 4   | 3   | 2    | 24   | 80    | 19   | 4263  | 6555   | 96312  | 33731   | 203919  |
+| 97   | 2   | 2   | 4   | 3    | 9    | 21    | 341  | 62    | 33404  | 383    | 36612   | 112646  |
+| 98   | 1   | 2   | 1   | 7    | 4    | 92    | 806  | 6572  | 20751  | 26915  | 218175  | 373060  |
+| 99   | 1   | 4   | 4   | 5    | 3    | 49    | 694  | 3957  | 15405  | 8757   | 173389  | 420918  |
+| 100  | 2   | 2   | 4   | 3    | 10   | 50    | 5    | 5430  | 38773  | 17901  | 6965    | 464910  |
++------+-----+-----+-----+------+------+-------+------+-------+--------+--------+---------+---------+
+0: jdbc:luciddb:> select * from fexp_server.bcp.types order by 1;
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+|     ID      |  C_VARCHAR  | C_DECIMAL  | C_TINYINT  | C_SMALLINT  |  C_INTEGER  |       C_BIGINT       | C_REAL  |   C_DOUBLE    | C_BOOLEAN  |   C_DATE    |  C_TIME   |      C_TIMESTAMP       |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+| newChar01   | new-01      |            |            |             |             |                      |         |               |            |             |           | 2006-12-12 12:24:34.0  |
+| thisChar01  | varchar-01  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  |            | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar02  | varchar-02  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  |            | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar03  | changed-03  |            |            |             |             |                      |         |               |            |             |           | 2006-10-10 02:29:01.0  |
+| thisChar04  | varchar-04  | 123.123    | 127        | 32767       | 2147483647  | 9223372036854775807  | 2.78    | 3.1415161718  |            | 2005-10-12  | 12:00:00  | 2005-10-12 12:00:00.0  |
+| thisChar05  | changed-05  |            |            |             |             |                      |         |               |            |             |           | 2006-05-05 05:55:55.0  |
++-------------+-------------+------------+------------+-------------+-------------+----------------------+---------+---------------+------------+-------------+-----------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from table ( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.bench100)));
++--------+----------+-------+------------+--------+
+|  NAME  |   TYPE   | SIZE  | PRECISION  | SCALE  |
++--------+----------+-------+------------+--------+
+| ID     | INTEGER  | 10    | 10         | 0      |
+| K2     | INTEGER  | 10    | 10         | 0      |
+| K4     | INTEGER  | 10    | 10         | 0      |
+| K5     | INTEGER  | 10    | 10         | 0      |
+| K10    | INTEGER  | 19    | 19         | 0      |
+| K25    | INTEGER  | 10    | 10         | 0      |
+| K100   | INTEGER  | 10    | 10         | 0      |
+| K1K    | INTEGER  | 10    | 10         | 0      |
+| K10K   | INTEGER  | 10    | 10         | 0      |
+| K40K   | INTEGER  | 10    | 10         | 0      |
+| K100K  | INTEGER  | 10    | 10         | 0      |
+| K250K  | INTEGER  | 10    | 10         | 0      |
+| K500K  | INTEGER  | 10    | 10         | 0      |
++--------+----------+-------+------------+--------+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from fexp_server.BCP.types)));
++--------------+------------+-------+------------+--------+
+|     NAME     |    TYPE    | SIZE  | PRECISION  | SCALE  |
++--------------+------------+-------+------------+--------+
+| ID           | CHAR       | 10    | 10         | 0      |
+| C_VARCHAR    | VARCHAR    | 10    | 10         | 0      |
+| C_DECIMAL    | DECIMAL    | 10    | 10         | 3      |
+| C_TINYINT    | TINYINT    | 3     | 3          | 0      |
+| C_SMALLINT   | SMALLINT   | 5     | 5          | 0      |
+| C_INTEGER    | INTEGER    | 10    | 10         | 0      |
+| C_BIGINT     | BIGINT     | 19    | 19         | 0      |
+| C_REAL       | REAL       | 13    | 7          | 0      |
+| C_DOUBLE     | DOUBLE     | 22    | 15         | 0      |
+| C_BOOLEAN    | BOOLEAN    | 5     | 1          | 0      |
+| C_DATE       | DATE       | 10    | 0          | 0      |
+| C_TIME       | TIME       | 8     | 0          | 0      |
+| C_TIMESTAMP  | TIMESTAMP  | 19    | 0          | 0      |
++--------------+------------+-------+------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema orig cascade;
+0: jdbc:luciddb:> drop schema inc cascade;
+0: jdbc:luciddb:> drop server fexp_server cascade;
+0: jdbc:luciddb:> !quit

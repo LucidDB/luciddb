@@ -32,6 +32,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.jdbc.engine.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
@@ -88,7 +89,21 @@ class MedJdbcColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        return
+        // FRG-183
+        RelNode rel = null;
+        try {
+            rel = optimizeLoopbackLink(cluster, connection);
+        } catch (SQLException ex) {
+            // REVIEW jvs 14-Aug-2006: Suppress it so that the optimization
+            // attempt doesn't cause something to fail that would have worked
+            // otherwise.  But maybe we should trace it?
+        }
+
+        if (rel != null) {
+            return rel;
+        }
+
+        rel =
             new MedJdbcQueryRel(
                 this,
                 cluster,
@@ -96,6 +111,58 @@ class MedJdbcColumnSet
                 connection,
                 dialect,
                 select);
+        return rel;
+    }
+
+    private RelNode optimizeLoopbackLink(
+        RelOptCluster cluster,
+        RelOptConnection connection)
+        throws SQLException
+    {
+        if (directory == null) {
+            return null;
+        }
+        if (directory.server == null) {
+            return null;
+        }
+        if (directory.server.schemaName != null) {
+            // Schema name should never be specified for a connection to
+            // Farrago; if it is, bail.
+            return null;
+        }
+        // Instead, schema name should always be present in foreign name.
+        String [] schemaQualifiedName = getForeignName();
+        if (schemaQualifiedName.length < 2) {
+            return null;
+        }
+        Connection loopbackConnection = directory.server.connection;
+        if (!(loopbackConnection instanceof FarragoJdbcEngineConnection)) {
+            return null;
+        }
+        String catalogName = directory.server.catalogName;
+        if (catalogName == null) {
+            // No catalog name specified, so try to query the connection for
+            // it.
+            catalogName = loopbackConnection.getCatalog();
+            if (catalogName == null) {
+                return null;
+            }
+        }
+
+        // OK, we're ready to construct the local name of the real
+        // underlying table.
+        String [] actualName = new String[3];
+        actualName[0] = catalogName;
+        actualName[1] = schemaQualifiedName[schemaQualifiedName.length - 2];
+        actualName[2] = schemaQualifiedName[schemaQualifiedName.length - 1];
+        
+        // REVIEW jvs 14-Aug-2006:  Security security security.
+        RelOptTable realTable =
+            getPreparingStmt().getTableForMember(actualName);
+        if (realTable == null) {
+            return null;
+        }
+        return realTable.toRel(cluster, connection);
     }
 }
 

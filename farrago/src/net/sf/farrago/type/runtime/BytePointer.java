@@ -709,6 +709,49 @@ public class BytePointer
             d.getScale());
     }
 
+
+    /**
+     * Attempts to convert this pointer's contents from a
+     * single-byte-ASCII-encoded integer string into a long.
+     *
+     * @return converted value if successful, or Long.MAX_VALUE if unsuccessful
+     * (does not necessarily indicate that cast fails, just that this fast path
+     * can't handle it, e.g. negative/decimal/floating)
+     */
+    public long attemptFastAsciiByteToLong()
+    {
+        // TODO jvs 17-Aug-2006:  Support more cases, UNICODE, etc.
+
+        int start = pos;
+        int end = count;
+
+        // pre-trim
+        for (; start < end; ++start) {
+            if (buf[start] != ' ') {
+                break;
+            }
+        }
+        for (; end > start; --end) {
+            if (buf[end - 1] != ' ') {
+                break;
+            }
+        }
+        
+        if (start >= end) {
+            return Long.MAX_VALUE;
+        }
+        long value = 0;
+        for (int i = start; i < end; ++i) {
+            int x = buf[i] - '0';
+            if ((x < 0) || (x > 9)) {
+                return Long.MAX_VALUE;
+            }
+            value *= 10;
+            value += x;
+        }
+        return value;
+    }
+
     /**
      * Casts a decimal into a string.
      *

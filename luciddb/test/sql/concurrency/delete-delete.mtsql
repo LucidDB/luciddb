@@ -1,0 +1,71 @@
+@nolockstep
+
+@setup
+-- test writes on different tables
+
+  SET SCHEMA 'concurrency';
+  DELETE FROM t1;
+  INSERT INTO t1 VALUES (1),(2);
+  DELETE FROM t2;
+  INSERT INTO t2 VALUES (5);
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  select * from concurrency.t1;
+  select * from concurrency.t2;
+  delete from concurrency.t1;
+  delete from concurrency.t2;
+  delete from concurrency2.t1;
+  delete from concurrency2.t2;
+@end
+
+-----------------------------------------------------------
+
+@thread writer1
+  SET SCHEMA 'concurrency';
+
+  @sync
+  delete from t1 where (c = 1 + sys_boot.mgmt.sleep(5000));
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writer2
+  SET SCHEMA 'concurrency';
+
+  @sync
+  @sleep 1000
+  @err delete from t2 where c=5;
+  @sync
+
+  @end
+
+-----------------------------------------------------------
+
+@thread writer3
+  SET SCHEMA 'concurrency';
+
+  @sync
+  @sleep 1000
+  @err delete from t1 where c=2;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread writer4
+  SET SCHEMA 'concurrency2';
+
+  @sync
+  @sleep 1000
+  @err delete from t1 where c=2;
+  @sync
+
+@end

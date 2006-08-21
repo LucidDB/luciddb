@@ -105,6 +105,21 @@ public abstract class NullablePrimitive
             setNull(false);
             setNumber((Number) obj);
         } else if (obj instanceof DataValue) {
+            if (obj instanceof BytePointer) {
+                BytePointer bytePointer = (BytePointer) obj;
+                if (bytePointer.isNull()) {
+                    setNull(true);
+                } else {
+                    // TODO jvs 17-Aug-2006:  Use this fastpath for
+                    // assignment to NOT NULL primitives also.
+                    long n = bytePointer.attemptFastAsciiByteToLong();
+                    if (n != Long.MAX_VALUE) {
+                        setNull(false);
+                        setLong(n);
+                        return;
+                    }
+                }
+            }
             DataValue dataValue = (DataValue) obj;
             assignFrom(dataValue.getNullableData());
         } else if (obj instanceof Boolean) {
@@ -136,6 +151,13 @@ public abstract class NullablePrimitive
      * @param number a new non-null value to be assigned
      */
     protected abstract void setNumber(Number number);
+
+    /**
+     * Assignment from non-null long value.
+     *
+     * @param n long value to assign
+     */
+    protected abstract void setLong(long n);
 
     //~ Inner Classes ----------------------------------------------------------
 
@@ -177,6 +199,12 @@ public abstract class NullablePrimitive
         protected void setNumber(Number number)
         {
             value = (number.longValue() != 0);
+        }
+
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (n != 0);
         }
 
         // implement BitReference
@@ -313,6 +341,12 @@ public abstract class NullablePrimitive
         {
             value = (byte) NumberUtil.round(number.doubleValue());
         }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (byte) n;
+        }
     }
 
     /**
@@ -330,6 +364,12 @@ public abstract class NullablePrimitive
         protected void setNumber(Number number)
         {
             value = number.doubleValue();
+        }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (double) n;
         }
     }
 
@@ -349,6 +389,12 @@ public abstract class NullablePrimitive
         {
             value = number.floatValue();
         }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (float) n;
+        }
     }
 
     /**
@@ -366,6 +412,12 @@ public abstract class NullablePrimitive
         protected void setNumber(Number number)
         {
             value = (int) NumberUtil.round(number.doubleValue());
+        }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (int) n;
         }
     }
 
@@ -385,6 +437,12 @@ public abstract class NullablePrimitive
         {
             value = NumberUtil.round(number.doubleValue());
         }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (long) n;
+        }
     }
 
     /**
@@ -402,6 +460,12 @@ public abstract class NullablePrimitive
         protected void setNumber(Number number)
         {
             value = (short) NumberUtil.round(number.doubleValue());
+        }
+        
+        // implement NullablePrimitive
+        protected void setLong(long n)
+        {
+            value = (short) n;
         }
     }
 }

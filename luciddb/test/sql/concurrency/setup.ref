@@ -5,4 +5,11 @@
 0: jdbc:luciddb:> create table concurrency.test(i int);
 0: jdbc:luciddb:> insert into concurrency.test values(42);
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table concurrency.t1(c integer);
+0: jdbc:luciddb:> create table concurrency.t2(c integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema concurrency2;
+0: jdbc:luciddb:> create table concurrency2.t1(c integer);
+0: jdbc:luciddb:> create table concurrency2.t2(c integer);
 0: jdbc:luciddb:> !quit

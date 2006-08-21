@@ -1,0 +1,76 @@
+@nolockstep
+
+@setup
+-- test write & read on different tables and on same table
+
+  SET SCHEMA 'concurrency';
+  DELETE FROM t1;
+  INSERT INTO t1 VALUES (1);
+  DELETE FROM t2;
+  INSERT INTO t2 VALUES (5);
+@end
+
+-----------------------------------------------------------
+
+@thread cleanup
+  @sync
+  @sync
+  @sync
+  @sync
+  select * from concurrency.t1;
+  delete from concurrency.t1;
+  delete from concurrency.t2;
+  delete from concurrency2.t1;
+  delete from concurrency2.t2;
+@end
+
+-----------------------------------------------------------
+
+@thread reader1
+  SET SCHEMA 'concurrency';
+
+  @sync
+  @sleep 1000
+  select * from t1 where c=1;
+  @sync
+  select * from t2;
+
+  @sync
+  @sleep 1000
+  @err select * from t1 where c=1;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+@thread reader2
+  SET SCHEMA 'concurrency2';
+
+  @sync
+  @sleep 1000
+  select * from t1;
+  @sync
+
+  @sync
+  @sleep 1000
+  @err select * from t2;
+  @sync
+
+@end
+
+-----------------------------------------------------------
+
+
+@thread writer
+  SET SCHEMA 'concurrency';
+
+  @sync
+  delete from t2 where (c = 5 + sys_boot.mgmt.sleep(5000));
+  @sync
+
+  @sync
+  delete from t1 where (c = 1 + sys_boot.mgmt.sleep(5000));
+  @sync
+
+@end

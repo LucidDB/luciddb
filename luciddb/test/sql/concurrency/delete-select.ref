@@ -1,0 +1,76 @@
+-- setup
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> DELETE FROM t1;
+0 rows affected.
+> INSERT INTO t1 VALUES (1);
+1 row affected.
+> DELETE FROM t2;
+0 rows affected.
+> INSERT INTO t2 VALUES (5);
+1 row affected.
+-- end of setup
+
+-- thread cleanup
+> select * from concurrency.t1;
++------------+
+| C          |
++------------+
++------------+
+
+> delete from concurrency.t1;
+0 rows affected.
+> delete from concurrency.t2;
+0 rows affected.
+> delete from concurrency2.t1;
+0 rows affected.
+> delete from concurrency2.t2;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread reader1
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> select * from t1 where c=1;
++------------+
+| C          |
++------------+
+| 1          |
++------------+
+
+> select * from t2;
++------------+
+| C          |
++------------+
++------------+
+
+> select * from t1 where c=1;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Failed to acquire lock on LOCALDB.CONCURRENCY.T1
+-- end of thread reader1
+
+-- thread reader2
+> SET SCHEMA 'concurrency2';
+0 rows affected.
+> select * from t1;
++------------+
+| C          |
++------------+
++------------+
+
+> select * from t2;
++------------+
+| C          |
++------------+
++------------+
+
+-- end of thread reader2
+
+-- thread writer
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> delete from t2 where (c = 5 + sys_boot.mgmt.sleep(5000));
+1 row affected.
+> delete from t1 where (c = 1 + sys_boot.mgmt.sleep(5000));
+1 row affected.
+-- end of thread writer
+

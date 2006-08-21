@@ -1,0 +1,43 @@
+-- setup
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> delete from t1;
+0 rows affected.
+> delete from t2;
+0 rows affected.
+-- end of setup
+
+-- thread cleanup
+> delete from concurrency.t1;
+3 rows affected.
+> delete from concurrency.t2;
+0 rows affected.
+-- end of thread cleanup
+
+-- thread fail
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> insert into t1 values(1);
+1 row affected.
+> insert into t1 values(2);
+1 row affected.
+> insert into t1 values("this should fail");
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: From line 1, column 23 to line 1, column 40: Unknown identifier 'this should fail'
+-- end of thread fail
+
+-- thread w1
+> SET SCHEMA 'concurrency';
+0 rows affected.
+> insert into t1 values(3);
+1 row affected.
+> select * from t1;
++------------+
+| C          |
++------------+
+| 1          |
+| 2          |
+| 3          |
++------------+
+
+-- end of thread w1
+

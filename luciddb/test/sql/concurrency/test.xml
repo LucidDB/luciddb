@@ -8,11 +8,14 @@
             <test-suite-modifier value="concurrency"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/concurrency" target="copy-csv"/>
       </init-hook>
 
       <test name="setup">
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/setup.sql"/>
       </test>
+
+
 
       <test name="sameTableReadRead" requiresSuccess="setup">
         <junit-sql 
@@ -27,6 +30,225 @@
       <test name="sameTableWriteRead" requiresSuccess="setup">
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/sameTableWriteRead.mtsql"/>
+
+      </test>
+
+<!-- basic tests -->
+
+      <test name="select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select.mtsql"/>
+      </test>
+
+      <test name="select-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select-delete.mtsql"/>
+      </test>
+
+      <test name="delete-select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-select.mtsql"/>
+      </test>
+
+      <test name="delete-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-delete.mtsql"/>
+      </test>
+
+      <test name="select-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/select-insert.mtsql"/>
+      </test>
+
+      <test name="insert-select" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-select.mtsql"/>
+      </test>
+
+      <test name="insert-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert.mtsql"/>
+      </test>
+
+      <test name="insert-insert1" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert1.mtsql"/>
+      </test>
+
+      <test name="insert-insert2" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-insert2.mtsql"/>
+      </test>
+
+      <test name="insert-delete" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/insert-delete.mtsql"/>
+      </test>
+
+      <test name="delete-insert" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/delete-insert.mtsql"/>
+      </test>
+
+      <test name="cretdrp-read" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
+      </test>
+
+      <test name="cretdrp-write" requiresSuccess="setup">
+        <!-- partly commented out; fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>
+      </test>
+
+      <test name="failthread" requiresSuccess="setup">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/failthread.mtsql"/>
+      </test>
+
+<!-- test cases for large local data set -->
+
+     <test name="preparedata" requiresSuccess="setup,oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
+        <junit-sql 
+          file="${open.dir}/luciddb/test/sql/concurrency/local/preparedata.sql"/>
+     </test>       
+
+      <test name="large-select1" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select1.mtsql"/>
+      </test>
+
+      <test name="large-select2" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select2.mtsql"/>
+      </test>
+
+      <test name="large-select3" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select3.mtsql"/>
+      </test>
+
+       <test name="large-select4" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select4.mtsql"/>
+      </test>
+
+      <test name="large-select5" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select5.mtsql"/>
+      </test>
+
+      <test name="large-select6" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select6.mtsql"/>
+      </test>
+
+      <test name="large-select7" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select7.mtsql"/>
+      </test>
+
+      <test name="large-select8" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select8.mtsql"/>
+      </test>
+
+      <test name="large-select9" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select9.mtsql"/>
+      </test>
+
+      <test name="large-select10" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/select10.mtsql"/>
+      </test>
+
+      <test name="large-delete1" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/delete1.mtsql"/>
+      </test>
+
+      <test name="large-delete2" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/delete2.mtsql"/>
+      </test>
+
+      <test name="large-insert-select" requiresSuccess="preparedata">
+        <!-- this test hangs; may be fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/insert-select-b.mtsql"/>
+      </test>
+      
+      <test name="large-ddlselect" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlselect.mtsql"/>
+      </test>
+
+      <test name="large-ddldelete" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddldelete.mtsql"/>
+      </test>
+
+      <test name="large-ddlinsert" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlinsert.mtsql"/>
+      </test>
+
+      <test name="large-ddlmerge" requiresSuccess="preparedata">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlmerge.mtsql"/>
+      </test>
+
+      <test name="large-selectddl" requiresSuccess="preparedata">
+        <!-- this test hangs sometimes; may be fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>        
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/selectddl.mtsql"/>
+      </test>
+
+      <test name="large-insertddl" requiresSuccess="preparedata">
+        <!-- this test hangs sometimes; may be fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>        
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/insertddl.mtsql"/>
+      </test>
+
+
+<!-- test cases for foreign data sources -->
+
+      <test name="oraclecreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/oraclecreserver.sql"/>
+      </test>
+
+      <test name="sqlservercreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/sqlservercreserver.sql"/>
+      </test>
+
+      <test name="flatfilecreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/flatfilecreserver.sql"/>
+      </test>
+
+      <test name="csvjdbccreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/csvjdbccreserver.sql"/>
+      </test>
+
+      <test name="importschema" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/importschema.mtsql"/>
+      </test>
+
+     <test name="creforeigntbl" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/creforeigntbl.mtsql"/>
+      </test>
+
+      <test name="crelocaltbl" requiresSuccess="creforeigntbl">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/crelocaltbl.mtsql"/>
+      </test>
+
+      <test name="selectonly" requiresSuccess="crelocaltbl">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/selectonly.mtsql"/>
+      </test>
+ 
+      <test name="insert2local" requiresSuccess="crelocaltbl">
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/insert2local.mtsql"/>
+      </test>
+
+      <test name="mixedops" requiresSuccess="crelocaltbl">
+        <!-- partly commented out; may be fixed by LDB-118 -->
+        <test-metadata>
+          <notImplemented value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/mixedops.mtsql"/>
       </test>
 
       <cleanup-hook>

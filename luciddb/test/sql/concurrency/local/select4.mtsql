@@ -1,0 +1,124 @@
+@nolockstep
+
+@setup
+--
+-- test concurrency on large data set
+--
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader11
+  set schema 's';
+
+  @sync
+  @repeat 10
+    select count(*) from bench1m where "k2"=1;
+    select count(*) from bench1m where "k100"=1;
+    select count(*) from bench1m where "k500k"=1;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader12
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 100
+    select count(*) from bench1m where "k2"=1;
+    select count(*) from bench1m where "k100"=1;
+    select count(*) from bench1m where "k500k"=1;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader13
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 200
+    select count(*) from bench1m where "k2"=1;
+    select count(*) from bench1m where "k100"=1;
+    select count(*) from bench1m where "k500k"=1;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader21
+  set schema 's';
+
+  @sync
+  @repeat 10
+    select count(*) from bench1m where "k100"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader22
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 100
+    select count(*) from bench1m where "k100"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader23
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 300
+    select count(*) from bench1m where "k100"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader31
+  set schema 's';
+
+  @sync
+  @repeat 10
+    select count(*) from bench1m where "k500k"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader32
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 100
+    select count(*) from bench1m where "k500k"=1;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread reader33
+  set schema 's';
+
+  @sync
+  @repeat 10
+    @sleep 400
+    select count(*) from bench1m where "k500k"=1;
+  @end
+
+@end
