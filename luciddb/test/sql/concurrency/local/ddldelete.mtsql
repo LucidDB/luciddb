@@ -52,16 +52,18 @@
 @thread w2
   set schema 's';
 
+-- explain plan is for local reference only and should not be checked in
+
   @sync
-  explain plan for delete from t1m where "k2"=1;
+--  explain plan for delete from t1m where "k2"=1;
   select count(*) from t1m where "k2"=1;
   @sync
   @sleep 50
-  explain plan for delete from t1m where "k2"=1;
+--  explain plan for delete from t1m where "k2"=1;
   delete from t1m where "k2"=1;
   select count(*) from t1m;
   @sync
-  explain plan for delete from t1m where "k2"=1;
+--  explain plan for delete from t1m where "k2"=1;
   select count(*) from t1m where "k2"=1;
   @sync
 
