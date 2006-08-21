@@ -35,11 +35,3 @@ public enum SargStrictness {
 }
 
 // End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java
-// End SargStrictness.java

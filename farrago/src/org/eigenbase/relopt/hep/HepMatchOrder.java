@@ -49,11 +49,3 @@ public enum HepMatchOrder {
 }
 
 // End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java
-// End HepMatchOrder.java

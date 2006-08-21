@@ -33,11 +33,3 @@ public enum JmiValidationAction {
 }
 
 // End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java
-// End JmiValidationAction.java

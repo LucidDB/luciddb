@@ -49,9 +49,10 @@ package org.eigenbase.util.mapping;
  * @version $Id$
  * @since Mar 24, 2006
  */
-public enum MappingType {
-    //            ordinal source target function inverse            =======
-    // ====== ====== ======== =================
+public enum MappingType
+{
+    //            ordinal source target function inverse
+    //            ======= ====== ====== ======== =================
 
     //                  0      1      1 true     0 Bijection
     Bijection,
@@ -239,7 +240,4 @@ public enum MappingType {
     private static final int MultipleTarget = 8;
 }
 
-// End MappingType.java
-// End MappingType.java
-// End MappingType.java
 // End MappingType.java

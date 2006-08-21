@@ -82,11 +82,3 @@ public enum FennelSearchEndpoint {
 }
 
 // End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java
-// End FennelSearchEndpoint.java

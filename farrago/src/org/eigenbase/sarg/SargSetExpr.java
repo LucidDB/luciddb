@@ -155,11 +155,18 @@ public class SargSetExpr
         // example, [4, 6] and [5, 7) are combined to form [4, 7).  (7, 8] is
         // not merged with the new range because neither range contains the
         // value 7.
-        //
-        // Input:          1  2  3  4  5  6  7  8  9 1 [1, 3] [-----] 2 [4, 6]
-        // [-----] 3 [5, 7)             [-----) 4 (7, 8] (--]
-        //
-        // Output: 1 [1, 3] [-----] 2 [4, 7)          [--------) 3 (7, 8] (--]
+	//
+	// Input:
+	//          1  2  3  4  5  6  7  8  9
+	// 1 [1, 3] [-----]
+	// 2 [4, 6]          [-----]
+	// 3 [5, 7)             [-----)
+	// 4 (7, 8]                   (--]
+	// 
+	// Output:
+	// 1 [1, 3] [-----]
+	// 2 [4, 7)          [--------)
+	// 3 (7, 8]                   (--]
         SargInterval accumulator = null;
         for (SargInterval interval : intervals) {
             // Empty intervals should have been previously filtered out.

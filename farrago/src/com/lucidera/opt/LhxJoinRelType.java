@@ -61,11 +61,3 @@ public enum LhxJoinRelType {
 }
 
 // End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java
-// End LhxJoinRelType.java

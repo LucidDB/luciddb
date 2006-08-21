@@ -32,11 +32,3 @@ public enum FarragoSessionTxnEnd {
 }
 
 // End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
-// End FarragoSessionTxnEnd.java
