@@ -314,6 +314,12 @@ public class SargSetExpr
                     source.getUpperBound().getCoordinate(),
                     source.getUpperBound().getStrictnessComplement());
 
+                if (target.getUpperBound().isFinite()) {
+                    newTarget.setUpper(
+                        target.getUpperBound().getCoordinate(),
+                        target.getUpperBound().getStrictness());
+                }
+                
                 // Trim current target to exclude the part of the range
                 // which will move to newTarget.
                 target.setUpper(
@@ -324,11 +330,14 @@ public class SargSetExpr
                 // into previous().
                 targetIter.add(newTarget);
 
-                // Next time through, work on newTarget.  By doing it
-                // this way, we work around the fact that remove() can't
-                // be called after add() without an intervening
-                // call to next/previous().
+                // Next time through, work on newTarget.
+                // targetIter.previous() is pointing at the newTarget.
                 target = targetIter.previous();
+                
+                // now targetIter.next() is also pointing at the newTarget
+                // need to do this redundant step to get targetIter in sync 
+                // with target
+                target = targetIter.next();
 
                 // Advance source.
                 if (!sourceIter.hasNext()) {

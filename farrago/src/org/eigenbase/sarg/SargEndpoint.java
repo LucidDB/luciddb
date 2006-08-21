@@ -351,7 +351,7 @@ public class SargEndpoint
      */
     public int getInfinitude()
     {
-        if (coordinate == null) {
+        if (!isFinite()) {
             if (boundType == SargBoundType.LOWER) {
                 return -1;
             } else {
@@ -460,7 +460,7 @@ public class SargEndpoint
     // implement Object
     public String toString()
     {
-        if (coordinate == null) {
+        if (!isFinite()) {
             if (boundType == SargBoundType.LOWER) {
                 return "-infinity";
             } else {
