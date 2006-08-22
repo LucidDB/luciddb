@@ -364,9 +364,9 @@
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Flatten hierarchical data
-0: jdbc:luciddb:> create function applib.flatten(c cursor)
+0: jdbc:luciddb:> create function applib.flatten_recursive_hierarchy(c cursor)
 . . . . . . . . > returns table(
-. . . . . . . . >     maxdepth integer,
+. . . . . . . . >     vertices integer,
 . . . . . . . . >     multipath boolean,
 . . . . . . . . >     level1 varchar(65535),
 . . . . . . . . >     level2 varchar(65535),
@@ -387,5 +387,5 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.Flatten.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
 0: jdbc:luciddb:> !quit

@@ -24,7 +24,8 @@ insert into tree1 values
     ('11','13')
 ;
 
-select * from table(applib.flatten(cursor(select * from tree1)));
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from tree1)));
 
 
 -- graph with multiple paths -----------------------------------------
@@ -44,7 +45,8 @@ insert into mgraph values
     ('01','08')
 ;
 
-select * from table(applib.flatten(cursor(select * from mgraph)));
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from mgraph)));
 
 truncate table mgraph;
 
@@ -69,7 +71,8 @@ insert into mgraph values
     ('12','14')
 ;
 
-select * from table(applib.flatten(cursor(select * from mgraph)));
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from mgraph)));
 
 
 -- input table has null values at col 1 for root nodes----------------
@@ -93,7 +96,8 @@ insert into nullval values
     ('11', '12')
 ;
 
-select * from table (applib.flatten(cursor(select * from nullval)));
+select * 
+from table (applib.flatten_recursive_hierarchy(cursor(select * from nullval)));
 
 truncate table nullval;
 
@@ -120,7 +124,8 @@ insert into nullval values
     ('12','14')
 ;
 
-select * from table (applib.flatten(cursor(select * from nullval)));
+select * 
+from table (applib.flatten_recursive_hierarchy(cursor(select * from nullval)));
 
 -- input table has non-string type -----------------------------------
 
@@ -137,7 +142,8 @@ insert into typeint values
     (6,7)
 ;
 
-select * from table (applib.flatten(cursor(select * from typeint)));
+select * 
+from table (applib.flatten_recursive_hierarchy(cursor(select * from typeint)));
 
 create table typedouble(parent double, child double);
 
@@ -152,7 +158,8 @@ insert into typedouble values
     (6.0,7.0)
 ;
 
-select * from table (applib.flatten(cursor(select * from typedouble)));
+select * 
+from table (applib.flatten_recursive_hierarchy(cursor(select * from typedouble)));
 
 create table typetimestamp(parent timestamp, child timestamp);
 
@@ -167,58 +174,41 @@ insert into typetimestamp values
     (timestamp'2002-01-06 01:56:00',timestamp'2002-01-07 01:56:00')
 ;
 
-select * from table (applib.flatten(cursor(select * from typetimestamp)));
+select * 
+from table (applib.flatten_recursive_hierarchy(cursor(select * from typetimestamp)));
 
--- clean up ----------------------------------------------------------
+-- tree as deep as maxDepth------------------------------------------
 
-drop table tree1 cascade;
-drop table mgraph cascade;
-drop table typeint;
-drop table typetimestamp;
-drop table typedouble;
+create table deep15(parent varchar(128), child varchar(128));
 
-
---------------------
--- negative tests --
---------------------
-
--- loop --------------------------------------------------------------
-
-create table loop(parent varchar(128), child varchar(128));
-
-insert into loop values 
-    ('1','2'),
-    ('2','1')
-;
-
-select * from table(applib.flatten(cursor(select * from loop)));
-
-truncate table loop;
-
-insert into loop values
+insert into deep15 values
+    ('a','b'),
+    ('a','c'),
+    ('b','c'),
     ('1','2'),
     ('2','3'),
-    ('3','1')
+    ('3','4'),
+    ('4','5'),
+    ('5','6'),
+    ('6','7'),
+    ('7','8'),
+    ('8','9'),
+    ('9','10'),
+    ('10','11'),
+    ('11','12'),
+    ('12','13'),
+    ('13','14'),
+    ('14','15')
 ;
 
-select * from table(applib.flatten(cursor(select * from loop)));
-
-truncate table loop;
-
-insert into loop values
-    ('1','2'),
-    ('2','3'),
-    ('3','2')
-;
-
-select * from table(applib.flatten(cursor(select * from loop)));
-
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from deep15)));
 
 -- tree deeper than maxDepth------------------------------------------
 
-create table deep(parent varchar(128), child varchar(128));
+create table deep16(parent varchar(128), child varchar(128));
 
-insert into deep values
+insert into deep16 values
     ('a','b'),
     ('a','c'),
     ('b','c'),
@@ -239,22 +229,69 @@ insert into deep values
     ('15','16')
 ;
 
-select * from table(applib.flatten(cursor(select * from deep)));
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from deep16)));
 
-create view dpview as
-    select * from table(applib.flatten(cursor(select * from deep)));
-select * from dpview;
+-- clean up ----------------------------------------------------------
 
+drop table tree1;
+drop table mgraph;
+drop table typeint;
+drop table typetimestamp;
+drop table typedouble;
+drop table deep15 cascade;
+drop table deep16 cascade;
+
+--------------------
+-- negative tests --
+--------------------
+
+-- loop --------------------------------------------------------------
+
+create table loop(parent varchar(128), child varchar(128));
+
+insert into loop values 
+    ('1','2'),
+    ('2','1')
+;
+
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from loop)));
+
+truncate table loop;
+
+insert into loop values
+    ('1','2'),
+    ('2','3'),
+    ('3','1'),
+    ('2','1'),
+    ('a','b'),
+    ('b','a')
+;
+
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from loop)));
+
+truncate table loop;
+
+insert into loop values
+    ('1','2'),
+    ('2','3'),
+    ('3','2')
+;
+
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from loop)));
 
 -- input table does not have 2 columns -------------------------------
 
 create table threecol(c1 varchar(10), c2 varchar(10), c3 varchar(10));
 
-select * from table (applib.flatten(cursor(select * from threecol)));
+select * 
+from table(applib.flatten_recursive_hierarchy(cursor(select * from threecol)));
 
 
 -- clean up ----------------------------------------------------------
 
-drop table loop cascade;
-drop table deep cascade;
-drop table threecol cascade;
+drop table loop;
+drop table threecol;
