@@ -99,6 +99,27 @@ public abstract class Bug
 
     // angel
 
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-187">issue FRG-187:
+     * FarragoAutoVmOperatorTest.testOverlapsOperator fails</a> is
+     * fixed.
+     */
+    public static final boolean Frg187Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-188">issue FRG-188:
+     * FarragoAutoVmOperatorTest tests for aggregate functions fails</a> is
+     * fixed.
+     */
+    public static final boolean Frg188Fixed = false;
+
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-189">issue FRG-189:
+     * FarragoAutoVmOperatorTest.testSelect fails</a> is
+     * fixed.
+     */
+    public static final boolean Frg189Fixed = false;
+
     // elin
 
     // fliang

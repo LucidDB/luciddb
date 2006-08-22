@@ -148,14 +148,17 @@ public:
 
 /**
  * FENNEL_TRACE can be used from within any class which implements
- * TraceSource.  msg can be an ostream expression like a << b << c.
+ * TraceSource. FENNEL_DELEGATE_TRACE is used from a lightweight class that
+ * isn't a TraceSource but belongs to and traces as one.
+ * msg can be an ostream expression like a << b << c.
  */
-#define FENNEL_TRACE(level,msg) \
+#define FENNEL_TRACE(level,msg) FENNEL_DELEGATE_TRACE(level,this,msg)
+#define FENNEL_DELEGATE_TRACE(level,tracer,msg) \
 do { \
-    if (isTracingLevel(level)) { \
+    if (tracer->isTracingLevel(level)) { \
         std::ostringstream oss; \
         oss << msg; \
-        trace(level,oss.str()); \
+        tracer->trace(level,oss.str()); \
     } \
 } while (false)
 
