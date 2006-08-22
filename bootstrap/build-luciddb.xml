@@ -117,6 +117,7 @@
 			<arg value="${build.home}/luciddb/initBuild.sh"/>
 			<arg value="${luciddb.init.arg}"/>
 			<arg value="--with-debug"/>
+			<arg value="--with-optimization"/>
 			<arg value="${luciddb.init.tests.arg}"/>
             <env key="EIGEN_HOME" file="${eigen_home}"/>
 			<env key="ANT_HOME" file="${build.home}/thirdparty/ant"/>
