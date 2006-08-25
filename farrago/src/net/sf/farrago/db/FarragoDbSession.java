@@ -1003,6 +1003,7 @@ public class FarragoDbSession
             reposTxnContext.commit();
             commitImpl();
             rollbackFennel = false;
+            ddlStmt.postCommit(ddlValidator);
 
             if (shutDownRequested) {
                 closeAllocation();
