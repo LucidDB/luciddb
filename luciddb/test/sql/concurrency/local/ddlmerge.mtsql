@@ -52,22 +52,24 @@
 @thread w2
   set schema 's';
 
+-- explain plan is for local reference only and should not be checked in
+
   @sync
-  explain plan for
-    merge into t1m as tr
-    using (select * from t1m where "k2"=1) as rf
-    on rf."kseq" = tr."kseq"
-    when matched then update set "k2"=-1
-    when not matched then insert ("kseq") values(0);
+--  explain plan for
+--    merge into t1m as tr
+--    using (select * from t1m where "k2"=1) as rf
+--    on rf."kseq" = tr."kseq"
+--    when matched then update set "k2"=-1
+--    when not matched then insert ("kseq") values(0);
   select count(*) from t1m where "k2"=1;
   @sync
   @sleep 50
-  explain plan for
-    merge into t1m as tr
-    using (select * from t1m where "k2"=1) as rf
-    on rf."kseq" = tr."kseq"
-    when matched then update set "k2"=-1
-    when not matched then insert ("kseq") values(0);
+--  explain plan for
+--    merge into t1m as tr
+--    using (select * from t1m where "k2"=1) as rf
+--    on rf."kseq" = tr."kseq"
+--    when matched then update set "k2"=-1
+--    when not matched then insert ("kseq") values(0);
   merge into t1m as tr
   using (select * from t1m where "k2"=1) as rf
   on rf."kseq" = tr."kseq"
@@ -75,12 +77,12 @@
   when not matched then insert ("kseq") values(0); 
   select count(*) from t1m;
   @sync
-  explain plan for
-    merge into t1m as tr
-    using (select * from t1m where "k2"=1) as rf
-    on rf."kseq" = tr."kseq"
-    when matched then update set "k2"=-1
-    when not matched then insert ("kseq") values(0);
+--  explain plan for
+--    merge into t1m as tr
+--    using (select * from t1m where "k2"=1) as rf
+--    on rf."kseq" = tr."kseq"
+--    when matched then update set "k2"=-1
+--    when not matched then insert ("kseq") values(0);
   select count(*) from t1m where "k2"=1;
   @sync
 

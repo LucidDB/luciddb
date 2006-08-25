@@ -51,15 +51,17 @@
 @thread w2,w3
   set schema 's';
 
+-- explain plan is for local reference only and should not be checked in
+
   @sync
-  explain plan for select count(*) from t1m where "k2"=1;
+--  explain plan for select count(*) from t1m where "k2"=1;
   select count(*) from t1m where "k2"=1;
   @sync
   @sleep 50
-  explain plan for select count(*) from t1m where "k2"=1;
+--  explain plan for select count(*) from t1m where "k2"=1;
   select count(*) from t1m where "k2"=1;
   @sync
-  explain plan for select count(*) from t1m where "k2"=1;
+--  explain plan for select count(*) from t1m where "k2"=1;
   select count(*) from t1m where "k2"=1;
   @sync
 

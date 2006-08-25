@@ -171,6 +171,27 @@
 <text>Application variable ''{1}'' has not been created in context ''{0}''</text>
 </exception>
 
+<exception id="900300" name="CannotGetMetaData">
+<text>Cannot get metadata from input table</text>
+</exception>
+
+<exception id="900310" name="WrongNumberInputColumns">
+<text>Input table must have two columns, not ''{0}''</text>
+</exception>
+
+<exception id="900320" name="CannotReadInput">
+<text>Cannot read from input</text>
+</exception>
+
+<exception id="900330" name="CannotWriteOutput">
+<text>Cannot write to output</text>
+</exception>
+
+<exception id="900340" name="GraphHasCycle">
+<text>Graph has cycle(s) of ''{0}'' vertices; first 20 in loop(s): ''{1}''</text>
+</exception>
+
+
 <!-- ====================================================================== -->
  Messages
 <!-- ====================================================================== -->

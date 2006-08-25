@@ -364,9 +364,9 @@ no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
 
 -- Flatten hierarchical data
-create function applib.flatten(c cursor)
+create function applib.flatten_recursive_hierarchy(c cursor)
 returns table(
-    maxdepth integer,
+    vertices integer,
     multipath boolean,
     level1 varchar(65535),
     level2 varchar(65535),
@@ -387,4 +387,4 @@ returns table(
 language java
 parameter style system defined java
 no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.Flatten.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';

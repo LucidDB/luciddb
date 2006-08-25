@@ -1,0 +1,99 @@
+@nolockstep
+
+@setup
+--
+-- tests concurrent reading from fds and local
+-- uses tables created in creforeigntbl.mtsql
+--
+
+@end
+
+
+-----------------------------------------------------------------------------
+
+@thread flatfile1direct, flatfile2direct
+
+  @sync
+  @repeat 5
+    select count(*) from ff_server."BCP"."bench100" where "kseq"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k500k"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from ff_server."BCP"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from ff_server."BCP"."bench100" where "kseq"<50;
+    select count(*) from ff_server."BCP"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+    select "kseq", floor("k500k"/10) from ff_server."BCP"."bench100" where "kseq" <= 3;
+  @end
+@end
+
+-----------------------------------------------------------------------------
+
+@thread csv1direct, csv2direct
+
+  @sync
+  @repeat 5
+    select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k500k" as bigint)=1 or 
+                                                              cast("k100" as bigint)=1 or 
+                                                              cast("k2" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("k2" as bigint)=1 and 
+                                                              cast("k500k" as bigint)=1;
+    select count(*) from csv_server.testdata."bench100" where cast("kseq" as bigint)<50;
+    select count(*) from csv_server.testdata."bench100"
+    where (cast("k100" as bigint) = 1) or 
+          (cast("k500k" as bigint) < 1) or 
+          (cast("k2" as bigint) is null) or
+          (cast("k2" as bigint)+ cast("k4" as bigint) < 3);
+    select "kseq", floor(cast("k500k" as bigint)/10) from csv_server.testdata."bench100" 
+    where cast("kseq" as bigint) <= 3;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread oracle1direct, oracle2direct
+
+  @sync
+  @repeat 5
+    select count(*) from orcl_server."SCHOI"."bench100" where "kseq"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from orcl_server."SCHOI"."bench100" where "kseq"<50;
+    select count(*) from orcl_server."SCHOI"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+    select "kseq", floor("k500k"/10) from orcl_server."SCHOI"."bench100" where "kseq" <= 3;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------
+
+@thread sqlserver1direct, sqlserver2direct
+
+  @sync
+  @repeat 5
+    select count(*) from mssql_server."dbo"."bench100" where "kseq"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k500k"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k500k"=1 or "k100"=1 or "k2"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "k2"=1 and "k500k"=1;
+    select count(*) from mssql_server."dbo"."bench100" where "kseq"<50;
+    select count(*) from mssql_server."dbo"."bench100"
+    where ("k100" = 1) or 
+          ("k500k" < 1) or 
+          ("k2" is null) or
+          ("k2" + "k4" < 3);
+    select "kseq", floor("k500k"/10) from mssql_server."dbo"."bench100" where "kseq" <= 3;
+  @end
+
+@end
+
+-----------------------------------------------------------------------------

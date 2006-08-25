@@ -53,15 +53,17 @@
 @thread w2
   set schema 's';
 
+-- explain plan is for local reference only and should not be checked in
+
   @sync
-  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+--  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
   select count(*) from t1k where "k2"=1;
   @sync
-  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+--  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
   insert into t1k select * from t1k where "k2"=1;
   select count(*) from t1k;
   @sync
-  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
+--  explain plan for insert into t1k select * from t1k where "k2"=1+sys_boot.mgmt.sleep(5000);
   select count(*) from t1k where "k2"=1;
   @sync
 
