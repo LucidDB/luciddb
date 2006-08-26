@@ -458,6 +458,10 @@ void LhxAggExecStream::setAggComputers(
         case AGG_FUNC_SINGLE_VALUE:
             partialAggFunction = pInvocation->aggFunction;
             break;
+        default:
+            assert(false);
+            partialAggFunction = pInvocation->aggFunction;
+            break;
         }
 
         /*
