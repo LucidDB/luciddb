@@ -69,6 +69,7 @@ void SortedAggExecStream::prepare(SortedAggExecStreamParams const &params)
         case AGG_FUNC_SUM:
         case AGG_FUNC_MIN:
         case AGG_FUNC_MAX:
+        case AGG_FUNC_SINGLE_VALUE:
             // Output type is same as input type, but nullable
             prevTupleDesc.push_back(inputDesc[pInvocation->iInputAttr]);
             prevTupleDesc.back().isNullable = true;

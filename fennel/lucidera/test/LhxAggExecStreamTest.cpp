@@ -37,24 +37,19 @@ class LhxAggExecStreamTest : public ExecStreamUnitTestBase
     void testCountImpl(uint forcePartitionLevel);
     void testSumImpl(uint forcePartitionLevel);
     void testGroupCountImpl(uint forcePartitionLevel);
+    void testSingleValueImpl(uint forcePartitionLevel);
 
-    void testImpl(
-        uint numInputRows, uint keyCount, uint cndKeys, uint numResultRows,
-        TupleDescriptor &inputDesc, TupleDescriptor &outputDesc,
-        TupleProjection &outputProj, bool leftOuter,
-        SharedMockProducerExecStreamGenerator pLeftGenerator,
-        SharedMockProducerExecStreamGenerator pRightGenerator,
-        CompositeExecStreamGenerator &verifier);
-    
 public:
     explicit LhxAggExecStreamTest()
     {
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testCount);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSum);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testGroupCount);
+        FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSingleValue);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testCountPartition);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSumPartition);
         FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testGroupCountPartition);
+        FENNEL_UNIT_TEST_CASE(LhxAggExecStreamTest, testSingleValuePartition);
     }
     
     void testCount();
@@ -65,6 +60,9 @@ public:
 
     void testGroupCount();
     void testGroupCountPartition();
+
+    void testSingleValue();
+    void testSingleValuePartition();
 };
 
 void LhxAggExecStreamTest::testCount()
@@ -95,6 +93,16 @@ void LhxAggExecStreamTest::testGroupCount()
 void LhxAggExecStreamTest::testGroupCountPartition()
 {
     testGroupCountImpl(2);
+}
+
+void LhxAggExecStreamTest::testSingleValue()
+{
+    testSingleValueImpl(0);
+}
+
+void LhxAggExecStreamTest::testSingleValuePartition()
+{
+    testSingleValueImpl(2);
 }
 
 void LhxAggExecStreamTest::testCountImpl(uint forcePartitionLevel)
@@ -275,6 +283,101 @@ void LhxAggExecStreamTest::testGroupCountImpl(uint forcePartitionLevel)
     CompositeExecStreamGenerator expectedResultGenerator(columnGenerators);
 
     verifyOutput(*pOutputStream, mockParams.nRows/2, expectedResultGenerator);
+}
+
+void LhxAggExecStreamTest::testSingleValueImpl(uint forcePartitionLevel)
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    TupleAttributeDescriptor attrDescNullable(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true,
+        sizeof(int64_t));
+
+    // Result should be a sequence of values in the first column
+    // and 2 for the second column
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsIn;
+
+    SharedInt64ColumnGenerator col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsIn.push_back(col);
+
+    uint numRows = 1000;
+
+    // Create two columns, both with two duplicates per column.
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = numRows;
+    mockParams.pGenerator.reset(
+        new CompositeExecStreamGenerator(columnGeneratorsIn));
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    TupleDescriptor outputDesc;
+    outputDesc.push_back(attrDesc);
+    outputDesc.push_back(attrDescNullable);
+
+    // simulate SELECT x, single_value(x) FROM t10k group by x
+    LhxAggExecStreamParams aggParams;
+    aggParams.groupByKeyCount = 1;
+    aggParams.outputTupleDesc = outputDesc;
+    AggInvocation singleValueInvocation;
+    singleValueInvocation.aggFunction = AGG_FUNC_SINGLE_VALUE;
+    singleValueInvocation.iInputAttr = 0;
+    aggParams.aggInvocations.push_back(singleValueInvocation);
+
+    aggParams.pCacheAccessor = pCache;
+    aggParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 100);
+    aggParams.pTempSegment = pRandomSegment;
+    aggParams.cndGroupByKeys = numRows;
+    aggParams.numRows = numRows;
+    aggParams.forcePartitionLevel = forcePartitionLevel;
+    aggParams.enableSubPartStat = true;
+    
+    ExecStreamEmbryo aggStreamEmbryo;
+
+    aggStreamEmbryo.init(new LhxAggExecStream(),aggParams);
+    aggStreamEmbryo.getStream()->setName("LhxAggExecStream");
+
+    ExternalSortExecStreamParams sortParams;
+    sortParams.outputTupleDesc = outputDesc;
+    sortParams.distinctness = DUP_ALLOW;
+    sortParams.pTempSegment = pRandomSegment;
+    sortParams.pCacheAccessor = pCache;
+    sortParams.scratchAccessor =
+        pSegmentFactory->newScratchSegment(pCache, 10);
+    sortParams.keyProj.push_back(0);
+    sortParams.storeFinalRun = false;
+
+    ExecStreamEmbryo sortStreamEmbryo;
+    sortStreamEmbryo.init(
+        ExternalSortExecStream::newExternalSortExecStream(),sortParams);
+    sortStreamEmbryo.getStream()->setName("ExternalSortExecStream");
+
+    std::vector<ExecStreamEmbryo> transforms;
+    transforms.push_back(aggStreamEmbryo);
+    transforms.push_back(sortStreamEmbryo);
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo, transforms);
+
+    // Result should be a sequence of values in both columns
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsOut;
+    
+    col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsOut.push_back(col);
+    
+    col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsOut.push_back(col);
+    
+    CompositeExecStreamGenerator expectedResultGenerator(columnGeneratorsOut);
+
+    verifyOutput(*pOutputStream, mockParams.nRows, expectedResultGenerator);
 }
 
 FENNEL_UNIT_TEST_SUITE(LhxAggExecStreamTest);
