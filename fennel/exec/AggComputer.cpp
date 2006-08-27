@@ -21,6 +21,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/exec/AggComputer.h"
 #include "fennel/exec/AggComputerImpl.h"
 #include "fennel/tuple/TupleDescriptor.h"
@@ -262,9 +263,8 @@ void ExtremeAggComputer::updateAccumulator(
         copyInputToAccumulator(accumulatorDatum, inputDatum);
         return;
     } else if (isSingleValue) {
-        ostringstream errMsg;
-        errMsg << "Scalar Query returned more than one tuple:";
-        throw FennelExcn(errMsg.str());    
+        throw FennelExcn(
+            FennelResource::instance().scalarQueryReturnedMultipleRows() );
     }
 
     // c = (input - accumulator)
@@ -318,9 +318,8 @@ void ExtremeAggComputer::updateAccumulator(
     TupleData const &inputTuple)
 {
     if (isSingleValue) {
-        ostringstream errMsg;
-        errMsg << "Scalar Query returned more than one tuple:";
-        throw FennelExcn(errMsg.str());    
+        throw FennelExcn(
+            FennelResource::instance().scalarQueryReturnedMultipleRows() );
     }
 
     TupleDatum const &inputDatum = inputTuple[iInputAttr];

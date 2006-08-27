@@ -71,6 +71,11 @@ class FennelResource : ResourceBundle
     std::string invalidParam(const std::string &p0, const std::string &p1) const;
 
     /**
+     * <code>scalarQueryReturnedMultipleRows</code> is 'Scalar query returned more than one row'
+     */
+    std::string scalarQueryReturnedMultipleRows() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -142,6 +147,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _executionAborted;
     ResourceDefinition _rowTooLong;
     ResourceDefinition _invalidParam;
+    ResourceDefinition _scalarQueryReturnedMultipleRows;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

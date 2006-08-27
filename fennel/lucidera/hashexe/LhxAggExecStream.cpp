@@ -459,8 +459,8 @@ void LhxAggExecStream::setAggComputers(
             partialAggFunction = pInvocation->aggFunction;
             break;
         default:
-            assert(false);
-            partialAggFunction = pInvocation->aggFunction;
+            permFail("unknown aggregation function: "
+                     << pInvocation->aggFunction);
             break;
         }
 
