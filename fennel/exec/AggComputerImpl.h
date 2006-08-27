@@ -121,13 +121,11 @@ class ExtremeAggComputer : public AggComputer
      */
     StoredTypeDescriptor const *pTypeDescriptor;
 
-    bool isSingleValue;
-    
     /**
-     * false for MAX, true for MIN
+     * Agg function implemented by this agg computer.
      */
-    bool isMin;
-    
+    AggFunction aggFunction;
+
     // FIXME jvs 7-Oct-2005: This violates the rule in AggComputer's class
     // description about where data state is stored.
     bool isResultNull;
@@ -138,9 +136,8 @@ class ExtremeAggComputer : public AggComputer
 
 public:
     explicit ExtremeAggComputer(
-        TupleAttributeDescriptor const &attrDesc,
-        bool isMin,
-        bool isSingleValue=false);
+        AggFunction aggFunctionInit,
+        TupleAttributeDescriptor const &attrDesc);
     
     // implement AggComputer
     virtual void clearAccumulator(
