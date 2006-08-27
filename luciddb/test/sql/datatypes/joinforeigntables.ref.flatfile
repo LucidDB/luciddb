@@ -1,0 +1,341 @@
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select DEPARTMENTS.DNAME, EMPLOYEES.FNAME
+. . . . . . . . > from FF_SERVER.BCP.DEPT as DEPARTMENTS,
+. . . . . . . . >      FF_SERVER.BCP.EMP as EMPLOYEES
+. . . . . . . . > where DEPARTMENTS.DEPTNO = EMPLOYEES.DEPTNO
+. . . . . . . . > order by 1,2;
++--------------+--------+
+|    DNAME     | FNAME  |
++--------------+--------+
+| Accounting   | Fritz  |
+| Development  | Bill   |
+| Development  | Jill   |
+| Development  | Julie  |
+| Development  | Rich   |
+| Marketing    | Frank  |
+| Sales        | Jack   |
+| Sales        | Rob    |
+| Sales        | Robin  |
+| Support      | Bob    |
+| Support      | Mary   |
++--------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select EMP.FNAME, PRODUCTS.NAME, SALES.PRICE
+. . . . . . . . > from FF_SERVER.BCP.SALES, 
+. . . . . . . . >      FF_SERVER.BCP.PRODUCTS,
+. . . . . . . . >      FF_SERVER.BCP.EMP
+. . . . . . . . > where cast(SALES.PRODID as integer) = cast(PRODUCTS.PRODID as integer) and
+. . . . . . . . >       cast(SALES.EMPNO as integer) = cast(EMP.EMPNO as integer) and
+. . . . . . . . >       cast(SALES.PRICE as double) > 7.00
+. . . . . . . . > order by 1,2,3;
++--------+---------------+--------+
+| FNAME  |     NAME      | PRICE  |
++--------+---------------+--------+
+| Bill   | Chicken       | 7.53   |
+| Bill   | Chicken       | 7.57   |
+| Bill   | Cookies       | 8.21   |
+| Bill   | Eggs          | 7.3    |
+| Bill   | Eggs          | 8.21   |
+| Bill   | Eggs          | 8.5    |
+| Bill   | Iron          | 7.84   |
+| Bill   | Iron          | 9.78   |
+| Bill   | Juice         | 9.65   |
+| Bill   | Microwave     | 7.38   |
+| Bill   | Microwave     | 9.17   |
+| Bill   | Microwave     | 9.23   |
+| Bill   | Refrigerator  | 8.77   |
+| Bill   | Shampoo       | 9.79   |
+| Bill   | Soap          | 9.96   |
+| Bill   | Soup          | 8.78   |
+| Bill   | Telephone     | 7.07   |
+| Bill   | Telephone     | 7.58   |
+| Bill   | Telephone     | 9.1    |
+| Bill   | Telephone     | 9.99   |
+| Bob    | Chicken       | 8.55   |
+| Bob    | Cookies       | 7.33   |
+| Bob    | Cookies       | 9.19   |
+| Bob    | Cookies       | 9.89   |
+| Bob    | Iron          | 9.23   |
+| Bob    | Iron          | 9.34   |
+| Bob    | Iron          | 9.86   |
+| Bob    | Juice         | 8.4    |
+| Bob    | Juice         | 9.82   |
+| Bob    | Milk          | 7.38   |
+| Bob    | Milk          | 7.41   |
+| Bob    | Milk          | 8.24   |
+| Bob    | Milk          | 8.47   |
+| Bob    | Milk          | 8.57   |
+| Bob    | Milk          | 9.38   |
+| Bob    | Plunger       | 7.22   |
+| Bob    | Plunger       | 8.57   |
+| Bob    | Plunger       | 9.28   |
+| Bob    | Refrigerator  | 7.38   |
+| Bob    | Refrigerator  | 8.0    |
+| Bob    | Refrigerator  | 8.25   |
+| Bob    | Refrigerator  | 8.52   |
+| Bob    | Refrigerator  | 9.79   |
+| Bob    | Shampoo       | 7.36   |
+| Bob    | Shampoo       | 9.51   |
+| Bob    | Soup          | 7.92   |
+| Bob    | Soup          | 8.96   |
+| Bob    | Telephone     | 7.83   |
+| Bob    | Towel         | 7.09   |
+| Frank  | Chicken       | 7.71   |
+| Frank  | Chicken       | 8.06   |
+| Frank  | Chicken       | 9.34   |
+| Frank  | Cookies       | 7.08   |
+| Frank  | Cookies       | 7.95   |
+| Frank  | Heater        | 8.7    |
+| Frank  | Juice         | 7.88   |
+| Frank  | Juice         | 8.59   |
+| Frank  | Juice         | 8.75   |
+| Frank  | Juice         | 9.93   |
+| Frank  | Plunger       | 9.78   |
+| Frank  | Refrigerator  | 9.32   |
+| Frank  | Shampoo       | 7.36   |
+| Frank  | Shampoo       | 8.42   |
+| Frank  | Shampoo       | 8.86   |
+| Frank  | Shampoo       | 9.73   |
+| Frank  | Soap          | 8.89   |
+| Frank  | Soap          | 9.36   |
+| Frank  | Soap          | 9.6    |
+| Frank  | Soda          | 7.42   |
+| Frank  | Soup          | 7.69   |
+| Frank  | Telephone     | 9.82   |
+| Frank  | Towel         | 7.56   |
+| Fritz  | Chicken       | 9.15   |
+| Fritz  | Cookies       | 7.01   |
+| Fritz  | Cookies       | 9.4    |
+| Fritz  | Cookies       | 9.48   |
+| Fritz  | Eggs          | 9.75   |
+| Fritz  | Iron          | 8.12   |
+| Fritz  | Iron          | 8.27   |
+| Fritz  | Iron          | 9.15   |
+| Fritz  | Juice         | 8.41   |
+| Fritz  | Milk          | 7.58   |
+| Fritz  | Milk          | 9.46   |
+| Fritz  | Plunger       | 7.66   |
+| Fritz  | Plunger       | 8.28   |
+| Fritz  | Plunger       | 9.32   |
+| Fritz  | Plunger       | 9.76   |
+| Fritz  | Refrigerator  | 7.05   |
+| Fritz  | Shampoo       | 7.3    |
+| Fritz  | Shampoo       | 7.4    |
+| Fritz  | Shampoo       | 8.23   |
+| Fritz  | Shampoo       | 9.44   |
+| Fritz  | Soap          | 7.35   |
+| Fritz  | Soap          | 7.72   |
+| Fritz  | Soap          | 9.05   |
+| Fritz  | Soda          | 7.7    |
+| Fritz  | Soup          | 7.29   |
+| Fritz  | Soup          | 8.25   |
+| Fritz  | Soup          | 8.67   |
++--------+---------------+--------+
+| FNAME  |     NAME      | PRICE  |
++--------+---------------+--------+
+| Jack   | Cookies       | 8.6    |
+| Jack   | Eggs          | 7.6    |
+| Jack   | Eggs          | 9.62   |
+| Jack   | Heater        | 7.02   |
+| Jack   | Heater        | 7.46   |
+| Jack   | Iron          | 8.23   |
+| Jack   | Iron          | 8.27   |
+| Jack   | Milk          | 8.08   |
+| Jack   | Milk          | 8.21   |
+| Jack   | Milk          | 8.45   |
+| Jack   | Plunger       | 9.35   |
+| Jack   | Plunger       | 9.54   |
+| Jack   | Refrigerator  | 7.08   |
+| Jack   | Refrigerator  | 7.1    |
+| Jack   | Refrigerator  | 7.45   |
+| Jack   | Shampoo       | 9.28   |
+| Jack   | Soap          | 7.31   |
+| Jack   | Soap          | 7.71   |
+| Jack   | Soda          | 7.23   |
+| Jack   | Soda          | 7.96   |
+| Jack   | Soda          | 9.3    |
+| Jack   | Telephone     | 8.88   |
+| Jack   | Telephone     | 9.87   |
+| Jack   | Towel         | 9.28   |
+| Jill   | Chicken       | 8.02   |
+| Jill   | Cookies       | 8.67   |
+| Jill   | Cookies       | 9.4    |
+| Jill   | Eggs          | 9.0    |
+| Jill   | Iron          | 7.22   |
+| Jill   | Iron          | 7.37   |
+| Jill   | Iron          | 7.57   |
+| Jill   | Iron          | 8.61   |
+| Jill   | Juice         | 9.27   |
+| Jill   | Juice         | 9.65   |
+| Jill   | Juice         | 9.71   |
+| Jill   | Milk          | 9.09   |
+| Jill   | Plunger       | 7.07   |
+| Jill   | Plunger       | 7.67   |
+| Jill   | Refrigerator  | 7.4    |
+| Jill   | Refrigerator  | 8.0    |
+| Jill   | Refrigerator  | 8.51   |
+| Jill   | Shampoo       | 7.23   |
+| Jill   | Soap          | 7.66   |
+| Jill   | Soap          | 8.33   |
+| Jill   | Soap          | 8.95   |
+| Jill   | Soda          | 7.93   |
+| Jill   | Soda          | 8.35   |
+| Jill   | Soda          | 9.72   |
+| Jill   | Telephone     | 9.04   |
+| Jill   | Telephone     | 9.32   |
+| Jill   | Telephone     | 9.46   |
+| Jill   | Telephone     | 9.68   |
+| Jill   | Towel         | 8.72   |
+| Julie  | Chicken       | 8.92   |
+| Julie  | Chicken       | 9.58   |
+| Julie  | Cookies       | 8.02   |
+| Julie  | Eggs          | 8.24   |
+| Julie  | Eggs          | 9.76   |
+| Julie  | Iron          | 9.47   |
+| Julie  | Juice         | 7.18   |
+| Julie  | Juice         | 7.83   |
+| Julie  | Microwave     | 8.18   |
+| Julie  | Microwave     | 8.42   |
+| Julie  | Microwave     | 8.78   |
+| Julie  | Milk          | 7.24   |
+| Julie  | Plunger       | 8.04   |
+| Julie  | Plunger       | 9.25   |
+| Julie  | Refrigerator  | 7.49   |
+| Julie  | Refrigerator  | 8.59   |
+| Julie  | Refrigerator  | 9.15   |
+| Julie  | Refrigerator  | 9.52   |
+| Julie  | Refrigerator  | 9.76   |
+| Julie  | Shampoo       | 7.42   |
+| Julie  | Shampoo       | 8.89   |
+| Julie  | Shampoo       | 9.84   |
+| Julie  | Soap          | 9.23   |
+| Julie  | Soda          | 8.67   |
+| Julie  | Soda          | 9.1    |
+| Julie  | Soda          | 9.61   |
+| Julie  | Soup          | 9.88   |
+| Julie  | Telephone     | 7.32   |
+| Julie  | Towel         | 7.31   |
+| Julie  | Towel         | 8.04   |
+| Mary   | Chicken       | 7.08   |
+| Mary   | Chicken       | 8.51   |
+| Mary   | Chicken       | 8.6    |
+| Mary   | Chicken       | 8.97   |
+| Mary   | Chicken       | 9.59   |
+| Mary   | Cookies       | 7.44   |
+| Mary   | Cookies       | 8.0    |
+| Mary   | Cookies       | 9.95   |
+| Mary   | Eggs          | 8.69   |
+| Mary   | Eggs          | 9.83   |
+| Mary   | Heater        | 8.03   |
+| Mary   | Heater        | 9.51   |
+| Mary   | Juice         | 9.86   |
+| Mary   | Microwave     | 7.79   |
+| Mary   | Microwave     | 8.22   |
+| Mary   | Milk          | 7.25   |
+| Mary   | Plunger       | 7.25   |
++--------+---------------+--------+
+| FNAME  |     NAME      | PRICE  |
++--------+---------------+--------+
+| Mary   | Plunger       | 7.31   |
+| Mary   | Refrigerator  | 8.71   |
+| Mary   | Shampoo       | 7.43   |
+| Mary   | Shampoo       | 8.54   |
+| Mary   | Shampoo       | 8.89   |
+| Mary   | Shampoo       | 9.23   |
+| Mary   | Soda          | 8.32   |
+| Mary   | Soup          | 8.47   |
+| Mary   | Telephone     | 9.22   |
+| Mary   | Towel         | 7.4    |
+| Mary   | Towel         | 7.61   |
+| Mary   | Towel         | 8.68   |
+| Rich   | Chicken       | 8.82   |
+| Rich   | Chicken       | 9.14   |
+| Rich   | Cookies       | 7.51   |
+| Rich   | Eggs          | 8.67   |
+| Rich   | Eggs          | 8.69   |
+| Rich   | Eggs          | 9.92   |
+| Rich   | Iron          | 7.05   |
+| Rich   | Iron          | 7.7    |
+| Rich   | Iron          | 8.59   |
+| Rich   | Juice         | 7.4    |
+| Rich   | Juice         | 7.56   |
+| Rich   | Juice         | 8.24   |
+| Rich   | Juice         | 9.14   |
+| Rich   | Microwave     | 8.69   |
+| Rich   | Milk          | 9.78   |
+| Rich   | Milk          | 9.86   |
+| Rich   | Plunger       | 7.95   |
+| Rich   | Shampoo       | 7.13   |
+| Rich   | Shampoo       | 8.2    |
+| Rich   | Shampoo       | 8.38   |
+| Rich   | Shampoo       | 8.72   |
+| Rich   | Soap          | 8.6    |
+| Rich   | Soap          | 9.23   |
+| Rich   | Soap          | 9.35   |
+| Rich   | Soda          | 8.13   |
+| Rich   | Soda          | 9.94   |
+| Rich   | Soup          | 8.49   |
+| Rich   | Telephone     | 9.04   |
+| Rich   | Telephone     | 9.11   |
+| Rich   | Telephone     | 9.41   |
+| Rich   | Telephone     | 9.54   |
+| Rich   | Towel         | 7.56   |
+| Rich   | Towel         | 7.71   |
+| Rob    | Cookies       | 7.31   |
+| Rob    | Eggs          | 8.53   |
+| Rob    | Eggs          | 9.41   |
+| Rob    | Heater        | 7.38   |
+| Rob    | Heater        | 7.99   |
+| Rob    | Heater        | 8.29   |
+| Rob    | Heater        | 8.4    |
+| Rob    | Juice         | 9.49   |
+| Rob    | Juice         | 9.95   |
+| Rob    | Microwave     | 7.95   |
+| Rob    | Milk          | 9.43   |
+| Rob    | Milk          | 9.67   |
+| Rob    | Plunger       | 8.63   |
+| Rob    | Plunger       | 8.92   |
+| Rob    | Plunger       | 9.3    |
+| Rob    | Refrigerator  | 8.86   |
+| Rob    | Shampoo       | 7.68   |
+| Rob    | Shampoo       | 9.15   |
+| Rob    | Shampoo       | 9.33   |
+| Rob    | Soap          | 9.44   |
+| Rob    | Soda          | 7.48   |
+| Rob    | Soda          | 7.71   |
+| Rob    | Soda          | 9.9    |
+| Rob    | Telephone     | 7.43   |
+| Rob    | Telephone     | 7.55   |
+| Rob    | Towel         | 8.08   |
+| Robin  | Chicken       | 7.81   |
+| Robin  | Cookies       | 7.05   |
+| Robin  | Cookies       | 8.37   |
+| Robin  | Cookies       | 9.01   |
+| Robin  | Cookies       | 9.62   |
+| Robin  | Eggs          | 9.02   |
+| Robin  | Heater        | 7.12   |
+| Robin  | Iron          | 7.57   |
+| Robin  | Iron          | 9.79   |
+| Robin  | Juice         | 7.95   |
+| Robin  | Juice         | 9.69   |
+| Robin  | Microwave     | 8.37   |
+| Robin  | Microwave     | 9.01   |
+| Robin  | Milk          | 8.28   |
+| Robin  | Plunger       | 9.98   |
+| Robin  | Refrigerator  | 7.41   |
+| Robin  | Refrigerator  | 7.55   |
+| Robin  | Refrigerator  | 8.47   |
+| Robin  | Refrigerator  | 8.88   |
+| Robin  | Refrigerator  | 9.1    |
+| Robin  | Refrigerator  | 9.91   |
+| Robin  | Shampoo       | 7.29   |
+| Robin  | Shampoo       | 7.39   |
+| Robin  | Soap          | 7.19   |
+| Robin  | Soap          | 9.77   |
+| Robin  | Soda          | 9.33   |
+| Robin  | Soup          | 9.53   |
+| Robin  | Telephone     | 7.84   |
+| Robin  | Towel         | 9.03   |
++--------+---------------+--------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

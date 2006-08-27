@@ -455,11 +455,12 @@ void LhxAggExecStream::setAggComputers(
         case AGG_FUNC_SUM:
         case AGG_FUNC_MIN:
         case AGG_FUNC_MAX:
+        case AGG_FUNC_SINGLE_VALUE:
             partialAggFunction = pInvocation->aggFunction;
             break;
         default:
-            assert(false);
-            partialAggFunction = pInvocation->aggFunction;
+            permFail("unknown aggregation function: "
+                     << pInvocation->aggFunction);
             break;
         }
 
@@ -561,6 +562,7 @@ void LhxAggExecStream::setHashInfo(
         case AGG_FUNC_SUM:
         case AGG_FUNC_MIN:
         case AGG_FUNC_MAX:
+        case AGG_FUNC_SINGLE_VALUE:
             // Key type is same as input type, but nullable
             keyDesc.push_back(inputDesc[pInvocation->iInputAttr]);
             keyDesc.back().isNullable = true;

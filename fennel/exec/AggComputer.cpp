@@ -21,12 +21,16 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
+#include "fennel/common/FennelResource.h"
 #include "fennel/exec/AggComputer.h"
 #include "fennel/exec/AggComputerImpl.h"
 #include "fennel/tuple/TupleDescriptor.h"
 #include "fennel/tuple/StandardTypeDescriptor.h"
+#include "fennel/common/FennelExcn.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+using namespace std;
 
 AggComputer *AggComputer::newAggComputer(
     AggFunction aggFunction,
@@ -67,8 +71,10 @@ AggComputer *AggComputer::newAggComputer(
         }
     case AGG_FUNC_MIN:
     case AGG_FUNC_MAX:
+    case AGG_FUNC_SINGLE_VALUE:
         assert(pAttrDesc);
-        return new ExtremeAggComputer(*pAttrDesc, aggFunction == AGG_FUNC_MIN);
+        return new ExtremeAggComputer(*pAttrDesc, aggFunction == AGG_FUNC_MIN,
+                                      aggFunction == AGG_FUNC_SINGLE_VALUE);
     }
     permAssert(false);
 }
@@ -217,10 +223,12 @@ void CountNullableAggComputer::updateAccumulator(
 
 ExtremeAggComputer::ExtremeAggComputer(
     TupleAttributeDescriptor const &attrDesc,
-    bool isMinInit)
+    bool isMinInit,
+    bool isSingleValueInit)
 {
     pTypeDescriptor = attrDesc.pTypeDescriptor;
     isMin = isMinInit;
+    isSingleValue = isSingleValueInit;
 }
 
 void ExtremeAggComputer::clearAccumulator(TupleDatum &accumulatorDatum)
@@ -254,7 +262,11 @@ void ExtremeAggComputer::updateAccumulator(
         // first non-null input:  use it
         copyInputToAccumulator(accumulatorDatum, inputDatum);
         return;
+    } else if (isSingleValue) {
+        throw FennelExcn(
+            FennelResource::instance().scalarQueryReturnedMultipleRows() );
     }
+
     // c = (input - accumulator)
     int c = pTypeDescriptor->compareValues(
         inputDatum.pData,
@@ -305,6 +317,11 @@ void ExtremeAggComputer::updateAccumulator(
     TupleDatum &accumulatorDatumDest,
     TupleData const &inputTuple)
 {
+    if (isSingleValue) {
+        throw FennelExcn(
+            FennelResource::instance().scalarQueryReturnedMultipleRows() );
+    }
+
     TupleDatum const &inputDatum = inputTuple[iInputAttr];
     
     if (!accumulatorDatumSrc.pData) {

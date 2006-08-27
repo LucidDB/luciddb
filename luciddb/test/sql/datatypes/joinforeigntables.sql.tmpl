@@ -1,0 +1,15 @@
+
+select DEPARTMENTS.DNAME, EMPLOYEES.FNAME
+from @SERVER_NAME@.@SCHEMA@.DEPT as DEPARTMENTS,
+     @SERVER_NAME@.@SCHEMA@.EMP as EMPLOYEES
+where DEPARTMENTS.DEPTNO = EMPLOYEES.DEPTNO
+order by 1,2;
+
+select EMP.FNAME, PRODUCTS.NAME, SALES.PRICE
+from @SERVER_NAME@.@SCHEMA@.SALES, 
+     @SERVER_NAME@.@SCHEMA@.PRODUCTS,
+     @SERVER_NAME@.@SCHEMA@.EMP
+where cast(SALES.PRODID as integer) = cast(PRODUCTS.PRODID as integer) and
+      cast(SALES.EMPNO as integer) = cast(EMP.EMPNO as integer) and
+      cast(SALES.PRICE as double) > 7.00
+order by 1,2,3;

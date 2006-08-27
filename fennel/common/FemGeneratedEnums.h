@@ -4,10 +4,11 @@ enum AggFunction {
     AGG_FUNC_SUM,
     AGG_FUNC_COUNT,
     AGG_FUNC_MIN,
-    AGG_FUNC_MAX
+    AGG_FUNC_MAX,
+    AGG_FUNC_SINGLE_VALUE
 };
 
-static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_COUNT","AGG_FUNC_MIN","AGG_FUNC_MAX",""};
+static std::string AggFunction_names[] = {"AGG_FUNC_SUM","AGG_FUNC_COUNT","AGG_FUNC_MIN","AGG_FUNC_MAX","AGG_FUNC_SINGLE_VALUE",""};
 
 enum CompOperator {
     COMP_NOOP,

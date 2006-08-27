@@ -61,6 +61,10 @@
     <text>Invalid parameter setting.  Setting must be between {0} and {1}.</text>
   </message>
 
+  <message id="440065" name="scalarQueryReturnedMultipleRows">
+    <text>Scalar query returned more than one row</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->

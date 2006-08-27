@@ -233,7 +233,9 @@ class FlatFileNameDirectory
         public boolean accept(File dir, String name)
         {
             String fileExt = server.params.getFileExtenstion();
-            return (name.endsWith(fileExt));
+            return
+                (name.endsWith(fileExt) &&
+                !(name.startsWith(".") || name.startsWith(",")));
         }
     }
 

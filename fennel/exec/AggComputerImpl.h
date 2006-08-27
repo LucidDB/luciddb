@@ -120,6 +120,8 @@ class ExtremeAggComputer : public AggComputer
      * Type descriptor used as comparison functor.
      */
     StoredTypeDescriptor const *pTypeDescriptor;
+
+    bool isSingleValue;
     
     /**
      * false for MAX, true for MIN
@@ -137,7 +139,8 @@ class ExtremeAggComputer : public AggComputer
 public:
     explicit ExtremeAggComputer(
         TupleAttributeDescriptor const &attrDesc,
-        bool isMin);
+        bool isMin,
+        bool isSingleValue=false);
     
     // implement AggComputer
     virtual void clearAccumulator(
@@ -275,7 +278,8 @@ public:
         }
     }
 };
-    
+
+
 FENNEL_END_NAMESPACE
 
 #endif

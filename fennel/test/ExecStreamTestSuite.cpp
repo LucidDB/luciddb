@@ -474,4 +474,66 @@ void ExecStreamTestSuite::testReshapeExecStream(
     verifyOutput(*pOutputStream, expectedNRows, resultGenerator);
 }
 
+void ExecStreamTestSuite::testSingleValueAggExecStream()
+{
+    StandardTypeDescriptorFactory stdTypeFactory;
+    TupleAttributeDescriptor attrDesc(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
+    TupleAttributeDescriptor attrDescNullable(
+        stdTypeFactory.newDataType(STANDARD_TYPE_INT_64), true,
+        sizeof(int64_t));
+    
+    // Result should be a sequence of values in the first column
+    // and 2 for the second column
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsIn;
+
+    SharedInt64ColumnGenerator col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsIn.push_back(col);
+
+    // Create two columns, both with two duplicates per column.
+    MockProducerExecStreamParams mockParams;
+    mockParams.outputTupleDesc.push_back(attrDesc);
+    mockParams.nRows = 10;
+    mockParams.pGenerator.reset(
+        new CompositeExecStreamGenerator(columnGeneratorsIn));
+
+    ExecStreamEmbryo mockStreamEmbryo;
+    mockStreamEmbryo.init(new MockProducerExecStream(), mockParams);
+    mockStreamEmbryo.getStream()->setName("MockProducerExecStream");
+
+    // simulate SELECT col, SINGLE_VALUE(col) FROM t10k GROUP BY col;
+    SortedAggExecStreamParams aggParams;
+    aggParams.groupByKeyCount = 1;
+    aggParams.outputTupleDesc.push_back(attrDesc);
+    aggParams.outputTupleDesc.push_back(attrDescNullable);
+    AggInvocation singleValueInvocation;
+    singleValueInvocation.aggFunction = AGG_FUNC_SINGLE_VALUE;
+    singleValueInvocation.iInputAttr = 0;
+    aggParams.aggInvocations.push_back(singleValueInvocation);
+    
+    ExecStreamEmbryo aggStreamEmbryo;
+    
+    aggStreamEmbryo.init(new SortedAggExecStream(),aggParams);
+    aggStreamEmbryo.getStream()->setName("SortedAggExecStream");    
+
+    SharedExecStream pOutputStream = prepareTransformGraph(
+        mockStreamEmbryo,aggStreamEmbryo);
+
+    // Result should be a sequence of values in both columns
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGeneratorsOut;
+    
+    col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsOut.push_back(col);
+    
+    col =
+        SharedInt64ColumnGenerator(new DupColumnGenerator(1));
+    columnGeneratorsOut.push_back(col);
+    
+    CompositeExecStreamGenerator expectedResultGenerator(columnGeneratorsOut);
+
+    verifyOutput(*pOutputStream, mockParams.nRows, expectedResultGenerator);
+}
+
 // End ExecStreamTest.cpp
