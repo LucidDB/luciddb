@@ -1273,6 +1273,12 @@ public class DdlValidator
         }
     }
 
+    // called by DdlStmt.postCommit(): dispatches by reflection
+    void handlePostCommit(CwmModelElement modelElement, String command)
+    {
+        invokeHandler(modelElement, "postCommit"+command);
+    }
+
     private boolean invokeHandler(
         CwmModelElement modelElement,
         String action)

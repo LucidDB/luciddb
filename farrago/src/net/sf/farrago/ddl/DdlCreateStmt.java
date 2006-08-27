@@ -71,6 +71,15 @@ public class DdlCreateStmt
     {
         return replaceOptions;
     }
+
+    // refine DdlStmt
+    public void postCommit(FarragoSessionDdlValidator ddlValidator)
+    {
+        if (ddlValidator instanceof DdlValidator) {
+            DdlValidator val = (DdlValidator) ddlValidator;
+            val.handlePostCommit(getModelElement(), "Create");
+        }
+    }
 }
 
 // End DdlCreateStmt.java

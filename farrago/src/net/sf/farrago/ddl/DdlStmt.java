@@ -82,6 +82,12 @@ public abstract class DdlStmt
     }
 
     // implement FarragoSessionDdlStmt
+    public void postCommit(FarragoSessionDdlValidator ddlValidator)
+    {
+        // by default, do nothing
+    }
+
+    // implement FarragoSessionDdlStmt
     public boolean requiresCommit()
     {
         return true;
