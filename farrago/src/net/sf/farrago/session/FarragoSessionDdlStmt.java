@@ -60,9 +60,15 @@ public interface FarragoSessionDdlStmt
     public void preExecute();
 
     /**
-     * Called after generic execution.
+     * Called immediately after generic execution.
      */
     public void postExecute();
+
+    /**
+     * Called after execution, after committing the repository transaction.
+     * @param ddlValidator the object validating this stmt
+     */
+    public void postCommit(FarragoSessionDdlValidator ddlValidator);
 
     /**
      * @return true if this statement implies an auto-commit before and after

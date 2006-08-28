@@ -98,6 +98,15 @@ public abstract class DdlAlterStmt
         }
     }
 
+    // refine DdlStmt
+    public void postCommit(FarragoSessionDdlValidator ddlValidator)
+    {
+        if (ddlValidator instanceof DdlValidator) {
+            DdlValidator val = (DdlValidator) ddlValidator;
+            val.handlePostCommit(getModelElement(), "Alter");
+        }
+    }
+
     protected abstract void execute(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session);
