@@ -757,7 +757,9 @@ public class LcsIndexGuide
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.isFullScan());
         scanStream.setHasExtraFilter(rel.hasExtraFilter());
-
+        Integer [] residualColumns = {};
+        scanStream.setResidualFilterColumns(
+            FennelRelUtil.createTupleProjection(repos, residualColumns));
         return scanStream;
     }
 
