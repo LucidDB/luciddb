@@ -191,6 +191,18 @@
 <text>Graph has cycle(s) of ''{0}'' vertices; first 20 in loop(s): ''{1}''</text>
 </exception>
 
+<exception id="900350" name="InputOutputColumnError">
+<text>Database access error while getting number of input and output columns</text>
+</exception>
+
+<exception id="900360" name="DatabaseAccessError">
+<text>Database access error ''{0}''</text>
+</exception>
+
+<exception id="900370" name="WriteIoError">
+<text>I/O error while writing to output stream ''{0}''</text>
+</exception>
+
 
 <!-- ====================================================================== -->
  Messages

@@ -388,3 +388,11 @@ language java
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
+
+-- Generate CRC udx
+create function generate_crc(c cursor)
+returns table(c.*, crc_value bigint)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';

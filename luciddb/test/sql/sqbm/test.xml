@@ -188,6 +188,13 @@
       <!-- run queries in parallel -->
       <!-- run concurrent users test -->
 
+      <test name="checkCrc" requiresSuccess="benchins1m">
+        <test-metadata>
+          <knownFailure value="true"/>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/checkCrc.sql"/>
+      </test>
+
       <!-- drop table and indexes -->
       <test name="dropidx" requiresSuccess="benchins1m">
         <test-metadata>
