@@ -338,7 +338,7 @@ ${farrago.test.jvmargs}
 <!-- End Experiment-->
 
   <target name="test" depends="cleanJars,createCatalog,gen-all-sql">
-    <property name="bh.filter.knownFailures" value="false"/>
+    <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
@@ -350,7 +350,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="emmaTest" depends="cleanJars,createCatalog,gen-all-sql">
-    <property name="bh.filter.knownFailures" value="false"/>
+    <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork

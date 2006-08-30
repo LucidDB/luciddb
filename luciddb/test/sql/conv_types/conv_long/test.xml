@@ -3,7 +3,7 @@
     <test-suite name="conv_long">
       
       <test-metadata> 
-        <knownFailure value="true"/>
+        <knownFailure>true</knownFailure>
       </test-metadata>
 
       <init-hook>

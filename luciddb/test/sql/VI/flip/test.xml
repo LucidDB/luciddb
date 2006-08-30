@@ -11,31 +11,23 @@
         <ant dir="${open.dir}/luciddb/test/sql/VI/flip" target="copy-csv"/>
       </init-hook>
 
+      <test-metadata>
+        <withIndex>true</withIndex>
+      </test-metadata>
+
       <test name="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/creschema.sql"/>
       </test>
 
       <test name="flip100" requiresSuccess="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/flip100.sql"/>
       </test>
       
       <test name="flip10k" requiresSuccess="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/flip10k.sql"/>
       </test>
       
       <test name="delk2" requiresSuccess="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/flip/del_k2_2.sql"/>
       </test>
 

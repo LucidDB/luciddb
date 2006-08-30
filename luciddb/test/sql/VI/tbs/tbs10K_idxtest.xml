@@ -3,6 +3,10 @@
   <target name="tbs10K-idxtest">
     <test-suite name="tbs10K-idxtest">
 
+      <test-metadata>
+        <withIndex>true</withIndex>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -13,115 +17,67 @@
       </init-hook>
 
       <test name="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/creschema.sql"/>
       </test>
         
       <test name="benchIns10k_idx" requiresSuccess="creschema">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/benchins10K_idx.sql"/>
       </test>
 
       <test name="q0_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q0_10K.sql"/>
       </test>
 
       <test name="qor_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/qor_10K.sql"/>
       </test>
 
       <test name="q1_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q1_10k.sql"/>
       </test>
 
       <test name="q2a_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q2a_10k.sql"/>
       </test>
 
       <test name="q3a_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q3a_10k.sql"/>
       </test>
 
       <test name="q3b_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q3b_10k.sql"/>
       </test>
 
       <test name="q7000_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7000_10K.sql"/>
       </test>
 
       <test name="q7001_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7001_10K.sql"/>
       </test>
 
       <test name="q7002_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7002_10K.sql"/>
       </test>
 
       <test name="q7003_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7003_10k.sql"/>
       </test>
 
       <test name="q7004_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7004_10K.sql"/>
       </test>
 
       <test name="q7005_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7005_10k.sql"/>
       </test>
 
       <test name="q7006_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
         <!-- IN not supported yet, commented out -->
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/q7006_10K.sql"/>
       </test>
 
       <test name="long_10k_idx" requiresSuccess="creschema,benchIns10k_idx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/tbs/gen/idx/long_10K.sql"/>
       </test>
 

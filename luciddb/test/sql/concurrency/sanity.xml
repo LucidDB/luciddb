@@ -91,7 +91,7 @@
       <test name="cretdrp-read" requiresSuccess="setup">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
@@ -100,7 +100,7 @@
       <test name="cretdrp-write" requiresSuccess="setup">
         <!-- partly commented out; fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>

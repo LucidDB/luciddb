@@ -2,6 +2,10 @@
   <target name="populate">
     <test-suite name="populate">
 
+      <test-metadata>
+        <withIndex>true</withIndex>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -12,16 +16,10 @@
       </init-hook>
 
       <test name="createIdx">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${foreign.db}/createIdx.sql"/>
       </test>
       
       <test name="createIdx2">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/populate/gen/${foreign.db}/createidx2.sql"/>
       </test>
 

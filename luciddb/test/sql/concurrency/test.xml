@@ -92,7 +92,7 @@
       <test name="cretdrp-read" requiresSuccess="setup">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-read.mtsql"/>
@@ -101,7 +101,7 @@
       <test name="cretdrp-write" requiresSuccess="setup">
         <!-- partly commented out; fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql 
           file="${open.dir}/luciddb/test/sql/concurrency/cretdrp-write.mtsql"/>
@@ -190,7 +190,7 @@
       <test name="large-insert-select" requiresSuccess="preparedata">
         <!-- this test hangs; may be fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/insert-select-b.mtsql"/>
       </test>
@@ -198,7 +198,7 @@
       <test name="large-ddlselect" requiresSuccess="preparedata">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlselect.mtsql"/>
       </test>
@@ -206,7 +206,7 @@
       <test name="large-ddldelete" requiresSuccess="preparedata">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddldelete.mtsql"/>
       </test>
@@ -214,7 +214,7 @@
       <test name="large-ddlinsert" requiresSuccess="preparedata">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlinsert.mtsql"/>
       </test>
@@ -222,7 +222,7 @@
       <test name="large-ddlmerge" requiresSuccess="preparedata">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/ddlmerge.mtsql"/>
       </test>
@@ -230,7 +230,7 @@
       <test name="large-selectddl" requiresSuccess="preparedata">
         <!-- this test hangs sometimes; may be fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>        
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/selectddl.mtsql"/>
       </test>
@@ -238,7 +238,7 @@
       <test name="large-insertddl" requiresSuccess="preparedata">
         <!-- this test hangs sometimes; may be fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>        
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/local/insertddl.mtsql"/>
       </test>
@@ -249,7 +249,7 @@
       <test name="importschema" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/importschema.mtsql"/>
       </test>
@@ -257,7 +257,7 @@
      <test name="creforeigntbl" requiresSuccess="oraclecreserver,sqlservercreserver,flatfilecreserver,csvjdbccreserver">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/creforeigntbl.mtsql"/>
       </test>
@@ -265,7 +265,7 @@
       <test name="crelocaltbl" requiresSuccess="creforeigntbl">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/crelocaltbl.mtsql"/>
       </test>
@@ -273,7 +273,7 @@
       <test name="selectonly" requiresSuccess="crelocaltbl">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/selectonly.mtsql"/>
       </test>
@@ -281,7 +281,7 @@
       <test name="insert2local" requiresSuccess="crelocaltbl">
         <!-- LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/insert2local.mtsql"/>
       </test>
@@ -289,7 +289,7 @@
       <test name="mixedops" requiresSuccess="crelocaltbl">
         <!-- partly commented out; may be fixed by LDB-118 -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/concurrency/fds/mixedops.mtsql"/>
       </test>

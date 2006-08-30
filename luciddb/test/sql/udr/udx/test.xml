@@ -44,7 +44,7 @@
         <!-- TODO: FRG-141, test also commented out in file so locking -->
         <!-- problem doesn't endure -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/cursorTests.sql"/>
       </test>
@@ -52,14 +52,14 @@
       <test name="flatten">
         <!-- LDB-125: update ref file after bug fix -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/flattenTest.sql"/>
       </test>
 
       <test name="generateCrc">
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udx/generateCrc.sql"/>
       </test>

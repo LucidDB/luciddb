@@ -13,7 +13,7 @@
 
       <test name="viload">
         <test-metadata>
-          <withIndex value="true"/>
+          <withIndex>true</withIndex>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/basic/viload.sql"/>
       </test>
