@@ -1,0 +1,135 @@
+0: jdbc:luciddb:> set schema 'udptest';
+0: jdbc:luciddb:> set path 'udptest';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Test added for LDB-127
+0: jdbc:luciddb:> -- check that field delimiter within bcp file is used if it's not specified
+0: jdbc:luciddb:> -- in foreign server definition
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server gen_ff_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options (
+. . . . . . . . >   directory '@EXPDIR@/local/basic',
+. . . . . . . . >   line_delimiter '\n'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check tables
+0: jdbc:luciddb:> select * from gen_ff_server.bcp."types" order by 1;
+
+0: jdbc:luciddb:>  
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP."bench100")));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP."types")));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.customers)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.dept)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.emp)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.location)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.products)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.sales)));
+
+0: jdbc:luciddb:> select * from table( get_column_info(
+. . . . . . . . > cursor(select * from gen_ff_server.BCP.empview)));
+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check import
+0: jdbc:luciddb:> create schema imp;
+0: jdbc:luciddb:> import foreign schema bcp
+. . . . . . . . > from server gen_ff_server
+. . . . . . . . > into imp;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select table_name, column_name, ordinal_position, datatype, "PRECISION", 
+. . . . . . . . >   dec_digits, is_nullable
+. . . . . . . . > from sys_root.dba_columns 
+. . . . . . . . > where schema_name='IMP'
+. . . . . . . . > order by 1,2,3;
++-------------+--------------+-------------------+------------+------------+-------------+--------------+
+| TABLE_NAME  | COLUMN_NAME  | ORDINAL_POSITION  |  DATATYPE  | PRECISION  | DEC_DIGITS  | IS_NULLABLE  |
++-------------+--------------+-------------------+------------+------------+-------------+--------------+
+| CUSTOMERS   | CUSTID       | 1                 | INTEGER    |            |             | YES          |
+| CUSTOMERS   | FNAME        | 2                 | VARCHAR    | 30         |             | YES          |
+| CUSTOMERS   | LNAME        | 3                 | VARCHAR    | 30         |             | YES          |
+| CUSTOMERS   | SEX          | 4                 | CHAR       | 1          |             | YES          |
+| DEPT        | DEPTNO       | 1                 | INTEGER    |            |             | YES          |
+| DEPT        | DNAME        | 2                 | VARCHAR    | 20         |             | YES          |
+| DEPT        | LOCID        | 3                 | CHAR       | 2          |             | YES          |
+| EMP         | COMMISION    | 9                 | INTEGER    |            |             | YES          |
+| EMP         | DEPTNO       | 5                 | INTEGER    |            |             | YES          |
+| EMP         | EMPNO        | 1                 | DECIMAL    | 5          | 0           | YES          |
+| EMP         | FNAME        | 2                 | VARCHAR    | 20         |             | YES          |
+| EMP         | HOBBY        | 10                | VARCHAR    | 20         |             | YES          |
+| EMP         | LNAME        | 3                 | VARCHAR    | 20         |             | YES          |
+| EMP         | LOCID        | 7                 | CHAR       | 2          |             | YES          |
+| EMP         | MANAGER      | 6                 | DECIMAL    | 5          | 0           | YES          |
+| EMP         | SAL          | 8                 | INTEGER    |            |             | YES          |
+| EMP         | SEX          | 4                 | CHAR       | 1          |             | YES          |
+| EMPVIEW     | COMMISION    | 9                 | INTEGER    |            |             | YES          |
+| EMPVIEW     | DEPTNO       | 5                 | INTEGER    |            |             | YES          |
+| EMPVIEW     | EMPNO        | 1                 | DECIMAL    | 5          | 0           | YES          |
+| EMPVIEW     | FNAME        | 2                 | VARCHAR    | 20         |             | YES          |
+| EMPVIEW     | HOBBY        | 10                | VARCHAR    | 20         |             | YES          |
+| EMPVIEW     | LNAME        | 3                 | VARCHAR    | 20         |             | YES          |
+| EMPVIEW     | LOCID        | 7                 | CHAR       | 2          |             | YES          |
+| EMPVIEW     | MANAGER      | 6                 | DECIMAL    | 5          | 0           | YES          |
+| EMPVIEW     | SAL          | 8                 | INTEGER    |            |             | YES          |
+| EMPVIEW     | SEX          | 4                 | CHAR       | 1          |             | YES          |
+| LOCATION    | CITY         | 3                 | VARCHAR    | 20         |             | YES          |
+| LOCATION    | LOCID        | 1                 | CHAR       | 2          |             | YES          |
+| LOCATION    | STATE        | 4                 | CHAR       | 2          |             | YES          |
+| LOCATION    | STREET       | 2                 | VARCHAR    | 50         |             | YES          |
+| LOCATION    | ZIP          | 5                 | DECIMAL    | 5          | 0           | YES          |
+| PRODUCTS    | NAME         | 2                 | VARCHAR    | 30         |             | YES          |
+| PRODUCTS    | PRICE        | 3                 | DECIMAL    | 4          | 2           | YES          |
+| PRODUCTS    | PRODID       | 1                 | INTEGER    |            |             | YES          |
+| SALES       | CUSTID       | 1                 | INTEGER    |            |             | YES          |
+| SALES       | EMPID        | 2                 | INTEGER    |            |             | YES          |
+| SALES       | PRICE        | 4                 | DECIMAL    | 4          | 2           | YES          |
+| SALES       | PRODID       | 3                 | INTEGER    |            |             | YES          |
+| bench100    | k10          | 5                 | INTEGER    |            |             | YES          |
+| bench100    | k100         | 7                 | INTEGER    |            |             | YES          |
+| bench100    | k100k        | 11                | INTEGER    |            |             | YES          |
+| bench100    | k10k         | 9                 | INTEGER    |            |             | YES          |
+| bench100    | k1k          | 8                 | INTEGER    |            |             | YES          |
+| bench100    | k2           | 2                 | INTEGER    |            |             | YES          |
+| bench100    | k25          | 6                 | INTEGER    |            |             | YES          |
+| bench100    | k250k        | 12                | INTEGER    |            |             | YES          |
+| bench100    | k4           | 3                 | INTEGER    |            |             | YES          |
+| bench100    | k40k         | 10                | INTEGER    |            |             | YES          |
+| bench100    | k5           | 4                 | INTEGER    |            |             | YES          |
+| bench100    | k500k        | 13                | INTEGER    |            |             | YES          |
+| bench100    | kseq         | 1                 | INTEGER    |            |             | YES          |
+| types       | c_bigint     | 7                 | BIGINT     |            |             | YES          |
+| types       | c_boolean    | 10                | BOOLEAN    |            |             | YES          |
+| types       | c_char       | 1                 | CHAR       | 10         |             | YES          |
+| types       | c_date       | 11                | DATE       |            |             | YES          |
+| types       | c_decimal    | 3                 | DECIMAL    | 10         | 3           | YES          |
+| types       | c_double     | 9                 | DOUBLE     |            |             | YES          |
+| types       | c_integer    | 6                 | INTEGER    |            |             | YES          |
+| types       | c_real       | 8                 | REAL       |            |             | YES          |
+| types       | c_smallint   | 5                 | SMALLINT   |            |             | YES          |
+| types       | c_time       | 12                | TIME       | 0          |             | YES          |
+| types       | c_timestamp  | 13                | TIMESTAMP  | 0          |             | YES          |
+| types       | c_tinyint    | 4                 | TINYINT    |            |             | YES          |
+| types       | c_varchar    | 2                 | VARCHAR    | 10         |             | YES          |
++-------------+--------------+-------------------+------------+------------+-------------+--------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from imp."types" order by 1;
+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop schema imp cascade;
+0: jdbc:luciddb:> drop server gen_ff_server cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
