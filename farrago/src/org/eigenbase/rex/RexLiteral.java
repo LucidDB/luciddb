@@ -213,7 +213,8 @@ public class RexLiteral
             return value instanceof Calendar;
         case SqlTypeName.IntervalDayTime_ordinal:
         case SqlTypeName.IntervalYearMonth_ordinal:
-            return value == null;
+            // REVIEW: angel 2006-08-27 - why is interval sometimes null?
+            return value instanceof BigDecimal || value == null;
         case SqlTypeName.Binary_ordinal:
             return value instanceof ByteBuffer;
         case SqlTypeName.Char_ordinal:
@@ -326,8 +327,13 @@ public class RexLiteral
             break;
         case SqlTypeName.IntervalDayTime_ordinal:
         case SqlTypeName.IntervalYearMonth_ordinal:
+            if (value instanceof BigDecimal) {
+            pw.print(value.toString());
+                
+            } else {
             assert value == null;
             pw.print("null");
+            }
             break;
         default:
             Util.pre(
@@ -383,6 +389,14 @@ public class RexLiteral
             return new RexLiteral(buffer, type, typeName);
         case SqlTypeName.Null_ordinal:
             return new RexLiteral(null, type, typeName);
+        case SqlTypeName.IntervalDayTime_ordinal:
+            long millis = SqlParserUtil.intervalToMillis(
+                literal, type.getIntervalQualifier());
+            return new RexLiteral(BigDecimal.valueOf(millis), type, typeName);
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            long months = SqlParserUtil.intervalToMonths(
+                literal, type.getIntervalQualifier());
+            return new RexLiteral(BigDecimal.valueOf(months), type, typeName);
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
@@ -412,10 +426,6 @@ public class RexLiteral
         case SqlTypeName.Symbol_ordinal:
 
         // Symbols are for internal use
-        case SqlTypeName.IntervalDayTime_ordinal:
-        case SqlTypeName.IntervalYearMonth_ordinal:
-
-        // Intervals are not yet encoded as strings
         default:
             throw Util.newInternal("fromJdbcString: unsupported type");
         }

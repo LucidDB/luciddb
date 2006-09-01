@@ -726,10 +726,13 @@ public class SqlValidatorTestCase
                 }
             }
 
+            SqlIntervalLiteral.IntervalValue interval =
+            (SqlIntervalLiteral.IntervalValue)
+                    ((SqlIntervalLiteral) node).getValue();
             long l =
-                SqlParserUtil.intervalToMillis(
-                    (SqlIntervalLiteral.IntervalValue)
-                    ((SqlIntervalLiteral) node).getValue());
+                interval.getIntervalQualifier().isYearMonth()?
+                SqlParserUtil.intervalToMonths(interval):
+                SqlParserUtil.intervalToMillis(interval);
             String actual = l + "";
             assertEquals(expected, actual);
         }

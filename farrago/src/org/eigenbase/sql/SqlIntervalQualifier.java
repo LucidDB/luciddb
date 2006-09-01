@@ -211,6 +211,35 @@ public class SqlIntervalQualifier
             || TimeUnit.Month.equals(startUnit);
     }
 
+    public static long getConversion(TimeUnit unit)
+    {
+        long val = 0;
+        switch (unit.getOrdinal()) {
+            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+                val = 24 * 3600000;  // number of millis
+                break;
+            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+                val = 3600000;  // number of millis
+                break;
+            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+                val = 60000;  // number of millis
+                break;
+            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+                val = 1000;  // number of millis
+                break;
+            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+                val = 12; // number of months
+                break;
+            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+                val = 1;  // number of months
+                break;
+            default:
+                assert false : "invalid interval qualifier";
+                break;
+        }
+        return val;
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

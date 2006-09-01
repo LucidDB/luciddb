@@ -207,6 +207,10 @@ public class RexBuilder
     {
         final RelDataType type = deriveReturnType(op, typeFactory, exprs);
         RexNode [] fixExprs = exprs;
+        // REVIEW: angel 2006-08-27 Commented out the following section
+        // piece of code, not sure what its purpose is, but it was causing
+        // errors
+        /*
         if (type instanceof IntervalSqlType) {
             //if (op instanceof SqlDatetimeSubtractionOperator) {
             //    op = SqlStdOperatorTable.minusOperator;
@@ -228,7 +232,7 @@ public class RexBuilder
                 }
                 fixExprs[i] = exprs[i];
             }
-        }
+        }  */
         return new RexCall(type, op, fixExprs);
     }
 
@@ -621,7 +625,7 @@ public class RexBuilder
         return
             makeLiteral(
                 null,
-                new IntervalSqlType(intervalQualifier, false),
+                typeFactory.createSqlIntervalType(intervalQualifier),
                 intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
                 : SqlTypeName.IntervalDayTime);
     }
@@ -629,13 +633,14 @@ public class RexBuilder
     /**
      * Creates an interval literal.
      */
-    public RexLiteral makeIntervalLiteral(long l)
+    public RexLiteral makeIntervalLiteral(long l, SqlIntervalQualifier intervalQualifier)
     {
         return
             makeLiteral(
                 new BigDecimal(l),
-                typeFactory.createSqlType(SqlTypeName.Bigint),
-                SqlTypeName.Decimal);
+                typeFactory.createSqlIntervalType(intervalQualifier),
+                intervalQualifier.isYearMonth() ? SqlTypeName.IntervalYearMonth
+                : SqlTypeName.IntervalDayTime);
     }
 
     public RexDynamicParam makeDynamicParam(

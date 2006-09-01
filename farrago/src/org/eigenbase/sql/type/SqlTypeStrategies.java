@@ -626,6 +626,15 @@ public abstract class SqlTypeStrategies
         new ExplicitReturnTypeInference(SqlTypeName.Bigint);
 
     /**
+     * Type-inference strategy whereby the result type of a call is an Bigint
+     * with nulls allowed if any of the operands allow nulls.
+     */
+    public static final SqlReturnTypeInference rtiNullableBigint =
+        new SqlTypeTransformCascade(
+            rtiBigint,
+            SqlTypeTransforms.toNullable);
+
+    /**
      * Type-inference strategy whereby the result type of a call is a nullable
      * Bigint
      */

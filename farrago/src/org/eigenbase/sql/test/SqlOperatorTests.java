@@ -1250,6 +1250,30 @@ public abstract class SqlOperatorTests
         getTester().checkFails(
             "100.1 / 0.00000000000000001",
             outOfRangeMessage);
+
+        // Intervals
+        getTester().checkScalar(
+            "interval '-2:2' hour to minute / 3",
+            "-00:40:40",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        getTester().checkScalar(
+            "interval '2:5:12' hour to second / 2 / -3",
+            "-00:20:52",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkNull(
+            "interval '2' day / cast(null as bigint)");
+        getTester().checkNull(
+            "cast(null as interval month) / 2");
+        if (todo) {
+            getTester().checkScalar(
+                "interval '3-3' year to month / 15e-1",
+                "+02-02",
+                "INTERVAL YEAR TO MONTH NOT NULL");
+            getTester().checkScalar(
+                "interval '3-4' year to month / 4.5",
+                "+00-08",
+                "INTERVAL YEAR TO MONTH NOT NULL");
+        }
     }
 
     public void testEqualsOperator()
@@ -1279,6 +1303,12 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(null as boolean)=cast(null as boolean)");
         getTester().checkNull("cast(null as integer)=1");
         getTester().checkNull("cast(null as varchar(10))='a'");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day = interval '1' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day = interval '2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2:2:2' hour to second = interval '2' hour", Boolean.FALSE);
+        getTester().checkNull("cast(null as interval hour) = interval '2' minute");
     }
 
     public void testGreaterThanOperator()
@@ -1305,6 +1335,18 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("false>false", Boolean.FALSE);
         getTester().checkBoolean("false>true", Boolean.FALSE);
         getTester().checkNull("3.0>cast(null as double)");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day > interval '1' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day > interval '5' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2 2:2:2' day to second > interval '2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day > interval '2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day > interval '-2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day > interval '2' hour", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' minute > interval '2' hour", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' second > interval '2' minute", Boolean.FALSE);
+        getTester().checkNull("cast(null as interval hour) > interval '2' minute");
+        getTester().checkNull("interval '2:2' hour to minute > cast(null as interval second)");
     }
 
     public void testIsDistinctFromOperator()
@@ -1325,6 +1367,10 @@ public abstract class SqlOperatorTests
         //getTester().checkBoolean("row(1,1) is distinct from row(1,1)",
         //Boolean.TRUE); getTester().checkBoolean("row(1,1) is distinct from
         //row(1,2)", Boolean.FALSE);
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day is distinct from interval '1' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '10' hour is distinct from interval '10' hour", Boolean.FALSE);
     }
 
     public void testIsNotDistinctFromOperator()
@@ -1347,6 +1393,10 @@ public abstract class SqlOperatorTests
         //getTester().checkBoolean("row(1,1) is not distinct from row(1,1)",
         //Boolean.FALSE); getTester().checkBoolean("row(1,1) is not distinct
         //from row(1,2)", Boolean.TRUE);
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day is not distinct from interval '1' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '10' hour is not distinct from interval '10' hour", Boolean.TRUE);
     }
 
     public void testGreaterThanOrEqualOperator()
@@ -1369,6 +1419,18 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("false>=false", Boolean.TRUE);
         getTester().checkBoolean("false>=true", Boolean.FALSE);
         getTester().checkNull("cast(null as real)>=999");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day >= interval '1' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day >= interval '5' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2 2:2:2' day to second >= interval '2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day >= interval '2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day >= interval '-2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day >= interval '2' hour", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' minute >= interval '2' hour", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' second >= interval '2' minute", Boolean.FALSE);
+        getTester().checkNull("cast(null as interval hour) >= interval '2' minute");
+        getTester().checkNull("interval '2:2' hour to minute >= cast(null as interval second)");
     }
 
     public void testInOperator()
@@ -1445,6 +1507,18 @@ public abstract class SqlOperatorTests
         getTester().checkNull("123<cast(null as bigint)");
         getTester().checkNull("cast(null as tinyint)<123");
         getTester().checkNull("cast(null as integer)<1.32");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day < interval '1' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day < interval '5' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2 2:2:2' day to second < interval '2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day < interval '2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day < interval '-2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day < interval '2' hour", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' minute < interval '2' hour", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' second < interval '2' minute", Boolean.TRUE);
+        getTester().checkNull("cast(null as interval hour) < interval '2' minute");
+        getTester().checkNull("interval '2:2' hour to minute < cast(null as interval second)");
     }
 
     public void testLessThanOrEqualOperator()
@@ -1470,12 +1544,25 @@ public abstract class SqlOperatorTests
         getTester().checkNull("cast(null as integer)<=3");
         getTester().checkNull("3<=cast(null as smallint)");
         getTester().checkNull("cast(null as integer)<=1.32");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day <= interval '1' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day <= interval '5' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2 2:2:2' day to second <= interval '2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day <= interval '2' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day <= interval '-2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' day <= interval '2' hour", Boolean.FALSE);
+        getTester().checkBoolean("interval '2' minute <= interval '2' hour", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' second <= interval '2' minute", Boolean.TRUE);
+        getTester().checkNull("cast(null as interval hour) <= interval '2' minute");
+        getTester().checkNull("interval '2:2' hour to minute <= cast(null as interval second)");
     }
 
     public void testMinusOperator()
     {
         getTester().setFor(SqlStdOperatorTable.minusOperator);
         getTester().checkScalarExact("-2-1", "-3");
+        getTester().checkScalarExact("-2-1-5", "-8");
         getTester().checkScalarExact("2-1", "1");
         getTester().checkScalarApprox(
             "cast(2.0 as double) -1",
@@ -1526,6 +1613,26 @@ public abstract class SqlOperatorTests
                 "cast(-5e8 as decimal(19,10)) - cast(5e8 as decimal(19,10))",
                 outOfRangeMessage);
         }
+
+        // Intervals
+        getTester().checkScalar(
+            "interval '2' day - interval '1' day",
+            "+01 00:00:00",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "interval '2' day - interval '1' minute",
+            "+01 23:59:00",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        getTester().checkScalar(
+            "interval '2' year - interval '1' month",
+            "+01-11",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        getTester().checkScalar(
+            "interval '2' year - interval '1' month - interval '3' year",
+            "-01-01",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        getTester().checkNull(
+            "cast(null as interval day) + interval '2' hour");
     }
 
     public void testMinusDateOperator()
@@ -1589,6 +1696,30 @@ public abstract class SqlOperatorTests
                 "cast(5e4 as decimal(19,10)) * cast(2e4 as decimal(19,10))",
                 outOfRangeMessage);
         }
+
+        // Intervals
+        getTester().checkScalar(
+            "interval '2:2' hour to minute * 3",
+            "+06:06:00",
+            "INTERVAL HOUR TO MINUTE NOT NULL");
+        getTester().checkScalar(
+            "interval '2:5:12' hour to second * 2 * 3",
+            "+12:31:12",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkNull(
+            "interval '2' day * cast(null as bigint)");
+        getTester().checkNull(
+            "cast(null as interval month) * 2");
+        if (todo) {
+            getTester().checkScalar(
+                "interval '3-2' year to month * 15e-1",
+                "+04-09",
+                "INTERVAL YEAR TO MONTH NOT NULL");
+            getTester().checkScalar(
+                "interval '3-4' year to month * 4.5",
+                "+15-00",
+                "INTERVAL YEAR TO MONTH NOT NULL");
+        }
     }
 
     public void testNotEqualsOperator()
@@ -1598,6 +1729,12 @@ public abstract class SqlOperatorTests
         getTester().checkBoolean("'a'<>'A'", Boolean.TRUE);
         getTester().checkBoolean("1e0<>1e1", Boolean.TRUE);
         getTester().checkNull("'a'<>cast(null as varchar(1))");
+
+        // Intervals
+        getTester().checkBoolean("interval '2' day <> interval '1' day", Boolean.TRUE);
+        getTester().checkBoolean("interval '2' day <> interval '2' day", Boolean.FALSE);
+        getTester().checkBoolean("interval '2:2:2' hour to second <> interval '2' hour", Boolean.TRUE);
+        getTester().checkNull("cast(null as interval hour) <> interval '2' minute");
     }
 
     public void testOrOperator()
@@ -1614,10 +1751,16 @@ public abstract class SqlOperatorTests
         getTester().setFor(SqlStdOperatorTable.plusOperator);
         getTester().checkScalarExact("1+2", "3");
         getTester().checkScalarExact("-1+2", "1");
+        getTester().checkScalarExact("1+2+3", "6");
         getTester().checkScalarApprox(
             "1+cast(2.0 as double)",
             "DOUBLE NOT NULL",
             3,
+            0);
+        getTester().checkScalarApprox(
+            "1+cast(2.0 as double)+cast(6.0 as float)",
+            "DOUBLE NOT NULL",
+            9,
             0);
         getTester().checkScalarExact(
             "10.0 + 5.0",
@@ -1627,6 +1770,10 @@ public abstract class SqlOperatorTests
             "19.68 + 4.2",
             "DECIMAL(5, 2) NOT NULL",
             "23.88");
+        getTester().checkScalarExact(
+            "19.68 + 4.2 + 6",
+            "DECIMAL(13, 2) NOT NULL",
+            "29.88");
         getTester().checkScalarApprox(
             "19.68 + cast(4.2 as float)",
             "DOUBLE NOT NULL",
@@ -1656,6 +1803,26 @@ public abstract class SqlOperatorTests
                 "cast(5e8 as decimal(19,10)) + cast(5e8 as decimal(19,10))",
                 outOfRangeMessage);
         }
+
+        // Intervals
+        getTester().checkScalar(
+            "interval '2' day + interval '1' day",
+            "+03 00:00:00",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "interval '2' day + interval '1' minute",
+            "+02 00:01:00",
+            "INTERVAL DAY TO MINUTE NOT NULL");
+        getTester().checkScalar(
+            "interval '2' day + interval '5' minute + interval '-3' second",
+            "+02 00:04:57",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "interval '2' year + interval '1' month",
+            "+02-01",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        getTester().checkNull(
+            "interval '2' year + cast(null as interval month)");
     }
 
     public void testDescendingOperator()
@@ -1774,6 +1941,22 @@ public abstract class SqlOperatorTests
         getTester().checkScalarApprox("-1.0e0", "DOUBLE NOT NULL", -1, 0);
         getTester().checkNull("-cast(null as integer)");
         getTester().checkNull("-cast(null as tinyint)");
+
+        // Intervals
+        getTester().checkScalar(
+            "-interval '-6:2:8' hour to second",
+            "+06:02:08",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "- -interval '-6:2:8' hour to second",
+            "-06:02:08",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "-interval '5' month",
+            "-00-05",
+            "INTERVAL MONTH NOT NULL");
+        getTester().checkNull(
+            "-cast(null as interval day to minute)");
     }
 
     public void testPrefixPlusOperator()
@@ -1784,6 +1967,26 @@ public abstract class SqlOperatorTests
         getTester().checkScalarApprox("+1.0e0", "DOUBLE NOT NULL", 1, 0);
         getTester().checkNull("+cast(null as integer)");
         getTester().checkNull("+cast(null as tinyint)");
+
+        // Intervals
+        getTester().checkScalar(
+            "+interval '-6:2:8' hour to second",
+            "-06:02:08",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "++interval '-6:2:8' hour to second",
+            "-06:02:08",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "+interval '6:2:8.234' hour to second",
+            "+06:02:08.234",
+            "INTERVAL HOUR TO SECOND NOT NULL");
+        getTester().checkScalar(
+            "+interval '5' month",
+            "+00-05",
+            "INTERVAL MONTH NOT NULL");
+        getTester().checkNull(
+            "+cast(null as interval day to minute)");
     }
 
     public void testExplicitTableOperator()
@@ -2122,6 +2325,17 @@ public abstract class SqlOperatorTests
             0);
 
         getTester().checkNull("abs(cast(null as double))");
+
+        // Intervals
+        getTester().checkScalar(
+            "abs(interval '-2' day)",
+            "+02 00:00:00",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkScalar(
+            "abs(interval '-5-03' year to month)",
+            "+05-03",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        getTester().checkNull("abs(cast(null as interval hour))");
     }
 
     public void testNullifFunc()
@@ -2168,6 +2382,21 @@ public abstract class SqlOperatorTests
             getTester().checkInvalid("1 + ^nullif(1, 2, 3)^ + 2",
                 "invalid number of arguments to NULLIF");
         }
+
+        // Intervals
+        getTester().checkScalar(
+            "nullif(interval '2' month, interval '3' year)",
+            "+00-02",
+            "INTERVAL MONTH"
+        );
+        getTester().checkScalar(
+            "nullif(interval '2 5' day to hour, interval '5' second)",
+            "+02 05:00:00",
+            "INTERVAL DAY TO HOUR"
+        );
+        getTester().checkNull(
+            "nullif(interval '3' day, interval '3' day)"
+        );
     }
 
     public void testCoalesceFunc()
@@ -2410,6 +2639,41 @@ public abstract class SqlOperatorTests
     public void testExtractFunc()
     {
         getTester().setFor(SqlStdOperatorTable.extractFunc);
+
+        // Intervals
+        getTester().checkScalar(
+            "extract(day from interval '2 3:4:5.678' day to second)",
+            "2",
+            "BIGINT NOT NULL"
+        );
+        getTester().checkScalar(
+            "extract(hour from interval '2 3:4:5.678' day to second)",
+            "3",
+            "BIGINT NOT NULL"
+        );
+        getTester().checkScalar(
+            "extract(minute from interval '2 3:4:5.678' day to second)",
+            "4",
+            "BIGINT NOT NULL"
+        );
+        // TODO: Seconds should include precision
+        getTester().checkScalar(
+            "extract(second from interval '2 3:4:5.678' day to second)",
+            "5",
+            "BIGINT NOT NULL"
+        );
+        getTester().checkScalar(
+            "extract(year from interval '4-2' year to month)",
+            "4",
+            "BIGINT NOT NULL"
+        );
+        getTester().checkScalar(
+            "extract(month from interval '4-2' year to month)",
+            "2",
+            "BIGINT NOT NULL"
+        );
+        getTester().checkNull(
+            "extract(month from cast(null as interval year))");
     }
 
     public void testCeilFunc()
@@ -2429,6 +2693,31 @@ public abstract class SqlOperatorTests
             "-1");
         getTester().checkNull("ceiling(cast(null as decimal(2,0)))");
         getTester().checkNull("ceiling(cast(null as double))");
+
+        // Intervals
+        getTester().checkScalar(
+            "ceil(interval '3:4:5' hour to second)",
+            "+04:00:00",
+            "INTERVAL HOUR TO SECOND NOT NULL"
+        );
+        getTester().checkScalar(
+            "ceil(interval '-6.3' second)",
+            "-00:00:06",
+            "INTERVAL SECOND NOT NULL"
+        );
+        getTester().checkScalar(
+            "ceil(interval '5-1' year to month)",
+            "+06-00",
+            "INTERVAL YEAR TO MONTH NOT NULL"
+        );
+        getTester().checkScalar(
+            "ceil(interval '-5-1' year to month)",
+            "-05-00",
+            "INTERVAL YEAR TO MONTH NOT NULL"
+        );
+        getTester().checkNull(
+            "ceil(cast(null as interval year))"
+        );
     }
 
     public void testFloorFunc()
@@ -2448,6 +2737,31 @@ public abstract class SqlOperatorTests
             "-2");
         getTester().checkNull("floor(cast(null as decimal(2,0)))");
         getTester().checkNull("floor(cast(null as real))");
+
+        // Intervals
+        getTester().checkScalar(
+            "floor(interval '3:4:5' hour to second)",
+            "+03:00:00",
+            "INTERVAL HOUR TO SECOND NOT NULL"
+        );
+        getTester().checkScalar(
+            "floor(interval '-6.3' second)",
+            "-00:00:07",
+            "INTERVAL SECOND NOT NULL"
+        );
+        getTester().checkScalar(
+            "floor(interval '5-1' year to month)",
+            "+05-00",
+            "INTERVAL YEAR TO MONTH NOT NULL"
+        );
+        getTester().checkScalar(
+            "floor(interval '-5-1' year to month)",
+            "-06-00",
+            "INTERVAL YEAR TO MONTH NOT NULL"
+        );
+        getTester().checkNull(
+            "floor(cast(null as interval year))"
+        );
     }
 
     public void testDenseRankFunc()

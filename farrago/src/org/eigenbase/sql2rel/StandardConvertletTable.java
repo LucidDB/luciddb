@@ -30,6 +30,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
@@ -151,6 +153,26 @@ public class StandardConvertletTable
                     return cx.convertExpression(kase);
                 }
             });
+
+        registerOp(
+            SqlStdOperatorTable.floorFunc,
+            new SqlRexConvertlet() {
+                public RexNode convertCall(SqlRexContext cx, SqlCall call)
+                {
+                    return convertFloorCeil(cx, (SqlCall) call, true);
+                }
+            }
+        );
+
+        registerOp(
+            SqlStdOperatorTable.ceilFunc,
+            new SqlRexConvertlet() {
+                public RexNode convertCall(SqlRexContext cx, SqlCall call)
+                {
+                    return convertFloorCeil(cx, (SqlCall) call, false);
+                }
+            }
+        );
 
         // Convert "element(<expr>)" to "$element_slice(<expr>)", if the
         // expression is a multiset of scalars.
@@ -408,58 +430,135 @@ public class StandardConvertletTable
         return cx.getRexBuilder().makeCast(type, arg);
     }
 
+    protected RexNode convertFloorCeil(
+        SqlRexContext cx,
+        SqlCall call,
+        boolean isFloor)
+    {
+        final SqlNode [] operands = call.getOperands();
+        // Rewrite floor, ceil of interval
+        if (operands.length == 1 && operands[0] instanceof SqlIntervalLiteral) {
+            SqlIntervalLiteral.IntervalValue interval =
+                (SqlIntervalLiteral.IntervalValue)
+                    ((SqlIntervalLiteral) operands[0]).getValue();
+            long val = SqlIntervalQualifier.getConversion(
+                interval.getIntervalQualifier().getStartUnit());
+            RexNode rexInterval = cx.convertExpression(operands[0]);
+
+            RexNode res;
+
+            final RexBuilder rexBuilder = cx.getRexBuilder();
+            RexNode zero = rexBuilder.makeExactLiteral(BigDecimal.valueOf(0));
+            RexNode cond = rexBuilder.makeCall(
+                SqlStdOperatorTable.greaterThanOrEqualOperator,
+                rexInterval,
+                zero
+            );
+
+            RexNode pad = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val-1));
+            RexNode cast = rexBuilder.makeCast(rexInterval.getType(), pad);
+            RexNode sum =
+                rexBuilder.makeCall(
+                    isFloor?
+                        SqlStdOperatorTable.minusOperator:
+                        SqlStdOperatorTable.plusOperator,
+                    rexInterval,
+                    cast);
+
+            RexNode kase =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.caseOperator,
+                    isFloor?
+                        new RexNode[] {cond, rexInterval, sum }:
+                        new RexNode[] {cond, sum, rexInterval } );
+
+            RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
+            RexNode div =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.divideOperator,
+                    kase,
+                    factor);
+            RexNode mult =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.multiplyOperator,
+                    div,
+                    factor);
+            res = mult;
+            return res;
+        }
+        // normal floor, ceil function
+        return convertFunction(cx, (SqlFunction) call.getOperator(), call);
+    }
+
+    public RexNode convertExtract(
+        SqlRexContext cx,
+        SqlExtractFunction op,
+        SqlCall call)
+    {
+        final RexBuilder rexBuilder = cx.getRexBuilder();
+        final SqlNode [] operands = call.getOperands();
+        final RexNode [] exprs = convertExpressionList(cx, operands);
+        // TODO: Will need to use decimal type for seconds with precision
+        RelDataType resType = cx.getTypeFactory().createSqlType(SqlTypeName.Bigint);
+        resType = cx.getTypeFactory().createTypeWithNullability(
+                resType, exprs[1].getType().isNullable());
+        RexNode cast = rexBuilder.makeCast(resType, exprs[1]);
+
+        SqlIntervalQualifier.TimeUnit unit =
+            ((SqlIntervalQualifier) operands[0]).getStartUnit();
+        long val = SqlIntervalQualifier.getConversion(unit);
+        RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
+        switch (unit.getOrdinal()) {
+            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+                val = 0;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+                val = SqlIntervalQualifier.getConversion(
+                    SqlIntervalQualifier.TimeUnit.Day);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+                val = SqlIntervalQualifier.getConversion(
+                    SqlIntervalQualifier.TimeUnit.Hour);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+                val = SqlIntervalQualifier.getConversion(
+                    SqlIntervalQualifier.TimeUnit.Minute);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+                val = 0;
+                break;
+            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+                val = SqlIntervalQualifier.getConversion(
+                    SqlIntervalQualifier.TimeUnit.Year);
+                break;
+            default:
+                assert false : "invalid interval qualifier";
+                break;
+        }
+
+        RexNode res = cast;
+        if (val != 0) {
+            RexNode modVal =
+                rexBuilder.makeExactLiteral(BigDecimal.valueOf(val), resType);
+            res = rexBuilder.makeCall(
+                    SqlStdOperatorTable.modFunc,
+                    res,
+                    modVal);
+        }
+
+        res = rexBuilder.makeCall(
+                SqlStdOperatorTable.divideOperator,
+                res,
+                factor);
+        return res;
+    }
+
     public RexNode convertFunction(
         SqlRexContext cx,
         SqlFunction fun,
         SqlCall call)
     {
         final SqlNode [] operands = call.getOperands();
-        if (fun instanceof SqlExtractFunction) {
-            int val = 1;
-            SqlOperator op1 = SqlStdOperatorTable.divideOperator;
-            SqlNode [] ratio = new SqlNode[2];
-            ratio[0] = operands[1];
-            switch (((SqlIntervalQualifier) operands[0]).getStartUnit()
-                .getOrdinal()) {
-            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
-                val = 24 * 3600000;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
-                val = 3600000;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
-                val = 60000;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
-                val = 1000;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
-                val = 12;
-                break;
-            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
-                val = 1;
-                break;
-            default:
-                assert false : "invalid interval qualifier";
-                break;
-            }
-            ratio[1] =
-                SqlLiteral.createExactNumeric(
-                    val + "",
-                    ratio[0].getParserPosition());
-            SqlCall call1 = op1.createCall(
-                    ratio,
-                    call.getParserPosition());
-
-            SqlOperator op2 = SqlStdOperatorTable.floorFunc;
-            SqlNode [] fl = new SqlNode[1];
-            fl[0] = call1;
-            SqlCall call2 = op2.createCall(
-                    fl,
-                    call.getParserPosition());
-
-            return cx.convertExpression(call2);
-        }
         final RexNode [] exprs = convertExpressionList(cx, operands);
         if (fun.getFunctionType()
             == SqlFunctionCategory.UserDefinedConstructor) {

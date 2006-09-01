@@ -250,6 +250,11 @@ public final class SqlParserUtil
         return ret;
     }
 
+
+    // TODO: angel 2006-08-27 There is duplication of logic in
+    // parseIntervalValue and getIntervalValue
+    // Combine into one function for easier maintenance
+
     /**
      * Parses a INTERVAL value.
      *
@@ -282,6 +287,13 @@ public final class SqlParserUtil
                 return null;
             }
             value = value.substring(1);
+        } else if ('+' == value.charAt(0)) {
+            sign = +1;
+            if (value.length() == 1) {
+                // handles the case when we have a single input value of '+'
+                return null;
+            }
+            value = value.substring(1);
         }
 
         try {
@@ -289,6 +301,15 @@ public final class SqlParserUtil
                 int years = 0;
                 int months = 0;
                 String [] valArray = value.split("-");
+                if (intervalQualifier.getEndUnit() == null) {
+                    if (valArray.length != 1) {
+                        return null;
+                    }
+                } else if ((intervalQualifier.getEndUnit().getOrdinal() -
+                    intervalQualifier.getStartUnit().getOrdinal() + 1)
+                                != valArray.length) {
+                    return null;
+                }
                 if (2 == valArray.length) {
                     years = parsePositiveInt(valArray[0]);
                     months = parsePositiveInt(valArray[1]);
@@ -317,6 +338,7 @@ public final class SqlParserUtil
                     ps = withoutDayPattern;
                 }
 
+                boolean bWithDecimal = false;
                 for (int iPattern = 0; iPattern < ps.length; iPattern++) {
                     String p = ps[iPattern];
                     Matcher m = Pattern.compile(p).matcher(value);
@@ -331,20 +353,26 @@ public final class SqlParserUtil
 
                         if (iPattern < 3) {
                             timeUnitsCount--;
+                            bWithDecimal = true;
                         }
 
                         SqlIntervalQualifier.TimeUnit start =
                             intervalQualifier.getStartUnit();
                         SqlIntervalQualifier.TimeUnit end =
                             intervalQualifier.getEndUnit();
-                        if ((null == end) && (timeUnitsCount > 1)) {
-                            return null;
-                        } else if ((null != end)
-                            && (
-                                (end.getOrdinal() - start.getOrdinal() + 1)
-                                != timeUnitsCount
-                               )) {
-                            return null;
+                        if (null == end) {
+                            if ((timeUnitsCount > 1) ||
+                                (bWithDecimal && start.getOrdinal() !=
+                                    SqlIntervalQualifier.TimeUnit.Second_ordinal)) {
+                                return null;
+                            }
+                        } else {
+                            if (((end.getOrdinal() - start.getOrdinal() + 1)
+                                    != timeUnitsCount) ||
+                                (bWithDecimal && end.getOrdinal() !=
+                                    SqlIntervalQualifier.TimeUnit.Second_ordinal)) {
+                                return null;
+                            }
                         }
                         return ret;
                     }
@@ -369,12 +397,8 @@ public final class SqlParserUtil
      * </ul>
      */
     public static int [] getIntervalValue(
-        SqlIntervalLiteral.IntervalValue interval)
+        String value, SqlIntervalQualifier intervalQualifier)
     {
-        String value = interval.getIntervalLiteral();
-        SqlIntervalQualifier intervalQualifier =
-            interval.getIntervalQualifier();
-
         value = value.trim();
         if (Util.isNullOrEmpty(value)) {
             return null;
@@ -388,19 +412,65 @@ public final class SqlParserUtil
                 return null;
             }
             value = value.substring(1);
-        }
-
-        // sign, day, hour, minute, second, millisecond
-        int [] ret = new int[6];
-        for (int i = 0; i < ret.length; i++) {
-            ret[i] = 0;
-        }
-        ret[0] = sign;
-        try {
-            // TODO (mravuri 08/08/2005): Need to support this later...
-            if (intervalQualifier.isYearMonth()) {
+        } else if ('+' == value.charAt(0)) {
+            sign = +1;
+            if (value.length() == 1) {
+                // handles the case when we have a single input value of '+'
                 return null;
             }
+            value = value.substring(1);
+        }
+
+        int [] ret = null;
+        try {
+            if (intervalQualifier.isYearMonth()) {
+                // sign, years, months
+                ret = new int[3];
+                for (int i = 0; i < ret.length; i++) {
+                    ret[i] = 0;
+                }
+                ret[0] = sign;
+
+                String [] valArray = value.split("-");
+                if (intervalQualifier.getEndUnit() == null) {
+                    if (valArray.length != 1) {
+                        return null;
+                    }
+                } else if ((intervalQualifier.getEndUnit().getOrdinal() -
+                    intervalQualifier.getStartUnit().getOrdinal() + 1)
+                                != valArray.length) {
+                    return null;
+                }
+                if (2 == valArray.length) {
+                    if (intervalQualifier.getStartUnit().getOrdinal()
+                            == SqlIntervalQualifier.TimeUnit.Year_ordinal) {
+                        ret[1] = parsePositiveInt(valArray[0]);
+                        ret[2] = parsePositiveInt(valArray[1]);
+                    } else {
+                        return null;
+                    }
+                } else if (1 == valArray.length) {
+                    if (intervalQualifier.getStartUnit().getOrdinal()
+                            == SqlIntervalQualifier.TimeUnit.Year_ordinal) {
+                        ret[1] = parsePositiveInt(valArray[0]);
+                    } else if (intervalQualifier.getStartUnit().getOrdinal()
+                            == SqlIntervalQualifier.TimeUnit.Month_ordinal) {
+                        ret[2] = parsePositiveInt(valArray[0]);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
+                }
+                return ret;
+            }
+
+            // sign, day, hour, minute, second, millisecond
+            ret = new int[6];
+            for (int i = 0; i < ret.length; i++) {
+                ret[i] = 0;
+            }
+            ret[0] = sign;
             String [] withDayPattern =
                 { "(\\d+)" // day
                     , "(\\d+) (\\d+)" // day to hour
@@ -422,6 +492,7 @@ public final class SqlParserUtil
 
             String [] ps;
             boolean bWithDayPattern = false;
+            boolean bWithDecimal = false;
             if (SqlIntervalQualifier.TimeUnit.Day.equals(
                     intervalQualifier.getStartUnit())) {
                 ps = withDayPattern;
@@ -456,6 +527,7 @@ public final class SqlParserUtil
                         // the millisecond part.
                         ret[5] =
                             (int) (Float.parseFloat("0." + m.group(5)) * 1000);
+                        bWithDecimal = true;
                     }
                 } else {
                     switch (timeUnitsCount) {
@@ -479,6 +551,7 @@ public final class SqlParserUtil
                         ret[4] = Integer.parseInt(m.group(1));
                         ret[5] =
                             (int) (Float.parseFloat("0." + m.group(2)) * 1000);
+                        bWithDecimal = true;
                         break;
                     case 3:
                         if (intervalQualifier.getStartUnit().getOrdinal()
@@ -499,6 +572,7 @@ public final class SqlParserUtil
                         ret[4] = Integer.parseInt(m.group(3));
                         ret[5] =
                             (int) (Float.parseFloat("0." + m.group(4)) * 1000);
+                        bWithDecimal = true;
                         break;
                     case 5:
                         ret[2] = Integer.parseInt(m.group(1));
@@ -511,12 +585,24 @@ public final class SqlParserUtil
                         ret[4] = Integer.parseInt(m.group(5));
                         ret[5] =
                             (int) (Float.parseFloat("0." + m.group(6)) * 1000);
+                        bWithDecimal = true;
                         break;
                     default:
                         break;
                     }
                 }
                 break;
+            }
+            if (bWithDecimal)  {
+                if (intervalQualifier.getEndUnit() == null) {
+                    if (intervalQualifier.getStartUnit().getOrdinal()
+                        != SqlIntervalQualifier.TimeUnit.Second_ordinal) {
+                        return null;
+                    }
+                } else if (intervalQualifier.getEndUnit().getOrdinal()
+                        != SqlIntervalQualifier.TimeUnit.Second_ordinal) {
+                    return null;
+                }
             }
         } catch (NumberFormatException e) {
             return null;
@@ -535,8 +621,17 @@ public final class SqlParserUtil
     public static long intervalToMillis(
         SqlIntervalLiteral.IntervalValue interval)
     {
-        int [] ret = getIntervalValue(interval);
-        assert (ret != null);
+        return intervalToMillis(
+            interval.getIntervalLiteral(),
+            interval.getIntervalQualifier());
+    }
+
+    public static long intervalToMillis(
+        String literal, SqlIntervalQualifier intervalQualifier)
+    {
+        Util.permAssert(!intervalQualifier.isYearMonth(), "interval must be day time");
+        int [] ret = getIntervalValue(literal, intervalQualifier);
+        Util.permAssert(ret != null, "error parsing day month interval " + literal);
 
         long l = 0;
         long [] conv = new long[5];
@@ -545,6 +640,39 @@ public final class SqlParserUtil
         conv[2] = conv[3] * 60; // minute
         conv[1] = conv[2] * 60; // hour
         conv[0] = conv[1] * 24; // day
+        for (int i = 1; i < ret.length; i++) {
+            l += conv[i - 1] * ret[i];
+        }
+        return ret[0] * l;
+
+    }
+    /**
+     * Converts the interval value into a months representation.
+     *
+     * @param interval
+     *
+     * @return a long value that represents months equivalent of the
+     * interval value.
+     */
+    public static long intervalToMonths(
+        SqlIntervalLiteral.IntervalValue interval)
+    {
+        return intervalToMonths(
+            interval.getIntervalLiteral(),
+            interval.getIntervalQualifier());
+    }
+
+    public static long intervalToMonths(
+        String literal, SqlIntervalQualifier intervalQualifier)
+    {
+        Util.permAssert(intervalQualifier.isYearMonth(), "interval must be year month");
+        int [] ret = getIntervalValue(literal, intervalQualifier);
+        Util.permAssert(ret != null, "error parsing year month interval " + literal);
+
+        long l = 0;
+        long [] conv = new long[2];
+        conv[1] = 1; // months
+        conv[0] = conv[1] * 12; // years
         for (int i = 1; i < ret.length; i++) {
             l += conv[i - 1] * ret[i];
         }

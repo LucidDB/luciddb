@@ -37,7 +37,6 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.runtime.*;
-import net.sf.farrago.util.*;
 
 import openjava.mop.*;
 
@@ -696,6 +695,18 @@ public class FarragoTypeFactoryImpl
                     SqlDateTimeWithoutTZ.SqlTimestamp.class,
                     declarer,
                     type);
+        case SqlTypeName.IntervalDayTime_ordinal:
+            return
+                newIntervalOJClass(
+                    EncodedSqlInterval.EncodedSqlIntervalDT.class,
+                    declarer,
+                    type);
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            return
+                newIntervalOJClass(
+                    EncodedSqlInterval.EncodedSqlIntervalYM.class,
+                    declarer,
+                    type);
         case SqlTypeName.Char_ordinal:
         case SqlTypeName.Varchar_ordinal:
         case SqlTypeName.Binary_ordinal:
@@ -745,6 +756,19 @@ public class FarragoTypeFactoryImpl
     }
 
     private OJClass newDatetimeOJClass(
+        Class superclass,
+        OJClass declarer,
+        RelDataType type)
+    {
+        return
+            newHolderOJClass(
+                superclass,
+                new MemberDeclarationList(),
+                declarer,
+                type);
+    }
+
+    private OJClass newIntervalOJClass(
         Class superclass,
         OJClass declarer,
         RelDataType type)
@@ -832,6 +856,12 @@ public class FarragoTypeFactoryImpl
         Expression expr)
     {
         if (SqlTypeUtil.isDatetime(type)
+            // REVIEW: angel 2006-08-27 added this for interval
+            // so generated java code okay for most expression
+            // but shouldn't be checking expr,
+            // probably need to rules to reinterpret interval 
+            || (SqlTypeUtil.isInterval(type) &&
+                (expr instanceof Variable || expr instanceof FieldAccess))
             || SqlTypeUtil.isDecimal(type)
             || ((getClassForPrimitive(type) != null) && type.isNullable())) {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);
@@ -869,6 +899,9 @@ public class FarragoTypeFactoryImpl
         case SqlTypeName.Time_ordinal:
         case SqlTypeName.Timestamp_ordinal:
             return SqlDateTimeWithoutTZ.getPrimitiveClass();
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            return EncodedSqlInterval.getPrimitiveClass();
         default:
             return null;
         }

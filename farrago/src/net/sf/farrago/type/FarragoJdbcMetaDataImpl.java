@@ -107,6 +107,9 @@ public class FarragoJdbcMetaDataImpl
         case SqlTypeName.Structured_ordinal:
         case SqlTypeName.Distinct_ordinal:
             return type.getSqlIdentifier().toString();
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            return type.toString();
         }
         return typeName.getName();
     }
