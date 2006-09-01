@@ -146,12 +146,22 @@ public class SqlNodeToRexConverterImpl
         case SqlTypeName.Date_ordinal:
             return rexBuilder.makeDateLiteral((Calendar) value);
 
-        // TODO: support IntervalYearMonth type of interval.
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            {
+                SqlIntervalLiteral.IntervalValue intervalValue =
+                    (SqlIntervalLiteral.IntervalValue) value;
+                long l = SqlParserUtil.intervalToMonths(intervalValue);
+                return rexBuilder.makeIntervalLiteral(l,
+                    intervalValue.getIntervalQualifier());
+            }
         case SqlTypeName.IntervalDayTime_ordinal:
-            long l =
-                SqlParserUtil.intervalToMillis(
-                    (SqlIntervalLiteral.IntervalValue) value);
-            return rexBuilder.makeIntervalLiteral(l);
+            {
+                SqlIntervalLiteral.IntervalValue intervalValue =
+                    (SqlIntervalLiteral.IntervalValue) value;
+                long l = SqlParserUtil.intervalToMillis(intervalValue);
+                return rexBuilder.makeIntervalLiteral(l,
+                    intervalValue.getIntervalQualifier());
+            }
         default:
             throw literal.getTypeName().unexpected();
         }

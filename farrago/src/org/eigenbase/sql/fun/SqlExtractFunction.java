@@ -41,11 +41,13 @@ public class SqlExtractFunction
 
     //~ Constructors -----------------------------------------------------------
 
+    // SQL2003, Part 2, Section 4.4.3 - extract returns a exact numeric
+    // TODO: Return type should be decimal for seconds
     public SqlExtractFunction()
     {
         super("EXTRACT",
             SqlKind.Function,
-            SqlTypeStrategies.rtiNullableDouble,
+            SqlTypeStrategies.rtiNullableBigint,
             null,
             SqlTypeStrategies.otcIntervalSameX2,
             SqlFunctionCategory.System);

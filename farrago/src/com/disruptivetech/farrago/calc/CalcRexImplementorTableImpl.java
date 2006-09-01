@@ -972,6 +972,12 @@ public class CalcRexImplementorTableImpl
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
+            // REVIEW angel 2006-08-31 - allow cast from intervals to bigint?
+            doubleKeyMap.put(
+                SqlTypeName.timeIntervalTypes,
+                SqlTypeName.Bigint,
+                new UsingInstrImplementor(
+                    ExtInstructionDefTable.castDateToMillis));
             doubleKeyMap.put(
                 SqlTypeName.booleanTypes,
                 SqlTypeName.charTypes,
@@ -1407,9 +1413,17 @@ public class CalcRexImplementorTableImpl
                     rd = rd1;
                 }
 
+                RelDataType castToType = call.operands[(small + 1) % 2].getType();
+                // REVIEW: angel 2006-08-27 Force operations with
+                // intervals to be treated as bigint operations
+                if (SqlTypeUtil.isInterval(castToType)) {
+                    RelDataTypeFactory fac = translator.rexBuilder.getTypeFactory();
+                    RelDataType int8 = fac.createSqlType(SqlTypeName.Bigint);
+                    castToType = int8;
+                }
                 RexNode castCall =
                     translator.rexBuilder.makeCast(
-                        call.operands[(small + 1) % 2].getType(),
+                        castToType,
                         call.operands[small]);
                 CalcReg newOp = translator.implementNode(castCall);
                 regs.set(small, newOp);

@@ -289,6 +289,11 @@ public class RexToOJTranslator
             timeInMillis = calendar.getTimeInMillis();
             setTranslation(Literal.makeLiteral(timeInMillis));
             break;
+        case SqlTypeName.IntervalDayTime_ordinal:
+        case SqlTypeName.IntervalYearMonth_ordinal:
+            BigDecimal interval = (BigDecimal) value;
+            setTranslation(Literal.makeLiteral(interval.longValue()));
+            break;
         case SqlTypeName.Symbol_ordinal:
             EnumeratedValues.BasicValue ord =
                 (EnumeratedValues.BasicValue) value;
