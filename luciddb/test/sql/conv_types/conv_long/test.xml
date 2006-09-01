@@ -16,21 +16,21 @@
 
       <test name="createsource">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/cr_source.sql"/>
       </test>
 
       <test name="longvarchar" requiresRun="createsource">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longchar.sql"/>
       </test>
 
       <test name="longvarbin" requiresRun="createsource">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_long/target_longbin.sql"/>
       </test>
