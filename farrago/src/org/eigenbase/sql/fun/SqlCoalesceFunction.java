@@ -62,6 +62,12 @@ public class SqlCoalesceFunction
         validateQuantifier(validator, call); // check DISTINCT/ALL
 
         SqlNode [] operands = call.getOperands();
+
+        if (operands.length == 1) {
+            // No CASE needed
+            return operands[0];
+        }
+        
         SqlParserPos pos = call.getParserPosition();
 
         SqlNodeList whenList = new SqlNodeList(pos);
