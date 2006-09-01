@@ -66,10 +66,13 @@ public class DayNumberOverallUdf
      * @return Absolute day number
      * @exception ApplibException
      */
-    public static int execute( java.sql.Date dtIn ) throws ApplibException
+    public static Integer execute( java.sql.Date dtIn ) throws ApplibException
     {
+        if (dtIn == null) {
+            return null;
+        }
         java.util.Date dt = convertToGmt((java.util.Date)dtIn);
-        return( (int) ( dt.getTime() / 1000 / 60 / 60 / 24 ) );
+        return( new Integer ((int) ( dt.getTime() / 1000 / 60 / 60 / 24 ) ));
     }
 
     /**
@@ -77,10 +80,13 @@ public class DayNumberOverallUdf
      * @return Absolute day number
      * @exception ApplibException
      */
-    public static int execute( Timestamp tsIn ) throws ApplibException
+    public static Integer execute( Timestamp tsIn ) throws ApplibException
     {
+        if (tsIn == null) {
+            return null;
+        }
         java.util.Date ts = convertToGmt(tsIn);
-        return( (int) ( ts.getTime() / 1000 / 60 / 60 / 24 ) );
+        return( new Integer ((int) ( ts.getTime() / 1000 / 60 / 60 / 24 ) ));
     }
 
 }

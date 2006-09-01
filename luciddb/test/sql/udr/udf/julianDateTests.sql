@@ -11,6 +11,9 @@ values applib.day_from_julian_start(DATE'1582-10-4');
 values applib.day_from_julian_start(DATE'1582-10-15');
 values applib.day_from_julian_start(DATE'1582-10-16');
 
+-- null input
+values applib.day_from_julian_start(cast (null as DATE));
+
 -- failures (the missing 10 days from julian to gregorian)
 values applib.day_from_julian_start(DATE'1582-10-5');
 values applib.day_from_julian_start(DATE'1582-10-14');
