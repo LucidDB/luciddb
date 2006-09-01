@@ -39,8 +39,18 @@ public class JmiDeletionRule
 
     private final JmiDeletionAction action;
 
+    private final boolean isReversed;
+
     //~ Constructors -----------------------------------------------------------
 
+    public JmiDeletionRule(
+        String endName,
+        Class superInterface,
+        JmiDeletionAction action)
+    {
+        this(endName, superInterface, action, false);
+    }
+    
     /**
      * Creates a new JmiDeletionRule.
      *
@@ -49,15 +59,20 @@ public class JmiDeletionRule
      * rule applies; if null, the rule applies to any object; otherwise, the
      * object must be an instance of this class
      * @param action what to do when this rule applies
+     * @param isReversed whether the senses of the ends are reversed
+     * (when false, endName is interpreted as the name of the end from
+     * which a cascade is originating)
      */
     public JmiDeletionRule(
         String endName,
         Class superInterface,
-        JmiDeletionAction action)
+        JmiDeletionAction action,
+        boolean isReversed)
     {
         this.endName = endName;
         this.superInterface = superInterface;
         this.action = action;
+        this.isReversed = isReversed;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -75,6 +90,11 @@ public class JmiDeletionRule
     public JmiDeletionAction getAction()
     {
         return action;
+    }
+
+    public boolean isReversed()
+    {
+        return isReversed;
     }
 }
 

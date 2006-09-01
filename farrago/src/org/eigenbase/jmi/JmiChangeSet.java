@@ -496,6 +496,18 @@ public class JmiChangeSet
         RefObject droppedEnd,
         RefObject otherEnd)
     {
+        if (rule.isReversed()) {
+            // Swap ends
+            RefObject tmp = droppedEnd;
+            droppedEnd = otherEnd;
+            otherEnd = tmp;
+        }
+        JmiValidationAction scheduledAction =
+            schedulingMap.get(droppedEnd.refMofId());
+        if (scheduledAction != JmiValidationAction.DELETION) {
+            // Spurious notification from opposite end
+            return;
+        }
         if ((rule.getSuperInterface() != null)
             && !(rule.getSuperInterface().isInstance(droppedEnd))) {
             return;
