@@ -136,9 +136,9 @@ class FennelResource : ResourceBundle
     std::string flatfileDescribeFailed(const std::string &p0) const;
 
     /**
-     * <code>flatfileNoHeader</code> is 'Could not read header from data file {0}'
+     * <code>flatfileNoHeader</code> is 'Could not read header from data file {0}: {1}'
      */
-    std::string flatfileNoHeader(const std::string &p0) const;
+    std::string flatfileNoHeader(const std::string &p0, const std::string &p1) const;
 
     private:
     ResourceDefinition _sysCallFailed;

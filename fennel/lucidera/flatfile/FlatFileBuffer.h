@@ -138,7 +138,17 @@ public:
      * Returns whether entire file has been read
      */
     bool isComplete();
-    
+
+    /**
+     * Returns whether the entire file has been read AND the read pointer
+     * is equal to (or past) the end pointer.
+     *
+     * @see isComplete()
+     * @see getReadPtr()
+     * @see getEndPtr()
+     */
+    bool isDone();
+
     /**
      * Consumes buffer contents up to pointer
      */

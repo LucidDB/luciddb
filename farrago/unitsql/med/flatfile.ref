@@ -14,15 +14,6 @@
 . . . . . . . . >     with_header 'yes', 
 . . . . . . . . >     log_directory 'testlog/');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- create a server without headers (for detecting other errors)
-0: jdbc:farrago:> create server flatfile_server_noheader
-. . . . . . . . > foreign data wrapper sys_file_wrapper
-. . . . . . . . > options (
-. . . . . . . . >     directory 'unitsql/med/flatfiles/',
-. . . . . . . . >     file_extension 'csv',
-. . . . . . . . >     with_header 'no', 
-. . . . . . . . >     log_directory 'testlog/');
-0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
 0: jdbc:farrago:> -- Part 1. Parser tests
@@ -96,7 +87,6 @@ Error: Could not read data file unitsql/med/flatfiles/missing.csv (state=,code=0
 . . . . . . . . > options (
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
-. . . . . . . . >     with_header 'no', 
 . . . . . . . . >     log_directory 'unitsql/med/flatfiles/');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_locked(
@@ -120,7 +110,6 @@ Error: Could not write log file unitsql/med/flatfiles/locked (state=,code=0)
 . . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     file_extension '',
-. . . . . . . . >     with_header 'no',
 . . . . . . . . >     line_delimiter '\t', 
 . . . . . . . . >     log_directory 'testlog/');
 0: jdbc:farrago:> 
@@ -132,7 +121,7 @@ Error: Could not write log file unitsql/med/flatfiles/locked (state=,code=0)
 . . . . . . . . > options (filename 'unitsql/med/flatfiles/noheader.csv');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_badLineDelim;
-Error: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=,code=0)
+Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.6 Test bad field delimiter
@@ -142,7 +131,6 @@ Error: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=
 . . . . . . . . > foreign data wrapper sys_file_wrapper
 . . . . . . . . > options (
 . . . . . . . . >     file_extension 'csv',
-. . . . . . . . >     with_header 'no',
 . . . . . . . . >     field_delimiter '\t', 
 . . . . . . . . >     log_directory 'testlog/');
 0: jdbc:farrago:> 
@@ -154,7 +142,7 @@ Error: Data file unitsql/med/flatfiles/noheader.csv has no row delimiter (state=
 . . . . . . . . > options (filename 'unitsql/med/flatfiles/noheader');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_badFieldDelim;
-Error: Read no rows from file unitsql/med/flatfiles/noheader.csv; last error was: Row has no column delimiter (state=,code=0)
+Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: Row has no column delimiter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.7 Test bad line delimiter
@@ -187,11 +175,11 @@ Error: Read no rows from file unitsql/med/flatfiles/noheader.csv; last error was
 0: jdbc:farrago:> create foreign table flatfile_tooManyColumns(
 . . . . . . . . >     id int not null,
 . . . . . . . . >     name varchar(50) not null)
-. . . . . . . . > server flatfile_server_noheader
+. . . . . . . . > server flatfile_server
 . . . . . . . . > options (filename 'noheader');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_tooManyColumns;
-Error: Read no rows from file unitsql/med/flatfiles/noheader.csv; last error was: Row has too many columns (state=,code=0)
+Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: Row has too many columns (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.9 Test data file with too few columns
@@ -201,11 +189,11 @@ Error: Read no rows from file unitsql/med/flatfiles/noheader.csv; last error was
 . . . . . . . . >     name varchar(50) not null,
 . . . . . . . . >     extra_field char(1) not null,
 . . . . . . . . >     extra_field2 char(1) not null)
-. . . . . . . . > server flatfile_server_noheader
+. . . . . . . . > server flatfile_server
 . . . . . . . . > options (filename 'example');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_tooFewColumns;
-Error: Read no rows from file unitsql/med/flatfiles/example.csv; last error was: Row has too few columns (state=,code=0)
+Error: Could not read header from data file unitsql/med/flatfiles/example.csv: Row has too few columns (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 1.10 Test row which is too long (the text is larger than one page)
@@ -366,7 +354,7 @@ Error: Could not derive column sizes for data file unitsql/med/flatfiles/empty.t
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Missing header error is returned when control file is supplied
 0: jdbc:farrago:> select * from flatfile_server_empty.BCP."empty";
-Error: Could not read header from data file unitsql/med/flatfiles/empty.txt (state=,code=0)
+Error: Could not read header from data file unitsql/med/flatfiles/empty.txt: Data file unitsql/med/flatfiles/empty.txt has no row delimiter (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.5 Describe a fixed format file (illegal)

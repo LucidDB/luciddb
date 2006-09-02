@@ -14,15 +14,6 @@ options (
     with_header 'yes', 
     log_directory 'testlog/');
 
--- create a server without headers (for detecting other errors)
-create server flatfile_server_noheader
-foreign data wrapper sys_file_wrapper
-options (
-    directory 'unitsql/med/flatfiles/',
-    file_extension 'csv',
-    with_header 'no', 
-    log_directory 'testlog/');
-
 
 ---------------------------------------------------------------------------
 -- Part 1. Parser tests
@@ -75,7 +66,6 @@ foreign data wrapper sys_file_wrapper
 options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
-    with_header 'no', 
     log_directory 'unitsql/med/flatfiles/');
 
 create foreign table flatfile_locked(
@@ -98,7 +88,6 @@ create server flatfile_server_badLineDelim
 foreign data wrapper sys_file_wrapper
 options (
     file_extension '',
-    with_header 'no',
     line_delimiter '\t', 
     log_directory 'testlog/');
 
@@ -119,7 +108,6 @@ create server flatfile_server_badFieldDelim
 foreign data wrapper sys_file_wrapper
 options (
     file_extension 'csv',
-    with_header 'no',
     field_delimiter '\t', 
     log_directory 'testlog/');
 
@@ -162,7 +150,7 @@ select * from flatfile_incompleteColumn;
 create foreign table flatfile_tooManyColumns(
     id int not null,
     name varchar(50) not null)
-server flatfile_server_noheader
+server flatfile_server
 options (filename 'noheader');
 
 select * from flatfile_tooManyColumns;
@@ -175,7 +163,7 @@ create foreign table flatfile_tooFewColumns(
     name varchar(50) not null,
     extra_field char(1) not null,
     extra_field2 char(1) not null)
-server flatfile_server_noheader
+server flatfile_server
 options (filename 'example');
 
 select * from flatfile_tooFewColumns;

@@ -118,7 +118,7 @@
   </message>
 
   <message id="441960" name="flatfileNoHeader">
-    <text>Could not read header from data file {0}</text>
+    <text>Could not read header from data file {0}: {1}</text>
   </message>
 
 </resourceBundle>

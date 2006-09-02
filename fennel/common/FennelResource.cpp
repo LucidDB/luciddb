@@ -142,9 +142,9 @@ string FennelResource::flatfileDescribeFailed(const std::string &p0) const
 {
     return _flatfileDescribeFailed.format(p0);
 }
-string FennelResource::flatfileNoHeader(const std::string &p0) const
+string FennelResource::flatfileNoHeader(const std::string &p0, const std::string &p1) const
 {
-    return _flatfileNoHeader.format(p0);
+    return _flatfileNoHeader.format(p0, p1);
 }
 
 } // end namespace fennel
