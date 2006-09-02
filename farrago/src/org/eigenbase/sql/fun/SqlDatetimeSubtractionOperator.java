@@ -48,7 +48,7 @@ public class SqlDatetimeSubtractionOperator
             SqlKind.Minus,
             40,
             true,
-            SqlTypeStrategies.rtiThirdArgType,
+            SqlTypeStrategies.rtiNullableThirdArgType,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcMinusDateOperator);
     }
