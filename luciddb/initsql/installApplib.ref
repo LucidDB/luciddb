@@ -404,6 +404,6 @@
 . . . . . . . . > language java
 . . . . . . . . > parameter style java
 . . . . . . . . > reads sql data
-. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.GrantSelectForSchemaUdp.execute';
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
