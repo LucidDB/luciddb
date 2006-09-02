@@ -404,4 +404,4 @@ in username varchar(255))
 language java
 parameter style java
 reads sql data
-external name 'applib.applibJar:com.lucidera.luciddb.applib.util.GrantSelectForSchemaUdp.execute';
+external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
