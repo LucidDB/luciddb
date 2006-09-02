@@ -183,11 +183,15 @@
 <text>Cannot read from input</text>
 </exception>
 
-<exception id="900330" name="CannotWriteOutput">
+<exception id="900330" name="NullChild">
+<text>This parent ''{0}'' must have non-null child</text>
+</exception>
+
+<exception id="900340" name="CannotWriteOutput">
 <text>Cannot write to output</text>
 </exception>
 
-<exception id="900340" name="GraphHasCycle">
+<exception id="900345" name="GraphHasCycle">
 <text>Graph has cycle(s) of ''{0}'' vertices; first 20 in loop(s): ''{1}''</text>
 </exception>
 

@@ -290,8 +290,17 @@ create table threecol(c1 varchar(10), c2 varchar(10), c3 varchar(10));
 select * 
 from table(applib.flatten_recursive_hierarchy(cursor(select * from threecol)));
 
+-- record has null child ---------------------------------------------
+
+create table nullchild(c1 integer, c2 integer);
+
+insert into nullchild values (1,2), (3,4), (5,null);
+
+select *
+from table(applib.flatten_recursive_hierarchy(cursor(select * from nullchild)));
 
 -- clean up ----------------------------------------------------------
 
 drop table loop;
 drop table threecol;
+drop table nullchild;
