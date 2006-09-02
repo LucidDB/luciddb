@@ -73,7 +73,7 @@ public abstract class GrantSelectForSchemaUdp {
             StackWriter.printSqlIdentifier(pw, userName);
             pw.close();
             ps = conn.prepareStatement(sw.toString());
-            rs = ps.executeQuery();
+            ps.executeUpdate();
         }
     }
 }
