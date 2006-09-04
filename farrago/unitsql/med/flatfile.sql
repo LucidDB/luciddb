@@ -1,6 +1,8 @@
 -- $Id$
 -- Test flatfile namespace plugin
 
+alter system set "calcVirtualMachine"='CALCVM_AUTO';
+
 create schema flatfile_schema;
 
 set schema 'flatfile_schema';
@@ -462,3 +464,45 @@ options (
 -- query for available schemas
 select * from table(sys_boot.mgmt.browse_foreign_schemas('FF_SERVER'))
 order by schema_name;
+
+
+---------------------------------------------------------------------------
+-- Part 5. Flat file error handling
+---------------------------------------------------------------------------
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+alter system set "calcVirtualMachine"='CALCVM_JAVA';
+
+alter session set "logDir" = 'testlog';
+alter session set "etlProcessId" = 101;
+alter session set "etlActionId" = 'SelectBuggy';
+
+set schema 'flatfile_schema';
+
+create foreign table buggy(
+    author varchar(30),
+    title varchar(45) not null,
+    cost decimal(10,2))
+server flatfile_server
+options (filename 'buggy');
+
+-- errors are usually returned immediately
+select * from buggy order by 1;
+
+-- but we can allow errors by setting this parameter
+alter session set "errorMax" = 100;
+select * from buggy order by 1;
+
+-- we can select the errors from the log directory
+create server log_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'testlog',
+    file_extension 'log');
+
+select le_exception, le_column_ordinal 
+from log_server.bcp."101_SelectBuggy_LOCALDB.FLATFILE_SCHEMA.BUGGY";
+
+-- we can also view the error log summaries
+select process_id, action_id, error_count, "SQL"
+from log_server.bcp."Summary";

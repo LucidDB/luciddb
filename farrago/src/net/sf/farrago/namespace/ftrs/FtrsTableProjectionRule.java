@@ -30,7 +30,6 @@ import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 
 
@@ -71,33 +70,37 @@ class FtrsTableProjectionRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        origProject = (ProjectRel) call.rels[0];
+        ProjectRel origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
             return;
         }
 
         FtrsIndexScanRel origScan = (FtrsIndexScanRel) call.rels[1];
         if (origScan.projectedColumns != null) {
-            // TODO:  fold existing projection?
             return;
         }
 
-        boolean needRename = createProjectionList(origScan);
-        if (numProjectedCols == 0) {
-            // there are expressions in the projection; we need to split
-            // the projection to first project the input references
-            PushProjector pushProject = new PushProjector();
-            ProjectRel newProject =
-                pushProject.convertProject(
-                    origProject,
-                    null,
-                    origScan,
-                    Collections.EMPTY_SET,
-                    null);
-            if (newProject != null) {
-                call.transformTo(newProject);
-            }
+        // determine which columns can be projected from the scan, pulling
+        // out references from expressions, if necessary
+        List<Integer> projectedColumnList = new ArrayList<Integer>();
+        List<ProjectRel> newProjList = new ArrayList<ProjectRel>();
+        boolean needRename =
+            createProjectionList(
+                origScan,
+                origProject,
+                projectedColumnList,
+                Collections.EMPTY_SET,
+                null,
+                newProjList);
+        // empty list indicates that nothing can be projected
+        if (projectedColumnList.size() == 0) {
             return;
+        }
+        ProjectRel newProject;
+        if (newProjList.isEmpty()) {
+            newProject = null;         
+        } else {
+            newProject = newProjList.get(0);
         }
 
         // Generate a potential scan for each available index covering the
@@ -109,6 +112,9 @@ class FtrsTableProjectionRule
             FarragoCatalogUtil.getTableIndexes(
                 repos,
                 origScan.ftrsTable.getCwmColumnSet()).iterator();
+        Integer[] projectedColumns =
+            projectedColumnList.toArray(
+                new Integer[projectedColumnList.size()]);
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
 
@@ -135,11 +141,17 @@ class FtrsTableProjectionRule
                     projectedColumns,
                     origScan.isOrderPreserving);
 
-            if (needRename) {
-                projectedScan = renameProjectedScan(projectedScan);
-            }
-
-            call.transformTo(projectedScan);
+            // create new RelNodes to replace the existing ones, either
+            // removing or replacing the ProjectRel and recreating the row scan
+            // to read only projected columns
+            RelNode modRelNode =
+                createNewRelNode(
+                    projectedScan,
+                    origProject,
+                    needRename,
+                    newProject);
+            
+            call.transformTo(modRelNode);  
         }
     }
 

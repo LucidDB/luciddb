@@ -198,6 +198,15 @@ public interface FarragoSessionPersonality
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode);
 
+    public void loadDefaultSessionVariables(
+        FarragoSessionVariables variables);
+
+    public void validateSessionVariable(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSessionVariables variables,
+        String paramName,
+        String paramValue);
+
     /**
      * Creates a new processor for JMI queries.
      *

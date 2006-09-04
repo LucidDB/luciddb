@@ -861,6 +861,9 @@ public class LcsIndexGuide
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(createUnclusteredBTreeKeyProj(index));
         sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
+        // TODO zfong 8/16/06 - replace this with real stats when we can
+        // call RelMetadataQuery.getRowCount on physical RelNodes
+        sortingStream.setEstimatedNumRows(-1);
         return sortingStream;
     }
 
@@ -1182,6 +1185,9 @@ public class LcsIndexGuide
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(createUnclusteredBitmapKeyProj());
         sortingStream.setOutputDesc(createUnclusteredBitmapTupleDesc());
+        // TODO zfong 8/16/06 - replace this with real stats when we can
+        // call RelMetadataQuery.getRowCount on physical RelNodes
+        sortingStream.setEstimatedNumRows(-1);
         return sortingStream;
     }
 

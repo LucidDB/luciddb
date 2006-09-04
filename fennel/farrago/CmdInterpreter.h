@@ -55,6 +55,7 @@ public:
         boost::shared_ptr<TraceTarget> pTraceTarget;
         FileStatsTarget statsTarget;
         StatsTimer statsTimer;
+        SharedExecStreamGovernor pResourceGovernor;
 
         // TODO:  parameterize these
         explicit DbHandle()
@@ -75,6 +76,7 @@ public:
         SharedLogicalTxn pTxn;
         SharedFtrsTableWriterFactory pFtrsTableWriterFactory;
         bool readOnly;
+        SharedExecStreamGovernor pResourceGovernor;
 
         explicit TxnHandle()
             : readOnly(false)

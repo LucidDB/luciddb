@@ -41,12 +41,12 @@ void LhxAggExecStream::prepare(
      * Force partitioning level. Only set in tests.
      */
     forcePartitionLevel = params.forcePartitionLevel;
-    enableSubPartStat   = params.enableSubPartStat;
+    enableSubPartStat = params.enableSubPartStat;
 
     buildInputIndex = hashInfo.inputDesc.size() - 1;
 
     /* 
-     * number of block and slots required to perform the aggregatin in memory,
+     * number of block and slots required to perform the aggregation in memory,
      * using estimates from the optimizer.
      */
     hashTable.calculateSize(hashInfo, buildInputIndex, numBlocksHashTable);
@@ -63,26 +63,34 @@ void LhxAggExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
-     * Set aside 1 cache block per child partition writer for I/O.
+     * Set aside cache blocks per child partition writer for I/O (including
+     * pre-fetch).
      */
     uint numInputs = 1;
-    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs;
+    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs *
+        SEG_NUM_PREFETCH_PAGES;
 }
 
 void LhxAggExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
+    ExecStreamResourceQuantity &optQuantity,
+    ExecStreamResourceSettingType &optType)
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
     
-    minQuantity.nCachePages += 
+    uint minPages = 
         LhxHashTable::LhxHashTableMinPages * LhxPlan::LhxChildPartCount
         + numMiscCacheBlocks;
-    optQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
-    /*
-     * TODO(rchen 2006-08-08): use the real min above.
-     */
-    minQuantity.nCachePages = optQuantity.nCachePages;
+    minQuantity.nCachePages += minPages;
+    // if valid stats weren't passed in, make an unbounded resource request
+    if (numBlocksHashTable < 0) {
+        optType = EXEC_RESOURCE_UNBOUNDED;
+    } else {
+        // REVIEW jvs 25-Aug-2006:  Why the +1 here?
+        optQuantity.nCachePages +=
+            std::max(minPages + 1, (uint) numBlocksHashTable);
+        optType = EXEC_RESOURCE_ESTIMATE;
+    }
 }
 
 void LhxAggExecStream::setResourceAllocation(
@@ -109,21 +117,28 @@ void LhxAggExecStream::open(bool restart)
 
     assert(status);
 
+    // REVIEW jvs 25-Aug-2006: Fennel coding convention is pParentPlan,
+    // pBuildPart, etc.  Same comment applies everywhere.  Also, consider using
+    // boost::ptr_vector<LhxPartition> rather than
+    // std::vector<SharedLhxPartition> (unless shared pointers are really
+    // required).
+    
     /*
      * Create the root plan.
      *
      * The execute state machine operates at the plan level.
      */
-    LhxPlan *parentPlan = NULL;
     vector<SharedLhxPartition> partitionList;
 
     buildPart = SharedLhxPartition(new LhxPartition());
-    (buildPart->segStream).reset();
+    // REVIEW jvs 25-Aug-2006:  Why does buildPart->segStream need to be reset
+    // immediately after construction?
+    buildPart->segStream.reset();
     buildPart->inputIndex = 0;
     partitionList.push_back(buildPart);
 
     rootPlan = SharedLhxPlan(new LhxPlan());
-    rootPlan->init(parentPlan, partitionLevel, partitionList,
+    rootPlan->init(WeakLhxPlan(), partitionLevel, partitionList,
         enableSubPartStat);
 
     /*
@@ -146,13 +161,23 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
 {
     while (true)
     {
+        // REVIEW jvs 25-Aug-2006:  Some compilers do better if you
+        // put the most commonly used cases first in a switch.  Definitely
+        // from a "follow-the-logic" standpoint, a testing-only state
+        // like ForcePartitionBuild belongs last.
         switch (aggState)
         {
+            // REVIEW jvs 25-Aug-2006:  I'm not sure that repeating all
+            // of this code between the ForcePartitionBuild and Build
+            // states is worth it just to remove one test from the
+            // inner loop.
         case ForcePartitionBuild:
             {
                 /*
                  * Build
                  */
+                // REVIEW jvs 25-Aug-2006:  Is it really necessary to compute
+                // the tuple every time through here?
                 inputTuple.compute(buildReader.getTupleDesc());
                 for (;;) {
                     if (!buildReader.isTupleConsumptionPending()) {
@@ -168,7 +193,8 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         if (!buildReader.demandData()) {
                             if (isTopPlan) {
                                 /*
-                                 * Top level: request more data from stream producer.
+                                 * Top level: request more data from stream
+                                 * producer.
                                  */
                                 return EXECRC_BUF_UNDERFLOW;
                             } else {
@@ -228,7 +254,8 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                         if (!buildReader.demandData()) {
                             if (isTopPlan) {
                                 /*
-                                 * Top level: request more data from stream producer.
+                                 * Top level: request more data from stream
+                                 * producer.
                                  */
                                 return EXECRC_BUF_UNDERFLOW;
                             } else {
@@ -273,6 +300,7 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                          */
                         return EXECRC_BUF_UNDERFLOW;
                     } else {
+                        // REVIEW jvs 25-Aug-2006:  only one input for agg..
                         /*
                          * Finished building the partitions for both
                          * inputs.
@@ -293,6 +321,11 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
                 
                 FENNEL_TRACE(TRACE_FINE, curPlan->toString());
 
+                // REVIEW jvs 25-Aug-2006:  This comment makes it sound
+                // like it's walking multiple levels in the plan tree
+                // right here, but really it's just walking down to the
+                // first leaf it just created (i.e. one step in
+                // recursion if curPlan was already non-root).
                 /*
                  * now recurse down the plan tree to get the first leaf plan.
                  */
@@ -351,9 +384,16 @@ ExecStreamResult LhxAggExecStream::execute(ExecStreamQuantum const &quantum)
             }
         case Produce:
             {
+                // REVIEW jvs 25-Aug-2006: Is there a reason tuples can't be
+                // pumped out in a loop right here?  Popping in and out of
+                // the state machine for every tuple is a bit of overhead.
+                // It's only a couple of lines of code which would be
+                // duplicated.  (An inline method would contradict
+                // my earlier comment about numTuplesProduced being
+                // a local variable.)
                 /*
-                 * Producing the results.
-                 * Handle output overflow and quantum expiration in ProducePending.
+                 * Producing the results.  Handle output overflow and quantum
+                 * expiration in ProducePending.
                  */
                 if (hashTableReader.getNext(outputTuple)) {
                     aggState = ProducePending;
@@ -411,6 +451,9 @@ void LhxAggExecStream::closeImpl()
         rootPlan->close();
         rootPlan.reset();
     }
+    // REVIEW jvs 25-Aug-2006: Are there other resources that ought to be
+    // released here?  Anything in hashTableReader, partInfo, buildPart,
+    // buildReader?  Or does that all get cleaned up implicitly?
     ConduitExecStream::closeImpl();
 }
 
@@ -425,7 +468,7 @@ void LhxAggExecStream::setAggComputers(
 
     /*
      * TupleDescriptor used by the hash table, of the format:
-     * [ grou-by keys, aggregates]
+     * [ group-by keys, aggregates ]
      */
     TupleDescriptor &hashDesc = hashInfo.inputDesc.back();
 
@@ -435,7 +478,7 @@ void LhxAggExecStream::setAggComputers(
     TupleProjection &aggsProj = hashInfo.aggsProj;
 
     /**
-     * Change oroginal agg computers to compute based on partial
+     * Change original agg computers to compute based on partial
      * aggregates.
      */
     AggFunction partialAggFunction;
@@ -513,7 +556,7 @@ void LhxAggExecStream::setHashInfo(
     for (int i = 0; i < params.groupByKeyCount; i ++) {
         keyProj.push_back(i);
         /*
-         * Hashing is special for varchar types(the trailing blanks are
+         * Hashing is special for varchar types (the trailing blanks are
          * insignificant).
          */
         if (inputDesc[i].pTypeDescriptor->getOrdinal()
@@ -545,6 +588,19 @@ void LhxAggExecStream::setHashInfo(
     TupleAttributeDescriptor countDesc(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
 
+    // REVIEW jvs 25-Aug-2006: It's possible to get rid of this nullability
+    // type transformation (but it requires matching changes at the Farrago
+    // level).  The reason is that LhxAggExecStream is only used for GROUP BY.
+    // Since empty groups are only possible with full-table agg, they are not
+    // an issue with GROUP BY.  So, the output can only be null if the input
+    // admits nulls.  However, the validator currently applies the
+    // transformation in all cases (e.g. SqlSumAggFunction uses
+    // rtiFirstArgTypeForceNullable).  To do it right, it would need to be
+    // context-sensitive (and SortedAggExecStream would need to be changed to
+    // match, discriminating on whether any group keys were specified).
+    // Probably not worth it.
+
+    // REVIEW jvs 25-Aug-2006: What is the prevTupleDesc mentioned here?
     /*
       Compute the accumulator result portion of prevTupleDesc based on
       requested aggregate function invocations, and instantiate polymorphic

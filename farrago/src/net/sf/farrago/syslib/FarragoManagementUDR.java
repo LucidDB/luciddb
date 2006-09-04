@@ -182,6 +182,23 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Populates a list of session parameters
+     */
+    public static void sessionParameters(PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoSessionVariables variables = 
+            FarragoUdrRuntime.getSession().getSessionVariables();
+        Map<String, String> readMap = variables.getMap();
+        for (String paramName : readMap.keySet()) {
+            int i = 0;
+            resultInserter.setString(++i, paramName);
+            resultInserter.setString(++i, readMap.get(paramName));
+            resultInserter.executeUpdate();
+        }
+    }
+
+    /**
      * Sleeps for a given number of milliseconds (checking for query
      * cancellation every second).
      *

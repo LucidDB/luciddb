@@ -30,8 +30,10 @@
 
 FENNEL_BEGIN_NAMESPACE
 
+// REVIEW jvs 25-Aug-2006: Seems like a common base AggExecStreamParams is in
+// order (with SortedAggExecStreamParams left empty for now)
 /**
- * SortedAggExecStreamParams defines parameters for SortedAggExecStream.
+ * LhxAggExecStreamParams defines parameters for SortedAggExecStream.
  */
 struct LhxAggExecStreamParams : public SortedAggExecStreamParams
 {
@@ -41,7 +43,7 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
     SharedSegment pTempSegment;
 
     /**
-     * whether to use sub partition stats.
+     * Whether to use sub partition stats.
      */
     bool enableSubPartStat;
 
@@ -51,22 +53,42 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
      */
     uint forcePartitionLevel;
 
+    // REVIEW jvs 25-Aug-2006:  When using Javadoc/doxygen comments,
+    // it's important to remember that each comment will show up
+    // separately in the generated class documentation.  Below,
+    // the first comment says "Initial stats ...", which
+    // really applies to both comments.  Instead, put a summary
+    // at the class-level comment, like "The fields cndGroupByKeys and numRows
+    // are provided by the optimizer to help with estimating
+    // resource allocation requirements" and then on the field-level
+    // comments, just say what they are, e.g. "Estimate for number of rows from
+    // the build input, etc."  (No need to repeat the field name inside
+    // of the field-level comments.)
+    
+    // REVIEW jvs 25-Aug-2006:  Use RecordNum for record counts.
+    // It is typedef'd to uint64_t to avoid overflow on 32-bit machines.
+    // Since it's unsigned, use MAXU/isMAXU for singular value
+    // (stat unknown).  Also have to change catalog model since this
+    // gets passed down from Java; use Long there.  (Long is signed,
+    // but if you pass -1 from Java it will be interpreted as MAXU.)
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
      * optimizer. For Hash Aggregate, this is the estimated number of groups.
+     * If < 0, stat is unknown.
      */
-    uint cndGroupByKeys;
+    int cndGroupByKeys;
 
+    // REVIEW jvs 25-Aug-2006:  Same as above regarding RecordNum.
     /**
-     * numRows: number of rows from the build input.
+     * numRows: number of rows from the build input.  If < 0, unknown.
      */
-    uint numRows;
+    int numRows;
 };
 
 /**
  * LhxAggExecStream aggregates its input, producing tuples of aggregate
- * function computations as output. The aggregatin is performed by using a hash
+ * function computations as output. The aggregation is performed by using a hash
  * table.
  *
  * @author Rushan Chen
@@ -74,6 +96,9 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
  */
 class LhxAggExecStream : public ConduitExecStream
 {
+    // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
+    // all uppercase with underscores
+    
     enum LhxAggState {
         ForcePartitionBuild, Build, Produce, ProducePending,
         Partition, CreateChildPlan, GetNextPlan, Done
@@ -89,14 +114,16 @@ class LhxAggExecStream : public ConduitExecStream
      */
     TupleData outputTuple;
 
+    // REVIEW jvs 25-Aug-2006:  This member is only accessed within
+    // one method (execute).  Wouldn't it be easier to make it a local
+    // variable there so it doesn't have to be reset?
     /**
      * Number of tuples produced within the current quantum.
      */
     uint numTuplesProduced;
 
-
     /**
-     * Hash join info.
+     * Hash aggregation info.
      */
     LhxHashInfo hashInfo;
 
@@ -106,23 +133,40 @@ class LhxAggExecStream : public ConduitExecStream
     LhxHashTable hashTable;
     LhxHashTableReader hashTableReader;
 
+    // REVIEW jvs 25-Aug-2006:  BlockNum/MAXU is the standard convention
+    // (just like RecordNum for record counts).
+    
     /**
      * Initial estimate of blocks required.
      */
-    uint numBlocksHashTable;
+    int numBlocksHashTable;
 
     /**
-     * Number of cache blocks set aside for I/O.
+     * Number of cache blocks set aside for I/O.  If < 0, no stats are
+     * available to compute this value.
      */
-    uint numMiscCacheBlocks;
+    int numMiscCacheBlocks;
 
+    // REVIEW jvs 25-Aug-2006:  Next three fields need comments, maybe
+    // a reference to somewhere else explaining the plan concept.  Is
+    // it true that isTopPlan can be derived from (curPlan == rootPlan.get())?
+    
     /*
      * Plan
      */
     bool isTopPlan;
     SharedLhxPlan rootPlan;
+
+    // REVIEW jvs 25-Aug-2006: If there's a valid reason not to declare this as
+    // a SharedLhxPlan (like performance, which seems justified), then that
+    // reason should be explained, since in general mixing shared and
+    // non-shared pointers can be error-prone.
     LhxPlan *curPlan;
 
+    // REVIEW jvs 25-Aug-2006: This will always be 0, right?  In that case, use
+    // a static const to make it obvious, and assert accordingly in ::prepare.
+    // And then use BUILD_INPUT_INDEX naming convention.
+    
     /**
      * Index of build input(should be 0 for agg)
      */
@@ -130,11 +174,11 @@ class LhxAggExecStream : public ConduitExecStream
   
     /**
      * Partition context used in recursive partitioning.
-     *
      */
     LhxPartitionInfo partInfo;
+    
     /**
-     * The build partition(which is also the only partition)
+     * The build partition (which is also the only partition)
      */
     SharedLhxPartition buildPart;
 
@@ -144,7 +188,7 @@ class LhxAggExecStream : public ConduitExecStream
     LhxPartitionReader buildReader;
 
     /**
-     * whether to use sub partition stats.
+     * Whether to use sub partition stats.
      */
     bool enableSubPartStat;
 
@@ -159,23 +203,30 @@ class LhxAggExecStream : public ConduitExecStream
      */
     LhxAggState aggState;
 
+    // REVIEW jvs 25-Aug-2006: This seems fairly useless in LhxAggExecStream;
+    // it only ever gets set to Produce.  I think it's vestigial from
+    // LhxJoinExecStream.
     /**
      * The next state of the AggExecStream
      */
     LhxAggState nextState;
   
 
+    // REVIEW jvs 25-Aug-2006: This is so temporary that it is never
+    // even referenced anywhere?
     /*
      * Some temporary variables.
      */
     uint groupByKeyCount;
 
+    // REVIEW jvs 25-Aug-2006:  Next two fields need comments, maybe
+    // a reference to somewhere else explaining the concept of partial
+    // aggregation.
+    
     AggComputerList aggComputers;
     AggComputerList partialAggComputers;
 
-    /**
-     * implement ExecStream
-     */
+    // implement ExecStream
     virtual void closeImpl();
 
     /*
@@ -184,7 +235,7 @@ class LhxAggExecStream : public ConduitExecStream
     void setHashInfo(LhxAggExecStreamParams const &params);
 
     /*
-     * set up the aggregate computers and partial aggregate computers used by
+     * Set up the aggregate computers and partial aggregate computers used by
      * the hash table.
      */
     void setAggComputers(
@@ -192,16 +243,15 @@ class LhxAggExecStream : public ConduitExecStream
         AggInvocationList const &aggInvocations);
 
 public:
-    /*
-     * implement ExecStream
-     */
+    // implement ExecStream
     virtual void prepare(LhxAggExecStreamParams const &params);
     virtual void open(bool restart);
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
 
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
 
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);

@@ -20,10 +20,8 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "fennel/common/FennelExcn.h"
 #include "fennel/lucidera/hashexe/LhxHashTable.h"
 #include "fennel/tuple/TuplePrinter.h"
-#include "fennel/tuple/TupleOverflowExcn.h"
 #include <sstream>
 
 using namespace std;
@@ -37,33 +35,6 @@ void LhxHashDataAccessor::init(TupleDescriptor const &inputDataDesc)
     dataAccessor.compute(dataDescriptor);
 }
 
-void LhxHashDataAccessor::checkStorageSize(TupleData const &inputTuple,
-    uint maxBufferSize)
-{
-    uint storageSize = getStorageSize(inputTuple);
-
-    if (storageSize > maxBufferSize) {
-        throw TupleOverflowExcn(
-            dataDescriptor,
-            inputTuple,
-            storageSize,
-            maxBufferSize);
-    }
-}
-
-void LhxHashDataAccessor::pack(
-    TupleData const &inputTuple)
-{
-    PBuffer buf = getBuffer();
-
-    assert(buf != NULL && inputTuple.size() == dataAccessor.size());
-
-    /*
-     * Copy the input tuple into the buffer associated with this accessor.
-     */
-    dataAccessor.marshal(inputTuple, buf);
-}
-
 void LhxHashDataAccessor::unpack(
     TupleData &outputTuple,
     TupleProjection &destProj)
@@ -73,9 +44,14 @@ void LhxHashDataAccessor::unpack(
     assert (buf != NULL);
 
     if (destProj.size() > 0) {
+        // REVIEW jvs 25-Aug-2006:  It looks like there's a potential
+        // for unmarshalling unneeded fields here.  If there could
+        // be a lot of those, set up a TupleProjectionAccessor
+        // and use that (over and over) instead.
+
         /*
-         * Destination positions in the outputTuple should be enough to hold fields
-         * returned by dataAccessor.
+         * Destination positions in the outputTuple should be enough to hold
+         * fields returned by dataAccessor.
          */
         uint tupleSize = min(destProj.size(), dataTuple.size());
 
@@ -90,7 +66,7 @@ void LhxHashDataAccessor::unpack(
         }
     } else {
         /*
-         * Set pointers in the outputtuple.
+         * Set pointers in the outputTuple.
          */
         dataAccessor.unmarshal(outputTuple);        
     }
@@ -110,10 +86,18 @@ string LhxHashDataAccessor::toString()
 }
 
 LhxHashKeyAccessor::LhxHashKeyAccessor()
-    : LhxHashNodeAccessor(sizeof(PBuffer) + sizeof(uint8_t))
+    : LhxHashNodeAccessor(
+        sizeof(PBuffer) + sizeof(uint8_t) + sizeof(PBuffer *))
 {
     firstDataOffset = 0;
+    /*
+     * firstData pointer is of type PBuffer
+     */
     isMatchedOffset = firstDataOffset + sizeof(PBuffer);
+    /*
+     * isMatched indicator is of type uint8_t
+     */
+    nextSlotOffset = isMatchedOffset + sizeof(uint8_t);
 }
 
 void LhxHashKeyAccessor::init(
@@ -125,8 +109,8 @@ void LhxHashKeyAccessor::init(
     keyTuple.compute(keyDescriptor);
     keyAccessor.compute(keyDescriptor);
 
-    keyColsProj   = keyColsProjInit;
-    aggsProj      = aggsProjInit;
+    keyColsProj = keyColsProjInit;
+    aggsProj = aggsProjInit;
 
     keyColsDesc.projectFrom(keyDescriptor, keyColsProj);
 }
@@ -134,40 +118,11 @@ void LhxHashKeyAccessor::init(
 void LhxHashKeyAccessor::addData(PBuffer inputData)
 {
     PBuffer firstDataNode = getFirstData();
-    if (firstDataNode) {
-        /*
-         * The original first data node becomes the next.
-         */
-        LhxHashDataAccessor firstData;
-        firstData.setNext(inputData, firstDataNode);
-    }
-    setFirstData(inputData);
-}
-
-void LhxHashKeyAccessor::checkStorageSize(TupleData const &inputTuple,
-    uint maxBufferSize)
-{
-    uint storageSize = getStorageSize(inputTuple);
-
-    if (storageSize > maxBufferSize) {
-        throw TupleOverflowExcn(
-            keyDescriptor,
-            inputTuple,
-            storageSize,
-            maxBufferSize);
-    }
-}
-
-void LhxHashKeyAccessor::pack(TupleData const &inputTuple)
-{
-    PBuffer buf = getBuffer();
-
-    assert(buf != NULL && inputTuple.size() == keyAccessor.size());
-
     /*
-     * Copy the input tuple into the buffer associated with this accessor.
+     * The original first data node becomes the next.
      */
-     keyAccessor.marshal(inputTuple, buf);
+    firstData.setNext(inputData, firstDataNode);
+    setFirstData(inputData);
 }
 
 void LhxHashKeyAccessor::unpack(
@@ -180,8 +135,8 @@ void LhxHashKeyAccessor::unpack(
 
     if (destProj.size() > 0) {
         /*
-         * Destination positions in the outputTuple should be enough to hold fields
-         * returned by dataAccessor.
+         * Destination positions in the outputTuple should be enough to hold
+         * fields returned by dataAccessor.
          */
         uint tupleSize = min(destProj.size(), keyTuple.size());
 
@@ -208,12 +163,10 @@ bool LhxHashKeyAccessor::matches(
 {
     assert(inputKeyProj.size() == keyColsProj.size());
 
-    TupleData inputKeyTuple;    
-    inputKeyTuple.projectFrom(inputTuple, inputKeyProj);
+    inputKey.projectFrom(inputTuple, inputKeyProj);
     
     keyAccessor.unmarshal(keyTuple);
 
-    TupleData currentKey;
     currentKey.projectFrom(keyTuple, keyColsProj);
 
     return (keyColsDesc.compareTuples(keyTuple, keyColsProj,
@@ -230,7 +183,8 @@ string LhxHashKeyAccessor::toString()
     keyTuple.compute(keyDescriptor);
     unpack(keyTuple, allFields);
     keyTrace << "[Key Node] ["
-             << (isMatched() ? "matched" : "unmatched") << "] ";
+             << (isMatched() ? "matched" : "unmatched")
+             << " next " << getNextSlot() << "] ";
     tuplePrinter.print(keyTrace, keyDescriptor, keyTuple);
     return keyTrace.str();
 }
@@ -241,29 +195,32 @@ void LhxHashBlockAccessor::init(uint usablePageSize)
     numSlotsPerBlock = blockUsableSize / sizeof(PBuffer);
 }
 
-void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid) 
+void LhxHashBlockAccessor::setCurrent(PBuffer blockPtrInit, bool valid,
+    bool clearContent) 
 {
     LhxHashNodeAccessor::setCurrent(blockPtrInit);
     freePtr = getBuffer();
     assert(freePtr);
     endPtr = freePtr + blockUsableSize;
-    if (!valid) {
+
+    if (valid) {
+        freePtr = endPtr;
+    } else if (clearContent) {
         /*
          * Clear the memory if it is not valid.
          * The next link is not reset however since this block can be part of a
          * reusable block list.
          */
         memset(freePtr, 0, blockUsableSize);
-    } else {
-        freePtr = endPtr;
     }
+
 }
 
 PBuffer LhxHashBlockAccessor::allocBuffer(uint bufSize)
 {
     PBuffer resultPtr = freePtr;
     
-    if ( freePtr + bufSize> endPtr) {
+    if (freePtr + bufSize > endPtr) {
         resultPtr = NULL;
     } else {
         freePtr += bufSize;
@@ -299,7 +256,7 @@ void LhxHashTable::init(
     /*
      * Recompute num slots based on hashInfo.numCachePages
      */
-    uint cndKeys = hashInfo.cndKeys[buildInputIndex];
+    int cndKeys = hashInfo.cndKeys[buildInputIndex];
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     
     calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);    
@@ -407,7 +364,7 @@ PBuffer LhxHashTable::allocBlock()
         /*
          * The new block is not linked in yet.
          */
-        blockAccessor.setCurrent(resultBlock, false);
+        blockAccessor.setCurrent(resultBlock, false, false);
         blockAccessor.setNext(NULL);
     } else {
         /*
@@ -436,7 +393,7 @@ PBuffer LhxHashTable::allocBuffer(uint bufSize)
         }
         
         if (currentBlock) {
-            nodeBlockAccessor.setCurrent(currentBlock, false);
+            nodeBlockAccessor.setCurrent(currentBlock, false, false);
             resultBuf = nodeBlockAccessor.allocBuffer(bufSize);
             
             assert (resultBuf);
@@ -452,6 +409,10 @@ bool LhxHashTable::allocateResources(bool reuse)
 
     PBuffer newBlock;
 
+    slotBlocks.clear();
+    firstSlot = NULL;
+    lastSlot = NULL;
+
     if (!reuse) {
         firstBlock = allocBlock();
     }
@@ -466,9 +427,10 @@ bool LhxHashTable::allocateResources(bool reuse)
     uint numSlotsPerBlock = blockAccessor.getSlotsPerBlock();
 
     /*
-     * Initialize the block(clear all bytes etc).
+     * Initialize the block (clear all bytes etc).
      */
-    nodeBlockAccessor.setCurrent(currentBlock, false);
+    nodeBlockAccessor.setCurrent(currentBlock, false, true);
+    slotBlocks.push_back(currentBlock);
             
     if (numSlots <= numSlotsPerBlock) {
         /*
@@ -482,7 +444,7 @@ bool LhxHashTable::allocateResources(bool reuse)
     }
 
     /*
-     * Need to allocate more than one blocks.
+     * Need to allocate more than one block.
      */
     int numSlotsToAlloc = numSlots - numSlotsPerBlock;
 
@@ -504,7 +466,8 @@ bool LhxHashTable::allocateResources(bool reuse)
          */
         nodeBlockAccessor.setNext(newBlock);
         currentBlock = newBlock;
-        nodeBlockAccessor.setCurrent(currentBlock, false);
+        nodeBlockAccessor.setCurrent(currentBlock, false, true);
+        slotBlocks.push_back(currentBlock);
 
         if (numSlotsToAlloc <= numSlotsPerBlock) {
             /*
@@ -547,6 +510,12 @@ void LhxHashTable::calculateNumSlots(
     uint usablePageSize,
     uint numBlocks)
 {
+    // if we don't have stats for the number of distinct keys, just
+    // use a default value
+    if (cndKeys < 0) {
+        cndKeys = 10000;
+    }
+
     /*
      * Use at least 1%, but no more than 10% of hash table cache pages to store
      * slots.
@@ -563,12 +532,15 @@ void LhxHashTable::calculateNumSlots(
 void LhxHashTable::calculateSize(
     LhxHashInfo const &hashInfo,
     uint inputIndex,
-    uint &numBlocks)
+    int &numBlocks)
 {
     uint usablePageSize = 
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize()
         - sizeof(PBuffer);
 
+    // REVIEW jvs 25-Aug-2006:  Why is it necessary to cast
+    // away const here?  You should be able to just declare const references.
+    
     TupleDescriptor &inputDesc  =
         (TupleDescriptor &)hashInfo.inputDesc[inputIndex];
 
@@ -578,18 +550,14 @@ void LhxHashTable::calculateSize(
     TupleProjection &dataProj  =
         (TupleProjection &)hashInfo.dataProj[inputIndex];
 
-    uint cndKeys = hashInfo.cndKeys[inputIndex];
-    uint numRows = hashInfo.numRows[inputIndex];
-
-    /*
-     * Let hash table use at most 50% os the total cache size.
-     *
-     * TODO(rchen 2006-08-08): remove the limit of cacheBlocksLimit
-     * once stream graph resource manager is in place.
-     */
-    uint cacheBlocksLimit =
-        (hashInfo.memSegmentAccessor.pCacheAccessor)->getCache()
-        ->getMaxLockedPages() / 2;
+    int cndKeys = hashInfo.cndKeys[inputIndex];
+    int numRows = hashInfo.numRows[inputIndex];
+    // if we don't have stats, don't bother trying to compute the hash table
+    // size
+    if (cndKeys < 0 || numRows < 0) {
+        numBlocks = -1;
+        return;
+    }
 
     TupleDescriptor keyDesc;
     keyDesc.projectFrom(inputDesc, keyProj);
@@ -604,7 +572,7 @@ void LhxHashTable::calculateSize(
     TupleProjection tmpAggsProj;
 
     /*
-     * Pretend there is no aggregate fields.
+     * When estimating hash table size, ignore aggregate fields.
      */
     for (int i = 0; i < keyDesc.size(); i ++) {
         tmpKeyProj.push_back(i);
@@ -615,34 +583,22 @@ void LhxHashTable::calculateSize(
 
     double totalBytes = 
         slotsNeeded(cndKeys) * sizeof(PBuffer)
-        + cndKeys * tmpKey.getMaxStorageSize()
-        + numRows * tmpData.getMaxStorageSize();
-    numBlocks = (uint)ceil(totalBytes / usablePageSize);
-
-    /*
-     * In case the stats are incorrect and numBlocks comes out really low, make
-     * sure hash table still claim some minimum mount of memory: at least 10000
-     * blocks (or 40M for blocksize of 4K)
-     */
-    numBlocks =
-        min(max((uint32_t)10000, numBlocks),
-            cacheBlocksLimit);
+        + cndKeys * tmpKey.getAvgStorageSize()
+        + numRows * tmpData.getAvgStorageSize();
+    numBlocks = (int) ceil(totalBytes / usablePageSize);
 }
+
 
 PBuffer *LhxHashTable::getSlot(uint slotNum)
 {
-    PBuffer nextBlock;
     PBuffer *slot;
     uint slotsPerBlock = blockAccessor.getSlotsPerBlock();
 
-    blockAccessor.setCurrent(firstBlock, true);
+    blockAccessor.setCurrent(slotBlocks[slotNum/slotsPerBlock], true, false);
     
-    while (!(slot = blockAccessor.getSlot(slotNum))) {
-        nextBlock = blockAccessor.getNext();
-        assert(nextBlock != NULL);
-        blockAccessor.setCurrent(nextBlock, true);
-        slotNum -= slotsPerBlock;
-    }
+    slot = blockAccessor.getSlot(slotNum%slotsPerBlock);
+
+    assert (slot);
 
     return slot;
 }
@@ -657,8 +613,6 @@ PBuffer LhxHashTable::findKeyLocation(
         (hashGen.hash(inputTuple, inputKeyProj, isKeyColVarChar)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
-    assert (slot);
-
     PBuffer keyLocation = (PBuffer)slot;
     PBuffer firstKey = *slot;
     PBuffer nextKey;
@@ -671,11 +625,11 @@ PBuffer LhxHashTable::findKeyLocation(
         hashKeyAccessor.setCurrent(firstKey, true);
         while (!hashKeyAccessor.matches(inputTuple, inputKeyProj)) {
             nextKey = hashKeyAccessor.getNext();
-            keyLocation = hashKeyAccessor.getNextLocation();
-
             if (!nextKey) {
                 return NULL;
             }
+
+            keyLocation = hashKeyAccessor.getNextLocation();
             hashKeyAccessor.setCurrent(nextKey, true);
         }
     } else {
@@ -698,14 +652,30 @@ PBuffer LhxHashTable::findKeyLocation(
 
 bool LhxHashTable::addKeyData(TupleData const &inputTuple)
 {
+    // REVIEW jvs 25-Aug-2006:  If we're not using a power of two to allow
+    // for fast modulo, then it should probably be a prime number to
+    // reduce collisions.  Broadbase had a table "BBPrime" which
+    // allowed it to quickly find the closest prime number after doing
+    // other calculations like resource estimation.
     uint slotNum =
         (hashGen.hash(inputTuple, keyColsProj, isKeyColVarChar)) % numSlots;
     
     PBuffer *slot = getSlot(slotNum);
-    assert (slot);
+    PBuffer *newLastSlot = NULL;
+
+    if (!firstSlot) {
+        firstSlot = slot;
+        lastSlot  = slot;
+    } else {
+        if (!(*slot)) {
+            // first time inserting into this slot
+            // need to chain the slot in if insertion successful
+            newLastSlot = slot;
+        }
+    }
+
     PBuffer newNextKey = *slot;
 
-    TupleData tmpKeyTuple;
     PBuffer newKey = NULL;
 
     if (!isGroupBy) {
@@ -729,7 +699,6 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
             allocBuffer(hashKeyAccessor.getStorageSize(aggResultTuple));
     }
 
-    TupleData tmpDataTuple;
     PBuffer newData = NULL;
 
     if (!isGroupBy) {
@@ -749,10 +718,22 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
         return false;
     }
 
+    PBuffer *nextSlot = NULL;
+
+    if (newNextKey) {
+        // if slot not empty
+        // copy the nextSlot field from newNextKey to newKey
+        hashKeyAccessor.setCurrent(newNextKey, true);
+        nextSlot = hashKeyAccessor.getNextSlot();
+        hashKeyAccessor.setNextSlot(NULL);
+    }
+
     *slot = newKey;
     hashKeyAccessor.setCurrent(newKey, false);
     hashKeyAccessor.setMatched(false);
     hashKeyAccessor.setNext(newNextKey);
+    hashKeyAccessor.setNextSlot(nextSlot);
+    hashKeyAccessor.setFirstData(NULL);
 
     if (!isGroupBy) {
         /*
@@ -774,21 +755,30 @@ bool LhxHashTable::addKeyData(TupleData const &inputTuple)
         hashKeyAccessor.pack(aggResultTuple);
     }
 
+
+    /*
+     * Link this slot (if inserted to for the first time) into the linked list.
+     */
+    if (newLastSlot) {
+        hashKeyAccessor.setCurrent((*lastSlot), true);
+        hashKeyAccessor.setNextSlot(newLastSlot);
+        lastSlot = newLastSlot;
+    }
+
     return true;
 }
 
 bool LhxHashTable::addData(PBuffer keyNode, TupleData const &inputTuple)
 {
     /*
-     * REVIEW: optimizatin possible here if dataProj is empty; i.e. key
+     * REVIEW: optimization possible here if dataProj is empty; i.e. key
      * contains all cols. We can keep a count in the key, instead of storing
      * empty data nodes following the key. See test case
      * LhxHashTableTest::testInsert1Ka().
+     * Another case is to support setop ALL in future.
      */
     hashKeyAccessor.setCurrent(keyNode, true);
 
-    TupleData tmpDataTuple;
-    
     tmpDataTuple.projectFrom(inputTuple, dataProj);
 
     hashDataAccessor.checkStorageSize(tmpDataTuple, maxBufferSize);
@@ -959,9 +949,8 @@ string LhxHashTable::printSlot(uint slotNum)
 {    
     ostringstream slotTrace;
     PBuffer *slot = getSlot(slotNum);
-    assert (slot);
 
-    slotTrace << "[Slot] [" << slotNum << "]\n";
+    slotTrace << "[Slot] [" << slotNum << "] [" << slot <<"]\n";
     
     /*
      * Print all keys in this slot.
@@ -1000,7 +989,9 @@ string LhxHashTable::toString()
         << "[Hash Table : maximum # blocks = " << maxBlockCount     << "]\n"
         << "[             current # blocks = " << currentBlockCount << "]\n"
         << "[             # slots          = " << numSlots          << "]\n"
-        << "[             partition level  = " << partitionLevel    << "]\n";
+        << "[             partition level  = " << partitionLevel    << "]\n"
+        << "[             first slot       = " << firstSlot         << "]\n"
+        << "[             last  slot       = " << lastSlot          << "]\n";
 
     for (int i = 0; i < numSlots; i ++) {
         hashTableTrace << printSlot(i);
@@ -1014,30 +1005,30 @@ bool LhxHashTableReader::advanceSlot()
     if (!boundKey) {
         curKey = NULL;
 
-        PBuffer *slot;        
-        while (curSlot < hashTable->getNumSlots()) {
-            slot = hashTable->getSlot(curSlot);
-            curSlot ++;
-            
-            if (slot && (PBuffer)*slot) {
-                if (returnUnMatched) {
-                    hashKeyAccessor.setCurrent(*slot, true);
-                    /*
-                     * Only return unmatched keys
-                     */
-                    if (!hashKeyAccessor.isMatched()) {
-                        curKey = *slot;
-                        break;
+        if (!isPositioned) {
+            curSlot = hashTable->getFirstSlot();
+        }
+
+        if (curSlot && *curSlot) {
+            if (returnUnMatched) {
+                /*
+                 * Look at the key pointed to by slot.
+                 */
+                hashKeyAccessor.setCurrent(*curSlot, true);
+                /*
+                 * Only return unmatched keys
+                 */
+                while (hashKeyAccessor.isMatched()) {
+                    curSlot = hashTable->getNextSlot(curSlot);
+                    if (curSlot && *curSlot) {
+                        hashKeyAccessor.setCurrent(*curSlot, true);
+                    } else {
+                        return false;
                     }
                 }
-                else {
-                    /*
-                     * Return everything.
-                     */
-                    curKey = *slot;
-                    break;
-                }
             }
+            curKey = *curSlot;
+            curSlot = hashTable->getNextSlot(curSlot);
         }
 
         if (!curKey) {
@@ -1164,26 +1155,6 @@ void LhxHashTableReader::init(
      * the whole hash table.
      */
     bindKey(NULL);
-}
-
-void LhxHashTableReader::bind(PBuffer key)
-{
-    boundKey = curKey = key;
-    curSlot = 0;
-    curData = NULL;
-    isPositioned = false;
-}
-
-void LhxHashTableReader::bindKey(PBuffer key)
-{
-    returnUnMatched = false;
-    bind(key);
-}
-
-void LhxHashTableReader::bindUnMatched()
-{
-    returnUnMatched = true;
-    bind(NULL);
 }
 
 bool LhxHashTableReader::getNext(TupleData &outputTuple)

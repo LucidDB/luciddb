@@ -918,9 +918,11 @@ public class FarragoDatabase
                 getCodeCacheMaxBytes(systemRepos.getCurrentConfig()));
         }
         
-        if (paramName.equals("cachePagesInit")) {
+        if (paramName.equals("cachePagesInit") ||
+            paramName.equals("expectedConcurrentStatements") ||
+            paramName.equals("cacheReservePercentage")) {
             executeFennelSetParam(paramName, ddlStmt.getParamValue());
-        }
+        }     
     }
 
     private long getCodeCacheMaxBytes(FemFarragoConfig config)

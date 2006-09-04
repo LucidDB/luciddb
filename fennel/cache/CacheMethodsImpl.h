@@ -326,17 +326,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
 ::lockScratchPage(BlockNum blockNum)
 {
     PageT *page;
-    // NOTE:  this will not churn CPU, because findFreePage
-    // has a sleep inside of it if it can't find even one victim.
-    // After a maximum of 10 sleeps, give up on the assumption
-    // of overcommit (just a hack until proper resource balancing
-    // is available).
-    for (int i = 0; i < 10; ++i) {
-        page = findFreePage();
-        if (page) {
-            break;
-        }
-    }
+    page = findFreePage();
     if (!page) {
         return NULL;
     }

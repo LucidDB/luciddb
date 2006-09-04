@@ -82,8 +82,10 @@ public class LhxJoinRule
 
         if ((nonEquiCondition != null)
             && (joinRel.getJoinType() != JoinRelType.INNER)) {
-            // this one can not be imlemented by hash join
-            // nor can it be implemented by cartesian product
+            // Cannot use hash outer join types if there're non-equi join
+            // conditions.
+            // Note this type of join cannot be implemented by cartesian
+            // product either.
             return;
         }
 
@@ -139,7 +141,7 @@ public class LhxJoinRule
 
         Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
         if (numBuildRows == null) {
-            numBuildRows = 10000.0;
+            numBuildRows = -1.0;
         }
 
         // Derive cardinality of RHS join keys.
@@ -159,8 +161,8 @@ public class LhxJoinRule
                 fennelRight,
                 joinKeyMap);
 
-        if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-            cndBuildKey = numBuildRows;
+        if (cndBuildKey == null) {
+            cndBuildKey = -1.0;
         }
 
         boolean isSetop = false;

@@ -232,8 +232,14 @@ public class SqlStdOperatorTable
      * <code>IN</code> operator tests for a value's membership in a subquery or
      * a list of values.
      */
-    public static final SqlBinaryOperator inOperator = new SqlInOperator();
+    public static final SqlBinaryOperator inOperator = new SqlInOperator(false);
 
+    /**
+     * <code>NOT IN</code> operator tests for a value's membership in a subquery or
+     * a list of values.
+     */
+    public static final SqlBinaryOperator notInOperator = new SqlInOperator(true);
+    
     /**
      * Logical less-than operator, '<code>&lt;</code>'.
      */
@@ -542,6 +548,12 @@ public class SqlStdOperatorTable
      */
     public static final SqlAggFunction firstValueOperator =
         new SqlFirstLastValueAggFunction(true);
+
+    /**
+     * <code>SINGLE_VALUE</code> aggregate function.
+     */
+    public static final SqlAggFunction singleValueOperator =
+        new SqlSingleValueAggFunction(null);
 
     /**
      * <code>AVG</code> aggregate function.
@@ -1137,6 +1149,33 @@ public class SqlStdOperatorTable
             }
         };
 
+    /**
+     * The internal "$SCALAR_QUERY" operator returns a scalar value from a
+     * record type. It asusmes the record type only has one field, and
+     * returns that field as the output.
+     */
+    public static final SqlInternalOperator scalarQueryOperator =
+        new SqlInternalOperator("$SCALAR_QUERY",
+            SqlKind.ScalarQuery,
+            0,
+            false,
+            SqlTypeStrategies.rtiRecordToScalarType,
+            null,
+            SqlTypeStrategies.otcRecordToScalarType) {
+            public void unparse(
+                SqlWriter writer,
+                SqlNode [] operands,
+                int leftPrec,
+                int rightPrec)
+            {
+                SqlUtil.unparseFunctionSyntax(this,
+                    writer,
+                    operands,
+                    true,
+                    null);
+            }
+        };
+        
     /**
      * The CARDINALITY operator, used to retrieve the number of elements in a
      * MULTISET

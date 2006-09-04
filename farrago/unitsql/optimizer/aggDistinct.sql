@@ -266,6 +266,10 @@ from emps as e join depts as d on e.deptno = d.deptno
 group by d.name
 order by 1,2,3;
 
+select e.name, d.deptno, sum(e.age), count(distinct d.name) 
+from emps e, depts d where e.deptno = d.deptno
+group by e.name, d.deptno
+order by 1;
 
 -- ------------
 -- verify plans
@@ -325,5 +329,10 @@ explain plan for
 select d.name, count(distinct e.empno), count(distinct e.slacker or e.manager)
 from emps as e join depts as d on e.deptno = d.deptno
 group by d.name;
+
+explain plan for
+select e.name, d.deptno, sum(e.age), count(distinct d.name) 
+from emps e, depts d where e.deptno = d.deptno
+group by e.name, d.deptno;
 
 -- End aggDistinct.sql

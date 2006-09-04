@@ -49,6 +49,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
+import org.eigenbase.trace.*;
 
 
 /**
@@ -103,6 +104,7 @@ public class FarragoRuntimeContext
     private boolean isCanceled;
     private ClassLoader statementClassLoader;
     private Map<String, RelDataType> resultSetTypeMap;
+    protected long stmtId;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -124,6 +126,7 @@ public class FarragoRuntimeContext
         this.streamFactoryProvider = params.streamFactoryProvider;
         this.isDml = params.isDml;
         this.resultSetTypeMap = params.resultSetTypeMap;
+        this.stmtId = params.stmtId;
 
         dataWrapperCache =
             new FarragoDataWrapperCache(
@@ -849,6 +852,31 @@ public class FarragoRuntimeContext
     public FarragoSession getSession()
     {
         return session;
+    }
+
+    /**
+     * Handles an exception encountered by a stream while processing an 
+     * input row. The default implementation logs exceptions to the 
+     * server trace file.
+     * 
+     * @param row the input row object
+     * @param ex the exception encountered
+     * @param columnIndex index for the output column being calculated 
+     *   when an exception was encountered, or zero if the filter condition 
+     *   was being evaluated. This parameter may be -1 if not appropriate 
+     *   for the exception
+     * @param tag an error handling tag specific to the runtime context.
+     *   This parameter may also be null
+     * @return the status of the error handler. While the default 
+     *   implementation returns null, Farrago extensions may return 
+     *   more informative values, such as TupleIter.NoDataReason.
+     */
+    public Object handleRowError(
+        SyntheticObject row, RuntimeException ex, int columnIndex, String tag) 
+    {
+        EigenbaseTrace.getStatementTracer().log(
+            Level.WARNING, "java calc exception", ex);
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------

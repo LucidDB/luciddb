@@ -24,6 +24,8 @@
 
 using namespace std;
 
+// REVIEW jvs 25-Aug-2006:  This file should be named LhxHashInfo.h, right?
+
 FENNEL_BEGIN_NAMESPACE
 
 /**
@@ -34,6 +36,9 @@ FENNEL_BEGIN_NAMESPACE
  */
 struct LhxHashInfo
 {
+    // REVIEW jvs 25-Aug-2006:  This shouldn't be a doxygen comment since
+    // it's not associated with any field.  Seems like the second sentence
+    // is out-of-date.
     /**
      * Note: need two accessors: one for writing to memory, the other one for
      * writing to the disk. Probably need a list of the second kind, each using
@@ -57,6 +62,15 @@ struct LhxHashInfo
      */
     uint numCachePages;
 
+    // REVIEW jvs 25-Aug-2006:  Instead of ten vectors of types, it's
+    // cleaner to create one struct (say LhxHashInputInfo) containing
+    // all the types as fields, and then just create one
+    // vector<LhxHashInputInfo>.  Access is then info.input[i].useJoinFilter
+    // rather than info.useJoinFilter[i].
+
+    // REVIEW jvs 25-Aug-2006:  Why is this named inputDesc?  Isn't
+    // it really output?  For example, LhxAggExecStream::prepare
+    // sets outputDesc = inputDesc.
     /**
      * Join keys, aggs and data
      * For join,
@@ -68,6 +82,7 @@ struct LhxHashInfo
     vector<TupleDescriptor> inputDesc;
 
     vector<TupleProjection> keyProj;
+    
     /*
      * If a key column is varchar type.
      */
@@ -88,7 +103,7 @@ struct LhxHashInfo
     /**
      * Estimated number of rows from the inputs.
      */
-    vector<uint> numRows;
+    vector<int> numRows;
 
     /**
      * Key cardinality estimate from the optimizer.
@@ -96,7 +111,7 @@ struct LhxHashInfo
      * It is also used to estimate the size of the hash table(to build partial
      * aggregates) during recursive partitioning for aggregate operations.
      */
-    vector<uint> cndKeys;
+    vector<int> cndKeys;
 
     /**
      * ExecStream buf accessors.

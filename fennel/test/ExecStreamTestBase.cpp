@@ -27,6 +27,7 @@
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
 #include "fennel/exec/ExecStream.h"
 #include "fennel/exec/DfsTreeExecStreamScheduler.h"
+#include "fennel/exec/SimpleExecStreamGovernor.h"
 
 #include <boost/test/test_tools.hpp>
 
@@ -52,11 +53,27 @@ ExecStreamScheduler *ExecStreamTestBase::newScheduler()
         "DfsTreeExecStreamScheduler");
 }
 
+ExecStreamGovernor *ExecStreamTestBase::newResourceGovernor(
+    ExecStreamResourceKnobs const &knobSettings,
+    ExecStreamResourceQuantity const &resourcesAvailable)
+{
+    return new SimpleExecStreamGovernor(
+        knobSettings, resourcesAvailable, shared_from_this(),
+        "SimpleExecStreamGovernor");
+}
+
 void ExecStreamTestBase::testCaseSetUp()
 {
     SegStorageTestBase::testCaseSetUp();
     openStorage(DeviceMode::createNew);
     pScheduler.reset(newScheduler());
+    ExecStreamResourceKnobs knobSettings;
+    knobSettings.cacheReservePercentage = DefaultCacheReservePercent;
+    knobSettings.expectedConcurrentStatements = DefaultConcurrentStatements;
+    ExecStreamResourceQuantity resourcesAvailable;
+    resourcesAvailable.nCachePages = nMemPages;
+    pResourceGovernor.reset(
+        newResourceGovernor(knobSettings, resourcesAvailable));
 }
 
 void ExecStreamTestBase::testCaseTearDown()
@@ -70,6 +87,8 @@ void ExecStreamTestBase::testCaseTearDown()
     // free the scheduler last, since an ExecStreamGraph holds a raw Scheduler
     // ptr
     pScheduler.reset(); 
+    assert(pResourceGovernor.unique());
+    pResourceGovernor.reset();
     SegStorageTestBase::testCaseTearDown();
 }
 

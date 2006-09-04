@@ -27,6 +27,7 @@ import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
@@ -209,20 +210,24 @@ public class LcsIndexSemiJoinRule
                 nullFilterRel,
                 castExps,
                 fieldNames);
-        RelNode sortInput =
+        RelNode distInput =
             mergeTraitsAndConvert(
                 semiJoin.getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
                 projectRel);
 
-        // create a sort on the projection
-        boolean discardDuplicates = true;
+        // create a distinct agg on top of the project to remove duplicate
+        // keys
+        AggregateRel distinctRel =
+            (AggregateRel) RelOptUtil.createDistinctRel(distInput);
+        
+        // then sort the result so we will search the index in key order
         FennelSortRel sort =
             new FennelSortRel(
                 origRowScan.getCluster(),
-                sortInput,
+                distinctRel,
                 FennelRelUtil.newIotaProjection(nKeys),
-                discardDuplicates);
+                false);
 
         // create a merge and index search on top of the index scan
         boolean needIntersect = (call.rels.length > 2);
@@ -298,7 +303,7 @@ public class LcsIndexSemiJoinRule
      *
      * @param relImplementor for allocating dynamic parameters
      * @param call inputs into this rule
-     * @param sort sort input into index search
+     * @param sort distinct, sorted input into index search
      * @param indexScan index scan to be used with search
      * @param rowScan the original row scan
      * @param needIntersect true if the row scan requires more than 1 index

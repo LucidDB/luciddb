@@ -66,6 +66,7 @@ public class IterCalcRel
     //~ Static fields/initializers ---------------------------------------------
 
     private static boolean abortOnError = true;
+    private static boolean errorBuffering = false;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -76,7 +77,7 @@ public class IterCalcRel
      */
     protected int flags;
 
-    private String loggerType;
+    private String tag;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -86,6 +87,16 @@ public class IterCalcRel
         RexProgram program,
         int flags)
     {
+        this(cluster, child, program, flags, null);
+    }
+    
+    public IterCalcRel(
+        RelOptCluster cluster,
+        RelNode child,
+        RexProgram program,
+        int flags,
+        String tag)
+    {
         super(
             cluster,
             new RelTraitSet(CallingConvention.ITERATOR),
@@ -93,15 +104,10 @@ public class IterCalcRel
         this.flags = flags;
         this.program = program;
         this.rowType = program.getOutputRowType();
-        loggerType = null;
+        this.tag = tag;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    public void setLoggerType(String loggerType)
-    {
-        this.loggerType = loggerType;
-    }
 
     // TODO jvs 10-May-2004: need a computeSelfCost which takes condition into
     // account; maybe inherit from CalcRelBase?
@@ -114,12 +120,12 @@ public class IterCalcRel
     protected String computeDigest()
     {
         String tempDigest = super.computeDigest();
-        if (loggerType != null) {
+        if (tag != null) {
             // append logger type to digest
             int lastParen = tempDigest.lastIndexOf(')');
             tempDigest =
                 tempDigest.substring(0, lastParen)
-                + ",type=" + loggerType
+                + ",type=" + tag
                 + tempDigest.substring(lastParen);
         }
         return tempDigest;
@@ -150,7 +156,8 @@ public class IterCalcRel
                 getCluster(),
                 RelOptUtil.clone(getChild()),
                 program.copy(),
-                getFlags());
+                getFlags(),
+                tag);
         clone.inheritTraitsFrom(this);
         return clone;
     }
@@ -199,6 +206,17 @@ public class IterCalcRel
         IterCalcRel.abortOnError = abortOnError;
     }
 
+    /**
+     * Allows errors to be buffered, in the event that they overflow the 
+     * error handler.
+     * 
+     * @param errorBuffering whether to buffer errors
+     */
+    public static void setErrorBuffering(boolean errorBuffering)
+    {
+        IterCalcRel.errorBuffering = errorBuffering;
+    }
+
     public static Expression implementAbstract(
         JavaRelImplementor implementor,
         JavaRel rel,
@@ -207,7 +225,7 @@ public class IterCalcRel
         final RelDataType inputRowType,
         final RelDataType outputRowType,
         RexProgram program,
-        String loggerType)
+        String tag)
     {
         return
             implementAbstractTupleIter(
@@ -218,9 +236,35 @@ public class IterCalcRel
                 inputRowType,
                 outputRowType,
                 program,
-                loggerType);
+                tag);
     }
 
+    /**
+     * Generates code for a Java expression satisfying the 
+     * {@link org.eigenbase.runtime.TupleIter} interface. The generated 
+     * code allocates a {@link org.eigenbase.runtime.CalcTupleIter}
+     * with a dynamic {@link org.eigenbase.runtime.TupleIter#fetchNext()} 
+     * method. If the "abort on error" flag is false, or an error handling 
+     * tag is specified, then fetchNext is written to handle row errors.
+     * 
+     * <p>
+     * 
+     * Row errors are handled by wrapping expressions that can fail 
+     * with a try/catch block. A caught RuntimeException is then published 
+     * to an "connection variable." In the event that errors can overflow, 
+     * an "error buffering" flag allows them to be posted again on the next 
+     * iteration of fetchNext.
+     * 
+     * @param implementor an object that implements relations as Java code
+     * @param rel the relation to be implemented
+     * @param childExp the implemented child of the relation
+     * @param varInputRow the Java variable to use for the input row
+     * @param inputRowType the rel data type of the input row
+     * @param outputRowType the rel data type of the output row
+     * @param program the rex program to implemented by the relation
+     * @param tag an error handling tag
+     * @return a Java expression satisfying the TupleIter interface
+     */
     public static Expression implementAbstractTupleIter(
         JavaRelImplementor implementor,
         JavaRel rel,
@@ -229,8 +273,28 @@ public class IterCalcRel
         final RelDataType inputRowType,
         final RelDataType outputRowType,
         RexProgram program,
-        String loggerType)
+        String tag)
     {
+        // Perform error recovery if continuing on errors or if 
+        // an error handling tag has been specified
+        boolean errorRecovery = (abortOnError == false || tag != null);
+        // Error buffering should not be enabled unless error recovery is
+        assert (errorBuffering == false || errorRecovery == true);
+
+        // Allow backwards compatibility until all Farrago extensions are
+        // satisfied with the new error handling semantics. The new semantics
+        // include:
+        //   (1) cast input object to input row object outside of try block,
+        //         should be fine, at least for base Farrago
+        //   (2) maintain a columnIndex counter to better locate of error,
+        //         at the cost of a few cycles
+        //   (3) publish errors to the runtime context. FarragoRuntimeContext
+        //         now supports this API
+        boolean backwardsCompatible = true;
+        if (tag != null) {
+            backwardsCompatible = false;
+        }
+
         RelDataTypeFactory typeFactory = implementor.getTypeFactory();
         OJClass outputRowClass =
             OJUtil.typeToOJClass(
@@ -251,6 +315,33 @@ public class IterCalcRel
                     outputRowClass,
                     new ExpressionList()));
 
+        // The method body for fetchNext, a main target of code generation
+        StatementList nextMethodBody = new StatementList();
+
+        // First, post an error if it overflowed the previous time 
+        //     if (pendingError) {
+        //         rc = handleRowError(...);
+        //         if (rc instanceof NoDataReason) {
+        //             return rc;
+        //         }
+        //         pendingError = false;
+        //     }
+        if (errorBuffering) {
+            // add to next method body...
+        }
+
+        // Most of fetchNext falls within a while() block. The while block 
+        // allows us to try multiple input rows against a filter condition
+        // before returning a single row.
+        //     while (true) {
+        //         Object varInputObj = inputIterator.fetchNext();
+        //         if (varInputObj instanceof TupleIter.NoDataReason) {
+        //             return varInputObj;
+        //         }
+        //         InputRowClass varInputRow = (InputRowClass) varInputObj;
+        //         int columnIndex = 0;
+        //         [calculation statements]
+        //     }
         StatementList whileBody = new StatementList();
 
         Variable varInputObj = implementor.newVariable();
@@ -275,39 +366,84 @@ public class IterCalcRel
 
         ifNoDataReasonBody.add(new ReturnStatement(varInputObj));
 
-        // The calculator (projection, filtering) statements are added to
-        // calcStmts.  In most cases it will just be the while loop's body.
+        // Push up the row declaration for new error handling so that the
+        // input row is available to the error handler
+        if (! backwardsCompatible) {
+            whileBody.add(
+                declareInputRow(inputRowClass, varInputRow, varInputObj));
+        }
+
+        Variable varColumnIndex = null;
+        if (errorRecovery && backwardsCompatible == false) {
+            varColumnIndex = implementor.newVariable();
+            whileBody.add(
+                new VariableDeclaration(
+                    OJUtil.typeNameForClass(int.class),
+                    varColumnIndex.toString(),
+                    Literal.makeLiteral(0)));
+        }
+
+        // Calculator (projection, filtering) statements are later appended 
+        // to calcStmts. Typically, this target will be the while list itself.
         StatementList calcStmts;
-        if (abortOnError && (loggerType == null)) {
+        if (errorRecovery == false) {
             calcStmts = whileBody;
         } else {
-            // This is not the usual case.  Here we wrap the calc statements
+            // For error recovery, we wrap the calc statements
             // (e.g., everything but the code that reads rows from the
-            // inputIterator) in a try/catch that ignores exceptions.
+            // inputIterator) in a try/catch that publishes exceptions.
 
             calcStmts = new StatementList();
 
             // try { /* calcStmts */ }
             // catch(RuntimeException ex) {
-            //     EigenbaseTrace.getStatementTracer().log(
-            //         Level.WARNING, "java calc exception", ex);
+            //     Object rc = connection.handleRowError(...);
+            //     [buffer error if necessary]
             // }
             StatementList catchStmts = new StatementList();
 
-            catchStmts.add(
-                new ExpressionStatement(
-                    new MethodCall(
+            if (backwardsCompatible) {
+                catchStmts.add(
+                    new ExpressionStatement(
                         new MethodCall(
-                            OJUtil.typeNameForClass(EigenbaseTrace.class),
-                            "getStatementTracer",
-                            null),
-                        "log",
-                        new ExpressionList(
-                            new FieldAccess(
-                                OJUtil.typeNameForClass(Level.class),
-                                "WARNING"),
-                            Literal.makeLiteral("java calc exception"),
-                            new FieldAccess("ex")))));
+                            new MethodCall(
+                                OJUtil.typeNameForClass(EigenbaseTrace.class),
+                                "getStatementTracer",
+                                null),
+                            "log",
+                            new ExpressionList(
+                                new FieldAccess(
+                                    OJUtil.typeNameForClass(Level.class),
+                                    "WARNING"),
+                                Literal.makeLiteral("java calc exception"),
+                                new FieldAccess("ex")))));
+            } else {
+                Variable varRc = implementor.newVariable();
+                ExpressionList handleRowErrorArgs = 
+                    new ExpressionList(
+                        varInputRow, 
+                        new FieldAccess("ex"),
+                        varColumnIndex);
+                handleRowErrorArgs.add(Literal.makeLiteral(tag));
+                catchStmts.add(
+                    new VariableDeclaration(
+                        OJUtil.typeNameForClass(Object.class),
+                        varRc.toString(),
+                        new MethodCall(
+                            implementor.getConnectionVariable(),
+                            "handleRowError",
+                            handleRowErrorArgs)));
+
+                // Buffer an error if it overflowed
+                //     if (rc instanceof NoDataReason) {
+                //         pendingError = true;
+                //         [save error state]
+                //         return rc;
+                //     }
+                if (errorBuffering) {
+                    // add to catch statements...
+                }
+            }
 
             CatchList catchList =
                 new CatchList(
@@ -322,13 +458,10 @@ public class IterCalcRel
             whileBody.add(tryStmt);
         }
 
-        calcStmts.add(
-            new VariableDeclaration(
-                TypeName.forOJClass(inputRowClass),
-                varInputRow.toString(),
-                new CastExpression(
-                    TypeName.forOJClass(inputRowClass),
-                    varInputObj)));
+        if (backwardsCompatible) {
+            whileBody.add(
+                declareInputRow(inputRowClass, varInputRow, varInputObj));
+        }
 
         MemberDeclarationList memberList = new MemberDeclarationList();
 
@@ -355,6 +488,13 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
+                if (errorRecovery && backwardsCompatible == false) {
+                    condBody.add(
+                        new ExpressionStatement(
+                            new UnaryExpression(
+                                varColumnIndex,
+                                UnaryExpression.POST_INCREMENT)));
+                }
                 ++i;
                 String javaFieldName = Util.toJavaId(
                         fields[i].getName(),
@@ -373,7 +513,6 @@ public class IterCalcRel
                 Literal.makeLiteral(true),
                 whileBody);
 
-        StatementList nextMethodBody = new StatementList();
         nextMethodBody.add(whileStmt);
 
         MemberDeclaration fetchNextMethodDecl =
@@ -384,6 +523,12 @@ public class IterCalcRel
                 new ParameterList(),
                 null,
                 nextMethodBody);
+
+        // The restart() method should reset variables used to buffer errors
+        //     pendingError = false
+        if (errorBuffering) {
+            // declare refinement of restart() and add to member list...
+        }
 
         memberList.add(rowVarDecl);
         memberList.add(fetchNextMethodDecl);
@@ -417,12 +562,28 @@ public class IterCalcRel
                 inputRowType,
                 outputRowType,
                 program,
-                loggerType);
+                tag);
     }
 
     public RexProgram getProgram()
     {
         return program;
+    }
+
+    public String getTag() 
+    {
+        return tag;
+    }
+
+    private static Statement declareInputRow(
+        OJClass inputRowClass, Variable varInputRow, Variable varInputObj)
+    {
+        return new VariableDeclaration(
+            TypeName.forOJClass(inputRowClass),
+            varInputRow.toString(),
+            new CastExpression(
+                TypeName.forOJClass(inputRowClass),
+                varInputObj));
     }
 }
 

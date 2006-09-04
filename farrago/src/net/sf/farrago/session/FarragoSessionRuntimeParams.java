@@ -103,6 +103,12 @@ public class FarragoSessionRuntimeParams
      * Map from result set name to row type.
      */
     public Map<String, RelDataType> resultSetTypeMap;
+
+    /**
+     * An identifier for the executable statement id. This parameter 
+     * assumes there will be a one to one mapping from statement to context.
+     */
+    public long stmtId;
 }
 
 // End FarragoSessionRuntimeParams.java

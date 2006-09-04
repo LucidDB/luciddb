@@ -86,17 +86,29 @@ void LbmGeneratorExecStream::open(bool restart)
 
 void LbmGeneratorExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
+    ExecStreamResourceQuantity &optQuantity,
+    ExecStreamResourceSettingType &optType)
 {
     BTreeExecStream::getResourceRequirements(minQuantity, optQuantity);
     LcsRowScanBaseExecStream::getResourceRequirements(minQuantity, optQuantity);
+    numMiscScratchPages = minQuantity.nCachePages;
 
     // need a minimum of one scratch pages for constructing LbmEntry's
     minQuantity.nCachePages += 1;
 
-    // TODO - optimum quantity should be set based on the max number 
-    // of distinct values in a batch encountered during cluster loads
-    optQuantity = minQuantity;
+    // If this is a multi-key index, then we're only creating singleton
+    // LbmEntry's and therefore, don't need multiple scratch pages.
+    // Otherwise, we ideally want to set the number of scratch pages
+    // based on the max number of distinct values in compressed batches.
+    // Since we don't have that information, we'll use an "estimate" of
+    // 10 pages.
+    if (nIdxKeys > 1) {
+        optQuantity.nCachePages += 1;
+        optType = EXEC_RESOURCE_ACCURATE;
+    } else {
+        optQuantity.nCachePages += 11;
+        optType = EXEC_RESOURCE_ESTIMATE;
+    }
 }
 
 void LbmGeneratorExecStream::setResourceAllocation(
@@ -105,7 +117,7 @@ void LbmGeneratorExecStream::setResourceAllocation(
     BTreeExecStream::setResourceAllocation(quantity);
     LcsRowScanBaseExecStream::setResourceAllocation(quantity);
 
-    maxNumScratchPages = 1;
+    maxNumScratchPages = quantity.nCachePages - numMiscScratchPages;
 }
 
 ExecStreamResult LbmGeneratorExecStream::execute(
@@ -312,7 +324,7 @@ bool LbmGeneratorExecStream::generateBitmaps()
 {
     // in the single key case, the column reader is always the first
     // one, in the first cluster reader
-    LcsColumnReader colReader = pClusters[0]->clusterCols[0];
+    LcsColumnReader &colReader = pClusters[0]->clusterCols[0];
     uint nDistinctVals = colReader.getBatchValCount();
 
     // only read rows beginning at startRid
@@ -449,7 +461,7 @@ void LbmGeneratorExecStream::initBitmapTable(uint nEntries)
         if (nPages > maxNumScratchPages) {
             nPages = maxNumScratchPages;
         }
-        if (nPages > nScratchPagesAllocated) {
+        while (nPages > nScratchPagesAllocated) {
             scratchLock.allocatePage();
             PBuffer newPage = scratchLock.getPage().getWritableData();
             scratchPages.push_back(newPage);

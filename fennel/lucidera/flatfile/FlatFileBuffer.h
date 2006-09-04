@@ -100,7 +100,7 @@ public:
     /**
      * Sets internal buffers
      *
-     * @param buffer storage for characters read
+     * @param pBuffer storage for characters read
      *
      * @param size size of buffer, in characters
      */

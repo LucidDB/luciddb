@@ -175,7 +175,19 @@ public:
      *
      * @param optQuantity receives the resource quantity
      * needed by this stream in order to execute optimally
+     *
+     * @param optType Receives the value indicating the accuracy of the
+     * optQuantity parameter.  This parameter is optional and defaults to
+     * EXEC_RESOURCE_ACCURATE if omitted.  If the optimum setting is an 
+     * estimate or no value can be specified (e.g., due to lack of statistics),
+     * then this parameter needs to be used to indicate a non-accurate
+     * optimum resource setting.
      */
+    virtual void getResourceRequirements(
+        ExecStreamResourceQuantity &minQuantity,
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
+
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
         ExecStreamResourceQuantity &optQuantity);

@@ -68,7 +68,7 @@ void LhxHashGenerator::init(uint levelInit)
     }
 
     level = levelInit;
-    magicTable = LhxHashGeneratorMagicTable;;
+    magicTable = LhxHashGeneratorMagicTable;
 
     uint base = level * 4;
     hashValueSeed
@@ -77,6 +77,10 @@ void LhxHashGenerator::init(uint levelInit)
         | (uint8_t(base + 2) << 8 )
         | (uint8_t(base + 3)      );
 }
+
+// REVIEW jvs 25-Aug-2006: Awww, the fancy bit-twiddling from Broadbase is
+// gone.  Boris L. will be so disappointed.  I guess it will have to be
+// someone's science fair project to see if any of it was worthwhile.
 
 void LhxHashGenerator::hashOneBuffer(uint &hashValue, PConstBuffer pBuf,
     uint bufSize)
@@ -128,6 +132,10 @@ void LhxHashGenerator::hashOneColumn(
         }
     }
 
+    // REVIEW jvs 25-Aug-2006:  Since the call below uses
+    // sizeof(TupleStorageByteLength), shouldn't trimmedLength
+    // be declared to match?
+    
     /*
      * First hash the length
      * However, ignore length field if pData is NULL.
@@ -164,6 +172,8 @@ uint LhxHashGenerator::hash(
 
     for (int i = 0; i < keyLength; i ++)
     {
+        // REVIEW jvs 25-Aug-2006:  Shouldn't this be a const &?  There's
+        // no need to copy the TupleDatum object.
         TupleDatum col = inputTuple[keyProjection[i]];
         hashOneColumn(hashValue, col, isKeyColVarChar[i]);
     }

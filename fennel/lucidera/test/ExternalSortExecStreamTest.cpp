@@ -66,7 +66,24 @@ public:
     void testRandomExternal();
     void testRandomExternalStoreFinal();
     void testRandomExternalFault();
+
+    virtual void testCaseSetUp();
 };
+
+void ExternalSortExecStreamTest::testCaseSetUp()
+{
+    ExecStreamUnitTestBase::testCaseSetUp();
+
+    // lower the cache availability to force external sorts for
+    // the larger datasets
+    ExecStreamResourceQuantity quantity;
+    quantity.nCachePages = 10;
+    pResourceGovernor->setResourceAvailability(quantity, CachePages);
+
+    ExecStreamResourceKnobs knob;
+    knob.expectedConcurrentStatements = 1;
+    pResourceGovernor->setResourceKnob(knob, ExpectedConcurrentStatements);
+}
 
 void ExternalSortExecStreamTest::testRandomInMem()
 {
@@ -138,10 +155,12 @@ void ExternalSortExecStreamTest::testImpl(
     ExternalSortExecStreamParams sortParams;
     sortParams.outputTupleDesc.push_back(attrDesc);
     sortParams.distinctness = DUP_ALLOW;
+    sortParams.estimatedNumRows = nRows;
     sortParams.pTempSegment = pRandomSegment;
     sortParams.pCacheAccessor = pCache;
+    // 10 total cache pages, 5% in reserve ==> 9 scratch pages per stream graph
     sortParams.scratchAccessor =
-        pSegmentFactory->newScratchSegment(pCache, 10);
+        pSegmentFactory->newScratchSegment(pCache, 9);
     sortParams.keyProj.push_back(0);
     sortParams.storeFinalRun = storeFinalRun;
     

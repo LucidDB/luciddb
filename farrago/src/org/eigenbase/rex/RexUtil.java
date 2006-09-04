@@ -761,17 +761,41 @@ public class RexUtil
             return null;
         }
 
-        // REVIEW jvs 1-May-2006: This builds a left-deep tree, probably
-        // for the sake of order-preservation.  But right-deep would
-        // be better for calculator short-circuiting.  It's possible
-        // to achieve both by walking the list backwards.
-        RexNode andExpr = rexList.get(0);
-        for (int i = 1; i < rexList.size(); i++) {
+        // create a right-deep tree to allow short-circuiting during
+        // expression evaluation
+        RexNode andExpr = rexList.get(rexList.size() - 1);
+        for (int i = rexList.size() - 2; i >= 0; i--) {
             andExpr =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.andOperator,
-                    andExpr,
-                    rexList.get(i));
+                    rexList.get(i),
+                    andExpr);
+        }
+        return andExpr;
+    }
+    
+    /**
+     * Creates an OR expression from a list of RexNodes
+     *
+     * @param rexList list of RexNodes
+     *
+     * @return OR'd expression
+     */
+    public static RexNode orRexNodeList(
+        RexBuilder rexBuilder,
+        List<RexNode> rexList)
+    {
+        if (rexList.isEmpty()) {
+            return null;
+        }
+
+        RexNode andExpr = rexList.get(rexList.size() - 1);
+        for (int i = rexList.size() - 2; i >= 0; i--) {
+            andExpr =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.orOperator,
+                    rexList.get(i),
+                    andExpr);
         }
         return andExpr;
     }

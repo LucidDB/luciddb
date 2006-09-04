@@ -21,6 +21,8 @@
 */
 package org.eigenbase.sql.type;
 
+import java.util.Arrays;
+
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
@@ -488,6 +490,60 @@ public abstract class SqlTypeStrategies
     public static final SqlOperandTypeChecker otcSetop =
         new SetopOperandTypeChecker();
 
+    public static final SqlOperandTypeChecker otcRecordToScalarType =
+        new SqlSingleOperandTypeChecker() {
+        public boolean checkSingleOperandType(
+            SqlCallBinding callBinding,
+            SqlNode node,
+            int iFormalOperand,
+            boolean throwOnFailure)
+        {
+            assert (0 == iFormalOperand);
+            RelDataType type =
+                callBinding.getValidator().deriveType(
+                    callBinding.getScope(),
+                    node);
+            boolean validationError = false;
+            if (!type.isStruct()) {
+                validationError = true;
+            } else if (type.getFieldList().size() != 1) {
+                validationError = true;
+            } 
+            
+            if (validationError && throwOnFailure) {
+                throw callBinding.newValidationSignatureError();
+            }
+            return !validationError;
+        }
+
+        public boolean checkOperandTypes(
+            SqlCallBinding callBinding,
+            boolean throwOnFailure)
+        {
+            return
+                checkSingleOperandType(
+                    callBinding,
+                    callBinding.getCall().operands[0],
+                    0,
+                    throwOnFailure);
+        }
+
+        public SqlOperandCountRange getOperandCountRange()
+        {
+            return SqlOperandCountRange.One;
+        }
+
+        public String getAllowedSignatures(SqlOperator op, String opName)
+        {
+            String [] array = new String[1];
+            Arrays.fill(array, "RECORDTYPE(SINGLE FIELD)");
+            return SqlUtil.getAliasedSignature(
+                    op,
+                    opName,
+                    Arrays.asList(array));
+        }
+    };
+            
     // ----------------------------------------------------------------------
     // SqlReturnTypeInference definitions
     // ----------------------------------------------------------------------
@@ -633,7 +689,7 @@ public abstract class SqlTypeStrategies
         new SqlTypeTransformCascade(
             rtiBigint,
             SqlTypeTransforms.forceNullable);
-
+    
     /**
      * Type-inference strategy whereby the result type of a call is an Integer
      * with nulls allowed if any of the operands allow nulls.
@@ -1199,6 +1255,45 @@ public abstract class SqlTypeStrategies
             rtiMultiset,
             SqlTypeTransforms.toMultisetElementType);
 
+    /**
+     * Returns the field type of a structured type which has only one field.
+     * For example, given 
+     *     <code>RECORD(x INTEGER)</code>
+     * returns 
+     *     <code>INTEGER</code>.
+     */
+    public static final SqlReturnTypeInference rtiRecordToScalarType =
+        new SqlReturnTypeInference() {
+            public RelDataType inferReturnType(
+                SqlOperatorBinding opBinding)
+            {
+                assert (opBinding.getOperandCount() == 1);
+                
+                final RelDataType recordType =
+                    opBinding.getOperandType(0);
+                
+                boolean isStruct = recordType.isStruct();
+                int fieldCount = recordType.getFieldCount();
+                
+                assert (isStruct && fieldCount == 1);
+                
+                RelDataTypeField fieldType =
+                    recordType.getFieldList().get(0);
+                assert fieldType != null : "expected a record type with one field: "
+                    + recordType;
+                final RelDataType firstColType = fieldType.getType();
+                return
+                /*
+                SqlTypeUtil.makeNullableIfOperandsAre(
+                    opBinding.getTypeFactory(),
+                    opBinding.collectOperandTypes(),
+                    firstColType);
+                    */
+                    opBinding.getTypeFactory().createTypeWithNullability(
+                        firstColType, true);
+            }
+        };
+    
     // ----------------------------------------------------------------------
     // SqlOperandTypeInference definitions
     // ----------------------------------------------------------------------

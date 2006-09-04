@@ -73,8 +73,14 @@ struct LbmGeneratorExecStreamParams :
 class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
 {
     /**
+     * Number of misc scratch pages needed; excludes pages for generating 
+     * bitmap entries
+     */
+    uint numMiscScratchPages;
+
+    /**
      * Number of scratch pages to allocate for constructing bitmaps as
-     * determined by the scheduler
+     * determined by the resource governor
      */
     uint maxNumScratchPages;
 
@@ -356,7 +362,8 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
     virtual void setResourceAllocation(ExecStreamResourceQuantity &quantity);
     virtual void closeImpl();
 };

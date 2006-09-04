@@ -3112,8 +3112,8 @@ public class SqlValidatorTest
     {
         check("SELECT  ename,(select name from dept where deptno=1) FROM emp");
         checkFails(
-            "SELECT ename,(select losal,^hisal^ from salgrade where grade=1) FROM emp",
-            "Only scalar subqueries allowed in select list.");
+            "SELECT ename,(select losal, ^hisal^ from salgrade where grade=1) FROM emp",
+            "Cannot apply '\\$SCALAR_QUERY' to arguments of type '\\$SCALAR_QUERY\\(<RECORDTYPE\\(INTEGER LOSAL, INTEGER HISAL\\)>\\)'\\. Supported form\\(s\\): '\\$SCALAR_QUERY\\(<RECORDTYPE\\(SINGLE FIELD\\)>\\)'");
     }
 
     public void testRecordType()

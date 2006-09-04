@@ -126,24 +126,32 @@ void LhxJoinExecStream::prepare(
     pOutAccessor->setTupleShape(outputDesc);
 
     /*
-     * Set aside 1 cache block per child partition writer for I/O.
+     * Set aside cache blocks per child partition writer for I/O (including
+     * pre-fetch).
      */
-    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs;
+    numMiscCacheBlocks = LhxPlan::LhxChildPartCount * numInputs *
+        SEG_NUM_PREFETCH_PAGES;
 }
 
 void LhxJoinExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
+    ExecStreamResourceQuantity &optQuantity,
+    ExecStreamResourceSettingType &optType)
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity,optQuantity);
 
-    minQuantity.nCachePages += 
-        LhxHashTable::LhxHashTableMinPages + numMiscCacheBlocks;
-    optQuantity.nCachePages += numBlocksHashTable + numMiscCacheBlocks;
-    /*
-     * TODO(rchen 2006-08-08): use the real min above.
-     */
-    minQuantity.nCachePages = optQuantity.nCachePages;
+    uint minPages = LhxHashTable::LhxHashTableMinPages + numMiscCacheBlocks;
+    minQuantity.nCachePages += minPages;
+    // if no stats were available, make an unbounded resource request
+    if (numBlocksHashTable < 0) {
+        optType = EXEC_RESOURCE_UNBOUNDED;
+    } else {
+        // make sure the opt is bigger than the min; otherwise, the
+        // resource governor won't try to give it extra
+        optQuantity.nCachePages +=
+            std::max(minPages + 1, (uint) numBlocksHashTable);
+        optType = EXEC_RESOURCE_ESTIMATE;
+    }
 }
 
 void LhxJoinExecStream::setResourceAllocation(
@@ -177,8 +185,6 @@ void LhxJoinExecStream::open(bool restart)
     (buildPart->segStream).reset();
     buildPart->inputIndex = DefaultBuildInputIndex;
 
-    LhxPlan *parentPlan = NULL;
-
     vector<SharedLhxPartition> partitionList;
     partitionList.push_back(probePart);
     partitionList.push_back(buildPart);
@@ -198,7 +204,7 @@ void LhxJoinExecStream::open(bool restart)
      * No input join filter for root plan.
      */
     rootPlan =  SharedLhxPlan(new LhxPlan());
-    rootPlan->init(parentPlan, partitionLevel, partitionList, subPartStats,
+    rootPlan->init(WeakLhxPlan(), partitionLevel, partitionList, subPartStats,
         joinFilterInit, filteredRows,  enableSubPartStat, enableSwing);
 
     /*

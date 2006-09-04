@@ -638,6 +638,39 @@ public abstract class RelOptUtil
      *
      * @param rel underlying rel
      *
+     * @return rel implementing SingleValueAgg
+     */
+    public static RelNode createSingleValueAggRel(
+        RelOptCluster cluster,
+        RelNode rel)
+    {
+        assert (rel.getRowType().getFieldCount() == 1);
+        RelDataType returnType =
+            SqlStdOperatorTable.singleValueOperator.inferReturnType(
+                cluster.getRexBuilder().getTypeFactory(),
+                new RelDataType[] {rel.getRowType().getFields()[0].getType()});
+        
+        final AggregateRelBase.Call singleValueCall =
+            new AggregateRelBase.Call(
+                SqlStdOperatorTable.singleValueOperator,
+                false,
+                new int[] {0},
+                returnType);
+        
+        return
+            new AggregateRel(
+                rel.getCluster(),
+                rel,
+                0,
+                new AggregateRel.Call[] { singleValueCall });
+    }
+
+    /**
+     * Creates an AggregateRel which removes all duplicates from the result of
+     * an underlying rel.
+     *
+     * @param rel underlying rel
+     *
      * @return rel implementing DISTINCT
      */
     public static RelNode createDistinctRel(
@@ -650,7 +683,7 @@ public abstract class RelOptUtil
                 rel.getRowType().getFieldCount(),
                 new AggregateRel.Call[0]);
     }
-
+    
     public static boolean analyzeSimpleEquiJoin(
         JoinRel joinRel,
         int [] joinFieldOrdinals)
@@ -1518,6 +1551,7 @@ public abstract class RelOptUtil
      * are pushed are added to list passed in as input parameters.
      *
      * @param joinRel node
+     * @param nFieldsleft number of fields in the left hand join input
      * @param filters filters to be classified
      * @param pushJoin true if filters originated from above the join node and
      * the join is an inner join
@@ -1530,7 +1564,8 @@ public abstract class RelOptUtil
      * @return true if at least one filter was pushed
      */
     public static boolean classifyFilters(
-        JoinRelBase joinRel,
+        RelNode joinRel,
+        int nFieldsLeft,
         List<RexNode> filters,
         boolean pushJoin,
         boolean pushLeft,
@@ -1541,7 +1576,6 @@ public abstract class RelOptUtil
     {
         RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
         boolean filterPushed = false;
-        int nFieldsLeft = joinRel.getLeft().getRowType().getFields().length;
         RelDataTypeField [] joinFields = joinRel.getRowType().getFields();
         int nTotalFields = joinFields.length;
 
@@ -1708,7 +1742,61 @@ public abstract class RelOptUtil
         }
         return new RexNode[] { equiCondition, nonEquiCondition };
     }
+    
+    /**
+     * Determines if a projection and its input reference identical input
+     * references.
+     * 
+     * @param project projection being examined
+     * @param checkNames if true, also compare that the names of the project
+     * fields and its child fields 
+     * 
+     * @return if checkNames is false, true is returned if the project and its
+     * child reference the same input references, regardless of the names of
+     * the project and child fields; if checkNames is true, then true is
+     * returned if the input references are the same but the field names are
+     * different
+     */
+    public static boolean checkProjAndChildInputs(
+        ProjectRel project,
+        boolean checkNames)
+    {
+        if (!project.isBoxed()) {
+            return false;
+        }
 
+        int n = project.getProjectExps().length;
+        RelDataType inputType = project.getChild().getRowType();
+        if (inputType.getFieldList().size() != n) {
+            return false;
+        }
+        RelDataTypeField [] projFields = project.getRowType().getFields();
+        RelDataTypeField [] inputFields = inputType.getFields();
+        boolean namesDifferent = false;
+        for (int i = 0; i < n; ++i) {
+            RexNode exp = project.getProjectExps()[i];
+            if (!(exp instanceof RexInputRef)) {
+                return false;
+            }
+            RexInputRef fieldAccess = (RexInputRef) exp;
+            if (i != fieldAccess.getIndex()) {
+                // can't support reorder yet
+                return false;
+            }
+            if (checkNames) {
+                String inputFieldName = inputFields[i].getName();
+                String projFieldName = projFields[i].getName();
+                if (!projFieldName.equals(inputFieldName)) {
+                    namesDifferent = true;
+                }
+            }
+        }
+
+        // inputs are the same; return value depends on the checkNames
+        // parameter
+        return (!checkNames || namesDifferent);
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private static class VariableSetVisitor

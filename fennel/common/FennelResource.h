@@ -76,6 +76,11 @@ class FennelResource : ResourceBundle
     std::string scalarQueryReturnedMultipleRows() const;
 
     /**
+     * <code>scratchMemExhausted</code> is 'Cache scratch memory exhausted'
+     */
+    std::string scratchMemExhausted() const;
+
+    /**
      * <code>readDataFailed</code> is 'Could not read data file {0}'
      */
     std::string readDataFailed(const std::string &p0) const;
@@ -148,6 +153,7 @@ class FennelResource : ResourceBundle
     ResourceDefinition _rowTooLong;
     ResourceDefinition _invalidParam;
     ResourceDefinition _scalarQueryReturnedMultipleRows;
+    ResourceDefinition _scratchMemExhausted;
     ResourceDefinition _readDataFailed;
     ResourceDefinition _dataTransferFailed;
     ResourceDefinition _writeLogFailed;

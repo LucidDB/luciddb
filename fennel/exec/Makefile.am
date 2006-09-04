@@ -10,14 +10,17 @@ CopyExecStream.cpp \
 DfsTreeExecStreamScheduler.cpp \
 DynamicParam.cpp \
 ExecStream.cpp \
+ExecStreamGovernor.cpp \
 ExecStreamGraph.cpp \
 ExecStreamGraphEmbryo.cpp \
 ExecStreamScheduler.cpp \
 MergeExecStream.cpp \
 MockConsumerExecStream.cpp \
 MockProducerExecStream.cpp \
+MockResourceExecStream.cpp \
 ScratchBufferExecStream.cpp \
 SegBufferExecStream.cpp \
+SimpleExecStreamGovernor.cpp \
 SingleInputExecStream.cpp \
 SingleOutputExecStream.cpp \
 SortedAggExecStream.cpp \
@@ -30,7 +33,8 @@ ReshapeExecStream.cpp
 DESIGN_DOCS=\
 ExecStreamDesign.cpp \
 ExecStreamHowTo.cpp \
-SchedulerDesign.cpp
+SchedulerDesign.cpp \
+ResourceGovernorDesign.cpp
 
 EXTRA_DIST=$(DESIGN_DOCS)
 TAGS_DEPENDENCIES=$(DESIGN_DOCS)

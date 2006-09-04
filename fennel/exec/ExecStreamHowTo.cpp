@@ -765,10 +765,12 @@ defined by ExecStreamResourceQuantity).  Streams which require these
 resources (including any stream which performs disk access) must
 override method ExecStream::getResourceRequirements
 (the default implementation requests zero resources).
-In response, the scheduler calls ExecStream::setResourceAllocation.
+In response, the resource governor, ExecStreamGovernor, calls
+ExecStream::setResourceAllocation.
 The default implementation for this method records the granted resource
 allocation in member variable ExecStream::resourceAllocation, which
 can be examined by the stream to decide how much to allocate.
+See ResourceGovernorDesign for a detailed description of the resource governor.
 
 <p>
 

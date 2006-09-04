@@ -49,9 +49,11 @@ using namespace fennel;
 class LcsRowScanExecStreamTest : public ExecStreamUnitTestBase
 {
 protected:
+    static const uint NDUPS = 20;
     StandardTypeDescriptorFactory stdTypeFactory;
     TupleAttributeDescriptor attrDesc_int64;
     TupleAttributeDescriptor attrDesc_bitmap;
+    TupleAttributeDescriptor attrDesc_char1;
     uint bitmapColSize;
 
     vector<boost::shared_ptr<BTreeDescriptor> > bTreeClusters;
@@ -59,7 +61,8 @@ protected:
     /**
      * Serially loads nClusters, each cluster containing nCols and nRows
      */
-    void loadClusters(uint nRows, uint nCols, uint nClusters);
+    void loadClusters(uint nRows, uint nCols, uint nClusters, 
+        bool compressed);
 
     /**
      * Loads a single cluster with nCols columns and nRows rows.
@@ -70,7 +73,8 @@ protected:
      *      ...
      */
     void loadOneCluster(uint nRows, uint nCols, int colStart,
-                        BTreeDescriptor &bTreeDescriptor);
+                        BTreeDescriptor &bTreeDescriptor,
+                        bool compressed);
 
     /**
      * Reads rows from clusters.  Assumes clusters have been loaded by
@@ -93,6 +97,36 @@ protected:
     void testScanCols(uint nRows, uint nCols, uint nClusters,
                       TupleProjection proj, uint skipRows,
                       uint expectedNumRows);
+
+    /**
+     * Filter rows from clusters.  Assumes clusters have been loaded by
+     * loadClusters/loadOneCluster.
+     *
+     * @param nRows total number of rows in the clusters
+     *
+     * @param nCols number of columns in each cluster
+     *
+     * @param nClusters number of clusters
+     *
+     * @param proj columns to be projected
+     *
+     * @param skipRows read every "skipRows" rows
+     *
+     * @param expectedNumRows expected number of rows in scan result;
+     * normally should be the same as nRows unless skipping rows or
+     * testing exception cases
+     *  
+     * @param compressed testing compressed bitmap optimization
+     */
+    void testFilterCols(uint nRows, uint nCols, uint nClusters,
+                        TupleProjection proj, uint skipRows,
+                        uint expectedNumRows, bool compressed);
+
+
+    void setSearchKey(
+          char lowerDirective, char upperDirective, uint64_t lowerVal,
+          uint64_t upperVal, PBuffer inputBuf, uint &offset,
+          TupleAccessor &inputTupleAccessor, TupleData &inputTupleData);
 
     /**
      * Generate bitmaps to pass as input into row scan exec stream
@@ -122,6 +156,8 @@ public:
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScans);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanOnEmptyCluster);
         FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, testScanPastEndOfCluster);
+        FENNEL_UNIT_TEST_CASE(LcsRowScanExecStreamTest, 
+            testCompressedFiltering);
     }
 
     void testCaseSetUp();
@@ -130,16 +166,19 @@ public:
     void testScans();
     void testScanOnEmptyCluster();
     void testScanPastEndOfCluster();
+    void testCompressedFiltering();
 };
 
 void LcsRowScanExecStreamTest::loadClusters(uint nRows, uint nCols,
-                                            uint nClusters)
+                                            uint nClusters,
+                                            bool compressed)
 {
     for (uint i = 0; i < nClusters; i++) {
         boost::shared_ptr<BTreeDescriptor> pBTreeDesc =
             boost::shared_ptr<BTreeDescriptor> (new BTreeDescriptor());
         bTreeClusters.push_back(pBTreeDesc);
-        loadOneCluster(nRows, nCols, i * nCols, *(bTreeClusters[i]));
+        loadOneCluster(nRows, nCols, i * nCols, *(bTreeClusters[i]),
+            compressed);
         resetExecStreamTest();
     }
 }
@@ -148,7 +187,8 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     uint nRows,
     uint nCols,
     int colStart,
-    BTreeDescriptor &bTreeDescriptor)
+    BTreeDescriptor &bTreeDescriptor,
+    bool compressed)
 {    
     MockProducerExecStreamParams mockParams;
     for (uint i = 0; i < nCols; i++) {
@@ -161,7 +201,10 @@ void LcsRowScanExecStreamTest::loadOneCluster(
     vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
     for (uint i = 0; i < nCols; i++) {
         SharedInt64ColumnGenerator col =
-            SharedInt64ColumnGenerator(new SeqColumnGenerator(i + colStart));
+            SharedInt64ColumnGenerator(
+            compressed ? 
+            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS, 
+            i + colStart,500) : new SeqColumnGenerator(i + colStart));
         columnGenerators.push_back(col);
     }
     mockParams.pGenerator.reset(
@@ -253,7 +296,7 @@ void LcsRowScanExecStreamTest::testScanCols(uint nRows, uint nCols,
     // times 8 bytes for each starting rid in the segment
     uint bufferSize = std::max(
         16, (int) (nRows/8 + nRows/bitmapColSize * 8));
-    pBuffer.reset(new uint8_t[bufferSize]);
+    pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
 
     if (nRows > 0) {
@@ -323,7 +366,7 @@ int LcsRowScanExecStreamTest::generateBitmaps(
 {
     int bufSize = 0;
     LbmEntry lbmEntry;
-    boost::scoped_array<uint8_t> entryBuf;
+    boost::scoped_array<FixedBuffer> entryBuf;
     TupleAccessor bitmapTupleAccessor;
     LcsRid rid = LcsRid(0);
 
@@ -338,7 +381,7 @@ int LcsRowScanExecStreamTest::generateBitmaps(
 
     // setup an LbmEntry with the initial rid value
     uint scratchBufSize = LbmEntry::getScratchBufferSize(bitmapColSize);
-    entryBuf.reset(new uint8_t[scratchBufSize]);
+    entryBuf.reset(new FixedBuffer[scratchBufSize]);
     lbmEntry.init(entryBuf.get(), NULL, scratchBufSize, bitmapTupleDesc);
     lbmEntry.setEntryTuple(bitmapTupleData);
 
@@ -379,7 +422,7 @@ void LcsRowScanExecStreamTest::testScans()
     uint nClusters = 3;
     TupleProjection proj;
 
-    loadClusters(nRows, nCols, nClusters);
+    loadClusters(nRows, nCols, nClusters, false);
     // note: no need to reset after loadClusters() because already done
     // there
 
@@ -423,7 +466,94 @@ void LcsRowScanExecStreamTest::testScans()
 
     // full table scan -- input stream is empty
     testScanCols(0, nCols, nClusters, proj, 1, nRows);
+
+    resetExecStreamTest();
+
+    // scan 1000 rows and columns
+    for (uint i = 0; i < nClusters; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            proj.push_back(i * nCols + j);
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 1000, false);
+
+    resetExecStreamTest();
+    
+    // scan all columns execept the 1st & 2nd of the 1st & 2nd cluster
+    proj.resize(0);
+    for (uint i = 0; i < nClusters; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            if (!(i < 2 && (j == 0 || j == 1))) {
+                proj.push_back(i * nCols + j);
+            }
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 1000, false);
+
+    resetExecStreamTest();
+
+    // skip one cluster
+    proj.resize(0);
+    for (uint i = 0; i < nClusters-1; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            proj.push_back(i * nCols + j);
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 1000, false);
 }
+
+
+void LcsRowScanExecStreamTest::testCompressedFiltering()
+{
+    // 1. load clusters, so they can be used by steps 2-5 below
+    // 2. scan all data in clusters
+    // 3. test projection
+    // 4. test skipping of rows
+    // 5. test full table scan
+    
+    uint nRows = 50000;
+    uint nCols = 12;
+    uint nClusters = 3;
+    TupleProjection proj;
+
+    // Test compressed bitmap optimization
+    //
+    loadClusters(nRows, nCols, nClusters, true);
+
+    // scan 500*NDUPS+500 rows and columns
+    proj.resize(0);
+    for (uint i = 0; i < nClusters; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            proj.push_back(i * nCols + j);
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true);
+
+    resetExecStreamTest();
+    
+    // scan all columns execept the 1st & 2nd of the 1st & 2nd cluster
+    proj.resize(0);
+    for (uint i = 0; i < nClusters; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            if (!(i < 2 && (j == 0 || j == 1))) {
+                proj.push_back(i * nCols + j);
+            }
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true);
+
+    resetExecStreamTest();
+
+    // skip one cluster
+    proj.resize(0);
+    for (uint i = 0; i < nClusters-1; i++) {
+        for (uint j = 0; j < nCols; j++) {
+            proj.push_back(i * nCols + j);
+        }
+    }
+    testFilterCols(nRows, nCols, nClusters, proj, 1, 500*NDUPS+500, true);
+}
+
 
 /**
  * Create an empty cluster with 1 column.  Try reading a rid from it
@@ -460,7 +590,7 @@ void LcsRowScanExecStreamTest::testScanOnEmptyCluster()
  */
 void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
 {
-    loadOneCluster(1, 1, 0, *(bTreeClusters[0]));
+    loadOneCluster(1, 1, 0, *(bTreeClusters[0]), false);
     resetExecStreamTest();
 
     // have testScanCols attempt to read 2 rows, although it should only
@@ -472,10 +602,209 @@ void LcsRowScanExecStreamTest::testScanPastEndOfCluster()
     testScanCols(2, 1, 1, proj, 1, 1);
 }
 
+
+void LcsRowScanExecStreamTest::setSearchKey(
+    char lowerDirective, char upperDirective, uint64_t lowerVal,
+    uint64_t upperVal, PBuffer inputBuf, uint &offset,
+    TupleAccessor &inputTupleAccessor, TupleData &inputTupleData)
+{
+    inputTupleData[0].pData = (PConstBuffer) &lowerDirective;
+    inputTupleData[2].pData = (PConstBuffer) &upperDirective;
+    inputTupleData[1].pData = (PConstBuffer) &lowerVal;
+    inputTupleData[3].pData = (PConstBuffer) &upperVal;
+    inputTupleAccessor.marshal(inputTupleData, inputBuf + offset);
+    offset += inputTupleAccessor.getCurrentByteCount();
+}
+
+void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
+                                            uint nClusters,
+                                            TupleProjection proj,
+                                            uint skipRows,
+                                            uint expectedNumRows,
+                                            bool compressed)
+{
+    // setup input rid stream
+
+    ValuesExecStreamParams valuesParams;
+    boost::shared_array<FixedBuffer> pBuffer;
+    ExecStreamEmbryo valuesStreamEmbryo;
+    LcsRowScanExecStreamParams scanParams;
+
+    scanParams.hasExtraFilter = true;
+
+    // setup a values stream either to provide an empty input to simulate
+    // the scan of the deletion index (in the case of a full scan) or a stream
+    // of rid values when we're doing reads based on specific rids
+    valuesParams.outputTupleDesc.push_back(attrDesc_int64);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+    valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
+
+
+    // set buffer size to max number of bytes required to represent each
+    // bit (nRows/8) plus max number of segments (nRows/bitmapColSize)
+    // times 8 bytes for each starting rid in the segment
+    uint bufferSize = std::max(
+        16, (int) (nRows/8 + nRows/bitmapColSize * 8));
+    pBuffer.reset(new FixedBuffer[bufferSize]);
+    valuesParams.pTupleBuffer = pBuffer;
+
+    if (nRows > 0) {
+        valuesParams.bufSize = generateBitmaps(
+            nRows, skipRows, valuesParams.outputTupleDesc, pBuffer.get());
+        assert(valuesParams.bufSize <= bufferSize);
+        scanParams.isFullScan = false;
+    } else {
+        scanParams.isFullScan = true;
+        valuesParams.bufSize = 0;
+    }
+    valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
+
+    // setup the following search keys:
+    // 1. key0 >= 20 or key0 < 10
+    // 2. 5 <= key1 - nCols < 30
+    // 3  key2 - 2*nCols > 15
+    //
+    // where key0 corresponds to column #0, 
+    // key1 corresponds to the column #nCols, and
+    // key2 corresponds to column #(2*nCols)
+
+    TupleAttributeDescriptor attrDesc_nullableInt64 =
+        TupleAttributeDescriptor(
+            stdTypeFactory.newDataType(STANDARD_TYPE_INT_64),
+            true, sizeof(uint64_t));
+
+    valuesParams.outputTupleDesc.resize(0);
+    TupleDescriptor inputTupleDesc;
+    for (uint i = 0; i < 2; i++) {
+        inputTupleDesc.push_back(attrDesc_char1);
+        inputTupleDesc.push_back(attrDesc_nullableInt64);
+        valuesParams.outputTupleDesc.push_back(attrDesc_char1);
+        valuesParams.outputTupleDesc.push_back(attrDesc_nullableInt64);
+    }
+    TupleData inputTupleData(inputTupleDesc);
+    TupleAccessor inputTupleAccessor;
+    inputTupleAccessor.compute(inputTupleDesc);
+
+    uint nInputTuples = 3;
+    boost::shared_array<FixedBuffer> inputBuffer;
+    inputBuffer.reset(
+        new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
+
+    PBuffer inputBuf = inputBuffer.get();
+    uint offset = 0;
+
+    setSearchKey(
+        '-', ')', 0, 1000, inputBuf, offset, inputTupleAccessor, inputTupleData);
+    setSearchKey(
+        '[', '+', 2000, 0, inputBuf, offset, inputTupleAccessor,
+        inputTupleData);
+
+    TupleData inputTupleData1(inputTupleDesc);
+    boost::shared_array<FixedBuffer> inputBuffer1;
+    inputBuffer1.reset(
+        new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
+    PBuffer inputBuf1 = inputBuffer1.get();
+    uint offset1 = 0;
+
+    setSearchKey(
+        '[', ')', 500+nCols, 3000+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
+
+    TupleData inputTupleData2(inputTupleDesc);
+    boost::shared_array<FixedBuffer> inputBuffer2;
+    inputBuffer2.reset(
+        new FixedBuffer[nInputTuples * inputTupleAccessor.getMaxByteCount()]);
+    PBuffer inputBuf2 = inputBuffer2.get();
+    uint offset2 = 0;
+
+    setSearchKey(
+        '(', '+', 1500+2*nCols, 0, inputBuf2, offset2, inputTupleAccessor, inputTupleData1);
+
+    valuesParams.pTupleBuffer = inputBuffer;
+    valuesParams.bufSize = offset;
+
+    ExecStreamEmbryo valuesStreamEmbryo1,  valuesStreamEmbryo2,
+        valuesStreamEmbryo3;
+    valuesStreamEmbryo1.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo1.getStream()->setName("ValuesExecStream1");
+
+    valuesParams.pTupleBuffer = inputBuffer1;
+    valuesParams.bufSize = offset1;
+    valuesStreamEmbryo2.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo2.getStream()->setName("ValuesExecStream2");
+
+    valuesParams.pTupleBuffer = inputBuffer2;
+    valuesParams.bufSize = offset2;
+    valuesStreamEmbryo3.init(new ValuesExecStream(), valuesParams);
+    valuesStreamEmbryo3.getStream()->setName("ValuesExecStream3");
+
+    // setup parameters into scan
+    //  nClusters cluster with nCols columns each
+
+    for (uint i = 0; i < nClusters; i++) {
+        struct LcsClusterScanDef clusterScanDef;
+
+        for (uint j = 0; j < nCols; j++)
+            clusterScanDef.clusterTupleDesc.push_back(attrDesc_int64);
+
+        clusterScanDef.pSegment = bTreeClusters[i]->segmentAccessor.pSegment;
+        clusterScanDef.pCacheAccessor =
+            bTreeClusters[i]->segmentAccessor.pCacheAccessor;
+        clusterScanDef.tupleDesc = bTreeClusters[i]->tupleDescriptor;
+        clusterScanDef.keyProj = bTreeClusters[i]->keyProjection;
+        clusterScanDef.rootPageId = bTreeClusters[i]->rootPageId;
+        clusterScanDef.segmentId = bTreeClusters[i]->segmentId;
+        clusterScanDef.pageOwnerId = bTreeClusters[i]->pageOwnerId;
+
+        scanParams.lcsClusterScanDefs.push_back(clusterScanDef);
+    }
+
+    // setup projection
+    scanParams.outputProj = proj;
+    for (uint i = 0; i < proj.size(); i++) {
+        scanParams.outputTupleDesc.push_back(attrDesc_int64);
+    }
+    scanParams.residualFilterCols.push_back(0);
+    scanParams.residualFilterCols.push_back(nCols);
+    scanParams.residualFilterCols.push_back(2*nCols);
+
+    ExecStreamEmbryo scanStreamEmbryo;
+    scanStreamEmbryo.init(new LcsRowScanExecStream(), scanParams);
+    scanStreamEmbryo.getStream()->setName("RowScanExecStream");
+    SharedExecStream pOutputStream;
+
+    std::vector<ExecStreamEmbryo> sources;
+    sources.push_back(valuesStreamEmbryo);
+    sources.push_back(valuesStreamEmbryo1);
+    sources.push_back(valuesStreamEmbryo2);
+    sources.push_back(valuesStreamEmbryo3);
+
+    pOutputStream =
+        prepareConfluenceGraph(sources, scanStreamEmbryo);
+
+    // setup generators for result stream
+
+    vector<boost::shared_ptr<ColumnGenerator<int64_t> > > columnGenerators;
+    for (uint i = 0; i < proj.size(); i++) {
+        SharedInt64ColumnGenerator col =
+            SharedInt64ColumnGenerator(compressed ? 
+            (Int64ColumnGenerator*)new MixedDupColumnGenerator(NDUPS, 
+            proj[i]+2000,500) : new SeqColumnGenerator(proj[i]+2000, skipRows));
+        columnGenerators.push_back(col);
+    }
+
+
+    CompositeExecStreamGenerator resultGenerator(columnGenerators);
+    verifyOutput(*pOutputStream, expectedNumRows, resultGenerator);
+}
+
+
 void LcsRowScanExecStreamTest::testCaseSetUp()
 {    
     ExecStreamUnitTestBase::testCaseSetUp();
-    
+
+    attrDesc_char1 = TupleAttributeDescriptor(
+        stdTypeFactory.newDataType(STANDARD_TYPE_CHAR), false, 1);
     attrDesc_int64 = TupleAttributeDescriptor(
         stdTypeFactory.newDataType(STANDARD_TYPE_INT_64));
     bitmapColSize = pRandomSegment->getUsablePageSize()/8;

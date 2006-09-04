@@ -219,7 +219,6 @@ void FlatFileExecStreamImpl::logError(
     FlatFileBinding binding(errorFilePath, data, targetSize);
     writeRequest.bindingList.push_back(binding);
     pErrorFile->transfer(writeRequest);
-    pErrorFile->flush();
     filePosition += targetSize;
 }
 
@@ -527,7 +526,10 @@ void FlatFileExecStreamImpl::closeImpl()
 void FlatFileExecStreamImpl::releaseResources()
 {
     pBuffer->close();
-    pErrorFile.reset();
+    if (pErrorFile) {
+        pErrorFile->flush();
+        pErrorFile.reset();
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

@@ -399,7 +399,7 @@ void LcsClusterAppendExecStreamTest::setUpDelIndexScan(
     valuesParams.outputTupleDesc.push_back(attrDesc_bitmap);
 
     uint bufferSize = 16;
-    pBuffer.reset(new uint8_t[bufferSize]);
+    pBuffer.reset(new FixedBuffer[bufferSize]);
     valuesParams.pTupleBuffer = pBuffer;
     valuesParams.bufSize = 0;
     valuesStreamEmbryo.init(new ValuesExecStream(), valuesParams);

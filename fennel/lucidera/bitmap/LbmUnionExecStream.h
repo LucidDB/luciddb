@@ -252,7 +252,8 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
     virtual void setResourceAllocation(ExecStreamResourceQuantity &quantity);
     virtual void closeImpl();
 };

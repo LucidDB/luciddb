@@ -36,6 +36,7 @@
 #include <boost/dynamic_bitset.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/shared_array.hpp>
+#include <boost/enable_shared_from_this.hpp>
 
 using namespace std;
 using namespace boost;
@@ -87,8 +88,8 @@ class LhxPartitionWriter
     bool isAggregate;
 
     /**
-     * Each writer has a local hash table(which shares the scratch page quota
-     * with other writer) to compute partial aggregates before flushing them to
+     * Each writer has a local hash table (which shares the scratch page quota
+     * with other writers) to compute partial aggregates before flushing them to
      * disk.
      */
     LhxHashTable hashTable;
@@ -154,6 +155,11 @@ public:
     inline TupleDescriptor const &getTupleDesc() const;
 };
 
+// REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
+// all uppercase with underscores.  Enums declared at top level
+// need prefix, e.g. LHX_PARTITION_UNDERFLOW, since we don't use
+// namespaces below the fennel level.
+    
 enum LhxPartitionState {
     PartitionUnderflow, PartitionEndOfData
 };
@@ -161,18 +167,19 @@ enum LhxPartitionState {
 struct LhxPartitionInfo
 {
     /**
-     * Hash Table Reader for the join.
+     * Hash Table Reader for hash aggregates.
      */
     LhxHashTableReader *hashTableReader;
 
     /**
      * Src partition reader.
      *
-     * It could either be a local reader(tmpReader), or a reader passed in from
-     * the exec stream. The latter is used to partition a build input. When the
-     * hash table overflows, all the data from the hash table, plus the
-     * remaining data from the build partition, as well as the inflight tuple
-     * which caused the hash table overflow, need to be repartitioned.
+     * It could either be a local reader (probeReader), or a reader passed in from
+     * the exec stream in open() method. The latter is used to partition a
+     * build input. When the hash table overflows, all the data from the hash
+     * table, plus the remaining data from the build partition, as well as the
+     * inflight tuple which caused the hash table overflow, need to be
+     * repartitioned.
      */
     LhxPartitionReader probeReader;
     LhxPartitionReader *reader;
@@ -182,19 +189,25 @@ struct LhxPartitionInfo
      */
     TupleData buildTuple;
 
+    // REVIEW jvs 26-Aug-2006:  see comment in LhxHashBase regarding
+    // one vector of structs vs many vectors of scalars; but may not
+    // apply here.
+
     /**
      * Child partitions for both inputs have to be complete before child plans
      * can be created.
      *     writerList.size() == destPartitionList.size() ==
      *           numInputs * LhxPlan::LhxChildPartCount
      *
-     * Input filters are used to filter only one input(the build input) of each
+     * Input filters are used to filter only one input (the build input) of each
      * child partition.
      *
      * joinFilterList.size() == LhxPlan::LhxChildPartCount
      */
     vector<SharedLhxPartitionWriter> writerList;
     vector<SharedLhxPartition> destPartitionList;
+    // REVIEW jvs 26-Aug-2006:  typedef dynamic_bitset<> LhxJoinBloomFilter
+    // would be nice, plus SharedLhxJoinBloomFilter
     vector<shared_ptr<dynamic_bitset<> > > joinFilterList;
     shared_array<uint> filteredRowCountList;
 
@@ -213,12 +226,14 @@ struct LhxPartitionInfo
 
     /*
      * True if the tuples currently being partitioned come from
-     * memory(i.e. from the hash table).
+     * memory (i.e. from the hash table).
      */
     bool partitionMemory;
     
     LhxPartitionInfo() {reader = NULL; hashTableReader = NULL;}
 
+    // REVIEW jvs 25-Aug-2006:  Unless input parameter can be NULL,
+    // make it a reference instead of a pointer.  Same is true elsewhere.
     /**
      * Set up the recursive partitioning context.
      */
@@ -239,10 +254,10 @@ struct LhxPartitionInfo
         uint buildInputIndex);
 
     /**
-     * Prepare to aggregate and partition the (build) input which reads from both
-     * hash table and an existing reader. There is also a inflight tuple that
-     * is part of this partition.
-     * aggList contains the agg computers which aggregate the input.
+     * Prepare to aggregate and partition the (build) input which reads from
+     * both hash table and an existing reader. There is also a inflight tuple
+     * that is part of this partition.  aggList contains the agg computers
+     * which aggregate the input.
      */
     void open(
         LhxHashTableReader *hashTableReaderInit,
@@ -256,7 +271,7 @@ struct LhxPartitionInfo
     void close();
 };
 
-class LhxPlan
+class LhxPlan : public enable_shared_from_this<LhxPlan>
 {
     uint partitionLevel;
     vector<SharedLhxPartition> partitions;
@@ -277,10 +292,16 @@ class LhxPlan
 
     /*
      * Plan linkage.
-     * Parent plan is not a shared pointer to avoid cycles, which affect
-     * shared pointer reference counting.
+     * Parent plan is a weak pointer to avoid cycles in shared pointer
+     * reference counting.
+     * http://www.boost.org/libs/smart_ptr/weak_ptr.htm
+     *
+     * Also to enable linking back via shared_ptr to the this LhxPlan object,
+     * LhxPlan used enable_shared_from_this as base class.
+     * http://www.boost.org/libs/smart_ptr/enable_shared_from_this.html
+     *
      */
-    LhxPlan *parentPlan;
+    WeakLhxPlan parentPlan;
     SharedLhxPlan firstChildPlan;
     SharedLhxPlan siblingPlan;
     
@@ -323,7 +344,7 @@ public:
      * Initialize a plan, with its input partitions and parent plan.
      */
     void init(
-        LhxPlan *parentPlanInit,
+        WeakLhxPlan parentPlanInit,
         uint partitionLevelInit,
         vector<SharedLhxPartition> &partitionsInit,
         bool enableSubPartStat);
@@ -332,7 +353,7 @@ public:
      * Initialize a plan.
      */
     void init(
-        LhxPlan *parentPlanInit,
+        WeakLhxPlan parentPlanInit,
         uint partitionLevelInit,
         vector<SharedLhxPartition> &partitionsInit,
         vector<shared_array<uint> > &subPartStats,
@@ -414,8 +435,6 @@ public:
      * @return the string representation of this plan tree.
      */
     string toString();
-
-    inline bool inputSwinged();
 };
 
 inline ExecStreamBufState LhxPartitionReader::getState() const
@@ -487,18 +506,12 @@ inline uint LhxPlan::getJoinSide(uint inputIndex)
 {
     uint i = 0;
     while ((joinSideToInputMap[i] != inputIndex) 
-        && (i < partitions.size())) {
+        && (i < partitions.size()))
+    {
         i ++;
     }
     
     return i;
-}
-
-inline bool LhxPlan::inputSwinged()
-{
-    uint numInputs = partitions.size();
-    uint i = 0;
-    return (joinSideToInputMap[i] == numInputs - i - 1);
 }
 
 inline bool LhxPlan::isBuildChildPart(uint childPartIndex)

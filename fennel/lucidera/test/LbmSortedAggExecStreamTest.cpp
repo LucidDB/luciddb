@@ -50,10 +50,10 @@ protected:
      * which is converted into a tuple stream [group keys, aggs] by the
      * agg stream.
      *
-     * @param uint nRows number of rows in simulated stream
+     * @param nRows number of rows in simulated stream
+     * @param nKeys number of keys in bitmap
      * @param repeatSeqValues specifies data pattern. Each value should be
      *   one or a distinct primary number.
-     * @param keyProjection projection from keys
      */
     void testSortedAgg(
         uint nRows,

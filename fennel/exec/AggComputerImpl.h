@@ -67,7 +67,7 @@ public:
         TupleData const &inputTuple);
 
     virtual void initAccumulator(
-        TupleDatum &accumulatorDatum,
+        TupleDatum &accumulatorDatumDest,
         TupleData const &inputTuple);
 
     virtual void initAccumulator(
@@ -97,7 +97,7 @@ public:
         TupleData const &inputTuple);
 
     virtual void initAccumulator(
-        TupleDatum &accumulatorDatum,
+        TupleDatum &accumulatorDatumDest,
         TupleData const &inputTuple);
 
     virtual void initAccumulator(
@@ -126,8 +126,9 @@ class ExtremeAggComputer : public AggComputer
      */
     AggFunction aggFunction;
 
-    // FIXME jvs 7-Oct-2005: This violates the rule in AggComputer's class
-    // description about where data state is stored.
+    /**
+     * True until a non-null input value is seen.
+     */
     bool isResultNull;
 
     inline void copyInputToAccumulator(
@@ -154,7 +155,7 @@ public:
         TupleDatum const &accumulatorDatum);
 
     virtual void initAccumulator(
-        TupleDatum &accumulatorDatum,
+        TupleDatum &accumulatorDatumDest,
         TupleData const &inputTuple);
 
     virtual void initAccumulator(
@@ -174,8 +175,9 @@ public:
 template <class T>
 class SumAggComputer : public AggComputer
 {
-    // FIXME jvs 7-Oct-2005: This violates the rule in AggComputer's class
-    // description about where data state is stored.
+    /**
+     * True until a non-null input value is seen.
+     */
     bool isResultNull;
     
     inline T &interpretDatum(TupleDatum &datum)

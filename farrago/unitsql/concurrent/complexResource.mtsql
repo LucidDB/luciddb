@@ -1,0 +1,139 @@
+@nolockstep
+
+@setup
+
+-- This test exercises the resource governor using a complex query that
+-- includes hash joins, aggregate/groupby, semijoins, and sort.  It also
+-- verifies that proper cleanup is done on a query when an exception occurs
+-- because resources couldn't be granted.
+
+-- limit the number of statements so all resources will be allocated to the
+-- first thread
+alter system set "expectedConcurrentStatements" = 1;
+
+create schema sj;
+set schema 'sj';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- setup schema to be used in the test
+create table sales(
+    sid int, product_id int, salesperson int, customer int, quantity int);
+create index i_sales_pid on sales(product_id);
+create index i_sales_sp on sales(salesperson);
+create index i_sales_cust on sales(customer);
+
+create table product(id int, name char(20), color char(10), size char(1));
+create table salesperson(id int, name char(20), age int);
+create table customer(id int, company char(20), city char(20));
+create table state(city char(20), state char(20));
+
+create index i_customer_city on customer(city);
+
+insert into product values(1, 'radio', 'black', 'S');
+insert into product values(2, 'phone', 'white', 'M');
+insert into salesperson values(1, 'XYZ', 30);
+insert into salesperson values(2, 'UVW', 40);
+insert into customer values(1, 'ABC', 'San Mateo');
+insert into customer values(2, 'DEF', 'New York City');
+insert into state values('San Mateo', 'CA');
+insert into state values('New York City', 'New York');
+insert into sales values(1, 1, 1, 1, 10);
+insert into sales values(2, 1, 1, 2, 20);
+insert into sales values(3, 1, 2, 1, 30);
+insert into sales values(4, 1, 2, 2, 40);
+insert into sales values(5, 2, 1, 1, 50);
+insert into sales values(6, 2, 1, 2, 60);
+insert into sales values(7, 2, 2, 1, 70);
+insert into sales values(8, 2, 2, 2, 80);
+
+-- fake stats to force semijoins; note also that the predicates chosen in the
+-- actual queries aren't necessarily selective in reality but the stats
+-- make the optimizer think they are
+
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
+call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
+
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+call sys_boot.mgmt.stat_set_column_histogram(
+    'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
+-- make sure this query really is doing semijoins, hash joins, and aggregation;
+-- this is the query that the threads will execute
+explain plan excluding attributes for
+    select sys_boot.mgmt.sleep(20000), count(*)
+    from customer c, salesperson sp, product p, sales s
+    where
+        s.product_id = p.id and
+        s.salesperson = sp.id and
+        s.customer = c.id and
+        p.size >= 'M' and sp.age >= 30 and c.city >= 'N' 
+    group by 1
+    order by 1, 2;
+@end
+
+@thread 1
+
+set schema 'sj';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- wait for thread 2 to connect
+@sync
+
+-- this will grab all resources and hold it while sleeping for 20 seconds,
+-- which should give plenty of time for thread 2 to attempt to get resources
+
+select sys_boot.mgmt.sleep(20000), count(*)
+    from customer c, salesperson sp, product p, sales s
+    where
+        s.product_id = p.id and
+        s.salesperson = sp.id and
+        s.customer = c.id and
+        p.size >= 'M' and sp.age >= 30 and c.city >= 'N' 
+    group by 1
+    order by 1, 2;
+
+-- reset back to original default value
+alter system set "expectedConcurrentStatements" = 4;
+
+@end
+
+@thread 2
+
+set schema 'sj';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- wait for thread 1 to connect
+@sync
+
+-- give thread 1 a chance to fetch
+@sleep 5000
+
+-- this should result in an error indicating there isn't enough cache resource
+@err select sys_boot.mgmt.sleep(1), count(*)
+    from customer c, salesperson sp, product p, sales s
+    where
+        s.product_id = p.id and
+        s.salesperson = sp.id and
+        s.customer = c.id and
+        p.size >= 'M' and sp.age >= 30 and c.city >= 'N' 
+    group by 1
+    order by 1, 2;
+
+@end
+

@@ -32,7 +32,9 @@ void LcsColumnReader::sync()
     pBatch = &pScan->pRangeBatches[colOrd];
     pValues = pScan->pLeaf + pBatch->oVal;
     pBase = pScan->pLeaf - pScan->delta[colOrd];
-    
+   
+    filters.filteringBitmap.resize(0);
+ 
     if (batchIsCompressed()) {
         // where the bit vectors start
         const PBuffer pBit = pValues + (sizeof(uint16_t) * pBatch->nVal);
@@ -124,6 +126,13 @@ void LcsColumnReader::sync()
         // Set function pointer to get data
         pGetCurrentValueFunc = &LcsColumnReader::getCompressedValue;
 
+        if (filters.hasResidualFilters) {
+            /*
+             * initializes bitmap
+             */
+            buildContainsMap();
+        }
+
     } else if (batchIsFixed()) {
         // Set function pointer to get data in fixed case
         pGetCurrentValueFunc = &LcsColumnReader::getFixedValue;
@@ -163,6 +172,144 @@ uint16_t LcsColumnReader::getCurrentValueCode() const
     uint16_t nValCode;
     pFuncReadBitVec(&nValCode, origin, pScan->getRangePos());
     return nValCode;
+}
+
+bool LcsColumnReader::applyFilters(
+    TupleDescriptor &projDescriptor, TupleData &outputTupleData)
+{
+
+    if (!filters.filteringBitmap.empty()) {
+        /*
+         * bitmap filtering
+         */
+        return (filters.filteringBitmap.test(getCurrentValueCode()));
+    }
+
+    for (uint k = 0; k < filters.filterData.size(); k++) {
+        
+        LcsResidualFilter *filter = filters.filterData[k].get();
+
+        if (filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER) {
+            int c = projDescriptor.compareTuples(
+                filter->boundData, filters.lowerBoundProj,
+                outputTupleData, filters.readerKeyProj);
+
+            if (filter->lowerBoundDirective == SEARCH_CLOSED_LOWER) {
+                if (c > 0) {
+                    continue;
+                }
+            } else {
+                if (c >= 0) {
+                    continue;
+                }
+            }
+        }
+
+       if (filter->upperBoundDirective == SEARCH_UNBOUNDED_UPPER) {
+          return true;
+       }
+
+       int c = projDescriptor.compareTuples(
+           filter->boundData, filters.upperBoundProj,
+           outputTupleData, filters.readerKeyProj);
+
+       if (filter->upperBoundDirective == SEARCH_CLOSED_UPPER) {
+           if (c >= 0) {
+               return true;
+           }
+       } else {
+           if (c > 0) {
+               return true;
+           }
+       }
+    }
+
+    return false;
+}
+
+uint LcsColumnReader::findVal(
+    uint filterPos, bool highBound, bool bStrict, TupleData &readerKeyData)
+{
+    uint iLo = 0, iHi = getBatchValCount(), iResult;
+    int cmp = 0;
+    TupleProjection &boundProj = highBound ?
+        filters.upperBoundProj : filters.lowerBoundProj;
+    TupleProjection allProj;
+
+    allProj.push_back(0);
+
+    // If nVals == 0, then iLo == iHi == 0, and we return 0.
+    while (iLo < iHi) {
+        uint iMid = (iLo + iHi) / 2;
+
+        readerKeyData[0].loadLcsDatum(getBatchValue(iMid));
+
+        cmp = filters.inputKeyDesc.compareTuples(
+            readerKeyData, allProj,
+            filters.filterData[filterPos]->boundData, boundProj);
+
+        if (cmp == 0) {
+            if (bStrict && !highBound) {
+                iResult = iMid + 1;
+            }
+            else {
+                iResult = iMid;
+            }
+            return iResult;
+        }
+        else if (cmp > 0) {       
+            iHi = iMid;    
+        }      
+        else {
+            iLo = iMid + 1;    
+        }
+    }
+
+    // We now know that no val[i] == key, so we don't worry about strictness.
+    assert(iLo == iHi);
+    if (cmp < 0) {                  // key < val[iMid]
+        iResult = iHi;
+    }
+    else {
+        // val[iMid] < key, so key < val[iMid+1]
+        iResult = iLo;
+    }
+
+    return iResult;
+}
+
+void LcsColumnReader::findBounds(
+    uint filterPos, uint &nLoVal, uint &nHiVal, TupleData &readerKeyData)
+{
+    LcsResidualFilter *filter = filters.filterData[filterPos].get();
+    bool getLowerSet = filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER;
+    bool getLowerBoundStrict =
+        filter->lowerBoundDirective != SEARCH_CLOSED_LOWER;
+    bool getUpperSet = filter->upperBoundDirective != SEARCH_UNBOUNDED_UPPER;
+    bool getUpperBoundStrict =
+        filter->upperBoundDirective != SEARCH_CLOSED_UPPER;
+
+    nLoVal = (getLowerSet ? findVal(filterPos, false, getLowerBoundStrict,
+        readerKeyData) : 0);
+    nHiVal = (getUpperSet ? findVal(filterPos, true, getUpperBoundStrict,
+        readerKeyData) : getBatchValCount());
+}
+
+void LcsColumnReader::buildContainsMap()
+{
+    uint nVals = getBatchValCount();
+
+    filters.filteringBitmap.resize(nVals);
+
+    for (uint i = 0; i < filters.filterData.size(); i++) {
+        uint nLoVal, nHiVal;
+
+        findBounds(i, nLoVal, nHiVal, filters.readerKeyData);
+
+        for (uint b = nLoVal; b < nVals && b < nHiVal; b++) {
+            filters.filteringBitmap.set(b);
+        }
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

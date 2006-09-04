@@ -112,6 +112,7 @@ class ExecStreamSubFactory_lu
         params.distinctness = streamDef.getDistinctness();
         params.pTempSegment = pDatabase->getTempSegment();
         params.storeFinalRun = false;
+        params.estimatedNumRows = streamDef.getEstimatedNumRows();
         CmdInterpreter::readTupleProjection(
             params.keyProj,
             streamDef.getKeyProj());
@@ -378,7 +379,7 @@ class ExecStreamSubFactory_lu
          * aggregation, so it is not very accurate. Disable sub partition stats
          * for now.
          */
-        params.enableSubPartStat   = false;
+        params.enableSubPartStat = false;
 
         pEmbryo->init(new LhxAggExecStream(), params);
     }
@@ -463,6 +464,6 @@ Java_com_lucidera_farrago_fennel_LucidEraJni_registerStreamFactory(
     }
 }
 
-FENNEL_END_CPPFILE("$Id: //open/lu/dev/fennel/lucidera/farrago/NativeMethods_lu.cpp#24 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End NativeMethods_lu.cpp

@@ -1,0 +1,258 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Test pushdown of projections.  This test primarily tests projections 
+0: jdbc:farrago:> -- involving views.  Other tests do a fairly good job testing projections
+0: jdbc:farrago:> -- on base tables.
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema pp;
+0: jdbc:farrago:> set schema 'pp';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- force usage of Fennel calculator
+0: jdbc:farrago:> alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test a few queries on FTRS first, but the bulk of the tests are against LCS
+0: jdbc:farrago:> create view vemps(eno, name, deptno, doubleage)
+. . . . . . . . >     as select empno, upper(name), deptno, age * 2 from sales.emps;
+0: jdbc:farrago:> create view vdepts(name, deptno)
+. . . . . . . . >     as select upper(name), deptno from sales.depts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select ve.name, ve.doubleage, vd.name
+. . . . . . . . >         from vemps ve, vdepts vd
+. . . . . . . . >         where ve.deptno = vd.deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..4=[{inputs}], expr#5=[=($t1, $t4)], NAME=[$t0], DOUBLEAGE=[$t2], NAME0=[$t3], $condition=[$t5])'
+'    FennelCartesianProductRel(leftouterjoin=[false])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t0)], expr#4=[2], expr#5=[*($t2, $t4)], NAME=[$t3], DEPTNO=[$t1], DOUBLEAGE=[$t5])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FennelRenameRel(fieldNames=[[NAME, DEPTNO]])'
+'        FennelCalcRel(expr#0..1=[{inputs}], expr#2=[UPPER($t1)], EXPR$0=[$t2], DEPTNO=[$t0])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select lower(ve.name), ve.doubleage/2
+. . . . . . . . >         from vemps ve, vdepts vd
+. . . . . . . . >         where ve.deptno = vd.deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[LOWER($t0)], expr#5=[2], expr#6=[/($t2, $t5)], EXPR$0=[$t4], EXPR$1=[$t6])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1, 2]], inputDirectiveProj=[[]])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t0)], expr#4=[2], expr#5=[*($t2, $t4)], NAME=[$t3], DEPTNO=[$t1], DOUBLEAGE=[$t5])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:>         
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> select ve.name, ve.doubleage, vd.name
+. . . . . . . . >     from vemps ve, vdepts vd
+. . . . . . . . >     where ve.deptno = vd.deptno order by 1;
++--------+------------+------------+
+|  NAME  | DOUBLEAGE  |    NAME    |
++--------+------------+------------+
+| ERIC   | 160        | MARKETING  |
+| FRED   | 50         | SALES      |
+| WILMA  | 100        | MARKETING  |
++--------+------------+------------+
+0: jdbc:farrago:> select lower(ve.name), ve.doubleage/2
+. . . . . . . . >     from vemps ve, vdepts vd
+. . . . . . . . >     where ve.deptno = vd.deptno order by 1;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| eric    | 80      |
+| fred    | 25      |
+| wilma   | 50      |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop view vemps;
+0: jdbc:farrago:> drop view vdepts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- now, LCS
+0: jdbc:farrago:> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table lcsemps(
+. . . . . . . . >     empno int, name varchar(12), deptno int, gender char(1), city varchar(12),
+. . . . . . . . >     empid int, age int);
+0: jdbc:farrago:> insert into lcsemps
+. . . . . . . . >     select empno, name, deptno, gender, city, empid, age from sales.emps;
+0: jdbc:farrago:> create table lcsdepts(deptno int, name varchar(12));
+0: jdbc:farrago:> insert into lcsdepts select * from sales.depts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view vemps(eno, name, deptno, doubleage)
+. . . . . . . . >     as select empno, upper(name), deptno, age * 2 from lcsemps;
+0: jdbc:farrago:> create view vdepts(name, deptno)
+. . . . . . . . >     as select upper(name), deptno from lcsdepts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select ve.name, ve.doubleage, vd.name
+. . . . . . . . >         from vemps ve, vdepts vd
+. . . . . . . . >         where ve.deptno = vd.deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..4=[{inputs}], NAME=[$t0], DOUBLEAGE=[$t2], NAME0=[$t3])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t0)], expr#4=[2], expr#5=[*($t2, $t4)], NAME=[$t3], DEPTNO=[$t1], DOUBLEAGE=[$t5])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[1, 2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$PP$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$PP$LCSEMPS$NAME]])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[UPPER($t1)], NAME=[$t2], DEPTNO=[$t0])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$LCSDEPTS$DEPTNO, SYS$CLUSTERED_INDEX$PP$LCSDEPTS$NAME]])'
+0: jdbc:farrago:> explain plan for
+. . . . . . . . >     select lower(ve.name), ve.doubleage/2
+. . . . . . . . >         from vemps ve, vdepts vd
+. . . . . . . . >         where ve.deptno = vd.deptno;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0..3=[{inputs}], expr#4=[LOWER($t0)], expr#5=[2], expr#6=[/($t2, $t5)], EXPR$0=[$t4], EXPR$1=[$t6])'
+'    LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'      FennelCalcRel(expr#0..2=[{inputs}], expr#3=[UPPER($t0)], expr#4=[2], expr#5=[*($t2, $t4)], NAME=[$t3], DEPTNO=[$t1], DOUBLEAGE=[$t5])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, LCSEMPS]], projection=[[1, 2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$LCSEMPS$AGE, SYS$CLUSTERED_INDEX$PP$LCSEMPS$DEPTNO, SYS$CLUSTERED_INDEX$PP$LCSEMPS$NAME]])'
+'      LcsRowScanRel(table=[[LOCALDB, PP, LCSDEPTS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$LCSDEPTS$DEPTNO]])'
+0: jdbc:farrago:>         
+0: jdbc:farrago:> !set outputformat table
+0: jdbc:farrago:> select ve.name, ve.doubleage, vd.name
+. . . . . . . . >     from vemps ve, vdepts vd
+. . . . . . . . >     where ve.deptno = vd.deptno order by 1;
++--------+------------+------------+
+|  NAME  | DOUBLEAGE  |    NAME    |
++--------+------------+------------+
+| ERIC   | 160        | MARKETING  |
+| FRED   | 50         | SALES      |
+| WILMA  | 100        | MARKETING  |
++--------+------------+------------+
+0: jdbc:farrago:> select lower(ve.name), ve.doubleage
+. . . . . . . . >     from vemps ve, vdepts vd
+. . . . . . . . >     where ve.deptno = vd.deptno order by 1;
++---------+------------+
+| EXPR$0  | DOUBLEAGE  |
++---------+------------+
+| eric    | 160        |
+| fred    | 50         |
+| wilma   | 100        |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t1(t1a int, t1b int, t1c int);
+0: jdbc:farrago:> create table t2(t2a int, t2b int, t2c int, t2d int);
+0: jdbc:farrago:> create table t3(t3a int, t3b int, t3c int, t3d int, t3e int);
+0: jdbc:farrago:> insert into t1 values(1, 11, 12);
+0: jdbc:farrago:> insert into t1 values(2, 21, 22);
+0: jdbc:farrago:> insert into t1 values(3, 31, 32);
+0: jdbc:farrago:> insert into t1 values(4, 41, 42);
+0: jdbc:farrago:> insert into t1 values(5, 51, 52);
+0: jdbc:farrago:> insert into t2 values(1, 101, 102, 103);
+0: jdbc:farrago:> insert into t2 values(2, 201, 202, 203);
+0: jdbc:farrago:> insert into t2 values(3, 301, 302, 303);
+0: jdbc:farrago:> insert into t2 values(4, 401, 402, 403);
+0: jdbc:farrago:> insert into t2 values(5, 501, 502, 503);
+0: jdbc:farrago:> insert into t3 values(1, 1001, 1002, 1003, 1004);
+0: jdbc:farrago:> insert into t3 values(2, 2001, 2002, 2003, 2004);
+0: jdbc:farrago:> insert into t3 values(3, 3001, 3002, 3003, 3004);
+0: jdbc:farrago:> insert into t3 values(4, 4001, 4002, 4003, 4004);
+0: jdbc:farrago:> insert into t3 values(5, 5001, 5002, 5003, 5004);
+0: jdbc:farrago:> create view vjoin(vja, vjb, vjc) as
+. . . . . . . . >     select t1.t1b - 10, t2.t2c - 100, t3.t3d - 1000
+. . . . . . . . >         from t1, t2, t3 where t1.t1a = t2.t2a and t2.t2a = t3.t3a;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from vjoin order by vja;
++------+------+-------+
+| VJA  | VJB  |  VJC  |
++------+------+-------+
+| 1    | 2    | 3     |
+| 11   | 102  | 1003  |
+| 21   | 202  | 2003  |
+| 31   | 302  | 3003  |
+| 41   | 402  | 4003  |
++------+------+-------+
+0: jdbc:farrago:> select vjc/1000, vja/10, vjb/100 from vjoin order by 1;
++---------+---------+---------+
+| EXPR$0  | EXPR$1  | EXPR$2  |
++---------+---------+---------+
+| 0       | 0       | 0       |
+| 1       | 1       | 1       |
+| 2       | 2       | 2       |
+| 3       | 3       | 3       |
+| 4       | 4       | 4       |
++---------+---------+---------+
+0: jdbc:farrago:> select count(*) from vjoin;
++---------+
+| EXPR$0  |
++---------+
+| 5       |
++---------+
+0: jdbc:farrago:> select lcs_rid(vja) from vjoin order by 1;
++---------+
+| EXPR$0  |
++---------+
+| 0       |
+| 1       |
+| 2       |
+| 3       |
+| 4       |
++---------+
+0: jdbc:farrago:> select 2*vjb, lcs_rid(vja) from vjoin order by 2;
++---------+---------+
+| EXPR$0  | EXPR$1  |
++---------+---------+
+| 4       | 0       |
+| 204     | 1       |
+| 404     | 2       |
+| 604     | 3       |
+| 804     | 4       |
++---------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !set outputformat csv
+0: jdbc:farrago:> explain plan for select * from vjoin order by vja;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..4=[{inputs}], expr#5=[10], expr#6=[-($t0, $t5)], expr#7=[100], expr#8=[-($t2, $t7)], expr#9=[1000], expr#10=[-($t4, $t9)], VJA=[$t6], VJB=[$t8], VJC=[$t10])'
+'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..3=[{inputs}], T1B=[$t1], T2A=[$t2], T2C=[$t3])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T1$T1A, SYS$CLUSTERED_INDEX$PP$T1$T1B]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T2$T2A, SYS$CLUSTERED_INDEX$PP$T2$T2C]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T3$T3A, SYS$CLUSTERED_INDEX$PP$T3$T3D]])'
+0: jdbc:farrago:> explain plan for select vjc/1000, vja/10, vjb/100 from vjoin order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..4=[{inputs}], expr#5=[1000], expr#6=[-($t4, $t5)], expr#7=[/($t6, $t5)], expr#8=[10], expr#9=[-($t0, $t8)], expr#10=[/($t9, $t8)], expr#11=[100], expr#12=[-($t2, $t11)], expr#13=[/($t12, $t11)], EXPR$0=[$t7], EXPR$1=[$t10], EXPR$2=[$t13])'
+'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..3=[{inputs}], T1B=[$t1], T2A=[$t2], T2C=[$t3])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T1$T1A, SYS$CLUSTERED_INDEX$PP$T1$T1B]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T2$T2A, SYS$CLUSTERED_INDEX$PP$T2$T2C]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T3$T3A, SYS$CLUSTERED_INDEX$PP$T3$T3D]])'
+0: jdbc:farrago:> explain plan for select count(*) from vjoin;
+'column0'
+'FennelToIteratorConverter'
+'  FennelCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])'
+'    FennelAggRel(groupCount=[0], agg#0=[COUNT()])'
+'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t2])'
+'        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'          FennelCalcRel(expr#0..1=[{inputs}], T2A=[$t1])'
+'            LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'              LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T1$T1A]])'
+'              LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T2$T2A]])'
+'          LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T3$T3A]])'
+0: jdbc:farrago:> explain plan for select lcs_rid(vja) from vjoin order by 1;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[0]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..2=[{inputs}], EXPR$0=[$t1])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..2=[{inputs}], T2A=[$t2], LCS_RID=[$t1])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T1$T1A]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T2$T2A]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T3$T3A]])'
+0: jdbc:farrago:> explain plan for select 2*vjb, lcs_rid(vja) from vjoin order by 2;
+'column0'
+'FennelToIteratorConverter'
+'  FennelSortRel(key=[[1]], discardDuplicates=[false])'
+'    FennelCalcRel(expr#0..3=[{inputs}], expr#4=[2], expr#5=[100], expr#6=[-($t1, $t5)], expr#7=[*($t4, $t6)], EXPR$0=[$t7], EXPR$1=[$t2])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'        FennelCalcRel(expr#0..3=[{inputs}], T2A=[$t2], T2C=[$t3], LCS_RID=[$t1])'
+'          LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T1]], projection=[[0, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T1$T1A]])'
+'            LcsRowScanRel(table=[[LOCALDB, PP, T2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T2$T2A, SYS$CLUSTERED_INDEX$PP$T2$T2C]])'
+'        LcsRowScanRel(table=[[LOCALDB, PP, T3]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$PP$T3$T3A]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit
