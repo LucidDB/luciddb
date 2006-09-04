@@ -39,7 +39,7 @@ public class VolcanoRuleCall
     //~ Instance fields --------------------------------------------------------
 
     protected final VolcanoPlanner volcanoPlanner;
-
+    
     //~ Constructors -----------------------------------------------------------
 
     protected VolcanoRuleCall(
@@ -66,6 +66,10 @@ public class VolcanoRuleCall
     // implement RelOptRuleCall
     public void transformTo(RelNode rel)
     {
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine(
+                "Transform to: rel#" + rel.getId() + " via " + getRule());
+        }
         try {
             // It's possible that rel is a subset or is already registered.
             // Is there still a point in continuing? Yes, because we might
@@ -98,7 +102,7 @@ public class VolcanoRuleCall
                 volcanoPlanner.listener.ruleProductionSucceeded(event);
             }
 
-            Util.discard(getPlanner().ensureRegistered(rel, rels[0]));
+            getPlanner().ensureRegistered(rel, rels[0]);
 
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleProductionEvent event =
@@ -129,6 +133,16 @@ public class VolcanoRuleCall
                 }
                 return;
             }
+
+            if (volcanoPlanner.getSubset(rels[0]) == null) {
+                if (tracer.isLoggable(Level.FINE)) {
+                    tracer.fine(
+                        "Rule [" + getRule() + "] not fired because operand"
+                        + " has no subset");
+                }
+                return;
+            }
+            
             if (tracer.isLoggable(Level.FINE)) {
                 tracer.fine(
                     "Apply rule [" + getRule() + "] to ["
@@ -146,7 +160,7 @@ public class VolcanoRuleCall
             }
 
             getRule().onMatch(this);
-
+            
             if (volcanoPlanner.listener != null) {
                 RelOptListener.RuleAttemptedEvent event =
                     new RelOptListener.RuleAttemptedEvent(
