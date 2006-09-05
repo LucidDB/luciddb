@@ -149,10 +149,9 @@ public class FarragoRexBuilder
                         getOpTab().isNullOperator,
                         exprs[i]));
                 caseOperandList.add(
-                    makeLiteral(
-                        null,
+                    makeCast(
                         routine.getReturnType(),
-                        SqlTypeName.Null));
+                        constantNull()));
             }
             caseOperandList.add(returnNode);
             RexNode [] caseOperands =
