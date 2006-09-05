@@ -247,6 +247,30 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Retrieves a list of repository integrity violations.  The
+     * result has two string columns; the first is the error description,
+     * the second is the MOFID of the object on which the error was
+     * detected, or null if unknown.
+     */
+    public static void repositoryIntegrityViolations(
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
+        for (FarragoReposIntegrityErr err : errs) {
+            resultInserter.setString(1, err.getDescription());
+            if (err.getRefObject() != null) {
+                resultInserter.setString(2, err.getRefObject().refMofId());
+            } else {
+                resultInserter.setString(2, null);
+            }
+            resultInserter.executeUpdate();
+        }
+    }
+
+    /**
      * Populates a table of properties of the current repository connection.
      *
      * @param resultInserter

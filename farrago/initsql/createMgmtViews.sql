@@ -17,6 +17,12 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryProper
 create view repository_properties_view as
   select * from table(repository_properties());
 
+create function repository_integrity_violations()
+returns table(description varchar(65535), mofid varchar(128))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryIntegrityViolations';
 
 create function statements()
 returns table(id int, session_id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))

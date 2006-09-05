@@ -26,6 +26,8 @@ import java.sql.*;
 import java.util.*;
 import java.util.logging.*;
 
+import javax.jmi.reflect.*;
+
 import net.sf.farrago.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.datatypes.*;
@@ -36,6 +38,7 @@ import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.type.*;
 
 import org.netbeans.api.mdr.events.*;
@@ -166,12 +169,15 @@ public class FarragoCatalogInit
                 modelElement.setVisibility(VisibilityKindEnum.VK_PUBLIC);
 
                 // Define this as a system-owned object.
-                FarragoCatalogUtil.newCreationGrant(
-                    repos,
-                    SYSTEM_USER_NAME,
-                    SYSTEM_USER_NAME,
-                    modelElement);
+                FemGrant grant =
+                    FarragoCatalogUtil.newCreationGrant(
+                        repos,
+                        SYSTEM_USER_NAME,
+                        SYSTEM_USER_NAME,
+                        modelElement);
+                JmiObjUtil.setMandatoryPrimitiveDefaults(grant);
             }
+            JmiObjUtil.setMandatoryPrimitiveDefaults((RefObject) obj);
         }
     }
 

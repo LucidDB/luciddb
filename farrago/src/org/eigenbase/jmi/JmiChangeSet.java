@@ -241,7 +241,7 @@ public class JmiChangeSet
                     deletionList.add(obj);
                 }
             } else {
-                JmiObjUtil.assertConstraints(obj);
+                checkJmiConstraints(obj);
             }
         }
 
@@ -254,6 +254,12 @@ public class JmiChangeSet
             }
             refObj.refDelete();
         }
+    }
+
+    // TODO jvs 4-Sept-2006:  Move this interface to JmiChangeDispatcher
+    protected void checkJmiConstraints(RefObject obj)
+    {
+        // e.g. subclass can call FarragoRepos.verifyIntegrity
     }
 
     // implement MDRPreChangeListener

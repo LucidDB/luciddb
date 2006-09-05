@@ -1,6 +1,9 @@
 0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Tests semijoin transformations
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO jvs 5-Sept-2006:  Get rid of this once leak is investigated.
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create schema sj;
 0: jdbc:farrago:> set schema 'sj';
 0: jdbc:farrago:> 
