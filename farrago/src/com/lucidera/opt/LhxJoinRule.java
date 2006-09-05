@@ -177,8 +177,8 @@ public class LhxJoinRule
                 leftKeys,
                 rightKeys,
                 newJoinOutputNames,
-                numBuildRows.intValue(),
-                cndBuildKey.intValue());
+                numBuildRows.longValue(),
+                cndBuildKey.longValue());
 
         int newProjectOutputSize = outputProj.size();
         RelDataTypeField [] joinOutputFields = rel.getRowType().getFields();

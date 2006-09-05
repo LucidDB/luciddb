@@ -124,8 +124,8 @@ public class LhxAggRule
                     fennelInput,
                     aggRel.getGroupCount(),
                     aggRel.getAggCalls(),
-                    numInputRows.intValue(),
-                    cndGroupByKey.intValue());
+                    numInputRows.longValue(),
+                    cndGroupByKey.longValue());
 
             call.transformTo(lhxAggRel);
         } else {

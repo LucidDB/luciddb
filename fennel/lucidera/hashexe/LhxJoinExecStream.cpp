@@ -143,13 +143,12 @@ void LhxJoinExecStream::getResourceRequirements(
     uint minPages = LhxHashTable::LhxHashTableMinPages + numMiscCacheBlocks;
     minQuantity.nCachePages += minPages;
     // if no stats were available, make an unbounded resource request
-    if (numBlocksHashTable < 0) {
+    if (isMAXU(numBlocksHashTable)) {
         optType = EXEC_RESOURCE_UNBOUNDED;
     } else {
         // make sure the opt is bigger than the min; otherwise, the
         // resource governor won't try to give it extra
-        optQuantity.nCachePages +=
-            std::max(minPages + 1, (uint) numBlocksHashTable);
+        optQuantity.nCachePages += std::max(minPages + 1, numBlocksHashTable);
         optType = EXEC_RESOURCE_ESTIMATE;
     }
 }

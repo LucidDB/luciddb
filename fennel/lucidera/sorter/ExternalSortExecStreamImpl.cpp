@@ -88,16 +88,24 @@ void ExternalSortExecStreamImpl::getResourceRequirements(
     // if no estimated row count is available, request an unbounded amount
     // from the resource governor; otherwise, estimate the number of pages
     // for an in-memory sort
-    if (estimatedNumRows < 0) {
+    if (isMAXU(estimatedNumRows)) {
         optType = EXEC_RESOURCE_UNBOUNDED;
     } else {
         // use the average of the min and max rowsizes
         // TODO - use stats to come up with a more accurate average
-        uint numPages =
+        RecordNum nPages =
             estimatedNumRows *
             ((pOutAccessor->getScratchTupleAccessor().getMaxByteCount() +
             pOutAccessor->getScratchTupleAccessor().getMinByteCount()) / 2) /
             sortInfo.memSegmentAccessor.pSegment->getUsablePageSize();
+        uint numPages;
+        if (nPages >= uint(MAXU)) {
+            numPages = uint(MAXU) - 1;
+        } else {
+            numPages = uint(nPages);
+        }
+        // make sure the opt is bigger than the min; otherwise, the
+        // resource governor won't try to give it extra
         optQuantity.nCachePages += std::max(minPages + 1, numPages);
         optType = EXEC_RESOURCE_ESTIMATE;
     }

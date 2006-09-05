@@ -719,7 +719,7 @@ class LhxHashTable
      *
      * @return number of slots needed.
      */
-    static inline uint slotsNeeded(double cndKeys);
+    static inline uint slotsNeeded(RecordNum cndKeys);
 
     /**
      * Find location that stores the key node based on key cols.
@@ -813,7 +813,7 @@ public:
     void calculateSize(
         LhxHashInfo const &hashInfo,
         uint inputIndex,
-        int &numBlocks);
+        BlockNum &numBlocks);
 
     /**
      * Compute the number of slots required by this hash table to store
@@ -825,7 +825,7 @@ public:
      * hash table
      */
     void calculateNumSlots(
-        double cndKeys,
+        RecordNum cndKeys,
         uint usablePageSize,
         uint numBlocks);
     
@@ -1250,9 +1250,14 @@ inline void LhxHashBlockAccessor::allocSlots(uint slotCount)
     assert (bufPtr != NULL);
 }
 
-inline uint LhxHashTable::slotsNeeded(double cndKeys)
+inline uint LhxHashTable::slotsNeeded(RecordNum cndKeys)
 {
-    return uint(ceil(cndKeys * 1.2));
+    RecordNum cKeys = RecordNum(ceil(cndKeys * 1.2));
+    if (cKeys >= uint(MAXU)) {
+        return uint(MAXU) - 1;
+    } else {
+        return uint(cKeys);
+    }
 }
 
 inline uint LhxHashTable::getNumSlots() const { return numSlots; }

@@ -64,26 +64,18 @@ struct LhxAggExecStreamParams : public SortedAggExecStreamParams
     // comments, just say what they are, e.g. "Estimate for number of rows from
     // the build input, etc."  (No need to repeat the field name inside
     // of the field-level comments.)
-    
-    // REVIEW jvs 25-Aug-2006:  Use RecordNum for record counts.
-    // It is typedef'd to uint64_t to avoid overflow on 32-bit machines.
-    // Since it's unsigned, use MAXU/isMAXU for singular value
-    // (stat unknown).  Also have to change catalog model since this
-    // gets passed down from Java; use Long there.  (Long is signed,
-    // but if you pass -1 from Java it will be interpreted as MAXU.)
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
      * optimizer. For Hash Aggregate, this is the estimated number of groups.
      * If < 0, stat is unknown.
      */
-    int cndGroupByKeys;
+    RecordNum cndGroupByKeys;
 
-    // REVIEW jvs 25-Aug-2006:  Same as above regarding RecordNum.
     /**
      * numRows: number of rows from the build input.  If < 0, unknown.
      */
-    int numRows;
+    RecordNum numRows;
 };
 
 /**
@@ -133,19 +125,16 @@ class LhxAggExecStream : public ConduitExecStream
     LhxHashTable hashTable;
     LhxHashTableReader hashTableReader;
 
-    // REVIEW jvs 25-Aug-2006:  BlockNum/MAXU is the standard convention
-    // (just like RecordNum for record counts).
-    
     /**
      * Initial estimate of blocks required.
      */
-    int numBlocksHashTable;
+    BlockNum numBlocksHashTable;
 
     /**
-     * Number of cache blocks set aside for I/O.  If < 0, no stats are
+     * Number of cache blocks set aside for I/O.  If MAXU, no stats are
      * available to compute this value.
      */
-    int numMiscCacheBlocks;
+    BlockNum numMiscCacheBlocks;
 
     // REVIEW jvs 25-Aug-2006:  Next three fields need comments, maybe
     // a reference to somewhere else explaining the plan concept.  Is

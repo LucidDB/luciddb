@@ -60,13 +60,11 @@ struct ExternalSortExecStreamParams : public ConduitExecStreamParams
      */
     bool storeFinalRun;
 
-    // REVIEW jvs 25-Aug-2006:  See my comments on LhxAggExecStreamParams
-    // regarding RecordNum instead of int here.
     /**
-     * Estimate of the number of rows in the sort input.  If < 0, no stats
+     * Estimate of the number of rows in the sort input.  If MAXU, no stats
      * were available to estimate this value.
      */
-    int estimatedNumRows;
+    RecordNum estimatedNumRows;
 };
 
 /**

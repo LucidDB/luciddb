@@ -256,7 +256,7 @@ void LhxHashTable::init(
     /*
      * Recompute num slots based on hashInfo.numCachePages
      */
-    int cndKeys = hashInfo.cndKeys[buildInputIndex];
+    RecordNum cndKeys = hashInfo.cndKeys[buildInputIndex];
     uint usablePageSize = scratchAccessor.pSegment->getUsablePageSize();
     
     calculateNumSlots(cndKeys, usablePageSize, maxBlockCount);    
@@ -506,14 +506,14 @@ void LhxHashTable::releaseResources(bool reuse)
 }
 
 void LhxHashTable::calculateNumSlots(
-    double cndKeys,
+    RecordNum cndKeys,
     uint usablePageSize,
-    uint numBlocks)
+    BlockNum numBlocks)
 {
     // if we don't have stats for the number of distinct keys, just
     // use a default value
-    if (cndKeys < 0) {
-        cndKeys = 10000;
+    if (isMAXU(cndKeys)) {
+        cndKeys = RecordNum(10000);
     }
 
     /*
@@ -532,7 +532,7 @@ void LhxHashTable::calculateNumSlots(
 void LhxHashTable::calculateSize(
     LhxHashInfo const &hashInfo,
     uint inputIndex,
-    int &numBlocks)
+    BlockNum &numBlocks)
 {
     uint usablePageSize = 
         (hashInfo.memSegmentAccessor.pSegment)->getUsablePageSize()
@@ -550,12 +550,12 @@ void LhxHashTable::calculateSize(
     TupleProjection &dataProj  =
         (TupleProjection &)hashInfo.dataProj[inputIndex];
 
-    int cndKeys = hashInfo.cndKeys[inputIndex];
-    int numRows = hashInfo.numRows[inputIndex];
+    RecordNum cndKeys = hashInfo.cndKeys[inputIndex];
+    RecordNum numRows = hashInfo.numRows[inputIndex];
     // if we don't have stats, don't bother trying to compute the hash table
     // size
-    if (cndKeys < 0 || numRows < 0) {
-        numBlocks = -1;
+    if (isMAXU(cndKeys) || isMAXU(numRows)) {
+        numBlocks = MAXU;
         return;
     }
 
@@ -585,7 +585,12 @@ void LhxHashTable::calculateSize(
         slotsNeeded(cndKeys) * sizeof(PBuffer)
         + cndKeys * tmpKey.getAvgStorageSize()
         + numRows * tmpData.getAvgStorageSize();
-    numBlocks = (int) ceil(totalBytes / usablePageSize);
+    double nBlocks = ceil(totalBytes / usablePageSize);
+    if (nBlocks >= BlockNum(MAXU)) {
+        numBlocks = BlockNum(MAXU) - 1;
+    } else {
+        numBlocks = BlockNum(nBlocks);
+    }
 }
 
 

@@ -63,12 +63,12 @@ public class LhxJoinRel
     /**
      * row count on the build side
      */
-    int numBuildRows;
+    long numBuildRows;
 
     /**
      * cardinality of the build key
      */
-    int cndBuildKey;
+    long cndBuildKey;
 
     /**
      * This LhxJoinRel implements setop, one of the following: intersect
@@ -98,8 +98,8 @@ public class LhxJoinRel
         List<Integer> leftKeys,
         List<Integer> rightKeys,
         List<String> fieldNameList,
-        int numBuildRows,
-        int cndBuildKey)
+        long numBuildRows,
+        long cndBuildKey)
     {
         super(cluster, left, right);
         assert joinType != null;

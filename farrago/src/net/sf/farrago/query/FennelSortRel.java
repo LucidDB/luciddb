@@ -170,7 +170,7 @@ public class FennelSortRel
         if (numInputRows == null) {
             sortingStream.setEstimatedNumRows(-1);
         } else {
-            sortingStream.setEstimatedNumRows(numInputRows.intValue());
+            sortingStream.setEstimatedNumRows(numInputRows.longValue());
         }
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()),

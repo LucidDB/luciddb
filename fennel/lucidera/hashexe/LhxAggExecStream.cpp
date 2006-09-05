@@ -83,12 +83,12 @@ void LhxAggExecStream::getResourceRequirements(
         + numMiscCacheBlocks;
     minQuantity.nCachePages += minPages;
     // if valid stats weren't passed in, make an unbounded resource request
-    if (numBlocksHashTable < 0) {
+    if (isMAXU(numBlocksHashTable)) {
         optType = EXEC_RESOURCE_UNBOUNDED;
     } else {
-        // REVIEW jvs 25-Aug-2006:  Why the +1 here?
-        optQuantity.nCachePages +=
-            std::max(minPages + 1, (uint) numBlocksHashTable);
+        // make sure the opt is bigger than the min; otherwise, the
+        // resource governor won't try to give it extra
+        optQuantity.nCachePages += std::max(minPages + 1, numBlocksHashTable);
         optType = EXEC_RESOURCE_ESTIMATE;
     }
 }

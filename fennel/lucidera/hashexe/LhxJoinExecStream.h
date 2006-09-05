@@ -57,20 +57,20 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
     uint forcePartitionLevel;
 
     // REVIEW jvs 25-Aug-2006: See my comments on LhxAggExecStreamParams
-    // regarding these fields (w.r.t. both RecordNum and comment cross-refs).
+    // regarding these fields (w.r.t. comment cross-refs).
     
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
      * optimizer. For Hash Aggregate, this is the estimated number of groups.
-     * If < 0, the stat is unknown.
+     * If MAXU, the stat is unknown.
      */
-    int cndKeys;
+    RecordNum cndKeys;
 
     /**
-     * numRows: number of rows from the build input.  If < 0, unknown.
+     * numRows: number of rows from the build input.  If MAXU, unknown.
      */
-    int numRows;
+    RecordNum numRows;
 
     /**
      * Return matching rows from the left.
@@ -173,10 +173,10 @@ class LhxJoinExecStream : public ConfluenceExecStream
     LhxHashTableReader hashTableReader;
 
     /**
-     * Initial estimate of blocks required.  If < 0, no stats are available
+     * Initial estimate of blocks required.  If MAXU, no stats are available
      * to compute this value.
      */
-    int numBlocksHashTable;
+    BlockNum numBlocksHashTable;
 
     /**
      * Number of cache blocks set aside for I/O.

@@ -103,7 +103,7 @@ struct LhxHashInfo
     /**
      * Estimated number of rows from the inputs.
      */
-    vector<int> numRows;
+    vector<RecordNum> numRows;
 
     /**
      * Key cardinality estimate from the optimizer.
@@ -111,7 +111,7 @@ struct LhxHashInfo
      * It is also used to estimate the size of the hash table(to build partial
      * aggregates) during recursive partitioning for aggregate operations.
      */
-    vector<int> cndKeys;
+    vector<RecordNum> cndKeys;
 
     /**
      * ExecStream buf accessors.

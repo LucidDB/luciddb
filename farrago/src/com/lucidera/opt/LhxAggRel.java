@@ -44,12 +44,12 @@ public class LhxAggRel
     /**
      * row count of the input
      */
-    int numInputRows;
+    long numInputRows;
 
     /**
      * cardinality of the group by key
      */
-    int cndGroupByKey;
+    long cndGroupByKey;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -58,8 +58,8 @@ public class LhxAggRel
         RelNode child,
         int groupCount,
         Call [] aggCalls,
-        int numInputRows,
-        int cndGroupByKey)
+        long numInputRows,
+        long cndGroupByKey)
     {
         super(
             cluster,
