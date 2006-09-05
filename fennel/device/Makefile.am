@@ -1,8 +1,7 @@
 include $(top_srcdir)/am_include.mk
 
-noinst_LTLIBRARIES=libdevice.la
+noinst_LTLIBRARIES=libdevice.la libdevice_aio.la
 libdevice_la_SOURCES=\
-AioLinuxScheduler.cpp \
 AioPollingScheduler.cpp \
 AioSignalScheduler.cpp \
 DeviceAccessScheduler.cpp \
@@ -12,6 +11,9 @@ IoCompletionPortScheduler.cpp \
 RandomAccessFileDevice.cpp \
 RandomAccessNullDevice.cpp \
 ThreadPoolScheduler.cpp
+
+libdevice_aio_la_SOURCES=\
+AioLinuxScheduler.cpp
 
 DESIGN_DOC=DeviceDesign.cpp
 EXTRA_DIST=$(DESIGN_DOC)

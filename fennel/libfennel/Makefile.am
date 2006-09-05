@@ -1,12 +1,12 @@
 # $Id: //depot/aspen/cpp/aspen/Makefile.am#7 $
 # Fennel is a relational database kernel.
-# (C) Copyright 2004-2005 Disruptive Tech
 
 include $(top_srcdir)/am_include.mk
 
 lib_LTLIBRARIES=\
 libfennel_common.la \
 libfennel_device.la \
+libfennel_device_aio.la \
 libfennel_cache.la \
 libfennel_segment.la \
 libfennel_txn.la \
@@ -17,6 +17,8 @@ libfennel_db.la \
 libfennel_ftrs.la
 
 DEVICE_DEPS = libfennel_common.la
+
+DEVICE_AIO_DEPS = libfennel_device.la $(DEVICE_DEPS)
 
 CACHE_DEPS = libfennel_device.la $(DEVICE_DEPS)
 
@@ -46,6 +48,10 @@ libfennel_common_la_LIBADD=\
 libfennel_device_la_SOURCES=
 libfennel_device_la_LIBADD=\
 	$(top_builddir)/device/libdevice.la $(DEVICE_DEPS)
+
+libfennel_device_aio_la_SOURCES=
+libfennel_device_aio_la_LIBADD=\
+	$(top_builddir)/device/libdevice_aio.la $(DEVICE_AIO_DEPS)
 
 libfennel_cache_la_SOURCES=
 libfennel_cache_la_LIBADD=\
@@ -79,6 +85,10 @@ libfennel_db_la_LIBADD=\
 if STATIC_TEST_LIBRARY
 libfennel_db_la_LDFLAGS=-Wl,-L$(top_builddir)/libfennel \
 	-Wl,-l$(BOOST_FILESYSTEMLIB) -Wl,-lfennel_common
+endif
+
+if HAVE_LIBAIO
+libfennel_device_aio_la_LDFLAGS=-Wl,-laio
 endif
 
 libfennel_ftrs_la_SOURCES=
