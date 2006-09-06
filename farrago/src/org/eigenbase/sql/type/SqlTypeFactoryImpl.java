@@ -352,15 +352,17 @@ public class SqlTypeFactoryImpl
                     }
                 }
 
-                // TODO jvs 4-June-2005:  This shouldn't be necessary;
-                // move logic into IntervalSqlType.combine
-                Object type1 = resultType;
-                resultType =
-                    ((IntervalSqlType) resultType).combine(
-                        (IntervalSqlType) type);
-                resultType =
-                    ((IntervalSqlType) resultType).combine(
-                        (IntervalSqlType) type1);
+                if (!type.equals(resultType)) {
+                    // TODO jvs 4-June-2005:  This shouldn't be necessary;
+                    // move logic into IntervalSqlType.combine
+                    Object type1 = resultType;
+                    resultType =
+                        ((IntervalSqlType) resultType).combine(
+                            this, (IntervalSqlType) type);
+                    resultType =
+                        ((IntervalSqlType) resultType).combine(
+                            this, (IntervalSqlType) type1);
+                }
             } else if (SqlTypeUtil.isDatetime(type)) {
                 // TODO: come up with a cleaner way to support
                 // datetime +/- interval (or integer) = datetime

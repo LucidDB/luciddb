@@ -32,10 +32,8 @@
 #include "fennel/device/IoCompletionPortScheduler.h"
 #include "fennel/common/SysCallExcn.h"
 #include <windows.h>
-#endif
-
-#ifdef USE_LIBAIO_H
-#include "fennel/device/AioLinuxScheduler.h"
+#else
+#include <dlfcn.h>
 #endif
 
 #ifdef USE_AIO_H
@@ -44,6 +42,27 @@
 #endif
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+#ifdef USE_LIBAIO_H
+static DeviceAccessScheduler *dlopenAioLinuxScheduler(
+    DeviceAccessSchedulerParams const &params)
+{
+    // TODO jvs 4-Sept-2006:  add corresponding dlclose if anyone cares
+    void *hLib = dlopen("libfennel_device_aio.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!hLib) {
+        return NULL;
+    }
+    void *pFactory = dlsym(hLib, "newAioLinuxScheduler");
+    if (!pFactory) {
+        return NULL;
+    }
+    typedef DeviceAccessScheduler *(*PDeviceAccessSchedulerFactory)(
+        DeviceAccessSchedulerParams const &);
+    PDeviceAccessSchedulerFactory pSchedulerFactory =
+        (PDeviceAccessSchedulerFactory) pFactory;
+    return (*pSchedulerFactory)(params);
+}
+#endif
 
 DeviceAccessScheduler *
 DeviceAccessScheduler::newScheduler(
@@ -58,10 +77,18 @@ DeviceAccessScheduler::newScheduler(
     case DeviceAccessSchedulerParams::IO_COMPLETION_PORT_SCHEDULER:
         return new IoCompletionPortScheduler(params);
 #endif
-        
+
 #ifdef USE_LIBAIO_H
     case DeviceAccessSchedulerParams::AIO_LINUX_SCHEDULER:
-        return new AioLinuxScheduler(params);
+        {
+            DeviceAccessScheduler *pScheduler = dlopenAioLinuxScheduler(params);
+            if (pScheduler) {
+                return pScheduler;
+            } else {
+                // if dynamic load fails, use ThreadPoolScheduler as a fallback
+                return new ThreadPoolScheduler(params);
+            }
+        }
 #endif
         
 #ifdef USE_AIO_H

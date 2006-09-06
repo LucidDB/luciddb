@@ -1185,6 +1185,14 @@ public class SqlValidatorTest
         assertTrue(b);
     }
 
+    public void testIntervalMonthsConversion()
+    {
+        checkIntervalConv("INTERVAL '1' YEAR", "12");
+        checkIntervalConv("INTERVAL '5' MONTH", "5");
+        checkIntervalConv("INTERVAL '3-2' YEAR TO MONTH", "38");
+        checkIntervalConv("INTERVAL '-5-4' YEAR TO MONTH", "-64");
+    }
+
     public void testIntervalMillisConversion()
     {
         checkIntervalConv("INTERVAL '1' DAY", "86400000");
@@ -1218,17 +1226,41 @@ public class SqlValidatorTest
             "INTERVAL DAY TO SECOND NOT NULL");
         checkExpType("INTERVAL '1 2:3:4' DAY(4) TO SECOND(4)",
             "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
+        checkExpType("INTERVAL '-1 2:3:4' DAY TO SECOND",
+            "INTERVAL DAY TO SECOND NOT NULL");
+        checkExpType("INTERVAL '+1 2:3:4' DAY(4) TO SECOND(4)",
+            "INTERVAL DAY(4) TO SECOND(4) NOT NULL");
 
         checkExpType("INTERVAL '1' YEAR", "INTERVAL YEAR NOT NULL");
         checkExpType("INTERVAL '1' MONTH", "INTERVAL MONTH NOT NULL");
         checkExpType("INTERVAL '1-2' YEAR TO MONTH",
             "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType("INTERVAL '-1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
+        checkExpType("INTERVAL '+1-2' YEAR TO MONTH",
+            "INTERVAL YEAR TO MONTH NOT NULL");
 
         // FIXME Error message should contain quotes:
         //    Illegal interval literal format '1:2' for INTERVAL DAY TO HOUR
         // FIXME Position is wrong
+        checkExpFails("INTERVAL '1.2' ^YEAR^",
+            "(?s).*Illegal interval literal format 1.2 for INTERVAL YEAR.*");
+        checkExpFails("INTERVAL '1-2' ^YEAR^",
+            "(?s).*Illegal interval literal format 1-2 for INTERVAL YEAR.*");
+        checkExpFails("INTERVAL '1-2' ^MONTH^",
+            "(?s).*Illegal interval literal format 1-2 for INTERVAL MONTH.*");
+        checkExpFails("INTERVAL '1.2' ^MONTH^",
+            "(?s).*Illegal interval literal format 1.2 for INTERVAL MONTH.*");
         checkExpFails("interval 'wael was here' ^HOUR^",
             "(?s).*Illegal interval literal format wael was here for INTERVAL HOUR.*");
+        checkExpFails("interval 'wael was here' ^MONTH^",
+            "(?s).*Illegal interval literal format wael was here for INTERVAL MONTH.*");
+        checkExpFails("interval '1.1' ^day^",
+            "Illegal interval literal format 1.1 for INTERVAL DAY");
+        checkExpFails("interval '1.1' ^hour^",
+            "Illegal interval literal format 1.1 for INTERVAL HOUR");
+        checkExpFails("interval '1.1' ^minute^",
+            "Illegal interval literal format 1.1 for INTERVAL MINUTE");
         checkExpFails("interval '1' day to ^hour^",
             "Illegal interval literal format 1 for INTERVAL DAY TO HOUR");
         checkExpFails("interval '1 2' day to ^second^",
@@ -1456,6 +1488,21 @@ public class SqlValidatorTest
             "DECIMAL(19, 6)");
         checkExpType("cast(1 as DECIMAL(19, 2)) / cast(1 as DECIMAL(19, 2))",
             "DECIMAL(19, 0) NOT NULL");
+    }
+
+    public void testFloorCeil()
+    {
+        checkExpType("floor(cast(null as tinyint))", "TINYINT");
+        checkExpType("floor(1.2)", "DECIMAL(2, 0) NOT NULL");
+        checkExpType("floor(1)", "INTEGER NOT NULL");
+        checkExpType("floor(1.2e-2)", "DOUBLE NOT NULL");
+        checkExpType("floor(interval '2' day)", "INTERVAL DAY NOT NULL");
+
+        checkExpType("ceil(cast(null as bigint))", "BIGINT");
+        checkExpType("ceil(1.2)", "DECIMAL(2, 0) NOT NULL");
+        checkExpType("ceil(1)", "INTEGER NOT NULL");
+        checkExpType("ceil(1.2e-2)", "DOUBLE NOT NULL");
+        checkExpType("ceil(interval '2' second)", "INTERVAL SECOND NOT NULL");
     }
 
     protected void checkWin(String sql, String expectedMsgPattern)
@@ -2861,10 +2908,10 @@ public class SqlValidatorTest
 
     public void testExtract()
     {
-        // The reason why extract returns double is because we can have
-        // seconds fractions
+        // TODO: Need to have extract return decimal type for seconds
+        // so we can have seconds fractions
         checkExpType("extract(year from interval '1-2' year to month)",
-            "DOUBLE NOT NULL");
+            "BIGINT NOT NULL");
         checkExp("extract(minute from interval '1.1' second)");
 
         checkExpFails("extract(minute from interval '11' month)",

@@ -34,6 +34,7 @@ import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.sql.SqlUtil;
 
 
 /**
@@ -190,7 +191,8 @@ public class FarragoOJRexCastImplementor
         Expression lhsExp,
         Expression rhsExp)
     {
-        if (translator.isNullablePrimitive(rhsType)) {
+        if (translator.isNullablePrimitive(rhsType) ||
+            SqlTypeUtil.isInterval(rhsType)) {
             rhsExp =
                 new FieldAccess(rhsExp, NullablePrimitive.VALUE_FIELD_NAME);
         }

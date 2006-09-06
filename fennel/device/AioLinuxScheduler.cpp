@@ -32,6 +32,13 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+extern "C"
+DeviceAccessScheduler *newAioLinuxScheduler(
+    DeviceAccessSchedulerParams const &params)
+{
+    return new AioLinuxScheduler(params);
+}
+
 AioLinuxScheduler::AioLinuxScheduler(
     DeviceAccessSchedulerParams const &params)
 {

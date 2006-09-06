@@ -48,11 +48,13 @@ AC_C_INLINE
 AC_TYPE_MODE_T
 AC_TYPE_SIZE_T
 
-dnl Checks for library functions.
+dnl Checks for library functions.  We dynamically load libaio, since
+dnl it is not always available, so override AC_CHECK_LIB to disable
+dnl automatic -l append
 AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror)
 AC_CHECK_LIB(uuid,uuid_generate)
-AC_CHECK_LIB(aio,io_queue_init)
+AC_CHECK_LIB(aio,io_queue_init,[AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])])
 
 dnl Check for Boost location
 AC_ARG_WITH([boost],
@@ -135,7 +137,7 @@ BOOST_LINKAGE=runtime-link-dynamic/shared-linkable-true
 BOOST_TOOLSET=gcc-stlport
 DLLEXT=so
 STLPORT_LIB_BASE=stlport_gcc
-EXTRA_LDFLAGS="-lpthread -lstdc++ -lgcc_s -lrt -release $VERSION"
+EXTRA_LDFLAGS="-lpthread -lstdc++ -lgcc_s -lrt -ldl -release $VERSION"
 boost_jam_platform=linuxx86
 lib_path_var=LD_LIBRARY_PATH
 jdk_platform=linux
@@ -165,6 +167,8 @@ dnl as a convenience library instead.  But on other platforms, building
 dnl it as a shared library helps reduce test executable sizes.
 AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
+
+AM_CONDITIONAL(HAVE_LIBAIO,test x$HAVE_LIBAIO=x1)
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
 

@@ -622,10 +622,9 @@ public class SqlLiteral
         case SqlTypeName.IntervalDayTime_ordinal:
             SqlIntervalLiteral.IntervalValue intervalValue =
                 (SqlIntervalLiteral.IntervalValue) value;
-            RelDataType t =
+            return
                 typeFactory.createSqlIntervalType(
                     intervalValue.getIntervalQualifier());
-            return typeFactory.createTypeWithNullability(t, false);
 
         case SqlTypeName.Symbol_ordinal:
             return typeFactory.createSqlType(SqlTypeName.Symbol);

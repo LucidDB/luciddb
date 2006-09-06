@@ -64,6 +64,9 @@ public class FarragoCalcSystemTest
         new HashMap<SqlOperator,Boolean>();
 
     static {
+        // TODO: Should also test these operators for java and fennel calcs
+        // if they the rewrites only involve operators that are implemented
+        // in the java and fennel calcs
         autoTab.put(SqlStdOperatorTable.betweenOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.notBetweenOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.selectOperator, Boolean.TRUE);
@@ -82,6 +85,7 @@ public class FarragoCalcSystemTest
         autoTab.put(SqlStdOperatorTable.avgOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.firstValueOperator, Boolean.TRUE);
         autoTab.put(SqlStdOperatorTable.lastValueOperator, Boolean.TRUE);
+        autoTab.put(SqlStdOperatorTable.extractFunc, Boolean.TRUE);
     }
 
     //~ Instance fields --------------------------------------------------------

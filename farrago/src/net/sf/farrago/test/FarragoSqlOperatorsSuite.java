@@ -285,6 +285,9 @@ public class FarragoSqlOperatorsSuite
             int actualTypeOrdinal = md.getColumnType(column);
             SqlTypeName actualSqlTypeName =
                 SqlTypeName.getNameForJdbcType(actualTypeOrdinal);
+            if (actualTypeOrdinal == Types.OTHER) {
+                return null;
+            }
             farragoTest.assertNotNull(actualSqlTypeName);
             farragoTest.assertEquals(
                 actualSqlTypeName.getName(),

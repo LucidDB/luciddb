@@ -25,7 +25,6 @@ package org.eigenbase.sql.type;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -84,7 +83,9 @@ public class IntervalSqlType
      * <code>INTERVAL SECOND</code> is<br>
      * <code>INTERVAL DAY TO SECOND</code>
      */
-    public IntervalSqlType combine(IntervalSqlType that)
+    public IntervalSqlType combine(
+        RelDataTypeFactoryImpl typeFactory,
+        IntervalSqlType that)
     {
         assert this.intervalQualifier.isYearMonth()
             == that.intervalQualifier.isYearMonth();
@@ -128,15 +129,17 @@ public class IntervalSqlType
             }
         }
 
-        return
-            new IntervalSqlType(
+        RelDataType intervalType =
+            typeFactory.createSqlIntervalType(
                 new SqlIntervalQualifier(
                     thisStart,
                     secondPrec,
                     thisEnd,
                     fracPrec,
-                    SqlParserPos.ZERO),
-                nullable);
+                    SqlParserPos.ZERO));
+        intervalType = typeFactory.createTypeWithNullability(
+            intervalType, nullable);
+        return (IntervalSqlType) intervalType;
     }
 
     // implement RelDataType
