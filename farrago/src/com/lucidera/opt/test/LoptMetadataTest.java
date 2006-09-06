@@ -28,6 +28,8 @@ import java.util.*;
 
 import junit.framework.*;
 
+import com.lucidera.opt.*;
+
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.session.*;
@@ -840,6 +842,60 @@ public class LoptMetadataTest
             COLSTORE_EMPS_ROWCOUNT * COLSTORE_DEPTS_ROWCOUNT * .5);
     }
 
+    public void testRowCountHashJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new LhxJoinRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps e, depts d "
+            + "where e.deptno = d.deptno");
+
+        Double result = RelMetadataQuery.getRowCount(rootRel);
+        assertTrue(result != null);
+        assertEquals(
+            COLSTORE_EMPS_ROWCOUNT,
+            result,
+            EPSILON);
+    }
+    
+    public void testRowCountLeftSemiJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new LhxJoinRule());
+        programBuilder.addRuleInstance(new LhxIntersectRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps intersect select * from emps");
+
+        Double result = RelMetadataQuery.getRowCount(rootRel);
+        assertTrue(result != null);
+        assertEquals(COLSTORE_EMPS_ROWCOUNT, result, EPSILON);
+    }
+    
+    public void testRowCountRightAntiJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new LhxJoinRule());
+        programBuilder.addRuleInstance(new LhxMinusRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps except select * from emps");
+
+        Double result = RelMetadataQuery.getRowCount(rootRel);
+        assertTrue(result != null);
+        assertEquals(COLSTORE_EMPS_ROWCOUNT, result, EPSILON);
+    }
+
     public void testSelectivityJoin()
         throws Exception
     {
@@ -1019,6 +1075,40 @@ public class LoptMetadataTest
             result.doubleValue(),
             EPSILON);
     }
+    
+    public void testDistinctRowCountHashJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new LhxJoinRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps e, depts d where e.deptno = d.deptno");
+
+        // get the distinct row count for emps.name
+        BitSet groupKey = new BitSet();
+        groupKey.set(1);
+        
+        Double result =
+            RelMetadataQuery.getDistinctRowCount(
+                rootRel,
+                groupKey,
+                null);
+        assertTrue(result != null);
+        double expected = 90000.0;
+        // call numDistinctVals twice -- once for the join and then once
+        // for the project; no need to call it a 3rd time for the semijoin
+        // because that doesn't reduce the distinct count any further
+        for (int i = 0; i < 2; i++) {
+            expected =
+                RelMdUtil.numDistinctVals(
+                    expected,
+                    (double) COLSTORE_EMPS_ROWCOUNT);
+        }
+        assertEquals(expected, result, EPSILON);
+    }
 
     private void testPopulationProjectedLcsTable(
         String sql,
@@ -1130,6 +1220,38 @@ public class LoptMetadataTest
             groupKey,
             expected,
             1.0);
+    }
+    
+    public void testPopulationHashJoin()
+        throws Exception
+    {
+        HepProgramBuilder programBuilder = new HepProgramBuilder();
+        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
+        programBuilder.addRuleInstance(new LhxJoinRule());
+        transformQuery(
+            programBuilder.createProgram(),
+            "select * from emps e, depts d where e.deptno = d.deptno");
+
+        // get the population for emps.name
+        BitSet groupKey = new BitSet();
+        groupKey.set(1);
+    
+        Double result =
+            RelMetadataQuery.getPopulationSize(
+                rootRel,
+                groupKey);
+        assertTrue(result != null);
+        double expected = 90000.0;
+        // call numDistinctVals three times -- once for the semijoin, once
+        // for the join and then once for the project
+        for (int i = 0; i < 3; i++) {
+            expected =
+                RelMdUtil.numDistinctVals(
+                    expected,
+                    (double) COLSTORE_EMPS_ROWCOUNT);
+        }
+        assertEquals(expected, result, EPSILON);
     }
 
     public void testUniqueKeysProjectedLcsTable()

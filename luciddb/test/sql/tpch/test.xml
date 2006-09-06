@@ -67,7 +67,7 @@
         <!-- TODO: LDB-64 -->
         <!-- ref file too large, not added until find way to reduce size -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/tpch/gen/${datasize}/10.sql"/>
       </test>

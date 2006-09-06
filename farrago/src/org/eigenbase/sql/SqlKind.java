@@ -556,6 +556,13 @@ public class SqlKind
     public static final SqlKind TopLevel =
         new SqlKind("TopLevel", TopLevelORDINAL);
 
+    /**
+     * Aggregate of SQL statement types {@link #Query}, {@link #Dml}.
+     */
+    public static final int ScalarQueryORDINAL = 305;
+    public static final SqlKind ScalarQuery =
+        new SqlKind("ScalarQuery", ScalarQueryORDINAL);
+
     public static final EnumeratedValues enumeration =
         new EnumeratedValues(
             new SqlKind[] {  // the basics
@@ -575,7 +582,7 @@ public class SqlKind
                 // row
             Row, Cast, Trim, 
                 // special
-            MultisetValueConstructor, MultisetQueryConstructor, LiteralChain, Unnest, Lateral });
+            MultisetValueConstructor, MultisetQueryConstructor, LiteralChain, Unnest, Lateral, ScalarQuery });
 
     //~ Constructors -----------------------------------------------------------
 

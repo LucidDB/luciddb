@@ -39,25 +39,34 @@ import org.eigenbase.sql.validate.*;
  * @version $Id$
  * @since April 17, 2006
  */
-class SqlInOperator
+public class SqlInOperator
     extends SqlBinaryOperator
 {
-
+    /**
+     * If true the call represents 'NOT IN'.
+     */
+    private final boolean isNotIn;
+    
     //~ Constructors -----------------------------------------------------------
 
-    SqlInOperator()
+    SqlInOperator(boolean isNotIn)
     {
-        super(
-            "IN",
+        super(isNotIn ? "NOT IN" : "IN",
             SqlKind.In,
             30,
             true,
             SqlTypeStrategies.rtiNullableBoolean,
             SqlTypeStrategies.otiFirstKnown,
             null);
+        this.isNotIn = isNotIn;
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public boolean isNotIn()
+    {
+        return isNotIn;
+    }
 
     public RelDataType deriveType(
         SqlValidator validator,

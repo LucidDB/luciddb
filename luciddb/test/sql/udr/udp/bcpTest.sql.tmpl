@@ -1,0 +1,53 @@
+set schema 'udptest';
+set path 'udptest';
+
+-- Test added for LDB-127
+-- check that field delimiter within bcp file is used if it's not specified
+-- in foreign server definition
+
+create server gen_ff_server
+foreign data wrapper "FLAT FILE"
+options (
+  directory '@EXPDIR@/local/basic',
+  line_delimiter '\n'
+);
+
+-- check tables
+select * from gen_ff_server.bcp."types" order by 1;
+ 
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP."bench100")));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP."types")));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.customers)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.dept)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.emp)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.location)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.products)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.sales)));
+select * from table( get_column_info(
+cursor(select * from gen_ff_server.BCP.empview)));
+
+-- check import
+create schema imp;
+import foreign schema bcp
+from server gen_ff_server
+into imp;
+
+select table_name, column_name, ordinal_position, datatype, "PRECISION", 
+  dec_digits, is_nullable
+from sys_root.dba_columns 
+where schema_name='IMP'
+order by 1,2,3;
+
+select * from imp."types" order by 1;
+
+-- cleanup
+drop schema imp cascade;
+drop server gen_ff_server cascade;

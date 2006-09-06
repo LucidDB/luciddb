@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/segment/ScratchSegment.h"
+#include "fennel/segment/ScratchMemExcn.h"
 #include "fennel/cache/Cache.h"
 #include "fennel/common/FennelExcn.h"
 
@@ -88,10 +89,8 @@ PageId ScratchSegment::allocatePageId(PageOwnerId)
     BlockNum blockNum = pages.size();
     CachePage *pPage = getCache()->lockScratchPage(blockNum);
     if (!pPage) {
-        // TODO jvs 23-Apr-2006:  i18n if this becomes permanent;
-        // right now it's a hack until resource balancing is available
-        throw FennelExcn("Cache scratch memory exhausted");
-    }
+        throw ScratchMemExcn();
+    } 
     pages.push_back(pPage);
     return getLinearPageId(blockNum);
 }

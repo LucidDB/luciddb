@@ -115,7 +115,7 @@ class LbmEntry : public LbmSegment
     /**
      * Set rid in the specified segment byte.
      *
-     * @param pSegBtye the specified segment byte.
+     * @param pSegByte the specified segment byte.
      * @param rid the rid to set the bit for.
      */
     inline void setRIDSegByte(PBuffer pSegByte, LcsRid rid);
@@ -193,10 +193,10 @@ class LbmEntry : public LbmSegment
      * contained in the current entry, by going through
      * the segement descriptors from the start to the end.
      *
-     * @param[out] lastLengthDescBytes the number of additional bytes required
+     * @param [out] lastLengthDescBytes the number of additional bytes required
      * to store the length of zero bytes
      *
-     * @param[out] lastZeroBytes number of zero bytes if lastLengthDescBytes is
+     * @param [out] lastZeroBytes number of zero bytes if lastLengthDescBytes is
      * non-zero.
      *
      * @return number of rows contained in this entry.
@@ -217,8 +217,6 @@ class LbmEntry : public LbmSegment
      *
      * @param reserveSpace the number of bytes to reserve in the scratch buffer
      *
-     * @param addDesc add descriptors to single bitmap entry
-     *
      * @return true if there is enough room to grow the current entry to rid;
      * false otherwise.
      */
@@ -230,7 +228,7 @@ class LbmEntry : public LbmSegment
      * byte-long bitmaps into the last byte of the current entry, and remove
      * the first bitmap byte from the input entry.
      *
-     * @param[in|out] the input entry tuple
+     * @param [in, out] inputTuple the input entry tuple
      *
      * @return true if the adjusted current entry includes the entire input
      * entry. In that case no merging is required later.
@@ -241,7 +239,8 @@ class LbmEntry : public LbmSegment
      * Add segment descriptors to a single bitmap entry, if the resulting
      * entry can have reservedSpace free.
      *
-     * @param[in] bitmap segment length to add descriptors for.
+     * @param [in] reservedSpace amount of space in reserve
+     * @param [in] bitmapLength bitmap segment length to add descriptors for.
      * 
      * @return true if the new descriptors can fit.
      */
@@ -255,7 +254,7 @@ class LbmEntry : public LbmSegment
     /**
      * Splices a singleton input into the current entry.
      *
-     * @param[in|out] inputTuple the input entry singleton
+     * @param [in, out] inputTuple the input entry singleton
      *
      * @return true if there is enough space in the current entry to splice
      * in the singleton input entry; false otherwise
@@ -280,7 +279,7 @@ class LbmEntry : public LbmSegment
      * segment corresponding to a singleton input.  I.e., replaces a byte
      * that's currently a "zero byte" with a byte containing a singleton rid.
      *
-     * @param[in|out] inputTuple the input entry singleton
+     * @param [in, out] inputTuple the input entry singleton
      * @param prevSrid starting rid of the segment that the new segment will be
      * inserted after
      * @param prevSegDesc pointer to the segment descriptor corresponding to the
@@ -306,7 +305,7 @@ class LbmEntry : public LbmSegment
      * Creates a new segment in between two segments containing a singleton
      * rid.
      *
-     * @param[in|out] inputTuple the input entry singleton
+     * @param [in, out] inputTuple the input entry singleton
      * @param prevSrid starting rid of the segment that the new segment will be
      * inserted after
      * @param prevSegDesc pointer to the segment descriptor corresponding to the
@@ -334,7 +333,7 @@ class LbmEntry : public LbmSegment
      * that's currently a "zero byte" with a byte containing a singleton rid.
      * If possible, combines adjacents segments into larger segments.
      *
-     * @param[in|out] inputTuple the input entry singleton
+     * @param [in, out] inputTuple the input entry singleton
      * @param prevSrid starting rid of the segment that the new segment will be
      * inserted after
      * @param prevSegDesc pointer to the segment descriptor corresponding to the
@@ -391,7 +390,7 @@ class LbmEntry : public LbmSegment
      * singleton, and merges the input singleton into the appropriate half.
      * The second half is copied into the input tuple.
      *
-     * @param[in|out] inputTuple input singleton to be merged in
+     * @param [in, out] inputTuple input singleton to be merged in
      */
     void splitEntry(TupleData &inputTuple);
 
@@ -399,7 +398,7 @@ class LbmEntry : public LbmSegment
      * Merges a singleton input into an entry that has just been split off from
      * the current entry
      *
-     * @param inputTuple[in|out] input singleton
+     * @param inputTuple [in|out] input singleton
      * @param splitEntry the split off entry
      */
     void mergeIntoSplitEntry(
@@ -467,12 +466,11 @@ class LbmEntry : public LbmSegment
                                 string prefix, LcsRid srid);
 
     /**
+     * Determines the amount of space required to merge an input tuple
+     *
+     * @param [in] inputTuple the input tuple
      * 
-     * @param[in] the left over space to fit the additional segment
-     * descriptors.
-     * 
-     * @return true if the single bitmap is small and the new descriptors can
-     * fit.
+     * @return the amount of space required for the merge
      */
     static uint getMergeSpaceRequired(TupleData const &inputTuple);
 
@@ -556,7 +554,8 @@ public:
      * current. The rids represented by the input must be larger than the
      * rids in the current entry, unless the input is a singleton.
      *
-     * @param[in|out] inputTuple
+     * @param [in, out] inputTuple the input tuple
+     *
      * @return false if merged entry can not fit into the maximum entry size.  
      *
      */
@@ -595,10 +594,10 @@ public:
      * Return the min and the max entry size, based on index tuple descriptor
      * , page size and preferred minimum entries per page.
      *
-     * @param[in] indexTupleDesc the tuple descriptor for the index entries.
-     * @param[in] pageSize the index leaf node size.
-     * @param[out] minEntrySize minimum entry size.
-     * @param[out] maxEntrySize maximum entry size.
+     * @param [in] indexTupleDesc the tuple descriptor for the index entries.
+     * @param [in] pageSize the index leaf node size.
+     * @param [out] minEntrySize minimum entry size.
+     * @param [out] maxEntrySize maximum entry size.
      */
     static void getSizeBounds(
         TupleDescriptor const &indexTupleDesc, uint pageSize,

@@ -63,12 +63,12 @@ public class LhxJoinRel
     /**
      * row count on the build side
      */
-    int numBuildRows;
+    long numBuildRows;
 
     /**
      * cardinality of the build key
      */
-    int cndBuildKey;
+    long cndBuildKey;
 
     /**
      * This LhxJoinRel implements setop, one of the following: intersect
@@ -98,8 +98,8 @@ public class LhxJoinRel
         List<Integer> leftKeys,
         List<Integer> rightKeys,
         List<String> fieldNameList,
-        int numBuildRows,
-        int cndBuildKey)
+        long numBuildRows,
+        long cndBuildKey)
     {
         super(cluster, left, right);
         assert joinType != null;
@@ -164,18 +164,7 @@ public class LhxJoinRel
     // implement RelNode
     public double getRows()
     {
-        double resultRowCount = 0;
-
-        if (joinType == LhxJoinRelType.LEFTSEMI) {
-            resultRowCount = RelMetadataQuery.getRowCount(left);
-        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
-            resultRowCount = RelMetadataQuery.getRowCount(right);
-        } else {
-            resultRowCount =
-                RelMetadataQuery.getRowCount(left)
-                * RelMetadataQuery.getRowCount(right);
-        }
-        return resultRowCount;
+        return RelMetadataQuery.getRowCount(this);
     }
 
     // override RelNode
@@ -284,6 +273,31 @@ public class LhxJoinRel
                 rightKeys));
 
         return streamDef;
+    }
+    
+    public LhxJoinRelType getJoinType()
+    {
+        return joinType;
+    }
+    
+    public RelNode getLeft()
+    {
+        return left;
+    }
+    
+    public RelNode getRight()
+    {
+        return right;
+    }
+    
+    public List<Integer> getLeftKeys()
+    {
+        return leftKeys;
+    }
+    
+    public List<Integer> getRightKeys()
+    {
+        return rightKeys;
     }
 }
 

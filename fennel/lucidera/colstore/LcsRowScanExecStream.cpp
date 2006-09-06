@@ -23,8 +23,87 @@
 #include "fennel/tuple/StandardTypeDescriptor.h"
 #include "fennel/lucidera/colstore/LcsRowScanExecStream.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/common/SearchEndpoint.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
+
+
+void LcsRowScanExecStream::prepareResidualFilters(
+    LcsRowScanExecStreamParams const &params)
+{
+
+    /*
+     * compute the outputTupleData position of filter columns
+     */
+    std::vector<uint> valueCols;
+    uint j, k = 0;
+    for (uint i = 0;  i < params.residualFilterCols.size(); i++) {
+        for (j = 0; j < params.outputProj.size(); j++) {
+            if (params.outputProj[j] == params.residualFilterCols[i]) {
+                valueCols.push_back(j);
+                break;
+            }
+        }
+
+        if (j >= params.outputProj.size()) {
+            valueCols.push_back(params.outputProj.size() +  k);
+            k++;
+        }
+    }
+
+    /*
+     * compute the cluster id and cluster position
+     */
+    uint valueClus;
+    uint clusterPos;
+    uint clusterStart = 0;
+    uint realClusterStart = 0;
+
+    for (uint i = 0; i < nClusters; i++) {
+        uint clusterEnd = clusterStart +
+            params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
+
+        for (uint j = 0; j < params.residualFilterCols.size(); j++) {
+            if (params.residualFilterCols[j] >= clusterStart &&
+                params.residualFilterCols[j] <= clusterEnd)
+            {
+                valueClus = i;
+
+                /*
+                 * find the position within the cluster
+                 */
+                for (uint k = 0; k < projMap.size(); k++) {
+                    if (projMap[k] == valueCols[j]) {
+                        clusterPos = k - realClusterStart;
+
+                        LcsResidualColumnFilters &filter =
+                            pClusters[valueClus]->
+                            clusterCols[clusterPos].
+                            getFilters();
+
+                        filters.push_back(&filter);
+
+                        filter.hasResidualFilters = true;
+  
+                        filter.readerKeyProj.push_back(valueCols[j]);
+                        filter.inputKeyDesc.projectFrom(projDescriptor, 
+                            filter.readerKeyProj);
+
+                        filter.lowerBoundProj.push_back(1);
+                        filter.upperBoundProj.push_back(3);
+                        filter.readerKeyData.computeAndAllocate(
+                            filter.inputKeyDesc);
+
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        clusterStart = clusterEnd + 1;
+        realClusterStart += pClusters[i]->nColsToRead;
+    }
+}
 
 void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
 {
@@ -44,9 +123,28 @@ void LcsRowScanExecStream::prepare(LcsRowScanExecStreamParams const &params)
         stdTypeFactory.newDataType(STANDARD_TYPE_RECORDNUM));
     assert(inputDesc[0] == expectedRidDesc);
 
-    assert(projDescriptor == pOutAccessor->getTupleDesc());
-    pOutAccessor->setTupleShape(projDescriptor);
+    assert(hasExtraFilter == (inAccessors.size() > 1));
+
+    if (hasExtraFilter) {
+        prepareResidualFilters(params);
+    }
+
+    /* 
+     * projDescriptor now also includes filter columns 
+     */
+    for (uint i = 0; i < params.outputProj.size(); i++) {
+        outputProj.push_back(i);
+    }
+
+    pOutAccessor->setTupleShape(pOutAccessor->getTupleDesc());
     outputTupleData.computeAndAllocate(projDescriptor);
+
+    /* 
+     * build the real output accessor 
+     * it will be used to unmarshal data into the 
+     * real output row: projOutputTuple.
+     */
+    projOutputTupleData.compute(pOutAccessor->getTupleDesc());
 }
 
 void LcsRowScanExecStream::open(bool restart)
@@ -61,6 +159,11 @@ void LcsRowScanExecStream::open(bool restart)
         deletedRidEos = false;
     }
     ridReader.init(inAccessors[0], ridTupleData);
+
+    /*
+     * read from the 1st input
+     */
+    iFilterToInitialize = 0;
 }
 
 void LcsRowScanExecStream::getResourceRequirements(
@@ -70,6 +173,69 @@ void LcsRowScanExecStream::getResourceRequirements(
     LcsRowScanBaseExecStream::getResourceRequirements(minQuantity, optQuantity);
 }
 
+bool LcsRowScanExecStream::initializeFiltersIfNeeded()
+{
+    /*
+     * initialize the filters local data
+     */
+    for (; iFilterToInitialize < inAccessors.size()-1; iFilterToInitialize++) {
+        SharedExecStreamBufAccessor &pInAccessor = 
+            inAccessors[iFilterToInitialize + 1];
+        TupleAccessor &inputAccessor = 
+            pInAccessor->getConsumptionTupleAccessor();
+        
+        if (pInAccessor->getState() != EXECBUF_EOS) {
+            LcsResidualColumnFilters *filter = filters[iFilterToInitialize]; 
+
+            while (pInAccessor->demandData()) {
+                SharedLcsResidualFilter filterData(new LcsResidualFilter);
+
+                pInAccessor->accessConsumptionTuple();
+
+                /*
+                 * Build lower and upper bound data
+                 */
+                filterData->boundData.compute(pInAccessor->getTupleDesc());
+                filterData->boundBuf.reset(
+                    new FixedBuffer[inputAccessor.getCurrentByteCount()]);
+    
+                memcpy(filterData->boundBuf.get(),  
+                    pInAccessor->getConsumptionStart(),
+                    inputAccessor.getCurrentByteCount());
+
+                /*
+                 * inputAccessor is used to unmarshal into boundData.
+                 * in order to do this, its current buffer is set to
+                 * boundBuf and restored.
+                 */
+                PConstBuffer tmpBuf;
+                tmpBuf = inputAccessor.getCurrentTupleBuf();
+                inputAccessor.setCurrentTupleBuf(filterData->boundBuf.get());
+                inputAccessor.unmarshal(filterData->boundData);
+                inputAccessor.setCurrentTupleBuf(tmpBuf);
+      
+                /*
+                 * record directives.
+                 */
+                filterData->lowerBoundDirective =
+                    SearchEndpoint(*filterData->boundData[0].pData);
+                filterData->upperBoundDirective =
+                    SearchEndpoint(*filterData->boundData[2].pData);
+      
+                filter->filterData.push_back(filterData);
+
+                pInAccessor->consumeTuple();
+            }
+  
+            if (pInAccessor->getState() != EXECBUF_EOS) {
+                return false;
+            }
+        }
+    } 
+    return true;
+}
+
+
 ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 {
     if (!isFullScan && inAccessors[0]->getState() == EXECBUF_EOS) {
@@ -77,6 +243,10 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         // Full table scan does not have any input.
         pOutAccessor->markEOS();
         return EXECRC_EOS;
+    }
+
+    if (!initializeFiltersIfNeeded()) {
+        return EXECRC_BUF_UNDERFLOW;
     }
 
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
@@ -161,7 +331,9 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                         opaqueToInt(rid - pScan->getCurrentRid()));
                 }
 
-                readColVals(pScan, outputTupleData, prevClusterEnd);
+                if (!readColVals(pScan, outputTupleData, prevClusterEnd)) {
+                    break;
+                }
                 prevClusterEnd += pScan->nColsToRead;
             }
 
@@ -172,7 +344,8 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
         }
             
         // produce tuple
-        if (tupleFound && !pOutAccessor->produceTuple(outputTupleData)) {
+        projOutputTupleData.projectFrom(outputTupleData, outputProj);
+        if (tupleFound && !pOutAccessor->produceTuple(projOutputTupleData)) {
             return EXECRC_BUF_OVERFLOW;
         }
         producePending = false;
@@ -197,6 +370,38 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
 void LcsRowScanExecStream::closeImpl()
 {
     LcsRowScanBaseExecStream::closeImpl();
+
+    for (uint i = 0; i < filters.size(); i++) {
+        filters[i]->filterData.clear();
+    }
+}
+
+void LcsRowScanExecStream::buildOutputProj(TupleProjection &outputProj,
+                            LcsRowScanBaseExecStreamParams const &params)
+{
+    LcsRowScanExecStreamParams const &rowScanParams = 
+        dynamic_cast<const LcsRowScanExecStreamParams&>(params);
+
+    /*
+     * Build a projection that contains filter columns
+     */
+    for (uint i = 0; i < rowScanParams.outputProj.size(); i++) {
+        outputProj.push_back(rowScanParams.outputProj[i]);
+    }
+    for (uint i = 0; i < rowScanParams.residualFilterCols.size(); i++) {
+        uint j;
+        for (j = 0; j < rowScanParams.outputProj.size(); j++) {
+            if (rowScanParams.outputProj[j] == 
+                rowScanParams.residualFilterCols[i])
+            {
+                break;
+            }
+        }
+    
+        if (j >= rowScanParams.outputProj.size()) {
+            outputProj.push_back(rowScanParams.residualFilterCols[i]);
+        }
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

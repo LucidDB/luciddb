@@ -143,12 +143,12 @@ public abstract class FlattenRecursiveHierarchyUdx
      * Builds the directed graph from input table
      * @param inputSet input table
      * @param inGraph 
-     * @exception SQLException
+     * @exception ApplibException SQLException
      */
     private static void buildGraphFromInput(
         ResultSet inputSet,
         DirectedGraph<String, DefaultEdge> inGraph)
-        throws SQLException
+        throws ApplibException, SQLException
     {
 
         String parent, child;
@@ -157,7 +157,12 @@ public abstract class FlattenRecursiveHierarchyUdx
             parent = inputSet.getString(1);
             child = inputSet.getString(2);
 
-            inGraph.addVertex(child);
+            if (child == null) {
+                throw ApplibResourceObject.get().NullChild.ex(parent);
+            }
+            else {
+                inGraph.addVertex(child);
+            }
 
             if (parent != null) {
                 inGraph.addVertex(parent);   

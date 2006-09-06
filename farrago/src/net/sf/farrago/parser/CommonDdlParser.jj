@@ -262,6 +262,8 @@ DdlStmt DdlStmtEof() :
             <SESSION>
             (
                 <IMPLEMENTATION> ddlStmt = SessionImplementation()
+                |
+                <SET> ddlStmt = SessionParamAssignment()
             )
             |
             <TABLE> ddlStmt = AlterTableStmt()
@@ -1357,6 +1359,21 @@ DdlStmt SystemParamAssignment() :
     paramValue = SystemParamValue()
     {
         return new DdlSetSystemParamStmt(
+            paramName.getSimple(),paramValue);
+    }
+}
+
+DdlStmt SessionParamAssignment() :
+{
+    SqlIdentifier paramName;
+    SqlLiteral paramValue;
+}
+{
+    paramName = SimpleIdentifier()
+    <EQ>
+    paramValue = SystemParamValue()
+    {
+        return new DdlSetSessionParamStmt(
             paramName.getSimple(),paramValue);
     }
 }

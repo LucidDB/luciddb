@@ -37,7 +37,7 @@
         -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcDate.sql"/>
       </test>
@@ -48,7 +48,7 @@
         -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcConvert.sql"/>
       </test>
@@ -59,7 +59,7 @@
         -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/funcInterval.sql"/>
       </test>
@@ -103,7 +103,7 @@
         -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/mathDate.sql"/>
       </test>
@@ -132,7 +132,7 @@
         <!-- TODO: UTL-9 -->
         <!-- French symbols not supported yet -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/like.sql"/>
       </test>
@@ -155,7 +155,7 @@
         <!-- no system paremeter DIVISIONRESULTSCALE -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/divisionScale.sql"/>
       </test>
@@ -196,7 +196,7 @@
       <test name="bug8665" requiresSuccess="cretables">
         <!-- no sql file -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8665.sql"/>
       </test>
@@ -215,7 +215,7 @@
         <!-- no sql file -->
         <!-- designed to test memory allocation for calc; test skipped -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug11665.sql"/>
       </test>
@@ -227,7 +227,7 @@
       <test name="bug12473" requiresSuccess="cretables">
         <!-- no sql file ; test skipped -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12473.sql"/>
       </test>
@@ -238,7 +238,7 @@
         -->
         <!-- no tests to include -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug8895.sql"/>
       </test>
@@ -246,7 +246,7 @@
       <test name="bug12909" requiresSuccess="cretables">
         <!-- no sql file -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug12909.sql"/>
       </test>
@@ -254,7 +254,7 @@
       <test name="bug9125" requiresSuccess="cretables">
         <!-- no sql file -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug9125.sql"/>
       </test>
@@ -262,7 +262,7 @@
       <test name="bug55046" requiresSuccess="cretables">
         <!-- no sql file -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug55046.sql"/>
       </test>
@@ -270,7 +270,7 @@
       <test name="varbinary" requiresSuccess="cretables">
         <!-- unresolved issue: JIRA FRG-147 FRG-148 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>   
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/varbinary.sql"/>
       </test>

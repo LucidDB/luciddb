@@ -51,6 +51,7 @@ FennelResource::FennelResource(Locale locale)
       _rowTooLong(this, "rowTooLong"),
       _invalidParam(this, "invalidParam"),
       _scalarQueryReturnedMultipleRows(this, "scalarQueryReturnedMultipleRows"),
+      _scratchMemExhausted(this, "scratchMemExhausted"),
       _readDataFailed(this, "readDataFailed"),
       _dataTransferFailed(this, "dataTransferFailed"),
       _writeLogFailed(this, "writeLogFailed"),
@@ -93,6 +94,10 @@ string FennelResource::invalidParam(const std::string &p0, const std::string &p1
 string FennelResource::scalarQueryReturnedMultipleRows() const
 {
     return _scalarQueryReturnedMultipleRows.format();
+}
+string FennelResource::scratchMemExhausted() const
+{
+    return _scratchMemExhausted.format();
 }
 string FennelResource::readDataFailed(const std::string &p0) const
 {
@@ -142,9 +147,9 @@ string FennelResource::flatfileDescribeFailed(const std::string &p0) const
 {
     return _flatfileDescribeFailed.format(p0);
 }
-string FennelResource::flatfileNoHeader(const std::string &p0) const
+string FennelResource::flatfileNoHeader(const std::string &p0, const std::string &p1) const
 {
-    return _flatfileNoHeader.format(p0);
+    return _flatfileNoHeader.format(p0, p1);
 }
 
 } // end namespace fennel

@@ -541,11 +541,13 @@ public abstract class JmiObjUtil
     }
 
     /**
-     * Asserts that constraints are satisfied. I tried using
-     * refVerifyConstraints to achieve this, but it didn't work in MDR. For now,
-     * this just checks that mandatory features have non-null values.
+     * Asserts that constraints are satisfied. This method exists because
+     * refVerifyConstraints didn't used to work MDR.  Now it does,
+     * so this method is deprecated.
      *
      * @param obj the object to be verified
+     *
+     * @deprecated use {@link RefBaseObject#refVerifyConstraints} instead
      */
     public static void assertConstraints(RefObject obj)
     {
@@ -573,6 +575,38 @@ public abstract class JmiObjUtil
                         + " in object " + objectName;
                 }
             }
+        }
+    }
+
+    /**
+     * Sets default values for mandatory attributes of primitive type (e.g.
+     * false for boolean).  MDR actually doesn't require this (it synthesizes
+     * the default values on demand), except in refVerifyConstraints, so we
+     * call this just before invoking that method.
+     *
+     * @param obj the object being updated
+     */
+    public static void setMandatoryPrimitiveDefaults(RefObject obj)
+    {
+        RefClass refClass = obj.refClass();
+        for (Attribute attr : getFeatures(refClass, Attribute.class, false)) {
+            if (!attr.isChangeable()) {
+                continue;
+            }
+            if (attr.getMultiplicity().getLower() == 0) {
+                continue;
+            }
+            // This is imprecise but does the job.
+            Object val = obj.refGetValue(attr);
+            if (val == null) {
+                // No default available
+                continue;
+            }
+            if (val instanceof RefObject) {
+                // Not a primitive
+                continue;
+            }
+            obj.refSetValue(attr, obj.refGetValue(attr));
         }
     }
 

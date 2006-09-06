@@ -26,8 +26,6 @@ import java.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util14.*;
-
 
 /**
  * RelMdPopulationSize supplies a default implementation of {@link
@@ -86,29 +84,8 @@ public class RelMdPopulationSize
 
     public Double getPopulationSize(JoinRelBase rel, BitSet groupKey)
     {
-        BitSet leftMask = new BitSet();
-        BitSet rightMask = new BitSet();
-
-        // separate the mask into masks for the left and right
-        RelMdUtil.setLeftRightBitmaps(
-            groupKey,
-            leftMask,
-            rightMask,
-            rel.getLeft().getRowType().getFieldCount());
-
-        Double population =
-            NumberUtil.multiply(
-                RelMetadataQuery.getPopulationSize(
-                    rel.getLeft(),
-                    leftMask),
-                RelMetadataQuery.getPopulationSize(
-                    rel.getRight(),
-                    rightMask));
-
-        return
-            RelMdUtil.numDistinctVals(
-                population,
-                RelMetadataQuery.getRowCount(rel));
+        return RelMdUtil.getJoinPopulationSize(
+            rel, rel.getLeft(), rel.getRight(), groupKey);
     }
 
     public Double getPopulationSize(SemiJoinRel rel, BitSet groupKey)

@@ -59,7 +59,7 @@
 . . . . . . . . > select t.r."EXPR$1", t.r."EXPR$0"
 . . . . . . . . > from (select row(1,2) r from sales.depts) t;
 'column0'
-'IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[2], EXPR$1=[$t2], EXPR$0=[$t1])'
+'IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[1], EXPR$1=[$t1], EXPR$0=[$t2])'
 '  FennelToIteratorConverter'
 '    FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 

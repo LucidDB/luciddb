@@ -1548,6 +1548,37 @@ public class SqlValidatorImpl
         String alias,
         boolean forceNullable)
     {
+        registerQuery(
+            parentScope,
+            usingScope,
+            node,
+            alias,
+            forceNullable,
+            true);
+    }
+    
+    /**
+     * Registers a query in a parent scope.
+     *
+     * @param parentScope Parent scope which this scope turns to in order to
+     * resolve objects
+     * @param usingScope Scope whose child list this scope should add itself to
+     * @param node
+     * @param alias Name of this query within its parent. Must be specified if
+     * usingScope != null
+     * @param checkUpdate if true, validate that the update feature is
+     * supported if validating the update statement
+     *
+     * @pre usingScope == null || alias != null
+     */
+    private void registerQuery(
+        SqlValidatorScope parentScope,
+        SqlValidatorScope usingScope,
+        SqlNode node,
+        String alias,
+        boolean forceNullable,
+        boolean checkUpdate)
+    {
         Util.pre((usingScope == null) || (alias != null),
             "usingScope == null || alias != null");
 
@@ -1598,7 +1629,7 @@ public class SqlValidatorImpl
             registerSubqueries(
                 aggScope,
                 select.getHaving());
-            registerSubqueries(
+            registerScalarSubqueries(
                 aggScope,
                 select.getSelectList());
             final SqlNodeList orderList = select.getOrderList();
@@ -1681,6 +1712,11 @@ public class SqlValidatorImpl
             break;
 
         case SqlKind.UpdateORDINAL:
+            if (checkUpdate) {
+                validateFeature(
+                    EigenbaseResource.instance().SQLFeature_E101_03,
+                    node.getParserPosition());
+            }
             SqlUpdate updateCall = (SqlUpdate) node;
             UpdateNamespace updateNs = new UpdateNamespace(this, updateCall);
             registerNamespace(usingScope, null, updateNs, forceNullable);
@@ -1708,13 +1744,15 @@ public class SqlValidatorImpl
 
             // update call can reference either the source table reference
             // or the target table, so set its parent scope to the merge's
-            // source select
+            // source select; when validating the update, skip the feature
+            // validation check
             if (mergeCall.getUpdateCall() != null) {
                 registerQuery(
                     (ListScope) whereScopes.get(mergeCall.getSourceSelect()),
                     null,
                     mergeCall.getUpdateCall(),
                     null,
+                    false,
                     false);
             }
             if (mergeCall.getInsertCall() != null) {
@@ -1805,6 +1843,44 @@ public class SqlValidatorImpl
             || (expr instanceof SqlDataTypeSpec);
     }
 
+    private void registerScalarSubqueries(
+        SqlValidatorScope parentScope,
+        SqlNode node)
+    {
+        if (node instanceof SqlCall) {
+            SqlCall call = (SqlCall) node;
+            final SqlNode [] operands = call.getOperands();
+            for (int i = 0; i < operands.length; i++) {
+                SqlNode operand = operands[i];
+                if (operand.isA(SqlKind.Query)) {
+                    operand =
+                        SqlStdOperatorTable.scalarQueryOperator
+                            .createCall(
+                                operand,
+                                operand.getParserPosition());    
+                    operands[i] = operand;
+                }
+                registerSubqueries(parentScope, operand);
+            }
+        } else if (node instanceof SqlNodeList) {
+            SqlNodeList list = (SqlNodeList) node;
+            for (int i = 0, count = list.size(); i < count; i++) {
+                SqlNode listNode = list.get(i);
+                if (listNode.isA(SqlKind.Query)) {
+                    listNode =
+                        SqlStdOperatorTable.scalarQueryOperator
+                            .createCall(
+                                listNode,
+                                listNode.getParserPosition());    
+                    list.set(i, listNode);
+                }
+                registerSubqueries(parentScope, listNode);
+            }            
+        } else {
+            ;
+        }
+    }
+    
     private void registerSubqueries(
         SqlValidatorScope parentScope,
         SqlNode node)
@@ -1817,6 +1893,26 @@ public class SqlValidatorImpl
             registerQuery(parentScope, null, node, null, false);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
+            SqlOperator operator = call.getOperator();
+            
+            boolean requireScalarOperand = false; 
+            if (operator instanceof SqlFunction) {
+                SqlFunction function = (SqlFunction) operator;
+                if (function instanceof SqlAggFunction) {
+                    requireScalarOperand = true;
+                }
+            } else {
+                SqlOperandTypeChecker typeChecker = operator.getOperandTypeChecker();
+                if ((typeChecker ==  SqlTypeStrategies.otcComparableOrderedX2 ||
+                     typeChecker ==  SqlTypeStrategies.otcComparableUnorderedX2)) {
+                    requireScalarOperand = true;
+                }
+            }
+            
+            if (requireScalarOperand) {
+                registerScalarSubqueries(parentScope, node);                
+            }
+            
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
                 SqlNode operand = operands[i];
@@ -1825,15 +1921,17 @@ public class SqlValidatorImpl
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
+                SqlNode listNode = list.get(i);
+
                 registerSubqueries(
                     parentScope,
-                    list.get(i));
+                    listNode);
             }
         } else {
             ; // atomic node -- can be ignored
         }
     }
-
+    
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
         final SqlIdentifier fqId = scope.fullyQualify(id);

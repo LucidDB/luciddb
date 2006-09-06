@@ -109,6 +109,7 @@ public class SameOperandTypeChecker
         if (type1.isStruct() != type2.isStruct()) {
             return false;
         }
+        
         if (type1.isStruct()) {
             int n = type1.getFieldCount();
             if (n != type2.getFieldCount()) {

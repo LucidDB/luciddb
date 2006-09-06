@@ -23,6 +23,7 @@
 package org.eigenbase.rel;
 
 import org.eigenbase.relopt.*;
+import org.eigenbase.rel.metadata.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
@@ -39,6 +40,7 @@ public final class SortRel
 
     protected final RelFieldCollation [] collations;
     protected final RexNode [] fieldExps;
+    protected final Double estimatedNumRows;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -70,6 +72,8 @@ public final class SortRel
                     fields[iField].getType(),
                     iField);
         }
+        // save the input row count while we still have logical RelNodes
+        estimatedNumRows = RelMetadataQuery.getRowCount(child);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -97,6 +101,14 @@ public final class SortRel
     public RelFieldCollation [] getCollations()
     {
         return collations;
+    }
+    
+    /**
+     * @return estimated number of rows in the sort input
+     */
+    public Double getEstimatedNumRows()
+    {
+        return estimatedNumRows;
     }
 
     public void explain(RelOptPlanWriter pw)

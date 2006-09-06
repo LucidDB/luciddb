@@ -123,6 +123,7 @@
 | SYS_BOOT   | MGMT           | ROW_COUNTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | SEQUENCES_VIEW                    | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | SESSIONS_VIEW                     | VIEW        |          |           |             |            |                            |                 |
+| SYS_BOOT   | MGMT           | SESSION_PARAMETERS_VIEW           | VIEW        |          |           |             |            |                            |                 |
 | SYS_BOOT   | MGMT           | STATEMENTS_VIEW                   | VIEW        |          |           |             |            |                            |                 |
 +------------+----------------+-----------------------------------+-------------+----------+-----------+-------------+------------+----------------------------+-----------------+
 0: jdbc:farrago:> 

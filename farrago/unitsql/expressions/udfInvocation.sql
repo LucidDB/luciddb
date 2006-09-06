@@ -100,6 +100,14 @@ no sql
 deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
 
+create function null_preserving_atoi(s varchar(128))
+returns int
+language java
+no sql
+returns null on null input
+deterministic
+external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
+
 create function atoi_with_null_for_err(s varchar(128))
 returns int
 language java
@@ -246,6 +254,10 @@ values good_atoi('451');
 
 -- this should fail
 values good_atoi('nineoneone');
+
+values null_preserving_atoi(cast(null as varchar(128)));
+
+values null_preserving_atoi('451');
 
 values stirfry('Alley');
 

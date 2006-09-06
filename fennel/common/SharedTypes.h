@@ -153,6 +153,13 @@ typedef boost::shared_ptr<ExecStreamFactory> SharedExecStreamFactory;
 class ExecStreamSubFactory;
 typedef boost::shared_ptr<ExecStreamSubFactory> SharedExecStreamSubFactory;
 
+class ExecStreamResourceQuantity;
+typedef boost::shared_ptr<ExecStreamResourceQuantity>
+    SharedExecStreamResourceQuantity;
+
+class ExecStreamGovernor;
+typedef boost::shared_ptr<ExecStreamGovernor> SharedExecStreamGovernor;
+
 class FtrsTableWriter;
 typedef boost::shared_ptr<FtrsTableWriter> SharedFtrsTableWriter;
 
@@ -198,6 +205,12 @@ typedef boost::shared_ptr<LhxPartitionWriter> SharedLhxPartitionWriter;
 
 class LhxPlan;
 typedef boost::shared_ptr<LhxPlan> SharedLhxPlan;
+
+class LhxPlan;
+typedef boost::weak_ptr<LhxPlan> WeakLhxPlan;
+
+struct LcsResidualFilter;
+typedef boost::shared_ptr<LcsResidualFilter> SharedLcsResidualFilter;
 
 FENNEL_END_NAMESPACE
 

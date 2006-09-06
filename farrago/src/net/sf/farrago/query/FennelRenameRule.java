@@ -22,14 +22,8 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FennelRenameRule is a rule for converting a rename-only Project into
@@ -66,42 +60,13 @@ public class FennelRenameRule
     public void onMatch(RelOptRuleCall call)
     {
         ProjectRel project = (ProjectRel) call.rels[0];
-        if (!project.isBoxed()) {
-            return;
-        }
-
-        RelNode inputRel = project.getChild();
-
-        int n = project.getProjectExps().length;
-        RelDataType inputType = inputRel.getRowType();
-        if (inputType.getFieldList().size() != n) {
-            return;
-        }
-        RelDataType projType = project.getRowType();
-        RelDataTypeField [] projFields = projType.getFields();
-        RelDataTypeField [] inputFields = inputType.getFields();
-        String [] fieldNames = new String[n];
-        boolean needRename = false;
-        for (int i = 0; i < n; ++i) {
-            RexNode exp = project.getProjectExps()[i];
-            if (!(exp instanceof RexInputRef)) {
-                return;
-            }
-            RexInputRef fieldAccess = (RexInputRef) exp;
-            if (i != fieldAccess.getIndex()) {
-                // can't support reorder yet
-                return;
-            }
-            String inputFieldName = inputFields[i].getName();
-            String projFieldName = projFields[i].getName();
-            if (!projFieldName.equals(inputFieldName)) {
-                needRename = true;
-            }
-            fieldNames[i] = projFieldName;
-        }
-
+        boolean needRename =
+            RelOptUtil.checkProjAndChildInputs(project, true);
+        
+        // either the inputs were different or they were identical, including
+        // matching field names; in the case of the latter, let
+        // RemoveTrivialProjectRule handle removing the redundant project
         if (!needRename) {
-            // let RemoveTrivialProjectRule handle this case
             return;
         }
 
@@ -109,7 +74,7 @@ public class FennelRenameRule
             mergeTraitsAndConvert(
                 project.getTraits(),
                 FennelRel.FENNEL_EXEC_CONVENTION,
-                inputRel);
+                project.getChild());
         if (fennelInput == null) {
             return;
         }
@@ -118,7 +83,7 @@ public class FennelRenameRule
             new FennelRenameRel(
                 project.getCluster(),
                 fennelInput,
-                fieldNames,
+                RelOptUtil.getFieldNames(project.getRowType()),
                 RelOptUtil.mergeTraits(
                     fennelInput.getTraits(),
                     new RelTraitSet(FennelRel.FENNEL_EXEC_CONVENTION)));

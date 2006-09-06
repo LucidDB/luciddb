@@ -22,7 +22,7 @@
       <test name="sqlserverWrapper">
         <!-- FRG-162 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sys/sqlserverWrapper.sql"/>
       </test>

@@ -21,12 +21,20 @@
 */
 package net.sf.farrago.test;
 
+import java.util.*;
+
 import junit.framework.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.relational.enumerations.*;
+import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.fem.sql2003.*;
 
+import javax.jmi.model.*;
+import javax.jmi.reflect.*;
+
+import net.sf.farrago.cwm.core.VisibilityKindEnum;
 
 /**
  * FarragoRepositoryTest contains unit tests for the repository.
@@ -61,6 +69,9 @@ public class FarragoRepositoryTest
         return wrappedSuite(FarragoRepositoryTest.class);
     }
 
+    /**
+     * Tests {@link FarragoRepos} interface for tags manipulation.
+     */
     public void testTags()
     {
         FemAnnotatedElement element =
@@ -86,6 +97,87 @@ public class FarragoRepositoryTest
 
         // Clean up the repo
         tag.refDelete();
+    }
+
+    public void testObjIntegrityVerificationPass()
+    {
+        // Verify an existing object
+        CwmCatalog catalog = repos.getSelfAsCatalog();
+        CwmSchema schema = (CwmSchema)
+            FarragoCatalogUtil.getModelElementByName(
+                catalog.getOwnedElement(),
+                "SALES");
+        CwmTable tbl = (CwmTable)
+            FarragoCatalogUtil.getModelElementByName(
+                schema.getOwnedElement(),
+                "DEPTS");
+        
+        List<FarragoReposIntegrityErr> errs =
+            repos.verifyIntegrity(tbl);
+        assertEquals(0, errs.size());
+    }
+
+    public void testObjIntegrityVerificationFail()
+    {
+        repos.beginReposTxn(true);
+        try {
+            CwmTable tbl = repos.newCwmTable();
+            tbl.setName("BOOFAR");
+
+            // Intentionaly leave visibility unset; it's mandatory,
+            // so this should cause an Attribute error
+            tbl.setTemporary(false);
+            tbl.setSystem(false);
+            tbl.setAbstract(false);
+        
+            CwmColumn col = repos.newCwmColumn();
+            tbl.getFeature().add(col);
+
+            // Intentionally leave type unset; it's mandatory,
+            // so this should cause an AssociationEnd error
+            col.setName("SNEE");
+            col.setCharacterSetName("ASCII");
+            col.setCollationName("DEFAULT");
+            col.setVisibility(VisibilityKindEnum.VK_PUBLIC);
+            col.setChangeability(ChangeableKindEnum.CK_CHANGEABLE);
+            CwmExpression nullExpression = repos.newCwmExpression();
+            nullExpression.setLanguage("SQL");
+            nullExpression.setBody("NULL");
+            col.setInitialValue(nullExpression);
+            col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
+
+            // Now run verification on table
+            List<FarragoReposIntegrityErr> errs =
+                repos.verifyIntegrity(tbl);
+            assertEquals(1, errs.size());
+
+            FarragoReposIntegrityErr err = errs.get(0);
+
+            assertEquals(
+                "javax.jmi.reflect.WrongSizeException, "
+                + "Attribute$Impl = visibility, Table = BOOFAR",
+                err.getDescription());
+
+            // Now run verification on column
+            errs = repos.verifyIntegrity(col);
+            assertEquals(1, errs.size());
+
+            err = errs.get(0);
+
+            // description has a MOFID in the middle, so compare
+            // prefix and suffix
+            assertTrue(
+                err.getDescription().startsWith(
+                    "javax.jmi.reflect.WrongSizeException:  "
+                    + "Not enough objects linked to "));
+            assertTrue(
+                err.getDescription().endsWith(
+                    "at end 'structuralFeature'., "
+                    + "AssociationEnd$Impl = type, Column = SNEE"));
+        } finally {
+            // Always rollback to clean up repo
+            repos.endReposTxn(true);
+        }
     }
 }
 

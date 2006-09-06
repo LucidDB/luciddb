@@ -29,12 +29,10 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.impl.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
-
 
 /**
  * LcsTableProjectionRule implements the rule for pushing a Projection into a
@@ -68,42 +66,44 @@ public class LcsTableProjectionRule
     // implement RelOptRule
     public void onMatch(RelOptRuleCall call)
     {
-        origProject = (ProjectRel) call.rels[0];
+        ProjectRel origProject = (ProjectRel) call.rels[0];
         if (!origProject.isBoxed()) {
             return;
         }
 
         LcsRowScanRel origScan = (LcsRowScanRel) call.rels[1];
         if (origScan.projectedColumns != null) {
-            // TODO:  fold existing projection?
             return;
         }
 
-        boolean needRename = createProjectionList(origScan);
-        if (numProjectedCols == 0) {
-            // create a rid expression to be used in the case where no fields
-            // are being projected
-            RexNode defaultExpr =
-                LucidDbSpecialOperators.makeRidExpr(
-                    origScan.getCluster().getRexBuilder(),
-                    origScan);
-
-            // there are expressions in the projection; we need to split
-            // the projection to first project the input references and any
-            // special columns
-            PushProjector pushProject = new PushProjector();
-            ProjectRel newProject =
-                pushProject.convertProject(
-                    origProject,
-                    null,
-                    origScan,
-                    LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
-                    defaultExpr);
-            if (newProject != null) {
-                call.transformTo(newProject);
-            }
+        // determine which columns can be projected from the scan, pulling
+        // out references from expressions, if necessary
+        List<Integer> projectedColumnList = new ArrayList<Integer>();
+        List<ProjectRel> newProjList = new ArrayList<ProjectRel>();
+        // create a rid expression to be used in the case where no fields
+        // are being projected
+        RexNode defaultExpr =
+            LucidDbSpecialOperators.makeRidExpr(
+                origScan.getCluster().getRexBuilder(),
+                origScan);
+        boolean needRename =
+            createProjectionList(
+                origScan,
+                origProject,
+                projectedColumnList,              
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
+                defaultExpr,
+                newProjList);
+        // empty list indicates that nothing can be projected
+        if (projectedColumnList.size() == 0) {
             return;
         }
+        ProjectRel newProject;
+        if (newProjList.isEmpty()) {
+            newProject = null;         
+        } else {
+            newProject = newProjList.get(0);
+        }        
 
         // TODO jvs 13-Mar-2006:  I put this in for safety so
         // that once residuals get implemented, we don't accidentally
@@ -122,13 +122,17 @@ public class LcsTableProjectionRule
 
         // Test which clustered indexes are needed to cover the
         // projectedColumns.
+        Integer[] projectedColumns =
+            projectedColumnList.toArray(
+                new Integer[projectedColumnList.size()]);
         Iterator iter = origScan.clusteredIndexes.iterator();
         while (iter.hasNext()) {
             FemLocalIndex index = (FemLocalIndex) iter.next();
 
             if (!origScan.getIndexGuide().testIndexCoverage(
                     index,
-                    projectedColumns)) {
+                    projectedColumns))
+            {
                 continue;
             }
             indexList.add(index);
@@ -155,11 +159,17 @@ public class LcsTableProjectionRule
                 origScan.isFullScan(),
                 origScan.hasExtraFilter());
 
-        if (needRename) {
-            projectedScan = renameProjectedScan(projectedScan);
-        }
-
-        call.transformTo(projectedScan);
+        // create new RelNodes to replace the existing ones, either
+        // removing or replacing the ProjectRel and recreating the row scan
+        // to read only projected columns
+        RelNode modRelNode =
+            createNewRelNode(
+                projectedScan,
+                origProject,
+                needRename,
+                newProject);
+        
+        call.transformTo(modRelNode);       
     }
 
     /**

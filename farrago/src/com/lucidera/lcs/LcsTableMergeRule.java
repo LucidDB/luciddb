@@ -85,134 +85,50 @@ public class LcsTableMergeRule
 
         ProjectRel origProj = (ProjectRel) call.rels[1];
         RexNode [] origProjExprs = origProj.getProjectExps();
-
-        // Replace the project with one that projects out the rid and 2 null
-        // columns (to simulate a singleton bitmap entry) as well as the
-        // expressions that make up a new insert target row.  The content of
-        // insert target row depends on whether the rid is null or non-null.
-        // In the case of the former, it corresponds to the target of the
-        // INSERT substatement while in the latter, it corresponds to the
-        // UPDATE.  These will be implemented using a CASE expression.  If
-        // only an INSERT or only an UPDATE substatement is present, no CASE
-        // expression is required.
         RelDataTypeField [] targetFields =
             tableModification.getTable().getRowType().getFields();
         int nTargetFields = targetFields.length;
         List<String> updateList = tableModification.getUpdateColumnList();
         boolean updateOnly =
-            (
-                (updateList.size() > 0)
-                && (origProjExprs.length == (nTargetFields + updateList.size()))
-            );
+            (updateList.size() > 0)
+            && (origProjExprs.length == (nTargetFields + updateList.size()));
         boolean insertOnly = (origProjExprs.length == nTargetFields);
         assert (!(updateOnly && insertOnly));
 
-        int nInsertFields = (updateOnly) ? 0 : nTargetFields;
-
-        RexNode [] projExprs = new RexNode[nTargetFields + 3];
-        String [] fieldNames = new String[nTargetFields + 3];
-
-        // create the rid expression on the target table and the null values
-        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-        RexNode nullLiteral =
-            rexBuilder.makeNullLiteral(
-                SqlTypeName.Varbinary,
-                LcsIndexGuide.LbmBitmapSegMaxSize);
+        // create a rid expression on the target table
+        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();      
         int nSourceFields =
             origProj.getChild().getRowType().getFieldCount() - nTargetFields;
         RexNode ridExpr =
             LucidDbSpecialOperators.makeRidExpr(
                 rexBuilder,
                 origProj.getChild(),
-                nSourceFields);
-        projExprs[0] = ridExpr;
-        projExprs[1] = nullLiteral;
-        projExprs[2] = nullLiteral;
-        fieldNames[0] = "rid";
-        fieldNames[1] = "descriptor";
-        fieldNames[2] = "segment";
-
-        // create the when condition for the CASE expression
-        RexNode whenExpr = null;
-        if (!updateOnly && !insertOnly) {
-            whenExpr =
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.isNullOperator,
-                    ridExpr);
-        }
-
-        for (int i = 0; i < nTargetFields; i++) {
-            RexNode updateExpr = null;
-            if (!insertOnly) {
-                // determine whether a target expression was specified for the
-                // field in the UPDATE call
-                int matchedSetExpr =
-                    updateList.indexOf(
-                        targetFields[i].getName());
-
-                if (matchedSetExpr != -1) {
-                    updateExpr =
-                        origProjExprs[nInsertFields + nTargetFields
-                            + matchedSetExpr];
-                } else {
-                    updateExpr = origProjExprs[nInsertFields + i];
-                }
-            }
-
-            if (insertOnly) {
-                projExprs[i + 3] = origProjExprs[i];
-            } else if (updateOnly) {
-                projExprs[i + 3] = updateExpr;
-            } else {
-                projExprs[i + 3] =
-                    rexBuilder.makeCall(
-                        SqlStdOperatorTable.caseOperator,
-                        new RexNode[] {
-                            whenExpr, origProjExprs[i], updateExpr
-                        });
-            }
-            fieldNames[i + 3] = targetFields[i].getName();
-        }
-
-        ProjectRel projRel =
-            (ProjectRel) CalcRel.createProject(
-                origProj.getChild(),
-                projExprs,
-                fieldNames);
-
-        // in the insert-only case, we only need the rows where the rid is
-        // null; so add a filter to select only those rows and then project
-        // the non-rid columns
+                nSourceFields);     
+        
+        // The merge source currently contains a projection with the
+        // insert expressions followed by the target columns and the update
+        // expressions (if the statement contains an UPDATE component).
+        // Replace this with whatever is appropriate for the specific type of
+        // MERGE statement.
         RelNode mergeSource;
         if (insertOnly) {
-            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
-            RelDataType ridType =
-                typeFactory.createTypeWithNullability(
-                    typeFactory.createSqlType(SqlTypeName.Bigint),
-                    true);
-            RexNode isNullExpr =
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.isNullOperator,
-                    rexBuilder.makeInputRef(ridType, 0));
-            mergeSource = CalcRel.createFilter(projRel, isNullExpr);
-            RexNode [] nonRidProjExprs = new RexNode[nTargetFields];
-            for (int i = 0; i < nTargetFields; i++) {
-                nonRidProjExprs[i] =
-                    rexBuilder.makeInputRef(
-                        projExprs[i + 3].getType(),
-                        i + 3);
-            }
-            String [] nonRidFieldNames = new String[nTargetFields];
-            System.arraycopy(fieldNames, 3, nonRidFieldNames, 0, nTargetFields);
             mergeSource =
-                CalcRel.createProject(
-                    mergeSource,
-                    nonRidProjExprs,
-                    nonRidFieldNames);
+                createInsertSource(
+                    origProj,
+                    targetFields,
+                    ridExpr,
+                    rexBuilder);
         } else {
-            mergeSource = projRel;
+            mergeSource =
+                createUpdateSource(
+                    origProj,
+                    targetFields,
+                    updateList,
+                    updateOnly,
+                    ridExpr,
+                    rexBuilder);
         }
-
+      
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 call.rels[0].getTraits(),
@@ -233,6 +149,176 @@ public class LcsTableMergeRule
                 updateOnly);
 
         call.transformTo(mergeRel);
+    }
+    
+    /**
+     * Creates a RelNode that serves as the source for an insert-only MERGE.
+     * A FilterRel is inserted underneath the current ProjectRel.
+     * The filter removes rids that are non-null.
+     * 
+     * @param origProj original projection
+     * @param targetFields fields from the target table
+     * @param ridExpr expression representing the target rid column
+     * @param rexBuilder rex builder
+     * 
+     * @return RelNode corresponding to the source for the insert-only MERGE
+     */
+    private RelNode createInsertSource(
+        ProjectRel origProj,
+        RelDataTypeField[] targetFields,
+        RexNode ridExpr,
+        RexBuilder rexBuilder)
+    {
+        // create a filter to select only rows where the rid is null
+        RexNode isNullExpr =
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator,
+                ridExpr);
+        RelNode filterRel =
+            CalcRel.createFilter(origProj.getChild(), isNullExpr);
+        
+        // recreate the original projection, but make its child the newly
+        // created FilterRel
+        int nTargetFields = targetFields.length;
+        RexNode [] projExprs = new RexNode[nTargetFields];
+        String [] fieldNames = new String[nTargetFields];
+        RexNode[] origProjExprs = origProj.getProjectExps();
+        RelDataTypeField[] origProjFields = origProj.getRowType().getFields();
+        for (int i = 0; i < nTargetFields; i++) {
+            projExprs[i] = origProjExprs[i];
+            fieldNames[i] = origProjFields[i].getName();
+        }
+
+        return
+            CalcRel.createProject(filterRel, projExprs, fieldNames);
+    }
+    
+    /**
+     * Creates the source RelNode for a MERGE that contains an UPDATE
+     * component.  The current ProjectRel is replaced by a FilterRel underneath
+     * a new ProjectRel.  The filter removes rows where the columns are not
+     * actually updated.  The new projection projects the target rid (and 2
+     * nulls) followed by a set of expressions representing new insert rows.
+     * 
+     * @param origProj the original projection being replaced
+     * @param targetFields fields from the target table
+     * @param updateList list of names corresponding to the update columns
+     * @param updateOnly if true, MERGE statement contains no INSERT
+     * @param ridExpr expression representing the target rid column
+     * @param rexBuilder rex builder
+     * 
+     * @return source RelNode for a MERGE that contains an UPDATE
+     */
+    private RelNode createUpdateSource(
+        ProjectRel origProj,
+        RelDataTypeField[] targetFields,
+        List<String> updateList,
+        boolean updateOnly,
+        RexNode ridExpr,
+        RexBuilder rexBuilder)
+    {
+        RexNode[] origProjExprs = origProj.getProjectExps();
+        int nTargetFields = targetFields.length;
+        
+        // create a filter selecting only rows where any of the update
+        // columns are different from their original column values; if there's
+        // an insert component in the MERGE, then we also need to allow
+        // rows where the target rid is null
+        List<RexNode> filterList = new ArrayList<RexNode>();
+        if (!updateOnly) {
+            RexNode isNullExpr = rexBuilder.makeCall(
+                SqlStdOperatorTable.isNullOperator,
+                ridExpr);
+            filterList.add(isNullExpr);
+        }
+        int nInsertFields = (updateOnly) ? 0 : nTargetFields;
+        for (int i = 0; i < updateList.size(); i++) {
+            // find the original target column corresponding to the update
+            // column
+            int targetColno;
+            for (targetColno = 0; targetColno < nTargetFields; targetColno++) {
+                if (targetFields[targetColno].getName().equals(
+                    updateList.get(i)))
+                {
+                    break;
+                }
+            }
+            assert(targetColno < nTargetFields);
+            RexNode filter =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.notEqualsOperator,
+                    new RexNode[] {
+                        origProjExprs[nInsertFields + targetColno],
+                        origProjExprs[nInsertFields + nTargetFields + i]
+                    });
+            filterList.add(filter);
+        }
+        RexNode nonUpdateFilter =
+            RexUtil.orRexNodeList(rexBuilder, filterList);
+        RelNode filterRel =
+            CalcRel.createFilter(origProj.getChild(), nonUpdateFilter);
+   
+        // Project out the rid and 2 null columns as well as the
+        // expressions that make up a new insert target row.  The content of
+        // insert target row depends on whether the rid is null or non-null.
+        // In the case of the former, it corresponds to the target of the
+        // INSERT substatement while in the latter, it corresponds to the
+        // UPDATE.  These will be implemented using a CASE expression.  If
+        // only an UPDATE substatement is present, no CASE expression is
+        // required.
+        RexNode [] projExprs = new RexNode[nTargetFields + 3];
+        String [] fieldNames = new String[nTargetFields + 3];
+        projExprs[0] = ridExpr;
+        RexNode nullLiteral =
+            rexBuilder.makeNullLiteral(
+                SqlTypeName.Varbinary,
+                LcsIndexGuide.LbmBitmapSegMaxSize);
+        projExprs[1] = nullLiteral;
+        projExprs[2] = nullLiteral;
+        fieldNames[0] = "rid";
+        fieldNames[1] = "descriptor";
+        fieldNames[2] = "segment";
+        
+        // when expression used in the case expression
+        RexNode whenExpr = null;
+        if (!updateOnly) {
+            whenExpr =
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.isNullOperator,
+                    ridExpr);
+        }
+        
+        for (int i = 0; i < nTargetFields; i++) {
+            RexNode updateExpr = null;
+            // determine whether a target expression was specified for the
+            // field in the UPDATE call
+            int matchedSetExpr =
+                updateList.indexOf(targetFields[i].getName());
+
+            if (matchedSetExpr != -1) {
+                updateExpr =
+                    origProjExprs[nInsertFields + nTargetFields
+                        + matchedSetExpr];
+            } else {
+                updateExpr = origProjExprs[nInsertFields + i];
+            }
+
+            if (updateOnly) {
+                projExprs[i + 3] = updateExpr;
+            } else {
+                projExprs[i + 3] =
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.caseOperator,
+                        new RexNode[] {
+                            whenExpr,
+                            origProjExprs[i],
+                            updateExpr
+                        });
+            }
+            fieldNames[i + 3] = targetFields[i].getName();
+        }
+        
+        return CalcRel.createProject(filterRel, projExprs, fieldNames);
     }
 }
 

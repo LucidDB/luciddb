@@ -25,8 +25,10 @@ import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.fennel.*;
 
 import com.lucidera.farrago.fennel.*;
+import com.lucidera.farrago.namespace.flatfile.*;
 import com.lucidera.lurql.*;
 
+import java.io.*;
 import java.util.*;
 
 import javax.jmi.reflect.*;
@@ -44,6 +46,7 @@ import net.sf.farrago.fem.security.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 
@@ -56,6 +59,7 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -69,15 +73,25 @@ public class FarragoDefaultSessionPersonality
     implements FarragoSessionPersonality
 {
 
+    //~ Static fields ----------------------------------------------------------
+
+    public static final String SQUEEZE_JDBC_NUMERIC = "squeezeJdbcNumeric";
+    public static final String SQUEEZE_JDBC_NUMERIC_DEFAULT = "true";
+
     //~ Instance fields --------------------------------------------------------
 
     protected final FarragoDatabase database;
+    protected final ParamValidator paramValidator;
 
     //~ Constructors -----------------------------------------------------------
 
     protected FarragoDefaultSessionPersonality(FarragoDbSession session)
     {
         database = session.getDatabase();
+
+        paramValidator = new ParamValidator();
+        paramValidator.registerBoolParam(
+            SQUEEZE_JDBC_NUMERIC, false);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -321,6 +335,27 @@ public class FarragoDefaultSessionPersonality
     }
 
     // implement FarragoSessionPersonality
+    public void loadDefaultSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        variables.setDefault(
+            SQUEEZE_JDBC_NUMERIC,
+            SQUEEZE_JDBC_NUMERIC_DEFAULT);
+    }
+
+    // implement FarragoSessionPersonality
+    public void validateSessionVariable(
+        FarragoSessionDdlValidator ddlValidator,
+        FarragoSessionVariables variables,
+        String name,
+        String value)
+    {
+        String validatedValue = 
+            paramValidator.validate(ddlValidator, name, value);
+        variables.set(name, validatedValue);
+    }
+
+    // implement FarragoSessionPersonality
     public JmiQueryProcessor newJmiQueryProcessor(String language)
     {
         if (!language.equals("LURQL")) {
@@ -377,6 +412,11 @@ public class FarragoDefaultSessionPersonality
         if (feature == maasFeature) {
             return false;
         }
+        
+        // Farrago doesn't support MERGE
+        if (feature == EigenbaseResource.instance().SQLFeature_F312) {
+            return false;
+        }
 
         // By default, support everything except the above.
         return true;
@@ -387,6 +427,121 @@ public class FarragoDefaultSessionPersonality
     {
         chain.addProvider(
             new FarragoRelMetadataProvider(database.getSystemRepos()));
+    }
+
+    private class ParamDesc
+    {
+        int type;
+        boolean nullability;
+        Integer rangeStart, rangeEnd;
+        
+        public ParamDesc(int type, boolean nullability) {
+            this.type = type;
+            this.nullability = nullability;
+        }
+
+        public ParamDesc(int type, boolean nullability, int start, int end) {
+            this.type = type;
+            this.nullability = nullability;
+            rangeStart = start;
+            rangeEnd = end;
+        }
+    }
+    
+    public class ParamValidator 
+    {
+        private final int BOOLEAN_TYPE = 1;
+        private final int INT_TYPE = 2;
+        private final int STRING_TYPE = 3;
+        private final int DIRECTORY_TYPE = 4;
+        
+        private Map<String, ParamDesc> params;
+
+        public ParamValidator()
+        {
+            params = new HashMap<String, ParamDesc>();
+        }
+
+        public void registerBoolParam(String name, boolean nullability)
+        {
+            params.put(name, new ParamDesc(BOOLEAN_TYPE, nullability));
+        }
+
+        public void registerIntParam(String name, boolean nullability)
+        {
+            params.put(name, new ParamDesc(INT_TYPE, nullability));
+        }
+
+        public void registerIntParam(
+            String name, boolean nullability, int start, int end)
+        {
+            assert (start <= end);
+            params.put(name, new ParamDesc(INT_TYPE, nullability, start, end));
+        }
+
+        public void registerStringParam(String name, boolean nullability)
+        {
+            params.put(name, new ParamDesc(STRING_TYPE, nullability));
+        }
+
+        public void registerDirectoryParam(String name, boolean nullability)
+        {
+            params.put(name, new ParamDesc(DIRECTORY_TYPE, nullability));
+        }
+
+        public String validate(
+            FarragoSessionDdlValidator ddlValidator,
+            String name, 
+            String value)
+        {
+            if (! params.containsKey(name)) {
+                throw FarragoResource.instance().ValidatorUnknownSysParam.ex(
+                    ddlValidator.getRepos().getLocalizedObjectName(name));
+            }
+            ParamDesc paramDesc = params.get(name);
+            if (paramDesc.nullability == false && value == null) {
+                throw FarragoResource.instance()
+                .ValidatorSysParamTypeMismatch.ex(
+                    value,
+                    ddlValidator.getRepos().getLocalizedObjectName(name));
+            } else if (value == null) {
+                return null;
+            }
+
+            Object o = null;
+            switch (paramDesc.type) {
+            case BOOLEAN_TYPE:
+                o = ConversionUtil.toBoolean(value);
+                break;
+            case INT_TYPE:
+                o = Integer.valueOf(value);
+                if (paramDesc.rangeStart != null) {
+                    Integer i = (Integer) o;
+                    if (i < paramDesc.rangeStart || i > paramDesc.rangeEnd) {
+                        throw FarragoResource.instance()
+                        .ParameterValueOutOfRange.ex(value, name);
+                    }
+                }
+                break;
+            case STRING_TYPE:
+                o = value;
+                break;
+            case DIRECTORY_TYPE:
+                File dir = new File(value);
+                if ( (!dir.exists()) || (!dir.isDirectory()) ) {
+                    throw FarragoResource.instance().InvalidDirectory.ex(
+                        value);
+                }
+                if (!dir.canWrite()) {
+                    throw FarragoResource.instance().FileWriteFailed.ex(value);
+                }
+                o = dir.getPath();
+                break;
+            default:
+                Util.permAssert(false, "invalid param type");
+            }
+            return o.toString();
+        }
     }
 }
 

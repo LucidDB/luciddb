@@ -1,0 +1,15 @@
+@nolockstep
+
+@setup
+
+-- This test verifies that four threads all can run concurrently. The order by
+-- ensures that max resources will be utilized.
+
+alter system set "expectedConcurrentStatements" = 4;
+
+@end
+
+@thread 1, 2, 3, 4
+select sys_boot.mgmt.sleep(5000), empno from sales.emps where empno = 100
+    order by empno;
+@end

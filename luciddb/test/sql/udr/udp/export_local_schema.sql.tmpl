@@ -62,6 +62,18 @@ ex."k40k" = l."k40k" and ex."k100k" = l."k100k" and ex."k250k" = l."k250k"
 and ex."k500k" = l."k500k"
 order by 1;
 
+-- check against old schema using crc
+select * 
+from 
+  table(applib.generate_crc(
+    cursor(select * from exp_server.bcp."bench100"))) ex
+  inner join
+  table(applib.generate_crc(
+    cursor(select * from udptest."bench100"))) l
+  on ex."kseq" = l."kseq"
+where ex.crc_value <> l.crc_value
+order by ex."kseq";
+
 drop server exp_server cascade;
 
 --

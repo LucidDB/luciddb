@@ -62,15 +62,26 @@ public class FennelCartesianJoinRule
         RelNode leftRel = joinRel.getLeft();
         RelNode rightRel = joinRel.getRight();
 
-        if ((joinRel.getJoinType() != JoinRelType.INNER)
-            && (joinRel.getJoinType() != JoinRelType.LEFT)) {
-            return;
-        }
-
-        if (!joinRel.getCondition().equals(
-                joinRel.getCluster().getRexBuilder().makeLiteral(true))) {
-            // TODO: implement condition with a filter, or better: do that in a
-            // separate logical transformation
+        /*
+         * Joins that can use CartesianProduct will have only TRUE condition 
+         * in JoinRel. Any other join conditions have to be extracted out 
+         * already. This implies that only ON TRUE condition is suported for
+         * LeftOuterJoins.
+         */
+        boolean joinTypeFeasible = 
+            (joinRel.getJoinType() == JoinRelType.INNER) ||
+            (joinRel.getJoinType() == JoinRelType.LEFT);
+        
+        /*
+         * CartesianProduct relies on a post filter to do the join filtering.
+         * If the join condition is not extracted to a post filter(and is still
+         * in JoinRel), CartesianProduct can not be used.
+         */
+        boolean joinConditionFeasible =
+            joinRel.getCondition().equals(
+                joinRel.getCluster().getRexBuilder().makeLiteral(true));
+                
+        if (!joinTypeFeasible || !joinConditionFeasible) {
             return;
         }
 

@@ -35,6 +35,8 @@
           groupCommitInterval='@groupCommitInterval@'
           resourceDir='@resourceDir@'
           jniHandleTraceFile='@jniHandleTraceFile@'
+          expectedConcurrentStatements='4'
+          cacheReservePercentage='5'
           />
       </FEMConfig:FarragoConfig.FennelConfig>
     </FEMConfig:FarragoConfig>

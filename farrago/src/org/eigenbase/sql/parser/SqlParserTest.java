@@ -1883,6 +1883,8 @@ public class SqlParserTest
 
     public void testCoalesce()
     {
+        checkExp("coalesce(v1)",
+            "COALESCE(`V1`)");
         checkExp("coalesce(v1,v2)",
             "COALESCE(`V1`, `V2`)");
         checkExp("coalesce(v1,v2,v3)",
@@ -2018,11 +2020,13 @@ public class SqlParserTest
             "TRIM(LEADING 'mustache' FROM 'beard')");
         checkExp("trim(\r\n\ttrailing\n  'mustache' FROM 'beard')",
             "TRIM(TRAILING 'mustache' FROM 'beard')");
+        checkExp("trim (coalesce(cast(null as varchar(2)))||"
+            + "' '||coalesce('junk ',''))",
+            "TRIM(BOTH ' ' FROM ((COALESCE(CAST(NULL AS VARCHAR(2))) || "
+            + "' ') || COALESCE('junk ', '')))");
 
         checkFails("trim(from 'beard')",
             "(?s).*'FROM' near line 1, column 6, without operands preceding it is illegal.*");
-        checkFails("trim('mustache' in 'beard')",
-            "(?s).*Encountered .in. at line 1, column 17.*");
     }
 
     public void testConvertAndTranslate()

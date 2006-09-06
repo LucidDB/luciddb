@@ -27,6 +27,7 @@
 #include "fennel/exec/ExecStreamBufAccessor.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/DynamicParam.h"
+#include "fennel/exec/ExecStreamGovernor.h"
 #include "fennel/segment/Segment.h"
 #include "fennel/exec/ScratchBufferExecStream.h"
 #include "fennel/common/Backtrace.h"
@@ -73,9 +74,20 @@ void ExecStreamGraphImpl::setScratchSegment(
     pScratchSegment = pScratchSegmentInit;
 }
 
+void ExecStreamGraphImpl::setResourceGovernor(
+    SharedExecStreamGovernor pResourceGovernorInit)
+{
+    pResourceGovernor = pResourceGovernorInit;
+}
+
 SharedLogicalTxn ExecStreamGraphImpl::getTxn()
 {
     return pTxn;
+}
+
+SharedExecStreamGovernor ExecStreamGraphImpl::getResourceGovernor()
+{
+    return pResourceGovernor;
 }
 
 ExecStreamGraphImpl::Vertex ExecStreamGraphImpl::newVertex()
@@ -451,13 +463,6 @@ void ExecStreamGraphImpl::open()
 
 void ExecStreamGraphImpl::openStream(SharedExecStream pStream)
 {
-    // TODO jvs 19-July-2004:  move resource allocation to scheduler,
-    // and set quotas based on current cache state; for now just set to
-    // minimum for testing
-    ExecStreamResourceQuantity minQuantity,optQuantity;
-    pStream->getResourceRequirements(minQuantity,optQuantity);
-    pStream->setResourceAllocation(minQuantity);
-
     pStream->open(false);
 }
 
@@ -479,6 +484,7 @@ void ExecStreamGraphImpl::closeImpl()
             sortedStreams.rend(),
             boost::bind(&ClosableObject::close,_1));
     }
+    getResourceGovernor()->returnResources(this);
     pTxn.reset();
 
     // release any scratch memory

@@ -140,6 +140,27 @@ merge into emps e1
         update set age = e1.age + 1;
 select * from emps order by empno;
 
+-- the updates in the following merges are no-ops
+-- verify that no updates have occurred by ensuring that the rids haven't
+-- changed
+select lcs_rid(empno), * from emps order by empno;
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set deptno = deptno, city = city,
+            salary = salary
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+            t.t_city);
+select lcs_rid(empno), * from emps order by empno;
+
+merge into emps e1
+    using (select * from emps) e2 on e1.empno = e2.empno
+    when matched then
+        update set age = e1.age + e1.deptno - e1.deptno;
+select lcs_rid(empno), * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -241,6 +262,25 @@ merge into emps
     using (select * from tempemps) on t_empno = empno
     when not matched then
         insert values (t_empno, t_name, t_deptno, t_gender, t_city, t_age, 0);
+
+-- no-op updates
+explain plan for
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set deptno = deptno, city = city,
+            salary = salary
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+            t.t_city);
+-- note that in this case (no-op update only), the check for non-update filter
+-- should be pushed down to the scan since there is no outer join
+explain plan for
+merge into emps e1
+    using (select * from emps) e2 on e1.empno = e2.empno
+    when matched then
+        update set age = e1.age + e1.deptno - e1.deptno;
 
 --------------
 -- Error cases
@@ -374,5 +414,20 @@ merge into emps e
     when not matched then
         insert (empno, name, age, gender, salary, city)
         values(t.t_empno, upper(t.t_name), t.t_name, t.t_gender, t.t_age * 1000,
+            t.t_city);
+
+-- LucidDb doesn't support UPDATE
+update emps set name = 'Foobar';
+
+-- Farrago doesn't support MERGE
+alter session implementation set default;
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set deptno = t.t_deptno, city = upper(t.t_city),
+            salary = salary * .25
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
             t.t_city);
 

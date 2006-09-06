@@ -182,6 +182,23 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Populates a list of session parameters
+     */
+    public static void sessionParameters(PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoSessionVariables variables = 
+            FarragoUdrRuntime.getSession().getSessionVariables();
+        Map<String, String> readMap = variables.getMap();
+        for (String paramName : readMap.keySet()) {
+            int i = 0;
+            resultInserter.setString(++i, paramName);
+            resultInserter.setString(++i, readMap.get(paramName));
+            resultInserter.executeUpdate();
+        }
+    }
+
+    /**
      * Sleeps for a given number of milliseconds (checking for query
      * cancellation every second).
      *
@@ -227,6 +244,30 @@ public abstract class FarragoManagementUDR
         FarragoSession callerSession = FarragoUdrRuntime.getSession();
         FarragoDatabase db = ((FarragoDbSession) callerSession).getDatabase();
         return db.getSystemRepos().getModelLoader();
+    }
+
+    /**
+     * Retrieves a list of repository integrity violations.  The
+     * result has two string columns; the first is the error description,
+     * the second is the MOFID of the object on which the error was
+     * detected, or null if unknown.
+     */
+    public static void repositoryIntegrityViolations(
+        PreparedStatement resultInserter)
+        throws SQLException
+    {
+        FarragoSession session = FarragoUdrRuntime.getSession();
+        FarragoRepos repos = session.getRepos();
+        List<FarragoReposIntegrityErr> errs = repos.verifyIntegrity(null);
+        for (FarragoReposIntegrityErr err : errs) {
+            resultInserter.setString(1, err.getDescription());
+            if (err.getRefObject() != null) {
+                resultInserter.setString(2, err.getRefObject().refMofId());
+            } else {
+                resultInserter.setString(2, null);
+            }
+            resultInserter.executeUpdate();
+        }
     }
 
     /**

@@ -33,7 +33,8 @@ FENNEL_BEGIN_CPPFILE("$Id$");
 DfsTreeExecStreamScheduler::DfsTreeExecStreamScheduler(
     SharedTraceTarget pTraceTargetInit,
     std::string nameInit)
-    : ExecStreamScheduler(pTraceTargetInit, nameInit)
+    : TraceSource(pTraceTargetInit, nameInit),
+      ExecStreamScheduler(pTraceTargetInit, nameInit)
 {
 }
     

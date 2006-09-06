@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.logging.*;
 
 import javax.jmi.reflect.*;
+import javax.jmi.model.*;
 
 import net.sf.farrago.*;
 import net.sf.farrago.cwm.core.*;
@@ -409,6 +410,89 @@ public abstract class FarragoReposImpl
         }
     }
 
+    // implement FarragoRepos
+    public List<FarragoReposIntegrityErr> verifyIntegrity(
+        RefObject refObj)
+    {
+        Collection exceptions;
+        if (refObj == null) {
+            return verifyIntegrityAll();
+        } else if (refObj instanceof CwmDependency) {
+            // REVIEW jvs 3-Sept-2006:  CwmDependency does not allow
+            // for dangling dependencies, but we rely on those, so
+            // skip them for now.
+            exceptions = null;
+        } else {
+            exceptions = refObj.refVerifyConstraints(false);
+        }
+
+        if (exceptions == null) {
+            return Collections.emptyList();
+        }
+
+        List<FarragoReposIntegrityErr> errs =
+            new ArrayList<FarragoReposIntegrityErr>();
+
+        for (Object obj : exceptions) {
+            JmiException ex = (JmiException) obj;
+            String description = ex.getClass().getName();
+            if (ex.getMessage() != null) {
+                description += ":  " + ex.getMessage();
+            }
+            RefObject metaObj = ex.getElementInError();
+            if (metaObj != null) {
+                description += ", ";
+                description +=
+                    ReflectUtil.getUnqualifiedClassName(metaObj.getClass());
+                description += " = ";
+                if (metaObj instanceof ModelElement) {
+                    description += ((ModelElement) metaObj).getName();
+                } else if (metaObj instanceof CwmModelElement) {
+                    description += ((CwmModelElement) metaObj).getName();
+                } else {
+                    description += metaObj;
+                }
+            }
+            if (ex.getObjectInError() != null) {
+                description += ", extra = " + ex.getObjectInError();
+            }
+            if (refObj != null) {
+                RefClass refClass = refObj.refClass();
+                String className = JmiObjUtil.getMetaObjectName(refClass);
+                String objectName = null;
+                try {
+                    // If it has a name attribute, use that
+                    objectName = (String) refObj.refGetValue("name");
+                } catch (Throwable t) {
+                    // Otherwise, fall through to dump below.
+                }
+                if (objectName == null) {
+                    objectName = refObj.toString();
+                }
+                description += ", " + className;
+                description += " = " + objectName;
+            }
+            FarragoReposIntegrityErr err =
+                new FarragoReposIntegrityErr(description, ex, refObj);
+            errs.add(err);
+        }
+        return errs;
+    }
+
+    private List<FarragoReposIntegrityErr> verifyIntegrityAll()
+    {
+        List<FarragoReposIntegrityErr> errs =
+            new ArrayList<FarragoReposIntegrityErr>();
+        for (JmiClassVertex classVertex : modelGraph.vertexSet()) {
+            RefClass refClass = classVertex.getRefClass();
+            for (Object obj : refClass.refAllOfClass()) {
+                RefObject refObj = (RefObject) obj;
+                errs.addAll(verifyIntegrity(refObj));
+            }
+        }
+        return errs;
+    }
+    
     // implement FarragoRepos
     public void addResourceBundles(List bundles)
     {

@@ -185,6 +185,13 @@ public abstract class Bug
 
     // rchen
 
+    /**
+     * Whether <a href="http://issues.eigenbase.org/browse/FRG-181">issue
+     * FRG-181: Type of window function avg() after SqlToRel conversion does
+     * not agree with the original Sql type</a> is fixed.
+     */
+    public static final boolean Frg181Fixed = false;
+
     // schoi
 
     // stephan

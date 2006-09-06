@@ -696,11 +696,8 @@
 'column0'
 'FennelToIteratorConverter'
 '  LcsTableAppendRel(table=[[LOCALDB, LCS, THREECLUSTERS]])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[CAST($t2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t3], $f1=[$t4], $f2=[$t5])'
-'        IterCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER NOT NULL], expr#4=[CAST($t1):VARCHAR(50) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#5=[CAST($t2):CHAR(1) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], ID=[$t3], NAME=[$t4], EXTRA_FIELD=[$t5])'
-'          FennelToIteratorConverter'
-'            FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
+'    FennelCalcRel(expr#0..2=[{inputs}], expr#3=[CAST($t0):INTEGER], expr#4=[CAST($t1):VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], expr#5=[CAST($t2):CHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary"], $f0=[$t3], $f1=[$t4], $f2=[$t5])'
+'      FlatFileFennelRel(table=[[LOCALDB, LCS, FLATFILE_TABLE]])'
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> insert into threeclusters select * from flatfile_table;
@@ -934,8 +931,7 @@
 'column0'
 'IterCalcRel(expr#0..4=[{inputs}], expr#5=[IS NULL($t1)], expr#6=[null], expr#7=[CAST($t6):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#8=[NEW($t2, $t3):ObjectSqlType(LOCALDB.LCS.RECTANGLE)], expr#9=[CASE($t5, $t7, $t8)], NAME=[$t0], R=[$t9], ID=[$t4])'
 '  FennelToIteratorConverter'
-'    FennelRenameRel(fieldNames=[[NAME, R, R, R, ID]])'
-'      LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[[0, 1, 2, 3, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
+'    LcsRowScanRel(table=[[LOCALDB, LCS, RECTANGLES]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LCS$RECTANGLES$ID, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$NAME, SYS$CLUSTERED_INDEX$LCS$RECTANGLES$R]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select id from rectangles t;

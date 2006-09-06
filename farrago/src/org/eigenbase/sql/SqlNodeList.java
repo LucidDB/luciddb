@@ -109,6 +109,11 @@ public class SqlNodeList
         return list.get(n);
     }
 
+    public SqlNode set(int n, SqlNode node)
+    {
+        return list.set(n, node);
+    }
+
     public int size()
     {
         return list.size();

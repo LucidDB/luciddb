@@ -118,56 +118,13 @@ public class RelMdDistinctRowCount
         BitSet groupKey,
         RexNode predicate)
     {
-        Double distRowCount;
-        BitSet leftMask = new BitSet();
-        BitSet rightMask = new BitSet();
-
-        RelMdUtil.setLeftRightBitmaps(
+        return RelMdUtil.getJoinDistinctRowCount(
+            rel,
+            rel.getLeft(),
+            rel.getRight(),
+            rel.getJoinType(),
             groupKey,
-            leftMask,
-            rightMask,
-            rel.getLeft().getRowType().getFieldCount());
-
-        // determine which filters apply to the left vs right
-        RexNode leftPred = null;
-        RexNode rightPred = null;
-        if (predicate != null) {
-            List<RexNode> leftFilters = new ArrayList<RexNode>();
-            List<RexNode> rightFilters = new ArrayList<RexNode>();
-            List<RexNode> joinFilters = new ArrayList<RexNode>();
-            List<RexNode> predList = new ArrayList<RexNode>();
-            RelOptUtil.decompCF(predicate, predList);
-
-            RelOptUtil.classifyFilters(
-                rel,
-                predList,
-                (rel.getJoinType() == JoinRelType.INNER),
-                !rel.getJoinType().generatesNullsOnLeft(),
-                !rel.getJoinType().generatesNullsOnRight(),
-                joinFilters,
-                leftFilters,
-                rightFilters);
-
-            RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
-            leftPred = RexUtil.andRexNodeList(rexBuilder, leftFilters);
-            rightPred = RexUtil.andRexNodeList(rexBuilder, rightFilters);
-        }
-
-        distRowCount =
-            NumberUtil.multiply(
-                RelMetadataQuery.getDistinctRowCount(
-                    rel.getLeft(),
-                    leftMask,
-                    leftPred),
-                RelMetadataQuery.getDistinctRowCount(
-                    rel.getRight(),
-                    rightMask,
-                    rightPred));
-
-        return
-            RelMdUtil.numDistinctVals(
-                distRowCount,
-                RelMetadataQuery.getRowCount(rel));
+            predicate);
     }
 
     public Double getDistinctRowCount(

@@ -190,7 +190,7 @@ class LbmMinusExecStream : public LbmBitOpExecStream
      * @param baseByteSeg pointer to the first byte of the anchor segment; note
      * that the segment is stored backwards so it needs to be read from right
      * to left
-     * @param length of the anchor segment
+     * @param baseLen length of the anchor segment
      *
      * @return EXECRC_YIELD if able to read data from children
      */

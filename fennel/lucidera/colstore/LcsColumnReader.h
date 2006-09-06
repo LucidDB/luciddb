@@ -24,6 +24,8 @@
 
 #include "fennel/lucidera/colstore/LcsClusterNode.h"
 #include "fennel/lucidera/colstore/LcsBitOps.h"
+#include "fennel/lucidera/colstore/LcsResidualColumnFilters.h"
+
 
 FENNEL_BEGIN_NAMESPACE
 
@@ -83,6 +85,11 @@ class LcsColumnReader
     const PBuffer (LcsColumnReader:: *pGetCurrentValueFunc) ();
 
     /**
+     * Filters associated with this column 
+     */
+    LcsResidualColumnFilters filters;
+
+    /**
      * Returns value from compressed batch
      */
     const PBuffer getCompressedValue();
@@ -97,6 +104,41 @@ class LcsColumnReader
      */
     const PBuffer getVariableValue();
 
+    /**
+     * locates the smallest value in the compressed batch
+     * that's greater or equal to a filter predicate's bound
+     *
+     * @param filterPos index into filters.filterData
+     *
+     * @param highBound true iff called for upper bound data
+     *
+     * @param readerKeyData TupleData used for comparision
+     *
+     * @return index of the found entry
+     */
+    uint findVal(uint filterPos, bool highBound, bool bStrict,
+        TupleData &readerKeyData);
+
+    /**
+     * locates the range of entries in the compressed batch
+     * that passes a filter predicate.
+     *
+     * @param filterPos index into filters.filterData
+     *
+     * @param [out] nLoVal index of the lower bound
+     *
+     * @param [out] nHiVal index of the upper bound
+     *
+     * @param readerKeyData TupleData used for comparision
+     */
+    void findBounds(uint filterPos, uint &nLoVal, uint &nHiVal,
+        TupleData &readerKeyData);
+
+    /**
+     * builds the contains bitmap for compressed batch.
+     */
+    void buildContainsMap();
+
 public:
     /**
      * Initializes a scan of column "colOrdInit"
@@ -109,6 +151,7 @@ public:
     {
         pScan = pScanInit;
         colOrd = colOrdInit;
+        filters.hasResidualFilters = false;
     }
 
     /**
@@ -203,6 +246,26 @@ public:
      * @param pActCount output param for actual number of value codes returned
      */
     void readCompressedBatch(uint count, uint16_t *pValCodes, uint *pActCount);
+
+    /**
+     * @return the filter column
+     */
+    struct LcsResidualColumnFilters& getFilters()
+    {
+        return filters;
+    }
+
+    /**
+     * Applies the filters
+     *
+     * @param projDescriptor TupleDescriptor for outputTupleData
+     *
+     * @param outputTupleData is the TupleData to compare with
+     *
+     * returns true iff the tuple passes the predicates
+     */ 
+    bool applyFilters(TupleDescriptor &projDescriptor,
+        TupleData &outputTupleData);
 };
 
 FENNEL_END_NAMESPACE

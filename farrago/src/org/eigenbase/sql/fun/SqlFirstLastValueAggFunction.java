@@ -30,9 +30,9 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * <code>Count</code> is an aggregator which returns the number of rows which
- * have gone into it. With one argument (or more), it returns the number of rows
- * for which that argument (or all) is not <code>null</code>.
+ * <code>FIRST_VALUE</code> and <code>LAST_VALUE</code> aggregate functions 
+ * return the first or the last value in a list of values that are input to
+ * the function.
  */
 public class SqlFirstLastValueAggFunction
     extends SqlAggFunction

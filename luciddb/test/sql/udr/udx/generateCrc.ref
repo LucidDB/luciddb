@@ -1,0 +1,64 @@
+0: jdbc:luciddb:> create schema gcrc;
+0: jdbc:luciddb:> set schema 'gcrc';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table types (
+. . . . . . . . >   c_smallint smallint,
+. . . . . . . . >   c_tinyint tinyint,
+. . . . . . . . >   c_int integer, 
+. . . . . . . . >   c_varchar varchar(10), 
+. . . . . . . . >   c_bigint bigint, 
+. . . . . . . . >   c_char char(10), 
+. . . . . . . . >   c_decimal decimal(10,4), 
+. . . . . . . . >   c_date date, 
+. . . . . . . . >   c_time time, 
+. . . . . . . . >   c_timestamp timestamp,
+. . . . . . . . >   c_boolean boolean
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- setup table
+0: jdbc:luciddb:> insert into types values
+. . . . . . . . > (32767,127,2147483647,'abcdefghij',9223372036854775807,'abcdefghij',999999.9999,date'2006-12-19', time'4:29:29',timestamp'2020-2-2 2:2:2',true),
+. . . . . . . . > (null,null,null,null,null,null,null,null,null,null,null),
+. . . . . . . . > (-32767,-127,-2147483647,'abcdefghij',-9223372036854775807,'abcdefghij',-999999.9999,date'2006-12-19', time'4:29:29',timestamp'2020-2-2 2:2:2',true),
+. . . . . . . . > (1,null,56,'lola',null,null,null,date'1979-2-20', time'8:17:3',null,false),
+. . . . . . . . > (null,1,null,null,56,'lola',null,date'1979-2-20', time'8:17:3',null,false),
+. . . . . . . . > (null,1,null,null,56,'lola',null,null,null,timestamp'1979-2-20 8:17:3',false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- check crc_values
+0: jdbc:luciddb:> select * 
+. . . . . . . . > from table(applib.generate_crc(
+. . . . . . . . >   cursor(select * from types)))
+. . . . . . . . > order by crc_value;
++-------------+------------+--------------+-------------+-----------------------+-------------+---------------+-------------+-----------+------------------------+------------+-------------+
+| C_SMALLINT  | C_TINYINT  |    C_INT     |  C_VARCHAR  |       C_BIGINT        |   C_CHAR    |   C_DECIMAL   |   C_DATE    |  C_TIME   |      C_TIMESTAMP       | C_BOOLEAN  |  CRC_VALUE  |
++-------------+------------+--------------+-------------+-----------------------+-------------+---------------+-------------+-----------+------------------------+------------+-------------+
+|             | 1          |              |             | 56                    | lola        |               |             |           | 1979-02-20 16:17:03.0  | false      | 162608835   |
+| 32767       | 127        | 2147483647   | abcdefghij  | 9223372036854775807   | abcdefghij  | 999999.9999   | 2006-12-19  | 12:29:29  | 2020-02-02 10:02:02.0  | true       | 393550663   |
+|             | 1          |              |             | 56                    | lola        |               | 1979-02-20  | 16:17:03  |                        | false      | 1695297196  |
+| -32767      | -127       | -2147483647  | abcdefghij  | -9223372036854775808  | abcdefghij  | -999999.9999  | 2006-12-19  | 12:29:29  | 2020-02-02 10:02:02.0  | true       | 2219645992  |
+| 1           |            | 56           | lola        |                       |             |               | 1979-02-20  | 16:17:03  |                        | false      | 3191090668  |
+|             |            |              |             |                       |             |               |             |           |                        |            | 3311752084  |
++-------------+------------+--------------+-------------+-----------------------+-------------+---------------+-------------+-----------+------------------------+------------+-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table temptypes(c_decimal decimal(10,5),c_tinyint tinyint,c_smallint smallint,c_int integer,c_bigint bigint,c_char char(10),c_varchar varchar(10),c_varchar2 varchar(2),c_int2 char(3),c_timestamp timestamp,c_boolean boolean);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- crc value not different for different column types, same data
+0: jdbc:luciddb:> insert into temptypes values
+. . . . . . . . > (null,1,null,null,56,'lola',null,null,null,timestamp'1979-2-20 8:17:3',false);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * 
+. . . . . . . . > from table(applib.generate_crc(
+. . . . . . . . >   cursor(select * from temptypes)))
+. . . . . . . . > order by crc_value;
++------------+------------+-------------+--------+-----------+-------------+------------+-------------+---------+------------------------+------------+------------+
+| C_DECIMAL  | C_TINYINT  | C_SMALLINT  | C_INT  | C_BIGINT  |   C_CHAR    | C_VARCHAR  | C_VARCHAR2  | C_INT2  |      C_TIMESTAMP       | C_BOOLEAN  | CRC_VALUE  |
++------------+------------+-------------+--------+-----------+-------------+------------+-------------+---------+------------------------+------------+------------+
+|            | 1          |             |        | 56        | lola        |            |             |         | 1979-02-20 16:17:03.0  | false      | 162608835  |
++------------+------------+-------------+--------+-----------+-------------+------------+-------------+---------+------------------------+------------+------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop table types cascade;
+0: jdbc:luciddb:> drop schema gcrc cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

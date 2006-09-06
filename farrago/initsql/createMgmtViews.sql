@@ -17,6 +17,12 @@ external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryProper
 create view repository_properties_view as
   select * from table(repository_properties());
 
+create function repository_integrity_violations()
+returns table(description varchar(65535), mofid varchar(128))
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryIntegrityViolations';
 
 create function statements()
 returns table(id int, session_id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
@@ -103,7 +109,24 @@ create procedure export_catalog_xmi(in filename varchar(65535))
   parameter style java
   no sql
   external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
-            
+
+-- Returns session parameters
+create function session_parameters ()
+returns table(
+  param_name varchar(128),
+  param_value varchar(128))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoManagementUDR.sessionParameters';
+
+create view session_parameters_view as
+  select * from table(session_parameters());
+
+-- todo:  grant this only to a privileged user
+grant select on session_parameters_view to public;
+
 --
 -- Statistics
 --

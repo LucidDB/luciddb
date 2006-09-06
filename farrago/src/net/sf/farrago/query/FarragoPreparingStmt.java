@@ -260,6 +260,12 @@ public class FarragoPreparingStmt
         SqlNode sqlNode,
         SqlNode sqlNodeOriginal)
     {
+        // REVIEW(rchen 2006-08-08)
+        // Should the state needValidation be kept in FarragoPreparingStmt, and
+        // modified in the method postValidate()?
+        // Deriving it locally from sqlValidator does not seem very clean:
+        // a validator might have been allocated but no validation has been
+        // performed.
         boolean needValidation = false;
         if (sqlValidator == null) {
             getSqlValidator();

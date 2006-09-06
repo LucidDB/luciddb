@@ -34,6 +34,8 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
+import java.io.*;
+
 
 /**
  * FlatFileFennelRel provides a flatfile implementation for {@link
@@ -42,10 +44,15 @@ import org.eigenbase.util.*;
  * @author John Pham
  * @version $Id$
  */
-class FlatFileFennelRel
+public class FlatFileFennelRel
     extends TableAccessRelBase
     implements FennelRel
 {
+
+    //~ Static fields ----------------------------------------------------------
+
+    // name of the session parameter for log directory
+    public static final String LOG_DIR = "logDir";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -82,12 +89,11 @@ class FlatFileFennelRel
         CalcVirtualMachine calcVm =
             FennelRelUtil.getPreparingStmt(this).getRepos().getCurrentConfig()
             .getCalcVirtualMachine();
-        if ((schemaType == FlatFileParams.SchemaType.DESCRIBE)
-            || (schemaType == FlatFileParams.SchemaType.SAMPLE)
-            || calcVm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
-            return true;
-        }
-        return false;
+        return 
+            (schemaType == FlatFileParams.SchemaType.DESCRIBE
+                || schemaType == FlatFileParams.SchemaType.SAMPLE
+                || calcVm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)
+                || calcVm.equals(CalcVirtualMachineEnum.CALCVM_AUTO));
     }
 
     /**
@@ -121,7 +127,8 @@ class FlatFileFennelRel
             repos.newFemFlatFileTupleStreamDef();
         streamDef.setDataFilePath(columnSet.getFilePath());
         if (params.getWithLogging()) {
-            streamDef.setErrorFilePath(columnSet.getLogFilePath());
+            streamDef.setErrorFilePath(
+                adjustLogFilePath(params, columnSet.getLogFilePath()));
         }
         streamDef.setFieldDelimiter(encodeChar(params.getFieldDelimiter()));
         streamDef.setRowDelimiter(encodeChar(params.getLineDelimiter()));
@@ -195,6 +202,21 @@ class FlatFileFennelRel
                 schemaType);
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    /**
+     * If the log directory was not specified in the server's parameters, 
+     * then adjust the log file path to use the session's log directory
+     */
+    private String adjustLogFilePath(FlatFileParams params, String basePath)
+    {
+        assert(basePath != null);
+        if (params.getLogDirectory() != null) {
+            return basePath;
+        }
+        String logDir = FennelRelUtil.getPreparingStmt(this).getSession()
+            .getSessionVariables().get(LOG_DIR);
+        return new File(logDir, basePath).toString();
     }
 }
 

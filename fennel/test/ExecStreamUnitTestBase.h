@@ -115,8 +115,9 @@ protected:
      * @param confluenceStreamEmbryo embryonic confluence stream which processes
      * tuples produced by the sourceStreamEmbryos
      *
-     * @param transforms embryonic transform streams which process
+     * @param transformStreamEmbryo embryonic transform streams which process
      * tuples produced by a child stream
+     *
      * @return output buffer stream
      */
     SharedExecStream prepareConfluenceTransformGraph(

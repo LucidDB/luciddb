@@ -320,6 +320,18 @@ public interface FarragoRepos
     public <T extends RefObject> Collection<T> allOfType(Class<T> clazz);
 
     /**
+     * Verifies the integrity of the repository.
+     *
+     * @param refObj a single object to check (independent of related
+     * objects) or null to check the entire repository
+     *
+     * @return list of violations (empty list indicates integrity check
+     * passed)
+     */
+    public List<FarragoReposIntegrityErr> verifyIntegrity(
+        RefObject refObj);
+
+    /**
      * Returns the FarragoModelLoader for this repos. May return null if not
      * supported by implementation.
      */

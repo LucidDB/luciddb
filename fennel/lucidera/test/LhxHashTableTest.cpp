@@ -385,7 +385,7 @@ void LhxHashTableTest::testInsert(
         uint tuplesRead[2];
         SharedLhxPlan plan = SharedLhxPlan(new LhxPlan());
 
-        plan->init(NULL, 0, partitions, false);
+        plan->init(WeakLhxPlan(), 0, partitions, false);
         
         LhxPlan *leafPlan;
         uint numLeafPlanCreated = 1;

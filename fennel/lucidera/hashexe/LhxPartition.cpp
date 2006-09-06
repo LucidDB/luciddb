@@ -131,7 +131,7 @@ void LhxPartitionWriter::aggAndMarshalTuple(TupleData const &inputTuple)
         bool status = hashTable.allocateResources(reuse);
         assert(status);
         /*
-         * Reset the reader and bind it to no particular key(will read the
+         * Reset the reader and bind it to no particular key (will read the
          * whole hash table).
          */
         hashTableReader.bindKey(NULL);
@@ -156,7 +156,8 @@ void LhxPartitionReader::open(
     }
 
     if (srcIsInputStream) {
-        streamBufAccessor = hashInfo.streamBufAccessor[srcPartition->inputIndex];
+        streamBufAccessor =
+            hashInfo.streamBufAccessor[srcPartition->inputIndex];
         outputTupleDesc = streamBufAccessor->getTupleDesc();
     } else {
         outputTupleDesc = hashInfo.inputDesc[srcPartition->inputIndex];
@@ -244,6 +245,8 @@ bool LhxPartitionReader::demandData()
                 /*
                  * REVIEW: when will this happen
                  */
+                // REVIEW jvs 26-Aug-2006:  It should never happen,
+                // so assert instead.
                 bufState = EXECBUF_EOS;
                 return false;
             } else {
@@ -302,7 +305,7 @@ void LhxPartitionInfo::open(
     reader = buildReader;
 
     /*
-     * The inflight(between disk partition and hash table) build tuple.
+     * The inflight (between disk partition and hash table) build tuple.
      */
     buildTuple = buildTupleInit;
 
@@ -334,7 +337,7 @@ void LhxPartitionInfo::open(
     }
 
     /*
-     * Tuples will come from memory(hash table) first.
+     * Tuples will come from memory (hash table) first.
      */
     partitionMemory = true;
 }
@@ -353,11 +356,12 @@ void LhxPartitionInfo::open(
 
     hashTableReader = hashTableReaderInit;
     /*
-     * Reset the reader and bind it to no particular key(will read the
+     * Reset the reader and bind it to no particular key (will read the
      * whole hash table).
      */
     hashTableReader->bindKey(NULL);    
 
+    // REVIEW jvs 26-Aug-2006:  no join if doing agg...
     /*
      * The build reader is from the LhxJoinExecStream and is already open.
      */
@@ -392,6 +396,7 @@ void LhxPartitionInfo::open(
             curSubPartStat[j] = 0;
         }
 
+        // REVIEW jvs 26-Aug-2006:  no join if doing agg...
         /*
          * One filter for each partition
          * filter bitmap is only allocated when a partition is written to
@@ -421,7 +426,7 @@ void LhxPartitionInfo::close()
 }
 
 void LhxPlan::init(
-    LhxPlan *parentPlanInit,
+    WeakLhxPlan parentPlanInit,
     uint partitionLevelInit,
     vector<SharedLhxPartition> &partitionsInit,
     bool enableSubPartStat)
@@ -445,7 +450,7 @@ void LhxPlan::init(
 }
 
 void LhxPlan::init(
-    LhxPlan *parentPlanInit,
+    WeakLhxPlan parentPlanInit,
     uint partitionLevelInit,
     vector<SharedLhxPartition> &partitionsInit,
     vector<shared_array<uint> > &subPartStats,
@@ -472,8 +477,10 @@ void LhxPlan::init(
     joinSideToInputMap.reset(new uint[numInputs]);
     subPartToChildMap.reset();
 
+    // REVIEW jvs 26-Aug-2006:  here "will be used" means once someone
+    // gets around to true hybrid, right?
     /*
-     * After support is added for repartitioning using stats(gathered during
+     * After support is added for repartitioning using stats (gathered during
      * previous round of partitioning), a bin-packing algorithm will be used to
      * keep in memory some subpartitions and output the rest to child
      * partitions of similar size.
@@ -548,8 +555,11 @@ void LhxPlan::mapSubPartToChild(
         subPartToChildMap[i] = j;
 
         k = 1;
-        while ((buildChildPartSize[j] > buildChildPartSize[(j + k) % LhxChildPartCount])
-            && k < LhxChildPartCount) {
+        while (
+            (buildChildPartSize[j]
+                > buildChildPartSize[(j + k) % LhxChildPartCount])
+            && k < LhxChildPartCount)
+        {
             k ++;
         }
 
@@ -593,6 +603,8 @@ LhxPartitionState LhxPlan::generatePartitions(
     LhxHashInfo const &hashInfo,
     LhxPartitionInfo  &partInfo)
 {
+    // REVIEW jvs 26-Aug-2006:  modulo on this is computed below; make
+    // sure compiler is optimizing to bitmask, or do it by hand
     uint filterSize = 4096;
     bool isAggregate = (partInfo.numInputs == 1);
 
@@ -714,7 +726,7 @@ LhxPartitionState LhxPlan::generatePartitions(
 
         /*
          * Done with tuples in the hash table. Next tuples will come from a
-         * partition(stream or disk).
+         * partition (stream or disk).
          */
         partInfo.partitionMemory = false;
 
@@ -798,9 +810,9 @@ LhxPartitionState LhxPlan::generatePartitions(
                  */                
                 if (isBuildChildPart(childPartIndex)) {
                     /*
-                     * Build input.
-                     * Note top level build input does not have input filter.
-                     * Use joinfilter from the probe input of the previous level.
+                     * Build input.  Note top level build input does not have
+                     * input filter.  Use joinfilter from the probe input of
+                     * the previous level.
                      */
                     if (partitionLevel == 0) {
                         writeToPartition = true;
@@ -932,7 +944,7 @@ void LhxPlan::createChildren(LhxHashInfo const &hashInfo,
         partitionList.push_back(destPartitionList[i + LhxChildPartCount]);
 
         newChildPlan->init(
-            this,
+            WeakLhxPlan(shared_from_this()),
             partitionLevel + 1,
             partitionList,
             enableSubPartStat);
@@ -961,7 +973,7 @@ void LhxPlan::createChildren(LhxPartitionInfo &partInfo,
                 partInfo.filteredRowCountList[i + LhxChildPartCount * j]);
         }
         newChildPlan->init(
-            this,
+            WeakLhxPlan(shared_from_this()),
             partitionLevel + 1,
             partitionList,
             subPartStats,
@@ -991,10 +1003,11 @@ LhxPlan *LhxPlan::getNextLeaf()
     if (siblingPlan) {
         return siblingPlan->getFirstLeaf();
     } else {
-        LhxPlan *parent = this->parentPlan;
+        WeakLhxPlan parent = this->parentPlan;
+        SharedLhxPlan shared_parent = parent.lock();
 
-        if (parent) {
-            return parent->getNextLeaf();
+        if (shared_parent) {
+            return shared_parent->getNextLeaf();
         } else {
             return NULL;
         }
@@ -1025,7 +1038,7 @@ string LhxPlan::toString()
     planTrace << "\n"
               << "[Plan : addr       = " << this                 << "]\n"
               << "[       level      = " << partitionLevel       << "]\n"
-              << "[       parent     = " << parentPlan           << "]\n"
+              << "[       parent     = " << parentPlan.lock().get()  << "]\n"
               << "[       firstChild = " << firstChildPlan.get() << "]\n"
               << "[       sibling    = " << siblingPlan.get()    << "]\n";
 

@@ -101,6 +101,14 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > deterministic
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create function null_preserving_atoi(s varchar(128))
+. . . . . . . . > returns int
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > returns null on null input
+. . . . . . . . > deterministic
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.atoi';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> create function atoi_with_null_for_err(s varchar(128))
 . . . . . . . . > returns int
 . . . . . . . . > language java
@@ -291,6 +299,20 @@ Error: From line 1, column 8 to line 1, column 40: No match found for function s
 0: jdbc:farrago:> -- this should fail
 0: jdbc:farrago:> values good_atoi('nineoneone');
 Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values null_preserving_atoi(cast(null as varchar(128)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values null_preserving_atoi('451');
++---------+
+| EXPR$0  |
++---------+
+| 451     |
++---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> values stirfry('Alley');
 +-------------+

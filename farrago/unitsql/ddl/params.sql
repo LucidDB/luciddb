@@ -39,3 +39,70 @@ alter system set "cachePagesInit" = 1001;
 
 -- should fail
 alter system set "cachePagesInit" = 'abc';
+
+-- should work
+alter system set "expectedConcurrentStatements" = 10;
+alter system set "expectedConcurrentStatements" = 4;
+
+-- should fail
+alter system set "expectedConcurrentStatements" = 201;
+
+-- should work
+alter system set "cacheReservePercentage" = 10;
+alter system set "cacheReservePercentage" = 5;
+
+-- should fail
+alter system set "cacheReservePercentage" = 100;
+
+-- Test session parameters
+
+-- should work
+select * from sys_boot.mgmt.session_parameters_view
+  where param_name in 
+    ('catalogName', 'schemaName', 'sessionUserName', 'squeezeJdbcNumeric')
+  order by 1;
+
+-- should fail (farrago does not have this parameter)
+alter session set "logDir" = 'testlog';
+
+-- should fail
+alter session set "squeezeJdbcNumeric" = 1;
+alter session set "squeezeJdbcNumeric" = 'or anything besides a boolean';
+
+-- should work
+alter session set "squeezeJdbcNumeric" = false;
+
+select * from sys_boot.mgmt.session_parameters_view
+  where param_name = 'squeezeJdbcNumeric';
+
+-- Test LucidDb session parameters
+
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+
+-- should work (luciddb inherits from farrago)
+alter session set "squeezeJdbcNumeric" = 'true';
+
+-- should work
+alter session set "logDir" = 'testlog';
+alter session set "etlProcessId" = 1234;
+alter session set "etlActionId" = 'LoadAccount';
+alter session set "errorMax" = 1000;
+alter session set "errorLogMax" = 1000;
+
+-- should fail
+alter session set "logDir" = 'foobar';
+alter session set "logDir" = 'README';
+alter session set "logDir" = null;
+alter session set "errorMax" = true;
+alter session set "errorLogMax" = 101.51;
+alter session set "errorMax" = 9876543210;
+alter session set "errorLogMax" = -1;
+
+-- should work
+select * from sys_boot.mgmt.session_parameters_view
+  where param_name in 
+    ('logDir', 'etlProcessId', 'etlActionId', 'errorMax', 'errorLogMax')
+  order by 1;
+
+-- should work
+alter session set "etlActionId" = null;

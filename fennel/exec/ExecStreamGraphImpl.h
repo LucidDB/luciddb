@@ -121,6 +121,11 @@ protected:
     SharedSegment pScratchSegment;
 
     /**
+     * Resource governor
+     */
+    SharedExecStreamGovernor pResourceGovernor;
+
+    /**
      * Whether this graph is currently open.  Note that this is not quite the
      * opposite of the inherited ClosableObject.needsClose, since a graph
      * needs to be closed before destruction if it has been prepared but never
@@ -177,7 +182,10 @@ public:
     virtual void setTxn(SharedLogicalTxn pTxn);
     virtual void setScratchSegment(
         SharedSegment pScratchSegment);
+    virtual void setResourceGovernor(
+        SharedExecStreamGovernor pResourceGovernor);
     virtual SharedLogicalTxn getTxn();
+    virtual SharedExecStreamGovernor getResourceGovernor();
     virtual void prepare(ExecStreamScheduler &scheduler);
     virtual void open();
     virtual void addStream(SharedExecStream pStream);

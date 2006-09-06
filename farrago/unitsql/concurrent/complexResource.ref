@@ -1,0 +1,195 @@
+-- setup
+> alter system set "expectedConcurrentStatements" = 1;
+0 rows affected.
+> create schema sj;
+0 rows affected.
+> set schema 'sj';
+0 rows affected.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0 rows affected.
+> create table sales(
+> sid int, product_id int, salesperson int, customer int, quantity int);
+0 rows affected.
+> create index i_sales_pid on sales(product_id);
+0 rows affected.
+> create index i_sales_sp on sales(salesperson);
+0 rows affected.
+> create index i_sales_cust on sales(customer);
+0 rows affected.
+> create table product(id int, name char(20), color char(10), size char(1));
+0 rows affected.
+> create table salesperson(id int, name char(20), age int);
+0 rows affected.
+> create table customer(id int, company char(20), city char(20));
+0 rows affected.
+> create table state(city char(20), state char(20));
+0 rows affected.
+> create index i_customer_city on customer(city);
+0 rows affected.
+> insert into product values(1, 'radio', 'black', 'S');
+1 row affected.
+> insert into product values(2, 'phone', 'white', 'M');
+1 row affected.
+> insert into salesperson values(1, 'XYZ', 30);
+1 row affected.
+> insert into salesperson values(2, 'UVW', 40);
+1 row affected.
+> insert into customer values(1, 'ABC', 'San Mateo');
+1 row affected.
+> insert into customer values(2, 'DEF', 'New York City');
+1 row affected.
+> insert into state values('San Mateo', 'CA');
+1 row affected.
+> insert into state values('New York City', 'New York');
+1 row affected.
+> insert into sales values(1, 1, 1, 1, 10);
+1 row affected.
+> insert into sales values(2, 1, 1, 2, 20);
+1 row affected.
+> insert into sales values(3, 1, 2, 1, 30);
+1 row affected.
+> insert into sales values(4, 1, 2, 2, 40);
+1 row affected.
+> insert into sales values(5, 2, 1, 1, 50);
+1 row affected.
+> insert into sales values(6, 2, 1, 2, 60);
+1 row affected.
+> insert into sales values(7, 2, 2, 1, 70);
+1 row affected.
+> insert into sales values(8, 2, 2, 2, 80);
+1 row affected.
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALES', 100000);
+0 rows affected.
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'PRODUCT', 20);
+0 rows affected.
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'SALESPERSON', 10);
+0 rows affected.
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'CUSTOMER', 100);
+0 rows affected.
+> call sys_boot.mgmt.stat_set_row_count('LOCALDB', 'SJ', 'STATE', 5);
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'SALES', 'PRODUCT_ID', 20, 100, 20, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'SALES', 'SALESPERSON', 10, 100, 10, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'SALES', 'CUSTOMER', 100, 100, 100, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'PRODUCT', 'ID', 20, 100, 20, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'SALESPERSON', 'ID', 10, 100, 10, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'CUSTOMER', 'ID', 100, 100, 100, 0, '0123456789');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'CUSTOMER', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+0 rows affected.
+> call sys_boot.mgmt.stat_set_column_histogram(
+> 'LOCALDB', 'SJ', 'STATE', 'CITY', 5, 100, 5, 1, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+0 rows affected.
+> explain plan excluding attributes for
+> select sys_boot.mgmt.sleep(20000), count(*)
+> from customer c, salesperson sp, product p, sales s
+> where
+> s.product_id = p.id and
+> s.salesperson = sp.id and
+> s.customer = c.id and
+> p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
+> group by 1
+> order by 1, 2;
++---------+
+| column0 |
++---------+
+| FennelToIteratorConverter |
+|   FennelSortRel |
+|     IteratorToFennelConverter |
+|       IterCalcRel |
+|         FennelToIteratorConverter |
+|           LhxAggRel |
+|             FennelCalcRel |
+|               LhxJoinRel |
+|                 FennelCalcRel |
+|                   LcsRowScanRel |
+|                 FennelCalcRel |
+|                   LhxJoinRel |
+|                     FennelCalcRel |
+|                       LcsRowScanRel |
+|                     FennelCalcRel |
+|                       LhxJoinRel |
+|                         LcsRowScanRel |
+|                           LcsIndexMergeRel |
+|                             LcsIndexSearchRel |
+|                               FennelValuesRel |
+|                         LcsRowScanRel |
+|                           LcsIndexIntersectRel |
+|                             LcsIndexMergeRel |
+|                               LcsIndexSearchRel |
+|                                 FennelSortRel |
+|                                   LhxAggRel |
+|                                     FennelCalcRel |
+|                                       LcsRowScanRel |
+|                             LcsIndexMergeRel |
+|                               LcsIndexSearchRel |
+|                                 FennelSortRel |
+|                                   LhxAggRel |
+|                                     FennelCalcRel |
+|                                       LcsRowScanRel |
+|                             LcsIndexMergeRel |
+|                               LcsIndexSearchRel |
+|                                 FennelSortRel |
+|                                   LhxAggRel |
+|                                     FennelCalcRel |
+|                                       LcsRowScanRel |
+|                                         LcsIndexMergeRel |
+|                                           LcsIndexSearchRel |
+|                                             FennelValuesRel |
++---------+
+
+-- end of setup
+
+-- thread 1
+> set schema 'sj';
+0 rows affected.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0 rows affected.
+> select sys_boot.mgmt.sleep(20000), count(*)
+> from customer c, salesperson sp, product p, sales s
+> where
+> s.product_id = p.id and
+> s.salesperson = sp.id and
+> s.customer = c.id and
+> p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
+> group by 1
+> order by 1, 2;
++------------+---------------------+
+| EXPR$0     | EXPR$1              |
++------------+---------------------+
+| 0          | 8                   |
++------------+---------------------+
+
+> alter system set "expectedConcurrentStatements" = 4;
+0 rows affected.
+-- end of thread 1
+
+-- thread 2
+> set schema 'sj';
+0 rows affected.
+> alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+0 rows affected.
+> select sys_boot.mgmt.sleep(1), count(*)
+> from customer c, salesperson sp, product p, sales s
+> where
+> s.product_id = p.id and
+> s.salesperson = sp.id and
+> s.customer = c.id and
+> p.size >= 'M' and sp.age >= 30 and c.city >= 'N'
+> group by 1
+> order by 1, 2;
+net.sf.farrago.jdbc.FarragoJdbcUtil$FarragoSqlException: Cache scratch memory exhausted
+-- end of thread 2
+

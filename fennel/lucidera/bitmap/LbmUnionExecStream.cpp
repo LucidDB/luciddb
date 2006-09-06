@@ -63,7 +63,8 @@ void LbmUnionExecStream::prepare(LbmUnionExecStreamParams const &params)
 
 void LbmUnionExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
-    ExecStreamResourceQuantity &optQuantity)
+    ExecStreamResourceQuantity &optQuantity,
+    ExecStreamResourceSettingType &optType)
 {
     ConfluenceExecStream::getResourceRequirements(minQuantity, optQuantity);
 
@@ -71,10 +72,8 @@ void LbmUnionExecStream::getResourceRequirements(
     //   - 1 for workspace
     //   - 1 for writer
     minQuantity.nCachePages += 2;
-    optQuantity.nCachePages += computeOptWorkspacePages(maxRid) + 1;
-
-    // cheat for now, until we get the chopper going
-    minQuantity = optQuantity;
+    optQuantity.nCachePages += 2 + computeOptWorkspacePages(maxRid) + 1;
+    optType = EXEC_RESOURCE_ESTIMATE;
 }
 
 void LbmUnionExecStream::setResourceAllocation(

@@ -60,6 +60,7 @@ struct LcsRowScanBaseExecStreamParams : public ConfluenceExecStreamParams
     TupleProjection outputProj;
 };
 
+
 /**
  * Implements basic elements required to scan clusters in an exec stream
  */
@@ -71,7 +72,7 @@ protected:
      * in the output projection
      */
     std::vector<uint> projMap;
-
+    
     /**
      * Number of clusters to be scanned
      */
@@ -114,10 +115,23 @@ protected:
      *
      * @param colStart starting column offset where first column will be
      * loaded
+     *
+     * @return false if column filters failed; true otherwise
      */
-    void readColVals(
+    bool readColVals(
         SharedLcsClusterReader &pScan, TupleDataWithBuffer &tupleData,
         uint colStart);
+
+    /**
+     * Builds outputProj from params.
+     *
+     * @param outputProj the projection to be built
+     *
+     * @param params the LcsRowScanBaseExecStreamParams
+     *
+     */
+    virtual void buildOutputProj(TupleProjection &outputProj,
+                            LcsRowScanBaseExecStreamParams const &params);
 
 public:
     explicit LcsRowScanBaseExecStream();

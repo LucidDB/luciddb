@@ -45,14 +45,16 @@ void LcsRowScanBaseExecStream::prepare(
     uint clusterStart = 0;
     uint projCount = 0;
     TupleDescriptor allClusterTupleDesc;
-    TupleProjection newProj;
+    TupleProjection newProj, outputProj;
 
-    newProj.resize(params.outputProj.size());
+    buildOutputProj(outputProj, params);
+
+    newProj.resize(outputProj.size());
 
     // if we're projecting non-cluster columns, keep track of them separately;
     TupleDescriptor outputTupleDesc = pOutAccessor->getTupleDesc();
-    for (uint i = 0; i < params.outputProj.size(); i++) {
-        if (params.outputProj[i] == LCS_RID_COLUMN_ID) {
+    for (uint i = 0; i < outputProj.size(); i++) {
+        if (outputProj[i] == LCS_RID_COLUMN_ID) {
             newProj[i] = projCount++;
             allClusterTupleDesc.push_back(outputTupleDesc[i]);
             nonClusterCols.push_back(params.outputProj[i]);
@@ -89,10 +91,10 @@ void LcsRowScanBaseExecStream::prepare(
         // based on the individual cluster projections
         TupleProjection clusterProj;
         for (uint j = 0; j < newProj.size(); j++) {
-            if (params.outputProj[j] >= clusterStart &&
-                params.outputProj[j] <= clusterEnd)
+            if (outputProj[j] >= clusterStart &&
+                outputProj[j] <= clusterEnd)
             {
-                clusterProj.push_back(params.outputProj[j] - clusterStart);
+                clusterProj.push_back(outputProj[j] - clusterStart);
                 newProj[j] = projCount++;
             }
         }
@@ -174,7 +176,7 @@ void LcsRowScanBaseExecStream::syncColumns(SharedLcsClusterReader &pScan)
     }
 }
 
-void LcsRowScanBaseExecStream::readColVals(
+bool LcsRowScanBaseExecStream::readColVals(
     SharedLcsClusterReader &pScan, TupleDataWithBuffer &tupleData,
     uint colStart)
 {
@@ -185,7 +187,26 @@ void LcsRowScanBaseExecStream::readColVals(
             // tuple datum entry 
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
             tupleData[projMap[colStart + iCluCol]].loadLcsDatum(curValue);
+            if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
+                if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
+                    tupleData)) 
+                {
+                    return false;
+                }
+            }
         }
+    }
+    return true;
+}
+
+void LcsRowScanBaseExecStream::buildOutputProj(TupleProjection &outputProj,
+                            LcsRowScanBaseExecStreamParams const &params)
+{
+    /*
+     * Copy the projection
+     */
+    for (uint i = 0;  i < params.outputProj.size(); i++) {
+        outputProj.push_back(params.outputProj[i]);
     }
 }
 
