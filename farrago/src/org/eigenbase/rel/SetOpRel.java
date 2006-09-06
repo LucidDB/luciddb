@@ -100,18 +100,32 @@ public abstract class SetOpRel
     /**
      * Returns whether all the inputs of this set operator have the same row
      * type as its output row.
+     * 
+     * @param compareNames whether or not column names are important in the
+     *                     homogeneity comparison
      */
-    public boolean isHomogeneous()
+    public boolean isHomogeneous(boolean compareNames)
     {
         RelDataType unionType = getRowType();
         RelNode [] inputs = getInputs();
         for (int i = 0; i < inputs.length; ++i) {
             RelDataType inputType = inputs[i].getRowType();
-            if (!RelOptUtil.areRowTypesEqual(inputType, unionType, true)) {
+            if (!RelOptUtil.areRowTypesEqual(
+                    inputType, unionType, compareNames)) {
                 return false;
             }
         }
         return true;
+    }
+    
+    /**
+     * Returns whether all the inputs of this set operator have the same row
+     * type as its output row.  Equivalent to 
+     * {@link #isHomogeneous(boolean) isHomogeneous(true)}.
+     */
+    public boolean isHomogeneous()
+    {
+        return isHomogeneous(true);
     }
 }
 

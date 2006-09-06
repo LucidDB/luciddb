@@ -87,6 +87,12 @@ public class RelSubset
      */
     long timestamp;
 
+    /** 
+     * Flag indicating whether this RelSubset's importance was artificially
+     * boosted.
+     */
+    boolean boosted;
+    
     //~ Constructors -----------------------------------------------------------
 
     RelSubset(
@@ -99,6 +105,7 @@ public class RelSubset
         this.rels = new ArrayList<RelNode>();
         this.parents = new ArrayList<RelNode>();
         this.bestCost = VolcanoCost.INFINITY;
+        this.boosted = false;
         recomputeDigest();
     }
 
@@ -282,9 +289,12 @@ public class RelSubset
 
         final RelOptCost cost = planner.getCost(rel);
         if (cost.isLt(bestCost)) {
-            tracer.finer(
-                "Subset cost improved: subset [" + this
-                + "] cost was " + bestCost + " now " + cost);
+            if (tracer.isLoggable(Level.FINER)) {
+                tracer.finer(
+                    "Subset cost improved: subset [" + this
+                    + "] cost was " + bestCost + " now " + cost);
+            }
+            
             bestCost = cost;
             best = rel;
 
@@ -299,6 +309,20 @@ public class RelSubset
         }
     }
 
+    public void propagateBoostRemoval(VolcanoPlanner planner)
+    {
+        planner.ruleQueue.recompute(this);
+        
+        if (boosted) {
+            boosted = false;
+
+            for(RelNode parent: parents) {
+                final RelSubset parentSubset = planner.getSubset(parent);
+                parentSubset.propagateBoostRemoval(planner);
+            }
+        }
+    }
+    
     public void collectVariablesUsed(Set<String> variableSet)
     {
         variableSet.addAll(getVariablesUsed());
@@ -308,7 +332,7 @@ public class RelSubset
     {
         variableSet.addAll(getVariablesSet());
     }
-
+    
     //~ Inner Classes ----------------------------------------------------------
 
     /**

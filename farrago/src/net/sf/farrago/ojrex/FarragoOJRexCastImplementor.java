@@ -192,6 +192,7 @@ public class FarragoOJRexCastImplementor
         Expression rhsExp)
     {
         if (translator.isNullablePrimitive(rhsType) ||
+            SqlTypeUtil.isDatetime(rhsType) ||
             SqlTypeUtil.isInterval(rhsType)) {
             rhsExp =
                 new FieldAccess(rhsExp, NullablePrimitive.VALUE_FIELD_NAME);

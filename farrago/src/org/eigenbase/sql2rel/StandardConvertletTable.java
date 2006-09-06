@@ -31,7 +31,6 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.sql.type.SqlTypeUtil;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
@@ -550,6 +549,44 @@ public class StandardConvertletTable
                 SqlStdOperatorTable.divideOperator,
                 res,
                 factor);
+        return res;
+    }
+
+    public RexNode convertDatetimeMinus(
+        SqlRexContext cx,
+        SqlDatetimeSubtractionOperator op,
+        SqlCall call)
+    {
+        // Rewrite datetime minus
+        final RexBuilder rexBuilder = cx.getRexBuilder();
+        final SqlNode [] operands = call.getOperands();
+        final RexNode [] exprs = convertExpressionList(cx, operands);
+        // TODO: Handle year month interval (represented in months)
+        for (int i = 0; i < exprs.length; i++) {
+            if (SqlTypeName.IntervalYearMonth.equals(
+                exprs[i].getType().getSqlTypeName())) {
+                Util.needToImplement("Datetime subtraction of year month interval");
+            }
+        }
+        RelDataType int8Type = cx.getTypeFactory().createSqlType(SqlTypeName.Bigint);
+        final RexNode [] casts = new RexNode[2];
+        casts[0] = rexBuilder.makeCast(
+            cx.getTypeFactory().createTypeWithNullability(
+                int8Type,
+                exprs[0].getType().isNullable()),
+            exprs[0]);
+        casts[1] = rexBuilder.makeCast(
+            cx.getTypeFactory().createTypeWithNullability(
+                int8Type,
+                exprs[1].getType().isNullable()),
+            exprs[1]);
+        final RexNode minus = rexBuilder.makeCall(
+            SqlStdOperatorTable.minusOperator,
+            casts
+        );
+        final RelDataType resType =
+            cx.getValidator().getValidatedNodeType(call);
+        final RexNode res = rexBuilder.makeCast(resType, minus);
         return res;
     }
 

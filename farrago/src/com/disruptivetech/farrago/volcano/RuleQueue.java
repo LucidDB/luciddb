@@ -50,13 +50,13 @@ class RuleQueue
     final Map<RelSubset, Double> subsetImportances =
         new HashMap<RelSubset, Double>();
 
-    private final List<VolcanoRuleMatch> matchList =
-        new ArrayList<VolcanoRuleMatch>();
-
+    final Set<RelSubset> boostedSubsets = new HashSet<RelSubset>();
+    
+    final Map<VolcanoPlannerPhase, PhaseMatchList> matchListMap =
+        new HashMap<VolcanoPlannerPhase, PhaseMatchList>();
+    
     private final Comparator<VolcanoRuleMatch> ruleMatchImportanceComparator =
         new RuleMatchImportanceComparator();
-
-    private final Set<String> matchNames = new HashSet<String>();
 
     private final VolcanoPlanner planner;
 
@@ -66,20 +66,48 @@ class RuleQueue
     private final Comparator<RelSubset> relImportanceComparator =
         new RelImportanceComparator();
 
-    private final BinaryHeap<RelSubset> relQueue =
-        new BinaryHeap<RelSubset>(true, relImportanceComparator);
-
-    private final Set<RelNode> rels = new HashSet<RelNode>();
-
+    private static final Set<String> allRules = 
+        Collections.singleton("<ALL RULES>");
+    
+    private final 
+        Map<VolcanoPlannerPhase, Set<String>> phaseRuleMapping;
+    
     //~ Constructors -----------------------------------------------------------
 
     RuleQueue(VolcanoPlanner planner)
     {
         this.planner = planner;
+        
+        phaseRuleMapping = new HashMap<VolcanoPlannerPhase, Set<String>>();
+
+        // init empty sets for all phases
+        for(VolcanoPlannerPhase phase: VolcanoPlannerPhase.values()) {
+            phaseRuleMapping.put(phase, new HashSet<String>());
+        }
+        
+        // configure phases
+        planner.getPhaseRuleMappingInitializer().initialize(phaseRuleMapping);
+
+        for(VolcanoPlannerPhase phase: VolcanoPlannerPhase.values()) {
+            // empty phases get converted to "all rules"
+            if (phaseRuleMapping.get(phase).isEmpty()) {
+                phaseRuleMapping.put(phase, allRules);
+            }
+
+            // create a match list data structure for each phase
+            PhaseMatchList matchList = new PhaseMatchList(phase);
+            
+            matchListMap.put(phase, matchList);
+        }
     }
 
     //~ Methods ----------------------------------------------------------------
 
+    public void phaseCompleted(VolcanoPlannerPhase phase)
+    {
+        matchListMap.remove(phase);
+    }
+    
     /**
      * Computes the importance a set (which is that of its most important
      * subset).
@@ -95,38 +123,103 @@ class RuleQueue
         return importance;
     }
 
-    public boolean contains(RelNode rel)
-    {
-        return this.rels.contains(rel);
-    }
-
     /**
      * Returns whether there is a rule match in the queue.
      */
-    public boolean hasNextMatch()
+    public boolean hasNextMatch(VolcanoPlannerPhase phase)
     {
-        return !matchList.isEmpty();
+        return !matchListMap.get(phase).list.isEmpty();
     }
 
-    public void recompute(RelSubset subset)
+    public void recompute(RelSubset subset, boolean force)
     {
-        final Double previousImportance = subsetImportances.get(subset);
+        Double previousImportance = subsetImportances.get(subset);
         if (previousImportance == null) {
-            // Subset has not been registered yet. Don't worry about it.
-            return;
+            if (!force) {
+                // Subset has not been registered yet. Don't worry about it.
+                return;
+            }
+            
+            previousImportance = Double.NEGATIVE_INFINITY;
         }
+        
         double importance = computeImportance(subset);
         if (previousImportance.doubleValue() == importance) {
             return;
         }
-        relQueue.remove(subset);
-        subsetImportances.put(subset, importance);
-        relQueue.insert(subset);
-    }
 
-    boolean isEmpty()
+        updateImportance(subset, importance);
+    }
+    
+    public void recompute(RelSubset subset)
     {
-        return relQueue.isEmpty();
+        recompute(subset, false);
+    }
+    
+    public void boostImportance(Collection<RelSubset> subsets, double factor)
+    {
+        ArrayList<RelSubset> boostRemovals = new ArrayList<RelSubset>();
+        Iterator<RelSubset> iter = boostedSubsets.iterator(); 
+        while(iter.hasNext()) {
+            RelSubset subset = iter.next();
+
+            if (!subsets.contains(subset)) {
+                iter.remove();
+                boostRemovals.add(subset);
+            }
+        }
+
+        Collections.sort(
+            boostRemovals,
+            new Comparator<RelSubset>() {
+
+                public int compare(RelSubset o1, RelSubset o2)
+                {
+                    int o1children = countChildren(o1);
+                    int o2children = countChildren(o2);
+                    
+                    return o1children - o2children;
+                }
+                
+                private int countChildren(RelSubset subset)
+                {
+                    int count = 0;
+                    for (RelNode rel: subset.rels) {
+                        count += rel.getInputs().length;
+                    }
+                    return count;
+                }
+            });
+        
+        for(RelSubset subset: boostRemovals) {
+            subset.propagateBoostRemoval(planner);
+        }
+        
+        for(RelSubset subset: subsets) {
+            double importance = subsetImportances.get(subset);
+        
+            updateImportance(
+                subset, 
+                Math.min(1.0 - Double.MIN_VALUE, importance * factor));
+            
+            subset.boosted = true;
+            boostedSubsets.add(subset);
+        }
+    }
+    
+    void updateImportance(RelSubset subset, Double importance)
+    {
+        subsetImportances.put(subset, importance);
+        
+        for(PhaseMatchList matchList: matchListMap.values()) {
+            MultiMap<RelSubset, VolcanoRuleMatch> relMatchMap = 
+                matchList.matchMap;
+            if (relMatchMap.containsKey(subset)) {
+                for(VolcanoRuleMatch match: relMatchMap.getMulti(subset)) {
+                    match.clearCachedImportance();
+                }
+            }
+        }
     }
 
     /**
@@ -142,6 +235,7 @@ class RuleQueue
     double getImportance(RelSubset rel)
     {
         assert rel != null;
+        
         double importance = 0;
         final RelSet set = planner.getSet(rel);
         assert set != null;
@@ -163,49 +257,40 @@ class RuleQueue
     }
 
     /**
-     * Registers that a relational expression's rules have not been fired.
-     *
-     * @pre rel != null
-     */
-    void add(RelNode rel)
-    {
-        assert rel != null : "pre: rel != null";
-        boolean b = rels.add(rel);
-        assert b : "RuleQueue already contained rel: " + rel
-            + " (Did you forget to clone a rel in a rule?)";
-        final RelSubset subset = planner.getSubset(rel);
-        assert (subset != null);
-        add(subset);
-    }
-
-    /**
-     * Registers a subset, if it has not already been registered.
-     */
-    void add(RelSubset subset)
-    {
-        if (subsetImportances.get(subset) == null) {
-            final double importance = computeImportance(subset);
-            final Double previousImportance =
-                subsetImportances.put(
-                    subset,
-                    importance);
-            assert previousImportance == null;
-            relQueue.insert(subset);
-        }
-    }
-
-    /**
      * Adds a rule match.
      */
     void addMatch(VolcanoRuleMatch match)
     {
         final String matchName = match.toString();
-        if (!matchNames.add(matchName)) {
-            // Identical match has already been added.
-            return;
+        for(PhaseMatchList matchList: matchListMap.values()) {
+            if (!matchList.names.add(matchName)) {
+                // Identical match has already been added.
+                continue;
+            }
+            
+            String ruleClassName = match.getRule().getClass().getSimpleName();
+                
+            Set<String> phaseRuleSet = phaseRuleMapping.get(matchList.phase);
+            if (phaseRuleSet != allRules) {
+                if (!phaseRuleSet.contains(ruleClassName)) {
+                    continue;
+                }
+                
+                tracer.finest("foo");
+            }
+
+            if (tracer.isLoggable(Level.FINEST)) {
+                tracer.finest(
+                    matchList.phase.toString() + " Rule-match queued: "
+                    + matchName);
+            }
+            
+            matchList.list.add(match);
+            
+            matchList.matchMap.putMulti(
+                planner.getSubset(match.rels[0]),
+                match);
         }
-        tracer.finest("Rule-match queued: " + matchName);
-        matchList.add(match);
     }
 
     /**
@@ -283,120 +368,48 @@ class RuleQueue
         pw.println("}");
     }
 
-    RelNode findCheapestMember(RelSubset childSubset)
-    {
-        RelOptCost cheapestCost = null;
-        RelNode cheapestRel = null;
-        for (RelNode rel : childSubset.rels) {
-            RelOptCost cost = planner.getCost(rel);
-            if ((cheapestCost == null) || cost.isLt(cheapestCost)) {
-                if (this.rels.contains(rel)) {
-                    cheapestCost = cost;
-                    cheapestRel = rel;
-                }
-            }
-        }
-        return cheapestRel;
-    }
-
-    /**
-     * Returns the relational expression whose cost is highest
-     *
-     * @pre !isEmpty()
-     * @post return != null
-     */
-    RelNode pop()
-    {
-        while (true) {
-            dump();
-            RelSubset subset = relQueue.pop();
-            if (!relQueue.isEmpty()) {
-                RelSubset nextSubset = relQueue.peek();
-                double importance = computeImportance(subset);
-                double nextImportance = computeImportance(nextSubset);
-                if (nextImportance > importance) {
-                    // The queue was out of order. Try it again.
-                    subsetImportances.put(
-                        subset,
-                        importance);
-                    subsetImportances.put(
-                        nextSubset,
-                        nextImportance);
-                    relQueue.pop();
-                    relQueue.insert(nextSubset);
-                    relQueue.insert(subset);
-                    continue;
-                }
-            }
-            final RelNode cheapestMember = findCheapestMember(subset);
-            if (cheapestMember != null) {
-                relQueue.insert(subset); // put it back.. there may be more
-                assert rels.remove(cheapestMember) : "candidate rel must be on rule queue";
-                return cheapestMember;
-            }
-
-            // don't put subset back on the queue
-            if (relQueue.isEmpty()) {
-                return null;
-            }
-        }
-    }
-
     /**
      * Removes the rule match with the highest importance, and returns it.
      *
      * @pre hasNextMatch()
      */
-    VolcanoRuleMatch popMatch()
+    VolcanoRuleMatch popMatch(VolcanoPlannerPhase phase)
     {
         dump();
-        assert (hasNextMatch());
-        final VolcanoRuleMatch [] matches =
-            (VolcanoRuleMatch []) matchList.toArray(
-                new VolcanoRuleMatch[matchList.size()]);
-        for (int i = 0; i < matches.length; i++) {
-            assert matches[i] != null : i;
-        }
-        Arrays.sort(matches, ruleMatchImportanceComparator);
+        assert (hasNextMatch(phase));
+
+        PhaseMatchList phaseMatchList = matchListMap.get(phase);
+        assert(phaseMatchList != null):
+            "Used match list for phase " + phase + " after phase complete";
+        
+        List<VolcanoRuleMatch> matchList = phaseMatchList.list;
+        
+        Collections.sort(matchList, ruleMatchImportanceComparator);
+
         if (tracer.isLoggable(Level.FINEST)) {
-            tracer.finest("Sorted rule queue:");
-            for (int i = 0; i < matches.length; i++) {
-                VolcanoRuleMatch match = (VolcanoRuleMatch) matches[i];
-                final double importance = match.computeImportance();
-                tracer.finest(match + " importance " + importance);
+            StringBuilder b = new StringBuilder();
+            b.append("Sorted rule queue:");
+            for(VolcanoRuleMatch match: matchList) {
+              final double importance = match.computeImportance();
+              b.append("\n");
+              b.append(match);
+              b.append(" importance ");
+              b.append(importance);                
             }
+            
+            tracer.finest(b.toString());
         }
-        final VolcanoRuleMatch match = matches[0];
-        matchList.remove(match);
+        
+        VolcanoRuleMatch match = matchList.remove(0);
+        
+        phaseMatchList.matchMap.removeMulti(
+            planner.getSubset(match.rels[0]),
+            match);
+        
+        if (tracer.isLoggable(Level.FINE)) {
+            tracer.fine("Pop match: " + match);
+        }
         return match;
-    }
-
-    boolean remove(RelNode rel)
-    {
-        final boolean existed = rels.remove(rel);
-        if (existed) {
-            // Remove any matches which involve the obsolete relational expr.
-            for (int i = 0; i < matchList.size(); i++) {
-                VolcanoRuleMatch match = matchList.get(i);
-                if (matchContains(match, rel)) {
-                    matchList.remove(i);
-                    --i;
-                }
-            }
-        }
-        return existed;
-    }
-
-    private static boolean matchContains(
-        VolcanoRuleMatch match,
-        RelNode rel)
-    {
-        for (int j = 0; j < match.rels.length; j++) {
-            if (match.rels[j] == rel) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -470,7 +483,7 @@ class RuleQueue
         {
             double imp1 = getImportance(rel1);
             double imp2 = getImportance(rel2);
-            int c = Double.compare(imp1, imp2);
+            int c = Double.compare(imp2, imp1);
             if (c == 0) {
                 c = rel1.getId() - rel2.getId();
             }
@@ -491,8 +504,8 @@ class RuleQueue
             VolcanoRuleMatch match1,
             VolcanoRuleMatch match2)
         {
-            double imp1 = match1.computeImportance();
-            double imp2 = match2.computeImportance();
+            double imp1 = match1.getImportance();
+            double imp2 = match2.getImportance();
             int c = Double.compare(imp1, imp2);
             if (c == 0) {
                 c = compareRels(
@@ -500,6 +513,22 @@ class RuleQueue
                         match2.getRels());
             }
             return -c;
+        }
+    }
+    
+    private static class PhaseMatchList
+    {
+        final VolcanoPlannerPhase phase;
+        List<VolcanoRuleMatch> list;
+        Set<String> names;
+        MultiMap<RelSubset, VolcanoRuleMatch> matchMap;
+        
+        PhaseMatchList(VolcanoPlannerPhase phase)
+        {
+            this.phase = phase;
+            this.list = new ArrayList<VolcanoRuleMatch>();
+            this.names = new HashSet<String>();
+            this.matchMap = new MultiMap<RelSubset, VolcanoRuleMatch>();
         }
     }
 }

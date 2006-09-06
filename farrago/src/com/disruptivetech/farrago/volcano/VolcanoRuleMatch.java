@@ -42,7 +42,8 @@ class VolcanoRuleMatch
     RelSubset targetSubset;
     private final String digest;
     private VolcanoPlanner volcanoPlanner;
-
+    private double cachedImportance = Double.NaN;
+    
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -79,6 +80,20 @@ class VolcanoRuleMatch
         return digest;
     }
 
+    void clearCachedImportance()
+    {
+        cachedImportance = Double.NaN;
+    }
+    
+    double getImportance()
+    {
+        if (Double.isNaN(cachedImportance)) {
+            cachedImportance = computeImportance();
+        }
+        
+        return cachedImportance;
+    }
+    
     double computeImportance()
     {
         assert rels[0] != null;
@@ -95,6 +110,7 @@ class VolcanoRuleMatch
                 volcanoPlanner.ruleQueue.getImportance(targetSubset);
             importance = Math.max(targetImportance, importance);
         }
+
         return importance;
     }
 

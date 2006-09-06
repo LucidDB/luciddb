@@ -973,11 +973,20 @@ public class CalcRexImplementorTableImpl
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
             // REVIEW angel 2006-08-31 - allow cast from intervals to bigint?
+            // TODO: Replace castDateToMillis with real cast from/to interval
+            //  (Okay to use castDateToMillis for now since it just
+            //   stuffs one int64 value into another)
             doubleKeyMap.put(
                 SqlTypeName.timeIntervalTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
+            doubleKeyMap.put(
+                SqlTypeName.Bigint,
+                SqlTypeName.timeIntervalTypes,
+                new UsingInstrImplementor(
+                    ExtInstructionDefTable.castDateToMillis));
+
             doubleKeyMap.put(
                 SqlTypeName.booleanTypes,
                 SqlTypeName.charTypes,
