@@ -168,7 +168,7 @@ dnl it as a shared library helps reduce test executable sizes.
 AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
 
-AM_CONDITIONAL(HAVE_LIBAIO,test x$HAVE_LIBAIO=x1)
+AM_CONDITIONAL(HAVE_LIBAIO,test "$HAVE_LIBAIO" = "1")
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
 
