@@ -314,6 +314,28 @@
 +---------+---------+
 +---------+---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LDB-135 - exercise the case where the buffer space for the aggregate 
+0: jdbc:farrago:> -- result increases, requiring a new slot to be created for an existing tuple
+0: jdbc:farrago:> create table test(num integer, name varchar(20));
+0: jdbc:farrago:> insert into test values(0,'B');
+0: jdbc:farrago:> insert into test values(1,'D');
+0: jdbc:farrago:> insert into test values(0,'AAA');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table test2(dname varchar(20), num integer);
+0: jdbc:farrago:> insert into test2 values('dept1', 0);
+0: jdbc:farrago:> insert into test2 values('dept2', 1);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select test2.dname, min(test.name) from test,test2
+. . . . . . . . >     where test.num = test2.num group by dname;
++--------+---------+
+| DNAME  | EXPR$1  |
++--------+---------+
+| dept1  | AAA     |
+| dept2  | D       |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop table test;
+0: jdbc:farrago:> drop table test2;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- verify plans
 0: jdbc:farrago:> !set outputformat csv
@@ -371,4 +393,5 @@
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End agg.sql
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

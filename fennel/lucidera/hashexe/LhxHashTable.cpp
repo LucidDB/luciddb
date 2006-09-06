@@ -850,6 +850,12 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
     
         if (newKey) {
             /*
+             * Save the current key's next slot so we can set it in the new
+             * key
+             */
+            PBuffer *nextSlot = hashKeyAccessor.getNextSlot();
+
+            /*
              * The old key buffer is not used any more. Write in the key
              * location the new key buffer.
              */
@@ -859,6 +865,7 @@ bool LhxHashTable::aggData(PBuffer destKeyLoc, TupleData const &inputTuple)
             hashKeyAccessor.setMatched(false);
             hashKeyAccessor.setNext(newNextKey);
             hashKeyAccessor.pack(aggResultTuple);
+            hashKeyAccessor.setNextSlot(nextSlot);
             return true;
         } else {
             return false;
