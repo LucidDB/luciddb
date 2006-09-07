@@ -271,6 +271,8 @@ public class FarragoDbSession
 
         personality = sessionFactory.newSessionPersonality(this, null);
         defaultPersonality = personality;
+        personality.loadDefaultSessionVariables(sessionVariables);
+
         sessionInfo = new FarragoDbSessionInfo(this, database);
     }
 
@@ -1112,6 +1114,7 @@ public class FarragoDbSession
                 stmt.newPersonality(
                     FarragoDbSession.this,
                     defaultPersonality);
+            personality.loadDefaultSessionVariables(sessionVariables);
         }
 
         // implement DdlVisitor

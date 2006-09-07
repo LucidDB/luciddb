@@ -25,6 +25,7 @@
 #include "fennel/farrago/CmdInterpreter.h"
 #include "fennel/farrago/JavaTraceTarget.h"
 #include "fennel/exec/ExecStreamGraphEmbryo.h"
+#include "fennel/exec/SimpleExecStreamGovernor.h"
 #include "fennel/farrago/ExecStreamBuilder.h"
 #include "fennel/cache/CacheParams.h"
 #include "fennel/common/ConfigMap.h"
@@ -189,6 +190,22 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     pDbHandle->statsTimer.addSource(pDb);
     pDbHandle->statsTimer.start();
 
+    ExecStreamResourceKnobs knobSettings;
+    knobSettings.cacheReservePercentage =
+        configMap.getIntParam("cacheReservePercentage");
+    knobSettings.expectedConcurrentStatements =
+        configMap.getIntParam("expectedConcurrentStatements");
+
+    ExecStreamResourceQuantity resourcesAvailable;
+    resourcesAvailable.nCachePages = pCache->getMaxLockedPages();
+
+    pDbHandle->pResourceGovernor =
+        SharedExecStreamGovernor(
+            new SimpleExecStreamGovernor(
+                knobSettings, resourcesAvailable,
+                pDbHandle->pTraceTarget,
+                "xo.resourceGovernor"));
+
     if (pDb->isRecoveryRequired()) {
         SegmentAccessor scratchAccessor =
             pDb->getSegmentFactory()->newScratchSegment(pDb->getCache());
@@ -205,6 +222,7 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
 void CmdInterpreter::visit(ProxyCmdCloseDatabase &cmd)
 {
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    pDbHandle->pResourceGovernor.reset();
     AutoBacktrace::setTraceTarget();
     deleteAndNullify(pDbHandle);
 }
@@ -223,17 +241,55 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
     DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
     SharedProxyDatabaseParam pParam = cmd.getParam();
 
-    // currently this command only sets the cachePagesInit parameter
-    if (pParam->getName().compare("cachePagesInit") == 0) {
+    std::string paramName = pParam->getName();
+
+    if (paramName.compare("cachePagesInit") == 0) {
         int pageCount = boost::lexical_cast<int>(pParam->getValue());
         SharedCache pCache = pDbHandle->pDb->getCache();
         if (pageCount <= 0 || pageCount > pCache->getMaxAllocatedPageCount()) {
             throw InvalidParamExcn("1", "'cachePagesMax'");
         }
+        ExecStreamResourceQuantity available;
+        available.nCachePages = pageCount;
+        if (!pDbHandle->pResourceGovernor->setResourceAvailability(
+            available, CachePages))
+        {
+            throw InvalidParamExcn(
+                "the number of pages currently assigned (plus reserve)",
+                "'cachePagesMax'");
+        }
         pCache->setAllocatedPageCount(pageCount);
+
+    } else if (paramName.compare("expectedConcurrentStatements") == 0) {
+        int nStatements = boost::lexical_cast<int>(pParam->getValue());
+        SharedCache pCache = pDbHandle->pDb->getCache();
+        // need to set aside at least 5 pages per statement
+        if (nStatements <= 0 ||
+            nStatements > pCache->getMaxLockedPages()/5)
+        {
+            throw InvalidParamExcn("1", "'cachePagesInit/5'");
+        }
+        ExecStreamResourceKnobs knob;
+        knob.expectedConcurrentStatements = nStatements;
+        pDbHandle->pResourceGovernor->setResourceKnob(
+            knob, ExpectedConcurrentStatements);
+
+    } else if (paramName.compare("cacheReservePercentage") == 0) {
+        int percent = boost::lexical_cast<int>(pParam->getValue());
+        if (percent <= 0 || percent >= 99) {
+            throw InvalidParamExcn("1", "99");
+        }
+        ExecStreamResourceKnobs knob;
+        knob.cacheReservePercentage = percent;
+        if (!pDbHandle->pResourceGovernor->setResourceKnob(
+            knob, CacheReservePercentage))
+        {
+            throw InvalidParamExcn(
+                "1",
+                "a percentage that sets aside fewer pages, to allow for pages already assigned");
+        }
     }
 }
-
     
 void CmdInterpreter::getBTreeForIndexCmd(
     ProxyIndexCmd &cmd,PageId rootPageId,BTreeDescriptor &treeDescriptor)
@@ -329,7 +385,8 @@ void CmdInterpreter::dropOrTruncateIndex(
 void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
 {
     // block checkpoints during this method
-    SharedDatabase pDb = getDbHandle(cmd.getDbHandle())->pDb;
+    DbHandle *pDbHandle = getDbHandle(cmd.getDbHandle());
+    SharedDatabase pDb = pDbHandle->pDb;
     SXMutexSharedGuard actionMutexGuard(
         pDb->getCheckpointThread()->getActionMutex());
 
@@ -350,6 +407,7 @@ void CmdInterpreter::visit(ProxyCmdBeginTxn &cmd)
     pTxnHandle->readOnly = readOnly;
     // TODO:  CacheAccessor factory
     pTxnHandle->pTxn = pDb->getTxnLog()->newLogicalTxn(pDb->getCache());
+    pTxnHandle->pResourceGovernor = pDbHandle->pResourceGovernor;
     
     // NOTE:  use a null scratchAccessor; individual ExecStreamGraphs
     // will have their own
@@ -440,6 +498,7 @@ void CmdInterpreter::visit(ProxyCmdCreateExecutionStreamGraph &cmd)
     SharedExecStreamGraph pGraph =
         ExecStreamGraph::newExecStreamGraph();
     pGraph->setTxn(pTxnHandle->pTxn);
+    pGraph->setResourceGovernor(pTxnHandle->pResourceGovernor);
     std::auto_ptr<StreamGraphHandle> pStreamGraphHandle(
         new StreamGraphHandle());
     JniUtil::incrementHandleCount(

@@ -118,9 +118,22 @@ public:
         SharedSegment pScratchSegment) = 0;
 
     /**
+     * Sets the global exec stream governor
+     *
+     * @param pResourceGovernor exec stream governor
+     */
+    virtual void setResourceGovernor(
+        SharedExecStreamGovernor pResourceGovernor) = 0;
+
+    /**
      * @return the transaction within which this graph is executing
      */
     virtual SharedLogicalTxn getTxn() = 0;
+
+    /**
+     * @return exec stream governor
+     */
+    virtual SharedExecStreamGovernor getResourceGovernor() = 0;
 
     /**
      * Adds a stream to this graph.

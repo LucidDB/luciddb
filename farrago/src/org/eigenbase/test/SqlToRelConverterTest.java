@@ -519,13 +519,14 @@ public class SqlToRelConverterTest
 
     public void testOverAvg()
     {
-        check(
-            "select sum(sal) over w1,\n"
-            + "  avg(sal) over w1\n"
-            + "from emp\n"
-            + "window w1 as (partition by job order by hiredate rows 2 preceding)",
-
-            "${plan}");
+        if (Bug.Frg181Fixed) {
+            check(
+                "select sum(sal) over w1,\n"
+                + "  avg(sal) over w1\n"
+                + "from emp\n"
+                + "window w1 as (partition by job order by hiredate rows 2 preceding)",
+                "${plan}");
+        }
     }
 
     public void testOverCountStar()

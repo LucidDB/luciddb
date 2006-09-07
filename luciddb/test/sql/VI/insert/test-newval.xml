@@ -13,7 +13,7 @@
 
       <test name="altersys">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/altersys.sql"/>
       </test>
@@ -24,7 +24,7 @@
 
       <test name="simple_q0">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/insert/gen/${foreign.db}/simple_q0.sql"/>
       </test>

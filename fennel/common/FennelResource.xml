@@ -65,6 +65,10 @@
     <text>Scalar query returned more than one row</text>
   </message>
 
+  <message id="440070" name="scratchMemExhausted">
+    <text>Cache scratch memory exhausted</text>
+  </message>
+
   <!-- message id range 441000-441999 reserved for external data wrapper -->
 
   <!-- message id range 441900-441999 reserved for flatfile data wrapper -->
@@ -118,7 +122,7 @@
   </message>
 
   <message id="441960" name="flatfileNoHeader">
-    <text>Could not read header from data file {0}</text>
+    <text>Could not read header from data file {0}: {1}</text>
   </message>
 
 </resourceBundle>

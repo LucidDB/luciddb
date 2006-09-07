@@ -126,6 +126,7 @@ public:
      * Returns a pointer to contiguous memory.
      *
      * @param pos memory position
+     * @param size returns size of the contiguous memory
      */
     inline PBuffer getMem(uint pos, uint &size)
     {

@@ -178,6 +178,7 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(new RemoveTrivialProjectRule());
         builder.addRuleInstance(new PushProjectPastJoinRule());
         builder.addRuleInstance(new PushProjectPastFilterRule());
+        builder.addRuleInstance(new MergeProjectRule());
         builder.addGroupEnd();
 
         // We're getting close to physical implementation.  First, insert

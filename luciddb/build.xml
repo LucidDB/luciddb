@@ -238,7 +238,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-nondb">
-    <property name="bh.filter.runDuration" value="short,medium"/>
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="nondb"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-nondb"/>
@@ -251,7 +251,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-flatfile">
-    <property name="bh.filter.runDuration" value="short,medium"/>
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="flatfile"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-flatfile"/>
@@ -264,7 +264,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-oracle">
-    <property name="bh.filter.runDuration" value="short,medium"/>
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="oracle"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-oracle"/>
@@ -277,7 +277,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-sqlserver">
-    <property name="bh.filter.runDuration" value="short,medium"/>
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="sqlserver"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-sqlserver"/>
@@ -290,7 +290,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="test-csvjdbc">
-    <property name="bh.filter.runDuration" value="short,medium"/>
+    <property name="bh.filter.runDuration" value="short,medium,null"/>
     <property name="foreign.db" value="csvjdbc"/>
     <property name="bh.log.gtlf.env.ForeignDb" value="${foreign.db}"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh-csvjdbc"/>
@@ -338,7 +338,7 @@ ${farrago.test.jvmargs}
 <!-- End Experiment-->
 
   <target name="test" depends="cleanJars,createCatalog,gen-all-sql">
-    <property name="bh.filter.knownFailures" value="false"/>
+    <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork
@@ -350,7 +350,7 @@ ${farrago.test.jvmargs}
   </target>
 
   <target name="emmaTest" depends="cleanJars,createCatalog,gen-all-sql">
-    <property name="bh.filter.knownFailures" value="false"/>
+    <property name="bh.filter.knownFailures" value="false,null"/>
     <property file="run.properties"/>
     <property name="bh.log.basedir" value="${testlog.dir}/bh"/>
     <blackhawk.fork

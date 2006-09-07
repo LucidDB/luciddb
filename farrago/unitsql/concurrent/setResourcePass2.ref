@@ -1,0 +1,31 @@
+-- setup
+> alter system set "cachePagesInit" = 500;
+0 rows affected.
+> alter system set "cacheReservePercentage" = 5;
+0 rows affected.
+> alter system set "expectedConcurrentStatements" = 2;
+0 rows affected.
+-- end of setup
+
+-- thread 1
+> select sys_boot.mgmt.sleep(10000), empno from sales.emps
+> where empno = 100 order by empno;
++------------+------------+
+| EXPR$0     | EMPNO      |
++------------+------------+
+| 0          | 100        |
++------------+------------+
+
+> alter system set "cachePagesInit" = 1000;
+0 rows affected.
+> alter system set "cacheReservePercentage" = 5;
+0 rows affected.
+> alter system set "expectedConcurrentStatements" = 4;
+0 rows affected.
+-- end of thread 1
+
+-- thread 2
+> alter system set "cacheReservePercentage" = 52;
+0 rows affected.
+-- end of thread 2
+

@@ -265,6 +265,7 @@ void ExecStreamUnitTestBase::testCaseSetUp()
     openRandomSegment();
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+    pGraph->setResourceGovernor(pResourceGovernor);
 }
 
 void ExecStreamUnitTestBase::resetExecStreamTest()
@@ -277,6 +278,7 @@ void ExecStreamUnitTestBase::resetExecStreamTest()
     pScheduler.reset(newScheduler());
     pGraph = newStreamGraph();
     pGraphEmbryo = newStreamGraphEmbryo(pGraph);
+    pGraph->setResourceGovernor(pResourceGovernor);
 }
 
 // refines ExecStreamTestBase::testCaseTearDown()
@@ -294,6 +296,7 @@ void ExecStreamUnitTestBase::verifyOutput(
 {
     // TODO:  assertions about output tuple
     
+    pResourceGovernor->requestResources(pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;
@@ -344,6 +347,7 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
 {
     // TODO:  assertions about output tuple
     
+    pResourceGovernor->requestResources(pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;
@@ -395,6 +399,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     expectedOutputAccessor.compute(outputTupleDesc);
     TupleData expectedTuple(outputTupleDesc);
     uint bufOffset = 0;
+    pResourceGovernor->requestResources(pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;

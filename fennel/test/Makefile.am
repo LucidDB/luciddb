@@ -38,6 +38,7 @@ CacheTest \
 LinearDeviceSegmentTest \
 LinearViewSegmentTest \
 VersionedSegmentTest \
+ExecStreamGovernorTest \
 BTreeTxnTest \
 BTreeTest \
 BacktraceTest
@@ -80,6 +81,8 @@ StandardTypeTest_SOURCES=StandardTypeTest.cpp
 DatabaseTest_SOURCES=DatabaseTest.cpp
 
 BacktraceTest_SOURCES=BacktraceTest.cpp
+
+ExecStreamGovernorTest_SOURCES=ExecStreamGovernorTest.cpp
 
 if !STATIC_TEST_LIBRARY
 libfenneltestdyn_la_LIBADD=libfenneltest.la

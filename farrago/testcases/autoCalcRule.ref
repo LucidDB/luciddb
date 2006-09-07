@@ -140,9 +140,9 @@
 +-------------------------------------------------------------------------------------------------------------------------------------+
 |                                                               column0                                                               |
 +-------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t3, $t2)], expr#5=[+($t1, $t4)], EXPR$0=[$t5], EMPNO=[$t0])                        |
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[JPLUS($t2, $t3)], expr#5=[+($t1, $t4)], EXPR$0=[$t5], EMPNO=[$t0])                        |
 |   FennelToIteratorConverter                                                                                                         |
-|     FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[2], expr#4=[CPLUS($t1, $t2)], proj#0..1=[{exprs}], $2=[$t3], $3=[$t4])  |
+|     FennelCalcRel(expr#0..1=[{inputs}], expr#2=[1], expr#3=[2], expr#4=[CPLUS($t1, $t2)], proj#0..1=[{exprs}], $2=[$t4], $3=[$t3])  |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                 |
 +-------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farragotest:> 

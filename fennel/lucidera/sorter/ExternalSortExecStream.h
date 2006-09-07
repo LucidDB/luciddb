@@ -59,6 +59,12 @@ struct ExternalSortExecStreamParams : public ConduitExecStreamParams
      * directly from last merge stage.
      */
     bool storeFinalRun;
+
+    /**
+     * Estimate of the number of rows in the sort input.  If MAXU, no stats
+     * were available to estimate this value.
+     */
+    RecordNum estimatedNumRows;
 };
 
 /**

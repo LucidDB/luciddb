@@ -56,17 +56,21 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
      */
     uint forcePartitionLevel;
 
+    // REVIEW jvs 25-Aug-2006: See my comments on LhxAggExecStreamParams
+    // regarding these fields (w.r.t. comment cross-refs).
+    
     /**
      * Initial stats provided by the optimizer for resource allocation.
      * cndKeys: key cardinality of the initial built input chosen by the
      * optimizer. For Hash Aggregate, this is the estimated number of groups.
+     * If MAXU, the stat is unknown.
      */
-    uint cndKeys;
+    RecordNum cndKeys;
 
     /**
-     * numRows: number of rows from the build input.
+     * numRows: number of rows from the build input.  If MAXU, unknown.
      */
-    uint numRows;
+    RecordNum numRows;
 
     /**
      * Return matching rows from the left.
@@ -128,6 +132,9 @@ struct LhxJoinExecStreamParams : public ConfluenceExecStreamParams
 
 class LhxJoinExecStream : public ConfluenceExecStream
 {
+    // REVIEW jvs 26-Aug-2006:  Fennel convention for enum names is
+    // all uppercase with underscores
+    
     enum LhxDefaultJoinInputIndex {
         DefaultProbeInputIndex=0, DefaultBuildInputIndex=1
     };
@@ -166,9 +173,10 @@ class LhxJoinExecStream : public ConfluenceExecStream
     LhxHashTableReader hashTableReader;
 
     /**
-     * Initial estimate of blocks required.
+     * Initial estimate of blocks required.  If MAXU, no stats are available
+     * to compute this value.
      */
-    uint numBlocksHashTable;
+    BlockNum numBlocksHashTable;
 
     /**
      * Number of cache blocks set aside for I/O.
@@ -305,7 +313,8 @@ public:
 
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
 
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);

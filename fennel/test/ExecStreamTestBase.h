@@ -24,7 +24,9 @@
 #ifndef Fennel_ExecStreamTestBase_Included
 #define Fennel_ExecStreamTestBase_Included
 
+#include "fennel/exec/ExecStreamGovernor.h"
 #include "fennel/test/SegStorageTestBase.h"
+
 FENNEL_BEGIN_NAMESPACE
 
 class ExecStreamScheduler;
@@ -39,7 +41,13 @@ class ExecStreamScheduler;
 class ExecStreamTestBase : virtual public SegStorageTestBase
 {
 protected:
+    static const uint DefaultCacheReservePercent = 5;
+
+    static const uint DefaultConcurrentStatements = 4;
+
     SharedExecStreamScheduler pScheduler;
+
+    SharedExecStreamGovernor pResourceGovernor;
 
     /**
      * Creates a stream graph.
@@ -56,6 +64,13 @@ protected:
      * Creates a scheduler.
      */
     virtual ExecStreamScheduler *newScheduler();
+
+    /**
+     * Creates the resource governor
+     */
+    virtual ExecStreamGovernor *newResourceGovernor(
+        ExecStreamResourceKnobs const &knobSettings,
+        ExecStreamResourceQuantity const &resourcesAvailable);
 
     /**
      * ExecStream-specific handler called from testCaseTearDown.

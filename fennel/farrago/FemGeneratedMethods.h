@@ -101,6 +101,7 @@ jmethodID ProxyLcsClusterScanDef::meth_getRowScan = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_getOutputProj = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_isFullScan = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_isHasExtraFilter = 0;
+jmethodID ProxyLcsRowScanStreamDef::meth_getResidualFilterColumns = 0;
 jmethodID ProxyLcsRowScanStreamDef::meth_getClusterScan = 0;
 jmethodID ProxyLhxAggStreamDef::meth_getNumRows = 0;
 jmethodID ProxyLhxAggStreamDef::meth_getCndGroupByKeys = 0;
@@ -431,20 +432,21 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 ProxyLcsRowScanStreamDef::meth_getOutputProj = pEnv->GetMethodID(jClass,"getOutputProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyLcsRowScanStreamDef::meth_isFullScan = pEnv->GetMethodID(jClass,"isFullScan","()Z");
 ProxyLcsRowScanStreamDef::meth_isHasExtraFilter = pEnv->GetMethodID(jClass,"isHasExtraFilter","()Z");
+ProxyLcsRowScanStreamDef::meth_getResidualFilterColumns = pEnv->GetMethodID(jClass,"getResidualFilterColumns","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyLcsRowScanStreamDef::meth_getClusterScan = pEnv->GetMethodID(jClass,"getClusterScan","()Ljava/util/List;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLhxAggStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLhxAggStreamDef>));
-ProxyLhxAggStreamDef::meth_getNumRows = pEnv->GetMethodID(jClass,"getNumRows","()I");
-ProxyLhxAggStreamDef::meth_getCndGroupByKeys = pEnv->GetMethodID(jClass,"getCndGroupByKeys","()I");
+ProxyLhxAggStreamDef::meth_getNumRows = pEnv->GetMethodID(jClass,"getNumRows","()J");
+ProxyLhxAggStreamDef::meth_getCndGroupByKeys = pEnv->GetMethodID(jClass,"getCndGroupByKeys","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemLhxJoinStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyLhxJoinStreamDef>));
 ProxyLhxJoinStreamDef::meth_isLeftOuter = pEnv->GetMethodID(jClass,"isLeftOuter","()Z");
 ProxyLhxJoinStreamDef::meth_getLeftKeyProj = pEnv->GetMethodID(jClass,"getLeftKeyProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
 ProxyLhxJoinStreamDef::meth_getRightKeyProj = pEnv->GetMethodID(jClass,"getRightKeyProj","()Lnet/sf/farrago/fem/fennel/FemTupleProjection;");
-ProxyLhxJoinStreamDef::meth_getNumBuildRows = pEnv->GetMethodID(jClass,"getNumBuildRows","()I");
-ProxyLhxJoinStreamDef::meth_getCndBuildKeys = pEnv->GetMethodID(jClass,"getCndBuildKeys","()I");
+ProxyLhxJoinStreamDef::meth_getNumBuildRows = pEnv->GetMethodID(jClass,"getNumBuildRows","()J");
+ProxyLhxJoinStreamDef::meth_getCndBuildKeys = pEnv->GetMethodID(jClass,"getCndBuildKeys","()J");
 ProxyLhxJoinStreamDef::meth_isLeftInner = pEnv->GetMethodID(jClass,"isLeftInner","()Z");
 ProxyLhxJoinStreamDef::meth_isRightInner = pEnv->GetMethodID(jClass,"isRightInner","()Z");
 ProxyLhxJoinStreamDef::meth_isRightOuter = pEnv->GetMethodID(jClass,"isRightOuter","()Z");
@@ -472,7 +474,7 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSortingStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySortingStreamDef>));
 ProxySortingStreamDef::meth_getDistinctness = pEnv->GetMethodID(jClass,"getDistinctness","()Lnet/sf/farrago/fem/fennel/Distinctness;");
-ProxySortingStreamDef::meth_getEstimatedNumRows = pEnv->GetMethodID(jClass,"getEstimatedNumRows","()I");
+ProxySortingStreamDef::meth_getEstimatedNumRows = pEnv->GetMethodID(jClass,"getEstimatedNumRows","()J");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemSplitterStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxySplitterStreamDef>));
@@ -1215,6 +1217,15 @@ bool ProxyLcsRowScanStreamDef::isHasExtraFilter()
 return pEnv->CallBooleanMethod(jObject,meth_isHasExtraFilter);
 }
 
+SharedProxyTupleProjection ProxyLcsRowScanStreamDef::getResidualFilterColumns()
+{
+SharedProxyTupleProjection p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getResidualFilterColumns);
+if (!p->jObject) p.reset();
+return p;
+}
+
 SharedProxyLcsClusterScanDef ProxyLcsRowScanStreamDef::getClusterScan()
 {
 SharedProxyLcsClusterScanDef p;
@@ -1225,14 +1236,14 @@ p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
 return p;
 }
 
-int32_t ProxyLhxAggStreamDef::getNumRows()
+int64_t ProxyLhxAggStreamDef::getNumRows()
 {
-return pEnv->CallIntMethod(jObject,meth_getNumRows);
+return pEnv->CallLongMethod(jObject,meth_getNumRows);
 }
 
-int32_t ProxyLhxAggStreamDef::getCndGroupByKeys()
+int64_t ProxyLhxAggStreamDef::getCndGroupByKeys()
 {
-return pEnv->CallIntMethod(jObject,meth_getCndGroupByKeys);
+return pEnv->CallLongMethod(jObject,meth_getCndGroupByKeys);
 }
 
 bool ProxyLhxJoinStreamDef::isLeftOuter()
@@ -1258,14 +1269,14 @@ if (!p->jObject) p.reset();
 return p;
 }
 
-int32_t ProxyLhxJoinStreamDef::getNumBuildRows()
+int64_t ProxyLhxJoinStreamDef::getNumBuildRows()
 {
-return pEnv->CallIntMethod(jObject,meth_getNumBuildRows);
+return pEnv->CallLongMethod(jObject,meth_getNumBuildRows);
 }
 
-int32_t ProxyLhxJoinStreamDef::getCndBuildKeys()
+int64_t ProxyLhxJoinStreamDef::getCndBuildKeys()
 {
-return pEnv->CallIntMethod(jObject,meth_getCndBuildKeys);
+return pEnv->CallLongMethod(jObject,meth_getCndBuildKeys);
 }
 
 bool ProxyLhxJoinStreamDef::isLeftInner()
@@ -1338,9 +1349,9 @@ std::string symbol = constructString(JniUtil::toString(pEnv,pEnv->CallObjectMeth
 return static_cast<Distinctness>(JniUtil::lookUpEnum(Distinctness_names,symbol));
 }
 
-int32_t ProxySortingStreamDef::getEstimatedNumRows()
+int64_t ProxySortingStreamDef::getEstimatedNumRows()
 {
-return pEnv->CallIntMethod(jObject,meth_getEstimatedNumRows);
+return pEnv->CallLongMethod(jObject,meth_getEstimatedNumRows);
 }
 
 SharedProxyTupleProjection ProxyTableUpdaterDef::getUpdateProj()

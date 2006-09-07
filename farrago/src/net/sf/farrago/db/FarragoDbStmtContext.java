@@ -198,6 +198,10 @@ public class FarragoDbStmtContext
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
             params.dynamicParamValues = dynamicParamValues;
             assert (runningContext == null);
+
+            initExecutingStmtInfo(executableStmt);
+            params.stmtId = getExecutingStmtInfo().getId();
+
             newContext = session.getPersonality().newRuntimeContext(params);
             if (allocations != null) {
                 newContext.addAllocation(allocations);
@@ -206,8 +210,6 @@ public class FarragoDbStmtContext
             if (daemon) {
                 newContext.addAllocation(this);
             }
-
-            initExecutingStmtInfo(executableStmt);
 
             // Acquire locks (or whatever transaction manager wants) on all
             // tables accessed by this statement.

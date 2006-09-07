@@ -119,7 +119,7 @@ public final class RemoveDistinctAggregateRule
             refs[groupCount + i] =
                 new RexInputRef(
                     groupCount + newAggCallList.size(),
-                    aggFields[i].getType());
+                    aggFields[groupCount + i].getType());
             newAggCallList.add(aggCall);
         }
 

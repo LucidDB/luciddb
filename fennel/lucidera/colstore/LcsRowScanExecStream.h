@@ -25,24 +25,37 @@
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
 #include "fennel/lucidera/bitmap/LbmRidReader.h"
+#include "fennel/lucidera/colstore/LcsResidualColumnFilters.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
- * Indicates the clustered indexes that need to be read to scan a table and
- * the columns from the clusters that need to be projected in the scan result.
+ * Parameters specific to the row scan execution stream, including the type
+ * of scan (full table scan versus specific rid reads) and whether residual
+ * filtering should be performed.
  */
 struct LcsRowScanExecStreamParams : public LcsRowScanBaseExecStreamParams
 {
     /**
-     * Does this ExecStream perform full scan.
+     * If true, this scan performs a full table scan.  In that case, the
+     * first input into the stream will be those rids that are to be excluded
+     * from the scan.  Otherwise, if this is false, the first input to the
+     * stream contains the list of rids that the stream should read.
      */
     bool isFullScan;
 
     /**
-     * Does this ExecStream contain extra filter(as a range list input).
+     * If true, this ExecStream contains extra residual filters that should
+     * be applied during the scan.  If n columns contain filters, then those
+     * filters are contained in input streams 1 through n, where each stream
+     * contains only those filters specific to each column.
      */
     bool hasExtraFilter;
+
+    /**
+     * contains an array of column id corresponding to each filter column
+     */
+    TupleProjection residualFilterCols;
 };
 
 /**
@@ -58,10 +71,32 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
     TupleData inputTuple;
 
     /**
-     * Tuple data for projected columns read from all clusters, in projection
-     * order
+     * Tuple data for all columns read from all clusters, including    
+     * filter columns
      */
     TupleDataWithBuffer outputTupleData;
+
+    /**
+     * This variable is used to control the initialization 
+     * of residual filters.  It's 1 less than the index of 
+     * the first filtering input to read.  After open, it's 
+     * initializaed to 0.  On execute, the filtering inputs
+     * are read sequentially, while this variable is incremented,
+     * until an underflow or all filtering inputs have been read. 
+     * On return due to an underflow, this variable allows reading
+     * resume where it had left off.
+     */
+    uint iFilterToInitialize;
+
+    /*
+     * Real output tuple.
+     */
+    TupleData projOutputTupleData;
+
+    /*
+     * projection for the output row.
+     */
+    TupleProjection outputProj;
 
     /**
      * Tuple data for input stream
@@ -117,6 +152,40 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      * true if produceTuple pending
      */
     bool producePending;
+
+    /**
+     * The local filter data structure.
+     * Note that these are aliasing pointers
+     * to facilitate filter data initialization
+     * and memory deallocation.
+     */
+    std::vector< LcsResidualColumnFilters *> filters;
+
+    /**
+     * Builds outputProj from params.
+     *
+     * @param outputProj the projection to be built
+     *
+     * @param params the LcsRowScanBaseExecStreamParams
+     *
+     */
+    virtual void buildOutputProj(TupleProjection &outputProj,
+                                 LcsRowScanBaseExecStreamParams const &params);
+
+    /**
+     * initializes the filter data structures
+     *
+     * @return false iff input under flows.
+     */
+    bool initializeFiltersIfNeeded();
+
+    /**
+     * initializes the filter data structures during prepare time
+     *
+     * @param params the LcsRowScanExecStreamParams
+     */
+    void prepareResidualFilters(LcsRowScanExecStreamParams const &params);
+
 
 public:
     virtual void prepare(LcsRowScanExecStreamParams const &params);

@@ -1,0 +1,49 @@
+-- setup
+> alter system set "expectedConcurrentStatements" = 4;
+0 rows affected.
+-- end of setup
+
+-- thread 1
+> select sys_boot.mgmt.sleep(5000), empno from sales.emps where empno = 100
+> order by empno;
++------------+------------+
+| EXPR$0     | EMPNO      |
++------------+------------+
+| 0          | 100        |
++------------+------------+
+
+-- end of thread 1
+
+-- thread  2
+> select sys_boot.mgmt.sleep(5000), empno from sales.emps where empno = 100
+> order by empno;
++------------+------------+
+| EXPR$0     | EMPNO      |
++------------+------------+
+| 0          | 100        |
++------------+------------+
+
+-- end of thread  2
+
+-- thread  3
+> select sys_boot.mgmt.sleep(5000), empno from sales.emps where empno = 100
+> order by empno;
++------------+------------+
+| EXPR$0     | EMPNO      |
++------------+------------+
+| 0          | 100        |
++------------+------------+
+
+-- end of thread  3
+
+-- thread  4
+> select sys_boot.mgmt.sleep(5000), empno from sales.emps where empno = 100
+> order by empno;
++------------+------------+
+| EXPR$0     | EMPNO      |
++------------+------------+
+| 0          | 100        |
++------------+------------+
+
+-- end of thread  4
+

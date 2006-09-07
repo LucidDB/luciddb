@@ -237,6 +237,12 @@ stream implementations provide a <code>prepare</code> method which precomputes
 data structures needed during execution
 </ol>
 
+<li>After the graph has been prepared, resources are set aside for the
+graph by an ExecStreamGovernor, based on the resource requirements of
+each stream in the graph.  See ResourceGovernorDesign for
+a detailed description of how resources are allocated to streams within a
+graph.
+
 <li>Before execution, a prepared graph must be opened.  Opening a
 graph clears the state of all buffer accessors and opens each of
 the constituent streams; stream implementations provide an <code>open</code>

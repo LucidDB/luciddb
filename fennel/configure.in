@@ -54,7 +54,12 @@ dnl automatic -l append
 AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror)
 AC_CHECK_LIB(uuid,uuid_generate)
-AC_CHECK_LIB(aio,io_queue_init,[AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])])
+AC_CHECK_LIB(aio,io_queue_init,[ found_libaio=true ])
+
+if test "$found_libaio" = "true"
+then
+    AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])
+fi
 
 dnl Check for Boost location
 AC_ARG_WITH([boost],
@@ -168,7 +173,7 @@ dnl it as a shared library helps reduce test executable sizes.
 AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
 
-AM_CONDITIONAL(HAVE_LIBAIO,test x$HAVE_LIBAIO=x1)
+AM_CONDITIONAL(HAVE_LIBAIO,test "$found_libaio" = "true")
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
 

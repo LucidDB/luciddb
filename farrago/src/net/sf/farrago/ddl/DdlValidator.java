@@ -44,6 +44,7 @@ import net.sf.farrago.trace.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
+import org.eigenbase.jmi.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.validate.*;
@@ -605,8 +606,6 @@ public class DdlValidator
                     // top-level object
                     deletionList.add(obj);
                 }
-            } else {
-                JmiUtil.assertConstraints(obj);
             }
             if (!(obj instanceof CwmModelElement)) {
                 continue;
@@ -652,6 +651,29 @@ public class DdlValidator
                 tracer.fine("really deleting " + refObj);
             }
             refObj.refDelete();
+        }
+
+        // verify repository integrity post-delete
+        for (Object entry : validatedMap.entrySet()) {
+            Map.Entry<RefObject, Object> mapEntry =
+                (Map.Entry<RefObject, Object>) entry;
+            RefObject obj = mapEntry.getKey();
+            Object action = mapEntry.getValue();
+            if (action != VALIDATE_DELETION) {
+                checkJmiConstraints(obj);
+            }
+        }
+    }
+
+    private void checkJmiConstraints(RefObject obj)
+    {
+        JmiObjUtil.setMandatoryPrimitiveDefaults(obj);
+        List<FarragoReposIntegrityErr> errs =
+            getRepos().verifyIntegrity(obj);
+        if (!errs.isEmpty()) {
+            throw Util.newInternal(
+                "Repository integrity check failed on object update:  "
+                + errs.toString());
         }
     }
 
@@ -1385,8 +1407,8 @@ public class DdlValidator
 
     /**
      * Removes dependency associations on oldElement so that it may be deleted
-     * without cascading side effects. Reassign these dependencies to newElement.
-     * Assumes MDR change listener isn't active.
+     * without cascading side effects. Reassign these dependencies to
+     * newElement.  Assumes MDR change listener isn't active.
      *
      * @param oldElement Element to remove dependencies from
      * @param newElement Element to add dependencies to

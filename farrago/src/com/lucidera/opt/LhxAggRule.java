@@ -97,7 +97,7 @@ public class LhxAggRule
 
         Double numInputRows = RelMetadataQuery.getRowCount(fennelInput);
         if (numInputRows == null) {
-            numInputRows = 10000.0;
+            numInputRows = -1.0;
         }
 
         // Derive cardinality of RHS join keys.
@@ -113,8 +113,8 @@ public class LhxAggRule
                 fennelInput,
                 groupByKeyMap);
 
-        if ((cndGroupByKey == null) || (cndGroupByKey > numInputRows)) {
-            cndGroupByKey = numInputRows;
+        if (cndGroupByKey == null) {
+            cndGroupByKey = -1.0;
         }
 
         if (aggRel.getGroupCount() > 0) {
@@ -124,8 +124,8 @@ public class LhxAggRule
                     fennelInput,
                     aggRel.getGroupCount(),
                     aggRel.getAggCalls(),
-                    numInputRows.intValue(),
-                    cndGroupByKey.intValue());
+                    numInputRows.longValue(),
+                    cndGroupByKey.longValue());
 
             call.transformTo(lhxAggRel);
         } else {

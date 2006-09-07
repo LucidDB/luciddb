@@ -135,12 +135,18 @@ bool FlatFileBuffer::isComplete()
     return filePosition == fileEnd;
 }
 
+bool FlatFileBuffer::isDone()
+{
+    assert(filePosition <= fileEnd);
+    return isComplete() && getReadPtr() >= getEndPtr();
+}
+
 void FlatFileBuffer::setReadPtr(char *ptr) 
 {
     assert(pBuffer <= pCurrent && pCurrent <= ptr && ptr <= getEndPtr());
     pCurrent = ptr;
 }
 
-FENNEL_END_CPPFILE("$Id: //open/dt/dev/fennel/lucidera/flatfile/FlatFileBuffer.cpp#6 $");
+FENNEL_END_CPPFILE("$Id$");
 
 // End FlatFileBuffer.cpp

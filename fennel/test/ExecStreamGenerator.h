@@ -459,6 +459,51 @@ public:
     }
 };
 
+/**
+ * Mixed Duplicate column generator
+ *
+ * Generates a mixture of unique rows or duplicate rows of numDups 
+ * per value for a column, in sequence, starting at initValue:
+ *
+ *  0, 1, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 7, 8, ...
+ */
+class MixedDupColumnGenerator : public ColumnGenerator<int64_t>
+{
+    int numDups;
+    int64_t curValue;
+    int width;
+    int nextValue;
+    int initialValue;
+
+public:
+    explicit MixedDupColumnGenerator(int numDupsInit, int startValue = 0,
+        int wid = 1) {
+        assert(numDupsInit > 0);
+        numDups = numDupsInit;
+        curValue = 0;
+        width = wid;
+        initialValue = nextValue = startValue;
+    }
+
+    int64_t next() 
+    {
+        int res;
+
+        if ((((nextValue-initialValue) / width) % 2)) {
+ 
+            res = nextValue + curValue++ / numDups;
+            if (curValue == numDups) {
+                curValue = 0;
+                nextValue++;
+            }
+        } else {
+            res = nextValue++;
+        }
+
+        return res;
+    }
+};
+
 FENNEL_END_NAMESPACE
 
 #endif

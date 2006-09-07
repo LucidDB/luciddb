@@ -50,17 +50,22 @@ private:
      */
     uint hashValueSeed;
 
+    // REVIEW jvs 25-Aug-2006: Let's unify the magic tables.  Result can
+    // probably go to common/HashUtil.h since there's nothing LucidDB-specific
+    // about it.
     /*
-     * The maigc table(same as the one used in LcsHash.cpp).
+     * The magic table(same as the one used in LcsHash.cpp).
      */
     uint8_t *magicTable;
 
+    // REVIEW jvs 25-Aug-2006: hashValues below are actually inout, right?
+    
     /**
      * Compute hash value from value stored in a buffer.
      *
-     * @param[out] hashValue
-     * @param[in] pBuf buffer containing the value
-     * @param[in] bufSize size of the buffer
+     * @param [out] hashValue
+     * @param [in] pBuf buffer containing the value
+     * @param [in] bufSize size of the buffer
      */
     void hashOneBuffer(uint &hashValue, PConstBuffer pBuf, uint bufSize);
 
@@ -68,9 +73,9 @@ private:
      * Compute hash value, from both value and length information, for a
      * TupleDatum.
      *
-     * @param[out] hashValue
-     * @param[in] inputCol input TupleDatum
-     * @param[in] isVarChar if col is varchar type
+     * @param [out] hashValue
+     * @param [in] inputCol input TupleDatum
+     * @param [in] isVarChar if col is varchar type
      */
     void hashOneColumn(uint &hashValue, TupleDatum const &inputCol,
         bool isVarChar);
@@ -90,9 +95,9 @@ public:
      * Compute hash value for a TupleData, on both value and length
      * information.
      *
-     * @param[in] inputTuple
-     * @param[in] keyProjection which fields in the input tuple are used
-     * @param[in] isKeyColVarChar a vector indicating if the corresponding hash
+     * @param [in] inputTuple
+     * @param [in] keyProjection which fields in the input tuple are used
+     * @param [in] isKeyColVarChar a vector indicating if the corresponding hash
      * key is of varchar type. The trailing blanks in varchar types are
      * insignificant in both comparison and hash value computation.
      *
@@ -106,8 +111,8 @@ public:
      * Compute hash value for a TupleDatum, on both value and length
      * information.
      *
-     * @param[input] inputCol
-     * @param[in] isVarChar if col is varchar type
+     * @param [in] inputCol
+     * @param [in] isVarChar if col is varchar type
      *
      * @return the hash value
      */
@@ -116,8 +121,8 @@ public:
     /**
      * Compute hash value from value stored in a buffer.
      *
-     * @param[in] pBuf buffer containing the value
-     * @param[in] bufSize size of the buffer
+     * @param [in] pBuf buffer containing the value
+     * @param [in] bufSize size of the buffer
      *
      * @return the hash value
      */

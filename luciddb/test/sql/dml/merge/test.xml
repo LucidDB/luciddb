@@ -37,7 +37,7 @@
       <!-- view is read-only -->
       <test name="view" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/targetView.sql"/>
       </test>
@@ -57,7 +57,7 @@
       <test name="searchFilter" requiresSuccess="download">
         <!-- TODO: FRG-173: error handling when there are multiple matches -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/searchFilter.sql"/>
       </test>
@@ -65,7 +65,7 @@
       <test name="setops" requiresSuccess="download">
         <!-- TODO: FRG-163 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/setOps.sql"/>
       </test>

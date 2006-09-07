@@ -16,42 +16,42 @@
 
       <test name="failinsert">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/failinsert.sql"/>
       </test>
 
       <test name="fixinsert">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/fixinsert.sql"/>
       </test>
 
       <test name="verifytable">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/verifytable.sql"/>
       </test>
 
       <test name="faildelete">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/faildelete.sql"/>
       </test>
 
       <test name="fixdelete">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/fixdelete.sql"/>
       </test>
 
       <test name="verifytable2">
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/VI/recovery/verifytable.sql"/>
       </test>

@@ -175,10 +175,10 @@ public:
     /**
      * Sets up fields in LcsHashTable.
      *
-     * @param[in] hashBlockInit buffer to fit the variable length fields entry
+     * @param [in] hashBlockInit buffer to fit the variable length fields entry
      * and valueNodes
      *
-     * @param[in] hashBlockSizeInit size of the buffer
+     * @param [in] hashBlockSizeInit size of the buffer
      */
     void init(PBuffer hashBlockInit, uint hashBlockSizeInit);
     
@@ -207,24 +207,25 @@ public:
     /**
      * Inserts a new node into the overflow chain.
      *
-     * @param[in] key hash key of the newNode
+     * @param [in] key hash key of the newNode
      *
-     * @param[in] newNode the new node to insert
+     * @param [in] newNode the new node to insert
      */
     inline void insertNewValueNode(uint key,  LcsHashValueNode *newNode);
 
     /**
      * Undoes the most recent insert.
      *
-     * @param[in] key hash key of the node to remove. The most recently inserted
-     * value nodes is always at the beginning of the overflow list for a key
+     * @param [in] key hash key of the node to remove. The most recently
+     * inserted value nodes is always at the beginning of the overflow list
+     * for a key
      */
     inline void undoNewValueNode(uint key);
 
     /**
      * Returns the first value node having a certain key value.
      *
-     * @param[in] key hash key to locate
+     * @param [in] key hash key to locate
      *
      * @return pointer to the first value node
      */ 
@@ -233,7 +234,7 @@ public:
     /**
      * Returns the next value node following a value node
      *
-     * @param[in] pValueNode pointer to the current LcsHashValueNode
+     * @param [in] pValueNode pointer to the current LcsHashValueNode
      *
      * @return pointer to the next value node
      */ 
@@ -242,8 +243,8 @@ public:
     /**
      * Checks if hash table is full.
      *
-     * @param[in] leftOvers additional value nodes to accommodate with a default
-     * value of 0
+     * @param [in] leftOvers additional value nodes to accommodate with a
+     * default value of 0
      *
      * @return true if hash table is full
      */
@@ -290,13 +291,13 @@ struct LcsUndoType
     /**
      * Sets fields.
      *
-     * @param[in] whatInit undo action
+     * @param [in] whatInit undo action
      *
-     * @param[in] keyInit key value to undo
+     * @param [in] keyInit key value to undo
      *
-     * @param[in] origMaxValueSize maxValueSize to roll back to
+     * @param [in] origMaxValueSizeInit maxValueSize to roll back to
      *
-     * @param[in] vPtrInit points to value nodes to undo
+     * @param [in] vPtrInit points to value nodes to undo
      */
     inline void set(
         LcsUndoState whatInit,
@@ -354,13 +355,13 @@ public:
     /**
      * Constructor.
      *
-     * @param[in] clusterBlockWriterInit reference to clsuter node writer
+     * @param [in] clusterBlockWriterInit reference to clsuter node writer
      *
-     * @param[in] hashTableInit reference to the hash table
+     * @param [in] hashTableInit reference to the hash table
      *
-     * @param[in] colTupleDescInit reference to column tuple descriptor
+     * @param [in] colTupleDescInit reference to column tuple descriptor
      *
-     * @param[in] columnIdInit which column in the cluster is being compared
+     * @param [in] columnIdInit which column in the cluster is being compared
      */
     explicit LcsCompareColKeyUsingOffsetIndex(
         SharedLcsClusterNodeWriter clusterBlockWriterInit,
@@ -375,9 +376,9 @@ public:
      * The implementation uses type information saved in colTupleDesc when
      * performing the comparison.
      *
-     * @param[in] ColKeyOffsetIndex1 index into the offset of the first value
+     * @param [in] colKeyOffsetIndex1 index into the offset of the first value
      *
-     * @param[in] ColKeyOffsetIndex2 index into the offset of the second value
+     * @param [in] colKeyOffsetIndex2 index into the offset of the second value
      *
      * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
@@ -405,7 +406,7 @@ public:
     /**
      * Constructor.
      *
-     * @param[in] compareInstanceInit reference to the class
+     * @param [in] compareInstanceInit reference to the class
      * LcsCompareColKeyUsingOffsetIndex
      */
     inline explicit LcsCompare(
@@ -414,9 +415,9 @@ public:
     /**
      * The less than operator.
      *
-     * @param[in] ColKeyOffsetIndex1 index into the offset of the first value
+     * @param [in] colKeyOffsetIndex1 index into the offset of the first value
      *
-     * @param[in] ColKeyOffsetIndex2 index into the offset of the second value
+     * @param [in] colKeyOffsetIndex2 index into the offset of the second value
      *
      * @return true if value at offset located at colKeyOffsetIndex1 is
      * less than value at offset loocated at colKeyOffsetIndex2
@@ -515,8 +516,8 @@ private:
     /**
      * Compue hash key from value.
      *
-     * @param[in] dataWithLen pointer to buffer with value and length info encoded
-     * at the first 1 or 2 bytes.
+     * @param [in] dataWithLen pointer to buffer with value and length info
+     * encoded at the first 1 or 2 bytes.
      *
      * @return hash key
      */
@@ -525,13 +526,13 @@ private:
     /**
      * Search for ordinal using hash key and column data value.
      *
-     * @param[in] key hash key to locate
+     * @param [in] key hash key to locate
      *
-     * @param[in] dataWithLen pointer to data buffer with length info encoded
+     * @param [in] dataWithLen pointer to data buffer with length info encoded
      *
-     * @param[out] valOrd hash value node ordinal number
+     * @param [out] valOrd hash value node ordinal number
      *
-     * @param[out] v hash value node if value is previously inserted
+     * @param [out] v hash value node if value is previously inserted
      *
      * @return true if a match in both the key and the data value is found
      */
@@ -545,15 +546,15 @@ public:
     /**
      * Initializes the LcsHash object.
      *
-     * @param[in] hashBlockSizeInit block to hold the hash table
+     * @param [in] hashBlockInit block to hold the hash table
      *
-     * @param[in] clusterBlockWriterInit reference to the node writer
+     * @param [in] clusterBlockWriterInit reference to the node writer
      *
-     * @param[in] colTupleDescInit tuple descriptor for the column tuple
+     * @param [in] colTupleDescInit tuple descriptor for the column tuple
      *
-     * @param[in] columnIdInit column ID for which this LcsHash is compressing.
+     * @param [in] columnIdInit column ID for which this LcsHash is compressing.
      *
-     * @param[in] blockSizeInit block size
+     * @param [in] blockSizeInit block size
      */
     void init(
         PBuffer hashBlockInit,
@@ -566,7 +567,7 @@ public:
      * Inserts a single column tuple into the hash table. It also causes the
      * column value to be inserted into the cluster block if needed.
      *
-     * @param[in] colTupleData column tuple to insert
+     * @param [in] colTupleDatum column tuple to insert
      *
      * @param[out] valOrd hash value node ordinal
      *
@@ -581,11 +582,11 @@ public:
      * Inserts a data buffer of a column into the hash table. It also causes
      * the column value to be inserted into the cluster block if needed.
      *
-     * @param[in] dataWithLen data buffer of column tuple to insert
+     * @param [in] dataWithLen data buffer of column tuple to insert
      *
-     * @param[out] valOrd hash value node ordinal
+     * @param [out] valOrd hash value node ordinal
      *
-     * @param[out] undoInsert true if this insert should be undone
+     * @param [out] undoInsert true if this insert should be undone
      */
     void insert(
         PBuffer dataWithLen,
@@ -597,14 +598,14 @@ public:
      * are trying to add all of the columns in a cluster and at least one can't
      * fit we will remove previously added cluster column values.
      *
-     * @param[in] colTupleData column tuple just inserted
+     * @param [in] colTupleDatum column tuple just inserted
      */
     void undoInsert(TupleDatum &colTupleDatum);
     
     /**
      * Undoes the previous insert of a column data buffer.
      *
-     * @param[in] dataWithLen data buffer to column tuple just inserted
+     * @param [in] dataWithLen data buffer to column tuple just inserted
      */
     void undoInsert(PBuffer dataWithLen);
     
@@ -612,25 +613,25 @@ public:
     /**
      * Prepares a fixed or variable batch to be written to the cluster block.
      *
-     * @param[in, out] rowArray upon input, this array holds value node
+     * @param [in, out] rowArray upon input, this array holds value node
      * ordinals; at output, the array holds offsets for values in a batch
      *
-     * @param[in] numRows number of values in a batch
+     * @param [in] numRows number of values in a batch
      */
     void prepareFixedOrVariableBatch(uint8_t *rowArray, uint numRows);
     
     /**
      * Prepares a compressed batch to be written to the cluster block.
      *
-     * @param[in, out] rowArray upon input, this array holds value nodes
+     * @param [in, out] rowArray upon input, this array holds value nodes
      * ordinals; at output, it holds the indices to the offset array of the
      * column value stored on a cluster block.
      *
-     * @param[in] numRows number of values in a batch
+     * @param [in] numRows number of values in a batch
      *
-     * @param[in] numVals (out) number of distinct values in a batch
+     * @param [in] numVals (out) number of distinct values in a batch
      *
-     * @param[out]  offsetIndexVector  at output, it holds the offsets of
+     * @param [out]  offsetIndexVector  at output, it holds the offsets of
      * the column value stored on a cluster block.
      */
     void prepareCompressedBatch(
@@ -648,7 +649,7 @@ public:
     /**
      * Prepares LcsHash object for a new batch.
      *
-     * @param[in] leftOvers number of left over hash value nodes from the
+     * @param [in] leftOvers number of left over hash value nodes from the
      * previous batch. The new batch needs to leave room apriori for these
      * nodes.
      */
@@ -658,9 +659,9 @@ public:
      * Sets up hash with values from an existing cluster block. This is called
      * when appending to an existing block.
      *
-     * @param[in] numVal number of values for this column
+     * @param [in] numVals number of values for this column
      *
-     * @param[in] lastValOff offset of the last value stored for this column 
+     * @param [in] lastValOff offset of the last value stored for this column 
      *
      */
     void restore(uint numVals, uint16_t lastValOff);
@@ -676,8 +677,9 @@ public:
     /**
      * Checks if the hash table is full.
      *
-     * @param[in] leftOvers number of left over hash value nodes from the previous
-     * batch. The next batch need to leave room apriori for these nodes.
+     * @param [in] leftOvers number of left over hash value nodes from the
+     * previous batch. The next batch need to leave room apriori for these
+     * nodes.
      *
      * @return true if hash table is full
      */

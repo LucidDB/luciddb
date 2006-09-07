@@ -401,6 +401,7 @@ require version '${required.ant.version}'."/>
       <fileset dir="${testlog.dir}" includes="*.xml"/>
       <fileset dir="${testlog.dir}" includes="*.txt"/>
       <fileset dir="${testlog.dir}" includes="*.log"/>
+      <fileset dir="${testlog.dir}" includes="*.bcp"/>
       <fileset dir="${testlog.dir}" includes="*.dif"/>
       <fileset dir="${testlog.dir}" includes="*.err"/>
       <fileset dir="${testlog.dir}" includes="*.history"/>
@@ -470,8 +471,7 @@ require version '${required.ant.version}'."/>
       extPresent=""
       xmiDir="${farrago.xmi.dir}"/>
     <farrago.mdrFork target="forked_importMetamodel"/>
-    <!-- TODO jvs 13-Aug-2006:  Enable this once all dependencies fixed.  -->
-    <!-- farrago.uncommentGenerics javadir="${farrago.catalog.src.dir}"/ -->
+    <farrago.uncommentGenerics javadir="${farrago.catalog.src.dir}"/>
     <farrago.javaCompile
       srcdir="${farrago.catalog.src.dir}"
       destdir="${farrago.catalog.src.dir}"

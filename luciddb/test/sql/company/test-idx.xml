@@ -2,6 +2,10 @@
   <target name="company-idx-test">
     <test-suite name="company-idx-test">
 
+      <test-metadata>
+        <withIndex>true</withIndex>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -10,56 +14,35 @@
         </test-suite>
         <ant dir="${open.dir}/luciddb/test/sql/company" target="copy-csv"/>
       </init-hook>
-
+      
       <!-- Create schema (with indexes), load data, then run queries -->
       <!-- indexed has extra tests which non-indexed don't have -->
       <test name="index">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/index.sql"/>
       </test>
 
       <test name="download" requiresSuccess="index">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/download.sql"/>
       </test>
 
       <test name="joinEq" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinEq.sql"/>
       </test>
 
       <test name="joinRng" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinRng.sql"/>
       </test>
 
       <test name="joinMisc" requiresSuccess="download">
         <!-- INC() functions not supported, commented out -->
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinMisc.sql"/>
       </test>
 
       <test name="joinSemi" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinSemi.sql"/>
       </test>
 
       <test name="joinSemiExp" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinSemiExp.sql"/>
       </test>
 
@@ -67,23 +50,16 @@
         <!-- TODO: FRG-115, FRG-165 -->
         <!-- FRG-52, LDB-121 -->
         <test-metadata>
-          <knownFailure value="true"/>
-          <withIndex value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg.sql"/>
       </test>
 
       <test name="aggJoinEq" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq.sql"/>
       </test>
 
       <test name="aggJoinRng" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinRng.sql"/>
       </test>
 
@@ -92,31 +68,23 @@
         <!-- FNL-42, LDB-121 -->
         <!-- to_number not supported yet, commented out -->
         <test-metadata>
-          <knownFailure value="true"/>
-          <withIndex value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/agg_cust.sql"/>
       </test>
 
       <test name="aggJoinEq_cust" requiresSuccess="download">
         <!-- LDB-92 -->
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinEq_cust.sql"/>
       </test>
 
       <test name="aggJoinRng_cust" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinRng_cust.sql"/>
       </test>
 
       <test name="aggDistinct" requiresSuccess="download">
         <test-metadata>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggDistinct.sql"/>
       </test>
@@ -125,8 +93,7 @@
         <!-- TODO: FRG-167 DESC not implemented yet -->
         <!-- LDB-121 -->
         <test-metadata>
-          <knownFailure value="true"/>
-          <withIndex value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/null.sql"/>
       </test>
@@ -134,8 +101,7 @@
       <test name="order" requiresSuccess="download">
         <!-- TODO: FRG-167 DESC, ASC not implemented yet -->
         <test-metadata>
-          <knownFailure value="true"/>
-          <withIndex value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/order.sql"/>
       </test>
@@ -145,29 +111,22 @@
         <!-- Subqueries not completely supported -->
         <!-- ONEROW and lower not supported yet -->
         <test-metadata>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/scalarSubquery.sql"/>
       </test>
 
       <test name="rangeNConv" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/rangeNConv.sql"/>
       </test>
 
       <test name="subFrom" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subFrom.sql"/>
       </test>
 
       <test name="subExists" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subExists.sql"/>
       </test>
@@ -175,16 +134,14 @@
       <test name="subIn" requiresSuccess="download">
         <!-- subqueries not completely supported yet -->
         <test-metadata>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subIn.sql"/>
       </test>
 
       <test name="subMisc" requiresSuccess="download">
         <test-metadata>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subMisc.sql"/>
       </test>
@@ -192,8 +149,7 @@
       <test name="subMult" requiresSuccess="download">
         <!-- subqueries not completely supported yet -->
         <test-metadata>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/subMult.sql"/>
       </test>
@@ -201,60 +157,38 @@
       <!-- special tests just for indexes -->
       <test name="stats" requiresSuccess="download">
         <!-- histogram_bars doesn't exist, IN not supported -->
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/stats.sql"/>
       </test>
 
       <test name="aggJoinFilt" requiresSuccess="download">
         <!-- subqueries and in not supported -->
         <test-metadata>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/aggJoinFilt.sql"/>
       </test>
 
       <test name="joinFiltExp" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinFiltExp.sql"/>
       </test>
 
       <test name="joinFilt" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/joinFilt.sql"/>
       </test>
 
       <test name="negJoinFiltExp" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/negJoinFiltExp.sql"/>
       </test>
 
       <test name="negJoinFilt" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/negJoinFilt.sql"/>
       </test>
 
       <test name="compIdx" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/compIdx.sql"/>
       </test>
 
       <test name="logPrec" requiresSuccess="download">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/company/logicalPrecedence.sql"/>
       </test>
 

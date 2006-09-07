@@ -132,13 +132,14 @@ class FlatFileColumnSet
                 fennelRel.getCluster(),
                 fennelRel);
 
-        IterCalcRel calcRel =
-            new IterCalcRel(
+        RelNode calcRel = 
+            new CalcRel(
                 iterRel.getCluster(),
+                new RelTraitSet(CallingConvention.NONE),
                 iterRel,
+                program.getOutputRowType(),
                 program,
-                ProjectRelBase.Flags.Boxed);
-        calcRel.setLoggerType("farrago.flatfile");
+                Collections.EMPTY_LIST);
         return calcRel;
     }
 

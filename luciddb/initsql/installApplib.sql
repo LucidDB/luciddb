@@ -388,3 +388,20 @@ language java
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.FlattenRecursiveHierarchyUdx.execute';
+
+-- Generate CRC udx
+create function generate_crc(c cursor)
+returns table(c.*, crc_value bigint)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
+
+-- UDP for granting a user select privileges for all tables and views in a schema
+create procedure grant_select_for_schema(
+in schemaname varchar(255), 
+in username varchar(255))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';

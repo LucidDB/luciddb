@@ -1869,16 +1869,26 @@ List Expression2(ExprContext exprContext) :
             (
                 // Special case for "IN", because RHS of "IN" is the only place
                 // that an expression-list is allowed ("exp IN (exp1, exp2)").
-                <IN>
+                LOOKAHEAD(2)
                 {
                     checkNonQueryExpression(exprContext);
-                    pos = getPos();
-                    list.add(
-                        new SqlParserUtil.ToTreeListItem(
-                            SqlStdOperatorTable.inOperator, pos));
                 }
+                (
+                    <NOT> <IN> 
+                    {
+                        op = SqlStdOperatorTable.notInOperator;
+                        pos = getPos();
+                    }
+                    |
+                    <IN>
+                    {
+                        op = SqlStdOperatorTable.inOperator;
+                        pos = getPos();
+                    }
+                )
                 list2 = ParenthesizedQueryOrCommaList(EXPR_ACCEPT_NONCURSOR)
                 {
+                    list.add(new SqlParserUtil.ToTreeListItem(op, pos));
                     pos = pos.plus(getPos());
                     // special case for stuff like IN (s1 UNION s2)
                     if (list2.size() == 1) {
@@ -2970,7 +2980,7 @@ SqlNode CursorExpression(ExprContext exprContext) :
 SqlNode BuiltinFunctionCall() :
 {
     String name;
-    List args;
+    List args = null;
     SqlNode e = null;
     SqlParserPos pos;
     SqlParserPos starPos;
@@ -3015,6 +3025,9 @@ SqlNode BuiltinFunctionCall() :
             pos = getPos();
         }
         <LPAREN>
+        // FIXME jvs 31-Aug-2006:  FRG-192:  This should be
+        // Expression(EXPR_ACCEPT_SUBQUERY), but that doesn't work
+        // because it matches the other kind of IN.
         e = AtomicRowExpression() { args = startList(e); }
         <IN>
         e = Expression(EXPR_ACCEPT_SUBQUERY) { args.add(e);}
@@ -3170,16 +3183,29 @@ SqlNode BuiltinFunctionCall() :
                         SqlTrimFunction.Flag.Leading, pos);
                 }
             ]
-            [ trimChars = AtomicRowExpression() ]
-            <FROM> {
-                if (null == flag && null == trimChars) {
-                    throw new ParseException(
-                        EigenbaseResource.instance().IllegalFromEmpty.str(
-                            getPositionString()));
+            [ trimChars = Expression(EXPR_ACCEPT_SUBQUERY) ]
+            (
+                <FROM>
+                {
+                    if (null == flag && null == trimChars) {
+                        throw new ParseException(
+                            EigenbaseResource.instance().IllegalFromEmpty.str(
+                                getPositionString()));
+                    }
                 }
-            }
+                | <RPAREN>
+                {
+                    // This is to handle the case of TRIM(x)
+                    // (FRG-191).
+                    args = startList(flag);
+                    args.add(null); // no trim chars
+                    args.add(trimChars); // reinterpret trimChars as source
+                    return SqlStdOperatorTable.trimFunc.createCall(
+                        SqlParserUtil.toNodeArray(args), pos);
+                }
+            )
         ]
-        e = AtomicRowExpression()
+        e = Expression(EXPR_ACCEPT_SUBQUERY)
         {
             args = startList(flag);
             args.add(trimChars);

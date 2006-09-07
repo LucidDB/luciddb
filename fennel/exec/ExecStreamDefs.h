@@ -99,6 +99,27 @@ struct ExecStreamQuantum
 };
     
 /**
+ * Enumerated type that indicates the nature of a resource requirement setting
+ * for an execution stream
+ */
+enum ExecStreamResourceSettingType {
+    /**
+     * Setting is accurate
+     */
+    EXEC_RESOURCE_ACCURATE,
+    /**
+     * Setting is an estimate, which may or may not be based on up-to-date
+     * statistics.  Therefore, if possible, additional resources may be
+     * granted to a stream using this setting.
+     */
+    EXEC_RESOURCE_ESTIMATE,
+    /**
+     * Setting is unknown and the stream requires maximum resources
+     */
+    EXEC_RESOURCE_UNBOUNDED
+};
+
+/**
  * ExecStreamResourceQuantity quantifies various resources which
  * can be allocated to an ExecStream.
  */

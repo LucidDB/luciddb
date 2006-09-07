@@ -63,7 +63,8 @@ public class RelMdUniqueKeys
         BitSet leftJoinCols = new BitSet();
         BitSet rightJoinCols = new BitSet();
         RelMdUtil.findEquiJoinCols(
-            rel,
+            rel.getLeft(),
+            rel.getRight(),
             rel.getCondition(),
             leftJoinCols,
             rightJoinCols);

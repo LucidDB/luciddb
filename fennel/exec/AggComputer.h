@@ -35,21 +35,11 @@ class TupleDatum;
     
 /**
  * Abstract base class representing computation of a single aggregate function
- * over a collection of values all having the same group key.  The memory model
- * defined here is suitable only for very basic sort-based aggregation, where
- * an entire group is processed at once, and accumulator state is of the same
- * type as the final output.  To be used for hash-based aggregation, where
- * computations for different groups are interleaved, it needs to be extended
- * to allow save/restore/merge of accumulator state.  To be used for more
- * complex functions such as AVG which require compound accumulator state, it
- * needs to be extended to allow AggComputer to collaborate with its caller in
- * defining the accumulator tuple.
- *
- *<p>
- *
- * To make it easier to support hash-based aggregation in the future,
- * implementations of this class should not store any state regarding the
- * actual data values being processed.
+ * over a collection of scalar values all having the same group key.  In order
+ * to be used for more complex functions such as AVG which require compound
+ * accumulator state, it needs to be extended to allow AggComputer to
+ * collaborate with its caller in defining the accumulator tuple.
+ * Luckily, Farrago rewrites AVG to SUM/COUNT.
  *
  * @author John V. Sichi
  * @version $Id$
@@ -119,8 +109,8 @@ public:
     /**
      * Initializes a new accumulator datum from an input tuple.
      *
-     * @param accumulatorDatum in-memory value to be updated. Memory needs to
-     * be associated with this datum by the caller.
+     * @param accumulatorDatumDest in-memory value to be updated. Memory needs
+     * to be associated with this datum by the caller.
      *
      * @param inputTuple source for update; no references to this
      * data should be retained after this method returns

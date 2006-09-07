@@ -746,6 +746,8 @@ bool isFullScan();
 static jmethodID meth_isFullScan;
 bool isHasExtraFilter();
 static jmethodID meth_isHasExtraFilter;
+SharedProxyTupleProjection getResidualFilterColumns();
+static jmethodID meth_getResidualFilterColumns;
 SharedProxyLcsClusterScanDef getClusterScan();
 static jmethodID meth_getClusterScan;
 };
@@ -844,9 +846,9 @@ class ProxyLhxAggStreamDef
 : virtual public JniProxy, virtual public ProxyAggStreamDef
 {
 public:
-int32_t getNumRows();
+int64_t getNumRows();
 static jmethodID meth_getNumRows;
-int32_t getCndGroupByKeys();
+int64_t getCndGroupByKeys();
 static jmethodID meth_getCndGroupByKeys;
 };
 
@@ -860,9 +862,9 @@ SharedProxyTupleProjection getLeftKeyProj();
 static jmethodID meth_getLeftKeyProj;
 SharedProxyTupleProjection getRightKeyProj();
 static jmethodID meth_getRightKeyProj;
-int32_t getNumBuildRows();
+int64_t getNumBuildRows();
 static jmethodID meth_getNumBuildRows;
-int32_t getCndBuildKeys();
+int64_t getCndBuildKeys();
 static jmethodID meth_getCndBuildKeys;
 bool isLeftInner();
 static jmethodID meth_isLeftInner;
@@ -912,7 +914,7 @@ class ProxySortingStreamDef
 public:
 Distinctness getDistinctness();
 static jmethodID meth_getDistinctness;
-int32_t getEstimatedNumRows();
+int64_t getEstimatedNumRows();
 static jmethodID meth_getEstimatedNumRows;
 };
 

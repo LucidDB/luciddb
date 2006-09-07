@@ -1,0 +1,55 @@
+@nolockstep
+
+@setup
+
+-- This test verifies that cacheReservePercentage can't be lowered below
+-- the current in-use threshhold
+
+alter system set "cachePagesInit" = 500;
+alter system set "cacheReservePercentage" = 5;
+alter system set "expectedConcurrentStatements" = 2;
+
+@end
+
+@thread 1
+
+@prepare select sys_boot.mgmt.sleep(10000), empno from sales.emps
+    where empno = 100 order by empno;
+
+@sync
+
+-- this will grab resources and hold it while sleeping for 10 seconds,
+-- which should give plenty of time for thread 2 to attempt to lower resource
+-- settings
+
+@fetch 
+
+@close
+
+-- switch back to original values
+alter system set "cachePagesInit" = 1000;
+alter system set "cacheReservePercentage" = 5;
+alter system set "expectedConcurrentStatements" = 4;
+
+@end
+
+@thread 2
+
+-- wait for thread 1 to prepare
+@sync
+
+-- give thread 1 a chance to fetch
+
+@sleep 5000
+
+-- This should succeed.
+--
+-- Total available cache pages = 500
+-- 5% in reserve leaves 475
+-- 2 concurrent statements means 475/2 = 237 per statement
+-- 1 active statement, so 237 pages are in use
+-- 53% in reserve leaves only 235 pages
+@err alter system set "cacheReservePercentage" = 53;
+
+@end
+

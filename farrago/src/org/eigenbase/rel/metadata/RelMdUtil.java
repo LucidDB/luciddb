@@ -336,7 +336,8 @@ public class RelMdUtil
     /**
      * Locates the columns corresponding to equijoins within a joinrel.
      *
-     * @param rel the join rel
+     * @param leftChild left input into the join
+     * @param rightChild right input into the join
      * @param predicate join predicate
      * @param leftJoinCols bitmap that will be set with the columns on the LHS
      * of the join that participate in equijoins
@@ -346,7 +347,8 @@ public class RelMdUtil
      * @return remaining join filters that are not equijoins
      */
     public static RexNode findEquiJoinCols(
-        JoinRelBase rel,
+        RelNode leftChild,
+        RelNode rightChild,
         RexNode predicate,
         BitSet leftJoinCols,
         BitSet rightJoinCols)
@@ -356,8 +358,8 @@ public class RelMdUtil
         List<Integer> rightKeys = new ArrayList<Integer>();
         RexNode nonEquiJoin =
             RelOptUtil.splitJoinCondition(
-                rel.getLeft(),
-                rel.getRight(),
+                leftChild,
+                rightChild,
                 predicate,
                 leftKeys,
                 rightKeys);
@@ -601,6 +603,121 @@ public class RelMdUtil
 
             return numDistinctVals(distinctRowCount, rowCount);
         }
+    }
+    
+    /**
+     * Computes the population size for a set of keys returned from a join
+     * 
+     * @param joinRel the join rel
+     * @param left left join input
+     * @param right right join key
+     * @param groupKey keys to compute the population for
+     * 
+     * @return computed population size
+     */
+    public static Double getJoinPopulationSize(
+        RelNode joinRel,
+        RelNode left,
+        RelNode right,
+        BitSet groupKey)
+    {
+        BitSet leftMask = new BitSet();
+        BitSet rightMask = new BitSet();
+
+        // separate the mask into masks for the left and right
+        RelMdUtil.setLeftRightBitmaps(
+            groupKey,
+            leftMask,
+            rightMask,
+            left.getRowType().getFieldCount());
+
+        Double population =
+            NumberUtil.multiply(
+                RelMetadataQuery.getPopulationSize(
+                    left,
+                    leftMask),
+                RelMetadataQuery.getPopulationSize(
+                    right,
+                    rightMask));
+
+        return
+            RelMdUtil.numDistinctVals(
+                population,
+                RelMetadataQuery.getRowCount(joinRel));
+    }
+    
+    /**
+     * Computes the number of distinct rows for a set of keys returned from
+     * a join
+     * 
+     * @param joinRel RelNode representing the join
+     * @param left left join child
+     * @param right right join child
+     * @param joinType type of join
+     * @param groupKey keys that the distinct row count will be computed for
+     * @param predicate join predicate
+     * 
+     * @return number of distinct rows
+     */
+    public static Double getJoinDistinctRowCount(
+        RelNode joinRel,
+        RelNode left,
+        RelNode right,
+        JoinRelType joinType,
+        BitSet groupKey,
+        RexNode predicate)
+    {
+        Double distRowCount;
+        BitSet leftMask = new BitSet();
+        BitSet rightMask = new BitSet();
+
+        RelMdUtil.setLeftRightBitmaps(
+            groupKey,
+            leftMask,
+            rightMask,
+            left.getRowType().getFieldCount());
+
+        // determine which filters apply to the left vs right
+        RexNode leftPred = null;
+        RexNode rightPred = null;
+        if (predicate != null) {
+            List<RexNode> leftFilters = new ArrayList<RexNode>();
+            List<RexNode> rightFilters = new ArrayList<RexNode>();
+            List<RexNode> joinFilters = new ArrayList<RexNode>();
+            List<RexNode> predList = new ArrayList<RexNode>();
+            RelOptUtil.decompCF(predicate, predList);
+
+            RelOptUtil.classifyFilters(
+                joinRel,
+                left.getRowType().getFieldCount(),
+                predList,
+                (joinType == JoinRelType.INNER),
+                !joinType.generatesNullsOnLeft(),
+                !joinType.generatesNullsOnRight(),
+                joinFilters,
+                leftFilters,
+                rightFilters);
+
+            RexBuilder rexBuilder = joinRel.getCluster().getRexBuilder();
+            leftPred = RexUtil.andRexNodeList(rexBuilder, leftFilters);
+            rightPred = RexUtil.andRexNodeList(rexBuilder, rightFilters);
+        }
+
+        distRowCount =
+            NumberUtil.multiply(
+                RelMetadataQuery.getDistinctRowCount(
+                    left,
+                    leftMask,
+                    leftPred),
+                RelMetadataQuery.getDistinctRowCount(
+                    right,
+                    rightMask,
+                    rightPred));
+
+        return
+            RelMdUtil.numDistinctVals(
+                distRowCount,
+                RelMetadataQuery.getRowCount(joinRel));
     }
 }
 

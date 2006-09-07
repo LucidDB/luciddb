@@ -74,6 +74,15 @@ void ExecStream::prepare(ExecStreamParams const &params)
     
 void ExecStream::getResourceRequirements(
     ExecStreamResourceQuantity &minQuantity,
+    ExecStreamResourceQuantity &optQuantity,
+    ExecStreamResourceSettingType &optType)
+{
+    getResourceRequirements(minQuantity, optQuantity);
+    optType = EXEC_RESOURCE_ACCURATE;
+}
+
+void ExecStream::getResourceRequirements(
+    ExecStreamResourceQuantity &minQuantity,
     ExecStreamResourceQuantity &optQuantity)
 {
     minQuantity.nThreads = 0;

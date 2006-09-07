@@ -1,0 +1,40 @@
+@nolockstep
+
+@setup
+
+-- This test verifies that a fifth thread will exceed resource limits.
+alter system set "expectedConcurrentStatements" = 4;
+
+@end
+
+@thread 1, 2, 3, 4
+
+@prepare select sys_boot.mgmt.sleep(20000), empno from sales.emps
+    where empno = 100 order by empno;
+
+-- wait for threads 1-4 to prepare
+@sync
+
+-- this will grab resources and hold it while sleeping for 20 seconds,
+-- which should give plenty of time for thread 5 to attempt to get resources
+
+@fetch 
+
+@close
+
+@end
+
+@thread 5
+
+-- wait for threads 1-4 to prepare
+@sync
+
+-- give threads 1-4 all a chance to fetch
+
+@sleep 10000
+
+-- this should result in an error indicating there isn't enough cache resources
+@err select empno from sales.emps order by empno;
+
+@end
+

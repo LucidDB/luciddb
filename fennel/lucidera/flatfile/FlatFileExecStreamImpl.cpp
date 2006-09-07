@@ -121,6 +121,10 @@ void FlatFileExecStreamImpl::handleTuple(
 
     if (mode != FLATFILE_MODE_DESCRIBE) {
         isRowPending = true;
+    } else {
+        // in describe mode, use this to count how many rows have been
+        // read, though this is an abuse of the variable's intended purpose
+        nRowsOutput++;
     }
 }
 
@@ -215,7 +219,6 @@ void FlatFileExecStreamImpl::logError(
     FlatFileBinding binding(errorFilePath, data, targetSize);
     writeRequest.bindingList.push_back(binding);
     pErrorFile->transfer(writeRequest);
-    pErrorFile->flush();
     filePosition += targetSize;
 }
 
@@ -237,7 +240,7 @@ void FlatFileExecStreamImpl::detectMajorErrors()
 
 void FlatFileExecStreamImpl::checkRowDelimiter()
 {
-    if (lastResult.nRowDelimsRead == 0) {
+    if (pBuffer->isDone() && lastResult.nRowDelimsRead == 0) {
         throw FennelExcn(
             FennelResource::instance().noRowDelimiter(dataFilePath));
     }
@@ -408,12 +411,18 @@ void FlatFileExecStreamImpl::open(bool restart)
         }
         pParser->scanRow(
             pBuffer->getReadPtr(), pBuffer->getSize(), headerDesc, lastResult);
+        pBuffer->setReadPtr(lastResult.next);
         if (lastResult.status != FlatFileRowParseResult::NO_STATUS) {
             logError(lastResult);
+            try {
+                checkRowDelimiter();
+            } catch (FennelExcn e) {
+                reason = e.getMessage();
+            }
             throw FennelExcn(
-                FennelResource::instance().flatfileNoHeader(dataFilePath));
+                FennelResource::instance().flatfileNoHeader(
+                    dataFilePath, reason));
         }
-        pBuffer->setReadPtr(lastResult.next);
     }
 
     done = false;
@@ -433,19 +442,25 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
         return EXECRC_BUF_OVERFLOW;
     }
 
-    // read up to the number of (good) tuples specified by quantum
+    // read up to the number of (good or bad) tuples specified by quantum
     for (uint nTuples=0; nTuples < quantum.nTuplesMax;) {
         // ready the next row for output
         while (!isRowPending) {
-            if ((numRowsScan > 0 && numRowsScan == nTuples)
-                || (pBuffer->isComplete()
-                    && (pBuffer->getReadPtr() >= pBuffer->getEndPtr())))
+            // check quantum, since this loop doesn't break until a good
+            // row is read
+            if (nTuples >= quantum.nTuplesMax) {
+                break;
+            }
+
+            if ((numRowsScan > 0 && numRowsScan == nRowsOutput)
+                || pBuffer->isDone())
             {
                 done = true;
                 break;
             }
             pParser->scanRow(
                 pBuffer->getReadPtr(),pBuffer->getSize(),rowDesc,lastResult);
+            nTuples++;
             
             switch (lastResult.status) {
             case FlatFileRowParseResult::INCOMPLETE_COLUMN:
@@ -466,7 +481,6 @@ ExecStreamResult FlatFileExecStreamImpl::execute(
                 try {
                     handleTuple(lastResult, dataTuple);
                     pBuffer->setReadPtr(lastResult.next);
-                    nTuples++;
                 } catch (CalcExcn e) {
                     logError(e.getMessage(), lastResult);
                     nRowErrors++;
@@ -512,7 +526,10 @@ void FlatFileExecStreamImpl::closeImpl()
 void FlatFileExecStreamImpl::releaseResources()
 {
     pBuffer->close();
-    pErrorFile.reset();
+    if (pErrorFile) {
+        pErrorFile->flush();
+        pErrorFile.reset();
+    }
 }
 
 FENNEL_END_CPPFILE("$Id$");

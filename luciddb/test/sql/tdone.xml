@@ -2,10 +2,10 @@
   <target name="cleanup">
     <!-- Notify LucidDbTestHarness of end of test suite. -->
     <test-suite name="cleanup">
-      <test name="testSuiteDone">
-        <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
+      <custom-task>
+        <junit-utility testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
           methodnames="testSuiteDone"/>
-      </test>
+      </custom-task>
     </test-suite>
   </target>
 </project>

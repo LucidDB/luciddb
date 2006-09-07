@@ -15,6 +15,10 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/cr_source.sql"/>
       </test>
 
+      <test name="grantSelectForSchema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/grant_select_for_schema.sql"/>
+      </test>
+
       <test name="exportLocalSchema" requiresSuccess="crSource">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_schema.sql"/>
       </test>
@@ -30,7 +34,7 @@
       <test name="exportLocalInc" requiresSuccess="crSource">
         <!-- TODO: FRG-172, FRG-175, FRG-176 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_incremental.sql"/>
       </test>
@@ -38,7 +42,7 @@
       <test name="exportForeignInc" requiresRun="exportLocalInc">
         <!-- TODO: FRG-176 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_foreign_incremental.sql"/>
       </test>
@@ -46,9 +50,17 @@
       <test name="exportMergedSchemas" requiresSuccess="crSource">
         <!-- TODO: FRG-182 -->
         <test-metadata>
-          <knownFailure value="true"/>
+          <knownFailure>true</knownFailure>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_merged_schemas.sql"/>
+      </test>
+
+      <test name="bcpTest" requiresSuccess="exportLocalSchema">
+        <!-- TODO: LDB-127 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/bcpTest.sql"/>
       </test>
 
       <cleanup-hook>

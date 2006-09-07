@@ -34,6 +34,7 @@
 #include "fennel/exec/ExecStreamGraph.h"
 #include "fennel/exec/ExecStreamScheduler.h"
 #include "fennel/exec/ExecStreamBufAccessor.h"
+#include "fennel/exec/ExecStreamGovernor.h"
 
 #include <sstream>
 
@@ -194,6 +195,8 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         // til after out java caller returns: hence the global ref.
         streamGraphHandle.javaRuntimeContext = pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
+        txnHandle.pResourceGovernor->requestResources(
+            streamGraphHandle.pExecStreamGraph);
         streamGraphHandle.pExecStreamGraph->open();
         if (streamGraphHandle.pScheduler.unique()) {
             streamGraphHandle.pScheduler->start();

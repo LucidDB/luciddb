@@ -125,6 +125,12 @@ public:
     virtual void reset(ByteStreamMarker const &marker);
 };
 
+/**
+ * Number of cache pages to reserve for pre-fetches.  Currently set to
+ * allow for one batch of pre-fetch.
+ */
+static const uint SEG_NUM_PREFETCH_PAGES = 4;
+
 FENNEL_END_NAMESPACE
 
 #endif

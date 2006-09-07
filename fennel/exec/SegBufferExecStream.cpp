@@ -45,8 +45,8 @@ void SegBufferExecStream::getResourceRequirements(
 {
     ConduitExecStream::getResourceRequirements(minQuantity,optQuantity);
 
-    // one page for I/O
-    minQuantity.nCachePages += 1;
+    // pages for I/O (including pre-fetch)
+    minQuantity.nCachePages += SEG_NUM_PREFETCH_PAGES;
     
     optQuantity = minQuantity;
 }
@@ -117,6 +117,7 @@ void SegBufferExecStream::openBufferForRead(bool destroy)
     if (destroy) {
         pByteInputStream->setDeallocate(true);
     }
+    pByteInputStream->startPrefetch();
 }
 
 ExecStreamResult SegBufferExecStream::execute(ExecStreamQuantum const &)

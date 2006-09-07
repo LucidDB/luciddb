@@ -2,6 +2,10 @@
   <target name="sqbm">
     <test-suite name="sqbm">
 
+      <test-metadata>
+        <withIndex>true</withIndex>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
@@ -12,24 +16,17 @@
       </init-hook>
 
       <test name="benchins1m">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/benchins1m_idx.sql"/>
       </test>
 
       <!--  Official Queries -->
       <test name="sqbm1" requiresSuccess="benchins1m">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q1.sql"/>
       </test>
 
       <test name="sqbm2a" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2a.sql"/>
       </test>
@@ -37,7 +34,6 @@
       <test name="sqbm2b" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q2b.sql"/>
       </test>
@@ -45,7 +41,6 @@
       <test name="sqbm3a" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3a.sql"/>
       </test>
@@ -53,7 +48,6 @@
       <test name="sqbm3b" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q3b.sql"/>
       </test>
@@ -61,7 +55,6 @@
       <test name="sqbm4" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4.sql"/>
       </test>
@@ -70,7 +63,6 @@
         <!-- LDB-121 -->
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5.sql"/>
       </test>
@@ -79,7 +71,6 @@
         <!-- LDB-121 -->
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6a.sql"/>
       </test>
@@ -87,7 +78,6 @@
       <test name="sqbm6b" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6b.sql"/>
       </test>
@@ -98,8 +88,7 @@
         <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>medium</runDuration>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q4nob.sql"/>
       </test>
@@ -109,8 +98,7 @@
         <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q5nob.sql"/>
       </test>
@@ -120,8 +108,7 @@
         <!-- notImplemented so they won't run normally -->
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_q6bnob.sql"/>
       </test>
@@ -130,7 +117,6 @@
       <test name="sqbmqfh1" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>short medium</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh1.sql"/>
       </test>
@@ -138,7 +124,6 @@
       <test name="sqbmqfh2" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>long</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh2.sql"/>
       </test>
@@ -146,8 +131,7 @@
       <test name="sqbmqfh3" requiresSuccess="benchins1m">
         <test-metadata>
           <!-- huge ref file -->
-          <withIndex value="true"/>
-          <notImplemented value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh3.sql"/>
       </test>
@@ -155,7 +139,6 @@
       <test name="sqbmqfh4" requiresSuccess="benchins1m">
         <test-metadata>
           <runDuration>long</runDuration>
-          <withIndex value="true"/>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/sqbm_qfh4.sql"/>
       </test>
@@ -163,24 +146,21 @@
       <!--  HHJ testing for Aggregates -->
       <test name="hhjswing1" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q1.sql"/>
       </test>
 
       <test name="hhjswing2" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q2.sql"/>
       </test>
 
       <test name="hhjswing3" requiresSuccess="benchins1m">
         <test-metadata>
-          <notImplemented value="true"/>
-          <withIndex value="true"/>
+          <notImplemented>true</notImplemented>
         </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/hhjswing_q3.sql"/>
       </test>
@@ -188,11 +168,15 @@
       <!-- run queries in parallel -->
       <!-- run concurrent users test -->
 
+      <test name="checkCrc" requiresSuccess="benchins1m">
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
+        <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/checkCrc.sql"/>
+      </test>
+
       <!-- drop table and indexes -->
       <test name="dropidx" requiresSuccess="benchins1m">
-        <test-metadata>
-          <withIndex value="true"/>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/sqbm/dropindexes.sql"/>
       </test>
 

@@ -52,7 +52,7 @@ public class FennelSortRel
      * least significant.
      */
     private final Integer [] keyProjection;
-
+    
     /**
      * Whether to discard tuples with duplicate keys.
      */
@@ -166,6 +166,12 @@ public class FennelSortRel
             FennelRelUtil.createTupleProjection(
                 repos,
                 keyProjection));
+        Double numInputRows = RelMetadataQuery.getRowCount(getChild());
+        if (numInputRows == null) {
+            sortingStream.setEstimatedNumRows(-1);
+        } else {
+            sortingStream.setEstimatedNumRows(numInputRows.longValue());
+        }
         implementor.addDataFlowFromProducerToConsumer(
             implementor.visitFennelChild((FennelRel) getChild()),
             sortingStream);

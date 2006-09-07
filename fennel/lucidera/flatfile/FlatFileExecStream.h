@@ -68,13 +68,13 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
 
     /**
      * Delimiter used to separate fields in a row. This value is typically
-     * ',' (comma) or '\t' (tab) or zero, which signifies no delimiter.
+     * ',' (comma) or '\\t' (tab) or zero, which signifies no delimiter.
      */
     char fieldDelim;
 
     /**
      * Delimiter used to terminate a row. This value is typically
-     * '\n' (newline), which represents any combination of '\r' and '\n'. 
+     * '\\n' (newline), which represents any combination of '\\r' and '\\n'. 
      */
     char rowDelim;
 

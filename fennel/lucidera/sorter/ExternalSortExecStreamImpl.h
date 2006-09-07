@@ -128,6 +128,12 @@ class ExternalSortExecStreamImpl : public ExternalSortExecStream
      */
     bool storeFinalRun;
 
+    /**
+     * Estimate of the number of rows in the sort input.  If < 0, no stats
+     * were available to estimate this value.
+     */
+    int estimatedNumRows;
+
 // ----------------------------------------------------------------------
 // private methods
 // ----------------------------------------------------------------------
@@ -210,7 +216,8 @@ public:
     virtual ExecStreamResult execute(ExecStreamQuantum const &quantum);
     virtual void getResourceRequirements(
         ExecStreamResourceQuantity &minQuantity,
-        ExecStreamResourceQuantity &optQuantity);
+        ExecStreamResourceQuantity &optQuantity,
+        ExecStreamResourceSettingType &optType);
     virtual void setResourceAllocation(
         ExecStreamResourceQuantity &quantity);
 };

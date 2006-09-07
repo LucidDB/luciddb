@@ -367,6 +367,9 @@ protected:
      * @param fullBufSize size of pBuf
      *
      * @param nBitmaps returns number of bitmaps generated
+     *
+     * @param includeKeys if true, include the keys in the generated bitmap
+     * entry
      */
     void generateBitmaps(
         uint nRows, uint start, uint skipRows, PBuffer pBuf, uint &bufSize,

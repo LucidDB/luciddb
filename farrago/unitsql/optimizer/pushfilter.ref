@@ -112,8 +112,8 @@
 '  FennelToIteratorConverter'
 '    FennelCartesianProductRel(leftouterjoin=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, PDF, T1]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'      FennelCalcRel(expr#0..4=[{inputs}], expr#5=[true], X=[$t5])'
-'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'      FennelCalcRel(expr#0=[{inputs}], expr#1=[true], X=[$t1])'
+'        FtrsIndexScanRel(table=[[LOCALDB, PDF, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------------
 0: jdbc:farrago:> -- pushdown join filters

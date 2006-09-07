@@ -27,6 +27,7 @@ import com.disruptivetech.farrago.rel.*;
 
 import com.lucidera.lcs.*;
 import com.lucidera.opt.*;
+import com.lucidera.runtime.*;
 
 import java.util.*;
 
@@ -56,12 +57,31 @@ import org.eigenbase.sql.*;
 public class LucidDbSessionPersonality
     extends FarragoDefaultSessionPersonality
 {
+    //~ Static fields ----------------------------------------------------------
 
+    public static final String LOG_DIR = "logDir";
+    public static final String LOG_DIR_DEFAULT = "log";
+    public static final String ETL_PROCESS_ID = "etlProcessId";
+    public static final String ETL_PROCESS_ID_DEFAULT = null;
+    public static final String ETL_ACTION_ID = "etlActionId";
+    public static final String ETL_ACTION_ID_DEFAULT = null;
+    public static final String ERROR_MAX = "errorMax";
+    public static final String ERROR_MAX_DEFAULT = "0";
+    public static final String ERROR_LOG_MAX = "errorLogMax";
+    public static final String ERROR_LOG_MAX_DEFAULT = null;
+    
     //~ Constructors -----------------------------------------------------------
 
     protected LucidDbSessionPersonality(FarragoDbSession session)
     {
         super(session);
+        paramValidator.registerDirectoryParam(LOG_DIR, false);
+        paramValidator.registerStringParam(ETL_PROCESS_ID, true);
+        paramValidator.registerStringParam(ETL_ACTION_ID, true);
+        paramValidator.registerIntParam(
+            ERROR_MAX, true, 0, Integer.MAX_VALUE);
+        paramValidator.registerIntParam(
+            ERROR_LOG_MAX, true, 0, Integer.MAX_VALUE);
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -90,6 +110,15 @@ public class LucidDbSessionPersonality
             return false;
         }
 
+        // LucidDB doesn't support UPDATE, only MERGE
+        if (feature == EigenbaseResource.instance().SQLFeature_E101_03) {
+            return false;
+        }
+
+        if (feature == EigenbaseResource.instance().SQLFeature_F312) {
+            return true;
+        }
+        
         return super.supportsFeature(feature);
     }
 
@@ -193,7 +222,7 @@ public class LucidDbSessionPersonality
         // since they modify the projection
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
-
+        
         // Remove trivial projects so tables referenced in selects in the
         // from clause can be optimized with the rest of the query
         builder.addRuleInstance(new RemoveTrivialProjectRule());
@@ -266,7 +295,6 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
-
         // Push project past filter so that we can reduce the number
         // of clustered indexes accessed by row scan.  There are two rule
         // patterns because the second is needed to handle the case where
@@ -286,6 +314,7 @@ public class LucidDbSessionPersonality
                 new RelOptRuleOperand(FilterRel.class, null),
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators(),
                 "without project"));
+        builder.addRuleInstance(new MergeProjectRule());
         builder.addGroupEnd();
 
         // Apply physical projection to row scans, eliminating access
@@ -333,6 +362,15 @@ public class LucidDbSessionPersonality
         // and decimal reduction).
         builder.addRuleInstance(ReduceAggregatesRule.instance);
 
+        // Bitmap aggregation is favored
+        builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
+        builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
+
+        // Prefer hash aggregation over the standard Fennel aggregation.
+        // Apply aggregation rules before the calc rules below so we can
+        // call metadata queries on logical RelNodes.
+        builder.addRuleInstance(new LhxAggRule());
+
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -340,14 +378,7 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(ProjectToCalcRule.instance);
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
-
-        // Bitmap aggregation is favored
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameRowScan);
-        builder.addRuleInstance(LcsIndexAggRule.instanceRenameNormalizer);
-
-        // Prefer hash aggregation over the standard Fennel aggregation.
-        builder.addRuleInstance(new LhxAggRule());
-
+        
         // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule());
 
@@ -404,6 +435,9 @@ public class LucidDbSessionPersonality
 
         // Finally, add generic converters as necessary.
         builder.addConverters(true);
+
+        // After calculator relations are resolved, decorate Java calc rels
+        builder.addRuleInstance(LoptIterCalcRule.flatfileInstance);
 
         return builder.createProgram();
     }
@@ -463,6 +497,25 @@ public class LucidDbSessionPersonality
             }
             return super.addRule(rule);
         }
+    }
+
+    // override FarragoDefaultSessionPersonality
+    public void loadDefaultSessionVariables(
+        FarragoSessionVariables variables)
+    {
+        super.loadDefaultSessionVariables(variables);
+        variables.setDefault(LOG_DIR, LOG_DIR_DEFAULT);
+        variables.setDefault(ETL_PROCESS_ID, ETL_PROCESS_ID_DEFAULT);
+        variables.setDefault(ETL_ACTION_ID, ETL_ACTION_ID_DEFAULT);
+        variables.setDefault(ERROR_MAX, ERROR_MAX_DEFAULT);
+        variables.setDefault(ERROR_LOG_MAX, ERROR_LOG_MAX_DEFAULT);
+    }
+
+    // override FarragoDefaultSessionPersonality
+    public FarragoSessionRuntimeContext newRuntimeContext(
+        FarragoSessionRuntimeParams params)
+    {
+        return new LucidDbRuntimeContext(params);
     }
 }
 

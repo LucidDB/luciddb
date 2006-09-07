@@ -32,8 +32,10 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
+import org.eigenbase.sql.fun.*;
 import org.eigenbase.stat.*;
 import org.eigenbase.util14.*;
 
@@ -337,6 +339,43 @@ public class LoptMetadataProvider
     }
 
     public Double getDistinctRowCount(
+        LhxJoinRel rel,
+        BitSet groupKey,
+        RexNode predicate)
+    {
+        // TODO zfong 8/29/06 - if we support mapping of physical relnodes to
+        // logical relnodes, then this method may not be needed
+        LhxJoinRelType joinType = rel.getJoinType();
+        int nFieldsLeft = rel.getLeft().getRowType().getFieldCount();
+        if (joinType == LhxJoinRelType.LEFTSEMI) {
+            assert(groupKey.nextSetBit(nFieldsLeft) < 0);
+            return
+                RelMetadataQuery.getDistinctRowCount(
+                    rel.getLeft(),
+                    groupKey,
+                    predicate);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+            // the key references all columns on the left, so we can reuse 
+            // it to represent the columns on the right
+            assert(groupKey.nextSetBit(nFieldsLeft) < 0);
+            return
+                RelMetadataQuery.getDistinctRowCount(
+                    rel.getRight(),
+                    groupKey,
+                    predicate);
+        } else {
+            return
+                RelMdUtil.getJoinDistinctRowCount(
+                    rel,
+                    rel.getLeft(),
+                    rel.getRight(),
+                    joinType.getLogicalJoinType(),
+                    groupKey,
+                    predicate);
+        }
+    }
+    
+    public Double getDistinctRowCount(
         LcsRowScanRel rel,
         BitSet groupKey,
         RexNode predicate)
@@ -360,7 +399,11 @@ public class LoptMetadataProvider
         }
         return
             NumberUtil.divide(
-                computeRowCountGivenConds(rel, unionPreds),
+                computeRowCountGivenConds(
+                    rel.getLeft(),
+                    rel.getRight(),
+                    rel.getJoinType(),
+                    unionPreds),
                 rowCount);
     }
 
@@ -452,12 +495,84 @@ public class LoptMetadataProvider
     public Double getRowCount(JoinRel rel)
     {
         return computeRowCountGivenConds(
-                rel,
+                rel.getLeft(),
+                rel.getRight(),
+                rel.getJoinType(),
                 rel.getCondition());
     }
+    
+    public Double getRowCount(LhxJoinRel rel)
+    {
+        // TODO zfong 8/29/06 - if we support mapping of physical relnodes to
+        // logical relnodes, then this method may not be needed
+        Double numRows;       
+        LhxJoinRelType joinType = rel.getJoinType();
+        RelNode left = rel.getLeft();
+        RelNode right = rel.getRight();
+        List<Integer> leftKeys = rel.getLeftKeys();
+        List<Integer> rightKeys = rel.getRightKeys();
+        
+        if (joinType == LhxJoinRelType.LEFTSEMI) {
+            numRows = RelMetadataQuery.getRowCount(left);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+            numRows = RelMetadataQuery.getRowCount(right);
+        } else {
+            // construct a join condition consisting of the hash join keys
+            // and then use that to estimate the number of rows in the join
+            // result
+            List<RexNode> joinFilterList = new ArrayList<RexNode>();
+            RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
+            RelDataTypeField[] leftFields = left.getRowType().getFields();
+            int nLeftFields = leftFields.length;
+            RelDataTypeField[] rightFields = right.getRowType().getFields();
+            for (int i = 0; i < leftKeys.size(); i++) {
+                RexNode leftInput =
+                    rexBuilder.makeInputRef(
+                        leftFields[leftKeys.get(i)].getType(),
+                        leftKeys.get(i));
+                RexNode rightInput =
+                    rexBuilder.makeInputRef(
+                        rightFields[rightKeys.get(i)].getType(),
+                        rightKeys.get(i) + nLeftFields);
+                joinFilterList.add(
+                    rexBuilder.makeCall(
+                        SqlStdOperatorTable.equalsOperator,
+                        leftInput,
+                        rightInput));
+            }
+            RexNode condition =
+                RexUtil.andRexNodeList(rexBuilder, joinFilterList);
+            numRows =
+                computeRowCountGivenConds(
+                    left,
+                    right,
+                    joinType.getLogicalJoinType(),
+                    condition);
+            if (numRows == null) {
+                numRows =
+                    RelMetadataQuery.getRowCount(left) *
+                    RelMetadataQuery.getRowCount(right) *
+                    RelMdUtil.guessSelectivity(condition);
+            }
+        }
+        return numRows;
+    }
 
+    /**
+     * Computes the rowcount from a join, given a join condition and the join
+     * inputs
+     * 
+     * @param leftChild left input into the join
+     * @param rightChild right input into the join
+     * @param joinType join type
+     * @param predicate the join condition
+     * 
+     * @return computed join rowcount
+     */
     private Double computeRowCountGivenConds(
-        JoinRel rel,
+        RelNode leftChild,
+        RelNode rightChild,
+        JoinRelType joinType,
         RexNode predicate)
     {
         // locate the columns that participate in equijoins
@@ -465,13 +580,14 @@ public class LoptMetadataProvider
         BitSet rightJoinCols = new BitSet();
         RexNode nonEquiJoin =
             RelMdUtil.findEquiJoinCols(
-                rel,
+                leftChild,
+                rightChild,
                 predicate,
                 leftJoinCols,
                 rightJoinCols);
 
-        Double nRowsLeft = RelMetadataQuery.getRowCount(rel.getLeft());
-        Double nRowsRight = RelMetadataQuery.getRowCount(rel.getRight());
+        Double nRowsLeft = RelMetadataQuery.getRowCount(leftChild);
+        Double nRowsRight = RelMetadataQuery.getRowCount(rightChild);
         if ((nRowsLeft == null) || (nRowsRight == null)) {
             return null;
         }
@@ -487,12 +603,12 @@ public class LoptMetadataProvider
         // when calculating the rowcount
         Double leftCard =
             RelMetadataQuery.getDistinctRowCount(
-                rel.getLeft(),
+                leftChild,
                 leftJoinCols,
                 null);
         Double rightCard =
             RelMetadataQuery.getDistinctRowCount(
-                rel.getRight(),
+                rightChild,
                 rightJoinCols,
                 null);
         double nGroups =
@@ -520,7 +636,12 @@ public class LoptMetadataProvider
             // determine which side corresponds to the dimension table
             // and return the number of rows on the fact table side
             if (leftJoinCols.cardinality() > 0) {
-                Boolean dimLeft = dimOnLeft(rel, leftJoinCols, rightJoinCols);
+                Boolean dimLeft =
+                    dimOnLeft(
+                        leftChild,
+                        rightChild,
+                        leftJoinCols,
+                        rightJoinCols);
                 if (dimLeft == null) {
                     rowCount =
                         nRowsLeft * nRowsRight
@@ -540,10 +661,10 @@ public class LoptMetadataProvider
             }
         }
 
-        if (rel.getJoinType().generatesNullsOnLeft()) {
+        if (joinType.generatesNullsOnLeft()) {
             rowCount = Math.max(rowCount, nRowsLeft);
         }
-        if (rel.getJoinType().generatesNullsOnRight()) {
+        if (joinType.generatesNullsOnRight()) {
             rowCount = Math.max(rowCount, nRowsRight);
         }
 
@@ -553,7 +674,8 @@ public class LoptMetadataProvider
     /**
      * Returns true if the dimension table is on the LHS of a join
      *
-     * @param rel the join rel
+     * @param left left input into the join
+     * @param right right input into the join
      * @param leftJoinCols equijoin columns from the left hand side of the join
      * @param rightJoinCols equijoin columns from the right hand side of the
      * join
@@ -561,17 +683,18 @@ public class LoptMetadataProvider
      * @return true if dimension table is on the left; null if cannot determine
      */
     private Boolean dimOnLeft(
-        JoinRelBase rel,
+        RelNode left,
+        RelNode right,
         BitSet leftJoinCols,
         BitSet rightJoinCols)
     {
         Boolean leftUnique =
             RelMdUtil.areColumnsUnique(
-                rel.getLeft(),
+                left,
                 leftJoinCols);
         Boolean rightUnique =
             RelMdUtil.areColumnsUnique(
-                rel.getRight(),
+                right,
                 rightJoinCols);
 
         if ((leftUnique == null) || (rightUnique == null)) {
@@ -587,9 +710,6 @@ public class LoptMetadataProvider
 
         // if neither side is unique, then whichever side yields a smaller
         // result after filtering is the dimension table
-        RelNode left = rel.getLeft();
-        RelNode right = rel.getRight();
-
         Double leftPercent = RelMetadataQuery.getPercentageOriginalRows(left);
         Double rightPercent = RelMetadataQuery.getPercentageOriginalRows(right);
         if ((leftPercent == null) || (rightPercent == null)) {
@@ -600,6 +720,26 @@ public class LoptMetadataProvider
             return true;
         } else {
             return false;
+        }
+    }
+    
+    public Double getPopulationSize(LhxJoinRel rel, BitSet groupKey)
+    {
+        // TODO zfong 8/29/06 - if we support mapping of physical relnodes to
+        // logical relnodes, then this method may not be needed
+        LhxJoinRelType joinType = rel.getJoinType();
+        int nFieldsLeft = rel.getLeft().getRowType().getFieldCount();
+        if (joinType == LhxJoinRelType.LEFTSEMI) {
+            assert(groupKey.nextSetBit(nFieldsLeft) < 0);
+            return RelMetadataQuery.getPopulationSize(rel.getLeft(), groupKey);
+        } else if (joinType == LhxJoinRelType.RIGHTANTI) {
+            // the key references all columns on the left, so we can reuse 
+            // it to represent the columns on the right
+            assert(groupKey.nextSetBit(nFieldsLeft) < 0);
+            return RelMetadataQuery.getPopulationSize(rel.getRight(), groupKey);
+        } else {
+            return RelMdUtil.getJoinPopulationSize(
+                rel, rel.getLeft(), rel.getRight(), groupKey);
         }
     }
 

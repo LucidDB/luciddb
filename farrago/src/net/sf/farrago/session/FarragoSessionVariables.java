@@ -32,7 +32,19 @@ import org.eigenbase.sql.pretty.*;
 
 /**
  * FarragoSessionVariables defines global variable settings for a Farrago
- * session.
+ * session. It has two types of variables, plain old Java object fields, 
+ * and variables stored in a generic name to value map. Plain old Java 
+ * object fields are accessed directly, while mapped fields are 
+ * accessed with {@link #set(String, String)} and {@link #get(String)}.
+ * Validation is handled in {@link FarragoSessionPersonality}.
+ * 
+ * <pre><code>
+ * Example: 
+ * FarragoSessionVariables sessionVars = ...;
+ * String catalogName = sessionVars.catalogName;
+ * sessionVars.set("newVar", "value"); // registers and sets value in map
+ * String newVar = sessionVars.get("newVar"); // gets mapped value only
+ * </code></pre>
  *
  * @author John V. Sichi
  * @version $Id$
@@ -105,12 +117,27 @@ public class FarragoSessionVariables
      */
     public long processId;
 
+    /**
+     * Additional variables
+     */
+    private Map<String,String> valueMap;
+    
     //~ Methods ----------------------------------------------------------------
+
+    public FarragoSessionVariables()
+    {
+        valueMap = new HashMap<String,String>();
+    }
 
     public FarragoSessionVariables cloneVariables()
     {
         try {
-            return (FarragoSessionVariables) clone();
+            FarragoSessionVariables copy = 
+                (FarragoSessionVariables) clone();
+            // Perform a deep copy of the value map
+            copy.valueMap = new HashMap<String,String>();
+            copy.valueMap.putAll(valueMap);
+            return copy;
         } catch (CloneNotSupportedException ex) {
             throw new AssertionError();
         }
@@ -165,6 +192,102 @@ public class FarragoSessionVariables
         // Since schemaSearchPath is meant to be an unmodifiable list,
         // it should be okay to just copy the reference.
         this.schemaSearchPath = baseVariables.schemaSearchPath;
+
+        // Perform a deep copy of the value map
+        this.valueMap = new HashMap<String,String>();
+        this.valueMap.putAll(baseVariables.valueMap);
+    }
+
+    /**
+     * Sets the value of a variable in a generic value map. This method does
+     * not affect any variables explictly materialized as a public members.
+     * 
+     * @param name the name of a session variable
+     * @param value the value to set, expressed as a string
+     */
+    public void set(String name, String value)
+    {
+        valueMap.put(name, value);
+    }
+
+    /**
+     * Gets the value of variable in a generic value map.
+     * 
+     * @param name the name of a session variable
+     * @throws IllegalArgumentException if the variable is not in the map
+     */
+    public String get(String name) 
+    {
+        if (!valueMap.containsKey(name)) {
+            throw new IllegalArgumentException();
+        }
+        return valueMap.get(name);
+    }
+
+    /**
+     * Sets the value of a variable, expressed as an integer
+     * @see #set(String, String)
+     */
+    public void setInteger(String name, Integer value)
+    {
+        String stringValue = (value == null) ? null : value.toString();
+        valueMap.put(name, stringValue);
+    }
+
+    /**
+     * Gets the value of a variable, casted to an Integer
+     * 
+     * @see #get(String)
+     * @param name the name of a session variable
+     * @throws IllegalArgumentException if the variable is not in the map
+     * @throws NumberFormatException if the value cannot be casted to an 
+     *   Integer
+     */
+    public Integer getInteger(String name) 
+    {
+        String stringValue = get(name);
+        return (stringValue == null) ? null : Integer.valueOf(stringValue);
+    }
+
+    /**
+     * Sets the default value for a variable. Does nothing if the variable 
+     * has already been initialized.
+     * 
+     * @param name the name of the variable
+     * @param value the default value of a variable
+     */
+    public void setDefault(String name, String value)
+    {
+        if (! valueMap.containsKey(name)) {
+            valueMap.put(name, value);
+        }
+    }
+
+    /**
+     * Retrieves a read only map from parameter name to parameter value.
+     * Parameter values are expressed as strings. This map contains values 
+     * of the generic value map. It also contains public fields of 
+     * {@link #FarragoSessionVariables}. The public fields take precedence.
+     */
+    public Map<String,String> getMap()
+    {
+        Map<String, String> readMap = new HashMap<String, String>();
+        readMap.putAll(valueMap);
+        
+        // copy public fields
+        readMap.put("catalogName", catalogName);
+        readMap.put("schemaName", schemaName);
+        readMap.put("systemUserName", systemUserName);
+        readMap.put("sessionUserName", sessionUserName);
+        readMap.put("currentUserName", currentUserName);
+        readMap.put("currentRoleName", currentRoleName);
+        // TODO: schemaSearchPath
+        readMap.put("systemUserFullName", systemUserFullName);
+        readMap.put("sessionName", sessionName);
+        readMap.put("programName", programName);
+        readMap.put("processId", Long.toString(processId));
+        
+        return Collections.unmodifiableMap(readMap);
     }
 }
 

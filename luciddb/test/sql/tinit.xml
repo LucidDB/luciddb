@@ -1,19 +1,12 @@
 <project name="bh" default="init">
   <target name="init">
     <test-suite name="init">
-
-      <init-hook>
-        <!-- Notify LucidDbTestHarness of start of test suite. -->
-        <test-suite name="init">
-          <test name="testSuiteInit">
-            <junit testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
-              methodnames="testSuiteInit"/>
-          </test>
-        </test-suite>
-      </init-hook>
-      
+      <!-- Notify LucidDbTestHarness of start of test suite. -->
+      <custom-task>
+        <junit-utility testclass="com.lucidera.luciddb.test.LucidDbTestHarness" 
+          methodnames="testSuiteInit"/>
+      </custom-task>
       <!-- anything else -->
-      
     </test-suite>
   </target>
 </project>

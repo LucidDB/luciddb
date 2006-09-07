@@ -410,9 +410,19 @@ Error: Graph has cycle(s) of '2' vertices; first 20 in loop(s): '3 2 ' (state=,c
 . . . . . . . . > from table(applib.flatten_recursive_hierarchy(cursor(select * from threecol)));
 Error: Input table must have two columns, not '3' (state=,code=0)
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- record has null child ---------------------------------------------
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table nullchild(c1 integer, c2 integer);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into nullchild values (1,2), (3,4), (5,null);
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select *
+. . . . . . . . > from table(applib.flatten_recursive_hierarchy(cursor(select * from nullchild)));
+Error: This parent '5' must have non-null child (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- clean up ----------------------------------------------------------
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table loop;
 0: jdbc:luciddb:> drop table threecol;
+0: jdbc:luciddb:> drop table nullchild;
 0: jdbc:luciddb:> !quit

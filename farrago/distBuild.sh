@@ -184,6 +184,13 @@ if $dist_fennel; then
     cp -d disruptivetech/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
     cp -d lucidera/libfennel_lu/.libs/$SO_PATTERN $LIB_DIR/fennel
     cp -d lucidera/farrago/.libs/$SO_PATTERN $LIB_DIR/fennel
+
+    # if possible, strip rpath info
+    if [ $cygwin = "false" ]; then
+        if [ -e /usr/bin/chrpath ]; then
+            /usr/bin/chrpath -d $LIB_DIR/fennel/*.so*
+        fi
+    fi
     
     # copy fennel resources
     cp common/*.properties $CATALOG_DIR/fennel
