@@ -216,32 +216,33 @@ public class JmiChangeSet
         // further validation
         stopListening();
 
+        // build deletion list
         List<RefObject> deletionList = new ArrayList<RefObject>();
         for (Map.Entry<RefObject, JmiValidationAction> mapEntry
             : validatedMap.entrySet()) {
             RefObject obj = (RefObject) mapEntry.getKey();
             Object action = mapEntry.getValue();
 
-            if (action == JmiValidationAction.DELETION) {
-                dispatcher.clearDependencySuppliers(obj);
-                RefFeatured container = obj.refImmediateComposite();
-                if (container != null) {
-                    JmiValidationAction containerAction =
-                        validatedMap.get(container);
-                    if (containerAction == JmiValidationAction.DELETION) {
-                        // container is also being deleted; don't try
-                        // deleting this contained object--depending on order,
-                        // the attempt could cause an excn
-                    } else {
-                        // container is not being deleted
-                        deletionList.add(obj);
-                    }
+            if (action != JmiValidationAction.DELETION) {
+                continue;
+            }
+            
+            dispatcher.clearDependencySuppliers(obj);
+            RefFeatured container = obj.refImmediateComposite();
+            if (container != null) {
+                JmiValidationAction containerAction =
+                    validatedMap.get(container);
+                if (containerAction == JmiValidationAction.DELETION) {
+                    // container is also being deleted; don't try
+                    // deleting this contained object--depending on order,
+                    // the attempt could cause an excn
                 } else {
-                    // top-level object
+                    // container is not being deleted
                     deletionList.add(obj);
                 }
             } else {
-                checkJmiConstraints(obj);
+                // top-level object
+                deletionList.add(obj);
             }
         }
 
@@ -253,6 +254,17 @@ public class JmiChangeSet
                 tracer.fine("really deleting " + refObj);
             }
             refObj.refDelete();
+        }
+
+        // verify repository integrity post-delete
+        for (Map.Entry<RefObject, JmiValidationAction> mapEntry
+            : validatedMap.entrySet())
+        {
+            RefObject obj = (RefObject) mapEntry.getKey();
+            Object action = mapEntry.getValue();
+            if (action != JmiValidationAction.DELETION) {
+                checkJmiConstraints(obj);
+            }
         }
     }
 
@@ -293,7 +305,7 @@ public class JmiChangeSet
             }
             scheduleModification(associationEvent.getFixedElement());
             if (associationEvent.getOldElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+                scheduleModification(associationEvent.getOldElement());
             }
             if (associationEvent.getNewElement() != null) {
                 scheduleModification(associationEvent.getNewElement());
