@@ -469,7 +469,7 @@ public:
     virtual PageT *lockPage(
         BlockId blockId,LockMode lockMode,bool readIfUnmapped,
         MappedPageListener *pMappedPageListener,TxnId txnId);
-    virtual PageT *lockScratchPage(BlockNum blockNum);
+    virtual PageT &lockScratchPage(BlockNum blockNum);
     virtual void discardPage(BlockId blockId);
     virtual uint checkpointPages(
         PagePredicate &pagePredicate,CheckpointType checkpointType);
