@@ -1,0 +1,41 @@
+-- $Id$
+-- Reading dates with date conversion functions based on the Java library
+
+-- specify datetime formats in the flat file link
+create server flatfile_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory '@DATADIR@',
+    file_extension 'csv',
+    date_format 'MM/dd/yyyy',
+    time_format 'hh:mm:ss a',
+    timestamp_format 'MM/dd/yyyy hh:mm:ss a'
+    );
+
+-- view the text of the file
+select * from flatfile_server.sample."dates";
+
+-- read the file as date and times
+select * from flatfile_server.bcp."dates";
+
+-- convert back into strings
+select 
+    applib.to_char('MM/dd/yyyy', start_date),
+    applib.to_char('hh:mm:ss a', start_time),
+    applib.to_char('MM/dd/yyyy hh:mm:ss a', activity_time)
+from 
+    flatfile_server.bcp."dates";
+
+values applib.timestamp_to_char(
+    'MM/dd/yyyy hh:mm:ss a', 
+    cast ('2001-01-01 12:00:00' as timestamp));
+
+values applib.char_to_timestamp(
+    'yyyy-MM-dd HH:mm:ss',
+    '2001-01-01 12:00:00');
+
+values applib.timestamp_to_char( 
+    'MM/dd/yyyy',
+    applib.char_to_timestamp(
+        'yyyy-MM-dd HH:mm:ss',
+        '2001-01-01 12:00:00'));

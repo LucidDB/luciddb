@@ -225,6 +225,51 @@
 . . . . . . . . > no sql
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.ConvertDateUdf.execute';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- converts a string to a date, according to the specified format string
+0: jdbc:luciddb:> create function applib.char_to_date(format varchar(50), dateString varchar(128))
+. . . . . . . . > returns date
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_char_to_date
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_date';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.char_to_time(format varchar(50), timeString varchar(128))
+. . . . . . . . > returns time
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_char_to_time
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_time';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.char_to_timestamp(
+. . . . . . . . >     format varchar(50), timestampString varchar(128))
+. . . . . . . . > returns timestamp
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_char_to_timestamp
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.char_to_timestamp';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- formats a string as a date, according to the specified format string
+0: jdbc:luciddb:> create function applib.date_to_char(format varchar(50), d date)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_date_to_char
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.date_to_char';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.time_to_char(format varchar(50), t time)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_time_to_char
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.time_to_char';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create function applib.timestamp_to_char(format varchar(50), ts timestamp)
+. . . . . . . . > returns varchar(128)
+. . . . . . . . > language java
+. . . . . . . . > specific applib_std_timestamp_to_char
+. . . . . . . . > no sql
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define dayFromJulianStart
 0: jdbc:luciddb:> -- 2440588 is the number of days from the Julian Calendar start date to 
 0: jdbc:luciddb:> -- the epoch Jan 1, 1970 
