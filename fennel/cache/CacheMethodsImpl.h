@@ -322,14 +322,13 @@ void CacheImpl<PageT,VictimPolicyT>
 }
 
 template <class PageT,class VictimPolicyT>
-PageT *CacheImpl<PageT,VictimPolicyT>
+PageT &CacheImpl<PageT,VictimPolicyT>
 ::lockScratchPage(BlockNum blockNum)
 {
     PageT *page;
-    page = findFreePage();
-    if (!page) {
-        return NULL;
-    }
+    do {
+        page = findFreePage();
+    } while (!page);
 
     StrictMutexGuard pageGuard(page->mutex);
     page->nReferences = 1;
@@ -338,7 +337,7 @@ PageT *CacheImpl<PageT,VictimPolicyT>
     CompoundId::setDeviceId(page->blockId,NULL_DEVICE_ID);
     CompoundId::setBlockNum(page->blockId,blockNum);
     
-    return page;
+    return *page;
 }
 
 template <class PageT,class VictimPolicyT>

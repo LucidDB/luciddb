@@ -209,7 +209,6 @@ ${farrago.test.jvmargs}
           <exclude name="numerics/build.xml"/>
           <exclude name="txn/build.xml"/>
           <exclude name="udr/udx/**"/>
-          <exclude name="udr/udf/**"/>
           <exclude name="VI/recovery/build.xml"/>
           <exclude name="VI/build.xml"/>
           <exclude name="hashjoin/**"/>

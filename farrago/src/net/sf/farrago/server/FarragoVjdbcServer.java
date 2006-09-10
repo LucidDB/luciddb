@@ -23,8 +23,11 @@ package net.sf.farrago.server;
 
 import de.simplicit.vjdbc.server.config.*;
 import de.simplicit.vjdbc.server.rmi.*;
+import de.simplicit.vjdbc.util.*;
 
 import java.io.*;
+import java.util.*;
+import java.sql.*;
 
 import net.sf.farrago.jdbc.engine.*;
 
@@ -39,6 +42,7 @@ import net.sf.farrago.jdbc.engine.*;
 public class FarragoVjdbcServer
     extends FarragoAbstractServer
 {
+    private FarragoJdbcServerDriver jdbcDriver;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -71,8 +75,13 @@ public class FarragoVjdbcServer
     protected int startNetwork(FarragoJdbcServerDriver jdbcDriver)
         throws Exception
     {
+        // REVIEW jvs 7-Sept-2006: seems like we should null this out in
+        // stopNetwork, but that causes problems in FarragoVjdbcServerTest.
+        this.jdbcDriver = jdbcDriver;
+        
         VJdbcConfiguration vjdbcConfig = new VJdbcConfiguration();
-        ConnectionConfiguration configFarrago = new ConnectionConfiguration();
+        ConnectionConfiguration configFarrago =
+            new FarragoConnectionConfiguration();
         configFarrago.setDriver(jdbcDriver.getClass().getName());
         configFarrago.setId("FarragoDBMS");
         configFarrago.setUrl(jdbcDriver.getBaseUrl());
@@ -101,6 +110,22 @@ public class FarragoVjdbcServer
         locateRmiRegistry();
 
         return rmiRegistryPort;
+    }
+
+    // NOTE jvs 7-Sept-2006:  This is to avoid calling DriverManager,
+    // which can deadlock when client and server are in same process.
+    private class FarragoConnectionConfiguration
+        extends ConnectionConfiguration
+    {
+        public Connection create(Properties props)
+            throws SQLException
+        {
+            try {
+                return jdbcDriver.connect(jdbcDriver.getBaseUrl(), props);
+            } catch (Throwable t) {
+                throw SQLExceptionHelper.wrap(t);
+            }
+        }
     }
 }
 

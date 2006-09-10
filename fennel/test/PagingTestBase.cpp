@@ -191,7 +191,7 @@ void PagingTestBase::testRandomOp(OpType opType)
 void PagingTestBase::testScratch()
 {
     for (uint i = 0; i < nRandomOps; i++) {
-        CachePage &page = *(getCache().lockScratchPage());
+        CachePage &page = getCache().lockScratchPage();
         fillPage(page,generateRandomNumber(10000));
         getCache().unlockPage(page,LOCKMODE_X);
     }

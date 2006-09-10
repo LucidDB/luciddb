@@ -65,7 +65,9 @@ class FlatFileParams
     public static final String PROP_NUM_ROWS_SCAN = "NUM_ROWS_SCAN";
     public static final String PROP_WITH_LOGGING = "WITH_LOGGING";
     public static final String PROP_LOG_DIRECTORY = "LOG_DIRECTORY";
-    public static final String PROP_SCHEMA_NAME = "SCHEMA";
+    public static final String PROP_DATE_FORMAT = "DATE_FORMAT";
+    public static final String PROP_TIME_FORMAT = "TIME_FORMAT";
+    public static final String PROP_TIMESTAMP_FORMAT = "TIMESTAMP_FORMAT";
 
     public static final String FILE_EXTENSION_PREFIX = ".";
     public static final String LOG_FILE_EXTENSION = "err";
@@ -373,6 +375,21 @@ class FlatFileParams
     public String getLogDirectory()
     {
         return logDirectory;
+    }
+
+    public String getDateFormat()
+    {
+        return props.getProperty(PROP_DATE_FORMAT);
+    }
+
+    public String getTimeFormat()
+    {
+        return props.getProperty(PROP_TIME_FORMAT);
+    }
+
+    public String getTimestampFormat()
+    {
+        return props.getProperty(PROP_TIMESTAMP_FORMAT);
     }
 
     /**

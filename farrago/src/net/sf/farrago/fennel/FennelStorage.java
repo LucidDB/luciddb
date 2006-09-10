@@ -28,6 +28,7 @@ import net.sf.farrago.fem.fennel.*;
 
 import org.eigenbase.util.*;
 
+import java.awt.*;
 
 /**
  * FennelStorage is the JNI interface for calling Fennel from Farrago. Most
@@ -39,10 +40,25 @@ import org.eigenbase.util.*;
  */
 public class FennelStorage
 {
+    private static Toolkit awtToolkit;
 
     //~ Static fields/initializers ---------------------------------------------
 
     static {
+        // REVIEW jvs 8-Sept-2006:  workaround upon workaround.  This
+        // is required because in native code, we have to use
+        // dlopen("libfarrago.so", RTLD_GLOBAL) in order for native plugins
+        // to load correctly.  But the RTLD_GLOBAL causes trouble later
+        // if someone tries to use AWT from within the same JVM.  So...
+        // preload AWT here.
+        try {
+            awtToolkit = Toolkit.getDefaultToolkit();
+        } catch (HeadlessException ex) {
+            // I'm not sure if this can actually happen, but if it does,
+            // just suppress it so that a headless server doesn't fail
+            // on startup.
+        }
+        
         Util.loadLibrary("farrago");
     }
 

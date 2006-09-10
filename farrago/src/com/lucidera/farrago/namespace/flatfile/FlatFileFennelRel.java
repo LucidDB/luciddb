@@ -57,7 +57,8 @@ public class FlatFileFennelRel
     //~ Instance fields --------------------------------------------------------
 
     private FlatFileColumnSet columnSet;
-    FlatFileParams.SchemaType schemaType;
+    private FlatFileParams.SchemaType schemaType;
+    FlatFileParams params;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -65,7 +66,8 @@ public class FlatFileFennelRel
         FlatFileColumnSet columnSet,
         RelOptCluster cluster,
         RelOptConnection connection,
-        FlatFileParams.SchemaType schemaType)
+        FlatFileParams.SchemaType schemaType,
+        FlatFileParams params)
     {
         super(
             cluster,
@@ -74,42 +76,22 @@ public class FlatFileFennelRel
             connection);
         this.columnSet = columnSet;
         this.schemaType = schemaType;
+        this.params = params;
+    }
+
+    protected FlatFileFennelRel(
+        FlatFileColumnSet columnSet,
+        RelOptCluster cluster,
+        RelOptConnection connection,
+        FlatFileParams.SchemaType schemaType,
+        FlatFileParams params,
+        RelDataType rowType)
+    {
+        this(columnSet, cluster, connection, schemaType, params);
+        this.rowType = rowType;
     }
 
     //~ Methods ----------------------------------------------------------------
-
-    /**
-     * Determines whether the flatfile scan can be implemented entirely within
-     * this Fennel RelNode. If not, then it requires a Java program.
-     */
-    public boolean isPureFennel()
-    {
-        // Use only FennelRel in basic modes, or if
-        // the Fennel calc mode is turned on
-        CalcVirtualMachine calcVm =
-            FennelRelUtil.getPreparingStmt(this).getRepos().getCurrentConfig()
-            .getCalcVirtualMachine();
-        return 
-            (schemaType == FlatFileParams.SchemaType.DESCRIBE
-                || schemaType == FlatFileParams.SchemaType.SAMPLE
-                || calcVm.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)
-                || calcVm.equals(CalcVirtualMachineEnum.CALCVM_AUTO));
-    }
-
-    /**
-     * Forces a flatfile scan to run in text only mode, bypassing the casting of
-     * columns into typed data. This call is only valid for regular queries (not
-     * describe or sample).
-     *
-     * @param textRowType target row type for the scan, all columns must be
-     * character columns.
-     */
-    public void setTextOnly(RelDataType textRowType)
-    {
-        assert (schemaType == FlatFileParams.SchemaType.QUERY);
-        schemaType = FlatFileParams.SchemaType.QUERY_TEXT;
-        rowType = textRowType;
-    }
 
     // implement FennelRel
     public Object implementFennelChild(FennelRelImplementor implementor)
@@ -147,9 +129,15 @@ public class FlatFileFennelRel
             numRowsScan = params.getNumRowsScan();
             // fall through to get program
         case QUERY:
-            FlatFileProgramWriter pw = new FlatFileProgramWriter(this);
-            RexProgram rexProgram = pw.getProgram(rowType);
-            program = pw.toFennelProgram(rexProgram);
+            FlatFileProgramWriter pw = 
+                new FlatFileProgramWriter(
+                    getCluster().getRexBuilder(),
+                    FennelRelUtil.getPreparingStmt(this), 
+                    params,
+                    rowType);
+            assert (pw.getJavaOnlySection() == null);
+            RexProgram rexProgram = pw.getFennelSection();
+            program = pw.serializeProgram(rexProgram, this);
             break;
         case QUERY_TEXT:
             break;
@@ -177,7 +165,7 @@ public class FlatFileFennelRel
         return streamDef;
     }
 
-    public String encodeChar(char c)
+    private String encodeChar(char c)
     {
         return (c == 0) ? "" : Character.toString(c);
     }
@@ -185,10 +173,7 @@ public class FlatFileFennelRel
     // implement FennelRel
     public RelFieldCollation [] getCollations()
     {
-        // REVIEW jvs 18-Feb-2006:  how so?
-
-        // trivially sorted
-        return new RelFieldCollation[] { new RelFieldCollation(0) };
+        return RelFieldCollation.emptyCollationArray;
     }
 
     // implement RelNode
@@ -199,7 +184,9 @@ public class FlatFileFennelRel
                 columnSet,
                 getCluster(),
                 connection,
-                schemaType);
+                schemaType,
+                params,
+                getRowType());
         clone.inheritTraitsFrom(this);
         return clone;
     }
