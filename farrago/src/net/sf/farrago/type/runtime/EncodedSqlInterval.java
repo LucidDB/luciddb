@@ -89,12 +89,18 @@ public abstract class EncodedSqlInterval
             return;
         }
         setNull(false);
-        if (obj instanceof String) {
-           String intervalStr = (String) obj;
-           parse(intervalStr);
+        if (obj instanceof Number) {
+            setNull(false);
+            assignFrom(((Number) obj).longValue());
+        } else if (obj instanceof DataValue) {
+            DataValue dataValue = (DataValue) obj;
+            assignFrom(dataValue.getNullableData());
+        } else if (obj instanceof String) {
+            String intervalStr = (String) obj;
+            parse(intervalStr);
         } else {
-           Util.permAssert(false,
-           "Cannot assign class " + obj.getClass() + " to interval");
+            Util.permAssert(false,
+                "Cannot assign class " + obj.getClass() + " to interval");
         }
     }
 

@@ -1613,6 +1613,11 @@ public abstract class SqlOperatorTests
                 "cast(-5e8 as decimal(19,10)) - cast(5e8 as decimal(19,10))",
                 outOfRangeMessage);
         }
+    }
+
+    public void testMinusIntervalOperator()
+    {
+        getTester().setFor(SqlStdOperatorTable.minusOperator);
 
         // Intervals
         getTester().checkScalar(
@@ -1633,12 +1638,43 @@ public abstract class SqlOperatorTests
             "INTERVAL YEAR TO MONTH NOT NULL");
         getTester().checkNull(
             "cast(null as interval day) + interval '2' hour");
+
+        // Datetime minus interval
+        getTester().checkScalar(
+            "time '12:03:01' - interval '1:1' hour to minute",
+            "11:02:01",
+            "TIME(0) NOT NULL");
+        getTester().checkScalar(
+            "date '2005-03-02' - interval '5' day",
+            "2005-02-25",
+            "DATE NOT NULL");
+        getTester().checkScalar(
+            "timestamp '2003-08-02 12:54:01' - interval '-4 2:4' day to minute",
+            "2003-08-06 14:58:01.0",
+            "TIMESTAMP(0) NOT NULL");
+
+        // TODO: Tests with interval year months (not supported)
     }
 
     public void testMinusDateOperator()
     {
         getTester().setFor(SqlStdOperatorTable.minusDateOperator);
-        //todo
+        getTester().checkScalar(
+            "(time '12:03:34' - time '11:57:23') minute",
+            "+00:06:11",
+            "INTERVAL MINUTE NOT NULL");
+        getTester().checkScalar(
+            "(timestamp '2004-05-01 12:03:34' - timestamp '2004-04-29 11:57:23') day to hour",
+            "+02 00:06:11",
+            "INTERVAL DAY TO HOUR NOT NULL");
+        getTester().checkScalar(
+            "(date '2004-12-02' - date '2003-12-01') day",
+            "+367 00:00:00",
+            "INTERVAL DAY NOT NULL");
+        getTester().checkNull(
+            "(cast(null as date) - date '2003-12-01') day");
+
+        // TODO: Add tests for year month intervals (currently not supported)
     }
 
     public void testMultiplyOperator()
@@ -1703,7 +1739,7 @@ public abstract class SqlOperatorTests
             "+06:06:00",
             "INTERVAL HOUR TO MINUTE NOT NULL");
         getTester().checkScalar(
-            "interval '2:5:12' hour to second * 2 * 3",
+            "3 * 2 * interval '2:5:12' hour to second",
             "+12:31:12",
             "INTERVAL HOUR TO SECOND NOT NULL");
         getTester().checkNull(
@@ -1803,7 +1839,11 @@ public abstract class SqlOperatorTests
                 "cast(5e8 as decimal(19,10)) + cast(5e8 as decimal(19,10))",
                 outOfRangeMessage);
         }
+    }
 
+    public void testPlusIntervalOperator()
+    {
+        getTester().setFor(SqlStdOperatorTable.plusOperator);
         // Intervals
         getTester().checkScalar(
             "interval '2' day + interval '1' day",
@@ -1823,6 +1863,22 @@ public abstract class SqlOperatorTests
             "INTERVAL YEAR TO MONTH NOT NULL");
         getTester().checkNull(
             "interval '2' year + cast(null as interval month)");
+
+        // Datetime plus interval
+        getTester().checkScalar(
+            "time '12:03:01' + interval '1:1' hour to minute",
+            "13:04:01",
+            "TIME(0) NOT NULL");
+        getTester().checkScalar(
+            "interval '5' day + date '2005-03-02'",
+            "2005-03-07",
+            "DATE NOT NULL");
+        getTester().checkScalar(
+            "timestamp '2003-08-02 12:54:01' + interval '-4 2:4' day to minute",
+            "2003-07-29 10:50:01.0",
+            "TIMESTAMP(0) NOT NULL");
+
+        // TODO: Tests with interval year months (not supported)
     }
 
     public void testDescendingOperator()

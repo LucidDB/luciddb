@@ -154,6 +154,40 @@ public class VolcanoPlanner
 
     //~ Methods ----------------------------------------------------------------
 
+    protected 
+        VolcanoPlannerPhaseRuleMappingInitializer 
+            getPhaseRuleMappingInitializer()
+    {
+        return new VolcanoPlannerPhaseRuleMappingInitializer() {
+            public void initialize(
+                Map<VolcanoPlannerPhase, 
+                Set<String>> phaseRuleMap)
+            {
+                Set<String> preProcessMdrPhaseRules = 
+                    phaseRuleMap.get(VolcanoPlannerPhase.PRE_PROCESS_MDR);
+
+                // Fire this rule early so we don't waste time fiddling with
+                // alternate join implementations.  The MDR queries are tuned
+                // to want this rule's output.
+                preProcessMdrPhaseRules.add("MedMdrJoinRule");
+                preProcessMdrPhaseRules.add("IterCalcRule");
+                preProcessMdrPhaseRules.add("ProjectToCalcRule");
+                preProcessMdrPhaseRules.add("FilterToCalcRule");
+                preProcessMdrPhaseRules.add("MergeCalcRule");
+                
+                Set<String> cleanupPhaseRules = 
+                    phaseRuleMap.get(VolcanoPlannerPhase.CLEANUP);
+
+                // Cleanup pass to remove trivial projects and merge calcs.
+                // Helps the planner concentrate on these easy tasks.
+                cleanupPhaseRules.add("RemoveTrivialProjectRule");
+                cleanupPhaseRules.add("MergeCalcRule");
+                cleanupPhaseRules.add("FennelCalcRule");
+                cleanupPhaseRules.add("IterCalcRule");
+            }
+        };
+    }
+    
     // REVIEW: SWZ: 3/1/2005: No one calls this.  Remove?
     // todo: pre-compute
     public RelOptRuleOperand [] getConversionOperands(
@@ -412,43 +446,75 @@ public class VolcanoPlanner
 
     public RelNode findBestExp()
     {
-        RelOptCost targetCost = makeHugeCost();
-        int tick = 0;
-        int firstFiniteTick = -1;
-        int splitCount = 0;
-        int giveUpTick = Integer.MAX_VALUE;
-        while (true) {
-            ++tick;
-            if (root.bestCost.isLe(targetCost)) {
-                if (firstFiniteTick < 0) {
-                    firstFiniteTick = tick;
-                }
-                if (ambitious) {
-                    // Choose a more ambitious target cost, and try again. If it
-                    // took us 1000 iterations to find our first finite plan,
-                    // give ourselves another 1000 iterations to meet the new
-                    // target.
-                    targetCost = root.bestCost.multiplyBy(0.5);
-                    ++splitCount;
-                    if (impatient) {
-                        giveUpTick = tick + firstFiniteTick;
+        int cumulativeTicks = 0;
+        for(VolcanoPlannerPhase phase: VolcanoPlannerPhase.values()) {
+            setInitialImportance();
+            
+            RelOptCost targetCost = makeHugeCost();
+            int tick = 0;
+            int firstFiniteTick = -1;
+            int splitCount = 0;
+            int giveUpTick = Integer.MAX_VALUE;
+
+            while (true) {
+                ++tick;
+                ++cumulativeTicks;
+                if (root.bestCost.isLe(targetCost)) {
+                    if (firstFiniteTick < 0) {
+                        firstFiniteTick = cumulativeTicks;
+                        
+                        clearImportanceBoost();
                     }
-                } else {
+                    if (ambitious) {
+                        // Choose a slightly more ambitious target cost, and 
+                        // try again. If it took us 1000 iterations to find our
+                        // first finite plan, give ourselves another 100 
+                        // iterations to reduce the cost by 10%.
+                        targetCost = root.bestCost.multiplyBy(0.9);
+                        ++splitCount;
+                        if (impatient) {
+                            if (firstFiniteTick < 10) {
+                                // It's possible pre-processing can create
+                                // an implementable plan -- give us some time
+                                // to actually optimize it.
+                                giveUpTick = cumulativeTicks + 25;
+                            } else {
+                                giveUpTick = 
+                                    cumulativeTicks + 
+                                    Math.max(firstFiniteTick / 10, 25);
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                } else if (cumulativeTicks > giveUpTick) {
+                    // We haven't made progress recently. Take the current best.
+                    break;
+                } else if (root.bestCost.isInfinite() && tick % 10 == 0) {
+                    injectImportanceBoost();
+                }
+                
+                if (!ruleQueue.hasNextMatch(phase)) {
                     break;
                 }
-            } else if (tick > giveUpTick) {
-                // We haven't made progress recently. Take the current best.
-                break;
+                
+                if (tracer.isLoggable(Level.FINE)) {
+                    tracer.fine(
+                        "PLANNER = " + this + 
+                        "; TICK = " + cumulativeTicks + "/" + tick +
+                        "; PHASE = " + phase.toString() +
+                        "; COST = " + root.bestCost);
+                }
+                
+                VolcanoRuleMatch match = ruleQueue.popMatch(phase);
+                match.onMatch();
+    
+                // The root may have been merged with another
+                // subset. Find the new root subset.
+                root = canonize(root);
             }
-            if (!ruleQueue.hasNextMatch()) {
-                break;
-            }
-            VolcanoRuleMatch match = ruleQueue.popMatch();
-            match.onMatch();
-
-            // The root may have been merged with another subset. Find the new
-            // root subset.
-            root = canonize(root);
+            
+            ruleQueue.phaseCompleted(phase);
         }
         if (tracer.isLoggable(Level.FINER)) {
             StringWriter sw = new StringWriter();
@@ -460,6 +526,80 @@ public class VolcanoPlanner
         return root.buildCheapestPlan(this);
     }
 
+    private void setInitialImportance()
+    {
+        RelVisitor visitor = new RelVisitor()
+        {
+            int depth = 0;
+        
+            HashSet<RelSubset> visitedSubsets = new HashSet<RelSubset>();
+            
+            public void visit(
+                RelNode p,
+                int ordinal,
+                RelNode parent)
+            {
+                if (p instanceof RelSubset) {
+                    RelSubset subset = (RelSubset) p;
+                    
+                    if (visitedSubsets.contains(subset)) {
+                        return;
+                    }
+                    
+                    if (subset != root) {
+                        Double importance = Math.pow(0.9, (double)depth);
+                        
+                        ruleQueue.updateImportance(subset, importance);
+                    }
+                    
+                    visitedSubsets.add(subset);
+                    
+                    depth++;
+                    for(RelNode rel: subset.rels) {
+                        visit(rel, -1, subset);
+                    }
+                    depth--;
+                } else {
+                    super.visit(p, ordinal, parent);
+                }
+            }
+        };
+        
+        visitor.go(root);
+    }
+    
+    /**
+     * Finds RelSubsets in the plan that contain only rels of 
+     * {@link CallingConvention#NONE} and boosts their importance.
+     */
+    private void injectImportanceBoost()
+    {
+        HashSet<RelSubset> requireBoost = new HashSet<RelSubset>();
+        
+        SUBSET_LOOP:
+            for(RelSubset subset: ruleQueue.subsetImportances.keySet()) {
+                for(RelNode rel: subset.rels) {
+                    if (rel.getConvention() != CallingConvention.NONE) {
+                        continue SUBSET_LOOP;
+                    }
+                }
+                
+                requireBoost.add(subset);                
+            }
+        
+        ruleQueue.boostImportance(requireBoost, 1.25);
+    }
+    
+    /**
+     * Clear all importance boosts.
+     */
+    private void clearImportanceBoost()
+    {
+        Collection<RelSubset> empty = Collections.emptySet();
+        
+        ruleQueue.boostImportance(empty, 1.0);
+    }
+    
     // implement Planner
     public RelOptCost makeCost(
         double dRows,
@@ -845,9 +985,9 @@ public class VolcanoPlanner
                 mapDigestToRel.put(
                     equivRel.getDigest(),
                     equivRel);
-                if (ruleQueue.remove(rel) && !ruleQueue.contains(equivRel)) {
-                    ruleQueue.add(equivRel);
-                }
+                
+                RelSubset equivRelSubset = getSubset(equivRel);
+                ruleQueue.recompute(equivRelSubset, true);
 
                 // Remove backlinks from children.
                 final RelNode [] inputs = rel.getInputs();
@@ -888,12 +1028,9 @@ public class VolcanoPlanner
         if ((equivRel != null) && (equivRel != rel)) {
             assert (equivRel.getClass() == rel.getClass());
             assert (equivRel.getTraits().equals(rel.getTraits()));
-            if (ruleQueue.contains(rel)) {
-                if (!ruleQueue.contains(equivRel)) {
-                    ruleQueue.add(equivRel);
-                }
-                ruleQueue.remove(rel);
-            }
+            
+            RelSubset equivRelSubset = getSubset(equivRel);
+            ruleQueue.recompute(equivRelSubset, true);
             return;
         }
 
@@ -914,58 +1051,6 @@ public class VolcanoPlanner
         return set.getOrCreateSubset(
                 subset.getCluster(),
                 subset.getTraits());
-    }
-
-    private RelSubset findBestPlan_old(
-        RelSubset subset,
-        RelOptCost targetCost)
-    {
-        if (subset.active) {
-            return subset; // prevent cycles
-        }
-        if (subset.getTraits().getTrait(0) == CallingConvention.NONE) {
-            return subset; // don't even bother
-        }
-        subset.active = true;
-        for (RelNode rel : subset.rels) {
-            assert rel.getTraits().equals(subset.getTraits());
-            RelOptCost minCost = targetCost;
-            if (subset.bestCost.isLt(minCost)) {
-                // not enough to do better than our target -- we have to do
-                // better than the best we already have
-                minCost = subset.bestCost;
-            }
-            RelOptCost cost = optimize(rel, minCost);
-            if (cost.isLt(minCost)) {
-                subset.best = rel;
-                subset.bestCost = cost;
-
-                // Lower cost means lower importance. Other nodes will change
-                // too, but we'll get to them later.
-                ruleQueue.recompute(subset);
-            }
-        }
-        subset.active = false;
-
-        /*
-           // also consider other subsets of the same set, if they can be //
-           converted to this convention RelSet set = subset.set; int found = 0;
-           for (int i = 0; i < set.subsets.size(); i++) {    RelSubset subset2 =
-           (RelSubset) set.subsets.get(i);    if (subset2 == subset) { continue; }
-           if (Converter.canConvertIndirectly(subset2.convention,
-           subset.convention)) {        if (subset2.bestCost.isInfinite()) {
-           findBestPlan_old(subset2, subset.bestCost);        }        if
-           (subset2.bestCost.isLt(subset.bestCost)) {            Rel converter =
-           Converter.create(                    subset.getCluster(), subset2,
-           subset2.getConvention(), subset.getConvention()); if (lookup(converter)
-           == null) {                // Converter did not previously exist. We've
-           done                // something useful. register(converter, set,
-           Planner.RegisterFlag.MAY_BE_REGISTERED);       found++;  }        } } }
-           if (found > 0) {    // now we have more options, recursively invoke
-           ourselves to see    // if we can do better findBestPlan_old(subset,
-           subset.bestCost); }
-         */
-        return canonize(subset);
     }
 
     /**
@@ -989,19 +1074,6 @@ public class VolcanoPlanner
                     ruleCall = new VolcanoRuleCall(this, operand);
                 }
                 ruleCall.match(rel);
-            }
-        }
-    }
-
-    private void fireRulesForSubset(RelSubset childSubset)
-    {
-        while (true) {
-            RelNode rel = ruleQueue.findCheapestMember(childSubset);
-            if (rel == null) {
-                break;
-            }
-            if (ruleQueue.remove(rel)) {
-                fireRules(rel, false);
             }
         }
     }
@@ -1043,69 +1115,6 @@ public class VolcanoPlanner
             root = set.getOrCreateSubset(
                     root.getCluster(),
                     root.getTraits());
-        }
-    }
-
-    /**
-     * By optimizing its children, finds the best implementation of relational
-     * expression <code>rel</code>. The cost is bounded by <code>
-     * targetCost</code>.
-     */
-    private RelOptCost optimize(
-        RelNode rel,
-        RelOptCost targetCost)
-    {
-loop:
-        while (true) {
-            // First, try to do the node itself.
-            RelOptCost nodeCost = RelMetadataQuery.getNonCumulativeCost(rel);
-            if (!nodeCost.isLt(targetCost)) {
-                int beforeCount = registerCount;
-                if (ruleQueue.remove(rel)) {
-                    fireRules(rel, false);
-                }
-                if (registerCount > beforeCount) {
-                    continue loop;
-                }
-                tracer.finer(
-                    "Optimize: cannot implement ["
-                    + rel.getDescription() + "] in less than ["
-                    + targetCost + "]");
-                return makeInfiniteCost(); // no can do
-            }
-
-            RelOptCost usedCost = nodeCost;
-
-            // Second, figure out if we can do the children using the remaining
-            // resources.
-            RelNode [] inputs = rel.getInputs();
-            for (int j = 0; j < inputs.length; j++) {
-                // Because exp is registered, each relational child is a
-                // RelSubset.
-                RelOptCost remainingCost = targetCost.minus(usedCost);
-                RelSubset childSubset =
-                    findBestPlan_old((RelSubset) inputs[j], remainingCost);
-
-                // Use RelSubset.bestCost, not Rel.getCost(), because (a) it
-                // includes children, (b) it prevents cycles during optimize,
-                // (c) it potentially prevents expensive cost calculations on
-                // deep trees.
-                if (!childSubset.bestCost.isLt(remainingCost)) {
-                    int beforeCount = registerCount;
-                    fireRulesForSubset(childSubset);
-                    if (registerCount > beforeCount) {
-                        continue loop;
-                    }
-                    tracer.finer(
-                        "Optimize: cannot implement2 " + rel.getDescription()
-                        + ", cost=" + childSubset.bestCost);
-                    return makeInfiniteCost(); // no can do
-                }
-                usedCost = usedCost.plus(childSubset.bestCost);
-            }
-
-            tracer.finer("Optimize: rel=" + rel.getId() + ", cost=" + usedCost);
-            return usedCost;
         }
     }
 
@@ -1175,9 +1184,11 @@ loop:
                     && (equivExp.getClass() == rel.getClass()));
             RelSet equivSet = getSet(equivExp);
             if (equivSet != null) {
-                tracer.finer(
-                    "Register: rel#" + rel.getId()
-                    + " is equivalent to " + equivExp.getDescription());
+                if (tracer.isLoggable(Level.FINER)) {
+                    tracer.finer(
+                        "Register: rel#" + rel.getId()
+                        + " is equivalent to " + equivExp.getDescription());
+                }
                 return registerSubset(
                         set,
                         getSubset(equivExp));
@@ -1190,9 +1201,11 @@ loop:
             final RelSet childSet = getSet(input);
             if ((set != null) && (set != childSet)
                 && (set.equivalentSet == null)) {
-                tracer.finer(
-                    "Register #" + rel.getId() + " " + digest
-                    + " (and merge sets, because it is a conversion)");
+                if (tracer.isLoggable(Level.FINER)) {
+                    tracer.finer(
+                        "Register #" + rel.getId() + " " + digest
+                        + " (and merge sets, because it is a conversion)");
+                }
                 merge(set, childSet);
                 registerCount++;
 
@@ -1236,10 +1249,13 @@ loop:
         mapRel2Subset.put(rel, subset);
         final RelNode xx = mapDigestToRel.put(digest, rel);
         assert ((xx == null) || (xx == rel));
-        tracer.finer(
-            "Register " + rel.getDescription()
-            + " in " + subset.getDescription());
-
+        
+        if (tracer.isLoggable(Level.FINER)) {
+            tracer.finer(
+                "Register " + rel.getDescription()
+                + " in " + subset.getDescription());
+        }
+        
         // This relational expression may have been registered while we
         // recursively registered its children. If this is the case, we're done.
         if (xx != null) {
@@ -1273,10 +1289,9 @@ loop:
         // If this set has any unsatisfied converters, try to satisfy them.
         checkForSatisfiedConverters(set, rel);
 
-        // Add relational expression to queue of expressions whose rules
-        // have not been fired.
-        ruleQueue.add(rel);
-
+        // Make sure this rel's subset importance is updated
+        ruleQueue.recompute(subset, true);
+        
         // Queue up all rules triggered by this relexp's creation.
         fireRules(rel, true);
 
