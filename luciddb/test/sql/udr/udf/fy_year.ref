@@ -19,7 +19,10 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- these should fail
 0: jdbc:luciddb:> values applib.fiscal_year(date'1000-4-4', 13);
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> values applib.fiscal_year('2005-12-1', 9);
 Error: From line 1, column 15 to line 1, column 41: No match found for function signature FISCAL_YEAR(<CHARACTER>, <NUMERIC>) (state=,code=0)
 0: jdbc:luciddb:> 

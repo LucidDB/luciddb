@@ -506,3 +506,7 @@ from log_server.bcp."101_SelectBuggy_LOCALDB.FLATFILE_SCHEMA.BUGGY";
 -- we can also view the error log summaries
 select process_id, action_id, error_count, "SQL"
 from log_server.bcp."Summary";
+
+-- we can limit the number of errors
+alter session set "errorMax" = 1;
+select * from buggy order by 1;

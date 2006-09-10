@@ -62,27 +62,45 @@ Error: Invalid end date (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_quarter( time_key, 0 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_quarter( time_key, 13 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_month( time_key, 0 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_month( time_key, 13 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_year( time_key, 0 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select time_key, applib.fiscal_year( time_key, 13 ) 
 . . . . . . . . > from table(applib.time_dimension( 1994, 1, 1, 1994, 1, 1 ));
-Error: First month must be between 1 and 12 (state=,code=0)
+Error: Could not calculate result column 2 for the following row:
+[1, 1994-01-01, Saturday, Y, 7, 1, 1, 8766, 1, 1253, January, 1, 289, 1, 1994, Q1CY94, 1993-12-26]
+Messages: Invocation of user-defined external Java method execute failed
+First month must be between 1 and 12 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create views w/ reference to time_dimension
 0: jdbc:luciddb:> 

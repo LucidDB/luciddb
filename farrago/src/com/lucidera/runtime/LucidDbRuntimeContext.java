@@ -22,6 +22,7 @@ package com.lucidera.runtime;
 
 import com.lucidera.farrago.*;
 
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
@@ -338,9 +339,11 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 } catch (FileNotFoundException ex2) {
                     tracer.severe("could not open row error logger " + filename 
                         + ": " + ex2);
+                    return;
                 } catch (SecurityException ex2) {
                     tracer.severe("could not open row error logger " + filename 
                         + ": " + ex2);
+                    return;
                 }
             }
 
@@ -362,7 +365,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
             args[0] = quoteValue(dateFormat.format(new Date()));
             if (hasException) {
-                args[1] = quoteValue(ex.toString());
+                args[1] = quoteValue(Util.getMessages(ex));
                 args[2] = quoteValue(Integer.toString(columnIndex));
             }
             for (int i = 0; i < fields.length; i++) {
@@ -514,7 +517,16 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 quota.errorCount++;
                 // NOTE: if an error causes an exception, do not log it
                 if (quota.errorCount > quota.errorMax) {
-                    throw ex;
+                    EigenbaseException ex2 = 
+                        FarragoResource.instance().JavaCalcFailed.ex(
+                            Integer.toString(columnIndex),
+                            o.toString(),
+                            Util.getMessages(ex));
+                    if (quota.errorMax > 0) {
+                        throw FarragoResource.instance().ErrorLimitExceeded.ex(
+                            quota.errorMax, Util.getMessages(ex2));
+                    }
+                    throw ex2;
                 }
                 if (quota.errorCount <= quota.errorLogMax) {
                     logger.log(o, ex, columnIndex);

@@ -60,15 +60,30 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- invalid argument failures
 0: jdbc:luciddb:> values applib.instr('nononon', 'no', 0, 1);
-Error: InStrUdf: invalid argument: inStr=nononon subStr=no startPos=0 nthAppearance=1 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+InStrUdf: invalid argument: inStr=nononon subStr=no startPos=0 nthAppearance=1 (state=,code=0)
 0: jdbc:luciddb:> values applib.instr('nono', 'no', 1, 0);
-Error: InStrUdf: invalid argument: inStr=nono subStr=no startPos=1 nthAppearance=0 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+InStrUdf: invalid argument: inStr=nono subStr=no startPos=1 nthAppearance=0 (state=,code=0)
 0: jdbc:luciddb:> values applib.instr('nonon', 'no', 6, 1);
-Error: InStrUdf: invalid argument: inStr=nonon subStr=no startPos=6 nthAppearance=1 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+InStrUdf: invalid argument: inStr=nonon subStr=no startPos=6 nthAppearance=1 (state=,code=0)
 0: jdbc:luciddb:> values applib.instr('fds', 'sdfkdsl');
-Error: InStrUdf: invalid argument: inStr=fds subStr=sdfkdsl startPos=1 nthAppearance=1 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+InStrUdf: invalid argument: inStr=fds subStr=sdfkdsl startPos=1 nthAppearance=1 (state=,code=0)
 0: jdbc:luciddb:> values applib.instr('hello there!', '');
-Error: InStrUdf: invalid argument: inStr=hello there! subStr= startPos=1 nthAppearance=1 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+InStrUdf: invalid argument: inStr=hello there! subStr= startPos=1 nthAppearance=1 (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- view test
 0: jdbc:luciddb:> create view flpview(flp, instr_flp) as 
