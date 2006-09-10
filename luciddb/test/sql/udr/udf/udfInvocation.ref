@@ -242,7 +242,9 @@ Error: From line 1, column 8 to line 1, column 40: No match found for function s
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail
 0: jdbc:luciddb:> values good_atoi('nineoneone');
-Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values stirfry('Alley');
 +-------------+
@@ -302,7 +304,10 @@ Error: Cannot assign 'nineoneone' to a NUMERIC value: NumberFormatException (sta
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values substring24(cast(null as varchar(128)));
-Error: java.lang.NullPointerException: null (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method substring24 failed
+java.lang.NullPointerException (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values prim_int_to_hex_string(255);
 +---------+
@@ -313,7 +318,9 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with an SQL exception for NULL detected
 0: jdbc:luciddb:> values prim_int_to_hex_string(cast(null as integer));
-Error: Target "I" cannot be assigned null value (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Target "I" cannot be assigned null value (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values obj_int_to_hex_string(255);
 +---------+
@@ -361,11 +368,17 @@ Error: Target "I" cannot be assigned null value (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values atoi(cast(null as varchar(128)));
-Error: java.lang.NumberFormatException: null (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method atoi failed
+java.lang.NumberFormatException: null (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- this should fail with a Java exception
 0: jdbc:luciddb:> values atoi('Posey');
-Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method atoi failed
+java.lang.NumberFormatException: For input string: "Posey" (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values atoi_with_null_for_err('451');
 +---------+
@@ -415,11 +428,17 @@ Error: java.lang.NumberFormatException: For input string: "Posey" (state=,code=0
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail
 0: jdbc:luciddb:> values throw_sql_exception();
-Error: nothing but a failure (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method throwSQLException failed
+nothing but a failure (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- should fail
 0: jdbc:luciddb:> values throw_npe();
-Error: java.lang.NullPointerException: null (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method throwNPE failed
+java.lang.NullPointerException (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> set path 'crypto2';
 0: jdbc:luciddb:> 

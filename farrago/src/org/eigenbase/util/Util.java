@@ -805,6 +805,27 @@ public class Util
     }
 
     /**
+     * Retrieves messages in a exception and writes them to a string. In the 
+     * string returned, each message will appear on a different line.
+     * @return a non-null string containing all messages of the exception
+     */
+    public static String getMessages(Exception ex)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
+            String msg = 
+                ((curr instanceof EigenbaseException) 
+                    || (curr instanceof SQLException))
+                ? curr.getMessage() : curr.toString();
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(msg);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Checks a pre-condition.
      *
      * <p>For example,
