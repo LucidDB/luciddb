@@ -277,7 +277,7 @@ public class IterCalcRel
     {
         // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
-        boolean errorRecovery = false; //(abortOnError == false || tag != null);
+        boolean errorRecovery = (abortOnError == false || tag != null);
         // Error buffering should not be enabled unless error recovery is
         assert (errorBuffering == false || errorRecovery == true);
 
