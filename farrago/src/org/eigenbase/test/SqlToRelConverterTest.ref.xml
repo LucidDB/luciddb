@@ -1148,9 +1148,9 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
     </TestCase>
     <TestCase name="testOverOrderWindow">
         <Resource name="sql">
-            <![CDATA[select last_value(deptno) over w
+            <![CDATA[select last_value(deptno) over (order by empno)
 from emp
-window w as (order by empno)]]>
+]]>
         </Resource>
         <Resource name="plan">
             <![CDATA[
@@ -1169,6 +1169,18 @@ from emp
             <![CDATA[
 ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($7):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING))):INTEGER NOT NULL])
   TableAccessRel(table=[[SALES, EMP]])
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testInterval">
+        <Resource name="sql">
+            <![CDATA[values(cast(interval '1' hour as interval hour to second))]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[$0])
+  ProjectRel(EXPR$0=[3600000])
+    OneRowRel
 ]]>
         </Resource>
     </TestCase>

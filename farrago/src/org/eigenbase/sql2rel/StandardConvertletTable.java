@@ -375,24 +375,19 @@ public class StandardConvertletTable
         assert SqlKind.Cast.equals(call.getOperator().getKind());
         if (call.operands[1] instanceof SqlIntervalQualifier) {
             SqlNode node = call.operands[0];
-            if (node instanceof SqlNumericLiteral) {
+            if (node instanceof SqlIntervalLiteral) {
                 SqlIntervalQualifier intervalQualifier =
                     (SqlIntervalQualifier) call.operands[1];
-                BigDecimal val;
-                SqlNumericLiteral numLiteral = (SqlNumericLiteral) node;
-                if (numLiteral.getValue() instanceof BigDecimal) {
-                    val = new BigDecimal(numLiteral.getValue().toString());
-                } else {
-                    assert false : "Not a valid interval during cast";
-                    val = new BigDecimal(0);
-                }
-                int sign = (val.signum() == -1) ? -1 : 1;
+                SqlIntervalLiteral.IntervalValue numLiteral =
+                    (SqlIntervalLiteral.IntervalValue)
+                        ((SqlLiteral) node).getValue();
+                int sign = (numLiteral.getSign() == -1) ? -1 : 1;
                 node =
                     SqlLiteral.createInterval(
                         sign,
-                        val.toString(),
+                        numLiteral.toString(),
                         intervalQualifier,
-                        numLiteral.getParserPosition());
+                        node.getParserPosition());
             }
             return cx.convertExpression(node);
         }
