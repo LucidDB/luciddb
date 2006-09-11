@@ -277,9 +277,9 @@ public class IterCalcRel
     {
         // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
-        boolean errorRecovery = (abortOnError == false || tag != null);
+        boolean errorRecovery = !abortOnError || tag != null;
         // Error buffering should not be enabled unless error recovery is
-        assert (errorBuffering == false || errorRecovery == true);
+        assert !errorBuffering || errorRecovery;
 
         // Allow backwards compatibility until all Farrago extensions are
         // satisfied with the new error handling semantics. The new semantics
@@ -374,7 +374,7 @@ public class IterCalcRel
         }
 
         Variable varColumnIndex = null;
-        if (errorRecovery && backwardsCompatible == false) {
+        if (errorRecovery && !backwardsCompatible) {
             varColumnIndex = implementor.newVariable();
             whileBody.add(
                 new VariableDeclaration(
@@ -386,7 +386,7 @@ public class IterCalcRel
         // Calculator (projection, filtering) statements are later appended
         // to calcStmts. Typically, this target will be the while list itself.
         StatementList calcStmts;
-        if (errorRecovery == false) {
+        if (!errorRecovery) {
             calcStmts = whileBody;
         } else {
             // For error recovery, we wrap the calc statements
@@ -459,7 +459,7 @@ public class IterCalcRel
         }
 
         if (backwardsCompatible) {
-            whileBody.add(
+            calcStmts.add(
                 declareInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
@@ -488,7 +488,7 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
-                if (errorRecovery && backwardsCompatible == false) {
+                if (errorRecovery && !backwardsCompatible) {
                     condBody.add(
                         new ExpressionStatement(
                             new UnaryExpression(
