@@ -90,6 +90,11 @@ public class LcsTableDeleteRel
 
     //~ Methods ----------------------------------------------------------------
 
+    public LcsTable getLcsTable() 
+    {
+        return lcsTable;
+    }
+
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)
     {

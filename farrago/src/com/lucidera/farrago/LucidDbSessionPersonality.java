@@ -438,6 +438,11 @@ public class LucidDbSessionPersonality
 
         // After calculator relations are resolved, decorate Java calc rels
         builder.addRuleInstance(LoptIterCalcRule.tableAccessInstance);
+        builder.addRuleInstance(LoptIterCalcRule.lcsAppendInstance);
+        builder.addRuleInstance(LoptIterCalcRule.lcsMergeInstance);
+        builder.addRuleInstance(LoptIterCalcRule.lcsDeleteInstance);
+        builder.addRuleInstance(LoptIterCalcRule.jdbcQueryInstance);
+        builder.addRuleInstance(LoptIterCalcRule.javaUdxInstance);
         builder.addRuleInstance(LoptIterCalcRule.defaultInstance);
 
         return builder.createProgram();
