@@ -654,9 +654,9 @@ require version '${required.ant.version}'."/>
   </target>
 
   <target name="convertExtMetamodel">
-    <farrago.extractPoseidonModel 
-      zumlFile="${FarragoExtMetamodelUML.zuml}"
-      umlBasename="FarragoExtMetamodelUML"
+    <farrago.extractArgoModel 
+      umlFile="${FarragoExtMetamodel.uml}"
+      umlBasename="FarragoExtMetamodel"
       mofBasename="FarragoExtMetamodel"
       xmiDir="${farrago.xmi.dir}"/>
     <xslt style="${farrago.xmi.dir}/transformFEM.xsl"
@@ -796,7 +796,7 @@ require version '${required.ant.version}'."/>
     <uptodate property="catalog.uptodate"
       targetfile="${farrago.dir}/catalog/java/net/sf/farrago/FarragoPackage.java">
       <srcfiles dir="${farrago.dir}/catalog/xmi">
-        <include name="FarragoExtMetamodelUML.zuml"/>
+        <include name="FarragoExtMetamodel.uml"/>
         <include name="*.xsl"/>
       </srcfiles>
     </uptodate>
