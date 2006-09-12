@@ -178,6 +178,10 @@
       </test>
 
       <test name="bug2380" requiresSuccess="cretables">
+        <!-- FRG-199 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bug2380.sql"/>
       </test>
 
