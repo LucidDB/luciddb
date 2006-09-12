@@ -41,7 +41,7 @@ when not matched then
   values (t.empno, t.fname, t.lname, t.manager, t.mfn, 
           upper(substring(t.mln from 1 for 1)));
 
-select empno, fname, lname, manager, mfname, mlname from emptemp;
+select empno, fname, lname, manager, mfname, mlname from emptemp order by 1;
 
 delete from emptemp;
 
@@ -66,7 +66,7 @@ when not matched then
   insert (empno, locid, sal)
   values (temp.empno, temp.locid, temp.sal);
 
-select empno, locid, sal from emptemp;
+select empno, locid, sal from emptemp order by 1;
 delete from emptemp;
 
 -- same query with case in update and insert
@@ -87,7 +87,7 @@ when not matched then
                 else e.sal
            end));
 
-select empno, locid, sal from emptemp;
+select empno, locid, sal from emptemp order by 1;
 delete from emptemp;
 
 --
@@ -119,7 +119,7 @@ when not matched then
           else e.sal + 5  
      end));
 
-select empno, fname, lname, sal from emptemp;
+select empno, fname, lname, sal from emptemp order by 1;
 
 delete from emp where empno >= 200;
 delete from emptemp;

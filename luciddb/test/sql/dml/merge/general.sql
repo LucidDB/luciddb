@@ -13,7 +13,7 @@ insert into t2 values (1,100), (2,200), (4,400);
 merge into t1 using t2 on n1 = m1
 when matched then update set n2=m2
 when not matched then insert values (m1, pow(m2,2));
-select * from t1;
+select * from t1 order by 2;
 delete from t1;
 insert into t1 values (1,10), (2,20), (3,30);
 
@@ -21,30 +21,30 @@ insert into t1 values (1,10), (2,20), (3,30);
 merge into t1
 using t2 on n1 = m1
 when matched then update set n2=m2;
-select * from t1;
+select * from t1 order by 2;
 
 merge into t1
 using t2 on n1 = m1
 when not matched then
   insert (n1,n2) values (m1,m2);
-select * from t1;
+select * from t1 order by 2;
 
 -- merge on self
 merge into t1 as tr
 using t1 as rf on tr.n1=rf.n1
 when matched then update set n1 = tr.n1 + 10;
-select * from t1;
+select * from t1 order by 2;
 
 merge into t1 as tr
 using t1 as rf on tr.n1=rf.n1
 when matched then update set n1=rf.n1 - 10;
-select * from t1;
+select * from t1 order by 2;
 
 merge into t1 as tr
 using (select * from t1 rf1, t1 rf2 where rf1.n1=rf2.n1) as rf
 on rf.n1=tr.n1
 when matched then update set n2=rf.n2 + 1;
-select * from t1;
+select * from t1 order by 2;
 
 
 --
