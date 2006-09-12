@@ -21,6 +21,7 @@
 package com.lucidera.runtime;
 
 import com.lucidera.farrago.*;
+import com.lucidera.opt.*;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -322,6 +323,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         private PrintStream ps;
         private boolean failedInit;
         private Field[] fields;
+        private int fieldCount;
         private Object[] args;
         private String format;
         private boolean needsHeader;
@@ -384,9 +386,13 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             int prefixCount = hasException ? 3 : 1;
             if (fields == null) {
                 fields = row.getFields();
+                fieldCount = fields.length;
+                if (fields[fieldCount-1].getName().startsWith("this$")) {
+                    fieldCount--;
+                }
             }
             if (args == null) {
-                args = new Object[fields.length+prefixCount];
+                args = new Object[fieldCount+prefixCount];
             }
             if (format == null) {
                 StringBuffer sb = new StringBuffer("%s");
@@ -402,7 +408,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 args[1] = quoteValue(Util.getMessages(ex));
                 args[2] = quoteValue(getFieldName(tag, columnIndex));
             }
-            for (int i = 0; i < fields.length; i++) {
+            for (int i = 0; i < fieldCount; i++) {
                 try {
                     args[prefixCount+i] = 
                         quoteValue(fields[i].get(row).toString());
@@ -418,8 +424,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                     fieldNames[1] = quoteValue(EXCEPTION_FIELD_NAME);
                     fieldNames[2] = quoteValue(POSITION_FIELD_NAME);
                 }
-                for (int i = 0; i < fields.length; i++) {
-                    fieldNames[i+prefixCount] = quoteValue(fields[i].getName());
+                for (int i = 0; i < fieldCount; i++) {
+                    fieldNames[i+prefixCount] = 
+                        quoteValue(stripColumnQualifier(fields[i].getName()));
                 }
                 ps.printf(format, fieldNames);
                 needsHeader = false;
@@ -441,6 +448,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             if (s == null) {
                 return "";
             }
+            if (s.length() == 0) {
+                return TWO_QUOTES;
+            }
 
             // We can simply return values without special characters.
             // In order for the quote character to be special, the value 
@@ -454,6 +464,21 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
             String replaced = s.replaceAll(ONE_QUOTE, TWO_QUOTES);
             return ONE_QUOTE + replaced + ONE_QUOTE;
+        }
+
+        /**
+         * Fields of generated Java code look like: ID$0$[COLNAME]
+         * This methods strips everything up to the last '$'.
+         * 
+         * @param fieldName name of field to be cleaned stripped
+         */
+        private String stripColumnQualifier(String fieldName)
+        {
+            int lastDollar = fieldName.lastIndexOf('$');
+            if (lastDollar == -1) {
+                return fieldName;
+            }
+            return fieldName.substring(lastDollar+1);
         }
 
         // implement ErrorLogger
@@ -556,7 +581,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 // NOTE: if an error causes an exception, do not log it
                 if (quota.errorCount > quota.errorMax) {
                     EigenbaseException ex2;
-                    if (tag.contains("IterCalcRel")) { 
+                    if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
                         ex2 = 
                             FarragoResource.instance().JavaCalcFailed.ex(
                                 getFieldName(tag, columnIndex),
@@ -585,6 +610,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         // implement ErrorLogger
         public String getFilename()
         {
+            if (quota.errorMax == 0) {
+                return "";
+            }
             return logger.getFilename();
         }
 

@@ -159,6 +159,12 @@ public abstract class NullablePrimitive
      */
     protected abstract void setLong(long n);
 
+    public String toString()
+    {
+        Object o = getNullableData();
+        return (o == null) ? "null" : o.toString();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**
