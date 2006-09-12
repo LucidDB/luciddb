@@ -789,15 +789,15 @@ public class RexUtil
             return null;
         }
 
-        RexNode andExpr = rexList.get(rexList.size() - 1);
+        RexNode orExpr = rexList.get(rexList.size() - 1);
         for (int i = rexList.size() - 2; i >= 0; i--) {
-            andExpr =
+            orExpr =
                 rexBuilder.makeCall(
                     SqlStdOperatorTable.orOperator,
                     rexList.get(i),
-                    andExpr);
+                    orExpr);
         }
-        return andExpr;
+        return orExpr;
     }
 
     //~ Inner Classes ----------------------------------------------------------

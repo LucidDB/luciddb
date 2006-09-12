@@ -75,7 +75,7 @@ public class LcsTableMergeRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList,
+        List<String> updateColumnList,
         boolean updateOnly)
     {
         super(
@@ -99,6 +99,16 @@ public class LcsTableMergeRel
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public LcsTable getLcsTable()
+    {
+        return lcsTable;
+    }
+
+    public boolean getUpdateOnly()
+    {
+        return updateOnly;
+    }
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)

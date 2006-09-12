@@ -501,7 +501,7 @@ options (
     file_extension 'log');
 
 select le_exception, le_column_ordinal 
-from log_server.bcp."101_SelectBuggy_LOCALDB.FLATFILE_SCHEMA.BUGGY";
+from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 
 -- we can also view the error log summaries
 select process_id, action_id, error_count, "SQL"

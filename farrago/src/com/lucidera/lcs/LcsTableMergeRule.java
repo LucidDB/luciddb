@@ -223,14 +223,14 @@ public class LcsTableMergeRule
         // create a filter selecting only rows where any of the update
         // columns are different from their original column values; if there's
         // an insert component in the MERGE, then we also need to allow
-        // rows where the target rid is null
+        // rows where the target rid is null; note also that since the
+        // expression comparing the original and new values doesn't handle
+        // nulls, we need to also explicitly add checks for nulls
         List<RexNode> filterList = new ArrayList<RexNode>();
         if (!updateOnly) {
-            RexNode isNullExpr = rexBuilder.makeCall(
-                SqlStdOperatorTable.isNullOperator,
-                ridExpr);
-            filterList.add(isNullExpr);
-        }
+            createNullFilter(rexBuilder, ridExpr, filterList);
+        }   
+        
         int nInsertFields = (updateOnly) ? 0 : nTargetFields;
         for (int i = 0; i < updateList.size(); i++) {
             // find the original target column corresponding to the update
@@ -244,13 +244,27 @@ public class LcsTableMergeRule
                 }
             }
             assert(targetColno < nTargetFields);
+            
+            // create null filters on the original and new values, accounting
+            // for the case where both are null
+            RexNode origValue = origProjExprs[nInsertFields + targetColno];
+            RexNode newValue = origProjExprs[nInsertFields + nTargetFields + i];
+            createNullFilterAndIsNotNullFilter(
+                rexBuilder,
+                origValue,
+                newValue,
+                filterList);           
+            createNullFilterAndIsNotNullFilter(
+                rexBuilder,
+                newValue,
+                origValue,
+                filterList);
+            
+            // create the != expression, comparing the original value
+            // against the new
             RexNode filter =
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.notEqualsOperator,
-                    new RexNode[] {
-                        origProjExprs[nInsertFields + targetColno],
-                        origProjExprs[nInsertFields + nTargetFields + i]
-                    });
+                    SqlStdOperatorTable.notEqualsOperator, origValue, newValue);
             filterList.add(filter);
         }
         RexNode nonUpdateFilter =
@@ -319,6 +333,56 @@ public class LcsTableMergeRule
         }
         
         return CalcRel.createProject(filterRel, projExprs, fieldNames);
+    }
+    
+    /**
+     * Creates an is null expression on an expression and adds it to a list
+     * of filters
+     * 
+     * @param rexBuilder rex builder
+     * @param expr expression to create the is null expression on
+     * @param filterList list of filters
+     */
+    private void createNullFilter(
+        RexBuilder rexBuilder,
+        RexNode expr,
+        List<RexNode> filterList)
+    {
+        RexNode filter = rexBuilder.makeCall(
+            SqlStdOperatorTable.isNullOperator,
+            expr);
+        filterList.add(filter);
+    }
+    
+    /**
+     * Creates an expression AND'ing together an IS NULL expression on one
+     * expression and a IS NOT NULL expression on a second, and adds it to a
+     * list of filter
+     * 
+     * @param rexBuilder rex builder
+     * @param nullExpr expression that the IS NULL will be created on
+     * @param notNullExpr expression that the IS NOT NULL expression will be
+     * created on
+     * @param filterList list of filters
+     */
+    private void createNullFilterAndIsNotNullFilter(
+        RexBuilder rexBuilder,
+        RexNode nullExpr,
+        RexNode notNullExpr,
+        List<RexNode> filterList)
+    {
+    	RexNode nullFilter = rexBuilder.makeCall(
+            SqlStdOperatorTable.isNullOperator,
+            nullExpr);
+    	RexNode notNullFilter = rexBuilder.makeCall(
+            SqlStdOperatorTable.isNotNullOperator,
+            notNullExpr);
+        RexNode filter = rexBuilder.makeCall(
+            SqlStdOperatorTable.andOperator,
+            nullFilter,
+            notNullFilter);
+    	
+        filterList.add(filter);
     }
 }
 

@@ -68,7 +68,7 @@ public class LcsTableAppendRel
         RelOptConnection connection,
         RelNode child,
         Operation operation,
-        List updateColumnList)
+        List<String> updateColumnList)
     {
         super(
             cluster,
@@ -90,6 +90,11 @@ public class LcsTableAppendRel
     }
 
     //~ Methods ----------------------------------------------------------------
+
+    public LcsTable getLcsTable()
+    {
+        return lcsTable;
+    }
 
     // implement RelNode
     public RelOptCost computeSelfCost(RelOptPlanner planner)

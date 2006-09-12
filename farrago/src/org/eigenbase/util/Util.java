@@ -1186,6 +1186,50 @@ public class Util
     }
 
     /**
+     * Trims trailing spaces from a string.
+     *
+     * @param s string to be trimmed
+     *
+     * @return trimmed string
+     */
+    public static String rtrim(String s)
+    {
+        int n = s.length() - 1;
+        if (n >= 0) {
+            if (s.charAt(n) != ' ') {
+                return s;
+            }
+            while ((--n) >= 0) {
+                if (s.charAt(n) != ' ') {
+                    return s.substring(0, n + 1);
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Pads a string with spaces up to a given length.
+     *
+     * @param s string to be padded
+     *
+     * @param len desired length
+     *
+     * @return padded string
+     */
+    public static String rpad(String s, int len)
+    {
+        if (s.length() >= len) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder(s);
+        while (sb.length() < len) {
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+    
+    /**
      * Runs an external application.
      *
      * @param cmdarray command and arguments, see {@link ProcessBuilder}

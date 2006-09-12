@@ -29,6 +29,10 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
+import java.util.*;
+import java.text.*;
 
 
 /**
@@ -78,7 +82,6 @@ public abstract class LoptIterCalcRule extends RelOptRule
                         null)
                     }));
 
-    /*
     public static LoptIterCalcRule lcsAppendInstance =
         new TableAppendRule(
             new RelOptRuleOperand(
@@ -108,9 +111,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
         }));
 
     public static LoptIterCalcRule lcsDeleteInstance =
-        new TableMergeRule(
+        new TableDeleteRule(
             new RelOptRuleOperand(
-                LcsTableMergeRel.class,
+                LcsTableDeleteRel.class,
                 new RelOptRuleOperand[] {
                     new RelOptRuleOperand(
                         ConverterRel.class,
@@ -120,7 +123,6 @@ public abstract class LoptIterCalcRule extends RelOptRule
                                 null)
                     })
         }));
-        */
 
     public static LoptIterCalcRule defaultInstance =
         new DefaultRule(
@@ -128,6 +130,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
                 IterCalcRel.class, null));
 
     // index acess rule, hash rules
+
+    private static String tagTimestampFormat = "yyyy-MM-dd-HH-mm-ss";
+    private static DateFormat tagTimestampFormatter = 
+        new SimpleDateFormat(tagTimestampFormat);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -184,14 +190,15 @@ public abstract class LoptIterCalcRule extends RelOptRule
     /**
      * Gets a tag corresponding to a table name. The tag is built from 
      * the elements qualified name, joined by dots, in other words:
-     * "<code>catalog.schema.table</code>".
+     * "<code>[action].catalog.schema.table</code>".
+     * @param action an action such as "delete" or "merge"
      * @param qualifiedName a qualified table name
      */
-    protected String getTableTag(String[] qualifiedName)
+    protected String getTableTag(String action, String[] qualifiedName)
     {
         assert (qualifiedName.length == 3);
-        StringBuffer sb = new StringBuffer(qualifiedName[0]);
-        for (int i = 1; i < qualifiedName.length; i++) {
+        StringBuffer sb = new StringBuffer(action);
+        for (int i = 0; i < qualifiedName.length; i++) {
             sb.append(".").append(qualifiedName[i]);
         }
         return sb.toString();
@@ -204,7 +211,20 @@ public abstract class LoptIterCalcRule extends RelOptRule
      */
     protected String getDefaultTag(IterCalcRel rel)
     {
-        return "IterCalcRel" + rel.getId();
+        // the timestamp should guarantee a unique default tag
+        // and might be more readable than a uuid
+        return "IterCalcRel" + rel.getId() + "_" 
+            + tagTimestampFormatter.format(new Date());
+    }
+
+    protected void setIterCalcTypeMap(
+        FennelRel rel,
+        String tag, 
+        RelOptTable table)
+    {
+        FarragoPreparingStmt stmt = 
+            FennelRelUtil.getPreparingStmt(rel);
+        stmt.mapIterCalcType(tag, table.getRowType());
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -229,6 +249,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
             TableAccessRelBase tableRel = (TableAccessRelBase) call.rels[2];
             String tag = getTableTag(
+                "Read",
                 tableRel.getTable().getQualifiedName());
             transformToTag(call, calc, tag);
         }
@@ -252,7 +273,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
                 return;
             }
 
-            String tag = "Jdbc_" + getDefaultTag(calc);
+            String tag = "Jdbc" + getDefaultTag(calc);
             transformToTag(call, calc, tag);
         }
     }
@@ -275,7 +296,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
                 return;
             }
 
-            String tag = "JavaUdx_" + getDefaultTag(calc);
+            String tag = "JavaUdx" + getDefaultTag(calc);
             transformToTag(call, calc, tag);
         }
     }
@@ -283,7 +304,6 @@ public abstract class LoptIterCalcRule extends RelOptRule
     /**
      * A rule for tagging a calculator beneath a table modification.
      */
-    /*
     private static class TableAppendRule extends LoptIterCalcRule
     {
         public TableAppendRule(RelOptRuleOperand operand)
@@ -302,7 +322,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
             LcsTableAppendRel tableRel = (LcsTableAppendRel) call.rels[0];
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
-            String tag = getTableTag(tableRel.getTable().getQualifiedName());
+            String tag = getTableTag(
+                "Insert", tableRel.getTable().getQualifiedName());
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(
                 new LcsTableAppendRel(
                     tableRel.getCluster(),
@@ -313,12 +336,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
                     tableRel.getUpdateColumnList()));
         }
     }
-    */
 
     /**
      * A rule for tagging a calculator beneath a table modification.
      */
-    /*
     private static class TableMergeRule extends LoptIterCalcRule
     {
         public TableMergeRule(RelOptRuleOperand operand)
@@ -337,7 +358,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
             LcsTableMergeRel tableRel = (LcsTableMergeRel) call.rels[0];
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
-            String tag = getTableTag(tableRel.getTable().getQualifiedName());
+            String tag = getTableTag(
+                "Merge", tableRel.getTable().getQualifiedName());
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(
                 new LcsTableMergeRel(
                     tableRel.getCluster(),
@@ -349,12 +373,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
                     tableRel.getUpdateOnly()));
         }
     }
-    */
 
     /**
      * A rule for tagging a calculator beneath a table modification.
      */
-    /*
     private static class TableDeleteRule extends LoptIterCalcRule
     {
         public TableDeleteRule(RelOptRuleOperand operand)
@@ -373,7 +395,10 @@ public abstract class LoptIterCalcRule extends RelOptRule
             LcsTableDeleteRel tableRel = (LcsTableDeleteRel) call.rels[0];
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
-            String tag = getTableTag(tableRel.getTable().getQualifiedName());
+            String tag = getTableTag(
+                "Delete", tableRel.getTable().getQualifiedName());
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(
                 new LcsTableDeleteRel(
                     tableRel.getCluster(),
@@ -384,7 +409,6 @@ public abstract class LoptIterCalcRule extends RelOptRule
                     tableRel.getUpdateColumnList()));
         }
     }
-    */
 
     /**
      * A default rule for tagging any calculator

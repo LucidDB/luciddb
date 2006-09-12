@@ -161,6 +161,30 @@ merge into emps e1
         update set age = e1.age + e1.deptno - e1.deptno;
 select lcs_rid(empno), * from emps order by empno;
 
+-- make sure that when the original value is null, the update does occur
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set salary =
+            (case when salary is null then 10000 else salary end)
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+            t.t_city);
+select lcs_rid(empno), * from emps order by empno;
+
+-- make sure that when the new value is null, the update occurs
+merge into emps e
+    using tempemps t on t.t_empno = e.empno
+    when matched then
+        update set salary =
+            (case when age is null then null else salary end)
+    when not matched then
+        insert (empno, name, age, gender, salary, city)
+        values(t.t_empno, upper(t.t_name), t.t_age, t.t_gender, t.t_age * 1000,
+            t.t_city);
+select lcs_rid(empno), * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------

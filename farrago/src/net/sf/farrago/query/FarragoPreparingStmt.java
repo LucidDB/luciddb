@@ -111,6 +111,7 @@ public class FarragoPreparingStmt
     private ChainedRelMetadataProvider relMetadataProvider;
     private boolean allowPartialImplementation;
     private final Map<String, RelDataType> resultSetTypeMap;
+    private final Map<String, RelDataType> iterCalcTypeMap;
 
     /**
      * Name of Java package containing code generated for this statement.
@@ -173,6 +174,7 @@ public class FarragoPreparingStmt
                 null);
 
         resultSetTypeMap = new HashMap<String, RelDataType>();
+        iterCalcTypeMap = new HashMap<String, RelDataType>();
 
         clearDmlValidation();
 
@@ -515,7 +517,8 @@ public class FarragoPreparingStmt
                     preparedResult.isDml(),
                     getReferencedObjectIds(),
                     tableAccessMap,
-                    resultSetTypeMap);
+                    resultSetTypeMap,
+                    iterCalcTypeMap);
         } else {
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =
@@ -1295,6 +1298,13 @@ public class FarragoPreparingStmt
         RelDataType rowType)
     {
         resultSetTypeMap.put(resultSetName, rowType);
+    }
+
+    public void mapIterCalcType(
+        String iterCalcName,
+        RelDataType rowType)
+    {
+        iterCalcTypeMap.put(iterCalcName, rowType);
     }
 
     public Variable getConnectionVariable()

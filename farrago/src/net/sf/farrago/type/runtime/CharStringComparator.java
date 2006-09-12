@@ -24,6 +24,7 @@ package net.sf.farrago.type.runtime;
 
 import java.util.*;
 
+import org.eigenbase.util.*;
 
 /**
  * A very slow, generic comparator for two objects with valid toString()
@@ -43,8 +44,8 @@ public class CharStringComparator
         Object o1,
         Object o2)
     {
-        String s1 = rtrim(o1.toString());
-        String s2 = rtrim(o2.toString());
+        String s1 = Util.rtrim(o1.toString());
+        String s2 = Util.rtrim(o2.toString());
         return s1.compareTo(s2);
     }
 
@@ -53,22 +54,6 @@ public class CharStringComparator
         Object o2)
     {
         return compareCharStrings(o1, o2);
-    }
-
-    private static String rtrim(String s)
-    {
-        int n = s.length() - 1;
-        if (n >= 0) {
-            if (s.charAt(n) != ' ') {
-                return s;
-            }
-            while ((--n) >= 0) {
-                if (s.charAt(n) != ' ') {
-                    return s.substring(0, n + 1);
-                }
-            }
-        }
-        return "";
     }
 }
 
