@@ -495,7 +495,7 @@
 '                LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$COMPANY, SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
 '                  LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                    LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N', _ISO-8859-1'+', null }]])'
+'                      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N                   ', _ISO-8859-1'+', null }]])'
 '                LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[0, 1, 2, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$CUSTOMER, SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$SALESPERSON, SYS$CLUSTERED_INDEX$SJ$SALES$SID]])'
 '                  LcsIndexIntersectRel(startRidParamId=[3], rowLimitParamId=[4])'
 '                    LcsIndexMergeRel(consumerSridParamId=[3], segmentLimitParamId=[4], ridLimitParamId=[6])'
@@ -518,7 +518,7 @@
 '                              LcsRowScanRel(table=[[LOCALDB, SJ, CUSTOMER]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$CUSTOMER$ID]])'
 '                                LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                                  LcsIndexSearchRel(table=[[LOCALDB, SJ, CUSTOMER]], index=[I_CUSTOMER_CITY], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
-'                                    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N', _ISO-8859-1'+', null }]])'
+'                                    FennelValuesRel(tuples=[[{ _ISO-8859-1'[', _ISO-8859-1'N                   ', _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- push semijoin past filter and join
 0: jdbc:farrago:> explain plan for

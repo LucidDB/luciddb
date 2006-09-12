@@ -328,6 +328,11 @@ select name from depts where deptno > ? and deptno < ?;
 explain plan for
 select name from depts where deptno > ? and name='Hysteria';
 
+-- FRG-198
+create table oj.frg198(a char(5) primary key, b char(5));
+insert into oj.frg198 values ('t1a1', 't1a1'), ('t2a2', 't2a2');
+select * from oj.frg198 where a > 't1a1';
+
 ----------------------------------------------
 -- LucidDB column store bitmap indexes test --
 ----------------------------------------------

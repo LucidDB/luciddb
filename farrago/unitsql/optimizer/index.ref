@@ -520,7 +520,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'    FennelValuesRel(tuples=[[{ _ISO-8859-1'(', _ISO-8859-1'Houdini        ', _ISO-8859-1']', _ISO-8859-1'Houdini        ' }]])'
+'    FennelValuesRel(tuples=[[{ _ISO-8859-1'(', _ISO-8859-1'Houdini', _ISO-8859-1']', _ISO-8859-1'Houdini' }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select v from oj.t3 where v >= 'Houdini                 xyz'
@@ -529,7 +529,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', _ISO-8859-1'Houdini        ', _ISO-8859-1'+', null }]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', _ISO-8859-1'Houdini', _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select v from oj.t3 where v <= 'Houdini                 xyz'
@@ -538,7 +538,7 @@
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T3]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T3$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1']', _ISO-8859-1'Houdini        ' }]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1']', _ISO-8859-1'Houdini' }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20 and deptno=30;
@@ -784,6 +784,13 @@
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'('], expr#2=[?0], expr#3=[_ISO-8859-1'+'], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[IS NOT NULL($t2)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t5], $condition=[$t6])'
 '          IterOneRowRel'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- FRG-198
+0: jdbc:farrago:> create table oj.frg198(a char(5) primary key, b char(5));
+0: jdbc:farrago:> insert into oj.frg198 values ('t1a1', 't1a1'), ('t2a2', 't2a2');
+0: jdbc:farrago:> select * from oj.frg198 where a > 't1a1';
+'A','B'
+'t2a2 ','t2a2 '
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ----------------------------------------------
 0: jdbc:farrago:> -- LucidDB column store bitmap indexes test --
