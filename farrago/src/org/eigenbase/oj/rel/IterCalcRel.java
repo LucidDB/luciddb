@@ -89,7 +89,7 @@ public class IterCalcRel
     {
         this(cluster, child, program, flags, null);
     }
-    
+
     public IterCalcRel(
         RelOptCluster cluster,
         RelNode child,
@@ -207,9 +207,9 @@ public class IterCalcRel
     }
 
     /**
-     * Allows errors to be buffered, in the event that they overflow the 
+     * Allows errors to be buffered, in the event that they overflow the
      * error handler.
-     * 
+     *
      * @param errorBuffering whether to buffer errors
      */
     public static void setErrorBuffering(boolean errorBuffering)
@@ -240,21 +240,21 @@ public class IterCalcRel
     }
 
     /**
-     * Generates code for a Java expression satisfying the 
-     * {@link org.eigenbase.runtime.TupleIter} interface. The generated 
+     * Generates code for a Java expression satisfying the
+     * {@link org.eigenbase.runtime.TupleIter} interface. The generated
      * code allocates a {@link org.eigenbase.runtime.CalcTupleIter}
-     * with a dynamic {@link org.eigenbase.runtime.TupleIter#fetchNext()} 
-     * method. If the "abort on error" flag is false, or an error handling 
+     * with a dynamic {@link org.eigenbase.runtime.TupleIter#fetchNext()}
+     * method. If the "abort on error" flag is false, or an error handling
      * tag is specified, then fetchNext is written to handle row errors.
-     * 
+     *
      * <p>
-     * 
-     * Row errors are handled by wrapping expressions that can fail 
-     * with a try/catch block. A caught RuntimeException is then published 
-     * to an "connection variable." In the event that errors can overflow, 
-     * an "error buffering" flag allows them to be posted again on the next 
+     *
+     * Row errors are handled by wrapping expressions that can fail
+     * with a try/catch block. A caught RuntimeException is then published
+     * to an "connection variable." In the event that errors can overflow,
+     * an "error buffering" flag allows them to be posted again on the next
      * iteration of fetchNext.
-     * 
+     *
      * @param implementor an object that implements relations as Java code
      * @param rel the relation to be implemented
      * @param childExp the implemented child of the relation
@@ -275,11 +275,11 @@ public class IterCalcRel
         RexProgram program,
         String tag)
     {
-        // Perform error recovery if continuing on errors or if 
+        // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
-        boolean errorRecovery = (abortOnError == false || tag != null);
+        boolean errorRecovery = !abortOnError || tag != null;
         // Error buffering should not be enabled unless error recovery is
-        assert (errorBuffering == false || errorRecovery == true);
+        assert !errorBuffering || errorRecovery;
 
         // Allow backwards compatibility until all Farrago extensions are
         // satisfied with the new error handling semantics. The new semantics
@@ -318,7 +318,7 @@ public class IterCalcRel
         // The method body for fetchNext, a main target of code generation
         StatementList nextMethodBody = new StatementList();
 
-        // First, post an error if it overflowed the previous time 
+        // First, post an error if it overflowed the previous time
         //     if (pendingError) {
         //         rc = handleRowError(...);
         //         if (rc instanceof NoDataReason) {
@@ -330,7 +330,7 @@ public class IterCalcRel
             // add to next method body...
         }
 
-        // Most of fetchNext falls within a while() block. The while block 
+        // Most of fetchNext falls within a while() block. The while block
         // allows us to try multiple input rows against a filter condition
         // before returning a single row.
         //     while (true) {
@@ -374,7 +374,7 @@ public class IterCalcRel
         }
 
         Variable varColumnIndex = null;
-        if (errorRecovery && backwardsCompatible == false) {
+        if (errorRecovery && !backwardsCompatible) {
             varColumnIndex = implementor.newVariable();
             whileBody.add(
                 new VariableDeclaration(
@@ -383,10 +383,10 @@ public class IterCalcRel
                     Literal.makeLiteral(0)));
         }
 
-        // Calculator (projection, filtering) statements are later appended 
+        // Calculator (projection, filtering) statements are later appended
         // to calcStmts. Typically, this target will be the while list itself.
         StatementList calcStmts;
-        if (errorRecovery == false) {
+        if (!errorRecovery) {
             calcStmts = whileBody;
         } else {
             // For error recovery, we wrap the calc statements
@@ -419,9 +419,9 @@ public class IterCalcRel
                                 new FieldAccess("ex")))));
             } else {
                 Variable varRc = implementor.newVariable();
-                ExpressionList handleRowErrorArgs = 
+                ExpressionList handleRowErrorArgs =
                     new ExpressionList(
-                        varInputRow, 
+                        varInputRow,
                         new FieldAccess("ex"),
                         varColumnIndex);
                 handleRowErrorArgs.add(Literal.makeLiteral(tag));
@@ -459,7 +459,7 @@ public class IterCalcRel
         }
 
         if (backwardsCompatible) {
-            whileBody.add(
+            calcStmts.add(
                 declareInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
@@ -488,7 +488,7 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
-                if (errorRecovery && backwardsCompatible == false) {
+                if (errorRecovery && !backwardsCompatible) {
                     condBody.add(
                         new ExpressionStatement(
                             new UnaryExpression(
@@ -570,7 +570,7 @@ public class IterCalcRel
         return program;
     }
 
-    public String getTag() 
+    public String getTag()
     {
         return tag;
     }

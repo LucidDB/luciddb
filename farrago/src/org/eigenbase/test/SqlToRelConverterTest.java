@@ -578,6 +578,12 @@ public class SqlToRelConverterTest
             "${plan}");
     }
 
+    public void testInterval()
+    {
+        check("values(cast(interval '1' hour as interval hour to second))",
+            "${plan}");
+    }
+    
     public void testExplainAsXml()
     {
         String sql = "select 1 + 2, 3 from (values (true))";
