@@ -57,6 +57,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     private static final String TIMESTAMP_FIELD_NAME = "LE_TIMESTAMP";
     private static final String EXCEPTION_FIELD_NAME = "LE_EXCEPTION";
     private static final String POSITION_FIELD_NAME = "LE_COLUMN_ORDINAL";
+    private static final String CONDITION_FIELD_NAME = "CONDITION";
 
     private static final Logger tracer = 
         FarragoTrace.getRuntimeContextTracer();
@@ -295,7 +296,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
          */
         protected String getFieldName(String tag, int columnIndex)
         {
-            assert(columnIndex != 0);
+            if (columnIndex == 0) {
+                return CONDITION_FIELD_NAME;
+            }
             RelDataType resultType = iterCalcTypeMap.get(tag);
             if (resultType != null) {
                 assert(columnIndex <= resultType.getFieldCount());
@@ -581,19 +584,21 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 // NOTE: if an error causes an exception, do not log it
                 if (quota.errorCount > quota.errorMax) {
                     EigenbaseException ex2;
-                    if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
+                    String field = getFieldName(tag, columnIndex);
+                    String row = o.toString();
+                    String messages = Util.getMessages(ex);
+                    if (columnIndex == 0) {
                         ex2 = 
-                            FarragoResource.instance().JavaCalcFailed.ex(
-                                getFieldName(tag, columnIndex),
-                                o.toString(),
-                                Util.getMessages(ex));
+                            FarragoResource.instance().JavaCalcConditionError
+                            .ex(row, messages);
+                    } else if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
+                        ex2 = 
+                            FarragoResource.instance().JavaCalcError.ex(
+                                field, row, messages);
                     } else {
                         ex2 = 
-                            FarragoResource.instance().JavaCalcFailed2.ex(
-                                getFieldName(tag, columnIndex),
-                                tag,
-                                o.toString(),
-                                Util.getMessages(ex));
+                            FarragoResource.instance().JavaCalcDetailedError
+                            .ex(field, tag, row, messages);
                     }
                     if (quota.errorMax > 0) {
                         throw FarragoResource.instance().ErrorLimitExceeded.ex(
