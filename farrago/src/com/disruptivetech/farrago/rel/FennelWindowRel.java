@@ -212,6 +212,11 @@ public class FennelWindowRel
         return clone;
     }
 
+    public List<Window> getWindows()
+    {
+        return Arrays.asList(windows);
+    }
+
     public boolean isValid(boolean fail)
     {
         if (!inputProgram.isValid(fail)) {
@@ -538,12 +543,12 @@ public class FennelWindowRel
      * CURRENT ROW</code>) is a logical window with an upper and lower bound.
      * </ul>
      */
-    static class Window
+    public static class Window
     {
         /**
          * The partitions which make up this window.
          */
-        final List<Partition> partitionList = new ArrayList<Partition>();
+        private final List<Partition> partitionList = new ArrayList<Partition>();
         final boolean physical;
         final SqlNode lowerBound;
         final SqlNode upperBound;
@@ -630,13 +635,18 @@ public class FennelWindowRel
             partitionList.add(partition);
             return partition;
         }
+
+        public List<Partition> getPartitionList()
+        {
+            return partitionList;
+        }
     }
 
     /**
      * A Partition is a collection of windowed aggregate expressions which
      * belong to the same {@link Window} and have the same partitioning keys.
      */
-    static class Partition
+    public static class Partition
     {
         /**
          * Array of {@link RexWinAggCall} objects, each of which is a call to a
@@ -719,6 +729,11 @@ public class FennelWindowRel
                     overList.size());
             overList.add(aggCall);
             return aggCall;
+        }
+
+        public List<RexWinAggCall> getOvers()
+        {
+            return overList;
         }
     }
 

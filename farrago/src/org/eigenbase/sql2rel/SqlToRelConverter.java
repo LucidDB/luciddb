@@ -225,7 +225,7 @@ public class SqlToRelConverter
                 validator.getValidatedNodeType(query);
             validatedRowType = uniquifyFields(validatedRowType);
             RelDataType convertedRowType = result.getRowType();
-            if (Bug.Dt471Fixed
+            if (!needsValidation
                 && !RelOptUtil.equal(
                     "validated row type",
                     validatedRowType,

@@ -149,7 +149,9 @@ public class StandardConvertletTable
                         "operands.length == 1");
                     final SqlNode arg = operands[0];
                     final SqlNode kase = expandAvg(arg, cx, call);
-                    return cx.convertExpression(kase);
+                    RelDataType type = cx.getValidator().getValidatedNodeType(call);
+                    RexNode rex = cx.convertExpression(kase);
+                    return cx.getRexBuilder().makeCast(type, rex);
                 }
             });
 
@@ -251,30 +253,28 @@ public class StandardConvertletTable
         RelDataType type = validator.getValidatedNodeType(call);
         type = cx.getTypeFactory().createTypeWithNullability(type, true);
         validator.setValidatedNodeType(nullLiteral, type);
-        final SqlNode kase =
-            SqlStdOperatorTable.caseOperator.createCall(
-                count,
-                new SqlNodeList(
-                    Arrays.asList(
-                        new SqlNode[] {
-                            SqlLiteral.createExactNumeric(
-                                "0",
-                                pos)
-                        }),
-                    pos),
-                new SqlNodeList(
-                    Arrays.asList(new SqlNode[] {
-                            nullLiteral
-                        }),
-                    pos),
-                SqlStdOperatorTable.divideOperator.createCall(
+        return SqlStdOperatorTable.caseOperator.createCall(
+            count,
+            new SqlNodeList(
+                Arrays.asList(
                     new SqlNode[] {
-                        sum,
-                count
-                    },
-                    pos),
-                pos);
-        return kase;
+                        SqlLiteral.createExactNumeric(
+                            "0",
+                            pos)
+                    }),
+                pos),
+            new SqlNodeList(
+                Arrays.asList(new SqlNode[] {
+                        nullLiteral
+                    }),
+                pos),
+            SqlStdOperatorTable.divideOperator.createCall(
+                new SqlNode[] {
+                    sum,
+            count
+                },
+                pos),
+            pos);
     }
 
     /**
