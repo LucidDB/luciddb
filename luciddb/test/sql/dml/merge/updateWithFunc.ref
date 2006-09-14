@@ -41,7 +41,7 @@
 . . . . . . . . >   values (t.empno, t.fname, t.lname, t.manager, t.mfn, 
 . . . . . . . . >           upper(substring(t.mln from 1 for 1)));
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select empno, fname, lname, manager, mfname, mlname from emptemp;
+0: jdbc:luciddb:> select empno, fname, lname, manager, mfname, mlname from emptemp order by 1;
 +--------+--------+-----------+----------+---------+----------+
 | EMPNO  | FNAME  |   LNAME   | MANAGER  | MFNAME  |  MLNAME  |
 +--------+--------+-----------+----------+---------+----------+
@@ -81,7 +81,7 @@
 . . . . . . . . >   insert (empno, locid, sal)
 . . . . . . . . >   values (temp.empno, temp.locid, temp.sal);
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select empno, locid, sal from emptemp;
+0: jdbc:luciddb:> select empno, locid, sal from emptemp order by 1;
 +--------+--------+-----------+
 | EMPNO  | LOCID  |    SAL    |
 +--------+--------+-----------+
@@ -118,7 +118,7 @@ Error: Non-query expression encountered in illegal context (state=,code=0)
 . . . . . . . . >                 else e.sal
 . . . . . . . . >            end));
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select empno, locid, sal from emptemp;
+0: jdbc:luciddb:> select empno, locid, sal from emptemp order by 1;
 +--------+--------+-----------+
 | EMPNO  | LOCID  |    SAL    |
 +--------+--------+-----------+
@@ -165,7 +165,7 @@ Error: Non-query expression encountered in illegal context (state=,code=0)
 . . . . . . . . >           else e.sal + 5  
 . . . . . . . . >      end));
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select empno, fname, lname, sal from emptemp;
+0: jdbc:luciddb:> select empno, fname, lname, sal from emptemp order by 1;
 +--------+--------+-----------+-----------+
 | EMPNO  | FNAME  |   LNAME   |    SAL    |
 +--------+--------+-----------+-----------+
@@ -191,4 +191,5 @@ Error: Non-query expression encountered in illegal context (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table emptemp;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

@@ -185,6 +185,13 @@ public abstract class EncodedSqlDecimal
         target.value = this.value;
     }
 
+    // override Object
+    public String toString()
+    {
+        Object o = getNullableData();
+        return (o == null) ? null : o.toString();
+    }
+
     //~ Inner Classes ----------------------------------------------------------
 
     /**

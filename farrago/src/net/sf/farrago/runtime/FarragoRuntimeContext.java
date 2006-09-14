@@ -874,10 +874,17 @@ public class FarragoRuntimeContext
     public Object handleRowError(
         SyntheticObject row, RuntimeException ex, int columnIndex, String tag) 
     {
-        EigenbaseException ex2 = FarragoResource.instance().JavaCalcFailed.ex(
-            Integer.toString(columnIndex),
-            row.toString(),
-            ex.getMessage());
+        EigenbaseException ex2;
+        if (columnIndex == 0) {
+            ex2 = FarragoResource.instance().JavaCalcConditionError.ex(
+                row.toString(),
+                Util.getMessages(ex));
+        } else {
+            ex2 = FarragoResource.instance().JavaCalcError.ex(
+                Integer.toString(columnIndex),
+                row.toString(),
+                Util.getMessages(ex));
+        }
         EigenbaseTrace.getStatementTracer().log(
             Level.WARNING, "java calc exception", ex2);
         return null;

@@ -31,10 +31,6 @@
       </test>
 
       <test name="joinRef" requiresSuccess="download">
-        <!-- LDB-137 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/dml/merge/joinRef.sql"/>
       </test>
 

@@ -193,13 +193,18 @@ public abstract class LoptIterCalcRule extends RelOptRule
      * "<code>[action].catalog.schema.table</code>".
      * @param action an action such as "delete" or "merge"
      * @param qualifiedName a qualified table name
+     * @param time whether to suffix with timestamp
      */
-    protected String getTableTag(String action, String[] qualifiedName)
+    protected String getTableTag(
+        String action, String[] qualifiedName, boolean time)
     {
         assert (qualifiedName.length == 3);
         StringBuffer sb = new StringBuffer(action);
         for (int i = 0; i < qualifiedName.length; i++) {
             sb.append(".").append(qualifiedName[i]);
+        }
+        if (time) {
+            sb.append("_" + tagTimestampFormatter.format(new Date()));
         }
         return sb.toString();
     }
@@ -229,6 +234,13 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     //~ Inner Classes ----------------------------------------------------------
 
+    public static final String TABLE_ACCESS_PREFIX = "Read";
+    public static final String JDBC_QUERY_PREFIX = "Jdbc";
+    public static final String JAVA_UDX_PREFIX = "JavaUdx";
+    public static final String TABLE_APPEND_PREFIX = "Insert";
+    public static final String TABLE_MERGE_PREFIX = "Merge";
+    public static final String TABLE_DELETE_PREFIX = "Delete";
+
     /**
      * A rule for tagging a calculator on top of a table scan.
      */
@@ -249,8 +261,8 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
             TableAccessRelBase tableRel = (TableAccessRelBase) call.rels[2];
             String tag = getTableTag(
-                "Read",
-                tableRel.getTable().getQualifiedName());
+                TABLE_ACCESS_PREFIX,
+                tableRel.getTable().getQualifiedName(), false);
             transformToTag(call, calc, tag);
         }
     }
@@ -273,7 +285,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
                 return;
             }
 
-            String tag = "Jdbc" + getDefaultTag(calc);
+            String tag = JDBC_QUERY_PREFIX + getDefaultTag(calc);
             transformToTag(call, calc, tag);
         }
     }
@@ -296,7 +308,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
                 return;
             }
 
-            String tag = "JavaUdx" + getDefaultTag(calc);
+            String tag = JAVA_UDX_PREFIX + getDefaultTag(calc);
             transformToTag(call, calc, tag);
         }
     }
@@ -323,7 +335,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
             String tag = getTableTag(
-                "Insert", tableRel.getTable().getQualifiedName());
+                TABLE_APPEND_PREFIX, 
+                tableRel.getTable().getQualifiedName(), 
+                true);
 
             setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(
@@ -359,7 +373,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
             String tag = getTableTag(
-                "Merge", tableRel.getTable().getQualifiedName());
+                TABLE_MERGE_PREFIX, 
+                tableRel.getTable().getQualifiedName(),
+                true);
 
             setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(
@@ -396,7 +412,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             IteratorToFennelConverter converter = 
                 (IteratorToFennelConverter) call.rels[1];
             String tag = getTableTag(
-                "Delete", tableRel.getTable().getQualifiedName());
+                TABLE_DELETE_PREFIX, 
+                tableRel.getTable().getQualifiedName(), 
+                true);
 
             setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
             call.transformTo(

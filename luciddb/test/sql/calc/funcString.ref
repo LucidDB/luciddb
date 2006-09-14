@@ -74,7 +74,9 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 | irl     |
 +---------+
 0: jdbc:luciddb:> select substring(str from 2 for -2) from foo;
-Error: The length for substring can not be negative (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[boy]
+Messages: The length for substring can not be negative (state=,code=0)
 0: jdbc:luciddb:> DROP TABLE FOO;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- New versions of statements

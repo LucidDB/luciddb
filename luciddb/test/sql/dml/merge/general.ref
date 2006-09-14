@@ -13,7 +13,7 @@
 0: jdbc:luciddb:> merge into t1 using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2
 . . . . . . . . > when not matched then insert values (m1, pow(m2,2));
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+---------+
 | N1  |   N2    |
 +-----+---------+
@@ -29,7 +29,7 @@
 0: jdbc:luciddb:> merge into t1
 . . . . . . . . > using t2 on n1 = m1
 . . . . . . . . > when matched then update set n2=m2;
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+------+
 | N1  |  N2  |
 +-----+------+
@@ -42,7 +42,7 @@
 . . . . . . . . > using t2 on n1 = m1
 . . . . . . . . > when not matched then
 . . . . . . . . >   insert (n1,n2) values (m1,m2);
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+------+
 | N1  |  N2  |
 +-----+------+
@@ -56,7 +56,7 @@
 0: jdbc:luciddb:> merge into t1 as tr
 . . . . . . . . > using t1 as rf on tr.n1=rf.n1
 . . . . . . . . > when matched then update set n1 = tr.n1 + 10;
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+------+
 | N1  |  N2  |
 +-----+------+
@@ -69,7 +69,7 @@
 0: jdbc:luciddb:> merge into t1 as tr
 . . . . . . . . > using t1 as rf on tr.n1=rf.n1
 . . . . . . . . > when matched then update set n1=rf.n1 - 10;
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+------+
 | N1  |  N2  |
 +-----+------+
@@ -83,7 +83,7 @@
 . . . . . . . . > using (select * from t1 rf1, t1 rf2 where rf1.n1=rf2.n1) as rf
 . . . . . . . . > on rf.n1=tr.n1
 . . . . . . . . > when matched then update set n2=rf.n2 + 1;
-0: jdbc:luciddb:> select * from t1;
+0: jdbc:luciddb:> select * from t1 order by 2;
 +-----+------+
 | N1  |  N2  |
 +-----+------+
@@ -104,8 +104,8 @@ Was expecting one of:
     "WHEN" ...
     "." ...
     "(" ...
-    "IN" ...
     "NOT" ...
+    "IN" ...
     "BETWEEN" ...
     "LIKE" ...
     "SIMILAR" ...
@@ -173,4 +173,5 @@ Error: Number of INSERT target columns (2) does not equal number of source items
 0: jdbc:luciddb:> -- clean up
 0: jdbc:luciddb:> drop table t1;
 0: jdbc:luciddb:> drop table t2;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit
