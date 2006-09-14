@@ -189,21 +189,28 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     /**
      * Gets a tag corresponding to a table name. The tag is built from 
-     * the elements qualified name, joined by dots, in other words:
-     * "<code>[action].catalog.schema.table</code>".
+     * elements of the qualified name, joined by dots. The tag is prefixed 
+     * with an action name, and is optionally suffixed with a unique 
+     * identifier. The tag has the overall format:
+     * "<code>[action].catalog.schema.table[.uniqueSuffix]</code>".
+     * The unique suffix is appended when the table's relation is provided. 
+     * The suffix has a combination of the relation's runtime id and the 
+     * current timestamp.
      * @param action an action such as "delete" or "merge"
      * @param qualifiedName a qualified table name
-     * @param time whether to suffix with timestamp
+     * @param rel the relation accessing a table for read or write. If 
+     *   not null, the relation is used to generate a unique suffix.
      */
     protected String getTableTag(
-        String action, String[] qualifiedName, boolean time)
+        String action, String[] qualifiedName, RelNode rel)
     {
         assert (qualifiedName.length == 3);
         StringBuffer sb = new StringBuffer(action);
         for (int i = 0; i < qualifiedName.length; i++) {
             sb.append(".").append(qualifiedName[i]);
         }
-        if (time) {
+        if (rel != null) {
+            sb.append("." + rel.getId());
             sb.append("_" + tagTimestampFormatter.format(new Date()));
         }
         return sb.toString();
@@ -224,12 +231,11 @@ public abstract class LoptIterCalcRule extends RelOptRule
 
     protected void setIterCalcTypeMap(
         FennelRel rel,
-        String tag, 
-        RelOptTable table)
+        String tag)
     {
         FarragoPreparingStmt stmt = 
             FennelRelUtil.getPreparingStmt(rel);
-        stmt.mapIterCalcType(tag, table.getRowType());
+        stmt.mapIterCalcType(tag, rel.getExpectedInputRowType(0));
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -262,7 +268,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
             TableAccessRelBase tableRel = (TableAccessRelBase) call.rels[2];
             String tag = getTableTag(
                 TABLE_ACCESS_PREFIX,
-                tableRel.getTable().getQualifiedName(), false);
+                tableRel.getTable().getQualifiedName(), null);
             transformToTag(call, calc, tag);
         }
     }
@@ -337,9 +343,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             String tag = getTableTag(
                 TABLE_APPEND_PREFIX, 
                 tableRel.getTable().getQualifiedName(), 
-                true);
+                tableRel);
 
-            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            setIterCalcTypeMap(tableRel, tag);
             call.transformTo(
                 new LcsTableAppendRel(
                     tableRel.getCluster(),
@@ -375,9 +381,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             String tag = getTableTag(
                 TABLE_MERGE_PREFIX, 
                 tableRel.getTable().getQualifiedName(),
-                true);
+                tableRel);
 
-            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            setIterCalcTypeMap(tableRel, tag);
             call.transformTo(
                 new LcsTableMergeRel(
                     tableRel.getCluster(),
@@ -414,9 +420,9 @@ public abstract class LoptIterCalcRule extends RelOptRule
             String tag = getTableTag(
                 TABLE_DELETE_PREFIX, 
                 tableRel.getTable().getQualifiedName(), 
-                true);
+                tableRel);
 
-            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            setIterCalcTypeMap(tableRel, tag);
             call.transformTo(
                 new LcsTableDeleteRel(
                     tableRel.getCluster(),
