@@ -323,7 +323,7 @@
 0: jdbc:luciddb:> ----
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- define TIMEDIMENSION
-0: jdbc:luciddb:> create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
+0: jdbc:luciddb:> create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
 . . . . . . . . > returns table(
 . . . . . . . . >   TIME_KEY_SEQ int,
 . . . . . . . . >   TIME_KEY date,
@@ -333,15 +333,40 @@
 . . . . . . . . >   DAY_NUMBER_IN_MONTH int,
 . . . . . . . . >   DAY_NUMBER_IN_YEAR int,
 . . . . . . . . >   DAY_NUMBER_OVERALL int,
+. . . . . . . . >   DAY_FROM_JULIAN int,
+. . . . . . . . >   WEEK_NUMBER_IN_MONTH int,
+. . . . . . . . >   WEEK_NUMBER_IN_QUARTER int,
 . . . . . . . . >   WEEK_NUMBER_IN_YEAR int,
 . . . . . . . . >   WEEK_NUMBER_OVERALL int,
 . . . . . . . . >   MONTH_NAME varchar(10),
+. . . . . . . . >   MONTH_NUMBER_IN_QUARTER int,
 . . . . . . . . >   MONTH_NUMBER_IN_YEAR int,
 . . . . . . . . >   MONTH_NUMBER_OVERALL int,
 . . . . . . . . >   QUARTER int,
 . . . . . . . . >   YR int,
 . . . . . . . . >   CALENDAR_QUARTER varchar(6),
-. . . . . . . . >   FIRST_DAY_OF_WEEK date)
+. . . . . . . . >   WEEK_START_DATE date,
+. . . . . . . . >   WEEK_END_DATE date,
+. . . . . . . . >   MONTH_START_DATE date,
+. . . . . . . . >   MONTH_END_DATE date,
+. . . . . . . . >   QUARTER_START_DATE date,
+. . . . . . . . >   QUARTER_END_DATE date,
+. . . . . . . . >   YEAR_START_DATE date,
+. . . . . . . . >   YEAR_END_DATE date,
+. . . . . . . . >   FISCAL_WEEK_START_DATE date,
+. . . . . . . . >   FISCAL_WEEK_END_DATE date,
+. . . . . . . . >   FISCAL_WEEK_NUMBER_IN_MONTH int,
+. . . . . . . . >   FISCAL_WEEK_NUMBER_IN_QUARTER int,
+. . . . . . . . >   FISCAL_WEEK_NUMBER_IN_YEAR int,
+. . . . . . . . >   FISCAL_MONTH_START_DATE date,
+. . . . . . . . >   FISCAL_MONTH_END_DATE date,
+. . . . . . . . >   FISCAL_MONTH_NUMBER_IN_QUARTER int,
+. . . . . . . . >   FISCAL_MONTH_NUMBER_IN_YEAR int,
+. . . . . . . . >   FISCAL_QUARTER_START_DATE date,
+. . . . . . . . >   FISCAL_QUARTER_END_DATE date,
+. . . . . . . . >   FISCAL_QUARTER_NUMBER_IN_YEAR int,
+. . . . . . . . >   FISCAL_YEAR_START_DATE date,
+. . . . . . . . >   FISCAL_YEAR_END_DATE date)
 . . . . . . . . > language java
 . . . . . . . . > parameter style system defined java
 . . . . . . . . > no sql

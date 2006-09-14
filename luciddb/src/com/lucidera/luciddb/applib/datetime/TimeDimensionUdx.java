@@ -34,11 +34,11 @@ public abstract class TimeDimensionUdx
 {
     public static void execute(
         int startYear, int startMonth, int startDay, int endYear, int endMonth,
-        int endDay, PreparedStatement resultInserter) 
+        int endDay, int fiscalYearStartMonth, PreparedStatement resultInserter) 
         throws SQLException
     {
         TimeDimensionInternal tdi = new TimeDimensionInternal(
-            startYear, startMonth, startDay, endYear, endMonth, endDay);
+            startYear, startMonth, startDay, endYear, endMonth, endDay, fiscalYearStartMonth);
         tdi.Start();
 
         for (int rowCount = 0; rowCount <= tdi.getNumDays(); rowCount++) {
@@ -63,11 +63,14 @@ public abstract class TimeDimensionUdx
             // Beginning of year
             int dayInYear = tdi.getDayOfYear();
 
+            // Week number in month
+            int weekNumInMonth = tdi.getWeekOfMonth();
+
             // Week number in year
             int week = tdi.getWeek();
 
             // Day of week
-            int dayOfWeek = tdi.getAndUpdateFirstDayOfWeek();
+            int dayOfWeek = tdi.getDayOfWeek();
 
             String isWeekend;
             if ((dayOfWeek == 1) || (dayOfWeek == 7)) {
@@ -80,6 +83,8 @@ public abstract class TimeDimensionUdx
             int column = 0;
             // TIME_KEY_SEQ
             resultInserter.setInt(++column, rowCount+1);
+
+            //~---------- calendar columns ----------
 
             // TODO: Julian date here? TIME_KEY 
             resultInserter.setDate(++column, tdi.getDate());
@@ -103,6 +108,15 @@ public abstract class TimeDimensionUdx
             // DAY_NUMBER_OVERALL
             resultInserter.setInt(++column, julianDay);//THIS IS IT (uh, what?)
 
+            // DAYS_FROM_JULIAN = DAY_NUMBER_OVERALL + 2440588
+            resultInserter.setInt(++column, julianDay + 2440588);
+
+            // WEEK_NUMBER_IN_MONTH
+            resultInserter.setInt(++column, weekNumInMonth);
+
+            // WEEK_NUMBER_IN_QUARTER
+            resultInserter.setInt(++column, tdi.getWeekOfQuarter());
+
             // WEEK_NUMBER_IN_YEAR
             resultInserter.setInt(++column, week);
 
@@ -113,6 +127,9 @@ public abstract class TimeDimensionUdx
             resultInserter.setString(++column, 
                 TimeDimensionInternal.getMonthOfYear(month - 1));
 
+            // MONTH_NUMBER_IN_QUARTER
+            resultInserter.setInt(++column, (month - 1) % 3 + 1);
+ 
             // MONTH_NUMBER_IN_YEAR
             resultInserter.setInt(++column, month);
 
@@ -129,8 +146,73 @@ public abstract class TimeDimensionUdx
             resultInserter.setString(++column, 
                 CalendarQuarterUdf.getCalendarQuarter(quarter, year));
 
-            // FIRST_DAY_OF_WEEK
+            // WEEK_START_DATE
             resultInserter.setDate(++column, tdi.getFirstDayOfWeekDate());
+
+            // WEEK_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfWeekDate());
+
+            // MONTH_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfMonthDate());
+
+            // MONTH_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfMonthDate());
+
+            // QUARTER_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfQuarterDate());
+
+            // QUARTER_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfQuarterDate());
+
+            // YEAR_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfYearDate());
+
+            // YEAR_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfYearDate());
+
+            //~---------- fiscal columns ----------
+          
+            // FISCAL_WEEK_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfWeekDate());
+
+            // FISCAL_WEEK_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfWeekDate());
+
+            // FISCAL_WEEK_NUMBER_IN_MONTH
+            resultInserter.setInt(++column, tdi.getWeekOfFiscalMonth());
+
+            // FISCAL_WEEK_NUMBER_IN_QUARTER
+            resultInserter.setInt(++column, tdi.getWeekOfFiscalQuarter());
+
+            // FISCAL_WEEK_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, tdi.getWeekOfFiscalYear());
+
+            // FISCAL_MONTH_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfMonthDate());
+ 
+            // FISCAL_MONTH_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfMonthDate());
+
+            // FISCAL_MONTH_NUMBER_IN_QUARTER
+            resultInserter.setInt(++column, (tdi.getFiscalMonth() - 1) % 3 + 1);
+            
+            // FISCAL_MONTH_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, tdi.getFiscalMonth());
+
+            // FISCAL_QUARTER_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfFiscalQuarterDate());
+
+            // FISCAL_QUARTER_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfFiscalQuarterDate());
+           
+            // FISCAL_QUARTER_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, tdi.getFiscalQuarter());
+
+            // FISCAL_YEAR_START_DATE
+            resultInserter.setDate(++column, tdi.getFirstDayOfFiscalYearDate());
+
+            // FISCAL_YEAR_END_DATE
+            resultInserter.setDate(++column, tdi.getLastDayOfFiscalYearDate());
 
             // update row
             resultInserter.executeUpdate();
