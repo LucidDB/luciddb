@@ -25,7 +25,9 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 +----------+
 0: jdbc:luciddb:> select * from foo where x like '%*E*R%' escape '*'
 . . . . . . . . > ;
-Error: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
+Error: Could not calculate condition for input:
+[TESTER]
+Messages: Invalid escape sequence: %*E*R% at 1 (state=,code=0)
 0: jdbc:luciddb:> select * from foo where x like '%ER*%' escape '*'
 . . . . . . . . > ;
 +----+
