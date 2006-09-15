@@ -22,14 +22,14 @@ values applib.day_from_julian_start(DATE'1582-10-14');
 select TIME_KEY, applib.day_from_julian_start("TIME_KEY") 
 from table(applib.time_dimension(1997, 9, 17, 1997, 10, 1));
 
-create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("FIRST_DAY_OF_WEEK")
+create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("WEEK_START_DATE")
 from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
 
 select * from tempview
 order by 1;
 
 -- in expressions
-select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("FIRST_DAY_OF_WEEK") / 2
+select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("WEEK_START_DATE") / 2
 from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
 
 

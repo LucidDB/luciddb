@@ -34,6 +34,15 @@ public abstract class TimeDimensionUdx
 {
     public static void execute(
         int startYear, int startMonth, int startDay, int endYear, int endMonth,
+        int endDay, PreparedStatement resultInserter) 
+        throws SQLException
+    {
+        execute(startYear, startMonth, startDay, endYear, endMonth, endDay, 1,
+            resultInserter);
+    }
+
+    public static void execute(
+        int startYear, int startMonth, int startDay, int endYear, int endMonth,
         int endDay, int fiscalYearStartMonth, PreparedStatement resultInserter) 
         throws SQLException
     {
