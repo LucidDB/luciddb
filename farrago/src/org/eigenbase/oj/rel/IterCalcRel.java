@@ -29,6 +29,7 @@ import java.util.logging.*;
 import openjava.mop.*;
 
 import openjava.ptree.*;
+import openjava.ptree.util.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
@@ -483,7 +484,6 @@ public class IterCalcRel
                 condBody = calcStmts;
             }
 
-            RexToOJTranslator condTranslator = translator.push(condBody);
             RelDataTypeField [] fields = outputRowType.getFields();
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
@@ -496,11 +496,61 @@ public class IterCalcRel
                                 UnaryExpression.POST_INCREMENT)));
                 }
                 ++i;
+
+                // NOTE jvs 14-Sept-2006:  Put complicated project expressions
+                // into their own method, otherwise a big select list
+                // can easily blow the 64K Java limit on method bytecode
+                // size.  Make methods private final in the hopes that they
+                // will get inlined JIT.  For now we decide "complicated"
+                // based on the size of the generated Java parse tree.
+                // A big enough select list of simple expressions could
+                // still blow the limit, so we may need to group them
+                // together, sub-divide, etc.
+
+                StatementList projMethodBody = new StatementList();
+                RexToOJTranslator projTranslator =
+                    translator.push(projMethodBody);
                 String javaFieldName = Util.toJavaId(
                         fields[i].getName(),
                         i);
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
-                condTranslator.translateAssignment(fields[i], lhs, rhs);
+                projTranslator.translateAssignment(fields[i], lhs, rhs);
+
+                int complexity = countParseTreeNodes(projMethodBody);
+                if (complexity < 20) {
+                    // No method needed; just append.
+                    condBody.addAll(projMethodBody);
+                    continue;
+                }
+
+                // Need a separate method.
+                
+                String projMethodName =
+                    "calc_" + varOutputRow.toString() + "_f_" + i;
+                ParameterList paramList = new ParameterList();
+                paramList.add(
+                    new Parameter(
+                        TypeName.forOJClass(inputRowClass),
+                        varInputRow.toString()));
+                paramList.add(
+                    new Parameter(
+                        TypeName.forOJClass(outputRowClass),
+                        varOutputRow.toString()));
+                MemberDeclaration projMethodDecl =
+                    new MethodDeclaration(
+                        new ModifierList(
+                            ModifierList.PRIVATE | ModifierList.FINAL),
+                        TypeName.forOJClass(OJSystem.VOID),
+                        projMethodName,
+                        paramList,
+                        null,
+                        projMethodBody);
+                memberList.add(projMethodDecl);
+                condBody.add(
+                    new ExpressionStatement(
+                        new MethodCall(
+                            projMethodName,
+                            new ExpressionList(varInputRow, varOutputRow))));
             }
         } finally {
             translator.popProgram(program);
@@ -539,6 +589,32 @@ public class IterCalcRel
                 memberList);
 
         return newTupleIterExp;
+    }
+
+    private static int countParseTreeNodes(ParseTree parseTree)
+    {
+        int n = 1;
+        if (parseTree instanceof NonLeaf) {
+            Object [] contents = ((NonLeaf) parseTree).getContents();
+            for (Object obj : contents) {
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        } else if (parseTree instanceof openjava.ptree.List) {
+            Enumeration e = ((openjava.ptree.List) parseTree).elements();
+            while (e.hasMoreElements()) {
+                Object obj = (Object) e.nextElement();
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        }
+        return n;
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
