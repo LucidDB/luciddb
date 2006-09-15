@@ -73,7 +73,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 | 1997-10-01  | 2450723  |
 +-------------+----------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("WEEK_START_DATE")
+0: jdbc:luciddb:> create view tempview as select applib.day_from_julian_start("TIME_KEY"), applib.day_from_julian_start("FIRST_DAY_OF_WEEK")
 . . . . . . . . > from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from tempview
@@ -91,7 +91,7 @@ Error: org.eigenbase.sql.parser.SqlParseException: Illegal DATE literal '1582-10
 +----------+----------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- in expressions
-0: jdbc:luciddb:> select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("WEEK_START_DATE") / 2
+0: jdbc:luciddb:> select applib.day_from_julian_start("TIME_KEY")+ applib.day_from_julian_start("FIRST_DAY_OF_WEEK") / 2
 . . . . . . . . > from table(applib.time_dimension(2001, 1, 30, 2001, 2, 5));
 +----------+
 |  EXPR$0  |

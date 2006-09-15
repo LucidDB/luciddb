@@ -32,13 +32,118 @@ import java.sql.*;
  */
 public abstract class TimeDimensionUdx
 {
+    // original time dimension for backwards compatibility
     public static void execute(
         int startYear, int startMonth, int startDay, int endYear, int endMonth,
         int endDay, PreparedStatement resultInserter) 
         throws SQLException
     {
-        execute(startYear, startMonth, startDay, endYear, endMonth, endDay, 1,
-            resultInserter);
+        TimeDimensionInternal tdi = new TimeDimensionInternal(
+            startYear, startMonth, startDay, endYear, endMonth, endDay, 1);
+        tdi.Start();
+
+        for (int rowCount = 0; rowCount <= tdi.getNumDays(); rowCount++) {
+            // Year
+            int year = tdi.getYear();
+            
+            // Days since the epoch (January 1, 1970)
+            int julianDay = tdi.getJulianDay();
+
+            // Month number (1=January)
+            int month = tdi.getMonth();
+
+            // Months since the epoch (January 1, 1970)
+            int julianMonth = (year - 1970) * 12 + month;
+
+            // Day of month
+            int date = tdi.getDayOfMonth();
+
+            // Calendar quarter
+            int quarter = (month - 1) / 3 + 1;
+
+            // Beginning of year
+            int dayInYear = tdi.getDayOfYear();
+
+            // Week number in month
+            int weekNumInMonth = tdi.getWeekOfMonth();
+
+            // Week number in year
+            int week = tdi.getWeek();
+
+            // Day of week
+            int dayOfWeek = tdi.getDayOfWeek();
+
+            String isWeekend;
+            if ((dayOfWeek == 1) || (dayOfWeek == 7)) {
+                isWeekend = "Y";
+            } else {
+                isWeekend = "N";
+            }
+
+            // insert data into row
+            int column = 0;
+            // TIME_KEY_SEQ
+            resultInserter.setInt(++column, rowCount+1);
+
+            //~---------- calendar columns ----------
+
+            // TODO: Julian date here? TIME_KEY 
+            resultInserter.setDate(++column, tdi.getDate());
+
+            // DAY_OF_WEEK
+            resultInserter.setString(
+                ++column, TimeDimensionInternal.getDayOfWeek(dayOfWeek - 1));
+
+            // WEEKEND
+            resultInserter.setString(++column, isWeekend);
+
+            // DAY_NUMBER_IN_WEEK
+            resultInserter.setInt(++column, dayOfWeek);
+
+            // DAY_NUMBER_IN_MONTH
+            resultInserter.setInt(++column, date);
+
+            // DAY_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, dayInYear);
+
+            // DAY_NUMBER_OVERALL
+            resultInserter.setInt(++column, julianDay);//THIS IS IT (uh, what?)
+
+            // WEEK_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, week);
+
+            // WEEK_NUMBER_OVERALL
+            resultInserter.setInt(++column, 1 + julianDay / 7);
+
+            // MONTH_NAME
+            resultInserter.setString(++column, 
+                TimeDimensionInternal.getMonthOfYear(month - 1));
+
+            // MONTH_NUMBER_IN_YEAR
+            resultInserter.setInt(++column, month);
+
+            // MONTH_NUMBER_OVERALL
+            resultInserter.setInt(++column, julianMonth);
+
+            // QUARTER
+            resultInserter.setInt(++column, quarter);
+
+            // YEAR
+            resultInserter.setInt(++column, year);
+
+            // CALENDAR_QUARTER
+            resultInserter.setString(++column, 
+                CalendarQuarterUdf.getCalendarQuarter(quarter, year));
+
+            // FIRST_DAY_OF_WEEK
+            resultInserter.setDate(++column, tdi.getFirstDayOfWeekDate());
+
+            // update row
+            resultInserter.executeUpdate();
+
+            // increment date
+            tdi.increment();
+        }
     }
 
     public static void execute(
