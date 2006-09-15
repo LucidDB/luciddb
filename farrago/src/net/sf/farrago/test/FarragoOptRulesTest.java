@@ -303,7 +303,7 @@ public class FarragoOptRulesTest
     {
         // tests the case where the semijoin is pushed to the left
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         check(
@@ -317,7 +317,7 @@ public class FarragoOptRulesTest
     {
         // tests the case where the semijoin is pushed to the right
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         check(
@@ -330,7 +330,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
         check(
@@ -343,7 +343,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addMatchOrder(HepMatchOrder.BOTTOM_UP);
         programBuilder.addRuleInstance(new ConvertMultiJoinRule());
         check(
@@ -377,7 +377,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
         check(
@@ -390,7 +390,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
@@ -404,7 +404,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         programBuilder.addRuleInstance(new RemoveSemiJoinRule());
@@ -418,7 +418,7 @@ public class FarragoOptRulesTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastJoinRule());
         programBuilder.addRuleInstance(new PushSemiJoinPastFilterRule());

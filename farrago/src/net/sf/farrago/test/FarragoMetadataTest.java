@@ -264,7 +264,7 @@ public class FarragoMetadataTest
     {
         // this test will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         transformQuery(
             programBuilder.createProgram(),
@@ -375,7 +375,7 @@ public class FarragoMetadataTest
     {
         // tests that call this method will test both joins and semijoins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         transformQuery(
             programBuilder.createProgram(),
@@ -550,7 +550,7 @@ public class FarragoMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         transformQuery(
             programBuilder.createProgram(),

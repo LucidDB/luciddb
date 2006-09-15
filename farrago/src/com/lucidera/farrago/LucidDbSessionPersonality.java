@@ -229,7 +229,7 @@ public class LucidDbSessionPersonality
 
         // Push filters down.
         builder.addRuleInstance(
-            new PushFilterRule(
+            new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
                     FilterRel.class,
                     new RelOptRuleOperand[] {
@@ -238,7 +238,7 @@ public class LucidDbSessionPersonality
                 "with filter above join"));
 
         builder.addRuleInstance(
-            new PushFilterRule(
+            new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
                 "without filter above join"));
 
