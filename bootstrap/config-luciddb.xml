@@ -41,6 +41,7 @@
             <property name="open.build.home" value="${open.integration.build.home}"/>
 
             <property name="with.tests" value="${with.tests}"/>
+            <property name="with.optimization" value="${with.optimization}"/>
 
             <property name="open_root" value="${p4root}"/>
             <property name="eigen_home" value="${open.integration.build.home}"/>
