@@ -225,7 +225,8 @@ public class SqlToRelConverter
                 validator.getValidatedNodeType(query);
             validatedRowType = uniquifyFields(validatedRowType);
             RelDataType convertedRowType = result.getRowType();
-            if (!RelOptUtil.equal(
+            if (shouldAssertRowTypePreserved()
+                && !RelOptUtil.equal(
                     "validated row type",
                     validatedRowType,
                     "converted row type",
@@ -243,6 +244,15 @@ public class SqlToRelConverter
             }
         }
         return result;
+    }
+
+    protected boolean shouldAssertRowTypePreserved()
+    {
+        // NOTE jvs 13-Sept-2006:  Julian, if you want to make this
+        // dependent on Bug.Dt471Fixed, override this method in
+        // a red-zone subclass.  For Farrago, the assert should
+        // always be on to prevent more mistakes from accumulating.
+        return true;
     }
 
     private RelDataType uniquifyFields(RelDataType rowType)
