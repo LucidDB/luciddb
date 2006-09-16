@@ -549,7 +549,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         transformQuery(
             programBuilder.createProgram(),
@@ -788,7 +788,7 @@ public class LoptMetadataTest
         // these test also test the SemiJoinRel case, as it's easier to test
         // the as part of regular joins
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         transformQuery(
             programBuilder.createProgram(),
@@ -846,7 +846,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new LhxJoinRule());
         transformQuery(
@@ -866,7 +866,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new LhxJoinRule());
         programBuilder.addRuleInstance(new LhxIntersectRule());
@@ -883,7 +883,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new LhxJoinRule());
         programBuilder.addRuleInstance(new LhxMinusRule());
@@ -900,7 +900,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         transformQuery(
             programBuilder.createProgram(),
             "select * from "
@@ -1080,7 +1080,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new LhxJoinRule());
         transformQuery(
@@ -1226,7 +1226,7 @@ public class LoptMetadataTest
         throws Exception
     {
         HepProgramBuilder programBuilder = new HepProgramBuilder();
-        programBuilder.addRuleInstance(new PushFilterRule());
+        programBuilder.addRuleInstance(new PushFilterPastJoinRule());
         programBuilder.addRuleInstance(new AddRedundantSemiJoinRule());
         programBuilder.addRuleInstance(new LhxJoinRule());
         transformQuery(

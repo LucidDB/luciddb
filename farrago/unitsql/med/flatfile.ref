@@ -740,14 +740,14 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 . . . . . . . . >     directory 'testlog',
 . . . . . . . . >     file_extension 'log');
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select le_exception, le_column_ordinal 
+0: jdbc:farrago:> select le_exception, le_target_column 
 . . . . . . . . > from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
-+--------------------------------------------------------------------------------------------------------------------------------+--------------------+
-|                                                          LE_EXCEPTION                                                          | LE_COLUMN_ORDINAL  |
-+--------------------------------------------------------------------------------------------------------------------------------+--------------------+
-| Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                  |
-| Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                  |
-+--------------------------------------------------------------------------------------------------------------------------------+--------------------+
++--------------------------------------------------------------------------------------------------------------------------------+-------------------+
+|                                                          LE_EXCEPTION                                                          | LE_TARGET_COLUMN  |
++--------------------------------------------------------------------------------------------------------------------------------+-------------------+
+| Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                 |
+| Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                 |
++--------------------------------------------------------------------------------------------------------------------------------+-------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can also view the error log summaries
 0: jdbc:farrago:> select process_id, action_id, error_count, "SQL"

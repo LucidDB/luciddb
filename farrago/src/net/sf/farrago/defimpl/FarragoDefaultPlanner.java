@@ -137,7 +137,7 @@ public class FarragoDefaultPlanner
 
         planner.addRule(ReduceAggregatesRule.instance);
 
-        planner.addRule(new PushFilterRule());
+        planner.addRule(new PushFilterPastJoinRule());
         planner.addRule(new PushProjectPastFilterRule());
         planner.addRule(new PushProjectPastJoinRule());
 

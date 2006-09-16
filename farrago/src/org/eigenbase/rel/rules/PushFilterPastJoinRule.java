@@ -30,20 +30,20 @@ import org.eigenbase.rex.*;
 
 
 /**
- * PushFilterRule implements the rule for pushing filters above and within a
- * join node into the join node and/or its children nodes.
+ * PushFilterPastJoinRule implements the rule for pushing filters above and
+ * within a join node into the join node and/or its children nodes.
  *
  * @author Zelaine Fong
  * @version $Id$
  */
-public class PushFilterRule
+public class PushFilterPastJoinRule
     extends RelOptRule
 {
     //  ~ Constructors --------------------------------------------------------
 
     //~ Constructors -----------------------------------------------------------
 
-    public PushFilterRule()
+    public PushFilterPastJoinRule()
     {
         super(
             new RelOptRuleOperand(
@@ -53,7 +53,7 @@ public class PushFilterRule
                 }));
     }
 
-    public PushFilterRule(RelOptRuleOperand rule, String id)
+    public PushFilterPastJoinRule(RelOptRuleOperand rule, String id)
     {
         // This rule is fired for either of the following two patterns:
         //
@@ -248,4 +248,4 @@ public class PushFilterRule
     }
 }
 
-// End PushFilterRule.java
+// End PushFilterPastJoinRule.java

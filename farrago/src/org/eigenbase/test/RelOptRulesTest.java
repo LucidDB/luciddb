@@ -92,7 +92,7 @@ public class RelOptRulesTest
     public void testPushFilterThroughOuterJoin()
     {
         checkPlanning(
-            new PushFilterRule(),
+            new PushFilterPastJoinRule(),
             "select 1 from sales.dept d left outer join sales.emp e"
             + " on d.deptno = e.deptno"
             + " where d.name = 'Charlie'");

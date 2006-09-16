@@ -323,6 +323,57 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.exec
 ----
 
 -- define TIMEDIMENSION
+create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int, fiscalYrStartMth int)
+returns table(
+  TIME_KEY_SEQ int,
+  TIME_KEY date,
+  DAY_OF_WEEK varchar(10),
+  WEEKEND varchar(1),
+  DAY_NUMBER_IN_WEEK int,
+  DAY_NUMBER_IN_MONTH int,
+  DAY_NUMBER_IN_YEAR int,
+  DAY_NUMBER_OVERALL int,
+  DAY_FROM_JULIAN int,
+  WEEK_NUMBER_IN_MONTH int,
+  WEEK_NUMBER_IN_QUARTER int,
+  WEEK_NUMBER_IN_YEAR int,
+  WEEK_NUMBER_OVERALL int,
+  MONTH_NAME varchar(10),
+  MONTH_NUMBER_IN_QUARTER int,
+  MONTH_NUMBER_IN_YEAR int,
+  MONTH_NUMBER_OVERALL int,
+  QUARTER int,
+  YR int,
+  CALENDAR_QUARTER varchar(6),
+  WEEK_START_DATE date,
+  WEEK_END_DATE date,
+  MONTH_START_DATE date,
+  MONTH_END_DATE date,
+  QUARTER_START_DATE date,
+  QUARTER_END_DATE date,
+  YEAR_START_DATE date,
+  YEAR_END_DATE date,
+  FISCAL_WEEK_START_DATE date,
+  FISCAL_WEEK_END_DATE date,
+  FISCAL_WEEK_NUMBER_IN_MONTH int,
+  FISCAL_WEEK_NUMBER_IN_QUARTER int,
+  FISCAL_WEEK_NUMBER_IN_YEAR int,
+  FISCAL_MONTH_START_DATE date,
+  FISCAL_MONTH_END_DATE date,
+  FISCAL_MONTH_NUMBER_IN_QUARTER int,
+  FISCAL_MONTH_NUMBER_IN_YEAR int,
+  FISCAL_QUARTER_START_DATE date,
+  FISCAL_QUARTER_END_DATE date,
+  FISCAL_QUARTER_NUMBER_IN_YEAR int,
+  FISCAL_YEAR_START_DATE date,
+  FISCAL_YEAR_END_DATE date)
+language java
+specific time_dimension_fm
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
+
+-- time dimension without fiscal information
 create function APPLIB.TIME_DIMENSION(startYr int, startMth int, startDay int, endYr int, endMth int, endDay int)
 returns table(
   TIME_KEY_SEQ int,
@@ -343,6 +394,7 @@ returns table(
   CALENDAR_QUARTER varchar(6),
   FIRST_DAY_OF_WEEK date)
 language java
+specific time_dimension
 parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';

@@ -500,7 +500,7 @@ options (
     directory 'testlog',
     file_extension 'log');
 
-select le_exception, le_column_ordinal 
+select le_exception, le_target_column 
 from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
 
 -- we can also view the error log summaries

@@ -159,7 +159,7 @@ public class FarragoDefaultHeuristicPlanner
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
         // Push filters down past joins.
-        builder.addRuleInstance(new PushFilterRule());
+        builder.addRuleInstance(new PushFilterPastJoinRule());
 
         // This rule will also get run as part of medPluginRules, but
         // we need to do it now before pushing down projections, otherwise

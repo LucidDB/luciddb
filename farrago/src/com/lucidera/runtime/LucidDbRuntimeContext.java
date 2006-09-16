@@ -56,7 +56,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     private static final String LOG_FILE_LINE_DELIMITER = "\n";
     private static final String TIMESTAMP_FIELD_NAME = "LE_TIMESTAMP";
     private static final String EXCEPTION_FIELD_NAME = "LE_EXCEPTION";
-    private static final String POSITION_FIELD_NAME = "LE_COLUMN_ORDINAL";
+    private static final String POSITION_FIELD_NAME = "LE_TARGET_COLUMN";
     private static final String CONDITION_FIELD_NAME = "CONDITION";
 
     private static final Logger tracer = 
