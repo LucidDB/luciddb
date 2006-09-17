@@ -42,92 +42,39 @@ ExecStreamGovernor::ExecStreamGovernor(
         resourcesAvailableInit.nCachePages *
         (100 - knobSettings.cacheReservePercentage) / 100;
     resourcesAssigned.nCachePages = 0;
-
-    perGraphAllocation = computePerGraphAllocation();
 }
 
 ExecStreamGovernor::~ExecStreamGovernor()
 {
+    assert(resourceMap.empty());
 }
 
-bool ExecStreamGovernor::setResourceKnob(
-    ExecStreamResourceKnobs const &knob, ExecStreamResourceKnobType knobType)
+void ExecStreamGovernor::traceCachePageRequest(
+    uint assigned,
+    ExecStreamResourceRequirements const &reqt,
+    std::string const &name)
 {
-    StrictMutexGuard mutexGuard(mutex);
-
-    switch (knobType) {
-    case ExpectedConcurrentStatements:
-        knobSettings.expectedConcurrentStatements =
-            knob.expectedConcurrentStatements;
-        perGraphAllocation = computePerGraphAllocation();
-        FENNEL_TRACE(TRACE_FINE,
-            "Expected concurrent statements set to " <<
-            knobSettings.expectedConcurrentStatements <<
-            ". Per graph allocation is now " << perGraphAllocation <<
-            " cache pages.");
+    switch (reqt.optType) {
+    case EXEC_RESOURCE_ACCURATE:
+        FENNEL_TRACE(TRACE_FINER,
+            "Stream " << name << " assigned " << assigned <<
+            " pages based on accurate (min,opt) request of " << "(" <<
+            reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
-
-    case CacheReservePercentage:
-        // make sure we have enough unassigned pages to set aside the new
-        // reserve amount
-        double percent = (100 - knobSettings.cacheReservePercentage) / 100.0;
-        uint totalPagesAvailable = (uint)
-            ((resourcesAvailable.nCachePages + resourcesAssigned.nCachePages) /
-            percent);
-        uint numReserve =
-            totalPagesAvailable * knob.cacheReservePercentage / 100;
-        if (totalPagesAvailable - numReserve < resourcesAssigned.nCachePages) {
-            return false;
-        }
-        knobSettings.cacheReservePercentage = knob.cacheReservePercentage;
-        resourcesAvailable.nCachePages =
-            totalPagesAvailable - numReserve - resourcesAssigned.nCachePages;
-        perGraphAllocation = computePerGraphAllocation();
-        FENNEL_TRACE(TRACE_FINE,
-            "Cache reserve percentage set to " <<
-            knobSettings.cacheReservePercentage <<
-            ". Per graph allocation is now " << perGraphAllocation <<
-            " cache pages.");
+    case EXEC_RESOURCE_ESTIMATE:
+        FENNEL_TRACE(TRACE_FINER,
+            "Stream " << name << " assigned " << assigned <<
+            " pages based on estimated (min,opt) request of " << "(" <<
+            reqt.minReqt << "," << reqt.optReqt << ") pages");
         break;
+    case EXEC_RESOURCE_UNBOUNDED:
+        FENNEL_TRACE(TRACE_FINER,
+            "Stream " << name << " assigned " << assigned <<
+            " pages based on an unbounded opt request with " << 
+            reqt.minReqt << " min pages");
     }
-
-    return true;
 }
 
-bool ExecStreamGovernor::setResourceAvailability(
-    ExecStreamResourceQuantity const &available,
-    ExecStreamResourceType resourceType)
-{
-    StrictMutexGuard mutexGuard(mutex);
-
-    switch (resourceType) {
-    case CachePages:
-        {
-        uint pagesAvailable =
-            available.nCachePages *
-            (100 - knobSettings.cacheReservePercentage) / 100;
-        if (pagesAvailable < resourcesAssigned.nCachePages) {
-            return false;
-        }
-        resourcesAvailable.nCachePages =
-            (pagesAvailable - resourcesAssigned.nCachePages);
-        perGraphAllocation = computePerGraphAllocation();
-        FENNEL_TRACE(TRACE_FINE,
-            resourcesAvailable.nCachePages <<
-            " cache pages now available for assignment.  " <<
-            "Per graph allocation is now " << perGraphAllocation <<
-            " cache pages.");
-        break;
-        }
-
-    case Threads:
-        resourcesAvailable.nThreads = available.nThreads;
-        break;
-    }
-
-    return true;
-}
-    
 FENNEL_END_CPPFILE("$Id$");
 
 // End ExecStreamGovernor.cpp

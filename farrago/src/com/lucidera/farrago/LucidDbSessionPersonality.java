@@ -371,6 +371,12 @@ public class LucidDbSessionPersonality
         // call metadata queries on logical RelNodes.
         builder.addRuleInstance(new LhxAggRule());
 
+        // Handle trivial renames now so that they don't get
+        // implemented as calculators.
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelRenameRule());
+        }
+
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.
         builder.addGroupBegin();
@@ -379,8 +385,16 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(MergeCalcRule.instance);
         builder.addGroupEnd();
         
+        // First, try to use ReshapeRel for calcs before firing the other
+        // physical calc conversion rules.  Fire this rule before
+        // ReduceDecimalsRule so we avoid decimal reinterprets that can
+        // be handled by Reshape
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelReshapeRule());
+        }
+        
         // Replace the DECIMAL datatype with primitive ints.
-        builder.addRuleInstance(new ReduceDecimalsRule());
+        builder.addRuleInstance(new ReduceDecimalsRule());   
 
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
@@ -397,11 +411,16 @@ public class LucidDbSessionPersonality
             builder.addRuleInstance(new FennelValuesRule());
 
             // Requires CoerceInputsRule.
-            builder.addRuleInstance(FennelUnionRule.instance);
+            builder.addRuleInstance(FennelUnionRule.instance);         
         } else {
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());
         }
+        
+        // If FennelCartesianJoinRule swapped its join inputs and added a
+        // new CalcRel on top of the new cartesian join, we may need to
+        // merge the calc with other calcs
+        builder.addRuleInstance(MergeCalcRule.instance);
 
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions

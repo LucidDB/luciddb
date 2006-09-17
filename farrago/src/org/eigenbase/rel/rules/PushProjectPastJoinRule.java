@@ -140,7 +140,7 @@ public class PushProjectPastJoinRule
         // the first column unless there is only one column in the child;
         // this is necessary since Fennel doesn't handle 0-column projections
         if ((nLeftProject == 0) && (preserveLeft.size() == 0)) {
-            if (nFieldsLeft == 1) {
+            if (nFieldsLeft == 1 && preserveRight.size() == 0) {
                 return;
             }
             projRefs.set(0);
@@ -157,7 +157,7 @@ public class PushProjectPastJoinRule
                 preserveLeft,
                 joinRel.getLeft());
         if ((nRightProject == 0) && (preserveRight.size() == 0)) {
-            if (nFieldsRight == 1) {
+            if (nFieldsRight == 1 && preserveLeft.size() == 0) {
                 return;
             }
             projRefs.set(nFieldsLeft);

@@ -19,6 +19,9 @@
 0: jdbc:farrago:> insert into oj.t3 
 . . . . . . . . > values ('Mesmer'), ('Houdini'), ('Copperfield'), ('Mandrake');
 0: jdbc:farrago:> 
+0: jdbc:farrago:> create table oj.t4(i int not null primary key, j boolean unique);
+0: jdbc:farrago:> insert into oj.t4 values (1, null), (2, true), (3, false);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- force usage of Java calculator
@@ -375,6 +378,41 @@
 | Accounts  | Wilma  |
 +-----------+--------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- is null predicate
+0: jdbc:farrago:> select * from oj.t1 where j is null;
++----+----+
+| I  | J  |
++----+----+
+| 1  |    |
++----+----+
+0: jdbc:farrago:> select * from oj.t1 where not(j is null);
++----+----+
+| I  | J  |
++----+----+
+| 2  | 2  |
+| 3  | 3  |
++----+----+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- predicates on boolean
+0: jdbc:farrago:> select * from oj.t4 where j is true;
++----+-------+
+| I  |   J   |
++----+-------+
+| 2  | true  |
++----+-------+
+0: jdbc:farrago:> select * from oj.t4 where j is false;
++----+--------+
+| I  |   J    |
++----+--------+
+| 3  | false  |
++----+--------+
+0: jdbc:farrago:> select * from oj.t4 where j is unknown;
++----+----+
+| I  | J  |
++----+----+
+| 1  |    |
++----+----+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- csv format is nicest for query plans
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> 
@@ -386,64 +424,64 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno > 20;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno >= 20;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno < 20;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno <= 20;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno between 20 and 30;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 30 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno > 20 and deptno < 30;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1')', 30 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno < 20 or deptno between 30 and 40;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 20 }, { _ISO-8859-1'[', 30, _ISO-8859-1']', 40 }]])'
 0: jdbc:farrago:> 
@@ -452,17 +490,15 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }, { _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }, { _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20.00;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -471,36 +507,32 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1'+', null }]])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno >= 20.1 order by name;
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1'+', null }]])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20000000000000;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno>20000000000000;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
@@ -509,11 +541,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1'+', null }]])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select v from oj.t3 where v='Houdini                 xyz';
@@ -543,8 +573,8 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=20 and deptno=30;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
@@ -553,25 +583,23 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..1=[{inputs}], NAME=[$t0])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
-'            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
+'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'M'], expr#4=[=($t2, $t3)], NAME=[$t0], $condition=[$t4])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1'M']], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where empid=3;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t0])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 3, _ISO-8859-1']', 3 }]])'
@@ -622,11 +650,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select depts.name as dname,emps.name as ename
@@ -636,11 +662,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname
@@ -650,11 +674,9 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname
@@ -664,12 +686,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select emps.name as ename,depts.name as dname
@@ -679,12 +699,10 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], ENAME=[$t2], DNAME=[$t1])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'              FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select e.name as ename,e.age,depts.name as dname
@@ -692,8 +710,8 @@
 . . . . . . . . > (select name,age - 20 as age from emps) e
 . . . . . . . . > inner join depts on e.age = depts.deptno;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], proj#0..1=[{exprs}], DNAME=[$t3])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) ENAME, INTEGER AGE, VARCHAR(128) DNAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], expr#4=[IS NOT NULL($t3)], expr#5=[CAST($t3):INTEGER NOT NULL], NAME=[$t0], AGE=[$t3], DEPTNO=[$t5], $condition=[$t4])'
@@ -706,8 +724,8 @@
 . . . . . . . . > (select name,age - 20 as age from emps) e
 . . . . . . . . > left outer join depts on e.age = depts.deptno;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], proj#0..1=[{exprs}], DNAME=[$t3])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) ENAME, INTEGER AGE, VARCHAR(128) DNAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], NAME=[$t0], AGE=[$t3])'
@@ -727,14 +745,12 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    IteratorToFennelConverter'
-'      IterCalcRel(expr#0..3=[{inputs}], DNAME=[$t3], ENAME=[$t0])'
-'        FennelToIteratorConverter'
-'          FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
-'            IteratorToFennelConverter'
-'              IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], expr#4=[IS NOT NULL($t3)], expr#5=[CAST($t3):INTEGER NOT NULL], NAME=[$t0], AGE=[$t3], DEPTNO=[$t5], $condition=[$t4])'
-'                FennelToIteratorConverter'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
+'        IteratorToFennelConverter'
+'          IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], expr#4=[IS NOT NULL($t3)], expr#5=[CAST($t3):INTEGER NOT NULL], NAME=[$t0], AGE=[$t3], DEPTNO=[$t5], $condition=[$t4])'
+'            FennelToIteratorConverter'
+'              FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select *
@@ -746,12 +762,44 @@
 '    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$UNIQUE_KEY$J], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '      FtrsIndexScanRel(table=[[LOCALDB, OJ, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select * from oj.t1 where j is null;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$UNIQUE_KEY$J], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', null, _ISO-8859-1']', null }]])'
+0: jdbc:farrago:> explain plan for select * from oj.t1 where not(j is null);
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T1]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$UNIQUE_KEY$J], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1'+', null }]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select * from oj.t4 where j is true;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T4$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T4$SYS$UNIQUE_KEY$J], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', true, _ISO-8859-1']', true }]])'
+0: jdbc:farrago:> explain plan for select * from oj.t4 where j is false;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T4$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T4$SYS$UNIQUE_KEY$J], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', false, _ISO-8859-1']', false }]])'
+0: jdbc:farrago:> explain plan for select * from oj.t4 where j is unknown;
+'column0'
+'FennelToIteratorConverter'
+'  FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T4$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
+'    FtrsIndexSearchRel(table=[[LOCALDB, OJ, T4]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T4$SYS$UNIQUE_KEY$J], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', null, _ISO-8859-1']', null }]])'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- can only explain plan for dynamic parameter search
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno=?;
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], NAME=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'['], expr#2=[?0], expr#3=[_ISO-8859-1']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
@@ -778,8 +826,8 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from depts where deptno > ? and name='Hysteria';
 'column0'
-'IterCalcRel(expr#0..1=[{inputs}], expr#2=[_ISO-8859-1'Hysteria'], expr#3=[=($t1, $t2)], NAME=[$t1], $condition=[$t3])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'Hysteria']], outputRowType=[RecordType(VARCHAR(128) NAME)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'('], expr#2=[?0], expr#3=[_ISO-8859-1'+'], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[IS NOT NULL($t2)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t5], $condition=[$t6])'
@@ -918,8 +966,8 @@
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from ftrsemps where deptno = 2 and ename = 'ADAM';
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[_ISO-8859-1'ADAM'], expr#4=[=($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'ADAM']], outputRowType=[RecordType(INTEGER EMPNO, VARCHAR(40) ENAME, INTEGER DEPTNO)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[0]], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 2, _ISO-8859-1']', 2 }]])'
@@ -1442,18 +1490,16 @@
 0: jdbc:farrago:> -- histogram type aggregate
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select age, count(*) from person group by age order by age;
-+----------------------------------------------------------------------------------------------------------------+
-|                                                    column0                                                     |
-+----------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                      |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                          |
-|     IteratorToFennelConverter                                                                                  |
-|       IterCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])                                                   |
-|         FennelToIteratorConverter                                                                              |
-|           LcsIndexAggRel(groupCount=[1], agg#0=[COUNT()])                                                      |
-|             FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                    |
-|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]])  |
-+----------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------+
+|                                                  column0                                                   |
++------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                  |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                      |
+|     FennelRenameRel(fieldNames=[[AGE, EXPR$1]])                                                            |
+|       LcsIndexAggRel(groupCount=[1], agg#0=[COUNT()])                                                      |
+|         FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                    |
+|           LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]])  |
++------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- cardinality type aggregate
 0: jdbc:farrago:> explain plan for 
@@ -1461,8 +1507,8 @@
 +------------------------------------------------------------------------------------------------------------+
 |                                                  column0                                                   |
 +------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], EXPR$0=[$t0])                                                               |
-|   FennelToIteratorConverter                                                                                |
+| FennelToIteratorConverter                                                                                  |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                   |
 |     FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])                                                         |
 |       LcsIndexAggRel(groupCount=[1])                                                                       |
 |         FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                    |
@@ -1472,16 +1518,19 @@
 0: jdbc:farrago:> -- agg with index search
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select avg(age) from person where age > 30;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                           column0                                                                            |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                                            |
-|   FennelToIteratorConverter                                                                                                                                  |
-|     LcsIndexAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                         |
-|       FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                        |
-|         LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
-|           FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 30, _ISO-8859-1'+', null }]])                                                                           |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                               |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                          |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                           |
+|     IteratorToFennelConverter                                                                                                                                      |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                                               |
+|         FennelToIteratorConverter                                                                                                                                  |
+|           LcsIndexAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                         |
+|             FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                        |
+|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|                 FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 30, _ISO-8859-1'+', null }]])                                                                           |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- multikey
 0: jdbc:farrago:> explain plan for 
@@ -1489,8 +1538,8 @@
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                column0                                                                                 |
 +------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], A=[$t0])                                                                                                                                |
-|   FennelToIteratorConverter                                                                                                                                            |
+| FennelToIteratorConverter                                                                                                                                              |
+|   FennelRenameRel(fieldNames=[[A]])                                                                                                                                    |
 |     LcsIndexAggRel(groupCount=[1])                                                                                                                                     |
 |       FennelRenameRel(fieldNames=[[$f0, SRID, SegmentDesc, Segment]])                                                                                                  |
 |         LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, MULTIKEY]], index=[IMULTIKEY], projection=[[0, 2, 3, 4]], inputKeyProj=[[1, 2, 4, 5]], inputDirectiveProj=[[0, 3]])  |
@@ -1513,8 +1562,8 @@
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                              column0                                                                               |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0=[{inputs}], B=[$t0])                                                                                                                            |
-|   FennelToIteratorConverter                                                                                                                                        |
+| FennelToIteratorConverter                                                                                                                                          |
+|   FennelRenameRel(fieldNames=[[B]])                                                                                                                                |
 |     LhxAggRel(groupCount=[1])                                                                                                                                      |
 |       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                          |
 |         LcsNormalizerRel                                                                                                                                           |
@@ -1542,8 +1591,8 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                                              column0                                                                                                              |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], proj#0..1=[{exprs}])                                                                                                                                                                            |
-|   FennelToIteratorConverter                                                                                                                                                                                                       |
+| FennelToIteratorConverter                                                                                                                                                                                                         |
+|   FennelRenameRel(fieldNames=[[AGE, EXPR$1]])                                                                                                                                                                                     |
 |     LhxAggRel(groupCount=[1], agg#0=[COUNT()])                                                                                                                                                                                    |
 |       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                         |
 |         LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$PERSON$AGE]])                                                                                                 |
@@ -1558,8 +1607,8 @@
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                                   column0                                                                                   |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], A=[$t1], B=[$t0])                                                                                                                         |
-|   FennelToIteratorConverter                                                                                                                                                 |
+| FennelToIteratorConverter                                                                                                                                                   |
+|   FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER B)])                                                                                   |
 |     LhxAggRel(groupCount=[2])                                                                                                                                               |
 |       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                                              |
 |         LcsNormalizerRel                                                                                                                                                    |
@@ -1570,33 +1619,39 @@
 0: jdbc:farrago:> -- TODO: implement interposed calc when we have sort order propagation
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select avg(age+1) from person;
-+----------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                column0                                                                 |
-+----------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                      |
-|   FennelToIteratorConverter                                                                                                            |
-|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                     |
-|       IteratorToFennelConverter                                                                                                        |
-|         IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                    |
-|           FennelToIteratorConverter                                                                                                    |
-|             LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$PERSON$AGE]])  |
-+----------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                   column0                                                                    |
++----------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                    |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                     |
+|     IteratorToFennelConverter                                                                                                                |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                         |
+|         FennelToIteratorConverter                                                                                                            |
+|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                     |
+|             IteratorToFennelConverter                                                                                                        |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                    |
+|                 FennelToIteratorConverter                                                                                                    |
+|                   LcsRowScanRel(table=[[LOCALDB, LBM, PERSON]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$PERSON$AGE]])  |
++----------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select avg(age+1) from person where age = 30;
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                              column0                                                                               |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], EXPR$0=[$t3])                                                                  |
-|   FennelToIteratorConverter                                                                                                                                        |
-|     FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                 |
-|       IteratorToFennelConverter                                                                                                                                    |
-|         IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                |
-|           FennelToIteratorConverter                                                                                                                                |
-|             LcsNormalizerRel                                                                                                                                       |
-|               LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
-|                 FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])                                                                             |
-+--------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                 column0                                                                                  |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                |
+|   FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                                 |
+|     IteratorToFennelConverter                                                                                                                                            |
+|       IterCalcRel(expr#0..1=[{inputs}], expr#2=[/($t0, $t1)], expr#3=[CAST($t2):INTEGER], $f0=[$t3])                                                                     |
+|         FennelToIteratorConverter                                                                                                                                        |
+|           FennelAggRel(groupCount=[0], agg#0=[SUM(0)], agg#1=[COUNT(0)])                                                                                                 |
+|             IteratorToFennelConverter                                                                                                                                    |
+|               IterCalcRel(expr#0=[{inputs}], expr#1=[1], expr#2=[+($t0, $t1)], $f0=[$t2])                                                                                |
+|                 FennelToIteratorConverter                                                                                                                                |
+|                   LcsNormalizerRel                                                                                                                                       |
+|                     LcsIndexOnlyScanRel(table=[[LOCALDB, LBM, PERSON]], index=[AGE_IDX], projection=[[0, 1, 2, 3]], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]])  |
+|                       FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ----------------------------------------------------------
 0: jdbc:farrago:> -- Tests to exercise using startrid in bitmap index search
@@ -1779,8 +1834,8 @@
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from lbmdepts, lbmemps where lbmemps.deptno = 2;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[DEPTNO, EMPNO, ENAME, DEPTNO]])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMDEPTS$DEPTNO]])'
 '      LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'
@@ -1795,8 +1850,8 @@
 . . . . . . . . > select * from lbmdepts, 
 . . . . . . . . >               (select * from lbmemps where lbmemps.deptno = 2) view;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], proj#0..3=[{exprs}])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel(fieldNames=[[DEPTNO, EMPNO, ENAME, DEPTNO]])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      LcsRowScanRel(table=[[LOCALDB, LBM, LBMDEPTS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMDEPTS$DEPTNO]])'
 '      LcsRowScanRel(table=[[LOCALDB, LBM, LBMEMPS]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LBM$LBMEMPS$DEPTNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$EMPNO, SYS$CLUSTERED_INDEX$LBM$LBMEMPS$ENAME]])'

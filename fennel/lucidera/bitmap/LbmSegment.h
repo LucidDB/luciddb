@@ -31,7 +31,7 @@ FENNEL_BEGIN_NAMESPACE
  * starting rid value, a bitmap segment descriptor, and then the actual
  * bitmap segments.
  */
-class LbmSegment
+class LbmSegment : public boost::noncopyable
 {
 protected:
     /**

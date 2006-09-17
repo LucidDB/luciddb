@@ -43,6 +43,8 @@ public class SargRexAnalyzer
     //~ Instance fields --------------------------------------------------------
 
     private final SargFactory factory;
+    
+    private final boolean simpleMode;
 
     private final Map<SqlOperator, CallConvertlet> convertletMap;
 
@@ -69,9 +71,11 @@ public class SargRexAnalyzer
     //~ Constructors -----------------------------------------------------------
 
     SargRexAnalyzer(
-        SargFactory factory)
+        SargFactory factory,
+        boolean simpleMode)
     {
         this.factory = factory;
+        this.simpleMode = simpleMode;
 
         convertletMap = new HashMap<SqlOperator, CallConvertlet>();
 
@@ -80,6 +84,30 @@ public class SargRexAnalyzer
             new ComparisonConvertlet(
                 null,
                 SargStrictness.CLOSED));
+        
+        registerConvertlet(
+            SqlStdOperatorTable.isNullOperator,
+            new ComparisonConvertlet(
+                null,
+                SargStrictness.CLOSED));
+        
+        registerConvertlet(
+            SqlStdOperatorTable.isTrueOperator,
+            new ComparisonConvertlet(
+                null,
+                SargStrictness.CLOSED));
+        
+        registerConvertlet(
+            SqlStdOperatorTable.isFalseOperator,
+            new ComparisonConvertlet(
+                null,
+                SargStrictness.CLOSED));
+        
+        registerConvertlet(
+            SqlStdOperatorTable.isUnknownOperator,
+            new ComparisonConvertlet(
+                null,
+                SargStrictness.CLOSED));       
 
         registerConvertlet(
             SqlStdOperatorTable.lessThanOperator,
@@ -110,19 +138,19 @@ public class SargRexAnalyzer
             new BooleanConvertlet(
                 SargSetOperator.INTERSECTION));
 
-        registerConvertlet(
-            SqlStdOperatorTable.orOperator,
-            new BooleanConvertlet(
-                SargSetOperator.UNION));
+        if (!simpleMode) {
+            registerConvertlet(
+                SqlStdOperatorTable.orOperator,
+                new BooleanConvertlet(
+                    SargSetOperator.UNION));
+        }
 
         registerConvertlet(
             SqlStdOperatorTable.notOperator,
             new BooleanConvertlet(
                 SargSetOperator.COMPLEMENT));
 
-        // TODO: isNull, isTrue, isFalse, isUnknown, likeOperator, inOperator,
-        // inOperator and (via complement) notEquals, isNotNull,
-        // notLikeOperator
+        // TODO: likeOperator (via complement notLikeOperator)
 
         // TODO:  non-literal constants (e.g. CURRENT_USER)
     }
@@ -244,9 +272,31 @@ public class SargRexAnalyzer
         // are AND'ed together
         RelOptUtil.decompCF(rexPredicate, rexCFList);
 
+        // In simple mode, each input ref can only be referenced once, so
+        // keep a list of them.  We also only allow one non-point expression.
+        List<RexInputRef> boundRefList = new ArrayList<RexInputRef>();
+        boolean rangeFound = false;
+        
         for (RexNode rexPred : rexCFList) {
             sargBinding = analyze(rexPred);
             if (sargBinding != null) {
+                if (simpleMode) {
+                    RexInputRef inputRef = sargBinding.getInputRef();
+                    if (boundRefList.contains(inputRef)) {
+                        rexPostFilterList.add(rexPred);
+                    } else {
+                        boundRefList.add(inputRef);
+                    }
+                    SargIntervalSequence sargSeq =
+                        sargBinding.getExpr().evaluate();
+                    if (sargSeq.isRange()) {
+                        if (rangeFound) {
+                            rexPostFilterList.add(rexPred);
+                        } else {
+                            rangeFound = true;
+                        }
+                    }
+                }
                 sargBindingList.add(sargBinding);
                 sarg2RexMap.put(
                     sargBinding.getExpr(),
@@ -430,8 +480,21 @@ public class SargRexAnalyzer
 
         // implement CallConvertlet
         public void convert(RexCall call)
-        {
-            if (!variableSeen || (coordinate == null)) {
+        {          
+            if (!variableSeen) {
+                failed = true;
+            }
+            
+            SqlOperator op = call.getOperator();
+            if (op == SqlStdOperatorTable.isNullOperator ||
+                op == SqlStdOperatorTable.isUnknownOperator)
+            {
+                coordinate = factory.getRexBuilder().constantNull();
+            } else if (op == SqlStdOperatorTable.isTrueOperator) {
+                coordinate = factory.getRexBuilder().makeLiteral(true);
+            } else if (op == SqlStdOperatorTable.isFalseOperator) {
+                coordinate = factory.getRexBuilder().makeLiteral(false);
+            } else if (coordinate == null) {
                 failed = true;
             }
 
@@ -573,7 +636,11 @@ public class SargRexAnalyzer
 
         public Void visitDynamicParam(RexDynamicParam dynamicParam)
         {
-            visitCoordinate(dynamicParam);
+            if (simpleMode) {
+                failed = true;
+            } else {
+                visitCoordinate(dynamicParam);
+            }              
             return null;
         }
 

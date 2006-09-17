@@ -34,10 +34,9 @@ As background, please read the ExecStreamDesign first.
 
 <p>
 
-The resource governor decides how much resources to allocate to each stream
-graph, as well as how much to allocate to each execution stream within
-the graph.
-Criteria for deciding how to allocate resources include:
+The resource governor decides how much of each resource to allocate to each
+stream graph, as well as how much to allocate to each execution stream within
+the graph.  Criteria for deciding how to allocate resources include:
 
 <ul>
 
@@ -118,7 +117,7 @@ following values:
 
 <ul>
 
-<li>EXEC_RESOURCE_ACCURATE - The optimium requirement is accurate. 
+<li>EXEC_RESOURCE_ACCURATE - The optimum requirement is accurate. 
 The resource governor will not grant any additional resources beyond the
 specified optimum.
 This is the default that is used when the third parameter is not specified.
@@ -133,7 +132,7 @@ may not be trustworthy.
 In the case of an estimate setting, the resource governor
 will try to allocate extra resources above the optimum setting.
 In the case of an unbounded setting, the resource governor will allocate as
-much resources as possible to the stream.
+much as possible to the stream.
 In both cases, the amount to be allocated is subject to the amount available to
 the overall stream graph and the amount required by other streams in the
 graph.
@@ -281,8 +280,8 @@ that specified EXEC_RESOURCE_ACCURATE.
 For the streams with EXEC_RESOURCE_ESTIMATE settings, it will assign them
 their optimum and then divide
 up the excess using a slight variation of the formula shown above.
-The variations are the excess is the difference between the reference amount
-and the total optimum, and the computation excludes
+The variations are that the excess is the difference between the reference
+amount and the total optimum, and the computation excludes
 those streams with EXEC_RESOURCE_ACCURATE settings.
 
 <p>
@@ -293,7 +292,7 @@ governor has assigned an optimum requirement to those streams.
 </ol>
 
 The following diagram summarizes the policy.
-The topmost horizontal line with represents the range of possible
+The topmost horizontal line represents the range of possible
 reference amounts, relative to the total minimum and total optimum for a
 stream graph.
 Depending on where the reference amount falls, either one of the five cases
@@ -319,7 +318,7 @@ bandwidth.
 
 <li>Assign priorities to requests.
 
-<li>Take into consideration mutual exlcusivity within stream graphs.
+<li>Take into consideration mutual exclusivity within stream graphs.
 
 <li>Allow resources to be assigned incrementally rather than once upfront.
 

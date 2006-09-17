@@ -296,7 +296,7 @@ void ExecStreamUnitTestBase::verifyOutput(
 {
     // TODO:  assertions about output tuple
     
-    pResourceGovernor->requestResources(pGraph);
+    pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;
@@ -347,7 +347,7 @@ void ExecStreamUnitTestBase::verifyConstantOutput(
 {
     // TODO:  assertions about output tuple
     
-    pResourceGovernor->requestResources(pGraph);
+    pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;
@@ -399,7 +399,7 @@ void ExecStreamUnitTestBase::verifyBufferedOutput(
     expectedOutputAccessor.compute(outputTupleDesc);
     TupleData expectedTuple(outputTupleDesc);
     uint bufOffset = 0;
-    pResourceGovernor->requestResources(pGraph);
+    pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;

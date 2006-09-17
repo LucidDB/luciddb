@@ -19,6 +19,9 @@ create table oj.t3(v varchar(15) not null primary key);
 insert into oj.t3 
 values ('Mesmer'), ('Houdini'), ('Copperfield'), ('Mandrake');
 
+create table oj.t4(i int not null primary key, j boolean unique);
+insert into oj.t4 values (1, null), (2, true), (3, false);
+
 set schema 'sales';
 
 -- force usage of Java calculator
@@ -158,6 +161,15 @@ inner join
 on 
     e.age=depts.deptno
 order by 1,2;
+
+-- is null predicate
+select * from oj.t1 where j is null;
+select * from oj.t1 where not(j is null);
+
+-- predicates on boolean
+select * from oj.t4 where j is true;
+select * from oj.t4 where j is false;
+select * from oj.t4 where j is unknown;
 
 -- csv format is nicest for query plans
 !set outputformat csv
@@ -310,6 +322,13 @@ explain plan for
 select *
 from oj.t1 left outer join oj.t2
 on t1.j = t2.j;
+
+explain plan for select * from oj.t1 where j is null;
+explain plan for select * from oj.t1 where not(j is null);
+
+explain plan for select * from oj.t4 where j is true;
+explain plan for select * from oj.t4 where j is false;
+explain plan for select * from oj.t4 where j is unknown;
 
 -- can only explain plan for dynamic parameter search
 explain plan for

@@ -32,7 +32,7 @@ FENNEL_BEGIN_NAMESPACE
 /**
  * Reads RIDs from a single cluster
  */
-class LcsColumnReader
+class LcsColumnReader : public boost::noncopyable
 {
     /**
      * Parent cluster reader object
@@ -90,6 +90,11 @@ class LcsColumnReader
     LcsResidualColumnFilters filters;
 
     /**
+     * Projection for readerKeyData
+     */
+    TupleProjection allProj;
+
+    /**
      * Returns value from compressed batch
      */
     const PBuffer getCompressedValue();
@@ -104,15 +109,16 @@ class LcsColumnReader
      */
     const PBuffer getVariableValue();
 
+    // REVIEW jvs 5-Sept-2006:  need doxygen for bStrict
     /**
-     * locates the smallest value in the compressed batch
-     * that's greater or equal to a filter predicate's bound
+     * Locates the smallest value in the compressed batch
+     * that's greater or equal to a filter predicate's bound.
      *
      * @param filterPos index into filters.filterData
      *
      * @param highBound true iff called for upper bound data
      *
-     * @param readerKeyData TupleData used for comparision
+     * @param readerKeyData TupleData used for comparison
      *
      * @return index of the found entry
      */
@@ -120,7 +126,7 @@ class LcsColumnReader
         TupleData &readerKeyData);
 
     /**
-     * locates the range of entries in the compressed batch
+     * Locates the range of entries in the compressed batch
      * that passes a filter predicate.
      *
      * @param filterPos index into filters.filterData
@@ -129,13 +135,13 @@ class LcsColumnReader
      *
      * @param [out] nHiVal index of the upper bound
      *
-     * @param readerKeyData TupleData used for comparision
+     * @param readerKeyData TupleData used for comparison
      */
     void findBounds(uint filterPos, uint &nLoVal, uint &nHiVal,
         TupleData &readerKeyData);
 
     /**
-     * builds the contains bitmap for compressed batch.
+     * Builds the contains bitmap for compressed batch.
      */
     void buildContainsMap();
 
@@ -152,6 +158,7 @@ public:
         pScan = pScanInit;
         colOrd = colOrdInit;
         filters.hasResidualFilters = false;
+        allProj.push_back(0);
     }
 
     /**

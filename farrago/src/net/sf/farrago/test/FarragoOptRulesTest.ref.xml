@@ -176,7 +176,8 @@ IterCalcRel(expr#0..11=[{inputs}], DNAME=[$t11], ENAME=[$t1])
     FennelCalcRel(expr#0..11=[{inputs}], expr#12=[=($t2, $t10)], expr#13=[_ISO-8859-1'Propane'], expr#14=[=($t11, $t13)], expr#15=[AND($t12, $t14)], proj#0..11=[{exprs}], $condition=[$t15])
       FennelCartesianProductRel(leftouterjoin=[false])
         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])
-        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])
+        FennelBufferRel(inMemory=[false], multiPass=[true])
+          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])
 ]]>
         </Resource>
     </TestCase>

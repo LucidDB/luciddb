@@ -148,8 +148,8 @@ Error: DDL validation error near line 2, column 27: Reference to unknown table "
 . . . . . . . . > select * from t11 tablesample substitute('SampleV')
 . . . . . . . . > where j < 2;
 'column0'
-'IterCalcRel(expr#0..2=[{inputs}], expr#3=[2], expr#4=[<($t1, $t3)], proj#0..2=[{exprs}], $condition=[$t4])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[2]], outputRowType=[RecordType(INTEGER I, INTEGER J, INTEGER K)])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SAMPLE, S1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$S1$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 1, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 

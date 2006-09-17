@@ -345,7 +345,7 @@ void FlatFileExecStreamTest::verifyOutput(
     // TODO:  assertions about output tuple, or better yet, use proper tuple
     // access
     
-    pResourceGovernor->requestResources(pGraph);
+    pResourceGovernor->requestResources(*pGraph);
     pGraph->open();
     pScheduler->start();
     uint nRows = 0;

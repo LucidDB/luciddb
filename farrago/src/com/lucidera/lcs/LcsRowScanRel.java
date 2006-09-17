@@ -24,14 +24,12 @@ import com.lucidera.farrago.*;
 import com.lucidera.query.*;
 
 import java.util.*;
-import java.util.List;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 
 import openjava.ptree.Literal;
 
@@ -39,8 +37,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.sarg.*;
 import org.eigenbase.sql.type.*;
 
 
@@ -89,11 +85,14 @@ public class LcsRowScanRel
      * Creates a new LcsRowScanRel object.
      *
      * @param cluster RelOptCluster for this rel
+     * @param children children inputs into the row scan
      * @param lcsTable table being scanned
      * @param clusteredIndexes clusters to use for table access
      * @param connection connection
      * @param projectedColumns array of 0-based table-relative column ordinals,
      * or null to project all columns
+     * @param isFullScan true if doing a full scan of the table
+     * @param hasExtraFilter true if the scan has residual filters
      */
     public LcsRowScanRel(
         RelOptCluster cluster,
@@ -374,24 +373,23 @@ public class LcsRowScanRel
     /**
      * Gets the column referenced by a FieldAccess relative to this scan.
      *
-     * @param columnOrdinal 0-based ordinal of an output field of the scan
+     * @param fieldOrdinal 0-based ordinal of an output field of the scan
      *
      * @return underlying column if the the column is a real one; otherwise,
      * null is returned (e.g., if the column corresponds to the rid column)
      */
-    public FemAbstractColumn getColumnForFieldAccess(int columnOrdinal)
+    public FemAbstractColumn getColumnForFieldAccess(int fieldOrdinal)
     {
-        // TODO zfong 5/29/06 - The code below does not account for UDTs.
-        // columnOrdinal represents a field ordinal and needs to be mapped
-        // back to its unflattened column ordinal.
-        assert columnOrdinal >= 0;
+        assert fieldOrdinal >= 0;
         if (projectedColumns != null) {
-            columnOrdinal = projectedColumns[columnOrdinal].intValue();
+            fieldOrdinal = projectedColumns[fieldOrdinal].intValue();
         }
+
         if (LucidDbOperatorTable.ldbInstance().isSpecialColumnId(
-                columnOrdinal)) {
+                fieldOrdinal)) {
             return null;
         } else {
+            int columnOrdinal = getIndexGuide().unFlattenOrdinal(fieldOrdinal);
             return
                 (FemAbstractColumn) lcsTable.getCwmColumnSet().getFeature().get(
                     columnOrdinal);

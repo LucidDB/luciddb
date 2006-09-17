@@ -31,7 +31,6 @@ import net.sf.farrago.session.*;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.rules.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.hep.*;
@@ -212,7 +211,7 @@ public class FarragoDefaultHeuristicPlanner
         if (fennelEnabled) {
             builder.addRuleInstance(new FennelRenameRule());
         }
-
+        
         // Convert remaining filters and projects to logical calculators,
         // merging adjacent ones.  Calculator expressions containing
         // multisets and windowed aggs may yield new projections,
@@ -235,13 +234,21 @@ public class FarragoDefaultHeuristicPlanner
         // Eliminate redundant SELECT DISTINCT.
         builder.addRuleInstance(new RemoveDistinctRule());
 
+        // First, try to use ReshapeRel for calcs before firing the other
+        // physical calc conversion rules.  Fire this rule before
+        // ReduceDecimalsRule so we avoid decimal reinterprets that can
+        // be handled by Reshape
+        if (fennelEnabled) {
+            builder.addRuleInstance(new FennelReshapeRule());
+        }
+
         // Replace the DECIMAL datatype with primitive ints.
         builder.addRuleInstance(new ReduceDecimalsRule());
 
         // Implement DISTINCT via tree-sort instead of letting it
         // be handled via normal sort plus agg.
-        builder.addRuleInstance(new FennelDistinctSortRule());
-
+        builder.addRuleInstance(new FennelDistinctSortRule());       
+        
         // The rest of these are all physical implementation rules
         // which are safe to apply simultaneously.
         builder.addGroupBegin();
@@ -262,7 +269,7 @@ public class FarragoDefaultHeuristicPlanner
             builder.addRuleInstance(
                 new IterRules.HomogeneousUnionToIteratorRule());
         }
-
+        
         if (calcVM.equals(CalcVirtualMachineEnum.CALCVM_FENNEL)) {
             // use Fennel for calculating expressions
             assert (fennelEnabled);

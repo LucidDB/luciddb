@@ -38,8 +38,8 @@ FENNEL_BEGIN_NAMESPACE
  * Resource knobs available
  */
 enum ExecStreamResourceKnobType {
-    ExpectedConcurrentStatements,
-    CacheReservePercentage
+    EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS,
+    EXEC_KNOB_CACHE_RESERVE_PERCENTAGE
 };
 
 /**
@@ -56,13 +56,25 @@ struct ExecStreamResourceKnobs
     /**
      * Percentage of cache pages to keep in reserve
      */
-    int cacheReservePercentage;
+    uint cacheReservePercentage;
 };
 
 /**
  * Resource types
  */
-enum ExecStreamResourceType { Threads, CachePages };
+enum ExecStreamResourceType {
+    EXEC_RESOURCE_THREADS,
+    EXEC_RESOURCE_CACHE_PAGES
+};
+
+/**
+ * Structure used to track the resource requirements for a single stream
+ */
+struct ExecStreamResourceRequirements {
+    uint minReqt;
+    uint optReqt;
+    ExecStreamResourceSettingType optType;
+};
 
 /**
  * ExecStreamGovernor defines an abstract base for determining
@@ -83,11 +95,6 @@ protected:
      * Current resource knob settings
      */
     ExecStreamResourceKnobs knobSettings;
-
-    /**
-     * Portion of resources that can be allocated to an exec stream graph
-     */
-    uint perGraphAllocation;
 
     /**
      * Keeps track of the total resources that are currently available for
@@ -112,10 +119,8 @@ protected:
     StrictMutex mutex;
 
     /**
-     * Initializes the resource governor object.  Initializes
-     * current resource availability. Computes the perGraphAllocation
-     * based on current resource availability and current resource
-     * knob settings.
+     * Initializes the resource governor object, including initializing
+     * current resource availability.
      *
      * @param knobSettings initial knob settings
      * @param resourcesAvailable initial available resources
@@ -129,7 +134,17 @@ protected:
         SharedTraceTarget pTraceTarget,
         std::string name);
 
-    inline uint computePerGraphAllocation();
+    /**
+     * Traces the number of pages assigned to a stream, as well as its
+     * minimum and optimum requirements
+     *
+     * @param assigned number of cache pages assigned to the stream
+     * @param reqt resource requirements for the stream
+     * @param name name of the stream
+     */
+    void traceCachePageRequest(
+        uint assigned, ExecStreamResourceRequirements const &reqt,
+        std::string const &name);
 
 public:
     virtual ~ExecStreamGovernor();
@@ -137,19 +152,19 @@ public:
     /**
      * Informs the resource governor of a new knob setting.  Called by
      * ALTER SYSTEM SET commands that dynamically modify parameters
-     * controlling resource allocation.  Recomputes perGraphAllocation.
+     * controlling resource allocation.
      *
      * @param knob new resource knob setting
      * @param knobType indicates which knob setting to change
      *
-     * @return True if possible to apply new setting; false if
+     * @return true if possible to apply new setting; false if
      * the setting is below current in-use threshholds.  E.g., if modifying
      * cacheReservePercentage, the new number of reserved pages must allow
      * for pages already assigned.
      */
-     bool setResourceKnob(
-         ExecStreamResourceKnobs const &knob,
-         ExecStreamResourceKnobType knobType);
+    virtual bool setResourceKnob(
+        ExecStreamResourceKnobs const &knob,
+        ExecStreamResourceKnobType knobType) = 0;
 
     /**
      * Informs the resource governor of a new resource availablity.
@@ -159,41 +174,33 @@ public:
      * @param available amount of resources now available
      * @param resourceType type of resource to be set
      *
-     * @return True if possible to apply new settings; false if
+     * @return true if possible to apply new settings; false if
      * the setting is below current in-use threshholds.  E.g.,
      * if modifying cachePagesInit, the value needs to be >= current
      * number of cache pages that have been assigned.
      */
-    bool setResourceAvailability(
+    virtual bool setResourceAvailability(
         ExecStreamResourceQuantity const &available,
-        ExecStreamResourceType resourceType);
+        ExecStreamResourceType resourceType) = 0;
 
     /**
      * Requests resources for an exec stream graph and assigns
-     * resources to each exec stream in the graph.  If the minimum
-     * resource requirements for any exec stream cannot be met,
-     * an exception is thrown.
+     * resources to each exec stream in the graph.
      *
-     * @param pExecStreamGraph the exec stream graph for resources are being
-     * requested
+     * @param graph the exec stream graph for which resources are
+     * being requested
      */
-    virtual void requestResources(SharedExecStreamGraph pExecStreamGraph) = 0;
+    virtual void requestResources(ExecStreamGraph &graph) = 0;
 
     /**
      * Returns to the available resource pool resources that have been
      * assigned to an exec stream graph.
      *
-     * @param pExecStreamGraph the exec stream graph that is returning its
+     * @param graph the exec stream graph that is returning its
      * resources
      */
-    virtual void returnResources(ExecStreamGraph *pExecStreamGraph) = 0;
+    virtual void returnResources(ExecStreamGraph &graph) = 0;
 };
-
-inline uint ExecStreamGovernor::computePerGraphAllocation()
-{
-    return (resourcesAvailable.nCachePages + resourcesAssigned.nCachePages) /
-        knobSettings.expectedConcurrentStatements;
-}
 
 FENNEL_END_NAMESPACE
 

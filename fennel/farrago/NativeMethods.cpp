@@ -196,7 +196,7 @@ Java_net_sf_farrago_fennel_FennelStorage_tupleStreamGraphOpen(
         streamGraphHandle.javaRuntimeContext = pEnv->NewGlobalRef(hJavaStreamMap);
         streamGraphHandle.pExecStreamGraph->setTxn(txnHandle.pTxn);
         txnHandle.pResourceGovernor->requestResources(
-            streamGraphHandle.pExecStreamGraph);
+            *(streamGraphHandle.pExecStreamGraph));
         streamGraphHandle.pExecStreamGraph->open();
         if (streamGraphHandle.pScheduler.unique()) {
             streamGraphHandle.pScheduler->start();

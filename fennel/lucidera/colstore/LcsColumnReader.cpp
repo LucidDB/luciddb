@@ -45,12 +45,13 @@ void LcsColumnReader::sync()
         bitVecPtr(pBatch->nRow, iV, width, origin, (PBuffer) pBit);
     
         uint totWidth;
-        if (iV == 1)
+        if (iV == 1) {
             totWidth = width[0];
-        else if (iV == 2)
+        } else if (iV == 2) {
             totWidth = width[0] + width[1];
-        else 
+        } else {
             totWidth = 0;
+        }
 
         // hack to do one switch statement based on both width arguments
         // The switch value is unique for any of the following combos of
@@ -230,13 +231,17 @@ bool LcsColumnReader::applyFilters(
 uint LcsColumnReader::findVal(
     uint filterPos, bool highBound, bool bStrict, TupleData &readerKeyData)
 {
+    // REVIEW jvs 5-Sept-2006:  It would be nice to use std::lower_bound
+    // and std::upper_bound instead of reimplementing binary search.
+    // This is low priority because it takes a bit of messing around
+    // to get iterators and functors in a form STL likes, and because
+    // (I'm assuming) the code below was taken straight from Broadbase,
+    // where it was already heavily exercised.
+    
     uint iLo = 0, iHi = getBatchValCount(), iResult;
     int cmp = 0;
     TupleProjection &boundProj = highBound ?
         filters.upperBoundProj : filters.lowerBoundProj;
-    TupleProjection allProj;
-
-    allProj.push_back(0);
 
     // If nVals == 0, then iLo == iHi == 0, and we return 0.
     while (iLo < iHi) {
@@ -251,16 +256,13 @@ uint LcsColumnReader::findVal(
         if (cmp == 0) {
             if (bStrict && !highBound) {
                 iResult = iMid + 1;
-            }
-            else {
+            } else {
                 iResult = iMid;
             }
             return iResult;
-        }
-        else if (cmp > 0) {       
+        } else if (cmp > 0) {       
             iHi = iMid;    
-        }      
-        else {
+        } else {
             iLo = iMid + 1;    
         }
     }
@@ -269,8 +271,7 @@ uint LcsColumnReader::findVal(
     assert(iLo == iHi);
     if (cmp < 0) {                  // key < val[iMid]
         iResult = iHi;
-    }
-    else {
+    } else {
         // val[iMid] < key, so key < val[iMid+1]
         iResult = iLo;
     }
@@ -306,7 +307,7 @@ void LcsColumnReader::buildContainsMap()
 
         findBounds(i, nLoVal, nHiVal, filters.readerKeyData);
 
-        for (uint b = nLoVal; b < nVals && b < nHiVal; b++) {
+        for (uint b = nLoVal; b < nHiVal; b++) {
             filters.filteringBitmap.set(b);
         }
     }

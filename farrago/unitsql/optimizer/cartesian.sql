@@ -36,3 +36,52 @@ from emps,(select deptno+1 as dnoplus from depts) d;
 
 explain plan for
 select depts.name from emps left outer join depts on TRUE;
+
+-- try lcs tables; lcs costing doesn't have a weird fudge factor so there will
+-- be cases where it doesn't make sense to buffer
+create schema lcscartesian;
+set schema 'lcscartesian';
+alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
+create table lcsemps(
+    empno int, name varchar(12), deptno int, gender char(1), city varchar(12),
+    empid int, age int);
+insert into lcsemps
+    select empno, name, deptno, gender, city, empid, age from sales.emps;
+create table lcsdepts(deptno int, name varchar(12));
+insert into lcsdepts select * from sales.depts;
+
+!set outputformat table
+-- should not use buffering
+select * from lcsemps e, lcsdepts d order by 1, 2, 3, 4, 5, 6, 7, 8, 9;
+select e.name, d.deptno from lcsemps e, lcsdepts d order by 1, 2;
+
+-- should use buffering
+select e.name, d.*
+    from lcsemps e, (select min(deptno) from lcsdepts) d order by 1;
+
+-- should still use buffering, swapping the join operands
+select e.name, d.*
+    from (select min(deptno) from lcsdepts) d, lcsemps e order by 1;
+select d.*, e.name
+    from (select min(deptno) from lcsdepts) d, lcsemps e order by 2;
+
+!set outputformat csv
+-- the following 2 should not use buffering
+explain plan for
+select * from lcsemps e, lcsdepts d order by 1, 2, 3, 4, 5, 6, 7, 8, 9;
+
+explain plan for
+select e.name, d.deptno from lcsemps e, lcsdepts d order by 1, 2;
+
+-- should use buffering
+explain plan for
+select e.name, d.*
+    from lcsemps e, (select min(deptno) from lcsdepts) d order by 1;
+
+-- should still use buffering, swapping the join operands
+explain plan for
+select e.name, d.*
+    from (select min(deptno) from lcsdepts) d, lcsemps e order by 1;
+explain plan for
+select d.*, e.name
+    from (select min(deptno) from lcsdepts) d, lcsemps e order by 2;

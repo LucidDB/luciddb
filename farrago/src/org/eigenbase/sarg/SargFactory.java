@@ -118,7 +118,19 @@ public class SargFactory
      */
     public SargRexAnalyzer newRexAnalyzer()
     {
-        return new SargRexAnalyzer(this);
+        return new SargRexAnalyzer(this, false);
+    }
+    
+    /**
+     * @param simpleMode if true, the analyzer restrictes the types of
+     * predicates it allows; only one predicate is allowed per RexInputRef,
+     * and only one range predicate is allowed
+     * 
+     * @return new analyzer for rex expressions
+     */
+    public SargRexAnalyzer newRexAnalyzer(boolean simpleMode)
+    {
+        return new SargRexAnalyzer(this, simpleMode);
     }
 
     /**

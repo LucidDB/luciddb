@@ -752,7 +752,7 @@ public class FarragoPreparingStmt
         return null;
     }
 
-    private void finalizeRelMetadata(RelNode rootRel)
+    public void finalizeRelMetadata(RelNode rootRel)
     {
         if (relMetadataProvider == null) {
             // already finalized
