@@ -484,7 +484,7 @@ void ExecStreamGraphImpl::closeImpl()
             sortedStreams.rend(),
             boost::bind(&ClosableObject::close,_1));
     }
-    getResourceGovernor()->returnResources(this);
+    getResourceGovernor()->returnResources(*this);
     pTxn.reset();
 
     // release any scratch memory

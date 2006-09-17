@@ -39,9 +39,9 @@ enum LbmPendingProduceType {
  * Structure that associates a scratch buffer with each bitmap entry under
  * construction
  */
-struct bitmapEntry
+struct LbmEntryInfo
 {
-    LbmEntry bitmap;
+    SharedLbmEntry pBitmap;
 
     /**
      * pointer to buffer allocated to this entry; NULL if not allocated yet
@@ -192,7 +192,7 @@ class LbmGeneratorExecStream : public BTreeExecStream, LcsRowScanBaseExecStream
     /**
      * Table of bitmap entries under construction
      */
-    std::vector<bitmapEntry> bitmapTable;
+    std::vector<LbmEntryInfo> bitmapTable;
 
     /**
      * Number of entries in the bitmap table

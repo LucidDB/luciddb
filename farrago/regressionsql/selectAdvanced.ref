@@ -350,14 +350,15 @@ Messages:
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
-'      FennelCalcRel(expr#0..1=[{inputs}], $f0=[$t1])'
+'      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT $f0)])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
-'          FennelRenameRel(fieldNames=[[C]])'
-'            FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
-'              FennelSortRel(key=[[0]], discardDuplicates=[true])'
-'                FennelRenameRel(fieldNames=[[$f0]])'
-'                  FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
+'          FennelBufferRel(inMemory=[false], multiPass=[true])'
+'            FennelRenameRel(fieldNames=[[C]])'
+'              FennelAggRel(groupCount=[0], agg#0=[COUNT(0)])'
+'                FennelSortRel(key=[[0]], discardDuplicates=[true])'
+'                  FennelRenameRel(fieldNames=[[$f0]])'
+'                    FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 

@@ -26,13 +26,10 @@ import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import openjava.ptree.Literal;
@@ -41,8 +38,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
-
 
 /**
  * FtrsIndexScanRel is the relational expression corresponding to a scan via a
@@ -75,6 +70,8 @@ class FtrsIndexScanRel
      */
     final Integer [] projectedColumns;
     final boolean isOrderPreserving;
+    
+    private FtrsIndexGuide indexGuide;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -113,19 +110,31 @@ class FtrsIndexScanRel
 
     //~ Methods ----------------------------------------------------------------
 
+    public FtrsIndexGuide getIndexGuide()
+    {
+        if (indexGuide == null) {
+            indexGuide =
+                new FtrsIndexGuide(
+                    ftrsTable.getPreparingStmt().getFarragoTypeFactory(),
+                    ftrsTable.getCwmColumnSet());
+        }
+        return indexGuide;
+    }
+    
     /**
      * Gets the column referenced by a FieldAccess relative to this scan.
      *
-     * @param columnOrdinal 0-based ordinal of an output field of the scan
+     * @param fieldOrdinal 0-based ordinal of an output field of the scan
      *
      * @return underlying column
      */
-    public FemAbstractColumn getColumnForFieldAccess(int columnOrdinal)
+    public FemAbstractColumn getColumnForFieldAccess(int fieldOrdinal)
     {
-        assert columnOrdinal >= 0;
+        assert fieldOrdinal >= 0;
         if (projectedColumns != null) {
-            columnOrdinal = projectedColumns[columnOrdinal].intValue();
+            fieldOrdinal = projectedColumns[fieldOrdinal].intValue();
         }
+        int columnOrdinal = getIndexGuide().unFlattenOrdinal(fieldOrdinal);
         return
             (FemAbstractColumn) ftrsTable.getCwmColumnSet().getFeature().get(
                 columnOrdinal);

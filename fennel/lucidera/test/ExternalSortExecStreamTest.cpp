@@ -78,11 +78,13 @@ void ExternalSortExecStreamTest::testCaseSetUp()
     // the larger datasets
     ExecStreamResourceQuantity quantity;
     quantity.nCachePages = 10;
-    pResourceGovernor->setResourceAvailability(quantity, CachePages);
+    pResourceGovernor->setResourceAvailability(
+        quantity, EXEC_RESOURCE_CACHE_PAGES);
 
     ExecStreamResourceKnobs knob;
     knob.expectedConcurrentStatements = 1;
-    pResourceGovernor->setResourceKnob(knob, ExpectedConcurrentStatements);
+    pResourceGovernor->setResourceKnob(
+        knob, EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS);
 }
 
 void ExternalSortExecStreamTest::testRandomInMem()

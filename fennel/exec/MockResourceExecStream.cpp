@@ -92,6 +92,13 @@ ExecStreamResult MockResourceExecStream::execute(
 
     if (numToAllocate == expected.nCachePages) {
         for (uint i = 0; i < numToAllocate; i++) {
+
+            // REVIEW jvs 8-Sept--2006: The NULL_PAGE_ID case will never
+            // happen, because allocatePage asserts; you probably meant to use
+            // tryAllocatePage instead.  But the case must never actually be
+            // tested anyway, because on lu/dev after I changed the cache back
+            // to retry forever on lockScratchPage, no test hangs.
+            
             PageId page = scratchLock.allocatePage();
             // if we can't allocate a page, break out of the loop; the stream
             // will return 0 instead of 1

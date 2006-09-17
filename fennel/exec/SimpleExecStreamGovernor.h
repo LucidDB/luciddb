@@ -40,15 +40,27 @@ FENNEL_BEGIN_NAMESPACE
 class SimpleExecStreamGovernor : public ExecStreamGovernor
 {
     /**
-     * Assigns each stream the specified number of cache pages
+     * Portion of resources that can be allocated to an exec stream graph
+     */
+    uint perGraphAllocation;
+
+    /**
+     * Computes the per graph allocation
+     */
+    inline uint computePerGraphAllocation();
+
+    /**
+     * Assigns each stream either its minimum or optimum resource requirements
      *
      * @param streams streams to be assigned resources
-     * @param nCachePages array containing number of cache pages to assign
-     * each stream
+     * @param reqts resource requirements for each stream
+     * @param assignMin if true, assign each stream its minimum; otherwise,
+     * assign each stream its optimum
      */
     void assignCachePages(
         std::vector<SharedExecStream> &streams,
-        boost::scoped_array<uint> const &nCachePages);
+        boost::scoped_array<ExecStreamResourceRequirements> const &reqts,
+        bool assignMin);
 
     /**
      * Distributes cache pages across streams according to the following
@@ -66,9 +78,7 @@ class SimpleExecStreamGovernor : public ExecStreamGovernor
      * </code></pre>
      *
      * @param streams streams to be assigned resources
-     * @param minReqts min cache pages required by each stream
-     * @param optReqts opt cache pages required by each stream
-     * @param optTypes optimum type setting of each stream
+     * @param reqts resource requirements for each stream
      * @param sqrtDiffOptMin sqrt of the difference between the opt and min
      * for each stream
      * @param totalSqrtDiffs sum of the sqrt of the differences between the
@@ -82,9 +92,7 @@ class SimpleExecStreamGovernor : public ExecStreamGovernor
      */
     uint distributeCachePages(
         std::vector<SharedExecStream> &streams,
-        boost::scoped_array<uint> const &minReqts,
-        boost::scoped_array<uint> const &optReqts,
-        boost::scoped_array<ExecStreamResourceSettingType> const &optTypes,
+        boost::scoped_array<ExecStreamResourceRequirements> const &reqts,
         boost::scoped_array<double> const &sqrtDiffOptMin,
         double totalSqrtDiffs, 
         uint excessAvailable, bool assignOpt);
@@ -99,9 +107,21 @@ public:
     virtual ~SimpleExecStreamGovernor();
 
     // implement the ExecStreamGovernor interface
-    virtual void requestResources(SharedExecStreamGraph pExecStreamGraph);
-    virtual void returnResources(ExecStreamGraph *pExecStreamGraph);
+    virtual bool setResourceKnob(
+        ExecStreamResourceKnobs const &knob,
+        ExecStreamResourceKnobType knobType);
+    virtual bool setResourceAvailability(
+        ExecStreamResourceQuantity const &available,
+        ExecStreamResourceType resourceType);
+    virtual void requestResources(ExecStreamGraph &graph);
+    virtual void returnResources(ExecStreamGraph &graph);
 };
+
+inline uint SimpleExecStreamGovernor::computePerGraphAllocation()
+{
+    return (resourcesAvailable.nCachePages + resourcesAssigned.nCachePages) /
+        knobSettings.expectedConcurrentStatements;
+}
 
 FENNEL_END_NAMESPACE
 

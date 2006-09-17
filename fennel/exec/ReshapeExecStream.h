@@ -102,9 +102,19 @@ class ReshapeExecStream : public ConduitExecStream
     TupleData inputCompareData;
 
     /**
+     * Buffer used to store comparison tuple passed in as a parameter
+     */
+    boost::shared_array<FixedBuffer> compTupleBuffer;
+
+    /**
      * Tuple descriptor for the comparison tuple
      */
     TupleDescriptor compTupleDesc;
+
+    /**
+     * Tuple projection used in the case when the comparison is non-equality
+     */
+    TupleProjection lastKey;
 
     /**
      * Tuple projection accessor for the output tuple

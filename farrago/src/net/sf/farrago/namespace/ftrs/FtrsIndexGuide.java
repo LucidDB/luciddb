@@ -31,7 +31,6 @@ import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.fennel.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
@@ -488,6 +487,26 @@ class FtrsIndexGuide
         int i = flatteningMap[columnOrdinal];
         assert (i != -1);
         return i;
+    }
+    
+    /**
+     * Returns the unflattened column ordinal corresponding to a flattened
+     * field ordinal
+     * 
+     * @param fieldOrdinal flattened ordinal
+     * 
+     * @return unflattened ordinal
+     */
+    public int unFlattenOrdinal(int fieldOrdinal)
+    {
+        int columnOrdinal = Arrays.binarySearch(flatteningMap, fieldOrdinal);
+        if (columnOrdinal >= 0) {
+            return columnOrdinal;
+        } else {
+            // When an inexact match is found, binarySearch returns
+            // (-(insertion point) - 1).  We want (insertion point) - 1.
+            return -(columnOrdinal + 1) - 1;
+        }
     }
 }
 

@@ -101,31 +101,12 @@ public class SwapJoinRule
             newJoin.setVariablesStopped(
                 new HashSet<String>(join.getVariablesStopped()));
         }
-        final RelDataTypeField [] newJoinFields =
-            newJoin.getRowType().getFields();
-        final RexNode [] exps = new RexNode[newJoinFields.length];
-        for (int i = 0; i < exps.length; i++) {
-            int source = (i + rightRowType.getFieldList().size()) % exps.length;
-            exps[i] =
-                rexBuilder.makeInputRef(
-                    newJoinFields[source].getType(),
-                    source);
-        }
-        final String [] fieldNames = getFieldNames(join.getRowType());
+        final RexNode[] exps =
+            RelOptUtil.createSwappedJoinExprs(newJoin, join, true);
         return CalcRel.createProject(
                 newJoin,
                 exps,
-                fieldNames);
-    }
-
-    private static String [] getFieldNames(RelDataType rowType)
-    {
-        final RelDataTypeField [] fields = rowType.getFields();
-        final String [] fieldNames = new String[fields.length];
-        for (int i = 0; i < fields.length; i++) {
-            fieldNames[i] = fields[i].getName();
-        }
-        return fieldNames;
+                RelOptUtil.getFieldNames(join.getRowType()));
     }
 
     public void onMatch(final RelOptRuleCall call)
@@ -142,27 +123,15 @@ public class SwapJoinRule
             // b0,b1,a0,a1,a2 from (select a0,a1,a2,b0,b1 from b join a)' is the
             // same as 'b join a'. If we didn't do this, the swap join rule
             // would fire on the new join, ad infinitum.
-            final RexBuilder rexBuilder = swapped.getCluster().getRexBuilder();
-            final RelDataType newJoinRowType = newJoin.getRowType();
-            final RelDataTypeField [] newJoinFields =
-                newJoinRowType.getFields();
-            final RexNode [] exps = new RexNode[newJoinFields.length];
-            final String [] fieldNames = new String[newJoinFields.length];
-            for (int i = 0; i < exps.length; i++) {
-                int source =
-                    (i + join.getLeft().getRowType().getFieldList().size())
-                    % exps.length;
-                final RelDataTypeField newJoinField = newJoinFields[i];
-                exps[i] =
-                    rexBuilder.makeInputRef(
-                        newJoinField.getType(),
-                        source);
-                fieldNames[i] = newJoinField.getName();
-            }
+            final RexNode [] exps =
+                RelOptUtil.createSwappedJoinExprs(
+                    newJoin,
+                    join,
+                    false);
             RelNode project = CalcRel.createProject(
                     swapped,
                     exps,
-                    fieldNames);
+                    RelOptUtil.getFieldNames(newJoin.getRowType()));
 
             // Make sure extra traits are carried over from the original rel
             project = RelOptRule.convert(

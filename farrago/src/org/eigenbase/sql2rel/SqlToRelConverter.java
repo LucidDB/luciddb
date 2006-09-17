@@ -1656,6 +1656,7 @@ public class SqlToRelConverter
         final RelDataType targetRowType = targetTable.getRowType();
         int expCount = targetRowType.getFieldCount();
         RexNode [] sourceExps = new RexNode[expCount];
+        String [] fieldNames = new String[expCount];
 
         // Walk the name list and place the associated value in the
         // expression list according to the ordinal value returned from
@@ -1669,8 +1670,9 @@ public class SqlToRelConverter
         }
 
         // Walk the expresion list and get default values for any columns
-        // that were not supplied in the statement
+        // that were not supplied in the statement. Get field names too.
         for (int i = 0; i < expCount; ++i) {
+            fieldNames[i] = targetRowType.getFields()[i].getName();
             if (sourceExps[i] != null) {
                 if (defaultValueFactory.isGeneratedAlways(targetTable, i)) {
                     // TODO: throw a proper exception
@@ -1679,12 +1681,11 @@ public class SqlToRelConverter
                 }
                 continue;
             }
-
             sourceExps[i] =
                 defaultValueFactory.newColumnDefaultValue(targetTable, i);
         }
 
-        return CalcRel.createProject(sourceRel, sourceExps, null);
+        return CalcRel.createProject(sourceRel, sourceExps, fieldNames);
     }
 
     /**

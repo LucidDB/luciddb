@@ -252,7 +252,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         ExecStreamResourceQuantity available;
         available.nCachePages = pageCount;
         if (!pDbHandle->pResourceGovernor->setResourceAvailability(
-            available, CachePages))
+            available, EXEC_RESOURCE_CACHE_PAGES))
         {
             throw InvalidParamExcn(
                 "the number of pages currently assigned (plus reserve)",
@@ -272,7 +272,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         ExecStreamResourceKnobs knob;
         knob.expectedConcurrentStatements = nStatements;
         pDbHandle->pResourceGovernor->setResourceKnob(
-            knob, ExpectedConcurrentStatements);
+            knob, EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS);
 
     } else if (paramName.compare("cacheReservePercentage") == 0) {
         int percent = boost::lexical_cast<int>(pParam->getValue());
@@ -282,7 +282,7 @@ void CmdInterpreter::visit(ProxyCmdSetParam &cmd)
         ExecStreamResourceKnobs knob;
         knob.cacheReservePercentage = percent;
         if (!pDbHandle->pResourceGovernor->setResourceKnob(
-            knob, CacheReservePercentage))
+            knob, EXEC_KNOB_CACHE_RESERVE_PERCENTAGE))
         {
             throw InvalidParamExcn(
                 "1",

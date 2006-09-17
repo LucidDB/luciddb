@@ -1797,6 +1797,38 @@ public abstract class RelOptUtil
         return (!checkNames || namesDifferent);
     }
     
+    /**
+     * Creates projection expressions reflecting the swapping of a join's input.
+     * 
+     * @param newJoin the RelNode corresponding to the join with its inputs
+     * swapped
+     * @param origJoin original JoinRel
+     * @param origOrder if true, create the projection expressions to reflect
+     * the original (pre-swapped) join projection; otherwise, create the
+     * projection to reflect the order of the swapped projection
+     * 
+     * @return array of expression representing the swapped join inputs
+     */
+    public static RexNode[] createSwappedJoinExprs(
+        RelNode newJoin, JoinRel origJoin, boolean origOrder)
+    {
+        final RelDataTypeField [] newJoinFields =
+            newJoin.getRowType().getFields();
+        final RexBuilder rexBuilder = newJoin.getCluster().getRexBuilder();
+        final RexNode [] exps = new RexNode[newJoinFields.length];
+        final int nFields = origOrder ?
+            origJoin.getRight().getRowType().getFieldCount() :
+            origJoin.getLeft().getRowType().getFieldCount();
+        for (int i = 0; i < exps.length; i++) {
+            final int source = (i + nFields) % exps.length;
+            RelDataTypeField field = origOrder ?
+                newJoinFields[source] :
+                newJoinFields[i];
+            exps[i] = rexBuilder.makeInputRef(field.getType(), source);
+        }
+        return exps;
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private static class VariableSetVisitor

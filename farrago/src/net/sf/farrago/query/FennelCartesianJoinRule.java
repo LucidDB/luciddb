@@ -24,7 +24,8 @@ package net.sf.farrago.query;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-
+import org.eigenbase.rel.metadata.*;
+import org.eigenbase.rex.*;
 
 /**
  * FennelCartesianJoinRule is a rule for converting an INNER JoinRel with no
@@ -89,6 +90,22 @@ public class FennelCartesianJoinRule
             return;
         }
 
+        // see if it makes sense to buffer the existing RHS; if not, try
+        // the LHS, swapping the join operands if it does make sense to buffer
+        // the LHS
+        boolean swapped = false;
+        FennelBufferRel bufRel = bufferRight(leftRel, rightRel);
+        if (bufRel != null) {
+            rightRel = bufRel;
+        } else {
+            bufRel = bufferRight(rightRel, leftRel);
+            if (bufRel != null) {
+                swapped = true;
+                leftRel = rightRel;
+                rightRel = bufRel;
+            }         
+        }
+
         RelNode fennelLeft =
             mergeTraitsAndConvert(
                 joinRel.getTraits(),
@@ -105,8 +122,8 @@ public class FennelCartesianJoinRule
                 rightRel);
         if (fennelRight == null) {
             return;
-        }
-
+        }      
+        
         FennelCartesianProductRel productRel =
             new FennelCartesianProductRel(
                 joinRel.getCluster(),
@@ -114,15 +131,87 @@ public class FennelCartesianJoinRule
                 fennelRight,
                 joinRel.getJoinType(),
                 RelOptUtil.getFieldNameList(joinRel.getRowType()));
-        call.transformTo(productRel);
-
-        // TODO jvs 15-Feb-2005: In most cases, buffering the
-        // right-hand input is good for performance; it allows us to only
-        // compute the right-hand side once, and since we store only
-        // what we need, we may save I/O.  However, there are counterexamples;
-        // if the right-hand side is a table scan with no filtering or
-        // projection, there's no point buffering it.  So we should produce
-        // plan variants with and without buffering and use cost to decide.
+        
+        RelNode newRel;
+        if (swapped) {
+            // if the join inputs were swapped, create a CalcRel on top of
+            // the new cartesian join that reflects the original join
+            // projection
+            final RexNode [] exps = 
+                RelOptUtil.createSwappedJoinExprs(
+                    productRel,
+                    joinRel,
+                    true);
+            final RexProgram program =
+                RexProgram.create(
+                    productRel.getRowType(),
+                    exps,
+                    null,
+                    joinRel.getRowType(),
+                    productRel.getCluster().getRexBuilder());
+            newRel =
+                new CalcRel(
+                    productRel.getCluster(),
+                    RelOptUtil.clone(joinRel.getTraits()),
+                    productRel,
+                    joinRel.getRowType(),
+                    program,
+                    RelCollation.emptyList);
+        } else {
+            newRel = productRel;
+        }
+        call.transformTo(newRel);
+    }
+    
+    /**
+     * Returns a FennelBufferRel in the case where it makes sense to buffer
+     * the RHS into the cartesian product join.  This is done by comparing
+     * the cost between the buffered and non-buffered cases.
+     * 
+     * @param left left hand input into the cartesian join
+     * @param right right hand input into the cartesian join
+     * 
+     * @return created FennelBufferRel if it makes sense to buffer the RHS
+     */
+    private FennelBufferRel bufferRight(RelNode left, RelNode right)
+    {
+        FennelBufferRel bufRel =
+            new FennelBufferRel(right.getCluster(), right, false, true);
+        
+        // if we don't have a rowcount for the LHS, then just go ahead and
+        // buffer
+        Double nRowsLeft = RelMetadataQuery.getRowCount(left);
+        if (nRowsLeft == null) {
+            return bufRel;
+        }
+        
+        // Cost without buffering is:
+        // getCumulativeCost(LHS) +
+        //     getRowCount(LHS) * getCumulativeCost(RHS)
+        //
+        // Cost with buffering is:
+        // getCumulativeCost(LHS) + getCumulativeCost(RHS) +
+        //     getRowCount(LHS) * getNonCumulativeCost(buffering) * 3;
+        //
+        // The times 3 represents the overhead of caching.  The "3"
+        // is arbitrary at this point.
+        //
+        // To decide if buffering makes sense, take the difference between the
+        // two costs described above.
+        RelOptCost rightCost =
+            RelMetadataQuery.getCumulativeCost(right);
+        RelOptCost noBufferPlanCost = rightCost.multiplyBy(nRowsLeft);
+        
+        RelOptCost bufferCost = RelMetadataQuery.getNonCumulativeCost(bufRel);
+        bufferCost = bufferCost.multiplyBy(3);
+        RelOptCost bufferPlanCost = bufferCost.multiplyBy(nRowsLeft);
+        bufferPlanCost = bufferPlanCost.plus(rightCost);
+        
+        if (bufferPlanCost.isLt(noBufferPlanCost)) {
+            return bufRel;
+        } else {
+            return null;
+        }      
     }
 }
 

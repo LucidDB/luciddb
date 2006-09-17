@@ -435,6 +435,9 @@ void LbmGeneratorExecStream::initBitmapTable(uint nEntries)
         // resize bitmap table to accomodate new batch,
         // which has more distinct values
         bitmapTable.resize(nEntries);
+        for (uint i = nBitmapEntries; i < nEntries; i++) {
+            bitmapTable[i].pBitmap = SharedLbmEntry(new LbmEntry());
+        }
 
         // compute the size of the bitmap buffers, based on the number
         // of scratch pages available and the number of distinct values
@@ -511,7 +514,7 @@ bool LbmGeneratorExecStream::addRidToBitmap(
     if (bitmapTable[keycode].inuse) {
         assert(bitmapTable[keycode].bufferPtr);
 
-        bool maxedOut = !bitmapTable[keycode].bitmap.setRID(rid);
+        bool maxedOut = !bitmapTable[keycode].pBitmap->setRID(rid);
         if (maxedOut) {
             if (!flushEntry(keycode)) {
                 return false;
@@ -520,7 +523,7 @@ bool LbmGeneratorExecStream::addRidToBitmap(
             bitmapTable[keycode].inuse = true;
             // buffer should now have enough space; create a singleton
             // entry
-            bitmapTable[keycode].bitmap.setEntryTuple(initBitmap);
+            bitmapTable[keycode].pBitmap->setEntryTuple(initBitmap);
         }
     } else {
 
@@ -534,9 +537,9 @@ bool LbmGeneratorExecStream::addRidToBitmap(
             bitmapTable[keycode].bufferPtr = bufPtr;
         }
         // now that we have a buffer, initialize the entry
-        bitmapTable[keycode].bitmap.init(
+        bitmapTable[keycode].pBitmap->init(
             bitmapTable[keycode].bufferPtr, NULL, entrySize, bitmapTupleDesc);
-        bitmapTable[keycode].bitmap.setEntryTuple(initBitmap);
+        bitmapTable[keycode].pBitmap->setEntryTuple(initBitmap);
         bitmapTable[keycode].inuse = true;
     }
 
@@ -592,7 +595,7 @@ bool LbmGeneratorExecStream::flushEntry(uint keycode)
     // retrieve the generated bitmap entry and write it to the output
     // stream
 
-    outputTuple = bitmapTable[keycode].bitmap.produceEntryTuple();
+    outputTuple = bitmapTable[keycode].pBitmap->produceEntryTuple();
 
     FENNEL_TRACE(TRACE_FINE, LbmEntry::toString(outputTuple));
 

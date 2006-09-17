@@ -101,11 +101,13 @@ void ExecStreamGovernorTest::testCaseSetUp()
     // lower the total cache availability so the perGraphAllocation is 95
     ExecStreamResourceQuantity quantity;
     quantity.nCachePages = 100;
-    pResourceGovernor->setResourceAvailability(quantity, CachePages);
+    pResourceGovernor->setResourceAvailability(
+        quantity, EXEC_RESOURCE_CACHE_PAGES);
 
     ExecStreamResourceKnobs knob;
     knob.expectedConcurrentStatements = 1;
-    pResourceGovernor->setResourceKnob(knob, ExpectedConcurrentStatements);
+    pResourceGovernor->setResourceKnob(
+        knob, EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS);
 }
 
 /**
@@ -331,10 +333,12 @@ void ExecStreamGovernorTest::testMinGreaterAllocation()
     // we need to allow for at least 2 stream graphs
     ExecStreamResourceQuantity quantity;
     quantity.nCachePages = 200;
-    pResourceGovernor->setResourceAvailability(quantity, CachePages);
+    pResourceGovernor->setResourceAvailability(
+        quantity, EXEC_RESOURCE_CACHE_PAGES);
     ExecStreamResourceKnobs knob;
     knob.expectedConcurrentStatements = 2;
-    pResourceGovernor->setResourceKnob(knob, ExpectedConcurrentStatements);
+    pResourceGovernor->setResourceKnob(
+        knob, EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS);
 
     uint nProducers = 2;
     std::vector<ExecStreamResourceQuantity> minReqts;

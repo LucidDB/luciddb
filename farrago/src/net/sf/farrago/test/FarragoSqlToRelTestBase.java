@@ -126,6 +126,7 @@ public abstract class FarragoSqlToRelTestBase
 
             // dig out the top-level relational expression
             RelNode topRel = explanation.getRel();
+            stmt.finalizeRelMetadata(topRel);
 
             checkAbstract(stmt, topRel);
         } finally {

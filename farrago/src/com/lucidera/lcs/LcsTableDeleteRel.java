@@ -166,7 +166,9 @@ public class LcsTableDeleteRel
         }
         if (sort) {
             FemSortingStreamDef sortingStream =
-                indexGuide.newSorter(deletionIndex);
+                indexGuide.newSorter(
+                    deletionIndex, 
+                    RelMetadataQuery.getRowCount(getChild()));
             implementor.addDataFlowFromProducerToConsumer(input, sortingStream);
             input = sortingStream;
         } else {

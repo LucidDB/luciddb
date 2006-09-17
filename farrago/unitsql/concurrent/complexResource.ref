@@ -113,13 +113,13 @@
 |           LhxAggRel |
 |             FennelCalcRel |
 |               LhxJoinRel |
-|                 FennelCalcRel |
+|                 FennelReshapeRel |
 |                   LcsRowScanRel |
-|                 FennelCalcRel |
+|                 FennelReshapeRel |
 |                   LhxJoinRel |
-|                     FennelCalcRel |
+|                     FennelReshapeRel |
 |                       LcsRowScanRel |
-|                     FennelCalcRel |
+|                     FennelReshapeRel |
 |                       LhxJoinRel |
 |                         LcsRowScanRel |
 |                           LcsIndexMergeRel |

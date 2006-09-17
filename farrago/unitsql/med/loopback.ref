@@ -77,8 +77,10 @@ Error: From line 1, column 15 to line 1, column 29: Table 'SALES.FUDGE' not foun
 0: jdbc:farrago:> explain plan excluding attributes for
 . . . . . . . . > select * from loopback_sys_boot.jdbc_metadata.catalogs_view;
 'column0'
-'IterCalcRel'
-'  MedMdrClassExtentRel'
+'FennelToIteratorConverter'
+'  FennelReshapeRel'
+'    IteratorToFennelConverter'
+'      MedMdrClassExtentRel'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan excluding attributes for
 . . . . . . . . > select emps.name as ename, depts.name as dname from 
@@ -88,7 +90,7 @@ Error: From line 1, column 15 to line 1, column 29: Table 'SALES.FUDGE' not foun
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel'
-'    FennelCalcRel'
+'    FennelReshapeRel'
 '      FtrsIndexSearchRel'
 '        FtrsIndexScanRel'
 0: jdbc:farrago:> 

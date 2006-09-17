@@ -239,8 +239,18 @@ public class LcsTableMergeRel
             implementor.addDataFlowFromProducerToConsumer(
                 splitter,
                 deleteReshape);
+            Double estimatedNumRows = RelMetadataQuery.getRowCount(getChild());
+            if (estimatedNumRows != null && !updateOnly) {
+                // TODO zfong 9/7/06 - In the case of a non-update only
+                // merge, arbitrarily assume that half the source rows are
+                // to be updated and half are inserted.  We can get a
+                // better estimate by converting the source join from an
+                // outer join to an inner join and getting the rowcount
+                // from that inner join.
+                estimatedNumRows = estimatedNumRows / 2;
+            }
             FemSortingStreamDef sortingStream =
-                indexGuide.newSorter(deletionIndex);
+                indexGuide.newSorter(deletionIndex, estimatedNumRows);
             implementor.addDataFlowFromProducerToConsumer(
                 deleteReshape,
                 sortingStream);

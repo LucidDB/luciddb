@@ -78,12 +78,12 @@
 . . . . . . . . >         (select * from d2, d3 where d2.d2_d3 = d3.d3_d2 and d3.d3 >= 0) j2
 . . . . . . . . >     where j1.f_d2 = j2.d2_f and j2.d2 >= 0;
 'column0'
-'IterCalcRel(expr#0..5=[{inputs}], F=[$t1], D1=[$t0], D2=[$t3], D3=[$t5])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[1, 0, 3, 5]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3)])'
 '    LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelCalcRel(expr#0..4=[{inputs}], D1=[$t0], F=[$t2], F_D2=[$t4])'
+'      FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER D1, INTEGER F, INTEGER F_D2)])'
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
 '            LcsIndexIntersectRel(startRidParamId=[3], rowLimitParamId=[4])'
@@ -105,9 +105,9 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D1_F=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'      FennelCalcRel(expr#0..4=[{inputs}], proj#0..1=[{exprs}], D3=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_F, INTEGER D3)])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>=($t0, $t3)], proj#0..2=[{exprs}], $condition=[$t4])'
+'          FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_F, INTEGER D2_D3)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D3, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                LcsIndexSearchRel(table=[[LOCALDB, JO, D2]], index=[ID2_D3], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -115,7 +115,7 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D3_D2=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D3, INTEGER D3_D2)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- MJ/RS
@@ -123,10 +123,10 @@
 . . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
 . . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 >= 0;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], F=[$t0], D1=[$t2], D2=[$t3])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelCalcRel(expr#0..4=[{inputs}], F=[$t0], F_D2=[$t2], D1=[$t3])'
+'      FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER F_D2, INTEGER D1)])'
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
 '            LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
@@ -142,9 +142,9 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D1_F=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_F)])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- MJ/FRS
@@ -152,10 +152,10 @@
 . . . . . . . . >     from (select * from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0) j, d2
 . . . . . . . . >     where j.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], F=[$t0], D1=[$t2], D2=[$t3])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelCalcRel(expr#0..4=[{inputs}], F=[$t0], F_D2=[$t2], D1=[$t3])'
+'      FennelReshapeRel(projection=[[0, 2, 3]], outputRowType=[RecordType(INTEGER F, INTEGER F_D2, INTEGER D1)])'
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
 '            LcsIndexIntersectRel(startRidParamId=[2], rowLimitParamId=[3])'
@@ -171,7 +171,7 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D1_F=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[2], expr#5=[=($t3, $t4)], proj#0..1=[{exprs}], $condition=[$t5])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
@@ -181,8 +181,8 @@
 . . . . . . . . >     from f, (select * from d1, d2 where d1.d1_d2 = d2.d2_d1 and d2.d2 >= 0) j
 . . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 >= 0;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], F=[$t0], D1=[$t2], D2=[$t4])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
@@ -197,9 +197,9 @@
 '                          LhxAggRel(groupCount=[1])'
 '                            FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D2_D1=[$t1], $condition=[$t5])'
 '                              LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1]])'
-'      FennelCalcRel(expr#0..4=[{inputs}], proj#0..1=[{exprs}], D2=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER D2)])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
-'          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[>=($t0, $t3)], proj#0..2=[{exprs}], $condition=[$t4])'
+'          FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER D1_D2)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_D2, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '              LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
 '                LcsIndexSearchRel(table=[[LOCALDB, JO, D1]], index=[ID1_D2], projection=[*], inputKeyProj=[*], inputDirectiveProj=[[]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -207,14 +207,14 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D2_D1=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_D1)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- RS/RS
 0: jdbc:farrago:> explain plan for select f, d1 from f, d1 where f.f_d1 = d1.d1_f and d1.d1 >= 0;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], F=[$t0], D1=[$t2])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
@@ -223,15 +223,15 @@
 '              LhxAggRel(groupCount=[1])'
 '                FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D1_F=[$t1], $condition=[$t5])'
 '                  LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F)])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- RS/FRS
 0: jdbc:farrago:> explain plan for select f, d2 from f, d2
 . . . . . . . . >     where f.f_d2 = d2.d2_f and d2.d2 + 0 = 2;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], F=[$t0], D2=[$t2])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[1])'
@@ -248,8 +248,8 @@
 . . . . . . . . >     from f, (select * from d1, d3 where d1.d1_d3 = d3.d3_d1 and d3.d3 >= 0) j
 . . . . . . . . >     where f.f_d1 = j.d1_f and j.d1 + 0 = 1;
 'column0'
-'IterCalcRel(expr#0..4=[{inputs}], F=[$t0], D1=[$t2], D3=[$t4])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2, 4]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D3)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
 '        LcsIndexMergeRel(consumerSridParamId=[0], segmentLimitParamId=[0], ridLimitParamId=[2])'
@@ -264,7 +264,7 @@
 '                          LhxAggRel(groupCount=[1])'
 '                            FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D3_D1=[$t1], $condition=[$t5])'
 '                              LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1]])'
-'      FennelCalcRel(expr#0..4=[{inputs}], proj#0..1=[{exprs}], D3=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F, INTEGER D3)])'
 '        LhxJoinRel(leftKeys=[[2]], rightKeys=[[1]], joinType=[INNER])'
 '          FennelCalcRel(expr#0..2=[{inputs}], expr#3=[0], expr#4=[+($t0, $t3)], expr#5=[1], expr#6=[=($t4, $t5)], proj#0..2=[{exprs}], $condition=[$t6])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1, 3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_D3, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
@@ -274,15 +274,15 @@
 '                    LhxAggRel(groupCount=[1])'
 '                      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D3_D1=[$t1], $condition=[$t5])'
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1]])'
-'          FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'          FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D3, INTEGER D3_D1)])'
 '            LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FRS/RS
 0: jdbc:farrago:> explain plan for select f, d1 from f, d1
 . . . . . . . . >     where f.f_d1 = d1.d1_f and f.f + 0 = 0 and d1.d1 >= 0;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], F=[$t0], D1=[$t2])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D1)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[=($t3, $t2)], proj#0..1=[{exprs}], $condition=[$t4])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D1]])'
@@ -292,15 +292,15 @@
 '                LhxAggRel(groupCount=[1])'
 '                  FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], expr#4=[IS NOT NULL($t1)], expr#5=[AND($t3, $t4)], D1_F=[$t1], $condition=[$t5])'
 '                    LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
-'      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[>=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t3])'
+'      FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER D1, INTEGER D1_F)])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FRS/FRS
 0: jdbc:farrago:> explain plan for select f, d2 from f, d2
 . . . . . . . . >     where f.f_d2 = d2.d2_f and f.f + 0 = 0 and d2.d2 + 0 = 2;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], F=[$t0], D2=[$t2])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER F, INTEGER D2)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      FennelCalcRel(expr#0..1=[{inputs}], expr#2=[0], expr#3=[+($t0, $t2)], expr#4=[=($t3, $t2)], proj#0..1=[{exprs}], $condition=[$t4])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, F]], projection=[[0, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$F$F, SYS$CLUSTERED_INDEX$JO$F$F_D2]])'
@@ -320,8 +320,8 @@
 0: jdbc:farrago:> explain plan for select f, d1, d2, d3 
 . . . . . . . . >     from f, d1, d2, d3;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], F=[$t0], D1=[$t3], D2=[$t2], D3=[$t1])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 3, 2, 1]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3)])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
@@ -381,8 +381,8 @@
 . . . . . . . . >         d1.d1_d2 = d2.d2_d1 and d1.d1_d3 = d3.d3_d1 and
 . . . . . . . . >         d2.d2_d3 = d3.d3_d2;
 'column0'
-'IterCalcRel(expr#0..9=[{inputs}], F=[$t8], D1=[$t0], D2=[$t4], D3=[$t6])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[8, 0, 4, 6]], outputRowType=[RecordType(INTEGER F, INTEGER D1, INTEGER D2, INTEGER D3)])'
 '    LhxJoinRel(leftKeys=[[1, 2, 3]], rightKeys=[[5, 1, 3]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, JO, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D1$D1, SYS$CLUSTERED_INDEX$JO$D1$D1_D2, SYS$CLUSTERED_INDEX$JO$D1$D1_D3, SYS$CLUSTERED_INDEX$JO$D1$D1_F]])'
 '        LcsIndexIntersectRel(startRidParamId=[10], rowLimitParamId=[11])'
@@ -413,7 +413,7 @@
 '                                  LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
 '                                    LcsIndexSearchRel(table=[[LOCALDB, JO, D3]], index=[ID3_F], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                                      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 3, _ISO-8859-1']', 3 }]])'
-'      FennelCalcRel(expr#0..9=[{inputs}], D2=[$t0], D2_D1=[$t2], D3=[$t4], D3_D1=[$t5], F=[$t7], F_D1=[$t8])'
+'      FennelReshapeRel(projection=[[0, 2, 4, 5, 7, 8]], outputRowType=[RecordType(INTEGER D2, INTEGER D2_D1, INTEGER D3, INTEGER D3_D1, INTEGER F, INTEGER F_D1)])'
 '        LhxJoinRel(leftKeys=[[1, 3]], rightKeys=[[5, 2]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D2$D2, SYS$CLUSTERED_INDEX$JO$D2$D2_D1, SYS$CLUSTERED_INDEX$JO$D2$D2_D3, SYS$CLUSTERED_INDEX$JO$D2$D2_F]])'
 '            LcsIndexIntersectRel(startRidParamId=[6], rowLimitParamId=[7])'
@@ -427,7 +427,7 @@
 '                        LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[[3]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3_D2]])'
 '                          LcsIndexSearchRel(table=[[LOCALDB, JO, D3]], index=[ID3_F], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
 '                            FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 3, _ISO-8859-1']', 3 }]])'
-'          FennelCalcRel(expr#0..7=[{inputs}], D3=[$t0], D3_D1=[$t2], D3_D2=[$t3], F=[$t4], F_D1=[$t5], F_D2=[$t6])'
+'          FennelReshapeRel(projection=[[0, 2, 3, 4, 5, 6]], outputRowType=[RecordType(INTEGER D3, INTEGER D3_D1, INTEGER D3_D2, INTEGER F, INTEGER F_D1, INTEGER F_D2)])'
 '            LhxJoinRel(leftKeys=[[1]], rightKeys=[[3]], joinType=[INNER])'
 '              LcsRowScanRel(table=[[LOCALDB, JO, D3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$D3$D3, SYS$CLUSTERED_INDEX$JO$D3$D3_D1, SYS$CLUSTERED_INDEX$JO$D3$D3_D2, SYS$CLUSTERED_INDEX$JO$D3$D3_F]])'
 '                LcsIndexSearchRel(table=[[LOCALDB, JO, D3]], index=[ID3_F], projection=[*], inputKeyProj=[[1, 3]], inputDirectiveProj=[[0, 2]], startRidParamId=[0], rowLimitParamId=[0])'
@@ -667,10 +667,10 @@
 . . . . . . . . >     from EMP, DEPT, LOCATION EL
 . . . . . . . . >     where EL.LOCID = EMP.LOCID and EL.LOCID=DEPT.LOCID;
 'column0'
-'IterCalcRel(expr#0..3=[{inputs}], LNAME=[$t0], DNAME=[$t2])'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(20) LNAME, VARCHAR(20) DNAME)])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
-'      FennelCalcRel(expr#0..2=[{inputs}], LNAME=[$t0], LOCID0=[$t2])'
+'      FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(VARCHAR(20) LNAME, CHAR(2) LOCID0)])'
 '        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, EMP]], projection=[[2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$EMP$LNAME, SYS$CLUSTERED_INDEX$JO$EMP$LOCID]])'
 '          LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
@@ -683,13 +683,14 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelCartesianProductRel(leftouterjoin=[false])'
-'    FennelCalcRel(expr#0..2=[{inputs}], LNAME=[$t0])'
+'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) LNAME)])'
 '      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, EMP]], projection=[[2, 6]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$EMP$LNAME, SYS$CLUSTERED_INDEX$JO$EMP$LOCID]])'
 '        LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
-'    FennelCalcRel(expr#0..2=[{inputs}], DNAME=[$t0])'
-'      LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$DEPT$DNAME, SYS$CLUSTERED_INDEX$JO$DEPT$LOCID]])'
-'        LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
+'    FennelBufferRel(inMemory=[false], multiPass=[true])'
+'      FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(20) DNAME)])'
+'        LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[INNER])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, DEPT]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$DEPT$DNAME, SYS$CLUSTERED_INDEX$JO$DEPT$LOCID]])'
+'          LcsRowScanRel(table=[[LOCALDB, JO, LOCATION]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$JO$LOCATION$LOCID]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

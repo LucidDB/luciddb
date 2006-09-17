@@ -40,30 +40,102 @@ SimpleExecStreamGovernor::SimpleExecStreamGovernor(
       ExecStreamGovernor(
             knobSettings, resourcesAvailable, pTraceTargetInit, nameInit)
 {
+    perGraphAllocation = computePerGraphAllocation();
 }
 
 SimpleExecStreamGovernor::~SimpleExecStreamGovernor()
 {
 }
 
-void SimpleExecStreamGovernor::requestResources(
-    SharedExecStreamGraph pExecStreamGraph)
+bool SimpleExecStreamGovernor::setResourceKnob(
+    ExecStreamResourceKnobs const &knob, ExecStreamResourceKnobType knobType)
+{
+    StrictMutexGuard mutexGuard(mutex);
+
+    switch (knobType) {
+    case EXEC_KNOB_EXPECTED_CONCURRENT_STATEMENTS:
+        knobSettings.expectedConcurrentStatements =
+            knob.expectedConcurrentStatements;
+        perGraphAllocation = computePerGraphAllocation();
+        FENNEL_TRACE(TRACE_FINE,
+            "Expected concurrent statements set to " <<
+            knobSettings.expectedConcurrentStatements <<
+            ". Per graph allocation is now " << perGraphAllocation <<
+            " cache pages.");
+        break;
+
+    case EXEC_KNOB_CACHE_RESERVE_PERCENTAGE:
+        // make sure we have enough unassigned pages to set aside the new
+        // reserve amount
+        double percent = (100 - knobSettings.cacheReservePercentage) / 100.0;
+        uint totalPagesAvailable = (uint)
+            ((resourcesAvailable.nCachePages + resourcesAssigned.nCachePages) /
+            percent);
+        uint numReserve =
+            totalPagesAvailable * knob.cacheReservePercentage / 100;
+        if (totalPagesAvailable - numReserve < resourcesAssigned.nCachePages) {
+            return false;
+        }
+        knobSettings.cacheReservePercentage = knob.cacheReservePercentage;
+        resourcesAvailable.nCachePages =
+            totalPagesAvailable - numReserve - resourcesAssigned.nCachePages;
+        perGraphAllocation = computePerGraphAllocation();
+        FENNEL_TRACE(TRACE_FINE,
+            "Cache reserve percentage set to " <<
+            knobSettings.cacheReservePercentage <<
+            ". Per graph allocation is now " << perGraphAllocation <<
+            " cache pages.");
+        break;
+    }
+
+    return true;
+}
+
+bool SimpleExecStreamGovernor::setResourceAvailability(
+    ExecStreamResourceQuantity const &available,
+    ExecStreamResourceType resourceType)
+{
+    StrictMutexGuard mutexGuard(mutex);
+
+    switch (resourceType) {
+    case EXEC_RESOURCE_CACHE_PAGES:
+        {
+        uint pagesAvailable =
+            available.nCachePages *
+            (100 - knobSettings.cacheReservePercentage) / 100;
+        if (pagesAvailable < resourcesAssigned.nCachePages) {
+            return false;
+        }
+        resourcesAvailable.nCachePages =
+            (pagesAvailable - resourcesAssigned.nCachePages);
+        perGraphAllocation = computePerGraphAllocation();
+        FENNEL_TRACE(TRACE_FINE,
+            resourcesAvailable.nCachePages <<
+            " cache pages now available for assignment.  " <<
+            "Per graph allocation is now " << perGraphAllocation <<
+            " cache pages.");
+        break;
+        }
+
+    case EXEC_RESOURCE_THREADS:
+        resourcesAvailable.nThreads = available.nThreads;
+        break;
+    }
+
+    return true;
+}
+void SimpleExecStreamGovernor::requestResources(ExecStreamGraph &graph)
 {
     FENNEL_TRACE(TRACE_FINE, "requestResources");
 
     StrictMutexGuard mutexGuard(mutex);
 
-    std::vector<SharedExecStream> sortedStreams =
-        pExecStreamGraph->getSortedStreams();
-    boost::scoped_array<uint> minReqts;
-    boost::scoped_array<uint> optReqts;
-    boost::scoped_array<ExecStreamResourceSettingType> optTypes;
+    std::vector<SharedExecStream> sortedStreams = graph.getSortedStreams();
+    boost::scoped_array<ExecStreamResourceRequirements> resourceReqts;
     boost::scoped_array<double> sqrtDiffOptMin;
     uint nStreams = sortedStreams.size();
 
-    minReqts.reset(new uint[nStreams]);
-    optReqts.reset(new uint[nStreams]);
-    optTypes.reset(new ExecStreamResourceSettingType[nStreams]);
+    resourceReqts.reset(new ExecStreamResourceRequirements[nStreams]);
     sqrtDiffOptMin.reset(new double[nStreams]);
 
     // scale down the number of pages that can be allocated based on how
@@ -90,18 +162,19 @@ void SimpleExecStreamGovernor::requestResources(
             minQuantity.nCachePages <= optQuantity.nCachePages);
         assert(minQuantity.nThreads <= optQuantity.nThreads);
 
-        minReqts[i] = minQuantity.nCachePages;
-        totalMin += minReqts[i];
-        optTypes[i] = optType;
+        ExecStreamResourceRequirements &reqt = resourceReqts[i];
+        reqt.minReqt = minQuantity.nCachePages;
+        totalMin += reqt.minReqt;
+        reqt.optType = optType;
 
         switch (optType) {
         case EXEC_RESOURCE_ACCURATE:
-            optReqts[i] = optQuantity.nCachePages;
-            sqrtDiffOptMin[i] = sqrt(optReqts[i] - minReqts[i]);
+            reqt.optReqt = optQuantity.nCachePages;
+            sqrtDiffOptMin[i] = sqrt(reqt.optReqt - reqt.minReqt);
             break;
         case EXEC_RESOURCE_ESTIMATE:
-            optReqts[i] = optQuantity.nCachePages;
-            sqrtDiffOptMin[i] = sqrt(optReqts[i] - minReqts[i]);
+            reqt.optReqt = optQuantity.nCachePages;
+            sqrtDiffOptMin[i] = sqrt(reqt.optReqt - reqt.minReqt);
             allAccurate = false;
             break;
         case EXEC_RESOURCE_UNBOUNDED:
@@ -115,10 +188,10 @@ void SimpleExecStreamGovernor::requestResources(
             allAccurate = false;
             // in the unbounded case, we don't have an optimum setting, so
             // set it to assume the full allocation amount plus the min
-            optReqts[i] = minReqts[i] + allocationAmount;
+            reqt.optReqt = reqt.minReqt + allocationAmount;
             break;
         }
-        totalOpt += optReqts[i];
+        totalOpt += reqt.optReqt;
         totalSqrtDiffs += sqrtDiffOptMin[i];
     }
 
@@ -135,7 +208,7 @@ void SimpleExecStreamGovernor::requestResources(
 
     // only enough to assign the minimum
     if (totalMin >= allocationAmount) {
-        assignCachePages(sortedStreams, minReqts);
+        assignCachePages(sortedStreams, resourceReqts, true);
         totalAssigned = totalMin;
         FENNEL_TRACE(TRACE_FINE,
             "Mininum request of " << totalMin << " cache pages assigned");
@@ -144,7 +217,7 @@ void SimpleExecStreamGovernor::requestResources(
         // if all streams have accurate optimum settings, and we have enough
         // to assign the optimum amount, then do so
         if (allAccurate) {
-            assignCachePages(sortedStreams, optReqts);
+            assignCachePages(sortedStreams, resourceReqts, false);
             totalAssigned = totalOpt;
             FENNEL_TRACE(TRACE_FINE,
                 "Optimum request of " << totalOpt << " cache pages assigned");
@@ -158,9 +231,8 @@ void SimpleExecStreamGovernor::requestResources(
             // optimum settings
             uint assigned =
                 distributeCachePages(
-                    sortedStreams, minReqts, optReqts, optTypes,
-                    sqrtDiffOptMin, totalSqrtDiffs,
-                    allocationAmount - totalOpt, true);
+                    sortedStreams, resourceReqts, sqrtDiffOptMin,
+                    totalSqrtDiffs, allocationAmount - totalOpt, true);
             totalAssigned = assigned;
             FENNEL_TRACE(TRACE_FINE,
                 assigned <<
@@ -173,8 +245,7 @@ void SimpleExecStreamGovernor::requestResources(
         // remains
         uint assigned =
             distributeCachePages(
-                sortedStreams, minReqts, optReqts, optTypes,
-                sqrtDiffOptMin, totalSqrtDiffs,
+                sortedStreams, resourceReqts, sqrtDiffOptMin, totalSqrtDiffs,
                 allocationAmount - totalMin, false);
         totalAssigned = assigned; 
         FENNEL_TRACE(TRACE_FINE,
@@ -190,8 +261,7 @@ void SimpleExecStreamGovernor::requestResources(
         pQuantity(new ExecStreamResourceQuantity());
     pQuantity->nCachePages = totalAssigned;
     resourceMap.insert(
-        ExecStreamGraphResourceMap::value_type(
-            pExecStreamGraph.get(), pQuantity));
+        ExecStreamGraphResourceMap::value_type(&graph, pQuantity));
 
     FENNEL_TRACE(TRACE_FINE,
         resourcesAvailable.nCachePages <<
@@ -200,23 +270,24 @@ void SimpleExecStreamGovernor::requestResources(
 
 void SimpleExecStreamGovernor::assignCachePages(
     std::vector<SharedExecStream> &streams,
-    boost::scoped_array<uint> const &nCachePages)
+    boost::scoped_array<ExecStreamResourceRequirements> const &reqts,
+    bool assignMin)
 {
     for (uint i = 0; i < streams.size(); i++) {
         ExecStreamResourceQuantity quantity;
-        quantity.nCachePages = nCachePages[i];
+        quantity.nCachePages =
+            (assignMin) ? reqts[i].minReqt : reqts[i].optReqt;
         streams[i]->setResourceAllocation(quantity);
-        FENNEL_TRACE(TRACE_FINER,
-            quantity.nCachePages << " cache pages assigned to stream " <<
-            streams[i]->getName());
+        if (isTracingLevel(TRACE_FINER)) {
+            traceCachePageRequest(
+                quantity.nCachePages, reqts[i], streams[i]->getName());
+        }
     }
 }
 
 uint SimpleExecStreamGovernor::distributeCachePages(
     std::vector<SharedExecStream> &streams,
-    boost::scoped_array<uint> const &minReqts,
-    boost::scoped_array<uint> const &optReqts,
-    boost::scoped_array<ExecStreamResourceSettingType> const &optTypes,
+    boost::scoped_array<ExecStreamResourceRequirements> const &reqts,
     boost::scoped_array<double> const &sqrtDiffOptMin,
     double totalSqrtDiffs,
     uint excessAvailable, bool assignOpt)
@@ -227,7 +298,7 @@ uint SimpleExecStreamGovernor::distributeCachePages(
     if (assignOpt) {
         totalSqrtDiffs = 0;
         for (uint i = 0; i < streams.size(); i++) {
-            if (optTypes[i] != EXEC_RESOURCE_ACCURATE) {
+            if (reqts[i].optType != EXEC_RESOURCE_ACCURATE) {
                 totalSqrtDiffs += sqrtDiffOptMin[i];
             }
         }
@@ -237,7 +308,8 @@ uint SimpleExecStreamGovernor::distributeCachePages(
     uint totalAssigned = 0;
     for (uint i = 0; i < streams.size(); i++) {
         uint amount;
-        if (assignOpt && optTypes[i] == EXEC_RESOURCE_ACCURATE) {
+        ExecStreamResourceRequirements &reqt = reqts[i];
+        if (assignOpt && reqt.optType == EXEC_RESOURCE_ACCURATE) {
             amount = 0;
         } else {
             amount = (uint) floor(excessAvailable * sqrtDiffOptMin[i] /
@@ -248,29 +320,28 @@ uint SimpleExecStreamGovernor::distributeCachePages(
 
         ExecStreamResourceQuantity quantity;
         if (assignOpt) {
-            assert(optTypes[i] != EXEC_RESOURCE_UNBOUNDED);
-            quantity.nCachePages = optReqts[i];
+            assert(reqt.optType != EXEC_RESOURCE_UNBOUNDED);
+            quantity.nCachePages = reqt.optReqt;
         } else {
-            quantity.nCachePages = minReqts[i];
+            quantity.nCachePages = reqt.minReqt;
         }
         quantity.nCachePages += amount;
         totalAssigned += quantity.nCachePages;
         streams[i]->setResourceAllocation(quantity);
-        FENNEL_TRACE(TRACE_FINER,
-            quantity.nCachePages << " cache pages assigned to stream " <<
-            streams[i]->getName());
+        if (isTracingLevel(TRACE_FINER)) {
+            traceCachePageRequest(
+                quantity.nCachePages, reqt, streams[i]->getName());
+        }
     }
 
     return totalAssigned;
 }
 
-void SimpleExecStreamGovernor::returnResources(
-    ExecStreamGraph *pExecStreamGraph)
+void SimpleExecStreamGovernor::returnResources(ExecStreamGraph &graph)
 {
     StrictMutexGuard mutexGuard(mutex);
 
-    ExecStreamGraphResourceMap::const_iterator iter =
-        resourceMap.find(pExecStreamGraph);
+    ExecStreamGraphResourceMap::const_iterator iter = resourceMap.find(&graph);
     if (iter == resourceMap.end()) {
         // no allocation may have been done
         return;
@@ -283,8 +354,7 @@ void SimpleExecStreamGovernor::returnResources(
         resourcesAvailable.nCachePages <<
         " cache pages now available for assignment");
 
-    resourceMap.erase(pExecStreamGraph);
-
+    resourceMap.erase(&graph);
 }
     
 FENNEL_END_CPPFILE("$Id$");

@@ -111,6 +111,7 @@ void SegBufferExecStream::openBufferForRead(bool destroy)
             bufferSegmentAccessor,firstPageId);
         pByteInputStream->getSegPos(restartPos);
     } else {
+        pByteInputStream->endPrefetch();
         pByteInputStream->seekSegPos(restartPos);
     }
     

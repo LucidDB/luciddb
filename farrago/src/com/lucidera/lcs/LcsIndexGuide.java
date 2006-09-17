@@ -449,11 +449,31 @@ public class LcsIndexGuide
         return false;
     }
 
-    int flattenOrdinal(int columnOrdinal)
+    private int flattenOrdinal(int columnOrdinal)
     {
         int i = flatteningMap[columnOrdinal];
         assert (i != -1);
         return i;
+    }
+    
+    /**
+     * Returns the unflattened column ordinal corresponding to a flattened
+     * field ordinal
+     * 
+     * @param fieldOrdinal flattened ordinal
+     * 
+     * @return unflattened ordinal
+     */
+    public int unFlattenOrdinal(int fieldOrdinal)
+    {
+        int columnOrdinal = Arrays.binarySearch(flatteningMap, fieldOrdinal);
+        if (columnOrdinal >= 0) {
+            return columnOrdinal;
+        } else {
+            // When an inexact match is found, binarySearch returns
+            // (-(insertion point) - 1).  We want (insertion point) - 1.
+            return -(columnOrdinal + 1) - 1;
+        }
     }
 
     /**
@@ -780,7 +800,7 @@ public class LcsIndexGuide
                 index,
                 createIndex,
                 implementor.translateParamId(dynParamId).intValue());
-        FemExecutionStreamDef sorter = newSorter(index);
+        FemExecutionStreamDef sorter = newSorter(index, null);
         FemExecutionStreamDef splicer =
             newSplicer(
                 rel,
@@ -850,7 +870,7 @@ public class LcsIndexGuide
     }
 
     protected FemSortingStreamDef newSorter(
-        FemLocalIndex index)
+        FemLocalIndex index, Double estimatedNumRows)
     {
         FemSortingStreamDef sortingStream = repos.newFemSortingStreamDef();
 
@@ -861,9 +881,12 @@ public class LcsIndexGuide
         sortingStream.setDistinctness(DistinctnessEnum.DUP_ALLOW);
         sortingStream.setKeyProj(createUnclusteredBTreeKeyProj(index));
         sortingStream.setOutputDesc(createUnclusteredBTreeTupleDesc(index));
-        // TODO zfong 8/16/06 - replace this with real stats when we can
-        // call RelMetadataQuery.getRowCount on physical RelNodes
-        sortingStream.setEstimatedNumRows(-1);
+        // estimated number of rows in the sort input; if unknown, set to -1
+        if (estimatedNumRows == null) {
+            sortingStream.setEstimatedNumRows(-1);
+        } else {
+            sortingStream.setEstimatedNumRows(estimatedNumRows.longValue());
+        }
         return sortingStream;
     }
 

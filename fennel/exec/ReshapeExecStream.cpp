@@ -48,8 +48,16 @@ void ReshapeExecStream::prepare(ReshapeExecStreamParams const &params)
         TupleAccessor tupleAccessor;
         tupleAccessor.compute(compTupleDesc);
         tupleAccessor.setCurrentTupleBuf(params.pCompTupleBuffer.get());
+        uint nBytes = tupleAccessor.getCurrentByteCount();
+        compTupleBuffer.reset(new FixedBuffer[nBytes]);
+        memcpy(compTupleBuffer.get(), params.pCompTupleBuffer.get(), nBytes);
+        tupleAccessor.setCurrentTupleBuf(compTupleBuffer.get());
         paramCompareData.compute(compTupleDesc);
         tupleAccessor.unmarshal(paramCompareData);
+
+        // setup a tuple projection to project the last key for use in
+        // non-equality comparisons
+        lastKey.push_back(paramCompareData.size() - 1);
     }
 
     // setup the output projection
@@ -191,7 +199,26 @@ ExecStreamResult ReshapeExecStream::execute(
 bool ReshapeExecStream::compareInput()
 {
     inputCompareProjAccessor.unmarshal(inputCompareData);
-    int rc = compTupleDesc.compareTuples(inputCompareData, paramCompareData);
+    int rc;
+
+    // if the comparison is non-equality, first compare the first n-1 keys
+    // for equality; if those keys are equal, then do the non-equality
+    // comparison on just the last key
+    if (compOp == COMP_EQ) {
+        rc = compTupleDesc.compareTuples(inputCompareData, paramCompareData);
+    } else {
+        rc =
+            compTupleDesc.compareTuplesKey(
+                inputCompareData, paramCompareData,
+                paramCompareData.size() - 1);
+        if (rc != 0) {
+            return false;
+        }
+        rc =
+            compTupleDesc.compareTuples(
+                inputCompareData, lastKey, paramCompareData, lastKey);
+    }
+
     bool pass;
     switch (compOp) {
     case COMP_EQ:
