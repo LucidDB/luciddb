@@ -19,7 +19,7 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-package com.lucidera.luciddb.applib.security;
+package com.lucidera.luciddb.applib.analysis;
 
 import com.lucidera.luciddb.applib.resource.*;
 import com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp;
@@ -28,33 +28,25 @@ import java.sql.*;
 import java.io.*;
 
 /**
- * GrantSelectForSchema UDP grants a user select privileges for all
- * tables and views in a specific schema.
+ * ComputeStatisticsForSchema UDP calls 'analyze table ... ' with 'compute
+ * statistics for all columns' for every table and view in the schema.
  *
  * @author Oscar Gothberg
  * @version $Id$
  */
 
-public abstract class GrantSelectForSchemaUdp {
+public abstract class ComputeStatisticsForSchemaUdp {
 
     /**
-     * @param schemaName name of schema to grant select privs for
-     * @param userName username of user to get privileges
+     * @param schemaName name of schema to compute statistics for
      */
 
-    public static void execute(String schemaName, String userName) throws SQLException {
+    public static void execute(String schemaName) throws SQLException {
         
-        StringWriter sw;
-        StackWriter stackw;
-        PrintWriter pw;
-
+        // currently doesn't do 'estimate' since that's not supported by luciddb yet. 
+        
         // build statement, forward it to DoForEntireSchemaUdp
-        sw = new StringWriter();
-        stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
-        pw = new PrintWriter(stackw);
-        pw.print("grant select on %TABLE_NAME% to ");
-        StackWriter.printSqlIdentifier(pw, userName);
-        pw.close();
-        DoForEntireSchemaUdp.execute(sw.toString(), schemaName, "TABLES_AND_VIEWS");
+        DoForEntireSchemaUdp.execute(
+            "analyze table %TABLE_NAME% compute statistics for all columns", schemaName, "TABLES");
     }
 }

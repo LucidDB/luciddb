@@ -28,7 +28,7 @@ import java.io.*;
 
 /**
  * DoForEntireSchemaUdp executes a sql statement for all
- * tables and views in a specific schema.
+ * tables, views, or tables and views, in a specific schema.
  *
  * @author Oscar Gothberg
  * @version $Id$
@@ -39,9 +39,11 @@ public abstract class DoForEntireSchemaUdp {
     /**
      * @param sql sql statement with %TABLE_NAME% as wildcard
      * @param schemaName name of schema to execute statement for
+     * @param objTypeStr type of objects to be processed. Can be "TABLES",
+     * "VIEWS" or "TABLES_AND_VIEWS"
      */
 
-    public static void execute(String sql, String schemaName) throws SQLException {
+    public static void execute(String sql, String schemaName, String objTypeStr) throws SQLException {
         
         PreparedStatement ps;
         ResultSet rs;
@@ -53,9 +55,21 @@ public abstract class DoForEntireSchemaUdp {
         // set up a jdbc connection
         conn = DriverManager.getConnection("jdbc:default:connection");
         
-        // retrieve list of everything table-like in schema
-        ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
-            + "from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = ?");
+        // retrieve list of wanted type of objects in schema
+        if (objTypeStr.equals("TABLES")) {
+            ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
+                + "from SYS_ROOT.DBA_TABLES "
+                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LocalTable'");
+        } else if (objTypeStr.equals("VIEWS")) {
+            ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
+                + "from SYS_ROOT.DBA_TABLES "
+                + "where SCHEMA_NAME = ? and TABLE_TYPE = 'LocalView'");
+        } else {
+            ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
+                + "from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = ?");
+        }
+            
+
         ps.setString(1, schemaName);
         rs = ps.executeQuery();
 

@@ -506,9 +506,19 @@
 0: jdbc:luciddb:> -- UDP for executing a sql statement for each table and view in an entire schema
 0: jdbc:luciddb:> create procedure do_for_entire_schema(
 . . . . . . . . > in sqlString varchar(65535),
-. . . . . . . . > in schemaName varchar(255))
+. . . . . . . . > in schemaName varchar(255),
+. . . . . . . . > in objTypeStr varchar(128))
 . . . . . . . . > language java
 . . . . . . . . > parameter style java
 . . . . . . . . > reads sql data
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- UDP for computing statistics for all tables in a schema
+0: jdbc:luciddb:> create procedure compute_statistics_for_schema(
+. . . . . . . . > in schemaName varchar(255))
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > reads sql data
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

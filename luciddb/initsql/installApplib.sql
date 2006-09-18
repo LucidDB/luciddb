@@ -506,8 +506,17 @@ external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelect
 -- UDP for executing a sql statement for each table and view in an entire schema
 create procedure do_for_entire_schema(
 in sqlString varchar(65535),
-in schemaName varchar(255))
+in schemaName varchar(255),
+in objTypeStr varchar(128))
 language java
 parameter style java
 reads sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
+
+-- UDP for computing statistics for all tables in a schema
+create procedure compute_statistics_for_schema(
+in schemaName varchar(255))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';
