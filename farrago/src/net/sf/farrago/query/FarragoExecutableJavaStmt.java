@@ -71,6 +71,7 @@ class FarragoExecutableJavaStmt
     private final String xmiFennelPlan;
     private final Set referencedObjectIds;
     private final Map<String, RelDataType> resultSetTypeMap;
+    private final Map<String, RelDataType> iterCalcTypeMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -85,7 +86,8 @@ class FarragoExecutableJavaStmt
         boolean isDml,
         Set referencedObjectIds,
         TableAccessMap tableAccessMap,
-        Map<String, RelDataType> resultSetTypeMap)
+        Map<String, RelDataType> resultSetTypeMap,
+        Map<String, RelDataType> iterCalcTypeMap)
     {
         super(dynamicParamRowType, isDml, tableAccessMap);
 
@@ -96,6 +98,7 @@ class FarragoExecutableJavaStmt
         this.xmiFennelPlan = xmiFennelPlan;
         this.referencedObjectIds = referencedObjectIds;
         this.resultSetTypeMap = resultSetTypeMap;
+        this.iterCalcTypeMap = iterCalcTypeMap;
 
         rowType = preparedRowType;
     }
@@ -189,6 +192,12 @@ class FarragoExecutableJavaStmt
     public Map<String, RelDataType> getResultSetTypeMap()
     {
         return resultSetTypeMap;
+    }
+
+    // implement FarragoSessionExecutableStmt
+    public Map<String, RelDataType> getIterCalcTypeMap()
+    {
+        return iterCalcTypeMap;
     }
 }
 

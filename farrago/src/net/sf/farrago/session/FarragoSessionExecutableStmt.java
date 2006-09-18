@@ -98,6 +98,11 @@ public interface FarragoSessionExecutableStmt
      * Map from result set name to row type.
      */
     public Map<String, RelDataType> getResultSetTypeMap();
+
+    /**
+     * Map from IterCalcRel tag to row type.
+     */
+    public Map<String, RelDataType> getIterCalcTypeMap();
 }
 
 // End FarragoSessionExecutableStmt.java

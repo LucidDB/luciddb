@@ -216,32 +216,33 @@ public class JmiChangeSet
         // further validation
         stopListening();
 
+        // build deletion list
         List<RefObject> deletionList = new ArrayList<RefObject>();
         for (Map.Entry<RefObject, JmiValidationAction> mapEntry
             : validatedMap.entrySet()) {
             RefObject obj = (RefObject) mapEntry.getKey();
             Object action = mapEntry.getValue();
 
-            if (action == JmiValidationAction.DELETION) {
-                dispatcher.clearDependencySuppliers(obj);
-                RefFeatured container = obj.refImmediateComposite();
-                if (container != null) {
-                    JmiValidationAction containerAction =
-                        validatedMap.get(container);
-                    if (containerAction == JmiValidationAction.DELETION) {
-                        // container is also being deleted; don't try
-                        // deleting this contained object--depending on order,
-                        // the attempt could cause an excn
-                    } else {
-                        // container is not being deleted
-                        deletionList.add(obj);
-                    }
+            if (action != JmiValidationAction.DELETION) {
+                continue;
+            }
+            
+            dispatcher.clearDependencySuppliers(obj);
+            RefFeatured container = obj.refImmediateComposite();
+            if (container != null) {
+                JmiValidationAction containerAction =
+                    validatedMap.get(container);
+                if (containerAction == JmiValidationAction.DELETION) {
+                    // container is also being deleted; don't try
+                    // deleting this contained object--depending on order,
+                    // the attempt could cause an excn
                 } else {
-                    // top-level object
+                    // container is not being deleted
                     deletionList.add(obj);
                 }
             } else {
-                checkJmiConstraints(obj);
+                // top-level object
+                deletionList.add(obj);
             }
         }
 
@@ -253,6 +254,17 @@ public class JmiChangeSet
                 tracer.fine("really deleting " + refObj);
             }
             refObj.refDelete();
+        }
+
+        // verify repository integrity post-delete
+        for (Map.Entry<RefObject, JmiValidationAction> mapEntry
+            : validatedMap.entrySet())
+        {
+            RefObject obj = (RefObject) mapEntry.getKey();
+            Object action = mapEntry.getValue();
+            if (action != JmiValidationAction.DELETION) {
+                checkJmiConstraints(obj);
+            }
         }
     }
 
@@ -293,7 +305,7 @@ public class JmiChangeSet
             }
             scheduleModification(associationEvent.getFixedElement());
             if (associationEvent.getOldElement() != null) {
-                scheduleModification(associationEvent.getNewElement());
+                scheduleModification(associationEvent.getOldElement());
             }
             if (associationEvent.getNewElement() != null) {
                 scheduleModification(associationEvent.getNewElement());
@@ -387,11 +399,28 @@ public class JmiChangeSet
                 }
                 JmiValidationAction action = mapEntry.getValue();
 
+                // TODO jvs 12-Sept-2006:  enable this assertion once
+                // all dependencies fixed
+                if (false) {
+                    JmiValidationAction prevAction = validatedMap.get(obj);
+                    if (prevAction != null) {
+                        if (action != JmiValidationAction.DELETION) {
+                            assert(action == prevAction)
+                                : "Illegal conflict from prevAction = "
+                                + prevAction + " to action = " + action;
+                        }
+                    }
+                }
+
                 // mark this object as already validated so it doesn't slip
                 // back in by updating itself
                 validatedMap.put(obj, action);
 
                 try {
+                    if (tracer.isLoggable(Level.FINE)) {
+                        tracer.fine(
+                            "validating " + obj + " on " + action);
+                    }
                     dispatcher.validateAction(obj, action);
                     progress = true;
                 } catch (JmiUnvalidatedDependencyException ex) {
@@ -503,6 +532,12 @@ public class JmiChangeSet
         RefObject otherEnd)
     {
         if (rule.isReversed()) {
+            if (singleLevelCascade) {
+                // REVIEW jvs 12-Sept-2006:  This is a kludge to suppress
+                // the rule from firing in the case where we're
+                // actually editing a table to delete a column.
+                return;
+            }
             // Swap ends
             RefObject tmp = droppedEnd;
             droppedEnd = otherEnd;

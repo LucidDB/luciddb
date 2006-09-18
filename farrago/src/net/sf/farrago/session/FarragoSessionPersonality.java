@@ -198,14 +198,45 @@ public interface FarragoSessionPersonality
         FarragoSessionStmtValidator stmtValidator,
         SqlNode sqlNode);
 
+    /**
+     * Loads variables from the session personality into a session variables 
+     * object. Each personality uses on its own variables. This method 
+     * allows the personality to declare its variables and set default 
+     * values for them. If any variables already have values, then they 
+     * will not be overwritten. 
+     * 
+     * <p>
+     * 
+     * This method should be called when initializing a new session or when 
+     * loading a new session personality for an existing session. The method 
+     * is fairly harmful. It has the side effect of permanently updating the 
+     * session variables. Even if the session personality is swapped out, 
+     * the changes will remain.
+     * 
+     * @param variables the session variables object
+     */
     public void loadDefaultSessionVariables(
         FarragoSessionVariables variables);
 
+    /**
+     * Checks whether a parameter value is appropriate for a session 
+     * variable and, if the value is appropriate, sets the session variable. 
+     * If an error is encountered, then the method throws an 
+     * {@link org.eigenbase.util.EigenbaseException}. Possible errors 
+     * include when no session variable has the specified name, when a 
+     * non-numeric value was specified for a numeric variable, when a 
+     * directory does not exist, or other errors.
+     * 
+     * @param ddlValidator a ddl statement validator
+     * @param variables a session variables object
+     * @param name name of the session variable to be validated
+     * @param value value to set for the session variable
+     */
     public void validateSessionVariable(
         FarragoSessionDdlValidator ddlValidator,
         FarragoSessionVariables variables,
-        String paramName,
-        String paramValue);
+        String name,
+        String value);
 
     /**
      * Creates a new processor for JMI queries.

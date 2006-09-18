@@ -20,24 +20,32 @@
 */
 package com.lucidera.opt;
 
-import com.lucidera.farrago.namespace.flatfile.*;
+import com.lucidera.lcs.*;
+
+import net.sf.farrago.query.*;
 
 import org.eigenbase.oj.rel.*;
+import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
+import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
+import org.eigenbase.reltype.*;
+
+import java.util.*;
+import java.text.*;
+
 
 /**
  * LoptIterCalcRule decorates an IterCalcRel with an error handling tag, 
- * according to the LucidDb requirements. Initially it decorates an 
- * IterCalcRel if it is adjacent to a TableAccessRelBase.
+ * according to the LucidDb requirements.
  *
  * @author John Pham
  * @version $Id$
  */
-public class LoptIterCalcRule extends RelOptRule
+public abstract class LoptIterCalcRule extends RelOptRule
 {
-    public static LoptIterCalcRule flatfileInstance = 
-        new LoptIterCalcRule(
+    public static LoptIterCalcRule tableAccessInstance = 
+        new TableAccessRule(
             new RelOptRuleOperand(
                 IterCalcRel.class,
                 new RelOptRuleOperand[] {
@@ -45,15 +53,92 @@ public class LoptIterCalcRule extends RelOptRule
                         ConverterRel.class,
                         new RelOptRuleOperand[] {
                             new RelOptRuleOperand(
-                                FlatFileFennelRel.class, 
+                                TableAccessRelBase.class, 
                                 null)
                     })
         }));
 
+    public static LoptIterCalcRule jdbcQueryInstance = 
+        new JdbcQueryRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                JdbcQuery.class, 
+                                null)
+                    })
+        }));
+
+    public static LoptIterCalcRule javaUdxInstance = 
+        new JavaUdxRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        FarragoJavaUdxRel.class,
+                        null)
+                    }));
+
+    public static LoptIterCalcRule lcsAppendInstance =
+        new TableAppendRule(
+            new RelOptRuleOperand(
+                LcsTableAppendRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                IterCalcRel.class,
+                                null)
+                    })
+        }));
+
+    public static LoptIterCalcRule lcsMergeInstance =
+        new TableMergeRule(
+            new RelOptRuleOperand(
+                LcsTableMergeRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                IterCalcRel.class,
+                                null)
+                    })
+        }));
+
+    public static LoptIterCalcRule lcsDeleteInstance =
+        new TableDeleteRule(
+            new RelOptRuleOperand(
+                LcsTableDeleteRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                IterCalcRel.class,
+                                null)
+                    })
+        }));
+
+    public static LoptIterCalcRule defaultInstance =
+        new DefaultRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class, null));
+
+    // index acess rule, hash rules
+
+    private static String tagTimestampFormat = "yyyy-MM-dd-HH-mm-ss";
+    private static DateFormat tagTimestampFormatter = 
+        new SimpleDateFormat(tagTimestampFormat);
+
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a new LcsIndexAccessRule object.
+     * Constructs a new LoptIterCalcRule
      */
     public LoptIterCalcRule(RelOptRuleOperand operand)
     {
@@ -62,36 +147,306 @@ public class LoptIterCalcRule extends RelOptRule
 
     //~ Methods ----------------------------------------------------------------
 
-    // implement RelOptRule
-    public void onMatch(RelOptRuleCall call)
+    /**
+     * Transform call to an IterCalcRel with a replaced tag
+     */
+    protected void transformToTag(
+        RelOptRuleCall call, IterCalcRel calc, String tag)
     {
-        IterCalcRel calc = (IterCalcRel) call.rels[0];
-        FlatFileFennelRel flatfile = (FlatFileFennelRel) call.rels[2];
+        call.transformTo(replaceTag(calc, tag));
+    }
 
-        if (calc.getTag() != null) {
-            return;
-        }
-        
-        String tag = makeTag(flatfile.getTable().getQualifiedName());
-        
-        IterCalcRel newCalc = 
+    /**
+     * Sets the tag of an IterCalcRel to the specified tag
+     * @return a new IterCalcRel with the specified tag
+     */
+    protected IterCalcRel replaceTag(IterCalcRel calc, String tag)
+    {
+        return
             new IterCalcRel(
                 calc.getCluster(),
                 calc.getChild(),
                 calc.getProgram(),
                 calc.getFlags(),
                 tag);
-        call.transformTo(newCalc);
     }
 
-    String makeTag(String[] qualifiedName)
+    /**
+     * Replaces the tag of an IterCalcRel underneath an 
+     * IteratorToFennelConverter. Replaces the tag, then duplicates 
+     * the converter.
+     * @return the duplicated converter
+     */
+    protected IteratorToFennelConverter replaceTagAsFennel(
+        IteratorToFennelConverter converter, IterCalcRel calc, String tag)
+    {
+        IterCalcRel newCalc = replaceTag(calc, tag);
+        return 
+            new IteratorToFennelConverter(
+                converter.getCluster(),
+                newCalc);
+    }
+
+    /**
+     * Gets a tag corresponding to a table name. The tag is built from 
+     * the elements qualified name, joined by dots, in other words:
+     * "<code>[action].catalog.schema.table</code>".
+     * @param action an action such as "delete" or "merge"
+     * @param qualifiedName a qualified table name
+     * @param time whether to suffix with timestamp
+     */
+    protected String getTableTag(
+        String action, String[] qualifiedName, boolean time)
     {
         assert (qualifiedName.length == 3);
-        StringBuffer sb = new StringBuffer(qualifiedName[0]);
-        for (int i = 1; i < qualifiedName.length; i++) {
+        StringBuffer sb = new StringBuffer(action);
+        for (int i = 0; i < qualifiedName.length; i++) {
             sb.append(".").append(qualifiedName[i]);
         }
+        if (time) {
+            sb.append("_" + tagTimestampFormatter.format(new Date()));
+        }
         return sb.toString();
+    }
+
+    /**
+     * Gets the default tag for an IterCalcRel, based upon its id.
+     * The generated tag will be unique for the server process.
+     * @param rel the relation to build a tag for
+     */
+    protected String getDefaultTag(IterCalcRel rel)
+    {
+        // the timestamp should guarantee a unique default tag
+        // and might be more readable than a uuid
+        return "IterCalcRel" + rel.getId() + "_" 
+            + tagTimestampFormatter.format(new Date());
+    }
+
+    protected void setIterCalcTypeMap(
+        FennelRel rel,
+        String tag, 
+        RelOptTable table)
+    {
+        FarragoPreparingStmt stmt = 
+            FennelRelUtil.getPreparingStmt(rel);
+        stmt.mapIterCalcType(tag, table.getRowType());
+    }
+
+    //~ Inner Classes ----------------------------------------------------------
+
+    public static final String TABLE_ACCESS_PREFIX = "Read";
+    public static final String JDBC_QUERY_PREFIX = "Jdbc";
+    public static final String JAVA_UDX_PREFIX = "JavaUdx";
+    public static final String TABLE_APPEND_PREFIX = "Insert";
+    public static final String TABLE_MERGE_PREFIX = "Merge";
+    public static final String TABLE_DELETE_PREFIX = "Delete";
+
+    /**
+     * A rule for tagging a calculator on top of a table scan.
+     */
+    private static class TableAccessRule extends LoptIterCalcRule
+    {
+        public TableAccessRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            TableAccessRelBase tableRel = (TableAccessRelBase) call.rels[2];
+            String tag = getTableTag(
+                TABLE_ACCESS_PREFIX,
+                tableRel.getTable().getQualifiedName(), false);
+            transformToTag(call, calc, tag);
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator on top of a JDBC query
+     */
+    private static class JdbcQueryRule extends LoptIterCalcRule
+    {
+        public JdbcQueryRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            String tag = JDBC_QUERY_PREFIX + getDefaultTag(calc);
+            transformToTag(call, calc, tag);
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator on top of a Java UDX
+     */
+    private static class JavaUdxRule extends LoptIterCalcRule
+    {
+        public JavaUdxRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            String tag = JAVA_UDX_PREFIX + getDefaultTag(calc);
+            transformToTag(call, calc, tag);
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator beneath a table modification.
+     */
+    private static class TableAppendRule extends LoptIterCalcRule
+    {
+        public TableAppendRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[2];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            LcsTableAppendRel tableRel = (LcsTableAppendRel) call.rels[0];
+            IteratorToFennelConverter converter = 
+                (IteratorToFennelConverter) call.rels[1];
+            String tag = getTableTag(
+                TABLE_APPEND_PREFIX, 
+                tableRel.getTable().getQualifiedName(), 
+                true);
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            call.transformTo(
+                new LcsTableAppendRel(
+                    tableRel.getCluster(),
+                    tableRel.getLcsTable(),
+                    tableRel.getConnection(),
+                    replaceTagAsFennel(converter, calc, tag),
+                    tableRel.getOperation(),
+                    tableRel.getUpdateColumnList()));
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator beneath a table modification.
+     */
+    private static class TableMergeRule extends LoptIterCalcRule
+    {
+        public TableMergeRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[2];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            LcsTableMergeRel tableRel = (LcsTableMergeRel) call.rels[0];
+            IteratorToFennelConverter converter = 
+                (IteratorToFennelConverter) call.rels[1];
+            String tag = getTableTag(
+                TABLE_MERGE_PREFIX, 
+                tableRel.getTable().getQualifiedName(),
+                true);
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            call.transformTo(
+                new LcsTableMergeRel(
+                    tableRel.getCluster(),
+                    tableRel.getLcsTable(),
+                    tableRel.getConnection(),
+                    replaceTagAsFennel(converter, calc, tag),
+                    tableRel.getOperation(),
+                    tableRel.getUpdateColumnList(),
+                    tableRel.getUpdateOnly()));
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator beneath a table modification.
+     */
+    private static class TableDeleteRule extends LoptIterCalcRule
+    {
+        public TableDeleteRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[2];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            LcsTableDeleteRel tableRel = (LcsTableDeleteRel) call.rels[0];
+            IteratorToFennelConverter converter = 
+                (IteratorToFennelConverter) call.rels[1];
+            String tag = getTableTag(
+                TABLE_DELETE_PREFIX, 
+                tableRel.getTable().getQualifiedName(), 
+                true);
+
+            setIterCalcTypeMap(tableRel, tag, tableRel.getTable());
+            call.transformTo(
+                new LcsTableDeleteRel(
+                    tableRel.getCluster(),
+                    tableRel.getLcsTable(),
+                    tableRel.getConnection(),
+                    replaceTagAsFennel(converter, calc, tag),
+                    tableRel.getOperation(),
+                    tableRel.getUpdateColumnList()));
+        }
+    }
+
+    /**
+     * A default rule for tagging any calculator
+     */
+    private static class DefaultRule extends LoptIterCalcRule
+    {
+        public DefaultRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+            transformToTag(call, calc, getDefaultTag(calc));
+        }
     }
 }
 

@@ -720,6 +720,29 @@ column type family is {1} but default value type family is {2}</text>
 <text>Failed to acquire lock on {0}</text>
 </exception>
 
+<exception id="450150" name="JavaCalcError">
+<text>Could not calculate result column {0} for the following row:
+{1}
+Messages: {2}</text>
+</exception>
+
+<exception id="450151" name="JavaCalcDetailedError">
+<text>Could not calculate result column {0} of {1} for input:
+{2}
+Messages: {3}</text>
+</exception>
+
+<exception id="450152" name="JavaCalcConditionError">
+<text>Could not calculate condition for input:
+{0}
+Messages: {1}</text>
+</exception>
+
+<exception id="450160" name="ErrorLimitExceeded">
+<text>Exceeded limit of {0,number,#} errors. Last error was: 
+{1}</text>
+</exception>
+
 <!-- ====================================================================== -->
 <!-- Data wrapper resources 460,000 - 470,000 -->
 <!-- ====================================================================== -->

@@ -124,6 +124,22 @@ select sum(age) from emps group by deptno order by 1;
 select deptno, count(*) from emps where deptno < 0 group by deptno
 order by 1;
 
+-- LDB-135 - exercise the case where the buffer space for the aggregate 
+-- result increases, requiring a new slot to be created for an existing tuple
+create table test(num integer, name varchar(20));
+insert into test values(0,'B');
+insert into test values(1,'D');
+insert into test values(0,'AAA');
+
+create table test2(dname varchar(20), num integer);
+insert into test2 values('dept1', 0);
+insert into test2 values('dept2', 1);
+
+select test2.dname, min(test.name) from test,test2
+    where test.num = test2.num group by dname;
+
+drop table test;
+drop table test2;
 
 -- verify plans
 !set outputformat csv

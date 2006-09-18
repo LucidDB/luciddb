@@ -2,6 +2,9 @@
 0: jdbc:farrago:> -- LucidDB SQL test for Hash Join and Hash Agg --
 0: jdbc:farrago:> -------------------------------------------------
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO jvs 11-Sept-2006:  Get rid of this once leak is investigated.
+0: jdbc:farrago:> alter system set "codeCacheMaxBytes" = min;
+0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------------------------------------------
 0: jdbc:farrago:> -- non LDB personality uses cartesian product --
 0: jdbc:farrago:> ------------------------------------------------

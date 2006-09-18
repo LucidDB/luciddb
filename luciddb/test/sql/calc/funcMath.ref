@@ -56,7 +56,9 @@
 +---------+---------+---------+---------+
 0: jdbc:luciddb:> select ln(nnull), ln(0), ln(exp(1)) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'LN' function (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invalid argument(s) for 'LN' function (state=,code=0)
 0: jdbc:luciddb:> select ln(nnull), ln(exp(1)) from boris1
 . . . . . . . . > ;
 +---------+---------+
@@ -154,10 +156,14 @@ Error: Argument to function 'MOD' must have a scale of 0 (state=,code=0)
 +---------+---------+
 0: jdbc:luciddb:> select pow(-1,-0.5) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'POW' function (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invalid argument(s) for 'POW' function (state=,code=0)
 0: jdbc:luciddb:> select pow(-1,-0.25) from boris1
 . . . . . . . . > ;
-Error: Invalid argument(s) for 'POW' function (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invalid argument(s) for 'POW' function (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- select round(cos(.2), 1), round(.2383, 2), round(.2313,0), round(nnull, 3) from boris1

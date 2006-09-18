@@ -21,11 +21,14 @@
 package com.lucidera.runtime;
 
 import com.lucidera.farrago.*;
+import com.lucidera.opt.*;
 
+import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
 
+import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.util.*;
@@ -54,6 +57,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     private static final String TIMESTAMP_FIELD_NAME = "LE_TIMESTAMP";
     private static final String EXCEPTION_FIELD_NAME = "LE_EXCEPTION";
     private static final String POSITION_FIELD_NAME = "LE_COLUMN_ORDINAL";
+    private static final String CONDITION_FIELD_NAME = "CONDITION";
 
     private static final Logger tracer = 
         FarragoTrace.getRuntimeContextTracer();
@@ -63,6 +67,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
     //~ Instance fields --------------------------------------------------------
 
+    private final Map<String, RelDataType> iterCalcTypeMap;
     private final FarragoSessionVariables vars;
     private final Map<String, ErrorLogger> loggerMap;
     private final ErrorQuota quota;
@@ -74,6 +79,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     public LucidDbRuntimeContext(FarragoSessionRuntimeParams params)
     {
         super(params);
+        iterCalcTypeMap = params.iterCalcTypeMap;
         vars = getSession().getSessionVariables();
         loggerMap = new HashMap<String, ErrorLogger>();
 
@@ -178,7 +184,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         SyntheticObject row, RuntimeException ex, int columnIndex, String tag) 
     {
         ErrorLogger logger = getLogger(tag);
-        logger.log(row, ex, columnIndex);
+        logger.log(row, ex, columnIndex, tag);
         // we don't return any status
         return null;
     }
@@ -257,7 +263,11 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         /**
          * Writes a record to a log file
          */
-        public void log(SyntheticObject o, RuntimeException ex, int columnIndex);
+        public void log(
+            SyntheticObject o, 
+            RuntimeException ex, 
+            int columnIndex,
+            String tag);
 
         /**
          * Gets the name of the log file being written
@@ -271,13 +281,41 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     }
 
     /**
+     * Base class for error loggers
+     */
+    private abstract class ErrorLoggerBase implements ErrorLogger
+    {
+        /**
+         * Gets the name of an IterCalcRel's output column. If the rel 
+         * is being used for table DML, the column name will be inferred 
+         * from the table. Otherwise the column name is the columnIndex.
+         * 
+         * @param tag error handling tag used to identify an IterCalcRel
+         * @param columnIndex a 1-based column index of an output column
+         * @return
+         */
+        protected String getFieldName(String tag, int columnIndex)
+        {
+            if (columnIndex == 0) {
+                return CONDITION_FIELD_NAME;
+            }
+            RelDataType resultType = iterCalcTypeMap.get(tag);
+            if (resultType != null) {
+                assert(columnIndex <= resultType.getFieldCount());
+                return resultType.getFieldList().get(columnIndex-1).getName();
+            }
+            return Integer.toString(columnIndex);
+        }
+    }
+
+    /**
      * The default error logger writes records to a file
      * 
      * <p>TODO: use existing schema export code and output BCP 
      * files as well.
      */
     private class DefaultErrorLogger 
-    implements ErrorLogger, ClosableAllocation
+    extends ErrorLoggerBase implements ClosableAllocation
     {
         private static final String timestampFormatStr = 
             SqlParserUtil.TimestampFormatStr;
@@ -288,6 +326,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         private PrintStream ps;
         private boolean failedInit;
         private Field[] fields;
+        private int fieldCount;
         private Object[] args;
         private String format;
         private boolean needsHeader;
@@ -320,7 +359,8 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         public void log(
             SyntheticObject row, 
             RuntimeException ex, 
-            int columnIndex)
+            int columnIndex,
+            String tag)
         {
             errorCount++;
             if (failedInit) return;
@@ -338,18 +378,24 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 } catch (FileNotFoundException ex2) {
                     tracer.severe("could not open row error logger " + filename 
                         + ": " + ex2);
+                    return;
                 } catch (SecurityException ex2) {
                     tracer.severe("could not open row error logger " + filename 
                         + ": " + ex2);
+                    return;
                 }
             }
 
             int prefixCount = hasException ? 3 : 1;
             if (fields == null) {
                 fields = row.getFields();
+                fieldCount = fields.length;
+                if (fields[fieldCount-1].getName().startsWith("this$")) {
+                    fieldCount--;
+                }
             }
             if (args == null) {
-                args = new Object[fields.length+prefixCount];
+                args = new Object[fieldCount+prefixCount];
             }
             if (format == null) {
                 StringBuffer sb = new StringBuffer("%s");
@@ -362,10 +408,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
             args[0] = quoteValue(dateFormat.format(new Date()));
             if (hasException) {
-                args[1] = quoteValue(ex.toString());
-                args[2] = quoteValue(Integer.toString(columnIndex));
+                args[1] = quoteValue(Util.getMessages(ex));
+                args[2] = quoteValue(getFieldName(tag, columnIndex));
             }
-            for (int i = 0; i < fields.length; i++) {
+            for (int i = 0; i < fieldCount; i++) {
                 try {
                     args[prefixCount+i] = 
                         quoteValue(fields[i].get(row).toString());
@@ -381,8 +427,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                     fieldNames[1] = quoteValue(EXCEPTION_FIELD_NAME);
                     fieldNames[2] = quoteValue(POSITION_FIELD_NAME);
                 }
-                for (int i = 0; i < fields.length; i++) {
-                    fieldNames[i+prefixCount] = quoteValue(fields[i].getName());
+                for (int i = 0; i < fieldCount; i++) {
+                    fieldNames[i+prefixCount] = 
+                        quoteValue(stripColumnQualifier(fields[i].getName()));
                 }
                 ps.printf(format, fieldNames);
                 needsHeader = false;
@@ -404,6 +451,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             if (s == null) {
                 return "";
             }
+            if (s.length() == 0) {
+                return TWO_QUOTES;
+            }
 
             // We can simply return values without special characters.
             // In order for the quote character to be special, the value 
@@ -417,6 +467,21 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
             String replaced = s.replaceAll(ONE_QUOTE, TWO_QUOTES);
             return ONE_QUOTE + replaced + ONE_QUOTE;
+        }
+
+        /**
+         * Fields of generated Java code look like: ID$0$[COLNAME]
+         * This methods strips everything up to the last '$'.
+         * 
+         * @param fieldName name of field to be cleaned stripped
+         */
+        private String stripColumnQualifier(String fieldName)
+        {
+            int lastDollar = fieldName.lastIndexOf('$');
+            if (lastDollar == -1) {
+                return fieldName;
+            }
+            return fieldName.substring(lastDollar+1);
         }
 
         // implement ErrorLogger
@@ -465,7 +530,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
          */
         synchronized public void logSummary(SummaryLogEntry entry)
         {
-            log(entry, null, 0);
+            log(entry, null, 0, null);
         }
     }
 
@@ -493,7 +558,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     /**
      * Applies a quota to an error logger
      */
-    private class ErrorQuotaLogger implements ErrorLogger
+    private class ErrorQuotaLogger extends ErrorLoggerBase
     {
         private ErrorLogger logger;
         private ErrorQuota quota;
@@ -507,17 +572,42 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         }
 
         // implement ErrorLogger
-        public void log(SyntheticObject o, RuntimeException ex, int columnIndex)
+        public void log(
+            SyntheticObject o, 
+            RuntimeException ex, 
+            int columnIndex, 
+            String tag)
         {
             errorCount++;
             synchronized (quota) {
                 quota.errorCount++;
                 // NOTE: if an error causes an exception, do not log it
                 if (quota.errorCount > quota.errorMax) {
-                    throw ex;
+                    EigenbaseException ex2;
+                    String field = getFieldName(tag, columnIndex);
+                    String row = o.toString();
+                    String messages = Util.getMessages(ex);
+                    if (columnIndex == 0) {
+                        ex2 = 
+                            FarragoResource.instance().JavaCalcConditionError
+                            .ex(row, messages);
+                    } else if (! tag.startsWith(LoptIterCalcRule.TABLE_ACCESS_PREFIX)) { 
+                        ex2 = 
+                            FarragoResource.instance().JavaCalcError.ex(
+                                field, row, messages);
+                    } else {
+                        ex2 = 
+                            FarragoResource.instance().JavaCalcDetailedError
+                            .ex(field, tag, row, messages);
+                    }
+                    if (quota.errorMax > 0) {
+                        throw FarragoResource.instance().ErrorLimitExceeded.ex(
+                            quota.errorMax, Util.getMessages(ex2));
+                    }
+                    throw ex2;
                 }
                 if (quota.errorCount <= quota.errorLogMax) {
-                    logger.log(o, ex, columnIndex);
+                    logger.log(o, ex, columnIndex, tag);
                 }
             }
         }
@@ -525,6 +615,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         // implement ErrorLogger
         public String getFilename()
         {
+            if (quota.errorMax == 0) {
+                return "";
+            }
             return logger.getFilename();
         }
 

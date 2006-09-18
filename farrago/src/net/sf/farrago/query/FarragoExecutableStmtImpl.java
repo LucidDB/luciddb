@@ -93,6 +93,12 @@ abstract class FarragoExecutableStmtImpl
     {
         return Collections.EMPTY_MAP;
     }
+
+    // implement FarragoSessionExecutableStmt
+    public Map<String, RelDataType> getIterCalcTypeMap()
+    {
+        return Collections.EMPTY_MAP;
+    }
 }
 
 // End FarragoExecutableStmtImpl.java

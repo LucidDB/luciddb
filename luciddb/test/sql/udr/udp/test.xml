@@ -28,6 +28,10 @@
       </test>
 
       <test name="misc" requiresSuccess="crSource">
+        <!-- TODO: BKH-29 -->
+        <test-metadata>
+          <knownFailure>true</knownFailure>
+        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/misc.sql"/>
       </test>
 

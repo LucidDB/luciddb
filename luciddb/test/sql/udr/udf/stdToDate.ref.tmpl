@@ -1,0 +1,74 @@
+0: jdbc:luciddb:> -- $Id$
+0: jdbc:luciddb:> -- Reading dates with date conversion functions based on the Java library
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- specify datetime formats in the flat file link
+0: jdbc:luciddb:> create server flatfile_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory '@DATADIR@',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     date_format 'MM/dd/yyyy',
+. . . . . . . . >     time_format 'hh:mm:ss a',
+. . . . . . . . >     timestamp_format 'MM/dd/yyyy hh:mm:ss a'
+. . . . . . . . >     );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- view the text of the file
+0: jdbc:luciddb:> select * from flatfile_server.sample."dates";
++-------------+--------------+-------------------------+
+|    COL1     |     COL2     |          COL3           |
++-------------+--------------+-------------------------+
+| START_DATE  | START_TIME   | ACTIVITY_TIME           |
+| 01/01/1980  | 12:00:00 AM  | 01/01/1980 12:00:00 AM  |
+| 12/31/1980  | 11:59:59 PM  | 12/31/1980 11:59:59 AM  |
+| 02/29/2004  | 12:00:00 PM  | 02/29/2004 12:00:00 PM  |
++-------------+--------------+-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- read the file as date and times
+0: jdbc:luciddb:> select * from flatfile_server.bcp."dates";
++-------------+-------------+------------------------+
+| START_DATE  | START_TIME  |     ACTIVITY_TIME      |
++-------------+-------------+------------------------+
+| 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00.0  |
+| 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59.0  |
+| 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
++-------------+-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- convert back into strings
+0: jdbc:luciddb:> select 
+. . . . . . . . >     applib.to_char('MM/dd/yyyy', start_date),
+. . . . . . . . >     applib.to_char('hh:mm:ss a', start_time),
+. . . . . . . . >     applib.to_char('MM/dd/yyyy hh:mm:ss a', activity_time)
+. . . . . . . . > from 
+. . . . . . . . >     flatfile_server.bcp."dates";
+Error: From line 2, column 12 to line 2, column 44: No match found for function signature TO_CHAR(<CHARACTER>, <DATE>) (state=,code=0)
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.timestamp_to_char(
+. . . . . . . . >     'MM/dd/yyyy hh:mm:ss a', 
+. . . . . . . . >     cast ('2001-01-01 12:00:00' as timestamp));
++-------------------------+
+|         EXPR$0          |
++-------------------------+
+| 01/01/2001 12:00:00 PM  |
++-------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.char_to_timestamp(
+. . . . . . . . >     'yyyy-MM-dd HH:mm:ss',
+. . . . . . . . >     '2001-01-01 12:00:00');
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 2001-01-01 12:00:00.0  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values applib.timestamp_to_char( 
+. . . . . . . . >     'MM/dd/yyyy',
+. . . . . . . . >     applib.char_to_timestamp(
+. . . . . . . . >         'yyyy-MM-dd HH:mm:ss',
+. . . . . . . . >         '2001-01-01 12:00:00'));
++-------------+
+|   EXPR$0    |
++-------------+
+| 01/01/2001  |
++-------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit

@@ -27,6 +27,7 @@ import java.text.*;
 
 import java.util.*;
 
+import net.sf.farrago.fem.config.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
@@ -109,40 +110,111 @@ class FlatFileColumnSet
         RelOptCluster cluster,
         RelOptConnection connection)
     {
-        FlatFileFennelRel fennelRel =
+        // Implement the flat file scan as physical relations. The scan 
+        // relies on a calculator to convert text into typed data. This 
+        // calculator may either be integrated into the flat file scan 
+        // as a Fennel calc, or may be a separate relation, probably a 
+        // Java calc.
+        // 
+        // In addition, if custom datetime formats are specified, they are 
+        // always implemented in a separate CalcRel (because the Fennel
+        // calc only understands ISO formats).
+
+        FlatFileProgramWriter pw = 
+            new FlatFileProgramWriter(
+                cluster.getRexBuilder(), 
+                getPreparingStmt(), 
+                params,
+                rowType);
+
+        if (preferFennel()) {
+            RexProgram program = pw.getJavaOnlySection();
+            if (program == null) {
+                return newFennelRel(cluster, connection, schemaType, rowType);
+            }
+            return newCalcRel(
+                cluster,
+                newFennelRel(
+                    cluster, 
+                    connection, 
+                    schemaType, 
+                    program.getInputRowType()),
+                program);
+        }
+
+        // Note: when using Java calc override the schema type
+        RexProgram program = pw.getProgram();
+        return newCalcRel(
+            cluster, 
+            newFennelRel(
+                cluster, 
+                connection, 
+                FlatFileParams.SchemaType.QUERY_TEXT, 
+                program.getInputRowType()), 
+            program);
+    }
+
+    /**
+     * Whether to prefer a Fennel implementation. A Fennel implementation
+     * is preferred for simple scan modes, SAMPLE and DESCRIBE, and when 
+     * the calc virtual machine settings are not equal to CALCVM_JAVA.
+     */
+    private boolean preferFennel()
+    {
+        switch (schemaType) {
+        case QUERY:
+            CalcVirtualMachine calcVm = getPreparingStmt().getRepos()
+                .getCurrentConfig().getCalcVirtualMachine();
+            return !calcVm.equals(CalcVirtualMachineEnum.CALCVM_JAVA);
+        default:
+            // basic modes such as SAMPLE and DESCRIBE can always be 
+            // implemented without Java
+            return true;
+        }
+    }
+    
+    /**
+     * Constructs a new FlatFileFennelRel
+     */
+    private FennelRel newFennelRel(
+        RelOptCluster cluster,
+        RelOptConnection connection,
+        FlatFileParams.SchemaType schemaType,
+        RelDataType rowType)
+    {
+        return
             new FlatFileFennelRel(
                 this,
                 cluster,
                 connection,
-                schemaType);
-
-        // return the rel directly unless java data conversions are required
-        if (fennelRel.isPureFennel()) {
-            return fennelRel;
-        }
-
-        // otherwise update the rel to return text only
-        // and allow the Java calc to perform the data conversions
-        FlatFileProgramWriter pw = new FlatFileProgramWriter(fennelRel);
-        RexProgram program = pw.getProgram(fennelRel.getRowType());
-        fennelRel.setTextOnly(program.getInputRowType());
-
-        RelNode iterRel =
-            new FennelToIteratorConverter(
-                fennelRel.getCluster(),
-                fennelRel);
-
-        RelNode calcRel = 
-            new CalcRel(
-                iterRel.getCluster(),
-                new RelTraitSet(CallingConvention.NONE),
-                iterRel,
-                program.getOutputRowType(),
-                program,
-                Collections.EMPTY_LIST);
-        return calcRel;
+                schemaType,
+                params,
+                rowType);
     }
 
+    /**
+     * Constructs a new CalcRel
+     */
+    private CalcRel newCalcRel(
+        RelOptCluster cluster, 
+        FennelRel child, 
+        RexProgram program)
+    {
+        // insert a converter to force the usage of Java calc
+        RelNode iterRel =
+            new FennelToIteratorConverter(
+                cluster,
+                child);
+
+        return new CalcRel(
+            cluster,
+            new RelTraitSet(CallingConvention.NONE),
+            iterRel,
+            program.getOutputRowType(),
+            program,
+            Collections.EMPTY_LIST);
+    }
+    
     /**
      * Constructs the full path to the file for a table, based upon the server
      * directory, filename option (if specified), and the server data file

@@ -256,10 +256,10 @@ ${farrago.test.jvmargs}
   <property name="FarragoExtMetamodelUMLSansDiagrams.xmi"
     location="${farrago.xmi.dir}/FarragoExtMetamodelUMLSansDiagrams.xmi"/>
 
-  <!-- Zipfile containing Poseidon UML XMI representation of -->
+  <!-- File containing ArgoUML XMI representation of -->
   <!-- Farrago metamodel -->
-  <property name="FarragoExtMetamodelUML.zuml"
-    location="${farrago.xmi.dir}/FarragoExtMetamodelUML.zuml"/>
+  <property name="FarragoExtMetamodel.uml"
+    location="${farrago.xmi.dir}/FarragoExtMetamodel.uml"/>
 
   <!-- File defining Farrago tracing -->
   <property name="FarragoTrace.properties"

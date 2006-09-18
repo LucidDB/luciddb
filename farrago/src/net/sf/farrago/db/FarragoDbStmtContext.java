@@ -196,6 +196,7 @@ public class FarragoDbStmtContext
             }
             params.isDml = isDml;
             params.resultSetTypeMap = executableStmt.getResultSetTypeMap();
+            params.iterCalcTypeMap = executableStmt.getIterCalcTypeMap();
             params.dynamicParamValues = dynamicParamValues;
             assert (runningContext == null);
 

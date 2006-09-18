@@ -59,7 +59,9 @@ Error: From line 1, column 25 to line 1, column 44: Numeric literal '-9223372036
 | 2.12346  |
 +----------+
 0: jdbc:luciddb:> select mod ((cast (d as decimal (10,0))), cast (d2 as decimal(1,0))) from dt;
-Error: java.lang.ArithmeticException: / by zero (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[-2.12346, 0.12]
+Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
 0: jdbc:luciddb:> select mod ((cast (d as decimal (10,0))), cast ('9.09' as decimal(1,0))) from dt;
 +---------+
 | EXPR$0  |
@@ -291,7 +293,9 @@ Error: DDL validation error near line 1, column 26: Precision specification not 
 | 1234.5679  |
 +------------+
 0: jdbc:luciddb:> values cast (12345.567890 as decimal(8,4));
-Error: Overflow during calculation or cast. (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- from literals
 0: jdbc:luciddb:> values cast (9223372036854775807 as decimal(19,0));
@@ -332,7 +336,9 @@ Error: From line 1, column 15 to line 1, column 33: Numeric literal '-9223372036
 | -918765432109876544  |
 +----------------------+
 0: jdbc:luciddb:> values cast (cast ('-918765432109876543.5' as varchar(100)) as decimal(19,3));
-Error: Overflow during calculation or cast. (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- to char/varchar
 0: jdbc:luciddb:> values cast (cast (-918765432109876543.2 as decimal(19,1)) as char(21));
@@ -494,7 +500,9 @@ Messages:
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- overflow
 0: jdbc:luciddb:> values cast(100000 as char(4));
-Error: Overflow during calculation or cast. (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> -- FRG-46
 0: jdbc:luciddb:> values cast (1.2 as decimal(19,18)) + 10;
 +------------------------+

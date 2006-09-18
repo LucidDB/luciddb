@@ -219,9 +219,9 @@ public:
      * @param blockNum the block number to use when making up the Page's
      * BlockId; the device ID will be NULL_DEVICE_ID
      *
-     * @return the locked page, or NULL if none are available
+     * @return the locked page
      */
-    virtual CachePage *lockScratchPage(BlockNum blockNum = 0) = 0;
+    virtual CachePage &lockScratchPage(BlockNum blockNum = 0) = 0;
 
     // partial implementation of CacheAccessor
     virtual SharedCache getCache();

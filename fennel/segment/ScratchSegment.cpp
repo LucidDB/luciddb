@@ -87,11 +87,8 @@ PageId ScratchSegment::allocatePageId(PageOwnerId)
     }
 
     BlockNum blockNum = pages.size();
-    CachePage *pPage = getCache()->lockScratchPage(blockNum);
-    if (!pPage) {
-        throw ScratchMemExcn();
-    } 
-    pages.push_back(pPage);
+    CachePage &page = getCache()->lockScratchPage(blockNum);
+    pages.push_back(&page);
     return getLinearPageId(blockNum);
 }
 

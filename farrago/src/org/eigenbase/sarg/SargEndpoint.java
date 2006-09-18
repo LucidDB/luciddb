@@ -31,6 +31,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -217,45 +218,60 @@ public class SargEndpoint
     {
         // For character strings, have to deal with truncation (complicated by
         // padding rules).
-
+        
+        boolean fixed = dataType.getSqlTypeName() == SqlTypeName.Char;
+        
         String s = value.getValue();
-        if (s.length() <= dataType.getPrecision()) {
-            // No truncation required.
-            return 0;
+        String trimmed = Util.rtrim(s);
+
+        if (fixed) {
+            // For CHAR, canonical representation is padded.  This is
+            // required during execution of comparisons.
+            s = Util.rpad(s, dataType.getPrecision());
+        } else {
+            // For PAD SPACE, we can use trimmed representation as
+            // canonical for VARCHAR.  This may shave off cycles
+            // during execution of comparisons.  If we ever support the NO PAD
+            // attribute, we'll have to do something different for collations
+            // with that attribute enabled.
+            s = trimmed;
         }
-        String truncated = s.substring(
-                0,
-                dataType.getPrecision());
+
+        // Truncate if needed
+        if (s.length() > dataType.getPrecision()) {
+            s = s.substring(0, dataType.getPrecision());
+
+            // Post-truncation, need to trim again if truncation
+            // left spaces on the end
+            if (!fixed) {
+                s = Util.rtrim(s);
+            }
+        }
         coordinate =
             factory.getRexBuilder().makeCharLiteral(
                 new NlsString(
-                    truncated,
+                    s,
                     value.getCharsetName(),
                     value.getCollation()));
 
-        // NOTE jvs 19-Feb-2006:  this implements the PAD SPACE attribute
-        // on collation.  If we ever support the NO PAD attribute,
-        // we should skip this for collations with that attribute enabled.
-        boolean allTrailingSpaces = true;
-        for (int i = dataType.getPrecision(); i < s.length(); ++i) {
-            if (s.charAt(i) != ' ') {
-                allTrailingSpaces = false;
-                break;
-            }
-        }
-        if (allTrailingSpaces) {
+        if (trimmed.length() > dataType.getPrecision()) {
+            // Truncation is always "down" in coordinate space, so rounding
+            // compensation is always "up".  Note that this calculation is
+            // intentionally with respect to the pre-truncation trim (not the
+            // post-truncation trim) because that's what tells us whether
+            // we truncated anything of significance.
+            return 1;
+        } else {
             // For PAD SPACE, trailing spaces have no effect on comparison,
             // so it's the same as if no truncation took place.
             return 0;
         }
-
-        // Truncation is always "down" in coordinate space, so rounding
-        // compensation is always "up".
-        return 1;
     }
 
     private int convertBytes(ByteBuffer value)
     {
+        // REVIEW jvs 11-Sept-2006:  What about 0-padding for BINARY?
+        
         // For binary strings, have to deal with truncation.
 
         byte [] a = value.array();

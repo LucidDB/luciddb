@@ -805,6 +805,27 @@ public class Util
     }
 
     /**
+     * Retrieves messages in a exception and writes them to a string. In the 
+     * string returned, each message will appear on a different line.
+     * @return a non-null string containing all messages of the exception
+     */
+    public static String getMessages(Exception ex)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (Throwable curr = ex; curr != null; curr = curr.getCause()) {
+            String msg = 
+                ((curr instanceof EigenbaseException) 
+                    || (curr instanceof SQLException))
+                ? curr.getMessage() : curr.toString();
+            if (sb.length() > 0) {
+                sb.append("\n");
+            }
+            sb.append(msg);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Checks a pre-condition.
      *
      * <p>For example,
@@ -1164,6 +1185,50 @@ public class Util
         }
     }
 
+    /**
+     * Trims trailing spaces from a string.
+     *
+     * @param s string to be trimmed
+     *
+     * @return trimmed string
+     */
+    public static String rtrim(String s)
+    {
+        int n = s.length() - 1;
+        if (n >= 0) {
+            if (s.charAt(n) != ' ') {
+                return s;
+            }
+            while ((--n) >= 0) {
+                if (s.charAt(n) != ' ') {
+                    return s.substring(0, n + 1);
+                }
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Pads a string with spaces up to a given length.
+     *
+     * @param s string to be padded
+     *
+     * @param len desired length
+     *
+     * @return padded string
+     */
+    public static String rpad(String s, int len)
+    {
+        if (s.length() >= len) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder(s);
+        while (sb.length() < len) {
+            sb.append(' ');
+        }
+        return sb.toString();
+    }
+    
     /**
      * Runs an external application.
      *

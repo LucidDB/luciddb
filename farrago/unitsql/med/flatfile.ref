@@ -718,7 +718,9 @@ Error: From line 1, column 15 to line 1, column 43: Table 'FLATFILEDIR_SCHEMA.ex
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- errors are usually returned immediately
 0: jdbc:farrago:> select * from buggy order by 1;
-Error: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
+Error: Could not calculate result column 3 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+[Caroll & Graf, The Diary of a Country Priest, -]
+Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- but we can allow errors by setting this parameter
 0: jdbc:farrago:> alter session set "errorMax" = 100;
@@ -739,13 +741,13 @@ Error: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=
 . . . . . . . . >     file_extension 'log');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select le_exception, le_column_ordinal 
-. . . . . . . . > from log_server.bcp."101_SelectBuggy_LOCALDB.FLATFILE_SCHEMA.BUGGY";
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
-|                                                                             LE_EXCEPTION                                                                              | LE_COLUMN_ORDINAL  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
-| org.eigenbase.util.EigenbaseException: Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                  |
-| org.eigenbase.util.EigenbaseException: Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------+
+. . . . . . . . > from log_server.bcp."101_SelectBuggy_Read.LOCALDB.FLATFILE_SCHEMA.BUGGY";
++--------------------------------------------------------------------------------------------------------------------------------+--------------------+
+|                                                          LE_EXCEPTION                                                          | LE_COLUMN_ORDINAL  |
++--------------------------------------------------------------------------------------------------------------------------------+--------------------+
+| Cannot assign '-' to a NUMERIC value: NumberFormatException                                                                    | 3                  |
+| Target CAST($t1):VARCHAR(45) CHARACTER SET ISO-8859-1 COLLATE ISO-8859-1$en_US$primary NOT NULL cannot be assigned null value  | 2                  |
++--------------------------------------------------------------------------------------------------------------------------------+--------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can also view the error log summaries
 0: jdbc:farrago:> select process_id, action_id, error_count, "SQL"
@@ -756,5 +758,13 @@ Error: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,code=
 | 101         | SelectBuggy  | 1            | select * from buggy order by 1  |
 | 101         | SelectBuggy  | 2            | select * from buggy order by 1  |
 +-------------+--------------+--------------+---------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- we can limit the number of errors
+0: jdbc:farrago:> alter session set "errorMax" = 1;
+0: jdbc:farrago:> select * from buggy order by 1;
+Error: Exceeded limit of 1 errors. Last error was: 
+Could not calculate result column 2 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
+[Gary Larsen, null, 5.00]
+Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

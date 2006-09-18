@@ -37,7 +37,7 @@
 +---------+
 | EXPR$0  |
 +---------+
-| 499900  |
+| 499901  |
 +---------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1m 

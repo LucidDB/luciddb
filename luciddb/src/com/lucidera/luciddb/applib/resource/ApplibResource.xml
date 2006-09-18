@@ -207,6 +207,10 @@
 <text>I/O error while writing to output stream ''{0}''</text>
 </exception>
 
+<exception id="900380" name="InvalidDateString">
+<text>Date format ''{0}'' could not be applied to string ''{1}''</text>
+</exception>
+
 
 <!-- ====================================================================== -->
  Messages

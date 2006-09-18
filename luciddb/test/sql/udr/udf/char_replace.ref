@@ -37,7 +37,10 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- failures
 0: jdbc:luciddb:> values applib.char_replace('bbbbbbbb', 'b', 'AA');
-Error: Replacement character must be a single character (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Invocation of user-defined external Java method execute failed
+Replacement character must be a single character (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create views with reference to applib.char_replace

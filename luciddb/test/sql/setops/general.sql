@@ -18,18 +18,18 @@ insert into t3 values(null,5),(unknown,6);
 --
 -- basics, intersect/except all not supported as of 6/28
 --
-select * from t1 union all select * from t2;
-select * from t1 union select * from t2;
-select * from t1 union all select * from t3;
-select * from t1 union select * from t3;
-select * from t1 intersect all select * from t2;
-select * from t1 intersect select * from t2;
-select * from t1 intersect all select * from t3;
-select * from t1 intersect select * from t3;
-select * from t1 except all select * from t2;
-select * from t1 except select * from t2;
-select * from t1 except all select * from t3;
-select * from t1 except select * from t3;
+select * from t1 union all select * from t2 order by 1,2;
+select * from t1 union select * from t2 order by 1,2;
+select * from t1 union all select * from t3 order by 1,2;
+select * from t1 union select * from t3 order by 1,2;
+select * from t1 intersect all select * from t2 order by 1,2;
+select * from t1 intersect select * from t2 order by 1,2;
+select * from t1 intersect all select * from t3 order by 1,2;
+select * from t1 intersect select * from t3  order by 1,2;
+select * from t1 except all select * from t2  order by 1,2;
+select * from t1 except select * from t2  order by 1,2;
+select * from t1 except all select * from t3  order by 1,2;
+select * from t1 except select * from t3  order by 1,2;
 
 drop table t1;
 drop table t2;
@@ -46,22 +46,22 @@ insert into t2 values (2),(3),(4);
 --
 -- set ops with empty set(s)
 --
-select * from t3 union all select * from t4;
-select * from t3 union select * from t4;
-select * from t3 intersect select * from t4;
-select * from t3 except select * from t4;
-select * from t2 union all select * from t4;
-select * from t2 union select * from t4;
-select * from t2 intersect select * from t4;
-select * from t2 except select * from t4;
+select * from t3 union all select * from t4 order by 1;
+select * from t3 union select * from t4 order by 1;
+select * from t3 intersect select * from t4 order by 1;
+select * from t3 except select * from t4 order by 1;
+select * from t2 union all select * from t4 order by 1;
+select * from t2 union select * from t4 order by 1;
+select * from t2 intersect select * from t4 order by 1;
+select * from t2 except select * from t4 order by 1;
 
 --
 -- set ops on self
 --
-select * from t1 union all select * from t1;
-select * from t1 union select * from t1;
-select * from t1 intersect select * from t1;
-select * from t1 except select * from t1;
+select * from t1 union all select * from t1 order by 1;
+select * from t1 union select * from t1 order by 1;
+select * from t1 intersect select * from t1 order by 1;
+select * from t1 except select * from t1 order by 1;
 
 --
 -- nested 
@@ -70,22 +70,22 @@ select * from t1 except select * from t1;
 select * from
   (select * from t1 union select * from t2)
 union all 
-select * from t1;
+select * from t1 order by 1;
 
 select * from t1
 except
 select * from
-  (select * from t1 except select * from t2);
+  (select * from t1 except select * from t2) order by 1;
 
 
 --
 -- precedence: intersect has higher precedence, union and except have same
 --
-select * from t1 union select * from t1 except select * from t1; 
-select * from t1 except select * from t1 union select * from t1;
-select * from t1 union all select * from t1 intersect select * from t2;
-select * from t2 intersect select * from t1 union all select * from t1;
-select * from t1 intersect select * from t2 union all select * from t1;
+select * from t1 union select * from t1 except select * from t1 order by 1;
+select * from t1 except select * from t1 union select * from t1 order by 1;
+select * from t1 union all select * from t1 intersect select * from t2 order by 1;
+select * from t2 intersect select * from t1 union all select * from t1 order by 1;
+select * from t1 intersect select * from t2 union all select * from t1 order by 1;
 
 drop table t1;
 drop table t2;
@@ -99,17 +99,17 @@ create table t2(m1 integer, m2 integer);
 insert into t1 values (1,10),(2,20);
 insert into t2 values (1,10),(2,21);
 
-select * from t1 UNION select * from t2;
+select * from t1 UNION select * from t2 order by 1,2;
 
-select * from t1 UNION ALL select * from t2;
+select * from t1 UNION ALL select * from t2 order by 1,2;
 
-select * from t2 UNION select * from t1;
+select * from t2 UNION select * from t1 order by 1,2;
 
-select * from t2 UNION ALL select * from t1;
+select * from t2 UNION ALL select * from t1 order by 1,2;
 
-select * from t1 INTERSECT select * from t2;
+select * from t1 INTERSECT select * from t2 order by 1,2;
 
-select * from t2 INTERSECT select * from t1;
+select * from t2 INTERSECT select * from t1 order by 1,2;
 
 
 drop table t1;
