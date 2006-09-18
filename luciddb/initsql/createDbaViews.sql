@@ -2,6 +2,11 @@ create schema localdb.sys_root;
 set schema 'localdb.sys_root';
 set path 'localdb.sys_root';
 
+-- FIXME jvs 17-Sept-2006:  None of these views should be granted
+-- to public; they're for the DBA only.  Full security will involve
+-- corresponding user_ views which show just the subset accessible
+-- to CURRENT_USER
+
 create view dba_schemas as
   select
     catalog_name,
@@ -282,6 +287,135 @@ create view dba_foreign_table_options as
 
 grant select on dba_foreign_table_options to public;
 
+create view dba_system_parameters as
+select col_name as param_name, col_value as param_value from 
+((select * from table(
+  applib.pivot_columns_to_rows(
+    cursor(select * from sys_fem."Config"."FarragoConfig"))))
+union all
+(select * from table(
+  applib.pivot_columns_to_rows(
+    cursor(select * from sys_fem."Config"."FennelConfig")))))
+where col_name not in 
+('mofId', 'mofClassName', 'FarragoConfig', 'FennelConfig', 'name')
+;
+
+grant select on dba_system_parameters to public;
+
+create view dba_sessions as
+select 
+id as session_id,
+url as connect_url,
+current_user_name,
+current_role_name,
+session_user_name,
+system_user_name,
+system_user_fullname,
+session_name,
+program_name as client_program_name,
+process_id as client_process_id,
+catalog_name as current_catalog_name,
+schema_name as current_schema_name,
+is_closed,
+is_auto_commit,
+is_txn_in_progress
+from sys_boot.mgmt.sessions_view;
+
+grant select on dba_sessions to public;
+
+create view dba_sql_statements as
+select
+id as stmt_id,
+session_id,
+sql_stmt as sql_text,
+create_time as creation_timestamp,
+parameters as parameter_values
+from sys_boot.mgmt.statements_view;
+
+grant select on dba_sql_statements to public;
+
+create view dba_repository_properties as
+select * from sys_boot.mgmt.repository_properties_view;
+
+grant select on dba_repository_properties to public;
+
+create view dba_repository_integrity_violations as
+select * from table(sys_boot.mgmt.repository_integrity_violations());
+
+grant select on dba_repository_integrity_violations to public;
+
+create view dba_objects_in_use as
+select * from sys_boot.mgmt.objects_in_use_view;
+
+grant select on dba_objects_in_use to public;
+
+create view dba_threads
+as select * from table(sys_boot.mgmt.threads());
+
+grant select on dba_threads to public;
+
+create view dba_thread_stack_entries
+as select * from table(sys_boot.mgmt.thread_stack_entries());
+
+grant select on dba_thread_stack_entries to public;
+
+create view dba_performance_counters
+as select * from table(sys_boot.mgmt.performance_counters());
+
+grant select on dba_performance_counters to public;
+
+create view dba_system_info
+as 
+(select * from table(sys_boot.mgmt.system_info()))
+union all
+(select * from dba_performance_counters);
+
+grant select on dba_system_info to public;
+
+-- NOTE jvs 17-Sept-2006:  This view is intentionally NOT prefixed
+-- with dba_ because it shows information about the current session only
+
+create view user_session_parameters as
+select * from sys_boot.mgmt.session_parameters_view;
+
+grant select on user_session_parameters to public;
+
+-- Flush all entries from the global code cache
+create procedure flush_code_cache()
+  language java
+  parameter style java
+  reads sql data
+  external name 
+  'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
+
+-- Kill a session by its ID (see dba_sessions)
+create procedure kill_session(in id bigint)
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killSession';
+
+-- Kill a statement by its ID (see dba_sql_statements)
+create procedure kill_statement(in id bigint)
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatement';
+
+-- Kill all statements whose sql_stmt text contains the input string
+-- (similar to Unix killall)
+create procedure kill_all_matching_statements(in s varchar(256))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoKillUDR.killStatementMatch';
+
+-- Exports the complete contents of the catalog to an XMI file
+create procedure export_catalog_xmi(in filename varchar(65535))
+language java
+parameter style java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 
 -- Export schema to csv files UDP. Standard version always creates bcp files
 -- and deletes incomplete files for a failed table export

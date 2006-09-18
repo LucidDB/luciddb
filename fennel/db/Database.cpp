@@ -603,9 +603,9 @@ void Database::checkpointImpl(CheckpointType checkpointType)
         header.txnLogCheckpointMemento,checkpointType);
 
     StrictMutexGuard mutexGuard(mutex);
-    // TODO:  make this proportional to the amount of data flushed by the
-    // checkpoint?
-    nCheckpointsStat += 10;
+    // TODO:  provide a counter which records the amount of data flushed by the
+    // checkpoint
+    ++nCheckpointsStat;
     ++nCheckpoints;
     condition.notify_all();
 }
@@ -770,7 +770,10 @@ void Database::writeStats(StatsTarget &target)
     pCache->writeStats(target);
 
     StrictMutexGuard mutexGuard(mutex);
-    target.writeCounter("DatabaseCheckpoints",nCheckpointsStat);
+    target.writeCounter(
+        "DatabaseCheckpoints", nCheckpointsStat);
+    target.writeCounter(
+        "DatabaseCheckpointsSinceInit", nCheckpoints);
     nCheckpointsStat = 0;
 }
 

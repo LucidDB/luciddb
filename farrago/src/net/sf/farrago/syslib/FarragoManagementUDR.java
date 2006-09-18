@@ -223,6 +223,35 @@ public abstract class FarragoManagementUDR
     }
 
     /**
+     * Discards all entries from the global code cache.
+     */
+    public static void flushCodeCache()
+        throws SQLException
+    {
+        Connection conn =
+            DriverManager.getConnection(
+                "jdbc:default:connection");
+        Statement stmt = conn.createStatement();
+        
+        // First, retrieve current setting.
+        ResultSet rs = stmt.executeQuery(
+            "select \"codeCacheMaxBytes\" from "
+            + "sys_fem.\"Config\".\"FarragoConfig\"");
+        rs.next();
+        long savedSetting = rs.getLong(1);
+        rs.close();
+
+        // Discard
+        stmt.executeUpdate(
+            "alter system set \"codeCacheMaxBytes\" = min");
+
+        // Restore saved setting
+        stmt.executeUpdate(
+            "alter system set \"codeCacheMaxBytes\" = "
+            + ((savedSetting == -1) ? "max" : Long.toString(savedSetting)));
+    }
+
+    /**
      * Exports the catalog repository contents as an XMI file.
      *
      * @param xmiFile name of file to create
@@ -298,6 +327,253 @@ public abstract class FarragoManagementUDR
                     props.getProperty(propName));
                 resultInserter.executeUpdate();
             }
+        }
+    }
+
+    /**
+     * Populates a table of all threads running in the JVM.
+     *
+     * @param resultInserter
+     *
+     * @throws SQLException
+     */
+    public static void threadList(PreparedStatement resultInserter)
+        throws Exception
+    {
+        // TODO jvs 17-Sept-2006:  Inside of Fennel, require all threads
+        // to register with the JVM so that we can get a complete
+        // picture here.
+        
+        Map<Thread, StackTraceElement[]> stackTraces =
+            Thread.getAllStackTraces();
+
+        for (Map.Entry<Thread, StackTraceElement[]> entry
+                 : stackTraces.entrySet())
+        {
+            Thread thread = entry.getKey();
+
+            int i = 0;
+
+            resultInserter.setLong(++i, thread.getId());
+            resultInserter.setString(++i, thread.getThreadGroup().getName());
+            resultInserter.setString(++i, thread.getName());
+            resultInserter.setInt(++i, thread.getPriority());
+            resultInserter.setString(++i, thread.getState().toString());
+            resultInserter.setBoolean(++i, thread.isAlive());
+            resultInserter.setBoolean(++i, thread.isDaemon());
+            resultInserter.setBoolean(++i, thread.isInterrupted());
+            resultInserter.executeUpdate();
+        }
+    }
+    
+    /**
+     * Populates a table of stack entries for all threads running in the JVM.
+     *
+     * @param resultInserter
+     *
+     * @throws SQLException
+     */
+    public static void threadStackEntries(PreparedStatement resultInserter)
+        throws Exception
+    {
+        Map<Thread, StackTraceElement[]> stackTraces =
+            Thread.getAllStackTraces();
+
+        for (Map.Entry<Thread, StackTraceElement[]> entry
+                 : stackTraces.entrySet())
+        {
+            Thread thread = entry.getKey();
+            StackTraceElement [] stackArray = entry.getValue();
+
+            int j = 0;
+
+            for (StackTraceElement element : stackArray) {
+
+                int i = 0;
+
+                resultInserter.setLong(++i, thread.getId());
+                resultInserter.setLong(++i, j++);
+                resultInserter.setString(++i, element.toString());
+                resultInserter.setString(++i, element.getClassName());
+                resultInserter.setString(++i, element.getMethodName());
+                resultInserter.setString(++i, element.getFileName());
+                resultInserter.setInt(++i, element.getLineNumber());
+                resultInserter.setBoolean(++i, element.isNativeMethod());
+                resultInserter.executeUpdate();
+            }
+        }
+    }
+
+    /**
+     * Populates a table of performance counters.
+     *
+     * @param resultInserter
+     */
+    public static void performanceCounters(PreparedStatement resultInserter)
+        throws Exception
+    {
+        String JVM_SRC = "JVM";
+        Runtime runtime = Runtime.getRuntime();
+        
+        // Read values from System and Runtime
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "JvmMemoryUnused",
+            Long.toString(runtime.freeMemory()),
+            "bytes");
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "JvmMemoryAllocationLimit",
+            Long.toString(runtime.maxMemory()),
+            "bytes");
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "JvmMemoryAllocated",
+            Long.toString(runtime.totalMemory()),
+            "bytes");
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "JvmNanoTime",
+            Long.toString(System.nanoTime()),
+            "ns");
+        
+        // Read values from Fennel
+        Map<String, String> perfCounters =
+            NativeTrace.instance().getPerfCounters();
+        for (Map.Entry<String, String> entry : perfCounters.entrySet()) {
+            addSysInfo(
+                resultInserter,
+                "Fennel",
+                entry.getKey(),
+                entry.getValue(),
+                null);
+        }
+    }
+
+    /**
+     * Populates a table of global information about the running system.
+     *
+     * @param resultInserter
+     */
+    public static void systemInfo(PreparedStatement resultInserter)
+        throws Exception
+    {
+        int i = 0;
+
+        String JVM_SRC = "java.lang.System";
+        Runtime runtime = Runtime.getRuntime();
+
+        // Read values from System and Runtime
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "currentTimeMillis",
+            Long.toString(System.currentTimeMillis()),
+            "ns");
+        addSysInfo(
+            resultInserter,
+            JVM_SRC,
+            "availableProcessors",
+            Integer.toString(runtime.availableProcessors()),
+            "cpus");
+
+        // Read environment variables
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            addSysInfo(
+                resultInserter,
+                "System.getenv",
+                entry.getKey(),
+                entry.getValue(),
+                null);
+        }
+
+        // Read system properties
+        for (Map.Entry<Object, Object> entry
+                 : System.getProperties().entrySet())
+        {
+            addSysInfo(
+                resultInserter,
+                "System.getProperties",
+                entry.getKey().toString(),
+                entry.getValue().toString(),
+                null);
+        }
+
+        // If we're running on Linux, we can try to get a lotta info
+        // from the /proc virtual filesystem; if not, just omit it
+        FileReader fileReader = null;
+        try {
+            String src = "/proc/meminfo";
+            fileReader = new FileReader(src);
+            readLinuxMeminfo(resultInserter, fileReader, src);
+            src = "/proc/cpuinfo";
+            fileReader.close();
+            fileReader = new FileReader(src);
+            readLinuxCpuinfo(resultInserter, fileReader, src);
+        } catch (Throwable ex) {
+            // ignore in case we're not running on Linux or don't have access
+        } finally {
+            Util.squelchReader(fileReader);
+        }
+    }
+
+    private static void addSysInfo(
+        PreparedStatement resultInserter,
+        String source,
+        String property,
+        String value,
+        String units)
+        throws Exception
+    {
+        int i = 0;
+        resultInserter.setString(++i, source);
+        resultInserter.setString(++i, property);
+        resultInserter.setString(++i, units);
+        resultInserter.setString(++i, value);
+        resultInserter.executeUpdate();
+    }
+
+    private static void readLinuxMeminfo(
+        PreparedStatement resultInserter,
+        FileReader fileReader,
+        String src)
+        throws Exception
+    {
+        LineNumberReader lineReader = new LineNumberReader(fileReader);
+        for (;;) {
+            String line = lineReader.readLine();
+            if (line == null) {
+                break;
+            }
+            StringTokenizer st = new StringTokenizer(line, ": ");
+            String itemName = st.nextToken();
+            String itemValue = st.nextToken();
+            String itemUnits = st.nextToken();
+            addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
+        }
+    }
+
+    private static void readLinuxCpuinfo(
+        PreparedStatement resultInserter,
+        FileReader fileReader,
+        String src)
+        throws Exception
+    {
+        LineNumberReader lineReader = new LineNumberReader(fileReader);
+        for (;;) {
+            String line = lineReader.readLine();
+            if (line == null) {
+                break;
+            }
+            StringTokenizer st = new StringTokenizer(line, ":\t");
+            String itemName = st.nextToken().trim();
+            String itemValue = st.nextToken().trim();
+            String itemUnits = null;
+            addSysInfo(resultInserter, src, itemName, itemValue, itemUnits);
         }
     }
 }

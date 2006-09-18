@@ -22,6 +22,7 @@
 */
 package net.sf.farrago.util;
 
+import java.util.*;
 import java.util.logging.*;
 
 
@@ -43,6 +44,10 @@ public class NativeTrace
 
     private String loggerPrefix;
 
+    private Map<String, String> perfCounters;
+    
+    private Map<String, String> perfCountersNew;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -54,6 +59,7 @@ public class NativeTrace
     protected NativeTrace(String loggerPrefix)
     {
         this.loggerPrefix = loggerPrefix;
+        perfCounters = new HashMap<String, String>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -108,10 +114,56 @@ public class NativeTrace
         int iLevel,
         String message)
     {
+        if (iLevel >= TRACE_PERFCOUNTER_UPDATE) {
+            handlePerfCounter(iLevel, loggerSuffix, message);
+            return;
+        }
         Logger tracer = getLogger(loggerSuffix);
         Level level = Level.parse(Integer.toString(iLevel));
         tracer.logp(level, loggerPrefix + loggerSuffix, "<native>", message);
     }
+
+    private synchronized void handlePerfCounter(
+        int iLevel,
+        String loggerSuffix,
+        String message)
+    {
+        switch (iLevel) {
+        case TRACE_PERFCOUNTER_BEGIN_SNAPSHOT:
+            perfCountersNew = new HashMap<String, String>();
+            break;
+        case TRACE_PERFCOUNTER_END_SNAPSHOT:
+            // rollin' rollin' rollin'
+            if (perfCountersNew != null) {
+                perfCounters = perfCountersNew;
+                perfCountersNew = null;
+            }
+            break;
+        case TRACE_PERFCOUNTER_UPDATE:
+            if (perfCountersNew != null) {
+                perfCountersNew.put(loggerSuffix, message);
+            }
+            break;
+        }
+    }
+
+    /**
+     * @return a consistent snapshot of all performance counters currently
+     * set
+     */
+    public synchronized Map<String, String> getPerfCounters()
+    {
+        return perfCounters;
+    }
+
+    // NOTE jvs 17-Sept-2006:  Values below have to match
+    // TraceLevel enum in fennel/common/TraceTarget.h
+
+    private static final int TRACE_PERFCOUNTER_BEGIN_SNAPSHOT = 20002;
+
+    private static final int TRACE_PERFCOUNTER_END_SNAPSHOT = 20001;
+    
+    private static final int TRACE_PERFCOUNTER_UPDATE = 20000;
 }
 
 // End NativeTrace.java

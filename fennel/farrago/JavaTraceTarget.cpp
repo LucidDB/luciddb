@@ -24,6 +24,8 @@
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/farrago/JavaTraceTarget.h"
 
+#include "boost/lexical_cast.hpp"
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 #define JAVATRACETARGET_TYPE_STR ("JavaTraceTarget")
@@ -98,6 +100,25 @@ TraceLevel JavaTraceTarget::getSourceTraceLevel(std::string source)
     int level = pEnv->CallIntMethod(
         javaTrace,methGetSourceTraceLevel,javaSource);
     return static_cast<TraceLevel>(level);
+}
+
+void JavaTraceTarget::beginSnapshot()
+{
+    notifyTrace(
+        "", TRACE_PERFCOUNTER_BEGIN_SNAPSHOT, "");
+}
+
+void JavaTraceTarget::endSnapshot()
+{
+    notifyTrace(
+        "", TRACE_PERFCOUNTER_END_SNAPSHOT, "");
+}
+
+void JavaTraceTarget::writeCounter(std::string name, uint value)
+{
+    std::string s = boost::lexical_cast<std::string>(value);
+    notifyTrace(
+        name, TRACE_PERFCOUNTER_UPDATE, s);
 }
 
 FENNEL_END_CPPFILE("$Id$");

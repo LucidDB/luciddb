@@ -23,6 +23,7 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/exec/ExecStreamGovernor.h"
+#include "fennel/common/StatsTarget.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -73,6 +74,23 @@ void ExecStreamGovernor::traceCachePageRequest(
             " pages based on an unbounded opt request with " << 
             reqt.minReqt << " min pages");
     }
+}
+
+void ExecStreamGovernor::writeStats(StatsTarget &target)
+{
+    StrictMutexGuard mutexGuard(mutex);
+    target.writeCounter(
+        "ExpectedConcurrentStatements",
+        knobSettings.expectedConcurrentStatements);
+    target.writeCounter(
+        "CacheReservePercentage",
+        knobSettings.cacheReservePercentage);
+    target.writeCounter(
+        "CachePagesGoverned",
+        resourcesAvailable.nCachePages);
+    target.writeCounter(
+        "CachePagesReserved",
+        resourcesAssigned.nCachePages);
 }
 
 FENNEL_END_CPPFILE("$Id$");
