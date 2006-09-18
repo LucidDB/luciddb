@@ -1019,33 +1019,47 @@ bool LhxHashTableReader::advanceSlot()
 
         if (!isPositioned) {
             curSlot = hashTable->getFirstSlot();
+        } else {
+            curSlot = hashTable->getNextSlot(curSlot);
         }
 
         if (curSlot && *curSlot) {
+            curKey = *curSlot;
             if (returnUnMatched) {
                 /*
-                 * Look at the key pointed to by slot.
+                 * Look at all the keys in this slot.
                  */
                 hashKeyAccessor.setCurrent(*curSlot, true);
+
                 /*
                  * Only return unmatched keys
                  */
                 while (hashKeyAccessor.isMatched()) {
-                    curSlot = hashTable->getNextSlot(curSlot);
-                    if (curSlot && *curSlot) {
-                        hashKeyAccessor.setCurrent(*curSlot, true);
+                    curKey = hashKeyAccessor.getNext();
+                    if (!curKey) {
+                        curSlot = hashTable->getNextSlot(curSlot);
+                        if (curSlot) {
+                            curKey = *curSlot;
+                        } else {
+                            curKey = NULL;
+                        }
+                    }
+
+                    if (curKey) {
+                        hashKeyAccessor.setCurrent(curKey, true);
                     } else {
-                        return false;
+                        /*
+                         * Reached the end of the slot list.
+                         */
+                        break;
                     }
                 }
             }
-            curKey = *curSlot;
-            curSlot = hashTable->getNextSlot(curSlot);
         }
 
         if (!curKey) {
             /*
-             * cound not find any fitting slot.
+             * Cound not find any slot with fitting key.
              */
             return false;
         }
@@ -1175,7 +1189,7 @@ bool LhxHashTableReader::getNext(TupleData &outputTuple)
         assert (!(boundKey && returnUnMatched));
 
         /*
-         * Position at the first key of the first slot.
+         * Position at the first qualifying key of the first slot.
          */
         if (!advanceSlot()) {
             /*

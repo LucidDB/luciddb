@@ -193,16 +193,22 @@ class LbmEntry : public LbmSegment
      * contained in the current entry, by going through
      * the segement descriptors from the start to the end.
      *
-     * @param [out] lastLengthDescBytes the number of additional bytes required
-     * to store the length of zero bytes
+     * @param [out] lastSegDescByte the last SegDesc byte in this entry
      *
-     * @param [out] lastZeroBytes number of zero bytes if lastLengthDescBytes is
-     * non-zero.
+     * @param [out] lastZeroRIDs number of RIDs from rows not having this
+     *  key value.
      *
-     * @return number of rows contained in this entry.
+     * @return number of rows encoded by this entry.
      */
     uint getRowCount(PBuffer &lastSegDescByte, uint &lastZeroRIDs);
 
+    /**
+     * Get the number of rows encoded by a bitmap tuple.
+     *
+     * @param [in] inputTuple the input bitmap tuple to get row count for
+     *
+     * @return number of rows encoded by this entry.
+     */
     uint getRowCount(TupleData const &inputTuple);
 
     uint getCompressedRowCount(
@@ -210,12 +216,12 @@ class LbmEntry : public LbmSegment
         PBuffer &lastSegDescByte, uint &lastZeroRIDs);
 
     /**
-     * Grow entry to encode zeros until rid(to be exact, the byte that encodes 
-     * rid).
+     * Grow entry to encode zero RIDs before rid(or more precisely, the byte
+     * that encodes rid).
      *
-     * @param rid the new rid that this entry will try to include
+     * @param [in] rid the new rid that this entry will try to include
      *
-     * @param reserveSpace the number of bytes to reserve in the scratch buffer
+     * @param [in] reserveSpace the number of bytes to reserve in the scratch buffer
      *
      * @return true if there is enough room to grow the current entry to rid;
      * false otherwise.
@@ -574,7 +580,9 @@ public:
     string toString();
 
     /**
-     * Returns number of rows represented by the entry
+     * Get the number of rows encoded by this entry
+     *
+     * @return number of rows encoded by this entry.
      */
     uint getRowCount();
 
@@ -585,8 +593,8 @@ public:
     /**
      * Print the inputTuple as a bitmap index entry.
      *
-     * @param inputTuple the index entry tuple to print.
-     * @param printRID true if want to print out the RIDs rather than bitmaps.
+     * @param [in] inputTuple the index entry tuple to print.
+     * @param [in] printRID true if want to print out the RIDs rather than bitmaps.
      */
     static string toString(TupleData const &inputTuple, bool printRID=false);
 
