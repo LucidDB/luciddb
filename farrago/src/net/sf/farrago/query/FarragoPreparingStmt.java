@@ -320,6 +320,11 @@ public class FarragoPreparingStmt
         return resultSetTypeMap;
     }
 
+    protected Map<String,RelDataType> getIterCalcTypeMap()
+    {
+        return iterCalcTypeMap;
+    }
+
     // implement FarragoSessionPreparingStmt
     public void postValidate(SqlNode sqlNode)
     {
