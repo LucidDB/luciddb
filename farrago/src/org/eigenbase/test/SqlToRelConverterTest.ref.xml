@@ -752,7 +752,7 @@ ProjectRel(EXPR$0=[$0])
     <TestCase name="testOverAvg">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[CASE(=(COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), 0), CAST(null):INTEGER, /(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)))])
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[CAST(/(SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), COUNT($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW))):INTEGER])
   TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
@@ -1181,6 +1181,20 @@ ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($7):BIGINT NOT NUL
 ProjectRel(EXPR$0=[$0])
   ProjectRel(EXPR$0=[3600000])
     OneRowRel
+]]>
+        </Resource>
+    </TestCase>
+    <TestCase name="testOverAvg2">
+        <Resource name="sql">
+            <![CDATA[select sum(sal) over w1,
+  avg(CAST(sal as real)) over w1
+from emp
+window w1 as (partition by job order by hiredate rows 2 preceding)]]>
+        </Resource>
+        <Resource name="plan">
+            <![CDATA[
+ProjectRel(EXPR$0=[SUM($5) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)], EXPR$1=[/(SUM(CAST($5):REAL NOT NULL) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW), COUNT(CAST($5):REAL NOT NULL) OVER (PARTITION BY $2 ORDER BY $4 ROWS BETWEEN 2 PRECEDING AND CURRENT ROW))])
+  TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
     </TestCase>

@@ -519,14 +519,28 @@ public class SqlToRelConverterTest
 
     public void testOverAvg()
     {
-        if (Bug.Frg181Fixed) {
-            check(
-                "select sum(sal) over w1,\n"
-                + "  avg(sal) over w1\n"
-                + "from emp\n"
-                + "window w1 as (partition by job order by hiredate rows 2 preceding)",
-                "${plan}");
-        }
+        // AVG(x) gets translated to SUM(x)/COUNT(x).  Because COUNT controls the
+        // return type there usually needs to be a final CAST to get the
+        // result back to match the type of x.
+        check(
+            "select sum(sal) over w1,\n"
+            + "  avg(sal) over w1\n"
+            + "from emp\n"
+            + "window w1 as (partition by job order by hiredate rows 2 preceding)",
+            "${plan}");
+    }
+
+    public void testOverAvg2()
+    {
+        // Check to see if extra CAST is present.  Because CAST is nested
+        // inside AVG it passed to both SUM and COUNT so the outer final CAST
+        // isn't needed.
+        check(
+            "select sum(sal) over w1,\n"
+            + "  avg(CAST(sal as real)) over w1\n"
+            + "from emp\n"
+            + "window w1 as (partition by job order by hiredate rows 2 preceding)",
+            "${plan}");
     }
 
     public void testOverCountStar()
