@@ -22,6 +22,7 @@
 package com.lucidera.luciddb.applib.security;
 
 import com.lucidera.luciddb.applib.resource.*;
+import com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp;
 import org.eigenbase.util.StackWriter;
 import java.sql.*;
 import java.io.*;
@@ -43,37 +44,17 @@ public abstract class GrantSelectForSchemaUdp {
 
     public static void execute(String schemaName, String userName) throws SQLException {
         
-        Statement s1 = null, s2 = null;
-        PreparedStatement ps;
-        ResultSet rs;
-        Connection conn = null;
         StringWriter sw;
         StackWriter stackw;
         PrintWriter pw;
 
-        // set up a jdbc connection
-        conn = DriverManager.getConnection("jdbc:default:connection");
-        
-        // retrieve list of everything table-like in schema
-        ps = conn.prepareStatement("select SCHEMA_NAME, TABLE_NAME " 
-            + "from SYS_ROOT.DBA_TABLES where SCHEMA_NAME = ?");
-        ps.setString(1, schemaName);
-        rs = ps.executeQuery();
-        
-        // grant select for all of it
-        while (rs.next()) {
-            sw = new StringWriter();
-            stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
-            pw = new PrintWriter(stackw);
-            pw.print("grant select on ");
-            StackWriter.printSqlIdentifier(pw, rs.getString(1));
-            pw.print(".");
-            StackWriter.printSqlIdentifier(pw, rs.getString(2));
-            pw.print(" to ");
-            StackWriter.printSqlIdentifier(pw, userName);
-            pw.close();
-            ps = conn.prepareStatement(sw.toString());
-            ps.executeUpdate();
-        }
+        // build statement, forward it to DoForEntireSchemaUdp
+        sw = new StringWriter();
+        stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
+        pw = new PrintWriter(stackw);
+        pw.print("grant select on %TABLE_NAME% to ");
+        StackWriter.printSqlIdentifier(pw, userName);
+        pw.close();
+        DoForEntireSchemaUdp.execute(sw.toString(), schemaName);
     }
 }

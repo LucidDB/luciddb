@@ -503,4 +503,12 @@
 . . . . . . . . > reads sql data
 . . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- UDP for executing a sql statement for each table and view in an entire schema
+0: jdbc:luciddb:> create procedure do_for_entire_schema(
+. . . . . . . . > in sqlString varchar(65535),
+. . . . . . . . > in schemaName varchar(255))
+. . . . . . . . > language java
+. . . . . . . . > parameter style java
+. . . . . . . . > reads sql data
+. . . . . . . . > external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
 0: jdbc:luciddb:> !quit

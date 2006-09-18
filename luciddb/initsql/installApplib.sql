@@ -502,3 +502,12 @@ language java
 parameter style java
 reads sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+
+-- UDP for executing a sql statement for each table and view in an entire schema
+create procedure do_for_entire_schema(
+in sqlString varchar(65535),
+in schemaName varchar(255))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
