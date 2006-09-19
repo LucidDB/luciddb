@@ -22,6 +22,9 @@
 */
 package org.eigenbase.util;
 
+import java.awt.HeadlessException;
+import java.awt.Toolkit;
+
 import java.io.*;
 
 import java.lang.reflect.Array;
@@ -60,6 +63,17 @@ public class Util
     //~ Static fields/initializers ---------------------------------------------
 
     /**
+     * Name of the system property that controls whether the AWT work-around
+     * is enabled.  This workaround allows Farrago to load its native 
+     * libraries despite a conflict with AWT and allows applications that
+     * use AWT to function normally.
+     * 
+     * @see #loadLibrary(String)
+     */
+    public static final String awtWorkaroundProperty = 
+        "org.eigenbase.util.AWT_WORKAROUND";
+    
+    /**
      * System-dependent newline character.
      */
     public static final String lineSeparator =
@@ -82,6 +96,9 @@ public class Util
      */
     private static final Pattern javaIdPattern =
         Pattern.compile("[a-zA-Z_$][a-zA-Z0-9$]*");
+
+    /** @see #loadLibrary(String) */
+    private static Toolkit awtToolkit;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -985,8 +1002,45 @@ public class Util
         return argument;
     }
 
+    /**
+     * Uses {@link System#loadLibrary(String)} to load a native library 
+     * correctly under mingw (Windows/Cygwin) and Linux environments.
+     *  
+     * <p>This method also implements a work-around for applications that 
+     * wish to load AWT.  AWT conflicts with some native libraries in a 
+     * way that requires AWT to be loaded first.  This method checks the
+     * system property named {@link #awtWorkaroundProperty} and if it is
+     * set to "on" (default; case-insensitive) it pre-loads AWT to avoid
+     * the conflict.
+     *  
+     * @param libName the name of the library to load, as in 
+     *                {@link System#loadLibrary(String)}.
+     */
     public static void loadLibrary(String libName)
     {
+        String awtSetting = System.getProperty(awtWorkaroundProperty, "on");
+        if (awtToolkit == null && awtSetting.equalsIgnoreCase("on")) {
+            // REVIEW jvs 8-Sept-2006:  workaround upon workaround.  This
+            // is required because in native code, we sometimes (see Farrago)
+            // have to use dlopen("libfoo.so", RTLD_GLOBAL) in order for native
+            // plugins to load correctly.  But the RTLD_GLOBAL causes trouble 
+            // later if someone tries to use AWT from within the same JVM. 
+            // So... preload AWT here unless someone configured explicitly
+            // not to do so.
+            try {
+                awtToolkit = Toolkit.getDefaultToolkit();
+            } catch (HeadlessException ex) {
+                // I'm not sure if this can actually happen, but if it does,
+                // just suppress it so that a headless server doesn't fail
+                // on startup.
+                
+                // REVIEW: SWZ: 18-Sept-2006: If this exception occurs, we'll
+                // retry the AWT load on each loadLibrary call.  Probably okay,
+                // since there are only a few libraries and they're loaded
+                // via static initializers.
+            }
+        }
+        
         if (!System.mapLibraryName(libName).startsWith("lib")) {
             // assume mingw
             System.loadLibrary("cyg" + libName + "-0");
