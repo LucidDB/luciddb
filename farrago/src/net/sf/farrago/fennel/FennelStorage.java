@@ -57,6 +57,10 @@ public class FennelStorage
             // I'm not sure if this can actually happen, but if it does,
             // just suppress it so that a headless server doesn't fail
             // on startup.
+        } catch (UnsatisfiedLinkError ex) {
+            // This happens if libmawt.xo is not on LD_LIBRARY_PATH, or if
+            // another library has been opened with RTLD_GLOBAL. Applications
+            // which don't need awt can safely ignore this error.
         }
         
         Util.loadLibrary("farrago");
