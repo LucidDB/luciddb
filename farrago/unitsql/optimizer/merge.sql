@@ -185,6 +185,15 @@ merge into emps e
             t.t_city);
 select lcs_rid(empno), * from emps order by empno;
 
+-- LER-1953
+-- cast in the ON clause should cast to a not null type
+merge into emps e
+    using tempemps t on t.t_empno = e.empno and
+        e.name = cast('Fred' as varchar(20))
+    when matched then
+        update set name = cast('FRED' as varchar(20));
+select * from emps order by empno;
+
 -----------------
 -- Explain output
 -----------------
@@ -305,6 +314,13 @@ merge into emps e1
     using (select * from emps) e2 on e1.empno = e2.empno
     when matched then
         update set age = e1.age + e1.deptno - e1.deptno;
+
+explain plan for
+merge into emps e
+    using tempemps t on t.t_empno = e.empno and
+        e.name = cast('Fred' as varchar(20))
+    when matched then
+        update set name = cast('FRED' as varchar(20));
 
 --------------
 -- Error cases

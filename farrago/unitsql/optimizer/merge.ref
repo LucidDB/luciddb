@@ -409,6 +409,26 @@
 | 39      | 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
 +---------+--------+----------+---------+---------+---------------------------------+------+---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LER-1953
+0: jdbc:farrago:> -- cast in the ON clause should cast to a not null type
+0: jdbc:farrago:> merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno and
+. . . . . . . . >         e.name = cast('Fred' as varchar(20))
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set name = cast('FRED' as varchar(20));
+0: jdbc:farrago:> select * from emps order by empno;
++--------+----------+---------+---------+---------------------------------+------+---------+
+| EMPNO  |   NAME   | DEPTNO  | GENDER  |              CITY               | AGE  | SALARY  |
++--------+----------+---------+---------+---------------------------------+------+---------+
+| 100    | FRED     | 11      |         | San Mateo                       | 26   | 70310   |
+| 110    | Eric     | 21      | M       | San Francisco                   | 81   | 225000  |
+| 120    | Wilma    | 21      | F       | San Mateo                       | 51   | 140630  |
+| 130    | JOHN     |         | M       | Vancouver                       |      |         |
+| 140    | Barney   | 40      | M       | San Mateo                       | 42   | 41000   |
+| 150    | Betty    | 50      | F       | San Francisco                   | 41   | 40000   |
+| 160    | Pebbles  | 60      | F       | Foster City                     | 3    | 0       |
++--------+----------+---------+---------+---------------------------------+------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------
 0: jdbc:farrago:> -- Explain output
 0: jdbc:farrago:> -----------------
@@ -625,6 +645,21 @@
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '        LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$EMPNO]])'
 '        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[IS NULL($t5)], expr#9=[+($t5, $t2)], expr#10=[-($t9, $t2)], expr#11=[IS NOT NULL($t10)], expr#12=[AND($t8, $t11)], expr#13=[IS NULL($t10)], expr#14=[IS NOT NULL($t5)], expr#15=[AND($t13, $t14)], expr#16=[<>($t5, $t10)], expr#17=[OR($t15, $t16)], expr#18=[OR($t12, $t17)], proj#0..7=[{exprs}], $condition=[$t18])'
+'          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > merge into emps e
+. . . . . . . . >     using tempemps t on t.t_empno = e.empno and
+. . . . . . . . >         e.name = cast('Fred' as varchar(20))
+. . . . . . . . >     when matched then
+. . . . . . . . >         update set name = cast('FRED' as varchar(20));
+'column0'
+'FennelToIteratorConverter'
+'  LcsTableMergeRel(table=[[LOCALDB, M, EMPS]])'
+'    FennelCalcRel(expr#0..8=[{inputs}], expr#9=[CAST($t7):BIGINT NOT NULL], expr#10=[null], expr#11=[CAST($t10):VARBINARY(512)], expr#12=[_ISO-8859-1'FRED'], expr#13=[CAST($t12):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], rid=[$t9], descriptor=[$t11], segment=[$t11], EMPNO=[$t1], NAME=[$t13], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6])'
+'      LhxJoinRel(leftKeys=[[0]], rightKeys=[[7]], joinType=[INNER])'
+'        LcsRowScanRel(table=[[LOCALDB, M, TEMPEMPS]], projection=[[0]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$TEMPEMPS$T_EMPNO]])'
+'        FennelCalcRel(expr#0..7=[{inputs}], expr#8=[_ISO-8859-1'Fred'], expr#9=[CAST($t8):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#10=[=($t1, $t9)], expr#11=[CAST($t0):INTEGER], expr#12=[IS NULL($t1)], expr#13=[_ISO-8859-1'FRED'], expr#14=[CAST($t13):VARCHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL], expr#15=[IS NOT NULL($t14)], expr#16=[AND($t12, $t15)], expr#17=[IS NULL($t14)], expr#18=[IS NOT NULL($t1)], expr#19=[AND($t17, $t18)], expr#20=[<>($t1, $t14)], expr#21=[OR($t19, $t20)], expr#22=[OR($t16, $t21)], expr#23=[AND($t10, $t22)], EMPNO=[$t0], DEPTNO=[$t2], GENDER=[$t3], CITY=[$t4], AGE=[$t5], SALARY=[$t6], LCS_RID=[$t7], CAST($0):INTEGER=[$t11], $condition=[$t23])'
 '          LcsRowScanRel(table=[[LOCALDB, M, EMPS]], projection=[[0, 1, 2, 3, 4, 5, 6, LCS_RID]], clustered indexes=[[SYS$CLUSTERED_INDEX$M$EMPS$AGE, SYS$CLUSTERED_INDEX$M$EMPS$CITY, SYS$CLUSTERED_INDEX$M$EMPS$DEPTNO, SYS$CLUSTERED_INDEX$M$EMPS$EMPNO, SYS$CLUSTERED_INDEX$M$EMPS$GENDER, SYS$CLUSTERED_INDEX$M$EMPS$NAME, SYS$CLUSTERED_INDEX$M$EMPS$SALARY]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
