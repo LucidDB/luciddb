@@ -350,7 +350,7 @@ Messages:
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[EXPR$0]])'
 '    FennelAggRel(groupCount=[0], agg#0=[SUM(0)])'
-'      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT $f0)])'
+'      FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(BIGINT NOT NULL $f0) NOT NULL])'
 '        FennelCartesianProductRel(leftouterjoin=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '          FennelBufferRel(inMemory=[false], multiPass=[true])'

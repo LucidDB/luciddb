@@ -425,7 +425,7 @@
 . . . . . . . . > select name from depts where deptno=20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -433,7 +433,7 @@
 . . . . . . . . > select name from depts where deptno > 20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
@@ -441,7 +441,7 @@
 . . . . . . . . > select name from depts where deptno >= 20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
@@ -449,7 +449,7 @@
 . . . . . . . . > select name from depts where deptno < 20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 20 }]])'
 0: jdbc:farrago:> 
@@ -457,7 +457,7 @@
 . . . . . . . . > select name from depts where deptno <= 20;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -465,7 +465,7 @@
 . . . . . . . . > select name from depts where deptno between 20 and 30;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 30 }]])'
 0: jdbc:farrago:> 
@@ -473,7 +473,7 @@
 . . . . . . . . > select name from depts where deptno > 20 and deptno < 30;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1')', 30 }]])'
 0: jdbc:farrago:> 
@@ -481,7 +481,7 @@
 . . . . . . . . > select name from depts where deptno < 20 or deptno between 30 and 40;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1')', 20 }, { _ISO-8859-1'[', 30, _ISO-8859-1']', 40 }]])'
 0: jdbc:farrago:> 
@@ -490,7 +490,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }, { _ISO-8859-1'[', 30, _ISO-8859-1']', 30 }]])'
 0: jdbc:farrago:> 
@@ -498,7 +498,7 @@
 . . . . . . . . > select name from depts where deptno=20.00;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -507,7 +507,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
@@ -516,7 +516,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 20, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
@@ -524,7 +524,7 @@
 . . . . . . . . > select name from depts where deptno=20000000000000;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
@@ -532,7 +532,7 @@
 . . . . . . . . > select name from depts where deptno>20000000000000;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
@@ -541,7 +541,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'    FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'-', null, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
@@ -574,7 +574,7 @@
 . . . . . . . . > select name from depts where deptno=20 and deptno=30;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'(', null, _ISO-8859-1')', null }]])'
 0: jdbc:farrago:> 
@@ -583,7 +583,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -591,7 +591,7 @@
 . . . . . . . . > select name from emps where deptno=20 and gender='M';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1'M']], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1'M']], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 20, _ISO-8859-1']', 20 }]])'
 0: jdbc:farrago:> 
@@ -599,7 +599,7 @@
 . . . . . . . . > select name from emps where empid=3;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 3, _ISO-8859-1']', 3 }]])'
@@ -650,7 +650,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -662,7 +662,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0, 1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -674,7 +674,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -686,7 +686,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -699,7 +699,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1, 0]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) ENAME, VARCHAR(128) DNAME)])'
+'    FennelReshapeRel(projection=[[2, 1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 5]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[2, 3]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        FtrsIndexSearchRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$UNIQUE_KEY$EMPID], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[0]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -711,7 +711,7 @@
 . . . . . . . . > inner join depts on e.age = depts.deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) ENAME, INTEGER AGE, VARCHAR(128) DNAME)])'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME, INTEGER AGE, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], expr#4=[IS NOT NULL($t3)], expr#5=[CAST($t3):INTEGER NOT NULL], NAME=[$t0], AGE=[$t3], DEPTNO=[$t5], $condition=[$t4])'
@@ -725,7 +725,7 @@
 . . . . . . . . > left outer join depts on e.age = depts.deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) ENAME, INTEGER AGE, VARCHAR(128) DNAME)])'
+'  FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME, INTEGER AGE, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" DNAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[true], inputKeyProj=[[1]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], NAME=[$t0], AGE=[$t3])'
@@ -745,7 +745,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) DNAME, VARCHAR(128) ENAME)])'
+'    FennelReshapeRel(projection=[[3, 0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL DNAME, VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL ENAME) NOT NULL])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[[2]], inputJoinProj=[[0, 1]], inputDirectiveProj=[[]])'
 '        IteratorToFennelConverter'
 '          IterCalcRel(expr#0..1=[{inputs}], expr#2=[20], expr#3=[-($t1, $t2)], expr#4=[IS NOT NULL($t3)], expr#5=[CAST($t3):INTEGER NOT NULL], NAME=[$t0], AGE=[$t3], DEPTNO=[$t5], $condition=[$t4])'
@@ -799,7 +799,7 @@
 . . . . . . . . > select name from depts where deptno=?;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'['], expr#2=[?0], expr#3=[_ISO-8859-1']'], expr#4=[IS NOT NULL($t2)], expr#5=[AND($t4, $t4)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t2], $condition=[$t5])'
@@ -827,7 +827,7 @@
 . . . . . . . . > select name from depts where deptno > ? and name='Hysteria';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'Hysteria']], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'Hysteria']], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'('], expr#2=[?0], expr#3=[_ISO-8859-1'+'], expr#4=[null], expr#5=[CAST($t4):INTEGER], expr#6=[IS NOT NULL($t2)], $f0=[$t1], $f1=[$t2], $f2=[$t3], $f3=[$t5], $condition=[$t6])'
@@ -967,7 +967,7 @@
 . . . . . . . . > select * from ftrsemps where deptno = 2 and ename = 'ADAM';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'ADAM']], outputRowType=[RecordType(INTEGER EMPNO, VARCHAR(40) ENAME, INTEGER DEPTNO)])'
+'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1'ADAM']], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" ENAME, INTEGER DEPTNO) NOT NULL])'
 '    FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$FTRSEMPS$EMPNO_PK], uniqueKey=[true], preserveOrder=[false], outer=[false], inputKeyProj=[*], inputJoinProj=[[]], inputDirectiveProj=[[]])'
 '      FtrsIndexSearchRel(table=[[LOCALDB, LBM, FTRSEMPS]], projection=[[0]], index=[DEPTNO_IX], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])'
 '        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 2, _ISO-8859-1']', 2 }]])'
@@ -1608,7 +1608,7 @@
 |                                                                                   column0                                                                                   |
 +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | FennelToIteratorConverter                                                                                                                                                   |
-|   FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER B)])                                                                                   |
+|   FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER A, INTEGER B) NOT NULL])                                                                          |
 |     LhxAggRel(groupCount=[2])                                                                                                                                               |
 |       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                                              |
 |         LcsNormalizerRel                                                                                                                                                    |
