@@ -25,15 +25,18 @@
 #define Fennel_JavaTraceTarget_Included
 
 #include "fennel/common/TraceTarget.h"
+#include "fennel/common/StatsTarget.h"
 #include "fennel/farrago/JniUtil.h"
 
 FENNEL_BEGIN_NAMESPACE
 
 /**
  * JavaTraceTarget implements TraceTarget by calling back into the 
- * java.util.logging facility.
+ * java.util.logging facility.  It also implements StatsTarget by
+ * converting performance counter updates into trace events which
+ * are published inside of Java.
  */
-class JavaTraceTarget : public TraceTarget
+class JavaTraceTarget : public TraceTarget, public StatsTarget
 {
     /**
      * net.sf.farrago.util.NativeTrace object to which trace messages should be
@@ -64,6 +67,11 @@ public:
     virtual void notifyTrace(
         std::string source,TraceLevel level,std::string message);
     virtual TraceLevel getSourceTraceLevel(std::string source);
+    
+    // implement StatsTarget
+    virtual void beginSnapshot();
+    virtual void endSnapshot();
+    virtual void writeCounter(std::string name,uint value);
 };
 
 FENNEL_END_NAMESPACE

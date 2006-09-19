@@ -38,6 +38,12 @@ public:
      * read (since last snapshot).
      */
     uint nHits;
+    
+    /**
+     * Number of times a page access was satisfied without a disk
+     * read (since cache initialization).
+     */
+    uint nHitsSinceInit;
 
     /**
      * Number of page accesses (since last snapshot).
@@ -45,10 +51,21 @@ public:
     uint nRequests;
 
     /**
+     * Number of page accesses (since cache initialization).
+     */
+    uint nRequestsSinceInit;
+
+    /**
      * Number of times a page had to be discarded to satisfy a request for
      * another page (since last snapshot).
      */
     uint nVictimizations;
+
+    /**
+     * Number of times a page had to be discarded to satisfy a request for
+     * another page (since cache initialization).
+     */
+    uint nVictimizationsSinceInit;
 
     /**
      * Number of dirty pages (instantaneous).
@@ -61,9 +78,37 @@ public:
     uint nPageReads;
 
     /**
+     * Number of disk pages read (since cache initialization).
+     */
+    uint nPageReadsSinceInit;
+
+    /**
      * Number of disk pages written (since last snapshot).
      */
     uint nPageWrites;
+
+    /**
+     * Number of disk pages written (since cache initialization).
+     */
+    uint nPageWritesSinceInit;
+
+    /**
+     * Number of memory pages currently allocated in buffer pool
+     * (instantaneous).
+     */
+    uint nMemPagesAllocated;
+
+    /**
+     * Number of memory pages currently allocated but unused
+     * (instantaneous).
+     */
+    uint nMemPagesUnused;
+
+    /**
+     * Maximum number of memory pages which can be allocated in buffer pool
+     * (immutable after cache initialization).
+     */
+    uint nMemPagesMax;
 };
 
 FENNEL_END_NAMESPACE

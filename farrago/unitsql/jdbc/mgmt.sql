@@ -73,3 +73,29 @@ select option_name, option_choice_ordinal, option_choice_value from table(
         values ('URL', 'jdbc:hsqldb:testcases/hsqldb/scott'),
                ('EXTENDED_OPTIONS', 'TRUE'))))
 order by option_ordinal, option_choice_ordinal;
+
+-- NOTE jvs 17-Sept-2006:  Next ones return too much noise to make
+-- it possible to check their results; just verify that they can execute
+
+select * from table(sys_boot.mgmt.threads()) where false;
+
+select * from table(sys_boot.mgmt.thread_stack_entries()) where false;
+
+select * from table(sys_boot.mgmt.system_info()) where false;
+
+select * from table(sys_boot.mgmt.performance_counters()) where false;
+
+select source_name, counter_name 
+from table(sys_boot.mgmt.performance_counters())
+order by source_name, counter_name;
+
+-- set code cache size to some arbitrary number
+alter system set "codeCacheMaxBytes" = 42000;
+
+call sys_boot.mgmt.flush_code_cache();
+
+-- verify that flush did not modify code cache size
+select "codeCacheMaxBytes" from sys_fem."Config"."FarragoConfig";
+
+-- back to max
+alter system set "codeCacheMaxBytes" = max;

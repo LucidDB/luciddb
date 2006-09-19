@@ -26,6 +26,7 @@
 
 #include "fennel/common/SharedTypes.h"
 #include "fennel/common/TraceSource.h"
+#include "fennel/common/StatsSource.h"
 #include "fennel/exec/ExecStreamDefs.h"
 #include "fennel/synch/SynchObj.h"
 
@@ -85,7 +86,8 @@ struct ExecStreamResourceRequirements {
  * @version $Id$
  */
 class ExecStreamGovernor
-    : public boost::noncopyable, public virtual TraceSource
+    : public boost::noncopyable, public virtual TraceSource,
+    public StatsSource
 {
 protected:
     typedef std::map<ExecStreamGraph *, SharedExecStreamResourceQuantity>
@@ -200,6 +202,9 @@ public:
      * resources
      */
     virtual void returnResources(ExecStreamGraph &graph) = 0;
+
+    // implement StatsSource
+    void writeStats(StatsTarget &);
 };
 
 FENNEL_END_NAMESPACE

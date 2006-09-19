@@ -60,7 +60,7 @@
 0: jdbc:farrago:> explain plan for select city from emps order by empno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CITY)])'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" CITY) NOT NULL])'
 '    FennelSortRel(key=[[1]], discardDuplicates=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[4, 0]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 

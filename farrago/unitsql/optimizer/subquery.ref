@@ -25,16 +25,16 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno in (select deptno from depts) order by name;
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                         column0                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                               |
-|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                   |
-|     FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) NAME)])                                                                   |
-|       LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])                                                                                  |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                   |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                              |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                  |
+|     FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
+|       LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFTSEMI])                                                                                                 |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                                  |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select name from emps where deptno in (select deptno from depts) order by name;
 +--------+
@@ -108,19 +108,19 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where not (deptno in (select deptno from depts));
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                         column0                                                                         |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                               |
-|   FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])                                                                     |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                       |
-|       LhxAggRel(groupCount=[1])                                                                                                                         |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-|       IteratorToFennelConverter                                                                                                                         |
-|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[false], proj#0..1=[{exprs}], $condition=[$t2])                                                        |
-|           FennelToIteratorConverter                                                                                                                     |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                               |
-+---------------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                               column0                                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                            |
+|   FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
+|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                                    |
+|       LhxAggRel(groupCount=[1])                                                                                                                                      |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])               |
+|       IteratorToFennelConverter                                                                                                                                      |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[false], proj#0..1=[{exprs}], $condition=[$t2])                                                                     |
+|           FennelToIteratorConverter                                                                                                                                  |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                            |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 1.3 (WRONG RESULTS:  should have one row for employee John)
 0: jdbc:farrago:> select name from emps where not (deptno in (select deptno from depts)) order by name;
@@ -185,18 +185,18 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where exists(select * from depts);
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                           column0                                                                           |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                   |
-|   FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(128) NAME)])         |
-|     FennelCartesianProductRel(leftouterjoin=[true])                                                                                                         |
-|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                            |
-|       IteratorToFennelConverter                                                                                                                             |
-|         IterCalcRel(expr#0=[{inputs}], expr#1=[true], $indicator=[$t1])                                                                                     |
-|           FennelToIteratorConverter                                                                                                                         |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
-+-------------------------------------------------------------------------------------------------------------------------------------------------------------+
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                               column0                                                                                                                |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                            |
+|   FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
+|     FennelCartesianProductRel(leftouterjoin=[true])                                                                                                                                                                                  |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                     |
+|       IteratorToFennelConverter                                                                                                                                                                                                      |
+|         IterCalcRel(expr#0=[{inputs}], expr#1=[true], $indicator=[$t1])                                                                                                                                                              |
+|           FennelToIteratorConverter                                                                                                                                                                                                  |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                           |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- (WRONG RESULTS:  shoud not be filter over cross product)
 0: jdbc:farrago:> select name from emps where exists(select * from depts) order by name;

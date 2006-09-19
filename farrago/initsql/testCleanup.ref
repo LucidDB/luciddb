@@ -6,9 +6,9 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should return empty set
 0: jdbc:farrago:> select * from table(sys_boot.mgmt.repository_integrity_violations());
-+--------------+--------+
-| DESCRIPTION  | MOFID  |
-+--------------+--------+
-+--------------+--------+
++--------------+---------+
+| DESCRIPTION  | MOF_ID  |
++--------------+---------+
++--------------+---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

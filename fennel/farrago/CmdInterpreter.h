@@ -53,14 +53,12 @@ public:
     {
         SharedDatabase pDb;
         boost::shared_ptr<TraceTarget> pTraceTarget;
-        FileStatsTarget statsTarget;
         StatsTimer statsTimer;
         SharedExecStreamGovernor pResourceGovernor;
 
         // TODO:  parameterize these
         explicit DbHandle()
-            : statsTarget("/tmp/fennel.stats"),
-              statsTimer(statsTarget,500)
+            : statsTimer(500)
         {
         }
 

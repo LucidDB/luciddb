@@ -111,7 +111,7 @@
 . . . . . . . . > select depts.name from emps left outer join depts on TRUE;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) NAME)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[true])'
 '      FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
@@ -257,7 +257,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FennelSortRel(key=[[1]], discardDuplicates=[false])'
-'    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, VARCHAR(12) NAME)])'
+'    FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, VARCHAR(12) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME) NOT NULL])'
 '      FennelCartesianProductRel(leftouterjoin=[false])'
 '        LcsRowScanRel(table=[[LOCALDB, LCSCARTESIAN, LCSEMPS]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LCSCARTESIAN$LCSEMPS$NAME]])'
 '        FennelBufferRel(inMemory=[false], multiPass=[true])'

@@ -164,7 +164,7 @@ class FennelReshapeRel
                 new String[] { "child", "projection", "outputRowType"},
                 new Object[] {
                     Arrays.asList(projection),
-                    outputRowType.toString()
+                    outputRowType.getFullTypeString()
                 });
         } else {
             // need to include the output rowtype in the digest to properly
@@ -184,7 +184,7 @@ class FennelReshapeRel
                     compOp.toString(),
                     Arrays.asList(filterOrdinals),
                     literals.toString(),
-                    outputRowType.toString()
+                    outputRowType.getFullTypeString()
                 });
         }
             

@@ -240,7 +240,7 @@
 . . . . . . . . > select sum(age) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
 '    FennelAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '      FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '        FennelRenameRel(fieldNames=[[$f0, $f1]])'
@@ -369,7 +369,7 @@
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[NAME, EXPR$1]])'
 '    LhxAggRel(groupCount=[1], agg#0=[COUNT()])'
-'      FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(VARCHAR(128) $f0)])'
+'      FennelReshapeRel(projection=[[2]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL $f0) NOT NULL])'
 '        LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2]], index=[EMPS_UX], preserveOrder=[false])'
 '          FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])'
@@ -388,7 +388,7 @@
 . . . . . . . . > select sum(age) from emps group by deptno;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0)])'
+'  FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
 '    LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '      FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[2, 6]], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])'

@@ -175,6 +175,12 @@ class CacheImpl : public Cache, private TimerThreadClient
     AtomicCounter nPageWrites;
 
     /**
+     * Accumulated state for all counters which are tracked since cache
+     * initialization.  Other fields are unused.
+     */
+    CacheStats statsSinceInit;
+
+    /**
      * Mutex coupled with freePageCondition.
      */
     StrictMutex freePageMutex;
@@ -438,6 +444,11 @@ class CacheImpl : public Cache, private TimerThreadClient
      * @param x reference to counter to be updated
      */
     void decrementStatsCounter(AtomicCounter &x);
+
+    /**
+     * Clears stats which are tracked since initialization.
+     */
+    void initializeStats();
     
 // ----------------------------------------------------------------------
 // Implementation of private Cache interface (q.v.)

@@ -45,7 +45,7 @@
 0: jdbc:farrago:> explain plan for select t2a, t1b, t1a, t2b from t1, t2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[2, 1, 0, 3]], outputRowType=[RecordType(VARCHAR(15) T2A, VARCHAR(10) T1B, CHAR(5) T1A, CHAR(20) T2B)])'
+'  FennelReshapeRel(projection=[[2, 1, 0, 3]], outputRowType=[RecordType(VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
 '      FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
@@ -55,13 +55,13 @@
 0: jdbc:farrago:> explain plan for select cast(t2id as integer) from t2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER EXPR$0)])'
+'  FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER EXPR$0) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . >     select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) EXPR$0, VARCHAR(5) EXPR$1)])'
+'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[1, 2]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- casting in an insert-select that will truncate the data
@@ -70,7 +70,7 @@
 'column0'
 'FennelToIteratorConverter'
 '  FtrsTableModificationRel(table=[[LOCALDB, RESHAPE, TRUNC]], operation=[INSERT], updateColumnList=[[]], flattened=[true])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER ID, VARCHAR(3) A, VARCHAR(2) B, INTEGER PK)])'
+'    FennelReshapeRel(projection=[[0, 1, 2, 3]], outputRowType=[RecordType(INTEGER ID, VARCHAR(3) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" A, VARCHAR(2) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" B, INTEGER NOT NULL PK) NOT NULL])'
 '      FennelRenameRel(fieldNames=[[ID, A, B, PK]])'
 '        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 1, 2, 3]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
@@ -80,81 +80,81 @@
 . . . . . . . . >     select * from t1 where t1id = 1 and t1b = 't1b1';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0, 2]], filterTuple=[[1, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0, 2]], filterTuple=[[1, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t1 where t1b = 't1b1' and t1id = 1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[2, 0]], filterTuple=[[_ISO-8859-1't1b1', 1]], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[2, 0]], filterTuple=[[_ISO-8859-1't1b1', 1]], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t2 where 't2a2' = t2a and 2 = t2id;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1, 0]], filterTuple=[[_ISO-8859-1't2a2', 2]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1, 0]], filterTuple=[[_ISO-8859-1't2a2', 2]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> -- range operators
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t2 where t2id >= 3;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t1 where t1a > 't1a2';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a2 ']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a2 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t1 where t1b <= 't1b3';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b3']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b3']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t2 where t2a < 't2a4';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t2 where 't2b3' >= t2b;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't2b3                ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't2b3                ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t1 where 't1a3' > t1a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a3 ']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't1a3 ']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t1 where 't1b4' <= t1b;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b4']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[2]], filterTuple=[[_ISO-8859-1't1b4']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select * from t2 where 't2a4' < t2a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GT], filterOrdinals=[[1]], filterTuple=[[_ISO-8859-1't2a4']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- range used with an equal
 0: jdbc:farrago:> explain plan for select * from t1 where t1id = 3 and t1b >= 't1b1';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER T1ID, CHAR(5) T1A, VARCHAR(10) T1B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for select * from t2 where t2id is null;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) T2A, CHAR(20) T2B, INTEGER PK)])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- both project and filter
@@ -163,18 +163,18 @@
 . . . . . . . . >         from t1, t2 where t1.t1id = 1 and t2.t2id = 1;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) EXPR$0, VARCHAR(5) EXPR$1)])'
+'  FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0, VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$1) NOT NULL])'
 '    FennelCartesianProductRel(leftouterjoin=[false])'
-'      FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(VARCHAR(10) T1B)])'
+'      FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B) NOT NULL])'
 '        FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 '      FennelBufferRel(inMemory=[false], multiPass=[true])'
-'        FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(CHAR(20) T2B)])'
+'        FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B) NOT NULL])'
 '          FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> explain plan for
 . . . . . . . . >     select cast(t1b as varchar(5)) from t1 where t1id = 3;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(VARCHAR(5) EXPR$0)])'
+'  FennelReshapeRel(projection=[[1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[3]], outputRowType=[RecordType(VARCHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" EXPR$0) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[[0, 2]], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -----------------------------------
@@ -489,15 +489,15 @@
 0: jdbc:farrago:> explain plan for select * from d1, d2 where d1.a = d2.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) A)])'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D1$A]])'
-'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) CAST($0):DECIMAL(10, 1))])'
+'      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(DECIMAL(10, 1) NOT NULL A, DECIMAL(10, 1) CAST($0):DECIMAL(10, 1)) NOT NULL])'
 '        LcsRowScanRel(table=[[LOCALDB, RESHAPE, D2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D2$A]])'
 0: jdbc:farrago:> explain plan for select * from d1, d3 where d1.a = d3.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) A)])'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[Reinterpret($t0)], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[Reinterpret($t3)], A=[$t0], CAST($0):DECIMAL(11, 2)=[$t4])'

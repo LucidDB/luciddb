@@ -18,14 +18,14 @@ create view repository_properties_view as
   select * from table(repository_properties());
 
 create function repository_integrity_violations()
-returns table(description varchar(65535), mofid varchar(128))
+returns table(description varchar(65535), mof_id varchar(128))
 language java
 parameter style system defined java
 no sql
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.repositoryIntegrityViolations';
 
 create function statements()
-returns table(id int, session_id int, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
+returns table(id bigint, session_id bigint, sql_stmt varchar(1024), create_time timestamp, parameters varchar(1024))
 language java
 parameter style system defined java
 no sql
@@ -39,7 +39,6 @@ grant select on statements_view to public;
 
 create function sessions()
 returns table(id int, url varchar(128), current_user_name varchar(128), current_role_name varchar(128), session_user_name varchar(128), system_user_name varchar(128), system_user_fullname varchar(128), session_name varchar(128), program_name varchar(128), process_id int, catalog_name varchar(128), schema_name varchar(128), is_closed boolean, is_auto_commit boolean, is_txn_in_progress boolean)
-
 language java
 parameter style system defined java
 no sql
@@ -52,8 +51,7 @@ create view sessions_view as
 grant select on sessions_view to public;
 
 create function objects_in_use()
-returns table(session_id int, stmt_id int, mof_id varchar(32))
-
+returns table(session_id bigint, stmt_id bigint, mof_id varchar(128))
 language java
 parameter style system defined java
 no sql
@@ -65,6 +63,51 @@ create view objects_in_use_view as
 -- TODO: grant this only to a privileged user
 grant select on objects_in_use_view to public;
 
+create function threads()
+returns table(
+    thread_id bigint, thread_group_name varchar(128), thread_name varchar(128),
+    thread_priority int, thread_state varchar(128), is_alive boolean,
+    is_daemon boolean, is_interrupted boolean)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.syslib.FarragoManagementUDR.threadList';
+
+create function thread_stack_entries()
+returns table(
+    thread_id bigint, stack_level int, entry_string varchar(1024),
+    class_name varchar(128), method_name varchar(128), 
+    file_name varchar(1024), line_num int, is_native boolean)
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoManagementUDR.threadStackEntries';
+
+create function system_info()
+returns table(
+    source_name varchar(128), 
+    item_name varchar(1024), 
+    item_units varchar(128),
+    item_value varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoManagementUDR.systemInfo';
+
+create function performance_counters()
+returns table(
+    source_name varchar(128), 
+    counter_name varchar(1024), 
+    counter_units varchar(128),
+    counter_value varchar(1024))
+language java
+parameter style system defined java
+no sql
+external name 
+'class net.sf.farrago.syslib.FarragoManagementUDR.performanceCounters';
+
 -- lie and say this is non-deterministic, since it's usually used
 -- in cases where it would be annoying if it got optimized away
 create function sleep(millis bigint)
@@ -73,6 +116,14 @@ language java
 no sql
 not deterministic
 external name 'class net.sf.farrago.syslib.FarragoManagementUDR.sleep';
+
+-- flushes all entries from the global code cache
+create procedure flush_code_cache()
+  language java
+  parameter style java
+  reads sql data
+  external name 
+  'class net.sf.farrago.syslib.FarragoManagementUDR.flushCodeCache';
 
 -- lets an administrator kill a running session
 -- TODO: grant this only to a privileged user

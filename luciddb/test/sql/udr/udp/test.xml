@@ -15,6 +15,14 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/cr_source.sql"/>
       </test>
 
+      <test name="computeStatisticsForSchema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/compute_statistics_for_schema.sql"/>
+      </test>
+
+      <test name="doForEntireSchema">
+        <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/do_for_entire_schema.sql"/>
+      </test>
+
       <test name="grantSelectForSchema">
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/grant_select_for_schema.sql"/>
       </test>

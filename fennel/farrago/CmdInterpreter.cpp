@@ -175,7 +175,8 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
     std::auto_ptr<DbHandle> pDbHandle(newDbHandle());
     JniUtil::incrementHandleCount(DBHANDLE_TRACE_TYPE_STR, pDbHandle.get());
 
-    pDbHandle->pTraceTarget.reset(newTraceTarget());
+    JavaTraceTarget *pJavaTraceTarget = newTraceTarget();
+    pDbHandle->pTraceTarget.reset(pJavaTraceTarget);
     // on a fatal error, echo the backtrace to the log file:
     AutoBacktrace::setTraceTarget(pDbHandle->pTraceTarget);
 
@@ -186,9 +187,6 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
         pDbHandle->pTraceTarget);
 
     pDbHandle->pDb = pDb;
-
-    pDbHandle->statsTimer.addSource(pDb);
-    pDbHandle->statsTimer.start();
 
     ExecStreamResourceKnobs knobSettings;
     knobSettings.cacheReservePercentage =
@@ -205,6 +203,11 @@ void CmdInterpreter::visit(ProxyCmdOpenDatabase &cmd)
                 knobSettings, resourcesAvailable,
                 pDbHandle->pTraceTarget,
                 "xo.resourceGovernor"));
+
+    pDbHandle->statsTimer.setTarget(*pJavaTraceTarget);
+    pDbHandle->statsTimer.addSource(pDb);
+    pDbHandle->statsTimer.addSource(pDbHandle->pResourceGovernor);
+    pDbHandle->statsTimer.start();
 
     if (pDb->isRecoveryRequired()) {
         SegmentAccessor scratchAccessor =

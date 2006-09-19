@@ -318,6 +318,68 @@ specific instr_without_optional_vars
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.string.InStrUdf.execute';
 
+
+----
+-- Application variables (a.k.a. "appvars")
+-- 
+-- Appvars are defined within a named context, allowing sets of
+-- variables to be manipulated as a unit.
+----
+
+-- Creates a variable (or a context if var_id is null).
+-- The initial value for a new variable is null.  It is an error
+-- to attempt to create a context or variable which already exists.
+create procedure applib.create_var(
+    context_id varchar(128), 
+    var_id varchar(128),
+    description varchar(65535))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
+
+-- Deletes a variable (or a context if var_id is null), which must
+-- currently exist.
+create procedure applib.delete_var(
+    context_id varchar(128), 
+    var_id varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
+
+-- Sets the value for a variable.  var_id must not be null, and must
+-- reference a previously created variable.
+create procedure applib.set_var(
+    context_id varchar(128), 
+    var_id varchar(128), 
+    new_value varchar(65535))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
+
+-- Flushes modifications to a variable (or a context if var_id is null).
+-- Before flush, there is no guarantee that modifications have
+-- been made permanent.
+create procedure applib.flush_var(
+    context_id varchar(128), 
+    var_id varchar(128))
+language java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
+
+-- Retrieves the current value of a variable.  var_id must not be null,
+-- and must reference a previously created variable.
+-- Declared as deterministic to let the optimizer know that it should
+-- be evaluated once per statement (rather than once per row) when
+-- the arguments are constant literals.
+create function applib.get_var(
+    context_id varchar(128), 
+    var_id varchar(128)) 
+returns varchar(65535)
+language java
+deterministic
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
+
 ----
 -- UDXs
 ----
@@ -399,67 +461,6 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.TimeDimensionUdx.execute';
 
-----
--- Application variables (a.k.a. "appvars")
--- 
--- Appvars are defined within a named context, allowing sets of
--- variables to be manipulated as a unit.
-----
-
--- Creates a variable (or a context if var_id is null).
--- The initial value for a new variable is null.  It is an error
--- to attempt to create a context or variable which already exists.
-create procedure applib.create_var(
-    context_id varchar(128), 
-    var_id varchar(128),
-    description varchar(65535))
-language java
-no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.CreateAppVarUdp.execute';
-
--- Deletes a variable (or a context if var_id is null), which must
--- currently exist.
-create procedure applib.delete_var(
-    context_id varchar(128), 
-    var_id varchar(128))
-language java
-no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.DeleteAppVarUdp.execute';
-
--- Sets the value for a variable.  var_id must not be null, and must
--- reference a previously created variable.
-create procedure applib.set_var(
-    context_id varchar(128), 
-    var_id varchar(128), 
-    new_value varchar(65535))
-language java
-no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.SetAppVarUdp.execute';
-
--- Flushes modifications to a variable (or a context if var_id is null).
--- Before flush, there is no guarantee that modifications have
--- been made permanent.
-create procedure applib.flush_var(
-    context_id varchar(128), 
-    var_id varchar(128))
-language java
-no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.FlushAppVarUdp.execute';
-
--- Retrieves the current value of a variable.  var_id must not be null,
--- and must reference a previously created variable.
--- Declared as deterministic to let the optimizer know that it should
--- be evaluated once per statement (rather than once per row) when
--- the arguments are constant literals.
-create function applib.get_var(
-    context_id varchar(128), 
-    var_id varchar(128)) 
-returns varchar(65535)
-language java
-deterministic
-no sql
-external name 'applib.applibJar:com.lucidera.luciddb.applib.variable.GetAppVarUdf.execute';
-
 -- Flatten hierarchical data
 create function applib.flatten_recursive_hierarchy(c cursor)
 returns table(
@@ -494,6 +495,18 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.GenerateCrcUdx.execute';
 
+-- Pivot columns to rows
+create function pivot_columns_to_rows(c cursor)
+returns table(col_name varchar(65535), col_value varchar(65535))
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
+
+----
+-- System procedures
+----
+
 -- UDP for granting a user select privileges for all tables and views in a schema
 create procedure grant_select_for_schema(
 in schemaname varchar(255), 
@@ -502,3 +515,21 @@ language java
 parameter style java
 reads sql data
 external name 'applib.applibJar:com.lucidera.luciddb.applib.security.GrantSelectForSchemaUdp.execute';
+
+-- UDP for executing a sql statement for each table and view in an entire schema
+create procedure do_for_entire_schema(
+in sqlString varchar(65535),
+in schemaName varchar(255),
+in objTypeStr varchar(128))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.util.DoForEntireSchemaUdp.execute';
+
+-- UDP for computing statistics for all tables in a schema
+create procedure compute_statistics_for_schema(
+in schemaName varchar(255))
+language java
+parameter style java
+reads sql data
+external name 'applib.applibJar:com.lucidera.luciddb.applib.analysis.ComputeStatisticsForSchemaUdp.execute';

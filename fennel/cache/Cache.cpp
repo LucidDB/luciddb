@@ -88,12 +88,34 @@ void Cache::writeStats(StatsTarget &target)
 {
     CacheStats stats;
     collectStats(stats);
-    target.writeCounter("CacheHits",stats.nHits);
-    target.writeCounter("CacheRequests",stats.nRequests);
-    target.writeCounter("CacheVictimizations",stats.nVictimizations);
-    target.writeCounter("CacheDirtyPages",stats.nDirtyPages);
-    target.writeCounter("CachePagesRead",stats.nPageReads);
-    target.writeCounter("CachePagesWritten",stats.nPageWrites);
+    target.writeCounter(
+        "CacheHits", stats.nHits);
+    target.writeCounter(
+        "CacheHitsSinceInit", stats.nHitsSinceInit);
+    target.writeCounter(
+        "CacheRequests", stats.nRequests);
+    target.writeCounter(
+        "CacheRequestsSinceInit", stats.nRequestsSinceInit);
+    target.writeCounter(
+        "CacheVictimizations", stats.nVictimizations);
+    target.writeCounter(
+        "CacheVictimizationsSinceInit", stats.nVictimizationsSinceInit);
+    target.writeCounter(
+        "CacheDirtyPages", stats.nDirtyPages);
+    target.writeCounter(
+        "CachePagesRead", stats.nPageReads);
+    target.writeCounter(
+        "CachePagesReadSinceInit", stats.nPageReadsSinceInit);
+    target.writeCounter(
+        "CachePagesWritten", stats.nPageWrites);
+    target.writeCounter(
+        "CachePagesWrittenSinceInit", stats.nPageWritesSinceInit);
+    target.writeCounter(
+        "CachePagesAllocated", stats.nMemPagesAllocated);
+    target.writeCounter(
+        "CachePagesUnused", stats.nMemPagesUnused);
+    target.writeCounter(
+        "CachePagesAllocationLimit", stats.nMemPagesMax);
 }
 
 FENNEL_END_CPPFILE("$Id$");

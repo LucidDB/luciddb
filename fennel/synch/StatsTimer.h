@@ -37,7 +37,7 @@ class StatsTarget;
  */
 class StatsTimer : private TimerThreadClient
 {
-    StatsTarget &target;
+    StatsTarget *pTarget;
     std::vector<SharedStatsSource> sources;
     TimerThread timerThread;
     uint intervalInMillis;
@@ -47,15 +47,29 @@ class StatsTimer : private TimerThreadClient
     
 public:
     /**
-     * Creates a new StatsTimer.
-     *
-     * @param target the StatsTarget that will receive stats
+     * Creates a new StatsTimer without any initial target.
      *
      * @param intervalInMillis interval between publications
      */
-    explicit StatsTimer(StatsTarget &target,uint intervalInMillis);
+    explicit StatsTimer(uint intervalInMillis);
+    
+    /**
+     * Creates a new StatsTimer with an initial target.
+     *
+     * @param target target to receive events
+     *
+     * @param intervalInMillis interval between publications
+     */
+    explicit StatsTimer(StatsTarget &target, uint intervalInMillis);
 
     virtual ~StatsTimer();
+
+    /**
+     * Sets the target for events.
+     *
+     * @param target target to receive events
+     */
+    void setTarget(StatsTarget &target);
 
     /**
      * Adds a source to be published.  Should not be used after start().
@@ -65,7 +79,8 @@ public:
     void addSource(SharedStatsSource pSource);
 
     /**
-     * Starts publication.  Sources must all remain valid until stop().
+     * Starts publication.  Target and sources must all remain valid until
+     * stop().
      */
     void start();
 

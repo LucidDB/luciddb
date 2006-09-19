@@ -29,15 +29,29 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 StatsTimer::StatsTimer(
-    StatsTarget &targetInit,
+    StatsTarget &target,
     uint intervalInMillisInit)
-    : target(targetInit), timerThread(*this)
+    : timerThread(*this)
 {
+    pTarget = &target;
+    intervalInMillis = intervalInMillisInit;
+}
+
+StatsTimer::StatsTimer(
+    uint intervalInMillisInit)
+    : timerThread(*this)
+{
+    pTarget = NULL;
     intervalInMillis = intervalInMillisInit;
 }
 
 StatsTimer::~StatsTimer()
 {
+}
+
+void StatsTimer::setTarget(StatsTarget &target)
+{
+    pTarget = &target;
 }
 
 void StatsTimer::addSource(SharedStatsSource pSource)
@@ -55,8 +69,10 @@ void StatsTimer::stop()
     timerThread.stop();
 
     // clear target counters
-    target.beginSnapshot();
-    target.endSnapshot();
+    if (pTarget) {
+        pTarget->beginSnapshot();
+        pTarget->endSnapshot();
+    }
 
     sources.clear();
 }
@@ -68,11 +84,14 @@ uint StatsTimer::getTimerIntervalMillis()
 
 void StatsTimer::onTimerInterval()
 {
-    target.beginSnapshot();
-    for (uint i = 0; i < sources.size(); ++i) {
-        sources[i]->writeStats(target);
+    if (!pTarget) {
+        return;
     }
-    target.endSnapshot();
+    pTarget->beginSnapshot();
+    for (uint i = 0; i < sources.size(); ++i) {
+        sources[i]->writeStats(*pTarget);
+    }
+    pTarget->endSnapshot();
 }
 
 FENNEL_END_CPPFILE("$Id$");

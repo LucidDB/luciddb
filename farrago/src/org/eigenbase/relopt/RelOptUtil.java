@@ -1587,6 +1587,8 @@ public abstract class RelOptUtil
         RelOptUtil.setRexInputBitmap(rightBitmap, nFieldsLeft, nTotalFields);
 
         ListIterator filterIter = filters.listIterator();
+        RelDataTypeField [] rightFields =
+            joinRel.getInputs()[1].getRowType().getFields();
         while (filterIter.hasNext()) {
             RexNode filter = (RexNode) filterIter.next();
 
@@ -1633,6 +1635,7 @@ public abstract class RelOptUtil
                             new RelOptUtil.RexInputConverter(
                                 rexBuilder,
                                 joinFields,
+                                rightFields,
                                 adjustments)));
                 }
                 filterIter.remove();

@@ -294,18 +294,24 @@ void LbmEntry::openLastSegment()
 
     uint lastZeroRIDs = 0;
     uint rowCount = getRowCount(currSegDescByte, lastZeroRIDs);
+
+    // get current segment length
+    currSegLength = getSegLength(*currSegDescByte);
+
+    // backtrack to exclude the extended zero length bytes
+    currentEntrySize -= getZeroLengthByteCount(*currSegDescByte);
     
     pSegDescEnd = currSegDescByte + 1;
-    currSegLength = getSegLength(*currSegDescByte);
+
+    // write the segment length back, and erase the previously stored extended
+    // zero length bytes in the seg descriptor
     setSegLength(*currSegDescByte, currSegLength);
 
     // still point to the same last segment byte
     currSegByte = pSegEnd;
+
     currSegByteStartRID = 
         startRID + rowCount - lastZeroRIDs - LbmOneByteSize;
-
-    // backtrack to exclude the extended zero length bytes
-    currentEntrySize -= getZeroLengthByteCount(*currSegDescByte);
 }
 
 
@@ -715,16 +721,22 @@ bool LbmEntry::growEntry(LcsRid rid, uint reserveSpace)
      */
     LcsRid endRID = startRID + rowCount - 1;
 
-    assert(rid >= endRID + 1);
-
-    /*
-     * If this rid is not in the next 8 RIDs. We need to "grow" the entry by
-     * - remembering the rid gap in the current segment descriptor.
-     * - open a new segment for appending.
-     */
-    if (!closeCurrentSegment(rid)) {
-        return false;
+    if (rid >= endRID + 1) {
+        /*
+         * If this rid is not in the next 8 RIDs. We need to "grow" the entry by
+         * - remembering the rid gap in the current segment descriptor.
+         * - open a new segment for appending.
+         */
+        if (!closeCurrentSegment(rid)) {
+            return false;
+        }
     }
+    /*
+     * if (rid < endRID + 1)
+     * is the singleton case. i.e. rid is from a singleton which chould appear
+     * before the endRID of this entry. Do not have to grow the entry
+     * (i.e. encode any intervening zero RIDs) in this case.
+     */
 
     return true;
 }
@@ -915,13 +927,6 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
 
     uint mergeSpaceRequired = getMergeSpaceRequired(inputTuple);
 
-    /*
-     * If the new inputTuple is a singleton, use the setRID interface.
-     */
-    if (isSingleton(inputTuple)) { 
-        return setRID(inputStartRID);
-    }
-
     if (!growEntry(inputStartRID, mergeSpaceRequired)) {
         /*
          * If either the combined entry is bigger than maximum entry size,
@@ -930,6 +935,13 @@ bool LbmEntry::mergeEntry(TupleData &inputTuple)
          * LbmZeroLengthExtended bytes, tell caller to start a new entry.
          */
         return false;
+    }
+
+    /*
+     * If the new inputTuple is a singleton, use the setRID interface.
+     */
+    if (isSingleton(inputTuple)) { 
+        return setRID(inputStartRID);
     }
 
     /*
@@ -1678,6 +1690,7 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
 {
     ostringstream tupleTrace;
     uint tupleSize = inputTuple.size();
+    LcsRid inputStartRID = *((LcsRid *)inputTuple[tupleSize - 3].pData);
 
     tupleTrace << "Key [";
     
@@ -1688,8 +1701,8 @@ string LbmEntry::toBitmapString(TupleData const&inputTuple)
         }
     }
     
-    tupleTrace << "] RID [" 
-               << opaqueToInt(*(LcsRid *)inputTuple[tupleSize - 3].pData)
+    tupleTrace << "] startRID [" 
+               << opaqueToInt(inputStartRID)
                << "] ";
 
     if (isSingleton(inputTuple)) {
@@ -1746,14 +1759,18 @@ string LbmEntry::toRIDString(TupleData const &inputTuple)
             keyTrace << "|";
         }
     }
-    keyTrace << "] RID [";
     
+    keyTrace << "] ";
+
+    tupleTrace << keyTrace.str() 
+               << "startRID [" 
+               << opaqueToInt(inputStartRID)
+               << "] ";
+
     if (isSingleton(inputTuple)) {
-        tupleTrace << keyTrace.str()
-                   << opaqueToInt(inputStartRID)
-                   << "]\n";
-    }
-    else {
+        tupleTrace <<"Singleton\n";
+    } else {
+        keyTrace << "RID [";
         PBuffer segDesc = (PBuffer)inputTuple[tupleSize - 2].pData;
         /*
          * segments are stored backward.
