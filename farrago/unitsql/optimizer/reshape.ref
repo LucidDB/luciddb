@@ -36,6 +36,7 @@
 0: jdbc:farrago:> insert into t2 values(3, 't2a3', 't2b3', 3);
 0: jdbc:farrago:> insert into t2 values(4, 't2a4', 't2b4', 4);
 0: jdbc:farrago:> insert into t2 values(5, 't2a5', 't2b5', 5);
+0: jdbc:farrago:> insert into t2 values(5, null, null, 6);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> --------------------------------
@@ -150,11 +151,16 @@
 'FennelToIteratorConverter'
 '  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_GE], filterOrdinals=[[0, 2]], filterTuple=[[3, _ISO-8859-1't1b1']], outputRowType=[RecordType(INTEGER NOT NULL T1ID, CHAR(5) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL T1A, VARCHAR(10) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T1B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T1]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T1$SYS$PRIMARY_KEY], preserveOrder=[false])'
-0: jdbc:farrago:> 
-0: jdbc:farrago:> explain plan for select * from t2 where t2id is null;
+0: jdbc:farrago:> explain plan for select * from t2 where t2id = 5 and t2b < 't3';
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_LT], filterOrdinals=[[0, 2]], filterTuple=[[5, _ISO-8859-1't3                  ']], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
+'    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for select * from t2 where t2a is null;
+'column0'
+'FennelToIteratorConverter'
+'  FennelReshapeRel(projection=[[0, 1, 2, 3]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[null]], outputRowType=[RecordType(INTEGER T2ID, VARCHAR(15) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2A, CHAR(20) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" T2B, INTEGER NOT NULL PK) NOT NULL])'
 '    FtrsIndexScanRel(table=[[LOCALDB, RESHAPE, T2]], projection=[*], index=[SYS$CONSTRAINT_INDEX$T2$SYS$PRIMARY_KEY], preserveOrder=[false])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- both project and filter
@@ -302,6 +308,11 @@
 +-------+-------+--------+-----------------------+
 |  T2A  |  T1B  |  T1A   |          T2B          |
 +-------+-------+--------+-----------------------+
+|       | t1b1  | t1a1   |                       |
+|       | t1b2  | t1a2   |                       |
+|       | t1b3  | t1a3   |                       |
+|       | t1b4  | t1a4   |                       |
+|       | t1b5  | t1a5   |                       |
 | t2a1  | t1b1  | t1a1   | t2b1                  |
 | t2a1  | t1b2  | t1a2   | t2b1                  |
 | t2a1  | t1b3  | t1a3   | t2b1                  |
@@ -338,11 +349,13 @@
 | 3       |
 | 4       |
 | 5       |
+| 5       |
 +---------+
 0: jdbc:farrago:> select cast(t2b as varchar(10)), cast(t2a as varchar(5)) from t2 order by 1, 2;
 +-------------+---------+
 |   EXPR$0    | EXPR$1  |
 +-------------+---------+
+|             |         |
 | t2b1        | t2a1    |
 | t2b2        | t2a2    |
 | t2b3        | t2a3    |
@@ -388,6 +401,7 @@
 | 3     | t2a3  | t2b3                  | 3   |
 | 4     | t2a4  | t2b4                  | 4   |
 | 5     | t2a5  | t2b5                  | 5   |
+| 5     |       |                       | 6   |
 +-------+-------+-----------------------+-----+
 0: jdbc:farrago:> select * from t1 where t1a > 't1a2' order by t1id;
 +-------+--------+-------+-----+
@@ -448,11 +462,18 @@
 +-------+--------+-------+-----+
 | 3     | t1a3   | t1b3  | 3   |
 +-------+--------+-------+-----+
+0: jdbc:farrago:> select * from t2 where t2id = 5 and t2b < 't3';
++-------+-------+-----------------------+-----+
+| T2ID  |  T2A  |          T2B          | PK  |
++-------+-------+-----------------------+-----+
+| 5     | t2a5  | t2b5                  | 5   |
++-------+-------+-----------------------+-----+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select * from t2 where t2id is null;
+0: jdbc:farrago:> select * from t2 where t2a is null;
 +-------+------+------+-----+
 | T2ID  | T2A  | T2B  | PK  |
 +-------+------+------+-----+
+| 5     |      |      | 6   |
 +-------+------+------+-----+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select cast(t2b as varchar(10)), cast(t1b as varchar(5))

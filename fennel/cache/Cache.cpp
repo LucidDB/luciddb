@@ -23,7 +23,6 @@
 
 #include "fennel/common/CommonPreamble.h"
 #include "fennel/cache/CacheImpl.h"
-#include "fennel/cache/CacheStats.h"
 #include "fennel/cache/LRUVictimPolicy.h"
 #include "fennel/common/StatsTarget.h"
 

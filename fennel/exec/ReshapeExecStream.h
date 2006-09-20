@@ -117,6 +117,11 @@ class ReshapeExecStream : public ConduitExecStream
     TupleProjection lastKey;
 
     /**
+     * Tuple descriptor corresponding to the last key
+     */
+    TupleDescriptor lastKeyDesc;
+
+    /**
      * Tuple projection accessor for the output tuple
      */
     TupleProjectionAccessor outputProjAccessor;

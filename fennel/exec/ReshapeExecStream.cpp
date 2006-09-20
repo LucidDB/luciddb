@@ -58,6 +58,7 @@ void ReshapeExecStream::prepare(ReshapeExecStreamParams const &params)
         // setup a tuple projection to project the last key for use in
         // non-equality comparisons
         lastKey.push_back(paramCompareData.size() - 1);
+        lastKeyDesc.projectFrom(compTupleDesc, lastKey);
     }
 
     // setup the output projection
@@ -214,9 +215,21 @@ bool ReshapeExecStream::compareInput()
         if (rc != 0) {
             return false;
         }
-        rc =
-            compTupleDesc.compareTuples(
-                inputCompareData, lastKey, paramCompareData, lastKey);
+        // ignore NULLs if doing a comparison against a non-NULL value
+        if (!paramCompareData[paramCompareData.size() - 1].pData) {
+            rc =
+                lastKeyDesc.compareTuples(
+                    inputCompareData, lastKey, paramCompareData, lastKey);
+        } else {
+            bool containsNullKey;
+            rc =
+                lastKeyDesc.compareTuples(
+                    inputCompareData, lastKey, paramCompareData, lastKey,
+                    &containsNullKey);
+            if (containsNullKey) {
+                return false;
+            }
+        }
     }
 
     bool pass;

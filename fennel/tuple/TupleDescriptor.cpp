@@ -93,20 +93,30 @@ int TupleDescriptor::compareTuples(
 
 int TupleDescriptor::compareTuples(
     TupleData const &tuple1, TupleProjection const &proj1,
-    TupleData const &tuple2, TupleProjection const &proj2) const
+    TupleData const &tuple2, TupleProjection const &proj2,
+    bool *containsNullKey) const
 {
     size_t keyCount = std::min(proj1.size(), proj2.size());
 
+    if (containsNullKey) {
+        *containsNullKey = false;
+    }
     for (uint i = 0; i < keyCount; ++i) {
         TupleDatum const &datum1 = tuple1[proj1[i]];
         TupleDatum const &datum2 = tuple2[proj2[i]];
         // TODO:  parameterize NULL-value collation
         if (!datum1.pData) {
+            if (containsNullKey) {
+                *containsNullKey = true;
+            }
             if (!datum2.pData) {
                 continue;
             }
             return -1;
         } else if (!datum2.pData) {
+            if (containsNullKey) {
+                *containsNullKey = true;
+            }
             return 1;
         }
         int c = (*this)[i].pTypeDescriptor->compareValues(

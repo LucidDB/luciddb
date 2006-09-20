@@ -25,6 +25,7 @@
 #define Fennel_CacheImpl_Included
 
 #include "fennel/cache/Cache.h"
+#include "fennel/cache/CacheStats.h"
 #include "fennel/common/IntrusiveList.h"
 #include "fennel/common/AtomicCounter.h"
 #include "fennel/synch/SXMutex.h"

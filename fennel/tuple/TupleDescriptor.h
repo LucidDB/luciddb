@@ -102,7 +102,8 @@ public:
     
     int compareTuples(
         TupleData const &tuple1, TupleProjection const &proj1,
-        TupleData const &tuple2, TupleProjection const &proj2) const;
+        TupleData const &tuple2, TupleProjection const &proj2,
+        bool *containsNullKey = NULL) const;
 
     void writePersistent(
         ByteOutputStream &) const;

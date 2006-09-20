@@ -69,6 +69,9 @@ typedef JniProxyIter<ProxyCmdVerifyIndex> SharedProxyCmdVerifyIndex;
 class ProxyCollectTupleStreamDef;
 typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
 
+class ProxyColumnName;
+typedef JniProxyIter<ProxyColumnName> SharedProxyColumnName;
+
 class ProxyCorrelation;
 typedef JniProxyIter<ProxyCorrelation> SharedProxyCorrelation;
 
@@ -532,6 +535,14 @@ class ProxyCollectTupleStreamDef
 public:
 };
 
+class ProxyColumnName
+: virtual public JniProxy
+{
+public:
+std::string getName();
+static jmethodID meth_getName;
+};
+
 class ProxyCorrelation
 : virtual public JniProxy
 {
@@ -612,6 +623,12 @@ bool isTranslationRecovery();
 static jmethodID meth_isTranslationRecovery;
 std::string getSubstituteCharacter();
 static jmethodID meth_getSubstituteCharacter;
+bool isTrim();
+static jmethodID meth_isTrim;
+bool isMapped();
+static jmethodID meth_isMapped;
+bool isLenient();
+static jmethodID meth_isLenient;
 };
 
 class ProxyGenericStreamDef
@@ -1151,6 +1168,8 @@ virtual void visit(ProxyCmdTruncateIndex &)
 virtual void visit(ProxyCmdVerifyIndex &)
 { unhandledVisit(); }
 virtual void visit(ProxyCollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyColumnName &)
 { unhandledVisit(); }
 virtual void visit(ProxyCorrelation &)
 { unhandledVisit(); }
