@@ -69,6 +69,9 @@ typedef JniProxyIter<ProxyCmdVerifyIndex> SharedProxyCmdVerifyIndex;
 class ProxyCollectTupleStreamDef;
 typedef JniProxyIter<ProxyCollectTupleStreamDef> SharedProxyCollectTupleStreamDef;
 
+class ProxyColumnName;
+typedef JniProxyIter<ProxyColumnName> SharedProxyColumnName;
+
 class ProxyCorrelation;
 typedef JniProxyIter<ProxyCorrelation> SharedProxyCorrelation;
 
@@ -282,10 +285,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getOutputFlow();
-static jmethodID meth_getOutputFlow;
 SharedProxyExecStreamDataFlow getInputFlow();
 static jmethodID meth_getInputFlow;
+SharedProxyExecStreamDataFlow getOutputFlow();
+static jmethodID meth_getOutputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -532,6 +535,14 @@ class ProxyCollectTupleStreamDef
 public:
 };
 
+class ProxyColumnName
+: virtual public JniProxy
+{
+public:
+std::string getName();
+static jmethodID meth_getName;
+};
+
 class ProxyCorrelation
 : virtual public JniProxy
 {
@@ -588,6 +599,8 @@ class ProxyFlatFileTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
+SharedProxyColumnName getColumnNames();
+static jmethodID meth_getColumnNames;
 std::string getDataFilePath();
 static jmethodID meth_getDataFilePath;
 std::string getErrorFilePath();
@@ -612,6 +625,12 @@ bool isTranslationRecovery();
 static jmethodID meth_isTranslationRecovery;
 std::string getSubstituteCharacter();
 static jmethodID meth_getSubstituteCharacter;
+bool isTrim();
+static jmethodID meth_isTrim;
+bool isMapped();
+static jmethodID meth_isMapped;
+bool isLenient();
+static jmethodID meth_isLenient;
 };
 
 class ProxyGenericStreamDef
@@ -1062,10 +1081,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowStreamDef getWindowStream();
-static jmethodID meth_getWindowStream;
 SharedProxyWindowPartitionDef getPartition();
 static jmethodID meth_getPartition;
+SharedProxyWindowStreamDef getWindowStream();
+static jmethodID meth_getWindowStream;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
@@ -1151,6 +1170,8 @@ virtual void visit(ProxyCmdTruncateIndex &)
 virtual void visit(ProxyCmdVerifyIndex &)
 { unhandledVisit(); }
 virtual void visit(ProxyCollectTupleStreamDef &)
+{ unhandledVisit(); }
+virtual void visit(ProxyColumnName &)
 { unhandledVisit(); }
 virtual void visit(ProxyCorrelation &)
 { unhandledVisit(); }
