@@ -36,6 +36,7 @@ insert into t2 values(2, 't2a2', 't2b2', 2);
 insert into t2 values(3, 't2a3', 't2b3', 3);
 insert into t2 values(4, 't2a4', 't2b4', 4);
 insert into t2 values(5, 't2a5', 't2b5', 5);
+insert into t2 values(5, null, null, 6);
 
 !set outputformat csv
 --------------------------------
@@ -81,8 +82,9 @@ explain plan for
 
 -- range used with an equal
 explain plan for select * from t1 where t1id = 3 and t1b >= 't1b1';
+explain plan for select * from t2 where t2id = 5 and t2b < 't3';
 
-explain plan for select * from t2 where t2id is null;
+explain plan for select * from t2 where t2a is null;
 
 -- both project and filter
 explain plan for
@@ -158,8 +160,9 @@ select * from t1 where 't1b4' <= t1b order by t1id;
 select * from t2 where 't2a4' < t2a order by t2id;
 
 select * from t1 where t1id = 3 and t1b >= 't1b1';
+select * from t2 where t2id = 5 and t2b < 't3';
 
-select * from t2 where t2id is null;
+select * from t2 where t2a is null;
 
 select cast(t2b as varchar(10)), cast(t1b as varchar(5))
     from t1, t2 where t1.t1id = 1 and t2.t2id = 1 order by 1, 2;
