@@ -27,7 +27,6 @@
 #include "fennel/device/DeviceAccessSchedulerParams.h"
 #include "fennel/device/RandomAccessNullDevice.h"
 #include "fennel/cache/CacheParams.h"
-#include "fennel/cache/CacheStats.h"
 #include "fennel/common/CompoundId.h"
 #include "fennel/common/InvalidParamExcn.h"
 #include "fennel/cache/VMAllocator.h"
