@@ -36,10 +36,10 @@ import java.nio.*;
  * <li>As an example of the code produced by a code-generator (cross-referenced
  * by javadoc comments in the code-generator); and</li>
  * <li>To help analyse the impact of changing runtime data structures. Suppose
- * we were to rename the {@link FarragoRuntimeContext#newJavaTupleStream}
- * method. Then the {@link #exampleJavaTupleStream()} method would fail to
- * compile. We can find the generator this code by finding all javadoc
- * references to the {@link #exampleJavaTupleStream()} method.
+ * we were to rename the {@link FarragoRuntimeContext#newFennelTransformTupleIter}
+ * method. Then the {@link #exampleFarragoTransform()} method would fail to
+ * compile. We can find the generator of this code by finding all javadoc
+ * references to the {@link #exampleFarragoTransform()} method.
  * </ul>
  *
  * @author Julian Hyde

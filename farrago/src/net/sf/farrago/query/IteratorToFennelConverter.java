@@ -509,8 +509,8 @@ public class IteratorToFennelConverter
         List<FemExecutionStreamDef> childStreamDefs =
             childStreamDefsMap.get(fennelImplInvocationCount);
 
-        FemJavaTransformStreamDef streamDef =
-            implementor.getRepos().newFemJavaTransformStreamDef();
+        FemJavaTransformStreamDef streamDef = 
+            newJavaTransformStreamDef(implementor);
 
         for (FemExecutionStreamDef childStreamDef : childStreamDefs) {
             implementor.addDataFlowFromProducerToConsumer(
@@ -524,6 +524,12 @@ public class IteratorToFennelConverter
         streamDef.setReserved("");
 
         return streamDef;
+    }
+    
+    protected FemJavaTransformStreamDef newJavaTransformStreamDef(
+        FennelRelImplementor implementor)
+    {
+        return implementor.getRepos().newFemJavaTransformStreamDef();        
     }
 
     // implement FennelRel
@@ -549,7 +555,7 @@ public class IteratorToFennelConverter
     /**
      * Rule which converts a {@link RelNode} of {@link
      * FennelRel#FENNEL_EXEC_CONVENTION Fennel calling convention} to {@link
-     * CallingConvention.ITERATOR iterator calling convention} by adding a
+     * CallingConvention#ITERATOR iterator calling convention} by adding a
      * {@link IteratorToFennelConverter}.
      */
     private static class IteratorToFennelPullRule

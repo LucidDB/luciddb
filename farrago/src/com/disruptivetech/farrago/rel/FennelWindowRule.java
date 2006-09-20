@@ -306,10 +306,10 @@ public abstract class FennelWindowRule
         for (FennelWindowRel.Window window : windowList) {
             ++i;
             int j = -1;
-            for (FennelWindowRel.Partition partition : window.partitionList) {
+            for (FennelWindowRel.Partition p : window.getPartitionList()) {
                 ++j;
                 int k = -1;
-                for (FennelWindowRel.RexWinAggCall over : partition.overList) {
+                for (FennelWindowRel.RexWinAggCall over : p.overList) {
                     ++k;
 
                     // Add the k'th over expression of the j'th partition of
