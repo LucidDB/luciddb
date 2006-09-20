@@ -51,7 +51,7 @@
     <member type="todo" />
     <historyfile name="" />
   </argo>
-    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Tue Sep 19 22:25:43 PDT 2006'>
+    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Sep 20 01:24:40 PDT 2006'>
       <XMI.header>    <XMI.documentation>
           <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
           <XMI.exporterVersion>0.20.x</XMI.exporterVersion>
@@ -2885,21 +2885,6 @@
                             <UML:DataType xmi.idref = 'Ilsmmsmmsmm4fe91emf85207efd8mm7fde'/>
                           </UML:StructuralFeature.type>
                         </UML:Attribute>
-                        <UML:Attribute xmi.id = '127-0-0-1--19f94f84:10dc80e0357:-8000:0000000000000D79'
-                          name = 'columnNames' visibility = 'public' isSpecification = 'false' ownerScope = 'instance'
-                          changeability = 'changeable' targetScope = 'instance'>
-                          <UML:StructuralFeature.multiplicity>
-                            <UML:Multiplicity xmi.id = '127-0-0-1--19f94f84:10dc80e0357:-8000:0000000000000D7D'>
-                              <UML:Multiplicity.range>
-                                <UML:MultiplicityRange xmi.id = '127-0-0-1--19f94f84:10dc80e0357:-8000:0000000000000D7C'
-                                  lower = '0' upper = '-1'/>
-                              </UML:Multiplicity.range>
-                            </UML:Multiplicity>
-                          </UML:StructuralFeature.multiplicity>
-                          <UML:StructuralFeature.type>
-                            <UML:Class xmi.idref = '127-0-0-1-561c950c:10dc99912ea:-8000:0000000000000D7C'/>
-                          </UML:StructuralFeature.type>
-                        </UML:Attribute>
                       </UML:Classifier.feature>
                     </UML:Class>
                     <UML:Generalization xmi.id = 'I56294fc4m107be290963mm546e' isSpecification = 'false'>
@@ -3595,6 +3580,43 @@
                         </UML:Attribute>
                       </UML:Classifier.feature>
                     </UML:Class>
+                    <UML:Association xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001992'
+                      name = 'FlatFileHasColumn' isSpecification = 'false' isRoot = 'false' isLeaf = 'false'
+                      isAbstract = 'false'>
+                      <UML:Association.connection>
+                        <UML:AssociationEnd xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001993'
+                          name = 'FlatFile' visibility = 'public' isSpecification = 'false' isNavigable = 'false'
+                          ordering = 'unordered' aggregation = 'composite' targetScope = 'instance'
+                          changeability = 'changeable'>
+                          <UML:AssociationEnd.multiplicity>
+                            <UML:Multiplicity xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001994'>
+                              <UML:Multiplicity.range>
+                                <UML:MultiplicityRange xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001995'
+                                  lower = '1' upper = '1'/>
+                              </UML:Multiplicity.range>
+                            </UML:Multiplicity>
+                          </UML:AssociationEnd.multiplicity>
+                          <UML:AssociationEnd.participant>
+                            <UML:Class xmi.idref = 'I56294fc4m107be290963mm555d'/>
+                          </UML:AssociationEnd.participant>
+                        </UML:AssociationEnd>
+                        <UML:AssociationEnd xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001996'
+                          name = 'Column' visibility = 'public' isSpecification = 'false' isNavigable = 'false'
+                          ordering = 'ordered' aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
+                          <UML:AssociationEnd.multiplicity>
+                            <UML:Multiplicity xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:000000000000199A'>
+                              <UML:Multiplicity.range>
+                                <UML:MultiplicityRange xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001999'
+                                  lower = '1' upper = '-1'/>
+                              </UML:Multiplicity.range>
+                            </UML:Multiplicity>
+                          </UML:AssociationEnd.multiplicity>
+                          <UML:AssociationEnd.participant>
+                            <UML:Class xmi.idref = '127-0-0-1-561c950c:10dc99912ea:-8000:0000000000000D7C'/>
+                          </UML:AssociationEnd.participant>
+                        </UML:AssociationEnd>
+                      </UML:Association.connection>
+                    </UML:Association>
                   </UML:Namespace.ownedElement>
                 </UML:Package>
                 <UML:Package xmi.id = 'Ilsmmsmmsmm4fe91emf85207efd8mm7e26' name = 'Config'
@@ -9150,7 +9172,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >name : String</text>
+          >name : String { frozen }</text>
           <text name="Fig0.4.3"
             x="145"
             y="237"
@@ -9373,7 +9395,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >databaseInitSize : Integer</text>
+          >databaseInitSize : Integer { frozen }</text>
           <text name="Fig1.4.3"
             x="681"
             y="149"
@@ -9493,7 +9515,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >cachePageSize : Integer</text>
+          >cachePageSize : Integer { frozen }</text>
           <text name="Fig1.4.15"
             x="681"
             y="305"
@@ -9632,7 +9654,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig3.2"
           x="376"
@@ -9721,7 +9743,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_FENNEL : CalcVirtualMachine</text>
+          >CALCVM_FENNEL : CalcVirtualMachine { frozen }</text>
           <text name="Fig3.4.3"
             x="377"
             y="450"
@@ -9731,7 +9753,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_JAVA : CalcVirtualMachine</text>
+          >CALCVM_JAVA : CalcVirtualMachine { frozen }</text>
           <text name="Fig3.4.4"
             x="377"
             y="463"
@@ -9741,7 +9763,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CALCVM_AUTO : CalcVirtualMachine</text>
+          >CALCVM_AUTO : CalcVirtualMachine { frozen }</text>
         </group>
         <rectangle name="Fig3.5"
           x="376"
@@ -14657,7 +14679,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig18.2"
           x="640"
@@ -14746,7 +14768,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_ALLOW : Distinctness</text>
+          >DUP_ALLOW : Distinctness { frozen }</text>
           <text name="Fig18.4.3"
             x="641"
             y="402"
@@ -14756,7 +14778,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_DISCARD : Distinctness</text>
+          >DUP_DISCARD : Distinctness { frozen }</text>
           <text name="Fig18.4.4"
             x="641"
             y="415"
@@ -14766,7 +14788,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DUP_FAIL : Distinctness</text>
+          >DUP_FAIL : Distinctness { frozen }</text>
         </group>
         <rectangle name="Fig18.5"
           x="640"
@@ -16546,7 +16568,7 @@
         </path>
       </group>
       <group name="Fig9"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[704, 224, 178, 239]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[704, 224, 150, 226]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="I56294fc4m107be290963mm555d"
            fill="1"
            fillcolor="white"
@@ -16559,15 +16581,15 @@
         <rectangle name="Fig9.0"
           x="704"
           y="224"
-          width="178"
-          height="239"
+          width="149"
+          height="226"
           fill="1"
           fillcolor="white"
           stroke="0"
           strokecolor="black"
         />
         <group name="Fig9.1"
-             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[704, 224, 178, 2]"
+             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[704, 224, 149, 2]"
              href="I56294fc4m107be290963mm555d"
              fill="1"
              fillcolor="white"
@@ -16580,7 +16602,7 @@
           <rectangle name="Fig9.1.0"
             x="704"
             y="224"
-            width="178"
+            width="149"
             height="2"
             fill="1"
             fillcolor="white"
@@ -16635,7 +16657,7 @@
           </path>
         </group>
         <group name="Fig9.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[705, 247, 177, 216]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[705, 247, 149, 203]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16647,8 +16669,8 @@
           <rectangle name="Fig9.4.0"
             x="705"
             y="247"
-            width="177"
-            height="216"
+            width="148"
+            height="203"
             fill="1"
             fillcolor="white"
             stroke="0"
@@ -16663,7 +16685,7 @@
           >
             <moveto x="705"
                     y="247" />
-            <lineto x="882"
+            <lineto x="853"
                     y="247" />
           </path>
           <text name="Fig9.4.2"
@@ -16816,22 +16838,12 @@
             font="Dialog"
             textsize="10"
           >mapped : Boolean</text>
-          <text name="Fig9.4.17"
-            x="705"
-            y="443"
-            fill="0"
-            fillcolor="white"
-            stroke="0"
-            strokecolor="black"
-            font="Dialog"
-            textsize="10"
-          >columnNames [0..*] : ColumnName</text>
         </group>
         <rectangle name="Fig9.5"
           x="704"
           y="224"
-          width="178"
-          height="239"
+          width="149"
+          height="226"
           fill="0"
           fillcolor="white"
           stroke="1"
@@ -16864,7 +16876,7 @@
         </path>
       </group>
       <group name="Fig11"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[544, 384, 74, 44]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[424, 384, 74, 44]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="127-0-0-1-561c950c:10dc99912ea:-8000:0000000000000D7C"
            fill="1"
            fillcolor="white"
@@ -16875,7 +16887,7 @@
         </private>
         
         <rectangle name="Fig11.0"
-          x="544"
+          x="424"
           y="384"
           width="74"
           height="44"
@@ -16885,7 +16897,7 @@
           strokecolor="black"
         />
         <group name="Fig11.1"
-             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[544, 384, 74, 2]"
+             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[424, 384, 74, 2]"
              href="127-0-0-1-561c950c:10dc99912ea:-8000:0000000000000D7C"
              fill="1"
              fillcolor="white"
@@ -16896,7 +16908,7 @@
           </private>
           
           <rectangle name="Fig11.1.0"
-            x="544"
+            x="424"
             y="384"
             width="74"
             height="2"
@@ -16907,7 +16919,7 @@
           />
         </group>
         <text name="Fig11.2"
-          x="544"
+          x="424"
           y="386"
           fill="1"
           fillcolor="white"
@@ -16917,7 +16929,7 @@
           textsize="10"
         >ColumnName</text>
         <group name="Fig11.3"
-             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[545, 419, 73, 20]"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[425, 419, 73, 20]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16928,7 +16940,7 @@
           </private>
           
           <rectangle name="Fig11.3.0"
-            x="545"
+            x="425"
             y="419"
             width="73"
             height="20"
@@ -16946,14 +16958,14 @@
             strokecolor="black"
             visibility="0"
           >
-            <moveto x="545"
+            <moveto x="425"
                     y="419" />
-            <lineto x="618"
+            <lineto x="498"
                     y="419" />
           </path>
         </group>
         <group name="Fig11.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[545, 407, 73, 21]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[425, 407, 73, 21]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16963,7 +16975,7 @@
           </private>
           
           <rectangle name="Fig11.4.0"
-            x="545"
+            x="425"
             y="407"
             width="73"
             height="21"
@@ -16979,13 +16991,13 @@
             stroke="1"
             strokecolor="black"
           >
-            <moveto x="545"
+            <moveto x="425"
                     y="407" />
-            <lineto x="618"
+            <lineto x="498"
                     y="407" />
           </path>
           <text name="Fig11.4.2"
-            x="545"
+            x="425"
             y="408"
             fill="0"
             fillcolor="white"
@@ -16996,7 +17008,7 @@
           >name : String</text>
         </group>
         <rectangle name="Fig11.5"
-          x="544"
+          x="424"
           y="384"
           width="74"
           height="44"
@@ -17005,6 +17017,31 @@
           stroke="1"
           strokecolor="black"
         />
+      </group>
+      <group name="Fig12"
+           description="org.argouml.uml.diagram.ui.FigAssociation"
+           href="127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001992"
+           stroke="1"
+           strokecolor="black"
+      >
+        <private>
+          sourcePortFig="Fig9.0"
+          destPortFig="Fig11.0"
+          sourceFigNode="Fig9"
+          destFigNode="Fig11"
+        </private>
+        <path name="Fig12.0"
+          description="org.tigris.gef.presentation.FigPoly"
+          fill="0"
+          fillcolor="white"
+          stroke="1"
+          strokecolor="black"
+        >
+          <moveto x="704"
+                  y="400" />
+          <lineto x="498"
+                  y="400" />
+        </path>
       </group>
     </pgml>
     <pgml description="org.argouml.uml.diagram.static_structure.ui.UMLClassDiagram|Ilsmmsmmsmm4fe91emf85207efd8mm7e41"
@@ -19857,7 +19894,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig5.2"
           x="552"
@@ -19946,7 +19983,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_SUM : AggFunction</text>
+          >AGG_FUNC_SUM : AggFunction { frozen }</text>
           <text name="Fig5.4.3"
             x="553"
             y="330"
@@ -19956,7 +19993,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_COUNT : AggFunction</text>
+          >AGG_FUNC_COUNT : AggFunction { frozen }</text>
           <text name="Fig5.4.4"
             x="553"
             y="343"
@@ -19966,7 +20003,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_MIN : AggFunction</text>
+          >AGG_FUNC_MIN : AggFunction { frozen }</text>
           <text name="Fig5.4.5"
             x="553"
             y="356"
@@ -19976,7 +20013,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_MAX : AggFunction</text>
+          >AGG_FUNC_MAX : AggFunction { frozen }</text>
           <text name="Fig5.4.6"
             x="553"
             y="369"
@@ -19986,7 +20023,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >AGG_FUNC_SINGLE_VALUE : AggFunction</text>
+          >AGG_FUNC_SINGLE_VALUE : AggFunction { frozen }</text>
         </group>
         <rectangle name="Fig5.5"
           x="552"
@@ -28698,7 +28735,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig11.2"
           x="88"
@@ -29255,7 +29292,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig4.2"
           x="848"
@@ -29344,7 +29381,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >SELECT : PrivilegedAction</text>
+          >SELECT : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.3"
             x="849"
             y="410"
@@ -29354,7 +29391,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >INSERT : PrivilegedAction</text>
+          >INSERT : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.4"
             x="849"
             y="423"
@@ -29364,7 +29401,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UPDATE : PrivilegedAction</text>
+          >UPDATE : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.5"
             x="849"
             y="436"
@@ -29374,7 +29411,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >DELETE : PrivilegedAction</text>
+          >DELETE : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.6"
             x="849"
             y="449"
@@ -29384,7 +29421,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >EXECUTE : PrivilegedAction</text>
+          >EXECUTE : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.7"
             x="849"
             y="462"
@@ -29394,7 +29431,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >REFERENCES : PrivilegedAction</text>
+          >REFERENCES : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.8"
             x="849"
             y="475"
@@ -29404,7 +29441,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >TRIGGER : PrivilegedAction</text>
+          >TRIGGER : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.9"
             x="849"
             y="488"
@@ -29414,7 +29451,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >INHERIT_ROLE : PrivilegedAction</text>
+          >INHERIT_ROLE : PrivilegedAction { frozen }</text>
           <text name="Fig4.4.10"
             x="849"
             y="501"
@@ -29424,7 +29461,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >CREATION : PrivilegedAction</text>
+          >CREATION : PrivilegedAction { frozen }</text>
         </group>
         <rectangle name="Fig4.5"
           x="848"
@@ -36826,7 +36863,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig3.2"
           x="152"
@@ -36915,7 +36952,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >SQL : ExtensionLanguage</text>
+          >SQL : ExtensionLanguage { frozen }</text>
           <text name="Fig3.4.3"
             x="153"
             y="498"
@@ -36925,7 +36962,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >JAVA : ExtensionLanguage</text>
+          >JAVA : ExtensionLanguage { frozen }</text>
         </group>
         <rectangle name="Fig3.5"
           x="152"
@@ -37947,7 +37984,7 @@
         </path>
       </group>
       <group name="Fig16"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[48, 168, 270, 96]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[48, 168, 271, 96]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="Iea8847m10104480055mm7ff6"
            fill="1"
            fillcolor="white"
@@ -37960,7 +37997,7 @@
         <rectangle name="Fig16.0"
           x="48"
           y="168"
-          width="270"
+          width="271"
           height="96"
           fill="1"
           fillcolor="white"
@@ -37968,7 +38005,7 @@
           strokecolor="black"
         />
         <group name="Fig16.1"
-             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[48, 168, 270, 15]"
+             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[48, 168, 271, 15]"
              href="Iea8847m10104480055mm7ff6"
              fill="1"
              fillcolor="white"
@@ -37981,7 +38018,7 @@
           <rectangle name="Fig16.1.0"
             x="48"
             y="168"
-            width="270"
+            width="271"
             height="15"
             fill="1"
             fillcolor="white"
@@ -37997,7 +38034,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig16.2"
           x="48"
@@ -38046,7 +38083,7 @@
           </path>
         </group>
         <group name="Fig16.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[49, 204, 269, 60]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[49, 204, 270, 60]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -38058,7 +38095,7 @@
           <rectangle name="Fig16.4.0"
             x="49"
             y="204"
-            width="269"
+            width="270"
             height="60"
             fill="1"
             fillcolor="white"
@@ -38074,7 +38111,7 @@
           >
             <moveto x="49"
                     y="204" />
-            <lineto x="318"
+            <lineto x="319"
                     y="204" />
           </path>
           <text name="Fig16.4.2"
@@ -38086,7 +38123,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_SQL : RoutineParameterStyle</text>
+          >RPS_SQL : RoutineParameterStyle { frozen }</text>
           <text name="Fig16.4.3"
             x="49"
             y="218"
@@ -38096,7 +38133,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_GENERAL : RoutineParameterStyle</text>
+          >RPS_GENERAL : RoutineParameterStyle { frozen }</text>
           <text name="Fig16.4.4"
             x="49"
             y="231"
@@ -38106,7 +38143,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_JAVA : RoutineParameterStyle</text>
+          >RPS_JAVA : RoutineParameterStyle { frozen }</text>
           <text name="Fig16.4.5"
             x="49"
             y="244"
@@ -38116,12 +38153,12 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RPS_JAVA_FARRAGO : RoutineParameterStyle</text>
+          >RPS_JAVA_FARRAGO : RoutineParameterStyle { frozen }</text>
         </group>
         <rectangle name="Fig16.5"
           x="48"
           y="168"
-          width="270"
+          width="271"
           height="96"
           fill="0"
           fillcolor="white"
@@ -38180,7 +38217,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig17.2"
           x="48"
@@ -38269,7 +38306,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_NO_SQL : RoutineDataAccess</text>
+          >RDA_NO_SQL : RoutineDataAccess { frozen }</text>
           <text name="Fig17.4.3"
             x="49"
             y="362"
@@ -38279,7 +38316,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_CONTAINS_SQL : RoutineDataAccess</text>
+          >RDA_CONTAINS_SQL : RoutineDataAccess { frozen }</text>
           <text name="Fig17.4.4"
             x="49"
             y="375"
@@ -38289,7 +38326,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_READS_SQL_DATA : RoutineDataAccess</text>
+          >RDA_READS_SQL_DATA : RoutineDataAccess { frozen }</text>
           <text name="Fig17.4.5"
             x="49"
             y="388"
@@ -38299,7 +38336,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >RDA_MODIFIES_SQL_DATA : RoutineDataAccess</text>
+          >RDA_MODIFIES_SQL_DATA : RoutineDataAccess { frozen }</text>
         </group>
         <rectangle name="Fig17.5"
           x="48"
@@ -44897,7 +44934,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >&lt;&lt;enumeration&gt;&gt;</text>
+          >«enumeration»</text>
         </group>
         <text name="Fig31.2"
           x="536"
@@ -44986,7 +45023,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_STATE : UserDefinedOrderingCategory</text>
+          >UDOC_STATE : UserDefinedOrderingCategory { frozen }</text>
           <text name="Fig31.4.3"
             x="537"
             y="90"
@@ -44996,7 +45033,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_RELATIVE : UserDefinedOrderingCategory</text>
+          >UDOC_RELATIVE : UserDefinedOrderingCategory { frozen }</text>
           <text name="Fig31.4.4"
             x="537"
             y="103"
@@ -45006,7 +45043,7 @@
             strokecolor="black"
             font="Dialog"
             textsize="10"
-          >UDOC_MAP : UserDefinedOrderingCategory</text>
+          >UDOC_MAP : UserDefinedOrderingCategory { frozen }</text>
         </group>
         <rectangle name="Fig31.5"
           x="536"

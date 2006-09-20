@@ -285,10 +285,10 @@ class ProxyExecutionStreamDef
 public:
 SharedProxyTupleDescriptor getOutputDesc();
 static jmethodID meth_getOutputDesc;
-SharedProxyExecStreamDataFlow getInputFlow();
-static jmethodID meth_getInputFlow;
 SharedProxyExecStreamDataFlow getOutputFlow();
 static jmethodID meth_getOutputFlow;
+SharedProxyExecStreamDataFlow getInputFlow();
+static jmethodID meth_getInputFlow;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -599,8 +599,6 @@ class ProxyFlatFileTupleStreamDef
 : virtual public JniProxy, virtual public ProxyTupleStreamDef
 {
 public:
-SharedProxyColumnName getColumnNames();
-static jmethodID meth_getColumnNames;
 std::string getDataFilePath();
 static jmethodID meth_getDataFilePath;
 std::string getErrorFilePath();
@@ -1081,10 +1079,10 @@ bool isPhysical();
 static jmethodID meth_isPhysical;
 std::string getRange();
 static jmethodID meth_getRange;
-SharedProxyWindowPartitionDef getPartition();
-static jmethodID meth_getPartition;
 SharedProxyWindowStreamDef getWindowStream();
 static jmethodID meth_getWindowStream;
+SharedProxyWindowPartitionDef getPartition();
+static jmethodID meth_getPartition;
 int32_t getOffset();
 static jmethodID meth_getOffset;
 };
