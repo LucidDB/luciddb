@@ -132,13 +132,14 @@ public class StandardConvertletTable
         // cases post-translation.  The reason I did that was to defer the
         // implementation decision; e.g. we may want to push it down to a
         // foreign server directly rather than decomposed; decomposition is
-        // easier than recognition.  Also, I didn't put in the CASE because the
-        // SUM is already supposed to come out as NULL in cases where the COUNT
-        // is zero, so the null check should take place first and prevent
-        // division by zero.
+        // easier than recognition.
 
-        // Convert "avg(<expr>)" to "case count(<expr>) when 0 then null else
-        // sum(<expr>) / count(<expr>) end"
+        // Convert "avg(<expr>)" to "cast(sum(<expr>) / count(<expr>) as
+        // <type>)". We don't need to handle the empty set specially, because
+        // the SUM is already supposed to come out as NULL in cases where the
+        // COUNT is zero, so the null check should take place first and prevent
+        // division by zero. We need the cast because SUM and COUNT may use
+        // different types, say BIGINT.
         registerOp(
             SqlStdOperatorTable.avgOperator,
             new SqlRexConvertlet() {
@@ -149,7 +150,10 @@ public class StandardConvertletTable
                         "operands.length == 1");
                     final SqlNode arg = operands[0];
                     final SqlNode kase = expandAvg(arg, cx, call);
-                    return cx.convertExpression(kase);
+                    RelDataType type =
+                        cx.getValidator().getValidatedNodeType(call);
+                    RexNode rex = cx.convertExpression(kase);
+                    return RexUtil.maybeCast(cx.getRexBuilder(), type, rex);
                 }
             });
 
@@ -243,38 +247,9 @@ public class StandardConvertletTable
             SqlStdOperatorTable.countOperator.createCall(
                 arg,
                 pos);
-        final SqlLiteral nullLiteral = SqlLiteral.createNull(pos);
-        final SqlValidator validator = cx.getValidator();
-
-        // Need to set the type of the NULL literal, since it can only be
-        // deduced from the context.
-        RelDataType type = validator.getValidatedNodeType(call);
-        type = cx.getTypeFactory().createTypeWithNullability(type, true);
-        validator.setValidatedNodeType(nullLiteral, type);
-        final SqlNode kase =
-            SqlStdOperatorTable.caseOperator.createCall(
-                count,
-                new SqlNodeList(
-                    Arrays.asList(
-                        new SqlNode[] {
-                            SqlLiteral.createExactNumeric(
-                                "0",
-                                pos)
-                        }),
-                    pos),
-                new SqlNodeList(
-                    Arrays.asList(new SqlNode[] {
-                            nullLiteral
-                        }),
-                    pos),
-                SqlStdOperatorTable.divideOperator.createCall(
-                    new SqlNode[] {
-                        sum,
-                count
-                    },
-                    pos),
-                pos);
-        return kase;
+        return SqlStdOperatorTable.divideOperator.createCall(
+            new SqlNode[] {sum, count},
+            pos);
     }
 
     /**

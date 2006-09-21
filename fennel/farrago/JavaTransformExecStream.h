@@ -74,11 +74,6 @@ class JavaTransformExecStream :	virtual public ExecStream
     jobject outputByteBuffer;
 
     /**
-     * The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform.
-     */
-    jobject farragoTransform;
-
-    /**
      * Accessor for scratch segment.
      */
     SegmentAccessor scratchAccessor;
@@ -91,6 +86,11 @@ class JavaTransformExecStream :	virtual public ExecStream
   protected:
     std::vector<SharedExecStreamBufAccessor> inAccessors;
     SharedExecStreamBufAccessor pOutAccessor;
+
+    /**
+     * The Java peer, an instance of a net.sf.farrago.runtime.FarragoTransform.
+     */
+    jobject farragoTransform;
 
   public:
     JavaTransformExecStream();
