@@ -29,7 +29,7 @@
 #include <rpcdce.h>
 #endif
 
-#ifndef FENNEL_UUID_REAL
+#if !defined(FENNEL_UUID_REAL) && !defined(FENNEL_UUID_REAL_NEW)
 #include <iomanip>
 #include <sstream>
 #endif
@@ -50,11 +50,22 @@ PseudoUuid::PseudoUuid(string uuid)
 
 void PseudoUuid::generate()
 {
+#ifdef FENNEL_UUID_REAL_NEW
+
+    // REVIEW: SWZ: 9/22/2006: Consider using a different mode.  V1 seems
+    // weak, but v3 and v5 seem reasonable.  They require arguments, however.
+    // Also, this method never returns error for V4, but might for others.
+    uuid_rc_t result = 
+        uuid_make(reinterpret_cast<uuid_t *>(data), UUID_MAKE_V4);
+    assert(result == UUID_RC_OK);
+
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+
 #ifdef FENNEL_UUID_REAL
     
     uuid_generate(data);
-    
-#else
+
+#else /* FENNEL_UUID_FAKE */
 
     memset(&data,0,sizeof(data));
 #ifdef __MINGW32__
@@ -67,6 +78,8 @@ void PseudoUuid::generate()
 #endif
     
 #endif
+
+#endif
 }
 
 void PseudoUuid::generateInvalid()
@@ -76,10 +89,29 @@ void PseudoUuid::generateInvalid()
 
 bool PseudoUuid::operator == (PseudoUuid const &other) const
 {
+#ifdef FENNEL_UUID_REAL_NEW
+
+    int cmp;
+    uuid_rc_t result = 
+        uuid_compare(
+            reinterpret_cast<const uuid_t *>(data),
+            reinterpret_cast<const uuid_t *>(other.data),
+            &cmp);
+    assert(result == UUID_RC_OK);
+    return cmp == 0;
+
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+
 #ifdef FENNEL_UUID_REAL
+
     return uuid_compare(data,other.data) == 0;
-#else
+
+#else /* FENNEL_UUID_FAKE */
+
     return (memcmp(data,other.data,sizeof(data)) == 0);
+
+#endif
+
 #endif
 }
 
@@ -100,11 +132,29 @@ int PseudoUuid::hashCode() const {
 
 string PseudoUuid::toString() const
 {
+#ifdef FENNEL_UUID_REAL_NEW
+
+    char uuidstr[40];
+    char *pUuidStr = uuidstr;
+    size_t uuidstrlen = sizeof(uuidstr);
+    uuid_rc_t result = 
+        uuid_export(
+            reinterpret_cast<const uuid_t *>(data),
+            UUID_FMT_STR,
+            reinterpret_cast<void **>(&pUuidStr),
+            &uuidstrlen);
+    assert(result == UUID_RC_OK);
+    return string(uuidstr);
+
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+
 #ifdef FENNEL_UUID_REAL
     char uuidstr[40];
     uuid_unparse(data, uuidstr);
     return string(uuidstr);
-#else
+
+#else /* FENNEL_UUID_FAKE */
+
     ostringstream ostr;
     
     for(int i = 0; i < sizeof(data); i++) {
@@ -117,16 +167,32 @@ string PseudoUuid::toString() const
     
     return ostr.str();
 #endif
+
+#endif
 }
 
 void PseudoUuid::parse(string uuid) throw (FennelExcn)
 {
+#ifdef FENNEL_UUID_REAL_NEW
+    uuid_rc_t rv = 
+        uuid_import(
+            reinterpret_cast<uuid_t *>(data),
+            UUID_FMT_STR,
+            uuid.c_str(),
+            uuid.length());
+    if (rv != UUID_RC_OK) {
+        throw FennelExcn("Invalid UUID format");
+    }
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
+
 #ifdef FENNEL_UUID_REAL    
     int rv = uuid_parse(uuid.c_str(), data);
     if (rv == -1) {
        throw FennelExcn("Invalid UUID format");
     }    
-#else
+
+#else /* FENNEL_UUID_FAKE */
+
     unsigned char id[UUID_LENGTH];
     if (uuid.length() != 36) {
         ostringstream errstr;
@@ -159,6 +225,7 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
         id[i] = (uint8_t) value;
     }
     memcpy(data, id, sizeof(data));
+#endif
 #endif
 }
 

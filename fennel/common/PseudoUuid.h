@@ -26,11 +26,22 @@
 
 #include "fennel/common/FennelExcn.h"
 
-#if defined(HAVE_UUID_UUID_H) && defined(HAVE_LIBUUID)
+#ifdef HAVE_LIBUUID
+
+#ifdef HAVE_UUID_UUID_H
 #include <uuid/uuid.h>
 #define FENNEL_UUID_REAL
-#else
+#endif
+
+#ifdef HAVE_UUID_H
+#include <uuid.h>
+#define FENNEL_UUID_REAL_NEW
+#endif
+
+#else /* !HAVE_LIBUUID */
+
 #define FENNEL_UUID_FAKE
+
 #endif
 
 FENNEL_BEGIN_NAMESPACE
@@ -43,13 +54,27 @@ FENNEL_BEGIN_NAMESPACE
  */
 class PseudoUuid
 {
-protected:
+public:
+#ifdef FENNEL_UUID_REAL_NEW
+    static const int UUID_LENGTH = UUID_LEN_BIN;
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
     static const int UUID_LENGTH = 16;
+#endif
+
+protected:
+#ifdef FENNEL_UUID_REAL_NEW
+    unsigned char data[UUID_LENGTH];
+#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
 
 #ifdef FENNEL_UUID_REAL
+
     uuid_t data;
-#else
+
+#else /* FENNEL_UUID_FAKE */
+
     unsigned char data[UUID_LENGTH];
+
+#endif
 #endif
 
 private:
