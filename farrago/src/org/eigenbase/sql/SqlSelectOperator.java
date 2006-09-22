@@ -221,6 +221,11 @@ public class SqlSelectOperator
         }
         writer.endList(selectFrame);
     }
+
+    public boolean argumentMustBeScalar(int ordinal)
+    {
+        return ordinal == SqlSelect.WHERE_OPERAND;
+    }
 }
 
 // End SqlSelectOperator.java

@@ -452,7 +452,13 @@ public class SqlStdOperatorTable
             40,
             SqlTypeStrategies.rtiBoolean,
             null,
-            SqlTypeStrategies.otcAny);
+            SqlTypeStrategies.otcAny)
+        {
+            public boolean argumentMustBeScalar(int ordinal)
+            {
+                return false;
+            }
+        };
 
     public static final SqlPrefixOperator notOperator =
         new SqlPrefixOperator("NOT",
@@ -1161,18 +1167,23 @@ public class SqlStdOperatorTable
             false,
             SqlTypeStrategies.rtiRecordToScalarType,
             null,
-            SqlTypeStrategies.otcRecordToScalarType) {
+            SqlTypeStrategies.otcRecordToScalarType)
+        {
             public void unparse(
                 SqlWriter writer,
                 SqlNode [] operands,
                 int leftPrec,
                 int rightPrec)
             {
-                SqlUtil.unparseFunctionSyntax(this,
-                    writer,
-                    operands,
-                    true,
-                    null);
+                final SqlWriter.Frame frame = writer.startList("(", ")");
+                operands[0].unparse(writer, 0, 0);
+                writer.endList(frame);
+            }
+
+            public boolean argumentMustBeScalar(int ordinal)
+            {
+                // Obvious, really.
+                return false;
             }
         };
         

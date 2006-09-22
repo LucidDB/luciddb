@@ -31,8 +31,6 @@ import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
-import java.util.*;
-
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
  * node in a SQL parse tree). It includes functions, operators such as '=', and
@@ -766,6 +764,22 @@ public abstract class SqlOperator
      * The default implementation is to return true.
      */
     public boolean requiresDecimalExpansion()
+    {
+        return true;
+    }
+
+    /**
+     * Returns whether the <code>ordinal</code>th argument to this operator
+     * must be scalar (as opposed to a query).
+     *
+     * <p>If true (the default), the validator will attempt to
+     * convert the argument into a scalar subquery, which must have one column
+     * and return at most one row.
+     *
+     * <p>Operators such as <code>SELECT</code> and <code>EXISTS</code>
+     * override this method.
+     */
+    public boolean argumentMustBeScalar(int ordinal)
     {
         return true;
     }

@@ -61,6 +61,11 @@ public class SqlUnnestOperator
         MultisetSqlType t = (MultisetSqlType) type;
         return t.getComponentType();
     }
+
+    public boolean argumentMustBeScalar(int ordinal)
+    {
+        return false;
+    }
 }
 
 // End SqlUnnestOperator.java

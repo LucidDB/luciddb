@@ -109,4 +109,9 @@ select "originalDefinition", "description"
 from sys_fem."SQL2003"."LocalView"
 where "name" = 'V12';
 
+-- view containing scalar subquery
+create view scalarSelectView as
+  select empno, (select 1 from (values (true))) as x from sales.emps;
+explain plan with type for select * from scalarSelectView;
+
 -- End view.sql
