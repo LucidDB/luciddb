@@ -2424,16 +2424,9 @@ public class SqlValidatorTest
      */
     public void testLarge()
     {
-        // E.g. large = "deptno * 1 + deptno * 2 + deptno * 3".
         final int x = 1000;
-        StringBuffer buf = new StringBuffer();
-        for (int i = 0; i < x; i++) {
-            if (i > 0) {
-                buf.append(" + ");
-            }
-            buf.append("deptno * ").append(i);
-        }
-        String large = buf.toString();
+        // E.g. large = "deptno * 1 + deptno * 2 + deptno * 3".
+        String large = list(" + ", "deptno * ", x);
         check("select " + large + "from emp");
         check("select distinct " + large + "from emp");
         check("select " + large + " from emp " + "group by deptno");
@@ -2441,6 +2434,31 @@ public class SqlValidatorTest
         check("select * from emp order by " + large + " desc");
         check("select " + large + " from emp order by 1");
         check("select distinct " + large + " from emp order by " + large);
+
+        // E.g. "in (0, 1, 2, ...)"
+        check("select * from emp where deptno in (" + list(", ", "", x) + ")");
+
+        // E.g. "where x = 1 or x = 2 or x = 3 ..."
+        check("select * from emp where " + list(" or ", "deptno = ", x));
+
+        // E.g. "select x1, x2 ... from (
+        // select 'a' as x1, 'a' as x2, ... from emp union
+        // select 'bb' as x1, 'bb' as x2, ... from dept)"
+        check("select " + list(", ", "x", x)
+            + " from (select " + list(", ", "'a' as x", x) + " from emp "
+            + "union all select " + list(", ", "'bb' as x", x) + " from dept)");
+    }
+
+    private String list(String sep, String before, int count)
+    {
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                buf.append(sep);
+            }
+            buf.append(before).append(i);
+        }
+        return buf.toString();
     }
 
     public void testOrder()
@@ -3161,6 +3179,22 @@ public class SqlValidatorTest
         checkFails(
             "SELECT ename,(select losal, ^hisal^ from salgrade where grade=1) FROM emp",
             "Cannot apply '\\$SCALAR_QUERY' to arguments of type '\\$SCALAR_QUERY\\(<RECORDTYPE\\(INTEGER LOSAL, INTEGER HISAL\\)>\\)'\\. Supported form\\(s\\): '\\$SCALAR_QUERY\\(<RECORDTYPE\\(SINGLE FIELD\\)>\\)'");
+
+        // Note that X is a field (not a record) and is nullable even though
+        // EMP.NAME is NOT NULL.
+        checkResultType("SELECT  ename,(select name from dept where deptno=1) FROM emp",
+            "RecordType(VARCHAR(20) NOT NULL ENAME, VARCHAR(10) EXPR$1) NOT NULL");
+
+        // scalar subqery inside AS operator
+        checkResultType("SELECT  ename,(select name from dept where deptno=1) as X FROM emp",
+            "RecordType(VARCHAR(20) NOT NULL ENAME, VARCHAR(10) X) NOT NULL");
+
+        // scalar subqery inside + operator
+        checkResultType("SELECT  ename, 1 + (select deptno from dept where deptno=1) as X FROM emp",
+            "RecordType(VARCHAR(20) NOT NULL ENAME, INTEGER X) NOT NULL");
+
+        // scalar subquery inside WHERE
+        check("select * from emp where (select true from dept)");
     }
 
     public void testRecordType()

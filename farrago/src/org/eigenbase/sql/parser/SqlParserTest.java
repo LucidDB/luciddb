@@ -1429,6 +1429,17 @@ public class SqlParserTest
             + "WHERE (`DEPT`.`DEPTNO` = `EMP`.`DEPTNO`)))");
     }
 
+    public void testScalarQueryInSelect()
+    {
+        check(
+            "select x, (select count(*) from dept where dept.deptno = emp.deptno) from emp",
+            TestUtil.fold(
+                "SELECT `X`, (SELECT COUNT(*)\n"
+                    + "FROM `DEPT`\n"
+                    + "WHERE (`DEPT`.`DEPTNO` = `EMP`.`DEPTNO`))\n"
+                    + "FROM `EMP`"));
+    }
+
     public void testSelectList()
     {
         check(

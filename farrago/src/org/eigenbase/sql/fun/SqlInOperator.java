@@ -151,6 +151,17 @@ public class SqlInOperator
 
         return type;
     }
+
+    public boolean argumentMustBeScalar(int ordinal)
+    {
+        // Argument #0 must be scalar, argument #1 can be a list (1, 2) or
+        // a query (select deptno from emp). So, only coerce argument #0 into
+        // a scalar subquery. For example, in
+        //  select * from emp
+        //  where (select count(*) from dept) in (select deptno from dept)
+        // we should coerce the LHS to a scalar.
+        return ordinal == 0;
+    }
 }
 
 // End SqlInOperator.java

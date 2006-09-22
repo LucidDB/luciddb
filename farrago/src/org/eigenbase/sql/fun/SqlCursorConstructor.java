@@ -77,6 +77,11 @@ public class SqlCursorConstructor
         operands[0].unparse(writer, leftPrec, rightPrec);
         writer.endList(frame);
     }
+
+    public boolean argumentMustBeScalar(int ordinal)
+    {
+        return false;
+    }
 }
 
 // End SqlCursorConstructor.java
