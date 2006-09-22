@@ -148,6 +148,14 @@ Error: From line 1, column 15 to line 1, column 17: Table 'V11' not found (state
 select empno, /* a comment */ name
   from sales.emps','foobar'
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- view containing scalar subquery
+0: jdbc:farrago:> create view scalarSelectView as
+. . . . . . . . >   select empno, (select 1 from (values (true))) as x from sales.emps;
+0: jdbc:farrago:> explain plan with type for select * from scalarSelectView;
+'column0'
+'EMPNO INTEGER NOT NULL,'
+'X INTEGER'
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- End view.sql
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

@@ -1594,9 +1594,7 @@ public class SqlValidatorImpl
 
             // Start by registering the WHERE clause
             whereScopes.put(select, selectScope);
-            registerSubqueries(
-                selectScope,
-                select.getWhere());
+            registerOperandSubqueries(selectScope, select, SqlSelect.WHERE_OPERAND);
 
             // Register FROM with the inherited scope 'parentScope', not
             // 'selectScope', otherwise tables in the FROM clause would be
@@ -1623,28 +1621,22 @@ public class SqlValidatorImpl
             } else {
                 selectScopes.put(select, selectScope);
             }
-            registerSubqueries(
-                selectScope,
-                select.getGroup());
-            registerSubqueries(
-                aggScope,
-                select.getHaving());
-            registerScalarSubqueries(
-                aggScope,
-                select.getSelectList());
+            registerSubqueries(selectScope, select.getGroup(), true);
+            registerOperandSubqueries(aggScope, select, SqlSelect.HAVING_OPERAND);
+            registerSubqueries(aggScope, select.getSelectList(), true);
             final SqlNodeList orderList = select.getOrderList();
             if (orderList != null) {
-                OrderByScope orderByScope =
+                OrderByScope orderScope =
                     new OrderByScope(aggScope, orderList, select);
                 if (isAggregate(select)) {
-                    orderScopes.put(select, orderByScope);
+                    orderScopes.put(select, orderScope);
                     AggregatingScope aggOrderScope =
-                        new AggregatingSelectScope(orderByScope, select);
+                        new AggregatingSelectScope(orderScope, select);
                     orderScopes.put(select, aggOrderScope);
-                    registerSubqueries(aggOrderScope, orderList);
+                    registerSubqueries(aggOrderScope, orderList, true);
                 } else {
-                    orderScopes.put(select, orderByScope);
-                    registerSubqueries(orderByScope, orderList);
+                    orderScopes.put(select, orderScope);
+                    registerSubqueries(orderScope, orderList, true);
                 }
             }
             break;
@@ -1683,7 +1675,7 @@ public class SqlValidatorImpl
                 // FIXME jvs 9-Feb-2005:  Correlation should
                 // be illegal in these subqueries.  Same goes for
                 // any non-lateral SELECT in the FROM list.
-                registerSubqueries(parentScope, operands[i]);
+                registerOperandSubqueries(parentScope, call, i);
             }
             break;
 
@@ -1774,7 +1766,7 @@ public class SqlValidatorImpl
                 alias,
                 unnestNs,
                 forceNullable);
-            registerSubqueries(usingScope, call.operands[0]);
+            registerOperandSubqueries(usingScope, call, 0);
             break;
 
         case SqlKind.FunctionORDINAL:
@@ -1786,7 +1778,7 @@ public class SqlValidatorImpl
                 alias,
                 procNs,
                 forceNullable);
-            registerSubqueries(parentScope, call);
+            registerSubqueries(parentScope, call, true);
             break;
 
         case SqlKind.MultisetQueryConstructorORDINAL:
@@ -1802,8 +1794,7 @@ public class SqlValidatorImpl
                 forceNullable);
             operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
-                SqlNode operand = operands[i];
-                registerSubqueries(parentScope, operand);
+                registerOperandSubqueries(parentScope, call, i);
             }
             break;
 
@@ -1843,47 +1834,10 @@ public class SqlValidatorImpl
             || (expr instanceof SqlDataTypeSpec);
     }
 
-    private void registerScalarSubqueries(
-        SqlValidatorScope parentScope,
-        SqlNode node)
-    {
-        if (node instanceof SqlCall) {
-            SqlCall call = (SqlCall) node;
-            final SqlNode [] operands = call.getOperands();
-            for (int i = 0; i < operands.length; i++) {
-                SqlNode operand = operands[i];
-                if (operand.isA(SqlKind.Query)) {
-                    operand =
-                        SqlStdOperatorTable.scalarQueryOperator
-                            .createCall(
-                                operand,
-                                operand.getParserPosition());    
-                    operands[i] = operand;
-                }
-                registerSubqueries(parentScope, operand);
-            }
-        } else if (node instanceof SqlNodeList) {
-            SqlNodeList list = (SqlNodeList) node;
-            for (int i = 0, count = list.size(); i < count; i++) {
-                SqlNode listNode = list.get(i);
-                if (listNode.isA(SqlKind.Query)) {
-                    listNode =
-                        SqlStdOperatorTable.scalarQueryOperator
-                            .createCall(
-                                listNode,
-                                listNode.getParserPosition());    
-                    list.set(i, listNode);
-                }
-                registerSubqueries(parentScope, listNode);
-            }            
-        } else {
-            ;
-        }
-    }
-    
     private void registerSubqueries(
         SqlValidatorScope parentScope,
-        SqlNode node)
+        SqlNode node,
+        boolean coerceToScalar)
     {
         if (node == null) {
             return;
@@ -1893,45 +1847,62 @@ public class SqlValidatorImpl
             registerQuery(parentScope, null, node, null, false);
         } else if (node instanceof SqlCall) {
             SqlCall call = (SqlCall) node;
-            SqlOperator operator = call.getOperator();
-            
-            boolean requireScalarOperand = false; 
-            if (operator instanceof SqlFunction) {
-                SqlFunction function = (SqlFunction) operator;
-                if (function instanceof SqlAggFunction) {
-                    requireScalarOperand = true;
-                }
-            } else {
-                SqlOperandTypeChecker typeChecker = operator.getOperandTypeChecker();
-                if ((typeChecker ==  SqlTypeStrategies.otcComparableOrderedX2 ||
-                     typeChecker ==  SqlTypeStrategies.otcComparableUnorderedX2)) {
-                    requireScalarOperand = true;
-                }
-            }
-            
-            if (requireScalarOperand) {
-                registerScalarSubqueries(parentScope, node);                
-            }
-            
             final SqlNode [] operands = call.getOperands();
             for (int i = 0; i < operands.length; i++) {
-                SqlNode operand = operands[i];
-                registerSubqueries(parentScope, operand);
+                registerOperandSubqueries(parentScope, call, i);
             }
         } else if (node instanceof SqlNodeList) {
             SqlNodeList list = (SqlNodeList) node;
             for (int i = 0, count = list.size(); i < count; i++) {
                 SqlNode listNode = list.get(i);
-
-                registerSubqueries(
-                    parentScope,
-                    listNode);
+                if (coerceToScalar
+                    && listNode.isA(SqlKind.Query))
+                {
+                    listNode =
+                        SqlStdOperatorTable.scalarQueryOperator
+                            .createCall(
+                                listNode,
+                                listNode.getParserPosition());
+                    list.set(i, listNode);
+                }
+                registerSubqueries(parentScope, listNode, coerceToScalar);
             }
         } else {
             ; // atomic node -- can be ignored
         }
     }
-    
+
+    /**
+     * Registers any subqueries inside a given call operand, and converts the
+     * operand to a scalar subquery if the operator requires it.
+     *
+     * @see SqlOperator#argumentMustBeScalar(int)
+     *
+     * @param parentScope Parent scope
+     * @param call Call
+     * @param operandOrdinal Ordinal of operand within call
+     */
+    private void registerOperandSubqueries(
+        SqlValidatorScope parentScope,
+        SqlCall call,
+        int operandOrdinal)
+    {
+        SqlNode operand = call.getOperands()[operandOrdinal];
+        if (operand == null) {
+            return;
+        }
+        if (operand.isA(SqlKind.Query)
+            && call.getOperator().argumentMustBeScalar(operandOrdinal))
+        {
+            operand =
+                SqlStdOperatorTable.scalarQueryOperator.createCall(
+                    operand,
+                    operand.getParserPosition());
+            call.setOperand(operandOrdinal, operand);
+        }
+        registerSubqueries(parentScope, operand, false);
+    }
+
     public void validateIdentifier(SqlIdentifier id, SqlValidatorScope scope)
     {
         final SqlIdentifier fqId = scope.fullyQualify(id);
