@@ -44,6 +44,10 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${shortreg.dir}/testlog" />
 
+  <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${shortreg.dir}/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -129,9 +133,26 @@
       classpathref="test.classpath"/>
   </target>
 
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="DEPT.csv"/>
+        <include name="EMP.csv"/>
+        <include name="PRODUCTS.csv"/>
+        <include name="SALES.csv"/>
+        <include name="LOCATION.csv"/>
+        <include name="CUSTOMERS.csv"/>
+      </fileset>
+    </sync>
+  </target>
+
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
+    <delete dir="${csv.copy.dir}"/>
     <delete file="run.properties"/>
     <delete file="config.properties"/>
   </target>
