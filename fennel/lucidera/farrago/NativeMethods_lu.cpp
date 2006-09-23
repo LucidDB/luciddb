@@ -91,6 +91,17 @@ class ExecStreamSubFactory_lu
         }
     }
 
+    void readColumnList(
+        ProxyFlatFileTupleStreamDef &streamDef, 
+        std::vector<std::string> &names)
+    {
+        SharedProxyColumnName pColumnName = streamDef.getColumn();
+        
+        for (; pColumnName; ++pColumnName) {
+            names.push_back(pColumnName->getName());
+        }
+    }
+
     // implement FemVisitor
     virtual void visit(ProxySortingStreamDef &streamDef)
     {
@@ -135,6 +146,10 @@ class ExecStreamSubFactory_lu
         params.quoteChar = readCharParam(streamDef.getQuoteCharacter());
         params.escapeChar = readCharParam(streamDef.getEscapeCharacter());
         params.header = streamDef.isHasHeader();
+        params.lenient = streamDef.isLenient();
+        params.trim = streamDef.isTrim();
+        params.mapped = streamDef.isMapped();
+        readColumnList(streamDef, params.columnNames);
         
         params.numRowsScan = streamDef.getNumRowsScan();
         params.calcProgram = streamDef.getCalcProgram();

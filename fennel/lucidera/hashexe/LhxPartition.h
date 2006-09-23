@@ -292,14 +292,14 @@ class LhxPlan : public enable_shared_from_this<LhxPlan>
 
     /*
      * Plan linkage.
+     *
      * Parent plan is a weak pointer to avoid cycles in shared pointer
      * reference counting.
      * http://www.boost.org/libs/smart_ptr/weak_ptr.htm
      *
-     * Also to enable linking back via shared_ptr to the this LhxPlan object,
-     * LhxPlan used enable_shared_from_this as base class.
+     * To enable linking back via shared_ptr to this LhxPlan object,
+     * LhxPlan uses enable_shared_from_this as base class.
      * http://www.boost.org/libs/smart_ptr/enable_shared_from_this.html
-     *
      */
     WeakLhxPlan parentPlan;
     SharedLhxPlan firstChildPlan;

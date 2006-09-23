@@ -138,8 +138,13 @@ public class FarragoDefaultPlanner
         planner.addRule(ReduceAggregatesRule.instance);
 
         planner.addRule(new PushFilterPastJoinRule());
+        planner.addRule(new PushFilterPastSetOpRule());
+        planner.addRule(new MergeFilterRule());
+        planner.addRule(new PushFilterPastProjectRule());
         planner.addRule(new PushProjectPastFilterRule());
         planner.addRule(new PushProjectPastJoinRule());
+        planner.addRule(new PushProjectPastSetOpRule());
+        planner.addRule(new MergeProjectRule());
 
         if (fennelEnabled) {
             planner.addRule(new FennelSortRule());

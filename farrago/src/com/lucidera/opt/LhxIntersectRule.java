@@ -110,9 +110,6 @@ public class LhxIntersectRule
             }
 
             Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
-            if (numBuildRows == null) {
-                numBuildRows = 10000.0;
-            }
 
             // Derive cardinality of build side(RHS) join keys.
             Double cndBuildKey;
@@ -127,8 +124,8 @@ public class LhxIntersectRule
                     fennelRight,
                     joinKeyMap);
 
-            if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-                cndBuildKey = numBuildRows;
+            if (cndBuildKey == null) {
+                cndBuildKey = -1.0;
             }
 
             boolean isSetop = true;
@@ -143,8 +140,8 @@ public class LhxIntersectRule
                     leftKeys,
                     rightKeys,
                     newJoinOutputNames,
-                    numBuildRows.intValue(),
-                    cndBuildKey.intValue());
+                    numBuildRows.longValue(),
+                    cndBuildKey.longValue());
         }
         call.transformTo(leftRel);
     }

@@ -1,4 +1,3 @@
-0: jdbc:farrago:> !set verbose on
 0: jdbc:farrago:> !set force on
 0: jdbc:farrago:> 
 0: jdbc:farrago:> set schema 'sales';
@@ -157,30 +156,33 @@
 |                                              column0                                               |
 +----------------------------------------------------------------------------------------------------+
 | ProjectRel(NAME=[$1])                                                                              |
-|   FilterRel(condition=[IS TRUE($11)])                                                              |
+|   FilterRel(condition=[IS TRUE($10)])                                                              |
 |     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset5, var1=offset2]])  |
 |       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                               |
-|       ProjectRel(DEPTNO=[$0], $indicator=[true])                                                   |
-|         ProjectRel(DEPTNO=[$0])                                                                    |
-|           FilterRel(condition=[AND(=(*($cor0.EMPID, 10), $0), =($0, $cor1.DEPTNO))])               |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                        |
+|       ProjectRel($indicator=[true])                                                                |
+|         AggregateRel(groupCount=[0], agg#0=[COUNT()])                                              |
+|           ProjectRel(DEPTNO=[$0])                                                                  |
+|             FilterRel(condition=[AND(=(*($cor0.EMPID, 10), $0), =($0, $cor1.DEPTNO))])             |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                      |
 +----------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 2.1 uncorrelated exists:  incorrect translation produces too many rows
 0: jdbc:farrago:> -- (need to limit to at most one on join RHS; Broadbase inserts count(*))
-0: jdbc:farrago:> -- LucidDB uses a special aggregate function that generates the value TRUE for each group
+0: jdbc:farrago:> -- LucidDB uses a special aggregate function that generates the value TRUE for
+0: jdbc:farrago:> -- each group
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where exists(select * from depts);
 +--------------------------------------------------------------+
 |                           column0                            |
 +--------------------------------------------------------------+
 | ProjectRel(NAME=[$1])                                        |
-|   FilterRel(condition=[IS TRUE($12)])                        |
+|   FilterRel(condition=[IS TRUE($10)])                        |
 |     JoinRel(condition=[true], joinType=[left])               |
 |       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])         |
-|       ProjectRel(DEPTNO=[$0], NAME=[$1], $indicator=[true])  |
-|         ProjectRel(DEPTNO=[$0], NAME=[$1])                   |
-|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])    |
+|       ProjectRel($indicator=[true])                          |
+|         AggregateRel(groupCount=[0], agg#0=[COUNT()])        |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1])                 |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
 +--------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
@@ -192,10 +194,12 @@
 |   FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
 |     FennelCartesianProductRel(leftouterjoin=[true])                                                                                                                                                                                  |
 |       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                     |
-|       IteratorToFennelConverter                                                                                                                                                                                                      |
-|         IterCalcRel(expr#0=[{inputs}], expr#1=[true], $indicator=[$t1])                                                                                                                                                              |
-|           FennelToIteratorConverter                                                                                                                                                                                                  |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                           |
+|       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                                                            |
+|         IteratorToFennelConverter                                                                                                                                                                                                    |
+|           IterCalcRel(expr#0=[{inputs}], expr#1=[true], $indicator=[$t1])                                                                                                                                                            |
+|             FennelToIteratorConverter                                                                                                                                                                                                |
+|               FennelAggRel(groupCount=[0], agg#0=[COUNT()])                                                                                                                                                                          |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                                         |
 +--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- (WRONG RESULTS:  shoud not be filter over cross product)
@@ -204,16 +208,8 @@
 |  NAME  |
 +--------+
 | Eric   |
-| Eric   |
-| Eric   |
-| Fred   |
-| Fred   |
 | Fred   |
 | John   |
-| John   |
-| John   |
-| Wilma  |
-| Wilma  |
 | Wilma  |
 +--------+
 0: jdbc:farrago:> 
@@ -225,18 +221,21 @@
 |                                       column0                                        |
 +--------------------------------------------------------------------------------------+
 | ProjectRel(NAME=[$1])                                                                |
-|   FilterRel(condition=[IS TRUE($12)])                                                |
+|   FilterRel(condition=[IS TRUE($10)])                                                |
 |     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])  |
 |       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                 |
-|       ProjectRel(DEPTNO=[$0], NAME=[$1], $indicator=[true])                          |
-|         ProjectRel(DEPTNO=[$0], NAME=[$1])                                           |
-|           FilterRel(condition=[=($0, $cor0.DEPTNO)])                                 |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                          |
+|       ProjectRel($indicator=[true])                                                  |
+|         AggregateRel(groupCount=[0], agg#0=[COUNT()])                                |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1])                                         |
+|             FilterRel(condition=[=($0, $cor0.DEPTNO)])                               |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                        |
 +--------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.1 uncorrelated scalar subquery:  passes most of translation
 0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select name, (select count(*) from depts) from emps;
+. . . . . . . . > select name,
+. . . . . . . . >        (select count(*) from depts)
+. . . . . . . . > from emps;
 +------------------------------------------------------------+
 |                          column0                           |
 +------------------------------------------------------------+
@@ -249,9 +248,10 @@
 |           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
 +------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- and even passes optimization
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name, (select count(*) from depts) from emps;
+. . . . . . . . > select name,
+. . . . . . . . >        (select count(*) from depts)
+. . . . . . . . > from emps;
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                              column0                                                                              |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -268,9 +268,10 @@
 |                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- produces correct result only when null or one value is produced from the subquery.
-0: jdbc:farrago:> -- need to add AggSingleRel for other cases
-0: jdbc:farrago:> select name, (select count(*) from depts) from emps order by name;
+0: jdbc:farrago:> select name, 
+. . . . . . . . >        (select count(*) from depts)
+. . . . . . . . > from emps
+. . . . . . . . > order by name;
 +--------+---------+
 |  NAME  | EXPR$1  |
 +--------+---------+
@@ -280,30 +281,49 @@
 | Wilma  | 3       |
 +--------+---------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- correct
-0: jdbc:farrago:> -- need to implement SingleValueAgg
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select name, (select deptno from depts where deptno > 100) from emps order by name;
-+--------------------------------------------------------------+
-|                           column0                            |
-+--------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                        |
-|   ProjectRel(NAME=[$1], EXPR$1=[$10])                        |
-|     JoinRel(condition=[true], joinType=[left])               |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])         |
-|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])  |
-|         ProjectRel(DEPTNO=[$0])                              |
-|           FilterRel(condition=[>($0, 100)])                  |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+--------------------------------------------------------------+
+0: jdbc:farrago:> -- should return null in deptno
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, 
+. . . . . . . . >        (select deptno from depts where deptno > 100)
+. . . . . . . . > from emps 
+. . . . . . . . > order by name;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                                column0                                                                                                                                |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                             |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                                                                                                                 |
+|     FennelRenameRel(fieldNames=[[NAME, EXPR$1]])                                                                                                                                                                                                                      |
+|       FennelCartesianProductRel(leftouterjoin=[true])                                                                                                                                                                                                                 |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                                                                                                                                    |
+|         FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                                                                                                                                         |
+|           FtrsIndexSearchRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], uniqueKey=[false], preserveOrder=[false], outer=[false], inputKeyProj=[[1, 3]], inputJoinProj=[[]], inputDirectiveProj=[[0, 2]])  |
+|             FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 100, _ISO-8859-1'+', null }]])                                                                                                                                                                                 |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- this should fail in validation
-0: jdbc:farrago:> -- explain plan without implementation for
-0: jdbc:farrago:> -- select name, (select * from depts) from emps;
+0: jdbc:farrago:> select name, 
+. . . . . . . . >        (select deptno from depts where deptno > 100)
+. . . . . . . . > from emps 
+. . . . . . . . > order by name;
++--------+---------+
+|  NAME  | EXPR$1  |
++--------+---------+
+| Eric   |         |
+| Fred   |         |
+| John   |         |
+| Wilma  |         |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should report validation error
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name, (select * from depts) from emps;
+Error: At line 2, column 22: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- check that scalar subquery type inference is correct
 0: jdbc:farrago:> create table s (a int);
-0: jdbc:farrago:> select empno, (select min(a) from s) from emps order by empno;
+0: jdbc:farrago:> select empno,
+. . . . . . . . >        (select min(a) from s)
+. . . . . . . . > from emps
+. . . . . . . . > order by empno;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -312,7 +332,11 @@
 | 110    |         |
 | 120    |         |
 +--------+---------+
-0: jdbc:farrago:> select empno, (select count(a) from s) from emps order by empno;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, 
+. . . . . . . . >        (select count(a) from s)
+. . . . . . . . > from emps
+. . . . . . . . > order by empno;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -321,10 +345,15 @@
 | 110    | 0       |
 | 120    | 0       |
 +--------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table s;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create table s (a int not null);
-0: jdbc:farrago:> select empno, (select min(a) from s) from emps order by empno;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno,
+. . . . . . . . >        (select min(a) from s)
+. . . . . . . . > from emps 
+. . . . . . . . > order by empno;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -333,7 +362,11 @@
 | 110    |         |
 | 120    |         |
 +--------+---------+
-0: jdbc:farrago:> select empno, (select count(a) from s) from emps order by empno;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno,
+. . . . . . . . >        (select count(a) from s)
+. . . . . . . . > from emps
+. . . . . . . . > order by empno;
 +--------+---------+
 | EMPNO  | EXPR$1  |
 +--------+---------+
@@ -342,13 +375,14 @@
 | 110    | 0       |
 | 120    | 0       |
 +--------+---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> drop table s;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.2 correlated scalar subquery in select list:  
 0: jdbc:farrago:> -- passes translation; needs decorrelation
-0: jdbc:farrago:> -- also needs to add AggSingleRel()
 0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select name, (select name from depts where depts.deptno=emps.deptno)
+. . . . . . . . > select name,
+. . . . . . . . >        (select name from depts where depts.deptno=emps.deptno)
 . . . . . . . . > from emps;
 +------------------------------------------------------------------------------------+
 |                                      column0                                       |
@@ -363,7 +397,6 @@
 +------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.3 non correlated in where clause
-0: jdbc:farrago:> -- parses now, need to add AggSingleRel
 0: jdbc:farrago:> -- note can also use semi join
 0: jdbc:farrago:> explain plan for 
 . . . . . . . . > select * from emps
@@ -382,32 +415,41 @@
 |               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- result is correct simply because subquery produces only one value
 0: jdbc:farrago:> select * from emps
-. . . . . . . . > where deptno = (select min(deptno) from depts) order by emps.empno;
+. . . . . . . . > where deptno = (select min(deptno) from depts)
+. . . . . . . . > order by emps.empno;
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
 | EMPNO  | NAME  | DEPTNO  | GENDER  | CITY  | EMPID  | AGE  | PUBLIC_KEY  | SLACKER  | MANAGER  |
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
 | 100    | Fred  | 10      |         |       | 30     | 25   | 41626320    | true     | false    |
 +--------+-------+---------+---------+-------+--------+------+-------------+----------+----------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- incorrect result
-0: jdbc:farrago:> -- need to implement SingleValueAgg
 0: jdbc:farrago:> -- note can also use semi join
-0: jdbc:farrago:> explain plan without implementation for
+0: jdbc:farrago:> explain plan for
 . . . . . . . . > select * from emps
 . . . . . . . . > where deptno = (select deptno from depts);
-+--------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                  column0                                                                   |
-+--------------------------------------------------------------------------------------------------------------------------------------------+
-| ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])  |
-|   FilterRel(condition=[=($2, $10)])                                                                                                        |
-|     JoinRel(condition=[true], joinType=[left])                                                                                             |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                       |
-|       AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                |
-|         ProjectRel(DEPTNO=[$0])                                                                                                            |
-|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                  |
-+--------------------------------------------------------------------------------------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                          column0                                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..10=[{inputs}], expr#11=[=($t2, $t10)], proj#0..9=[{exprs}], $condition=[$t11])                                                        |
+|   FennelToIteratorConverter                                                                                                                               |
+|     FennelCartesianProductRel(leftouterjoin=[true])                                                                                                       |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[*], index=[SYS$CONSTRAINT_INDEX$EMPS$SYS$PRIMARY_KEY], preserveOrder=[false])          |
+|       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                 |
+|         FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                             |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should report runtime error
+0: jdbc:farrago:> select * from emps
+. . . . . . . . > where deptno = (select deptno from depts);
+Error: Scalar query returned more than one row (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should report validation error
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * from emps
+. . . . . . . . > where deptno = (select * from depts);
+Error: At line 3, column 24: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.4 correlated scalar subquery in where clause:
 0: jdbc:farrago:> -- 
@@ -447,7 +489,64 @@
 +--------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.5 scalar subquery as operand for an aggregation
-0: jdbc:farrago:> -- needs to implement SingleValueAgg
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, min((select name from depts))
+. . . . . . . . > from emps
+. . . . . . . . > group by name;
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                     |
+|   FennelRenameRel(fieldNames=[[NAME, EXPR$1]])                                                                                                                |
+|     LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                 |
+|       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                                |
+|         FennelCartesianProductRel(leftouterjoin=[true])                                                                                                       |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                          |
+|           FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                 |
+|             FennelAggRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                             |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should report runtime error
+0: jdbc:farrago:> select name, min((select name from depts))
+. . . . . . . . > from emps
+. . . . . . . . > group by name;
+Error: Scalar query returned more than one row (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, min((select max(name) from depts))
+. . . . . . . . > from emps
+. . . . . . . . > group by name;
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                              column0                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                         |
+|   FennelRenameRel(fieldNames=[[NAME, EXPR$1]])                                                                                                                    |
+|     LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                     |
+|       FennelRenameRel(fieldNames=[[$f0, $f1]])                                                                                                                    |
+|         FennelCartesianProductRel(leftouterjoin=[true])                                                                                                           |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1]], index=[EMPS_UX], preserveOrder=[false])                                              |
+|           FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                     |
+|             FennelRenameRel(fieldNames=[[EXPR$0]])                                                                                                                |
+|               FennelAggRel(groupCount=[0], agg#0=[MAX(0)])                                                                                                        |
+|                 FennelRenameRel(fieldNames=[[$f0]])                                                                                                               |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[1]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name, min((select max(name) from depts))
+. . . . . . . . > from emps
+. . . . . . . . > group by name
+. . . . . . . . > order by name;
++--------+---------+
+|  NAME  | EXPR$1  |
++--------+---------+
+| Eric   | Sales   |
+| Fred   | Sales   |
+| John   | Sales   |
+| Wilma  | Sales   |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- needs decorrelation
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name, min((select name from depts where depts.deptno=emps.deptno))
 . . . . . . . . > from emps
@@ -466,12 +565,49 @@
 |               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                          |
 +----------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- this should report validation error
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name, sum((select * from depts))
+. . . . . . . . > from emps
+. . . . . . . . > group by name;
+Error: At line 2, column 26: Cannot apply '$SCALAR_QUERY' to arguments of type '$SCALAR_QUERY(<RECORDTYPE(INTEGER DEPTNO, VARCHAR(128) NAME)>)'. Supported form(s): '$SCALAR_QUERY(<RECORDTYPE(SINGLE FIELD)>)' (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- window functions
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select last_value((select deptno from depts)) over (order by empno)
+. . . . . . . . > from emps;
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($10):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])  |
+|   JoinRel(condition=[true], joinType=[left])                                                                                                                 |
+|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                           |
+|     AggregateRel(groupCount=[0], agg#0=[SINGLE_VALUE(0)])                                                                                                    |
+|       ProjectRel(DEPTNO=[$0])                                                                                                                                |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                      |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select last_value((select min(deptno) from depts)) over w
+. . . . . . . . > from emps window w as (order by empno);
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EXPR$0=[CAST($HISTOGRAM_LAST_VALUE($HISTOGRAM(CAST($10):BIGINT NOT NULL) OVER (ORDER BY $0 ROWS BETWEEN CURRENT ROW AND CURRENT ROW))):INTEGER])  |
+|   JoinRel(condition=[true], joinType=[left])                                                                                                                 |
+|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                           |
+|     ProjectRel(EXPR$0=[$0])                                                                                                                                  |
+|       AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                                                           |
+|         ProjectRel($f0=[$0])                                                                                                                                 |
+|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                    |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 3.6 HAVING clause scalar subquery currently produces incorrect plan
 0: jdbc:farrago:> --     if HAVING clause references aggs. This is because HAVING clause is processed
 0: jdbc:farrago:> --     before agg. So the subqueries get transformed into joins too early.
 0: jdbc:farrago:> --     (Currently having clause is processed before agg processing because the way aggs
 0: jdbc:farrago:> --      are gathered -- via expression conversion).
-0: jdbc:farrago:> --     Ideally, aggs shoudl be gathered first,
+0: jdbc:farrago:> --     Ideally, aggs should be gathered first,
 0: jdbc:farrago:> --     then AggRels are generated, followed by processing of HAVING clause.
 0: jdbc:farrago:> --
 0: jdbc:farrago:> explain plan without implementation for
@@ -518,18 +654,6 @@
 |             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
 +--------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 3.7 These two will report error for scalar subquery if its select list
-0: jdbc:farrago:> -- contains more than one field.
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- explain plan without implementation for
-0: jdbc:farrago:> -- select empno, (select min(empno), min(deptno) from emps)
-0: jdbc:farrago:> -- from emps;
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- explain plan without implementation for
-0: jdbc:farrago:> -- select empno
-0: jdbc:farrago:> -- from emps
-0: jdbc:farrago:> -- where empno = (select min(empno), min(deptno) from emps);
-0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 4.1 nested correlations
 0: jdbc:farrago:> --
 0: jdbc:farrago:> create table depts2 (deptno integer, name varchar(20));
@@ -547,26 +671,27 @@
 . . . . . . . . >              where depts.deptno > emps.deptno or 
 . . . . . . . . >                    exists (select *
 . . . . . . . . >                            from depts2
-. . . . . . . . >                            where depts.deptno = depts2.deptno 
-. . . . . . . . >                                  and depts2.deptno = emps.deptno));
-+------------------------------------------------------------------------------------------------------------------+
-|                                                     column0                                                      |
-+------------------------------------------------------------------------------------------------------------------+
-| ProjectRel(NAME=[$1])                                                                                            |
-|   FilterRel(condition=[IS TRUE($12)])                                                                            |
-|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2, var2=offset2, var1=offset2]])  |
-|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                             |
-|       ProjectRel(DEPTNO=[$0], NAME=[$1], $indicator=[true])                                                      |
-|         ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                       |
-|           FilterRel(condition=[OR(>($0, $cor2.DEPTNO), IS TRUE($4))])                                            |
-|             CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset0, var1=offset0]])        |
-|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                    |
-|               ProjectRel(DEPTNO=[$0], NAME=[$1], $indicator=[true])                                              |
-|                 ProjectRel(DEPTNO=[$0], NAME=[$1])                                                               |
-|                   FilterRel(condition=[AND(=($cor0.DEPTNO, $0), =($0, $cor1.DEPTNO))])                           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                             |
-+------------------------------------------------------------------------------------------------------------------+
-0: jdbc:farrago:> 
+. . . . . . . . >                            where depts.name = depts2.name
+. . . . . . . . >                                  and depts2.deptno = emps.empno));
++----------------------------------------------------------------------------------------------------+
+|                                              column0                                               |
++----------------------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                              |
+|   FilterRel(condition=[IS TRUE($10)])                                                              |
+|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var2=offset2, var1=offset0]])  |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                               |
+|       ProjectRel($indicator=[true])                                                                |
+|         AggregateRel(groupCount=[0], agg#0=[COUNT()])                                              |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1])                                                       |
+|             FilterRel(condition=[OR(>($0, $cor2.DEPTNO), IS TRUE($2))])                            |
+|               CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset1]])      |
+|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                    |
+|                 ProjectRel($indicator=[true])                                                      |
+|                   AggregateRel(groupCount=[0], agg#0=[COUNT()])                                    |
+|                     ProjectRel(DEPTNO=[$0], NAME=[$1])                                             |
+|                       FilterRel(condition=[AND(=($cor0.NAME, $1), =($0, $cor1.EMPNO))])            |
+|                         TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                           |
++----------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 4.2 correlation in more than one child
 0: jdbc:farrago:> -- also has the same problem as 4.1 during createJoin if the correlation is on 
@@ -577,24 +702,62 @@
 0: jdbc:farrago:> explain plan without implementation for 
 . . . . . . . . > select * from emps
 . . . . . . . . > where exists (select * from (select * from depts where depts.deptno = emps.deptno) t,
-. . . . . . . . >                             (select * from depts2 where depts2.deptno = emps.deptno) v);
+. . . . . . . . >                             (select * from depts2 where depts2.deptno = emps.empno) v);
 +--------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                  column0                                                                   |
 +--------------------------------------------------------------------------------------------------------------------------------------------+
 | ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9])  |
-|   FilterRel(condition=[IS TRUE($14)])                                                                                                      |
-|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2, var1=offset2]])                                          |
+|   FilterRel(condition=[IS TRUE($10)])                                                                                                      |
+|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2, var1=offset0]])                                          |
 |       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                       |
-|       ProjectRel(DEPTNO=[$0], NAME=[$1], DEPTNO0=[$2], NAME0=[$3], $indicator=[true])                                                      |
-|         ProjectRel(DEPTNO=[$0], NAME=[$1], DEPTNO0=[$2], NAME0=[$3])                                                                       |
-|           CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var1=offset0]])                                                 |
-|             ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                             |
-|               FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                                   |
-|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                            |
-|             ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                             |
-|               FilterRel(condition=[=($0, $cor1.DEPTNO)])                                                                                   |
-|                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                           |
+|       ProjectRel($indicator=[true])                                                                                                        |
+|         AggregateRel(groupCount=[0], agg#0=[COUNT()])                                                                                      |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1], DEPTNO0=[$2], NAME0=[$3])                                                                     |
+|             JoinRel(condition=[true], joinType=[inner])                                                                                    |
+|               ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                           |
+|                 FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                                 |
+|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                          |
+|               ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                           |
+|                 FilterRel(condition=[=($0, $cor1.EMPNO)])                                                                                  |
+|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                         |
 +--------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 5.1 lateral correlation
+0: jdbc:farrago:> -- check that the translation is correct
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * 
+. . . . . . . . > from emps,
+. . . . . . . . > lateral (select * from depts where depts.deptno = emps.deptno);
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])  |
+|   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset2]])                                                                                     |
+|     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                     |
+|     ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                                                                 |
+|       FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                                                                       |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * 
+. . . . . . . . > from emps,
+. . . . . . . . > lateral (select * from depts where depts.deptno = emps.deptno),
+. . . . . . . . > lateral (select * from depts2 where depts2.deptno = emps.deptno);
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                              column0                                                                                               |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11], DEPTNO1=[$12], NAME1=[$13])  |
+|   CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var1=offset2]])                                                                                                                 |
+|     CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset2]])                                                                                                               |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                                               |
+|       ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                                                                                           |
+|         FilterRel(condition=[=($0, $cor0.DEPTNO)])                                                                                                                                                 |
+|           TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                                          |
+|     ProjectRel(DEPTNO=[$0], NAME=[$1])                                                                                                                                                             |
+|       FilterRel(condition=[=($0, $cor1.DEPTNO)])                                                                                                                                                   |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                                                                                           |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- clean up --

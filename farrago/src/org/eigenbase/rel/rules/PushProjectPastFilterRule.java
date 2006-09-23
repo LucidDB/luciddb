@@ -112,14 +112,9 @@ public class PushProjectPastFilterRule
             return;
         }
 
-        PushProjector pushProjector = new PushProjector();
-        ProjectRel topProject =
-            pushProjector.convertProject(
-                origProj,
-                origFilter,
-                rel,
-                preserveExprs,
-                null);
+        PushProjector pushProjector =
+            new PushProjector(origProj, origFilter, rel, preserveExprs);
+        ProjectRel topProject = pushProjector.convertProject(null);
 
         if (topProject != null) {
             call.transformTo(topProject);

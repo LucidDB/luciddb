@@ -14,7 +14,8 @@ options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'csv',
     with_header 'yes', 
-    log_directory 'testlog/');
+    log_directory 'testlog/',
+    lenient 'no');
 
 
 ---------------------------------------------------------------------------
@@ -91,7 +92,8 @@ foreign data wrapper sys_file_wrapper
 options (
     file_extension '',
     line_delimiter '\t', 
-    log_directory 'testlog/');
+    log_directory 'testlog/',
+    lenient 'no');
 
 create foreign table flatfile_badLineDelim(
     id int not null,
@@ -111,7 +113,8 @@ foreign data wrapper sys_file_wrapper
 options (
     file_extension 'csv',
     field_delimiter '\t', 
-    log_directory 'testlog/');
+    log_directory 'testlog/',
+    lenient 'no');
 
 create foreign table flatfile_badFieldDelim(
     id int not null,
@@ -135,7 +138,8 @@ options (
     file_extension 'csv',
     with_header 'no',
     line_delimiter 'G', 
-    log_directory 'testlog/');
+    log_directory 'testlog/',
+    lenient 'no');
 
 create foreign table flatfile_incompleteColumn(
     id int not null,
@@ -181,7 +185,8 @@ options (
     directory 'unitsql/med/flatfiles/',
     file_extension 'txt',
     with_header 'yes', 
-    log_directory 'testlog/');
+    log_directory 'testlog/',
+    lenient 'no');
 
 select * from flatfile_server_rowTooLong.BCP."longrow";
 

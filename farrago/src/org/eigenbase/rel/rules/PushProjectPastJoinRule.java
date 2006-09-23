@@ -84,105 +84,36 @@ public class PushProjectPastJoinRule
         ProjectRel origProj = (ProjectRel) call.rels[0];
         JoinRel joinRel = (JoinRel) call.rels[1];
 
-        RelDataTypeField [] joinFields = joinRel.getRowType().getFields();
-        RelDataTypeField [] leftFields =
-            joinRel.getLeft().getRowType().getFields();
-        RelDataTypeField [] rightFields =
-            joinRel.getRight().getRowType().getFields();
-        int nFieldsLeft = leftFields.length;
-        int nFieldsRight = rightFields.length;
-        int nTotalFields = nFieldsLeft + nFieldsRight;
-
-        RexNode [] origProjFields = origProj.getChildExps();
-
-        // locate all fields referenced in the projection and join condition
-        BitSet projRefs = new BitSet(nTotalFields);
-        BitSet leftBitmap = new BitSet(nFieldsLeft);
-        BitSet rightBitmap = new BitSet(nFieldsRight);
-        RelOptUtil.setRexInputBitmap(leftBitmap, 0, nFieldsLeft);
-        RelOptUtil.setRexInputBitmap(rightBitmap, nFieldsLeft, nTotalFields);
-        List<RexNode> preserveLeft = new ArrayList<RexNode>();
-        List<RexNode> preserveRight = new ArrayList<RexNode>();
-
-        PushProjector pushProject = new PushProjector();
-        pushProject.locateAllRefs(
-            origProjFields,
-            joinRel.getCondition(),
-            projRefs,
-            leftBitmap,
-            rightBitmap,
-            preserveExprs,
-            preserveLeft,
-            preserveRight);
-
-        // if all fields are being projected and there are no special
-        // expressions, no point in proceeding any further
-        if ((projRefs.cardinality() == nTotalFields)
-            && (preserveLeft.size() == 0)
-            && (preserveRight.size() == 0)) {
+        // locate all fields referenced in the projection and join condition;
+        // determine which inputs are referenced in the projection and
+        // join condition; if all fields are being referenced and there are no
+        // special expressions, no point in proceeding any further
+        PushProjector pushProject =
+            new PushProjector(
+                origProj,
+                joinRel.getCondition(),
+                joinRel,
+                preserveExprs);
+        if (pushProject.locateAllRefs()) {
             return;
         }
-
-        // determine how many fields on projected from the left vs right
-        int nLeftProject = 0;
-        for (int bit = projRefs.nextSetBit(0);
-            (bit >= 0)
-            && (bit < nFieldsLeft); bit = projRefs.nextSetBit(bit + 1)) {
-            nLeftProject++;
-        }
-        int nRightProject = projRefs.cardinality() - nLeftProject;
-
+        
         // create left and right projections, projecting only those
         // fields referenced on each side
-        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
-
-        // if nothing is projected from join child, arbitrarily project
-        // the first column unless there is only one column in the child;
-        // this is necessary since Fennel doesn't handle 0-column projections
-        if ((nLeftProject == 0) && (preserveLeft.size() == 0)) {
-            if (nFieldsLeft == 1 && preserveRight.size() == 0) {
-                return;
-            }
-            projRefs.set(0);
-            nLeftProject = 1;
-        }
         RelNode leftProjRel =
             pushProject.createProjectRefsAndExprs(
-                rexBuilder,
-                projRefs,
-                leftFields,
-                null,
-                0,
-                nLeftProject,
-                preserveLeft,
-                joinRel.getLeft());
-        if ((nRightProject == 0) && (preserveRight.size() == 0)) {
-            if (nFieldsRight == 1 && preserveLeft.size() == 0) {
-                return;
-            }
-            projRefs.set(nFieldsLeft);
-            nRightProject = 1;
-        }
+                joinRel.getLeft(),
+                false,
+                false);
         RelNode rightProjRel =
             pushProject.createProjectRefsAndExprs(
-                rexBuilder,
-                projRefs,
-                rightFields,
-                joinFields,
-                nFieldsLeft,
-                nRightProject,
-                preserveRight,
-                joinRel.getRight());
+                joinRel.getRight(),
+                true,
+                true);
 
         // convert the join condition to reference the projected columns
         RexNode newJoinFilter = null;
-
-        int [] adjustments =
-            pushProject.getAdjustments(
-                joinFields,
-                projRefs,
-                nFieldsLeft,
-                preserveLeft.size());
+        int [] adjustments = pushProject.getAdjustments();
         if (joinRel.getCondition() != null) {
             RelDataTypeField [] projLeftFields =
                 leftProjRel.getRowType().getFields();
@@ -205,15 +136,9 @@ public class PushProjectPastJoinRule
                 projRightFields.length);
             newJoinFilter =
                 pushProject.convertRefsAndExprs(
-                    rexBuilder,
                     joinRel.getCondition(),
-                    joinFields,
-                    adjustments,
-                    preserveLeft,
-                    nLeftProject,
-                    preserveRight,
-                    nLeftProject + preserveLeft.size() + nRightProject,
-                    projJoinFields);
+                    projJoinFields,
+                    adjustments);
         }
 
         // create a new joinrel with the projected children
@@ -231,16 +156,7 @@ public class PushProjectPastJoinRule
         // put the original project on top of the join, converting it to
         // reference the modified projection list
         ProjectRel topProject =
-            pushProject.createNewProject(
-                origProj,
-                joinFields,
-                adjustments,
-                preserveLeft,
-                nLeftProject,
-                preserveRight,
-                nLeftProject + preserveLeft.size() + nRightProject,
-                rexBuilder,
-                newJoinRel);
+            pushProject.createNewProject(newJoinRel, adjustments);
 
         call.transformTo(topProject);
     }

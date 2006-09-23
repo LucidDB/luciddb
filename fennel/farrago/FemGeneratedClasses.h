@@ -539,6 +539,8 @@ class ProxyColumnName
 : virtual public JniProxy
 {
 public:
+SharedProxyFlatFileTupleStreamDef getFlatFile();
+static jmethodID meth_getFlatFile;
 std::string getName();
 static jmethodID meth_getName;
 };
@@ -629,6 +631,8 @@ bool isMapped();
 static jmethodID meth_isMapped;
 bool isLenient();
 static jmethodID meth_isLenient;
+SharedProxyColumnName getColumn();
+static jmethodID meth_getColumn;
 };
 
 class ProxyGenericStreamDef

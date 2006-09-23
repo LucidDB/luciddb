@@ -84,8 +84,7 @@ public class RelMdPopulationSize
 
     public Double getPopulationSize(JoinRelBase rel, BitSet groupKey)
     {
-        return RelMdUtil.getJoinPopulationSize(
-            rel, rel.getLeft(), rel.getRight(), groupKey);
+        return RelMdUtil.getJoinPopulationSize(rel, groupKey);
     }
 
     public Double getPopulationSize(SemiJoinRel rel, BitSet groupKey)

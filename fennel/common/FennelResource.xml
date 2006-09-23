@@ -125,5 +125,13 @@
     <text>Could not read header from data file {0}: {1}</text>
   </message>
 
+  <message id="441970" name="flatfileMappedRequiresLenient">
+    <text>Flat file columns cannot be mapped without lenient mode</text>
+  </message>
+
+  <message id="441980" name="flatfileNoMappedColumns">
+    <text>Could not map flat file columns because the flat file header {0} contained none of the target columns {1}</text>
+  </message>
+
 </resourceBundle>
 

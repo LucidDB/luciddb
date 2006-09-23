@@ -51,7 +51,7 @@
     <member type="todo" />
     <historyfile name="" />
   </argo>
-    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Sep 20 01:24:40 PDT 2006'>
+    <XMI xmi.version = '1.2' xmlns:UML = 'org.omg.xmi.namespace.UML' timestamp = 'Wed Sep 20 03:41:02 PDT 2006'>
       <XMI.header>    <XMI.documentation>
           <XMI.exporter>ArgoUML (using Netbeans XMI Writer version 1.0)</XMI.exporter>
           <XMI.exporterVersion>0.20.x</XMI.exporterVersion>
@@ -3585,7 +3585,7 @@
                       isAbstract = 'false'>
                       <UML:Association.connection>
                         <UML:AssociationEnd xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001993'
-                          name = 'FlatFile' visibility = 'public' isSpecification = 'false' isNavigable = 'false'
+                          name = 'FlatFile' visibility = 'public' isSpecification = 'false' isNavigable = 'true'
                           ordering = 'unordered' aggregation = 'composite' targetScope = 'instance'
                           changeability = 'changeable'>
                           <UML:AssociationEnd.multiplicity>
@@ -3601,12 +3601,12 @@
                           </UML:AssociationEnd.participant>
                         </UML:AssociationEnd>
                         <UML:AssociationEnd xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001996'
-                          name = 'Column' visibility = 'public' isSpecification = 'false' isNavigable = 'false'
+                          name = 'Column' visibility = 'public' isSpecification = 'false' isNavigable = 'true'
                           ordering = 'ordered' aggregation = 'none' targetScope = 'instance' changeability = 'changeable'>
                           <UML:AssociationEnd.multiplicity>
-                            <UML:Multiplicity xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:000000000000199A'>
+                            <UML:Multiplicity xmi.id = '127-0-0-1-ee59706:10dcac6bb30:-8000:00000000000013A2'>
                               <UML:Multiplicity.range>
-                                <UML:MultiplicityRange xmi.id = '127-0-0-1-74a6b0a5:10dca44ab43:-8000:0000000000001999'
+                                <UML:MultiplicityRange xmi.id = '127-0-0-1-ee59706:10dcac6bb30:-8000:00000000000013A1'
                                   lower = '1' upper = '-1'/>
                               </UML:Multiplicity.range>
                             </UML:Multiplicity>
@@ -16568,7 +16568,7 @@
         </path>
       </group>
       <group name="Fig9"
-           description="org.argouml.uml.diagram.static_structure.ui.FigClass[704, 224, 150, 226]pathVisible=false;operationsVisible=false;attributesVisible=true"
+           description="org.argouml.uml.diagram.static_structure.ui.FigClass[704, 224, 151, 226]pathVisible=false;operationsVisible=false;attributesVisible=true"
            href="I56294fc4m107be290963mm555d"
            fill="1"
            fillcolor="white"
@@ -16581,7 +16581,7 @@
         <rectangle name="Fig9.0"
           x="704"
           y="224"
-          width="149"
+          width="151"
           height="226"
           fill="1"
           fillcolor="white"
@@ -16589,7 +16589,7 @@
           strokecolor="black"
         />
         <group name="Fig9.1"
-             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[704, 224, 149, 2]"
+             description="org.argouml.uml.diagram.ui.FigStereotypesCompartment[704, 224, 151, 2]"
              href="I56294fc4m107be290963mm555d"
              fill="1"
              fillcolor="white"
@@ -16602,7 +16602,7 @@
           <rectangle name="Fig9.1.0"
             x="704"
             y="224"
-            width="149"
+            width="151"
             height="2"
             fill="1"
             fillcolor="white"
@@ -16621,7 +16621,7 @@
           textsize="10"
         >FlatFileTupleStreamDef</text>
         <group name="Fig9.3"
-             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[705, 454, 177, 20]"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[705, 441, 149, 20]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16633,8 +16633,8 @@
           
           <rectangle name="Fig9.3.0"
             x="705"
-            y="454"
-            width="177"
+            y="441"
+            width="149"
             height="20"
             fill="1"
             fillcolor="white"
@@ -16651,13 +16651,13 @@
             visibility="0"
           >
             <moveto x="705"
-                    y="454" />
-            <lineto x="882"
-                    y="454" />
+                    y="441" />
+            <lineto x="854"
+                    y="441" />
           </path>
         </group>
         <group name="Fig9.4"
-             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[705, 247, 149, 203]"
+             description="org.argouml.uml.diagram.ui.FigAttributesCompartment[705, 247, 150, 203]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -16669,7 +16669,7 @@
           <rectangle name="Fig9.4.0"
             x="705"
             y="247"
-            width="148"
+            width="150"
             height="203"
             fill="1"
             fillcolor="white"
@@ -16685,7 +16685,7 @@
           >
             <moveto x="705"
                     y="247" />
-            <lineto x="853"
+            <lineto x="855"
                     y="247" />
           </path>
           <text name="Fig9.4.2"
@@ -16842,7 +16842,7 @@
         <rectangle name="Fig9.5"
           x="704"
           y="224"
-          width="149"
+          width="151"
           height="226"
           fill="0"
           fillcolor="white"
@@ -38047,7 +38047,7 @@
           textsize="10"
         >RoutineParameterStyle</text>
         <group name="Fig16.3"
-             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[49, 255, 269, 20]"
+             description="org.argouml.uml.diagram.ui.FigOperationsCompartment[49, 255, 270, 20]"
              fill="1"
              fillcolor="white"
              stroke="0"
@@ -38060,7 +38060,7 @@
           <rectangle name="Fig16.3.0"
             x="49"
             y="255"
-            width="269"
+            width="270"
             height="20"
             fill="1"
             fillcolor="white"
@@ -38078,7 +38078,7 @@
           >
             <moveto x="49"
                     y="255" />
-            <lineto x="318"
+            <lineto x="319"
                     y="255" />
           </path>
         </group>

@@ -191,6 +191,12 @@ bool LcsColumnReader::applyFilters(
         LcsResidualFilter *filter = filters.filterData[k].get();
 
         if (filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER) {
+            // REVIEW zfong 9/19/06 - This compareTuples() call, as well
+            // as the other one in this method, are incorrect.  The tuple
+            // descriptor that should be used needs to be a tuple
+            // descriptor that reflects only the projected columns.  The
+            // tuple descriptors being used here and in the other call in
+            // this method correspond to the full tuples w/o projection.
             int c = projDescriptor.compareTuples(
                 filter->boundData, filters.lowerBoundProj,
                 outputTupleData, filters.readerKeyProj);

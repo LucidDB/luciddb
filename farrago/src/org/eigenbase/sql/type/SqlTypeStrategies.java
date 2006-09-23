@@ -1302,12 +1302,6 @@ public abstract class SqlTypeStrategies
                     + recordType;
                 final RelDataType firstColType = fieldType.getType();
                 return
-                /*
-                SqlTypeUtil.makeNullableIfOperandsAre(
-                    opBinding.getTypeFactory(),
-                    opBinding.collectOperandTypes(),
-                    firstColType);
-                    */
                     opBinding.getTypeFactory().createTypeWithNullability(
                         firstColType, true);
             }

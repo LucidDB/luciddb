@@ -14,7 +14,8 @@
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     with_header 'yes', 
-. . . . . . . . >     log_directory 'testlog/');
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     lenient 'no');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
@@ -113,7 +114,8 @@ Error: Could not write log file unitsql/med/flatfiles/locked (state=,code=0)
 . . . . . . . . > options (
 . . . . . . . . >     file_extension '',
 . . . . . . . . >     line_delimiter '\t', 
-. . . . . . . . >     log_directory 'testlog/');
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     lenient 'no');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_badLineDelim(
 . . . . . . . . >     id int not null,
@@ -134,7 +136,8 @@ Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: 
 . . . . . . . . > options (
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     field_delimiter '\t', 
-. . . . . . . . >     log_directory 'testlog/');
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     lenient 'no');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_badFieldDelim(
 . . . . . . . . >     id int not null,
@@ -159,7 +162,8 @@ Error: Could not read header from data file unitsql/med/flatfiles/noheader.csv: 
 . . . . . . . . >     file_extension 'csv',
 . . . . . . . . >     with_header 'no',
 . . . . . . . . >     line_delimiter 'G', 
-. . . . . . . . >     log_directory 'testlog/');
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     lenient 'no');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> create foreign table flatfile_incompleteColumn(
 . . . . . . . . >     id int not null,
@@ -208,7 +212,8 @@ Error: Could not read header from data file unitsql/med/flatfiles/example.csv: R
 . . . . . . . . >     directory 'unitsql/med/flatfiles/',
 . . . . . . . . >     file_extension 'txt',
 . . . . . . . . >     with_header 'yes', 
-. . . . . . . . >     log_directory 'testlog/');
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     lenient 'no');
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from flatfile_server_rowTooLong.BCP."longrow";
 +----------+-------+-------+
@@ -380,12 +385,13 @@ Error: Cannot derive column types for file unitsql/med/flatfiles/nullheader.txt 
 0: jdbc:farrago:> -- 3.8 Test sampling of a file with nulls in data
 0: jdbc:farrago:> --
 0: jdbc:farrago:> select * from flatfile_server_empty.BCP."nulldata";
-+---------+-----+--------+-----+
-| header  | no  | nulls  | ok  |
-+---------+-----+--------+-----+
-| but     |     | nulls  |     |
-|         | in  | data   |     |
-+---------+-----+--------+-----+
++---------+------+--------+----------+
+| header  |  no  | nulls  |    ok    |
++---------+------+--------+----------+
+| but     |      | nulls  |          |
+|         | in   | data   |          |
+|         | too  | many   | columns  |
++---------+------+--------+----------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --
 0: jdbc:farrago:> -- 3.9 Select when BCP file is empty
@@ -730,7 +736,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 +--------------------------------+------------------------------------------------+--------+
 | Robert M. Pirsig               | (too long) Zen and the Art of Motorcycle Main  | 0.30   |
 | Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
-| Steve Jones                    |   (leading spaces) Darwin's Ghost              | 15.00  |
+| Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |
 +--------------------------------+------------------------------------------------+--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- we can select the errors from the log directory

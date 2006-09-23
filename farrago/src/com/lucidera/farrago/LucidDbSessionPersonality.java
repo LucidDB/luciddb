@@ -228,6 +228,9 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
         // Push filters down.
+        builder.addGroupBegin();
+        builder.addRuleInstance(new PushFilterPastSetOpRule());
+        builder.addRuleInstance(new PushFilterPastProjectRule());
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(
@@ -236,11 +239,12 @@ public class LucidDbSessionPersonality
                         new RelOptRuleOperand(JoinRel.class, null)
                     }),
                 "with filter above join"));
-
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));
+                "without filter above join"));     
+        builder.addRuleInstance(new MergeFilterRule());
+        builder.addGroupEnd();
 
         // Convert 2-way joins to n-way joins.  Do the conversion bottom-up
         // so once a join is converted to a MultiJoinRel, you're ensured that
@@ -287,11 +291,14 @@ public class LucidDbSessionPersonality
 
         // Remove any semijoins that couldn't be converted
         builder.addRuleInstance(new RemoveSemiJoinRule());
-
-        // Apply PushProjectPastJoinRule while there are no physical joinrels
-        // since the rule only matches on JoinRel.
+    
         builder.addGroupBegin();
         builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(
+            new PushProjectPastSetOpRule(
+                LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
+        // Apply PushProjectPastJoinRule while there are no physical joinrels
+        // since the rule only matches on JoinRel.
         builder.addRuleInstance(
             new PushProjectPastJoinRule(
                 LucidDbOperatorTable.ldbInstance().getSpecialOperators()));
