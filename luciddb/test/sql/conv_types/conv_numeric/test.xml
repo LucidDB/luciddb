@@ -1,14 +1,6 @@
 <project name="bh" default="conv_numeric">
   <target name="conv_numeric">
     <test-suite name="conv_numeric">
-      
-      <init-hook>
-        <test-suite name="init">
-          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
-            <test-suite-modifier value="conv_numeric"/>
-          </test-suite-call>
-        </test-suite>
-      </init-hook>
 
       <!-- unresolved issues: FRG-213-->
       <!-- above issue causes errors in createsource, and thus all other -->
@@ -16,6 +8,14 @@
       <test-metadata>
         <knownFailure>true</knownFailure>
       </test-metadata>
+
+      <init-hook>
+        <test-suite name="init">
+          <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">
+            <test-suite-modifier value="conv_numeric"/>
+          </test-suite-call>
+        </test-suite>
+      </init-hook>
 
       <test name="createsource">
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/cr_source.sql"/>
