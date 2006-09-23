@@ -39,6 +39,7 @@ class PseudoUuidTest : public TestBase, public TraceSource
     void testComparison();
     void testParsing();
     void testFormatting();
+    void testCopy();
 
 public:
     explicit PseudoUuidTest()
@@ -49,6 +50,7 @@ public:
         FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testComparison);
         FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testParsing);
         FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testFormatting);
+        FENNEL_UNIT_TEST_CASE(PseudoUuidTest, testCopy);
     }
 };
 
@@ -76,7 +78,7 @@ void PseudoUuidTest::testInvalid()
 
     for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
         BOOST_CHECK_MESSAGE(
-            uuid.getByte(i) == 0xFF, "invalid UUID not all 0xFF");
+            uuid.getByte(i) == (uint8_t)0xFF, "invalid UUID not all 0xFF");
     }
 }
 
@@ -93,13 +95,11 @@ void PseudoUuidTest::testComparison()
 
 void PseudoUuidTest::testParsing()
 {
-    PseudoUuid uuid1("03020100-0504-0706-0809-0A0B0C0D0E0F");
+    PseudoUuid uuid1("00010203-0405-0607-0809-0A0B0C0D0E0F");
 
-// Pre version 0.9.4 returns parsed UUID with bytes in the order given above.
-// Post version 0.9.4 returns parsed UUID with bytes in host endian order
-//    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
-//        BOOST_CHECK_EQUAL(i, uuid1.getByte(i));
-//    }
+    for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
+        BOOST_CHECK_EQUAL(i, uuid1.getByte(i));
+    }
 
     PseudoUuid uuid2("00000000-0000-0000-0000-000000000000");
 
@@ -110,7 +110,7 @@ void PseudoUuidTest::testParsing()
     PseudoUuid uuid3("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
 
     for(int i = 0; i < PseudoUuid::UUID_LENGTH; i++) {
-        BOOST_CHECK_EQUAL(0xff, uuid3.getByte(i));
+        BOOST_CHECK_EQUAL((uint8_t)0xff, uuid3.getByte(i));
     }
 
     BOOST_CHECK_THROW(
@@ -133,6 +133,25 @@ void PseudoUuidTest::testFormatting()
     BOOST_CHECK_EQUAL(exp2, got2);
 }
 
+void PseudoUuidTest::testCopy()
+{
+    PseudoUuid uuid1("00010203-0405-0607-0809-0A0B0C0D0E0F");
+    PseudoUuid uuid2(uuid1);
+    PseudoUuid uuid3 = uuid1;
+
+    BOOST_CHECK_EQUAL(uuid1, uuid2);
+    BOOST_CHECK_EQUAL(uuid1, uuid3);
+
+    PseudoUuid uuid4;
+
+    uuid4.generateInvalid();
+
+    PseudoUuid uuid5 = uuid4;
+    PseudoUuid uuid6(uuid4);
+
+    BOOST_CHECK_EQUAL(uuid4, uuid5);
+    BOOST_CHECK_EQUAL(uuid4, uuid6);
+}
 FENNEL_UNIT_TEST_SUITE(PseudoUuidTest)
 // End PseudoUuidTest.cpp
 

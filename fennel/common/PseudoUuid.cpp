@@ -29,10 +29,8 @@
 #include <rpcdce.h>
 #endif
 
-#if !defined(FENNEL_UUID_REAL) && !defined(FENNEL_UUID_REAL_NEW)
 #include <iomanip>
 #include <sstream>
-#endif
 
 using namespace std;
 
@@ -48,17 +46,36 @@ PseudoUuid::PseudoUuid(string uuid)
     parse(uuid);
 }
 
+PseudoUuid::~PseudoUuid()
+{
+    memset(data, 0, sizeof(data));
+}
+
 void PseudoUuid::generate()
 {
 #ifdef FENNEL_UUID_REAL_NEW
+    uuid_t *apiData;
+
+    uuid_rc_t result = uuid_create(&apiData);
+    assert(result == UUID_RC_OK);
 
     // REVIEW: SWZ: 9/22/2006: Consider using a different mode.  V1 seems
     // weak, but v3 and v5 seem reasonable.  They require arguments, however.
-    // Also, this method never returns error for V4, but might for others.
-    uuid_rc_t result = 
-        uuid_make(reinterpret_cast<uuid_t *>(data), UUID_MAKE_V4);
+    // Also, uuid_make never returns error for V4, but might for others.
+    result = uuid_make(apiData, UUID_MAKE_V4);
     assert(result == UUID_RC_OK);
 
+    size_t len = UUID_LENGTH;
+    result = 
+        uuid_export(
+            apiData,
+            UUID_FMT_BIN,
+            reinterpret_cast<void **>(&data),
+            &len);
+    assert(result == UUID_RC_OK);
+
+    result = uuid_destroy(apiData);
+    assert(result == UUID_RC_OK);
 #else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
 
 #ifdef FENNEL_UUID_REAL
@@ -84,45 +101,34 @@ void PseudoUuid::generate()
 
 void PseudoUuid::generateInvalid()
 {
-    memset(&data,0xFF,sizeof(data));
+    memset(data, 0xFF, sizeof(data));
 }
 
 bool PseudoUuid::operator == (PseudoUuid const &other) const
 {
-#ifdef FENNEL_UUID_REAL_NEW
-
-    int cmp;
-    uuid_rc_t result = 
-        uuid_compare(
-            reinterpret_cast<const uuid_t *>(data),
-            reinterpret_cast<const uuid_t *>(other.data),
-            &cmp);
-    assert(result == UUID_RC_OK);
-    return cmp == 0;
-
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
-
-#ifdef FENNEL_UUID_REAL
-
-    return uuid_compare(data,other.data) == 0;
-
-#else /* FENNEL_UUID_FAKE */
-
     return (memcmp(data,other.data,sizeof(data)) == 0);
-
-#endif
-
-#endif
 }
 
-unsigned char PseudoUuid::getByte(int index) const
+
+
+uint8_t PseudoUuid::getByte(int index) const
 {
     assert(index < sizeof(data));
 
     return data[index];
 }
 
-int PseudoUuid::hashCode() const {
+const uint8_t *PseudoUuid::getBytes() const
+{
+#ifdef FENNEL_UUID_REAL    
+    return reinterpret_cast<const uint8_t *>(&data);
+#else
+    return data;
+#endif
+}
+
+int PseudoUuid::hashCode() const
+{
     return
         ((int)(data[0] ^ data[4] ^ data[8] ^ data[12]) & 0xFF) << 24 |
         ((int)(data[1] ^ data[5] ^ data[9] ^ data[13]) & 0xFF) << 16 |
@@ -132,29 +138,9 @@ int PseudoUuid::hashCode() const {
 
 string PseudoUuid::toString() const
 {
-#ifdef FENNEL_UUID_REAL_NEW
-
-    char uuidstr[40];
-    char *pUuidStr = uuidstr;
-    size_t uuidstrlen = sizeof(uuidstr);
-    uuid_rc_t result = 
-        uuid_export(
-            reinterpret_cast<const uuid_t *>(data),
-            UUID_FMT_STR,
-            reinterpret_cast<void **>(&pUuidStr),
-            &uuidstrlen);
-    assert(result == UUID_RC_OK);
-    return string(uuidstr);
-
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
-
-#ifdef FENNEL_UUID_REAL
-    char uuidstr[40];
-    uuid_unparse(data, uuidstr);
-    return string(uuidstr);
-
-#else /* FENNEL_UUID_FAKE */
-
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // the library's version).  Those two methods produce different output
+    // for the same UUID.
     ostringstream ostr;
     
     for(int i = 0; i < sizeof(data); i++) {
@@ -162,38 +148,18 @@ string PseudoUuid::toString() const
             ostr << "-";
         }
         
-        ostr << hex << setw(2) << setfill('0') << (int) data[i];;
+        ostr << hex << setw(2) << setfill('0') << (int) (data[i] & 0xFF);
     }
     
     return ostr.str();
-#endif
-
-#endif
 }
 
 void PseudoUuid::parse(string uuid) throw (FennelExcn)
 {
-#ifdef FENNEL_UUID_REAL_NEW
-    uuid_rc_t rv = 
-        uuid_import(
-            reinterpret_cast<uuid_t *>(data),
-            UUID_FMT_STR,
-            uuid.c_str(),
-            uuid.length());
-    if (rv != UUID_RC_OK) {
-        throw FennelExcn("Invalid UUID format");
-    }
-#else /* FENNEL_UUID_REAL || FENNEL_UUID_FAKE */
-
-#ifdef FENNEL_UUID_REAL    
-    int rv = uuid_parse(uuid.c_str(), data);
-    if (rv == -1) {
-       throw FennelExcn("Invalid UUID format");
-    }    
-
-#else /* FENNEL_UUID_FAKE */
-
-    unsigned char id[UUID_LENGTH];
+    // NOTE: libuuid has either uuid_unparse or uuid_export (depending on 
+    // the library's version).  Those two methods produce different output
+    // for the same UUID
+    uint8_t id[UUID_LENGTH];
     if (uuid.length() != 36) {
         ostringstream errstr;
         errstr << "Invalid UUID format: length " << uuid.length() 
@@ -225,8 +191,6 @@ void PseudoUuid::parse(string uuid) throw (FennelExcn)
         id[i] = (uint8_t) value;
     }
     memcpy(data, id, sizeof(data));
-#endif
-#endif
 }
 
 FENNEL_END_CPPFILE("$Id$");
