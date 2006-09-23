@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -22,14 +22,28 @@
 
 <project name="VI" basedir="." default="test">
   <dirname property="VI.dir" file="${ant.file.VI}" />
-  
+
   <property name="open.dir" location="${VI.dir}/../../../.."/>
   <fail unless="open.dir" />
 
   <property environment="env" />
   <property file="run.properties" />
 
-  <target name="test">
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
     <ant dir="basic" target="test"/>
     <!-- ant dir="leaf" target="test"/ -->
     <!-- ant dir="rs" target="test"/ -->
@@ -38,22 +52,23 @@
     <!-- ant dir="xomerge" target="test"/ -->
     <!-- ant dir="xominus" target="test"/ -->
     <!-- ant dir="xoor" target="test"/ -->
-    <ant dir="populate" target="test"/> 
+    <ant dir="populate" target="test"/>
     <ant dir="tbs" target="test"/>
     <ant dir="flip" target="test"/>
     <ant dir="insert" target="test"/>
     <ant dir="recovery" target="test"/>
-  </target>  
+  </target>
 
   <target name="clean">
-    <delete dir="${bh.log.basedir}"/> 
-    <ant dir="basic" target="clean"/> 
+    <delete dir="${bh.log.basedir}"/>
+    <ant dir="basic" target="clean"/>
     <ant dir="populate" target="clean"/>
     <ant dir="tbs" target="clean"/>
     <ant dir="flip" target="clean"/>
-    <ant dir="insert" target="clean"/> 
+    <ant dir="insert" target="clean"/>
     <ant dir="recovery" target="clean"/>
-  </target>  
+    <delete file="run.properties"/>
+  </target>
 
 
 </project>

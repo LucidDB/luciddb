@@ -189,7 +189,7 @@
       </test>
 
       <test name="logPrec" requiresSuccess="download">
-        <junit-sql file="${open.dir}/luciddb/test/sql/company/logicalPrecedence.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/idx/logicalPrecedence.sql"/>
       </test>
 
       <cleanup-hook>

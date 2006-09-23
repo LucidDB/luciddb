@@ -8,14 +8,8 @@ known failures will not be run.
 Pre-requisites:
 ---------------
 
-If running for the first time and using flatfile or csvjdbc sources, 
-mount //raksha so that /mnt/raksha/engineering/testdata/csv_BENCH on 
-local machine exists.
+Data sources for these tests can be found at open/luciddb/test/data.
 
-(See http://redsquare.jot.com/WikiHome/HomeDirectories
-for instructions on how to do this)
-
-Otherwise, if raksha is not available, a local copy of raksha's csv files will be used.
 
 To run against all sources:
 ---------------------------
@@ -28,7 +22,7 @@ testfile=test-all.xml
 
 To run against a specific source:
 --------------------------
-(1) in run.properties*, set: 
+(1) in run.properties*, set:
 
 foreign.db=[flatfile | oracle | sqlserver | csvjdbc]
 
@@ -44,8 +38,6 @@ are required for flatfile and csvjdbc.)
 "gen-all-sql" will generate sql files for all sources.
 
 "clean" will clean all testlogs, csv-copy, and generated sql files
-
-"clean-csv" will "clean" plus delete snapshot of raksha's csv files
 
 
 Note *:

@@ -44,14 +44,9 @@
   <!-- directory where blackhawk output should go -->
   <property name="bh.log.basedir" value="${compositekey.dir}/testlog" />
 
-  <!-- directory where the csv files are copied from  -->
-  <property name="csvsource.dir" value="/mnt/raksha/engineering/testdata/csv_BENCH"/>
-
-  <!-- directory with local copies of csv files -->
-  <property name="csv.dir" value="${compositekey.dir}/csv" />
-
-  <!-- csv directory used for sql generation to avoid re-use of bcp files -->
+  <!-- directory of csv files -->
   <property name="csv.copy.dir" value="${compositekey.dir}/csv-copy" />
+  <property name="data.dir" value="${open.dir}/luciddb/test/data" />
 
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
@@ -108,13 +103,25 @@
   </target>
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir"
       property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile,csvjdbc" 
+        <foreach list="oracle,sqlserver,flatfile,csvjdbc"
           param="prop.source"
           target="gen-sql"/>
       </else>
@@ -122,41 +129,14 @@
   </target>
 
   <target name="copy-csv">
-    <available file="${csvsource.dir}" type="dir"
-      property="raksha.available"/>
-    <if>
-      <isset property="raksha.available"/>
-      <then>
-        <!-- sync raksha <-> csv.dir -->
-        <sync todir="${csv.dir}" 
-          overwrite="false"
-          failonerror="false"
-          verbose="true">
-          <fileset dir="${csvsource.dir}">
-            <include name="bench100.csv"/>
-          </fileset>
-        </sync>
-      </then>
-    </if>
-    <available file="${csv.dir}" type="dir"
-      property="csv.available"/>
-    <if>
-      <isset property="csv.available"/>
-      <then> 
-        <!-- sync csv.dir <-> csv-copy.dir -->
-        <sync todir="${csv.copy.dir}"
-          overwrite="true"
-          verbose="true"
-          failonerror="true">
-          <fileset dir="${csv.dir}">
-            <include name="bench100.csv"/>
-          </fileset>
-        </sync>
-      </then>
-      <else>
-        <echo message="!! NO CSV FILES !!"/>
-      </else>
-    </if>
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="bench100.csv"/>
+      </fileset>
+    </sync>
   </target>
 
   <target name="test" depends="gen-all-sql">
@@ -170,10 +150,8 @@
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
-  </target>
-
-  <target name="clean-csv" depends="clean">
-    <delete dir="${csv.dir}"/>
+    <delete file="run.properties"/>
+    <delete file="config.properties"/>
   </target>
 
 </project>

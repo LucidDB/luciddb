@@ -55,6 +55,18 @@
   <property name="test.classpath" refid="test.classpath"/>
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <uptodate property="gensql.uptodate">
       <srcfiles dir="${dml_merge.dir}" includes="*.tmpl"/>
       <mapper type="glob" from="*.tmpl" to="*"/>
@@ -75,8 +87,8 @@
   </target>
 
   <target name="test" depends="gen-all-sql">
-    <blackhawk.fork 
-      basedir="${dml_merge.dir}" 
+    <blackhawk.fork
+      basedir="${dml_merge.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
@@ -88,7 +100,7 @@
       <isset property="raksha.available"/>
       <then>
         <!-- sync raksha <-> csv.dir -->
-        <sync todir="${csv.dir}" 
+        <sync todir="${csv.dir}"
           overwrite="false"
           failonerror="false"
           verbose="true">
@@ -100,7 +112,7 @@
       property="csv.available"/>
     <if>
       <isset property="csv.available"/>
-      <then> 
+      <then>
         <!-- sync csv.dir <-> csv-copy.dir -->
         <sync todir="${csv.copy.dir}"
           overwrite="true"
@@ -135,12 +147,13 @@
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
     <delete>
-      <fileset dir="${dml_merge.dir}"> 
+      <fileset dir="${dml_merge.dir}">
         <include name="*.log"/>
         <include name="download.ref"/>
         <include name="download.sql"/>
       </fileset>
     </delete>
+    <delete file="run.properties"/>
   </target>
 
   <target name="clean-csv">

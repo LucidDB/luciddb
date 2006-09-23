@@ -37,7 +37,7 @@
 
   <taskdef name="foreach" classname="net.sf.antcontrib.logic.ForEach" classpath="${ant.classpath}"/>
   <taskdef name="if" classname="net.sf.antcontrib.logic.IfTask" classpath="${ant.classpath}"/>
-  
+
   <!-- directory where sql is generated -->
   <property name="gensql.dir" value="${shortreg.dir}/gen" />
 
@@ -97,13 +97,25 @@
   </target>
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir"
       property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
       <then/>
       <else>
-        <foreach list="oracle,sqlserver,flatfile" 
+        <foreach list="oracle,sqlserver,flatfile"
           param="prop.source"
           target="gen-sql"/>
       </else>
@@ -111,15 +123,17 @@
   </target>
 
   <target name="test" depends="gen-all-sql">
-    <blackhawk.fork 
-      basedir="${shortreg.dir}" 
+    <blackhawk.fork
+      basedir="${shortreg.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
   </target>
-  
+
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
+    <delete file="run.properties"/>
+    <delete file="config.properties"/>
   </target>
 
 </project>

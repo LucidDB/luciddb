@@ -47,7 +47,21 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="test">
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork
       basedir="${conv_numeric.dir}"
       testscript="${testfile}"
@@ -59,6 +73,7 @@
     <delete>
       <fileset dir="${conv_numeric.dir}" includes="*.log"/>
     </delete>
+    <delete file="run.properties"/>
   </target>
 
 </project>
