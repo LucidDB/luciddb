@@ -16,7 +16,7 @@
       checkpointInterval='@checkpointInterval@'
       serverRmiRegistryPort='-1'
       serverSingleListenerPort='-1'
-      calcVirtualMachine='CALCVM_AUTO'
+      calcVirtualMachine='@calcVirtualMachine@'
       javaCompilerClassName='org.eigenbase.javac.JaninoCompiler'
       >
       <FEMConfig:FarragoConfig.FennelConfig>

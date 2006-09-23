@@ -10,6 +10,13 @@
         </test-suite>
       </init-hook>
 
+      <!-- unresolved issues: FRG-213-->
+      <!-- above issue causes errors in createsource, and thus all other -->
+      <!-- tests -->
+      <test-metadata>
+        <knownFailure>true</knownFailure>
+      </test-metadata>
+
       <test name="createsource">
         <junit-sql file="${open.dir}/luciddb/test/sql/conv_types/conv_numeric/cr_source.sql"/>
       </test>

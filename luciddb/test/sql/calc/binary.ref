@@ -9,25 +9,25 @@ Error: DDL validation error near line 1, column 12: Reference to unknown table "
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into foo values (1, X'1bad3bad')
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(4)' to 'BINARY(6)' (state=,code=0)
 0: jdbc:luciddb:> insert into foo values (1, X'1bad3aad')
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(4)' to 'BINARY(6)' (state=,code=0)
 0: jdbc:luciddb:> insert into foo values (1, X'1bad3cad')
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(4)' to 'BINARY(6)' (state=,code=0)
 0: jdbc:luciddb:> insert into foo values (2, X'1bad2bad3bad')
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(6)' to 'BINARY(6)' (state=,code=0)
 0: jdbc:luciddb:> insert into foo values (3, X'1bad2bad3bad4bad')
 . . . . . . . . > ;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(8)' to 'BINARY(6)' (state=,code=0)
 0: jdbc:luciddb:> select * from foo
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3B  |
+| 1  | 1BAD3A  |
+| 1  | 1BAD3C  |
+| 2  | 1BAD2B  |
+| 3  | 1BAD2B  |
++----+---------+
 0: jdbc:luciddb:> insert into boo select y from foo
 . . . . . . . . > ;
 Error: At line 1, column 24: Cannot assign to target field 'X' of type CHAR(10) from source field 'Y' of type BINARY(6) (state=,code=0)
@@ -41,40 +41,52 @@ Error: At line 1, column 24: Cannot assign to target field 'X' of type CHAR(10) 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from foo where y > X'1bad3bad' or x > 99999999
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3C  |
++----+---------+
 0: jdbc:luciddb:> select * from foo where y >= X'1bad3bad' or x > 99999999
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3C  |
++----+---------+
 0: jdbc:luciddb:> select * from foo where y < X'1bad3bad' or x > 99999999
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3B  |
+| 1  | 1BAD3A  |
+| 2  | 1BAD2B  |
+| 3  | 1BAD2B  |
++----+---------+
 0: jdbc:luciddb:> select * from foo where y <= X'1bad3bad' or x > 99999999
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3B  |
+| 1  | 1BAD3A  |
+| 2  | 1BAD2B  |
+| 3  | 1BAD2B  |
++----+---------+
 0: jdbc:luciddb:> select * from foo where y <> X'1bad3bad' or x > 99999999
 . . . . . . . . > ;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
++----+---------+
+| X  |    Y    |
++----+---------+
+| 1  | 1BAD3B  |
+| 1  | 1BAD3A  |
+| 1  | 1BAD3C  |
+| 2  | 1BAD2B  |
+| 3  | 1BAD2B  |
++----+---------+
 0: jdbc:luciddb:> -- character/binary should be a type compatibility error
 0: jdbc:luciddb:> select * from foo where y = X'1bad3bad' or x > 99999999;
-+----+----+
-| X  | Y  |
-+----+----+
-+----+----+
+
 0: jdbc:luciddb:> DROP TABLE boo;
 0: jdbc:luciddb:> DROP TABLE foo;
 0: jdbc:luciddb:> 

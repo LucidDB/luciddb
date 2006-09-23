@@ -67,7 +67,7 @@ select * from doubletable order by 1;
 select * from floattable order by 1;
 select * from dectable order by 1;
 
-alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+--alter system set "calcVirtualMachine"='CALCVM_FENNEL';
 
 drop table dectable;
 drop table inttable;
@@ -110,7 +110,7 @@ select * from doubletable order by 1;
 select * from floattable order by 1;
 select * from dectable order by 1;
 
-alter system set "calcVirtualMachine"='CALCVM_AUTO';
+--alter system set "calcVirtualMachine"='CALCVM_AUTO';
 
 values cast (123.45 as decimal(8,4));
 values cast (1234.5678 as decimal(8,4));

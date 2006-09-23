@@ -20,6 +20,7 @@
 0: jdbc:luciddb:> insert into qrysrcnum values ( 7, 10.00 , 300.00, 50000.000000 )
 . . . . . . . . > ;
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-199
 0: jdbc:luciddb:> -- FRG-49, FRG-50
 0: jdbc:luciddb:> -- SELECT  n1, n2, n3, n4, AVG(n1)   
 0: jdbc:luciddb:> SELECT  n1, n2, n3, n4
@@ -28,6 +29,6 @@
 . . . . . . . . > -- HAVING (n4 - n3) < (SELECT AVG(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > HAVING (n4 - n3) < (SELECT SUM(n1) FROM qrysrcnum qsn)  
 . . . . . . . . > ;
-Error: From line 4, column 9 to line 4, column 54: Cannot apply '<' to arguments of type '<DECIMAL(17, 7)> < <RECORDTYPE(DECIMAL(2, 0) EXPR$0)>'. Supported form(s): '<COMPARABLE_TYPE> < <COMPARABLE_TYPE>' (state=,code=0)
+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

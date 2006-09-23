@@ -15,10 +15,9 @@
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=0 Code=22012 (state=,code=0)
+Error: Could not calculate result column 1 of Read.LOCALDB.S.MOCK_FENNEL_TABLE for input:
+[0]
+Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;
@@ -46,10 +45,9 @@ Messages:
 . . . . . . . . > select * from s.mock_fennel_table
 . . . . . . . . > union all
 . . . . . . . . > select 1/id from s.mock_fennel_table;
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=0 Code=22012 (state=,code=0)
+Error: Could not calculate result column 1 of Read.LOCALDB.S.MOCK_FENNEL_TABLE for input:
+[0]
+Messages: java.lang.ArithmeticException: / by zero (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- verify that table contents were rolled back
 0: jdbc:luciddb:> select count(*) from s.t;

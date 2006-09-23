@@ -11,7 +11,9 @@
       </init-hook>
 
       <test name="decimals">
+        <!-- unresolved issue: FRG-54 -->
         <!-- decimal precision differences on different VMs -->
+        <knownFailure>true</knownFailure>
         <junit-sql file="${open.dir}/luciddb/test/sql/numerics/decimals.sql"/>
       </test>
 

@@ -453,6 +453,7 @@ ${farrago.test.jvmargs}
       <replacefilter token="@fennel.disabled@" value="${fennel.disabled}"/>
       <replacefilter token="@resourceDir@" value="$${FARRAGO_HOME}/catalog/fennel"/>
       <replacefilter token="@jniHandleTraceFile@" value="${trace.fennel.handles}"/>
+      <replacefilter token="@calcVirtualMachine@" value="CALCVM_JAVA"/>
     </replace>
     <farrago.mdrFork target="forked_importConfig"/>
   </target>

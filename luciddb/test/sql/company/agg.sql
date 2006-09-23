@@ -13,8 +13,8 @@ select floor(sum(PRICE)) from SALES;
 select count(PRICE) from SALES;
 select count(*) from SALES;
 
--- TODO:
-select floor(avg(PRICE)) from SALES;
+-- changed because rounding causes average to become 5.0
+select floor(avg(cast(PRICE as decimal(10,4)))) from SALES;
 
 select floor(min(PRICE)), floor(max(PRICE)) from SALES;
 

@@ -35,6 +35,6 @@ select * from foo where y <= X'1bad3bad' or x > 99999999
 select * from foo where y <> X'1bad3bad' or x > 99999999
 ;
 -- character/binary should be a type compatibility error
-select * from foo where y = X'1bad3bad' or x > 99999999;
+select * from foo where y = '1bad3bad' or x > 99999999;
 DROP TABLE boo;
 DROP TABLE foo;

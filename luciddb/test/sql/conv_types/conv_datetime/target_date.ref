@@ -91,10 +91,6 @@ Error: From line 2, column 9 to line 2, column 15: Cannot assign to target field
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select cast (cast (colchar as timestamp) as date) from datatype_source where colname = 'DATE'
 . . . . . . . . > ;
-Error: could not calculate results for the following row:
-[ 'DATE', '1400-3-11 4:5:11.' ]
-Messages:
-[0]:PC=7 Code=22007 (state=,code=0)
 0: jdbc:luciddb:> insert into target_date
 . . . . . . . . >  select cast (cast (colvchar as timestamp) as date) from datatype_source where colname = 'DATE'
 . . . . . . . . > ;
@@ -114,8 +110,10 @@ Messages:
 +-------------+
 |   COLDATE   |
 +-------------+
+| 1400-03-11  |
 | 1760-03-11  |
 | 1775-03-11  |
+| 1888-10-03  |
 | 1917-11-07  |
 | 1963-04-27  |
 | 1963-04-27  |

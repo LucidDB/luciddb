@@ -21,11 +21,9 @@ Error: At line 2, column 8: Cannot assign to target field 'C_REAL' of type REAL 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT * FROM @name_prefix@_ft_schema.blobtypes_nonexplicit;
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(0)' to 'BINARY(10)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> INSERT INTO blobtypes
 . . . . . . . . > SELECT * FROM @name_prefix@_is_schema."blob";
-Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast from 'VARBINARY(10)' to 'BINARY(10)' (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from types;
 +---------+
@@ -37,6 +35,6 @@ Error: java.lang.UnsupportedOperationException: class java.lang.String: Cast fro
 +---------+
 | EXPR$0  |
 +---------+
-| 11      |
+| 33      |
 +---------+
 0: jdbc:luciddb:> !quit
