@@ -856,9 +856,10 @@ public class FarragoDatabase
             }
         } while (executableStmt == null);
 
-        // REVIEW mb: what if stmt is not cached?
         if (cacheEntry != null) {
             owner.addAllocation(cacheEntry);
+        } else {
+            owner.addAllocation(executableStmt);
         }
         return executableStmt;
     }

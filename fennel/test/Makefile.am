@@ -41,7 +41,8 @@ VersionedSegmentTest \
 ExecStreamGovernorTest \
 BTreeTxnTest \
 BTreeTest \
-BacktraceTest
+BacktraceTest \
+PseudoUuidTest
 
 TESTS = $(noinst_PROGRAMS)
 $(noinst_PROGRAMS): $(lib_LTLIBRARIES)
@@ -83,6 +84,8 @@ DatabaseTest_SOURCES=DatabaseTest.cpp
 BacktraceTest_SOURCES=BacktraceTest.cpp
 
 ExecStreamGovernorTest_SOURCES=ExecStreamGovernorTest.cpp
+
+PseudoUuidTest_SOURCES=PseudoUuidTest.cpp
 
 if !STATIC_TEST_LIBRARY
 libfenneltestdyn_la_LIBADD=libfenneltest.la

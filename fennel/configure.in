@@ -40,7 +40,7 @@ fi
 dnl Checks for header files.
 AC_HEADER_DIRENT
 AC_HEADER_STDC
-AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h aio.h libaio.h sched.h uuid/uuid.h)
+AC_CHECK_HEADERS(fcntl.h limits.h malloc.h unistd.h aio.h libaio.h sched.h uuid/uuid.h uuid.h)
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -53,12 +53,28 @@ dnl it is not always available, so override AC_CHECK_LIB to disable
 dnl automatic -l append
 AC_FUNC_MMAP
 AC_CHECK_FUNCS(strerror)
-AC_CHECK_LIB(uuid,uuid_generate)
 AC_CHECK_LIB(aio,io_queue_init,[ found_libaio=true ])
+AC_CHECK_LIB(uuid,uuid_generate,[ found_old_libuuid=true ])
+AC_CHECK_LIB(uuid,uuid_make,[ found_new_libuuid=true ])
 
 if test "$found_libaio" = "true"
 then
     AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])
+    LIBS="$LIBS -luuid"
+fi
+
+dnl Starting with v0.9.4, libuuid changed APIs
+if test "$found_old_libuuid" = "true"
+then
+    AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
+    LIBS="-luuid $LIBS"
+fi
+
+if test "$found_new_libuuid" = "true"
+then
+    AC_DEFINE([HAVE_LIBUUID],[1],[Define to 1 if you have the `uuid' library (-luuid).])
+    AC_DEFINE([HAVE_LIBUUID_NEW],[1],[Define to 1 if you have `uuid' library 0.9.4 or later (-luuid).])
+    LIBS="-luuid $LIBS"
 fi
 
 dnl Check for Boost location
@@ -174,6 +190,8 @@ AM_CONDITIONAL(STATIC_TEST_LIBRARY,\
 test "$target_os" = "cygwin" -o "$target_os" = "mingw32")
 
 AM_CONDITIONAL(HAVE_LIBAIO,test "$found_libaio" = "true")
+AM_CONDITIONAL(HAVE_LIBUUID,test "$found_old_libuuid" = "true" || "$found_new_libuuid" = "true")
+AM_CONDITIONAL(HAVE_LIBUUID_NEW,test "$found_new_libuuid" = "true")
 
 dnl TODO:  combine common mingw/cygwin stuff under host rather than target.
 
