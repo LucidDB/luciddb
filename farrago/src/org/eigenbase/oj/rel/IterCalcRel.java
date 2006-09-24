@@ -516,8 +516,10 @@ public class IterCalcRel
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
                 projTranslator.translateAssignment(fields[i], lhs, rhs);
 
-                int complexity = countParseTreeNodes(projMethodBody);
-                if (complexity < 20) {
+                boolean[] containsContinue = new boolean[] {false};
+                int complexity =
+                    countParseTreeNodes(projMethodBody, containsContinue);
+                if (complexity < 20 || containsContinue[0]) {
                     // No method needed; just append.
                     condBody.addAll(projMethodBody);
                     continue;
@@ -591,14 +593,21 @@ public class IterCalcRel
         return newTupleIterExp;
     }
 
-    private static int countParseTreeNodes(ParseTree parseTree)
+    private static int countParseTreeNodes(
+        ParseTree parseTree, boolean containsContinue[])
     {
         int n = 1;
+        if (parseTree instanceof ContinueStatement) {
+            // FIXME: jhyde, 2006/9/26: If an expression contains a 'continue'
+            // statement, it can't be split up.
+            containsContinue[0] = true;
+            return 1;
+        }
         if (parseTree instanceof NonLeaf) {
             Object [] contents = ((NonLeaf) parseTree).getContents();
             for (Object obj : contents) {
                 if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
+                    n += countParseTreeNodes((ParseTree) obj, containsContinue);
                 } else {
                     n += 1;
                 }
@@ -608,7 +617,7 @@ public class IterCalcRel
             while (e.hasMoreElements()) {
                 Object obj = (Object) e.nextElement();
                 if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
+                    n += countParseTreeNodes((ParseTree) obj, containsContinue);
                 } else {
                     n += 1;
                 }
