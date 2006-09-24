@@ -485,6 +485,27 @@ public abstract class SqlTypeUtil
     }
 
     /**
+     * Returns the maximum value of an integral type, as a long value
+     */
+    public static long maxValue(RelDataType type)
+    {
+        assert (SqlTypeUtil.isIntType(type));
+        switch (type.getSqlTypeName().getOrdinal()) {
+        case SqlTypeName.Tinyint_ordinal:
+            return Byte.MAX_VALUE;
+        case SqlTypeName.Smallint_ordinal:
+            return Short.MAX_VALUE;
+        case SqlTypeName.Integer_ordinal:
+            return Integer.MAX_VALUE;
+        case SqlTypeName.Bigint_ordinal:
+            return Long.MAX_VALUE;
+        default:
+            Util.permAssert(false, "invalid arg for SqlTypeUtil.maxValue");
+        }
+        return 0;
+    }
+
+    /**
      * @return true if type is numeric with approximate precision
      */
     public static boolean isApproximateNumeric(RelDataType type)

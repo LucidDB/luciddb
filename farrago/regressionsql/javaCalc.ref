@@ -1,0 +1,119 @@
+0: jdbc:farrago:> -- $Id$
+0: jdbc:farrago:> -- Tests to cover Java calc code paths
+0: jdbc:farrago:> -- (But preserve the existing calcVirtualMachine settings since that 
+0: jdbc:farrago:> -- setting persists from test to test)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_JAVA';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create schema s;
+0: jdbc:farrago:> set schema 's';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- DATA SOURCES
+0: jdbc:farrago:> -- (use tables for nullable values and to avoid constant optimization)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- tinyint data sources
+0: jdbc:farrago:> create table tinyint_nonnullable(
+. . . . . . . . >     val tinyint not null primary key);
+0: jdbc:farrago:> insert into tinyint_nonnullable values (-128), (127);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table tinyint_nullable_src (
+. . . . . . . . >     i tinyint generated always as identity primary key,
+. . . . . . . . >     val tinyint);
+0: jdbc:farrago:> insert into tinyint_nullable_src (val) values (-128), (127);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view tinyint_nullable as
+. . . . . . . . > select val from tinyint_nullable_src;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- smallint data sources
+0: jdbc:farrago:> create table smallint_nonnullable(
+. . . . . . . . >     val smallint not null primary key);
+0: jdbc:farrago:> insert into smallint_nonnullable 
+. . . . . . . . >     values (-128), (127), (-32768), (32767);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table smallint_nullable_src (
+. . . . . . . . >     i smallint generated always as identity primary key,
+. . . . . . . . >     val smallint);
+0: jdbc:farrago:> insert into smallint_nullable_src (val) 
+. . . . . . . . >     values (-128), (127), (-32768), (32767);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view smallint_nullable as
+. . . . . . . . > select val from smallint_nullable_src;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- float data sources
+0: jdbc:farrago:> create table float_nonnullable(
+. . . . . . . . >     val float not null primary key);
+0: jdbc:farrago:> insert into float_nonnullable 
+. . . . . . . . >     values (-9.9), (9.9);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table float_nullable_src (
+. . . . . . . . >     i int generated always as identity primary key,
+. . . . . . . . >     val float);
+0: jdbc:farrago:> insert into float_nullable_src (val) 
+. . . . . . . . >     values (-19.9), (19.9);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create view float_nullable as
+. . . . . . . . > select val from float_nullable_src;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TEST CASES
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test tinyint
+0: jdbc:farrago:> create table a (
+. . . . . . . . >     i tinyint generated always as identity primary key,
+. . . . . . . . >     j tinyint not null,
+. . . . . . . . >     k tinyint);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into a (j) select * from tinyint_nonnullable;
+0: jdbc:farrago:> insert into a (j) select * from tinyint_nullable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into a (j, k) select 0, val from tinyint_nonnullable;
+0: jdbc:farrago:> insert into a (j, k) select 0, val from tinyint_nullable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test overflow
+0: jdbc:farrago:> insert into a (j) select * from smallint_nonnullable 
+. . . . . . . . > where val > 127;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:farrago:> -- TODO: causes an infinite loop in MergeProjectRule
+0: jdbc:farrago:> --insert into a (j) select * from smallint_nullable 
+0: jdbc:farrago:> --where val > 127;
+0: jdbc:farrago:> insert into a (j, k) select 0, val from smallint_nonnullable 
+. . . . . . . . > where val > 127;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:farrago:> insert into a (j, k) select 0, val from smallint_nullable 
+. . . . . . . . > where val > 127;
+Error: Overflow during calculation or cast. (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test rounding
+0: jdbc:farrago:> insert into a (j) select * from float_nonnullable;
+0: jdbc:farrago:> insert into a (j) select * from float_nullable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into a (j, k) select 0, val from float_nonnullable;
+0: jdbc:farrago:> insert into a (j, k) select 0, val from float_nullable;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- TODO: test rounding which causes overflow (especially int)
+0: jdbc:farrago:> -- the (-) operation used in rounding algorithm can also cause overflow
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from a;
++-----+-------+-------+
+|  I  |   J   |   K   |
++-----+-------+-------+
+| 0   | -128  |       |
+| 1   | 127   |       |
+| 2   | -128  |       |
+| 3   | 127   |       |
+| 4   | 0     | -128  |
+| 5   | 0     | 127   |
+| 6   | 0     | -128  |
+| 7   | 0     | 127   |
+| 11  | -10   |       |
+| 12  | 10    |       |
+| 13  | -20   |       |
+| 14  | 20    |       |
+| 15  | 0     | -10   |
+| 16  | 0     | 10    |
+| 17  | 0     | -20   |
+| 18  | 0     | 20    |
++-----+-------+-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_AUTO';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> !quit
