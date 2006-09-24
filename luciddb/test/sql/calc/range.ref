@@ -11,12 +11,12 @@
 . . . . . . . . > ;
 0: jdbc:luciddb:> insert into numbers values (130, 66000, 12345.123)
 . . . . . . . . > ;
-Error: Could not calculate result column C for the following row:
+Error: Could not calculate result column A for the following row:
 [130, 66000, 12345.123]
 Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into numbers values (-130, -66000, -12345.123)
 . . . . . . . . > ;
-Error: Could not calculate result column C for the following row:
+Error: Could not calculate result column A for the following row:
 [-130, -66000, -12345.123]
 Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from numbers order by 1

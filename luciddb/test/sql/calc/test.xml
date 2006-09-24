@@ -90,10 +90,6 @@
 
       <test name="explicitConversion" requiresSuccess="null"
         requiresRun="implicitConversion">
-        <!-- unresolved issues: FRG-54/FRG-171/FRG-204 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/explicitConversion.sql"/>
       </test>
 
@@ -125,10 +121,6 @@
       </test>
 
       <test name="binary" requiresSuccess="null">
-        <!-- unresolved issues: FRG-147 -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/binary.sql"/>
       </test>
 
@@ -155,7 +147,7 @@
       </test>
 
       <test name="funcMathCover" requiresSuccess="null">
-        <!-- unresolved issue: FRG-213 -->
+        <!-- unresolved issue: FRG-214 -->
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
@@ -220,11 +212,6 @@
 
       <test name="bugs" requiresSuccess="null"
         requiresRun="explicitConversion">
-        <!-- unresolved issues: FRG-54/FRG-171/FRG-204 -->
-        <!-- ALL not supported -->
-        <test-metadata>
-          <knownFailure>true</knownFailure>
-        </test-metadata>
         <junit-sql file="${open.dir}/luciddb/test/sql/calc/bugs.sql"/>
       </test>
 
