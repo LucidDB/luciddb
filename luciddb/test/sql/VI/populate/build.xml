@@ -104,6 +104,18 @@
 
   <!-- generates sql files for all configurations -->
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir"
       property="sql.generated"/>
     <if>
@@ -162,6 +174,8 @@
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
+    <delete file="run.properties"/>
+    <delete file="config.properties"/>
   </target>
 
   <target name="clean-csv">

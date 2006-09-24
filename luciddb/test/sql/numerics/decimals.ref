@@ -168,7 +168,7 @@ Error: DDL validation error near line 1, column 26: Precision specification not 
 | 16  |
 +-----+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> alter system set "calcVirtualMachine"='CALCVM_FENNEL';
+0: jdbc:luciddb:> --alter system set "calcVirtualMachine"='CALCVM_FENNEL';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> drop table dectable;
 0: jdbc:luciddb:> drop table inttable;
@@ -272,7 +272,7 @@ Error: DDL validation error near line 1, column 26: Precision specification not 
 | 16  |
 +-----+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> alter system set "calcVirtualMachine"='CALCVM_AUTO';
+0: jdbc:luciddb:> --alter system set "calcVirtualMachine"='CALCVM_AUTO';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> values cast (123.45 as decimal(8,4));
 +-----------+
@@ -379,10 +379,9 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> insert into dTable2 values(cast (' -0012345678.9099 ' as decimal(10,2)));
 0: jdbc:luciddb:> insert into dTable2 values(cast (' -0012345678.9999 ' as decimal(10,2)));
 0: jdbc:luciddb:> insert into dTable2 values(cast (' -1012345678.9999 ' as decimal(10,2)));
-Error: could not calculate results for the following row:
-[ 0 ]
-Messages:
-[0]:PC=0 Code=22003 (state=,code=0)
+Error: Could not calculate result column 1 for the following row:
+[0]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select * from dTable2 order by 1;
 +---------------+
@@ -446,7 +445,7 @@ Messages:
 +---------------------+
 | 0.6931471805599453  |
 | 0.6931471805599453  |
-| 0.8329091229351039  |
+| 0.8329091229351041  |
 | 0.9162907318741551  |
 | 2.995732273553991   |
 | 3.1354942159291497  |

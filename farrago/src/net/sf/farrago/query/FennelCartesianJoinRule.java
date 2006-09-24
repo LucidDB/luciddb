@@ -94,11 +94,12 @@ public class FennelCartesianJoinRule
         // the LHS, swapping the join operands if it does make sense to buffer
         // the LHS
         boolean swapped = false;
-        FennelBufferRel bufRel = bufferRight(leftRel, rightRel);
+        FennelBufferRel bufRel =
+            bufferRight(leftRel, rightRel, joinRel.getTraits());
         if (bufRel != null) {
             rightRel = bufRel;
         } else {
-            bufRel = bufferRight(rightRel, leftRel);
+            bufRel = bufferRight(rightRel, leftRel, joinRel.getTraits());
             if (bufRel != null) {
                 swapped = true;
                 leftRel = rightRel;
@@ -170,14 +171,23 @@ public class FennelCartesianJoinRule
      * 
      * @param left left hand input into the cartesian join
      * @param right right hand input into the cartesian join
+     * @param traits traits of the original join
      * 
      * @return created FennelBufferRel if it makes sense to buffer the RHS
      */
-    private FennelBufferRel bufferRight(RelNode left, RelNode right)
+    private FennelBufferRel bufferRight(
+        RelNode left,
+        RelNode right,
+        RelTraitSet traits)
     {
+        RelNode fennelInput = 
+            mergeTraitsAndConvert(
+                traits,
+                FennelRel.FENNEL_EXEC_CONVENTION,
+                right);
         FennelBufferRel bufRel =
-            new FennelBufferRel(right.getCluster(), right, false, true);
-        
+            new FennelBufferRel(right.getCluster(), fennelInput, false, true);
+
         // if we don't have a rowcount for the LHS, then just go ahead and
         // buffer
         Double nRowsLeft = RelMetadataQuery.getRowCount(left);

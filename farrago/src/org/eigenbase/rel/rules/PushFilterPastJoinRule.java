@@ -139,10 +139,8 @@ public class PushFilterPastJoinRule
          * generating side.
          */
         boolean filterPushed = false;
-        int nFieldsLeft = joinRel.getLeft().getRowType().getFieldCount();
         if (RelOptUtil.classifyFilters(
                 joinRel,
-                nFieldsLeft,
                 aboveFilters,
                 (joinRel.getJoinType() == JoinRelType.INNER),
                 !joinRel.getJoinType().generatesNullsOnLeft(),
@@ -160,7 +158,6 @@ public class PushFilterPastJoinRule
          */
         if (RelOptUtil.classifyFilters(
                 joinRel,
-                nFieldsLeft,
                 joinFilters,
                 false,
                 !joinRel.getJoinType().generatesNullsOnRight(),

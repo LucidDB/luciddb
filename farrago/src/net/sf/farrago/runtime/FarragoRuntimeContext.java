@@ -306,7 +306,9 @@ public class FarragoRuntimeContext
         // NOTE jvs 25-Sept-2004:  per SQL standard, the same time
         // is used for all references within the same statement.
         if (currentTime == 0) {
+            // internally, we use a psuedo local time
             currentTime = System.currentTimeMillis();
+            currentTime += TimeZone.getDefault().getOffset(currentTime);
         }
         return currentTime;
     }

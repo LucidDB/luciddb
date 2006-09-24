@@ -29,6 +29,7 @@ jmethodID ProxyCmdSavepoint::meth_getResultHandle = 0;
 jmethodID ProxyCmdSetParam::meth_getParam = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isEstimate = 0;
 jmethodID ProxyCmdVerifyIndex::meth_isIncludeTuples = 0;
+jmethodID ProxyColumnName::meth_getFlatFile = 0;
 jmethodID ProxyColumnName::meth_getName = 0;
 jmethodID ProxyCorrelation::meth_getId = 0;
 jmethodID ProxyCorrelation::meth_getOffset = 0;
@@ -58,6 +59,7 @@ jmethodID ProxyFlatFileTupleStreamDef::meth_getSubstituteCharacter = 0;
 jmethodID ProxyFlatFileTupleStreamDef::meth_isTrim = 0;
 jmethodID ProxyFlatFileTupleStreamDef::meth_isMapped = 0;
 jmethodID ProxyFlatFileTupleStreamDef::meth_isLenient = 0;
+jmethodID ProxyFlatFileTupleStreamDef::meth_getColumn = 0;
 jmethodID ProxyGenericStreamDef::meth_getType = 0;
 jmethodID ProxyGenericStreamDef::meth_getContent = 0;
 jmethodID ProxyHandle::meth_getLongHandle = 0;
@@ -262,6 +264,7 @@ visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(ne
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemColumnName");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyColumnName>));
+ProxyColumnName::meth_getFlatFile = pEnv->GetMethodID(jClass,"getFlatFile","()Lnet/sf/farrago/fem/fennel/FemFlatFileTupleStreamDef;");
 ProxyColumnName::meth_getName = pEnv->GetMethodID(jClass,"getName","()Ljava/lang/String;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemCorrelation");
@@ -318,6 +321,7 @@ ProxyFlatFileTupleStreamDef::meth_getSubstituteCharacter = pEnv->GetMethodID(jCl
 ProxyFlatFileTupleStreamDef::meth_isTrim = pEnv->GetMethodID(jClass,"isTrim","()Z");
 ProxyFlatFileTupleStreamDef::meth_isMapped = pEnv->GetMethodID(jClass,"isMapped","()Z");
 ProxyFlatFileTupleStreamDef::meth_isLenient = pEnv->GetMethodID(jClass,"isLenient","()Z");
+ProxyFlatFileTupleStreamDef::meth_getColumn = pEnv->GetMethodID(jClass,"getColumn","()Ljava/util/List;");
 
 jClass = pEnv->FindClass("net/sf/farrago/fem/fennel/FemGenericStreamDef");
 visitTbl.addMethod(jClass,JniProxyVisitTable<FemVisitor>::SharedVisitorMethod(new JniProxyVisitTable<FemVisitor>::VisitorMethodImpl<ProxyGenericStreamDef>));
@@ -771,6 +775,15 @@ bool ProxyCmdVerifyIndex::isIncludeTuples()
 return pEnv->CallBooleanMethod(jObject,meth_isIncludeTuples);
 }
 
+SharedProxyFlatFileTupleStreamDef ProxyColumnName::getFlatFile()
+{
+SharedProxyFlatFileTupleStreamDef p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getFlatFile);
+if (!p->jObject) p.reset();
+return p;
+}
+
 std::string ProxyColumnName::getName()
 {
 return constructString(pEnv->CallObjectMethod(jObject,meth_getName));
@@ -949,6 +962,16 @@ return pEnv->CallBooleanMethod(jObject,meth_isMapped);
 bool ProxyFlatFileTupleStreamDef::isLenient()
 {
 return pEnv->CallBooleanMethod(jObject,meth_isLenient);
+}
+
+SharedProxyColumnName ProxyFlatFileTupleStreamDef::getColumn()
+{
+SharedProxyColumnName p;
+p->pEnv = pEnv;
+p->jObject = pEnv->CallObjectMethod(jObject,meth_getColumn);
+p.jIter = JniUtil::getIter(p->pEnv,p->jObject);
+++p;
+return p;
 }
 
 std::string ProxyGenericStreamDef::getType()

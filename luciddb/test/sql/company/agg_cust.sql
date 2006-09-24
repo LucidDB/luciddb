@@ -7,13 +7,13 @@ set schema 's';
 
 -- plain aggregates
 
--- TODO:
 -- FNL-42
 select floor(sum(PRICE)) from SALES;
 
 select count(PRICE) from SALES;
 
-select floor(avg(PRICE)) from SALES;
+-- changed because rounding causes average to become 5.0
+select floor(avg(cast(PRICE as decimal(10,4)))) from SALES;
 
 --select floor(to_number(min(PRICE))), floor(to_number(max(PRICE))) from SALES;
 

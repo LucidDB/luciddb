@@ -609,20 +609,18 @@ public class RelMdUtil
      * Computes the population size for a set of keys returned from a join
      * 
      * @param joinRel the join rel
-     * @param left left join input
-     * @param right right join key
      * @param groupKey keys to compute the population for
      * 
      * @return computed population size
      */
     public static Double getJoinPopulationSize(
         RelNode joinRel,
-        RelNode left,
-        RelNode right,
         BitSet groupKey)
     {
         BitSet leftMask = new BitSet();
         BitSet rightMask = new BitSet();
+        RelNode left = joinRel.getInputs()[0];
+        RelNode right = joinRel.getInputs()[1];
 
         // separate the mask into masks for the left and right
         RelMdUtil.setLeftRightBitmaps(
@@ -651,8 +649,6 @@ public class RelMdUtil
      * a join
      * 
      * @param joinRel RelNode representing the join
-     * @param left left join child
-     * @param right right join child
      * @param joinType type of join
      * @param groupKey keys that the distinct row count will be computed for
      * @param predicate join predicate
@@ -661,8 +657,6 @@ public class RelMdUtil
      */
     public static Double getJoinDistinctRowCount(
         RelNode joinRel,
-        RelNode left,
-        RelNode right,
         JoinRelType joinType,
         BitSet groupKey,
         RexNode predicate)
@@ -670,6 +664,8 @@ public class RelMdUtil
         Double distRowCount;
         BitSet leftMask = new BitSet();
         BitSet rightMask = new BitSet();
+        RelNode left = joinRel.getInputs()[0];
+        RelNode right = joinRel.getInputs()[1];
 
         RelMdUtil.setLeftRightBitmaps(
             groupKey,
@@ -689,7 +685,6 @@ public class RelMdUtil
 
             RelOptUtil.classifyFilters(
                 joinRel,
-                left.getRowType().getFieldCount(),
                 predList,
                 (joinType == JoinRelType.INNER),
                 !joinType.generatesNullsOnLeft(),

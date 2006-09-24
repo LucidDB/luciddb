@@ -8,6 +8,7 @@
             <test-suite-modifier value="shortreg-sanity"/>
           </test-suite-call>
         </test-suite>
+        <ant dir="${open.dir}/luciddb/test/sql/shortreg" target="copy-csv"/>
       </init-hook>
 
       <test name="creschema">

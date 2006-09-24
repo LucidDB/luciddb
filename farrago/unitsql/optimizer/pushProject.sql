@@ -9,7 +9,10 @@ set schema 'pp';
 -- force usage of Fennel calculator
 alter system set "calcVirtualMachine" = 'CALCVM_FENNEL';
 
--- test a few queries on FTRS first, but the bulk of the tests are against LCS
+--------------------------------------------------------------------------
+-- test a few queries on FTRS first, but the bulk of the tests are against
+-- LCS
+--------------------------------------------------------------------------
 create view vemps(eno, name, deptno, doubleage)
     as select empno, upper(name), deptno, age * 2 from sales.emps;
 create view vdepts(name, deptno)
@@ -33,10 +36,22 @@ select lower(ve.name), ve.doubleage/2
     from vemps ve, vdepts vd
     where ve.deptno = vd.deptno order by 1;
 
+--------------------------------------------------------------------
+-- run a query through Volcano to exercise the rules more thoroughly
+--------------------------------------------------------------------
+alter session implementation add jar sys_boot.sys_boot.volcano_plugin;
+!set outputformat csv
+explain plan for
+    select lower(ve.name), ve.doubleage/2
+        from vemps ve, vdepts vd
+        where ve.deptno = vd.deptno;
+
 drop view vemps;
 drop view vdepts;
 
+-----------
 -- now, LCS
+-----------
 alter session implementation set jar sys_boot.sys_boot.luciddb_plugin;
 
 create table lcsemps(
@@ -51,8 +66,12 @@ create view vemps(eno, name, deptno, doubleage)
     as select empno, upper(name), deptno, age * 2 from lcsemps;
 create view vdepts(name, deptno)
     as select upper(name), deptno from lcsdepts;
+create view vuemps(eno, name, deptno, age) as
+    select * from vemps union select empno, name, deptno, age from sales.emps;
+create view vunion(id, name, number) as
+    select 'emps', name, eno from vemps union
+    select 'depts', name, deptno from vdepts;
 
-!set outputformat csv
 explain plan for
     select ve.name, ve.doubleage, vd.name
         from vemps ve, vdepts vd
@@ -61,6 +80,10 @@ explain plan for
     select lower(ve.name), ve.doubleage/2
         from vemps ve, vdepts vd
         where ve.deptno = vd.deptno;
+explain plan for
+    select name from vuemps where eno = 110;
+explain plan for select id, lcs_rid(name) from vunion;
+explain plan for select id, lcs_rid(name) from vunion where number in (20, 120);
         
 !set outputformat table
 select ve.name, ve.doubleage, vd.name
@@ -69,6 +92,9 @@ select ve.name, ve.doubleage, vd.name
 select lower(ve.name), ve.doubleage
     from vemps ve, vdepts vd
     where ve.deptno = vd.deptno order by 1;
+select name from vuemps where eno = 110 order by 1;
+select id, lcs_rid(name) from vunion order by 1, 2;
+select id, lcs_rid(name) from vunion where number in (20, 120) order by 1;
 
 create table t1(t1a int, t1b int, t1c int);
 create table t2(t2a int, t2b int, t2c int, t2d int);

@@ -120,8 +120,6 @@ public class RelMdDistinctRowCount
     {
         return RelMdUtil.getJoinDistinctRowCount(
             rel,
-            rel.getLeft(),
-            rel.getRight(),
             rel.getJoinType(),
             groupKey,
             predicate);

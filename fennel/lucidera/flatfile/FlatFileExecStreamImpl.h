@@ -55,6 +55,10 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     // parameters
     bool header;
     bool logging;
+    bool lenient;
+    bool trim;
+    bool mapped;
+    std::vector<std::string> columnNames;
 
     FlatFileRowDescriptor rowDesc;
     SharedFlatFileBuffer pBuffer;
@@ -97,6 +101,13 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
     void releaseResources();
 
     /**
+     * Finds an output column by its name and returns the column's index.
+     * Performs a case insensitive comparison and uses the first matching
+     * column. If no column could not be found, this function returns -1.
+     */
+    int findField(const std::string &name);
+
+    /**
      * Translates a TupleDescriptor into a FlatFileRowDescriptor. The major
      * attributes required for parsing a column are whether it is a character
      * column (which can be quoted) and the maximum length of the column.
@@ -122,7 +133,7 @@ class FlatFileExecStreamImpl : public FlatFileExecStream
      * @param tuple tuple data
      */
     void handleTuple(
-        const FlatFileRowParseResult &result,
+        FlatFileRowParseResult &result,
         TupleData &tuple);
 
     /**

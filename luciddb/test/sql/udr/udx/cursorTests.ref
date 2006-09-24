@@ -54,6 +54,7 @@
 | cachePageSize                   | 4        | INTEGER      |
 | cachePagesInit                  | 4        | INTEGER      |
 | cachePagesMax                   | 4        | INTEGER      |
+| cacheReservePercentage          | 4        | INTEGER      |
 | databaseIncrementSize           | 4        | INTEGER      |
 | databaseInitSize                | 4        | INTEGER      |
 | databaseMaxSize                 | 4        | INTEGER      |
@@ -61,6 +62,7 @@
 | databaseShadowLogInitSize       | 4        | INTEGER      |
 | databaseTxnLogIncrementSize     | 4        | INTEGER      |
 | databaseTxnLogInitSize          | 4        | INTEGER      |
+| expectedConcurrentStatements    | 4        | INTEGER      |
 | groupCommitInterval             | 4        | INTEGER      |
 | jniHandleTraceFile              | 12       | VARCHAR      |
 | mofClassName                    | 12       | VARCHAR      |
@@ -130,7 +132,7 @@
 | cachePageSize                   | 32768                               |
 | cachePagesInit                  | 5000                                |
 | cachePagesMax                   | 5000                                |
-| calcVirtualMachine              | CALCVM_AUTO                         |
+| calcVirtualMachine              | CALCVM_JAVA                         |
 | checkpointInterval              | 0                                   |
 | codeCacheMaxBytes               | 0                                   |
 | databaseIncrementSize           | 1000                                |
@@ -243,7 +245,7 @@
 +---------------------------+-------------------------------------+----------+--------------+
 |        PARAM_NAME         |             PARAM_VALUE             | COLTYPE  | COLTYPENAME  |
 +---------------------------+-------------------------------------+----------+--------------+
-| calcVirtualMachine        | CALCVM_AUTO                         | 12       | VARCHAR      |
+| calcVirtualMachine        | CALCVM_JAVA                         | 12       | VARCHAR      |
 | checkpointInterval        | 0                                   | 4        | INTEGER      |
 | codeCacheMaxBytes         | 0                                   | -5       | BIGINT       |
 | fennelDisabled            | false                               | 16       | BOOLEAN      |

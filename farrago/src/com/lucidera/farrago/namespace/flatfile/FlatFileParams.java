@@ -68,7 +68,10 @@ class FlatFileParams
     public static final String PROP_DATE_FORMAT = "DATE_FORMAT";
     public static final String PROP_TIME_FORMAT = "TIME_FORMAT";
     public static final String PROP_TIMESTAMP_FORMAT = "TIMESTAMP_FORMAT";
-
+    public static final String PROP_LENIENT = "LENIENT";
+    public static final String PROP_TRIM = "TRIM";
+    public static final String PROP_MAPPED = "MAPPED";
+    
     public static final String FILE_EXTENSION_PREFIX = ".";
     public static final String LOG_FILE_EXTENSION = "err";
 
@@ -81,6 +84,9 @@ class FlatFileParams
     protected static final boolean DEFAULT_WITH_HEADER = true;
     protected static final int DEFAULT_NUM_ROWS_SCAN = 5;
     protected static final boolean DEFAULT_WITH_LOGGING = true;
+    protected static final boolean DEFAULT_LENIENT = true;    
+    protected static final boolean DEFAULT_TRIM = true;    
+    protected static final boolean DEFAULT_MAPPED = false;
 
     //~ Enums ------------------------------------------------------------------
 
@@ -147,6 +153,7 @@ class FlatFileParams
     private char quoteChar, escapeChar;
     private boolean withHeader, withLogging;
     private int numRowsScan;
+    private boolean lenient, trim, mapped;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -220,6 +227,15 @@ class FlatFileParams
         logDirectory =
             decodeDirectory(
                 props.getProperty(PROP_LOG_DIRECTORY, null));
+        lenient = 
+            getBooleanProperty(
+                props, PROP_LENIENT, DEFAULT_LENIENT);
+        trim = 
+            getBooleanProperty(
+                props, PROP_TRIM, DEFAULT_TRIM);
+        mapped = 
+            getBooleanProperty(
+                props, PROP_MAPPED, DEFAULT_MAPPED);
     }
 
     /**
@@ -390,6 +406,21 @@ class FlatFileParams
     public String getTimestampFormat()
     {
         return props.getProperty(PROP_TIMESTAMP_FORMAT);
+    }
+
+    public boolean getLenient()
+    {
+        return lenient;
+    }
+
+    public boolean getTrim()
+    {
+        return trim;
+    }
+
+    public boolean getMapped()
+    {
+        return mapped;
     }
 
     /**

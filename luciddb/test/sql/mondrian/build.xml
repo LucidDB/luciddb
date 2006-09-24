@@ -24,7 +24,7 @@
   <dirname property="mondrian.test.dir" file="${ant.file.mondrian}" />
 
   <property name="open.dir" location="${mondrian.test.dir}/../../../.."/>
-  
+
 <fail unless="open.dir" />
 
   <property environment="env" />
@@ -98,9 +98,21 @@
       </fileset>
     </copy>
   </target>
-  
+
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir"
       property="sql.generated"/>
     <if>
@@ -108,7 +120,7 @@
       <then/>
       <else>
 <!--        <foreach list="oracle,sqlserver,flatfile,csvjdbc" -->
-        <foreach list="sqlserver" 
+        <foreach list="sqlserver"
           param="prop.source"
           target="gen-sql"/>
       </else>
@@ -125,6 +137,8 @@
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
+    <delete file="run.properties"/>
+    <delete file="config.properties"/>
   </target>
 
 </project>

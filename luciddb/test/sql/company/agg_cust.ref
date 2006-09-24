@@ -7,6 +7,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- plain aggregates
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- FNL-42
 0: jdbc:luciddb:> select floor(sum(PRICE)) from SALES;
 +---------+
 | EXPR$0  |
@@ -21,7 +22,8 @@
 | 1000    |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select floor(avg(PRICE)) from SALES;
+0: jdbc:luciddb:> -- changed because rounding causes average to become 5.0
+0: jdbc:luciddb:> select floor(avg(cast(PRICE as decimal(10,4)))) from SALES;
 +---------+
 | EXPR$0  |
 +---------+
@@ -104,6 +106,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- having
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-115
 0: jdbc:luciddb:> select sum(PRICE)
 . . . . . . . . > , PRODID
 . . . . . . . . > from SALES group by PRODID having PRODID < 10010 order by PRODID;
@@ -212,6 +215,7 @@
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- having and where clauses
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: FRG-115
 0: jdbc:luciddb:> select sum(PRICE)
 . . . . . . . . > , PRODID
 . . . . . . . . > from SALES

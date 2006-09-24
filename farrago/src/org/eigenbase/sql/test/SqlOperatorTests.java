@@ -2196,6 +2196,9 @@ public abstract class SqlOperatorTests
         getTester().checkScalarExact("position('b' in 'abc')", "2");
         getTester().checkScalarExact("position('' in 'abc')", "1");
 
+        // FRG-211
+        getTester().checkScalarExact("position('tra' in 'fdgjklewrtra')", "10");
+
         getTester().checkNull("position(cast(null as varchar(1)) in '0010')");
         getTester().checkNull("position('a' in cast(null as varchar(1)))");
     }

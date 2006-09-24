@@ -158,12 +158,13 @@ ProjectRel(gender=[$3], EXPR$1=[$6])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
-  FilterRel(condition=[IS TRUE($7)])
+  FilterRel(condition=[IS TRUE($6)])
     JoinRel(condition=[true], joinType=[left])
       ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
-      ProjectRel(EXPR$0=[$0], $indicator=[true])
-        ProjectRel(EXPR$0=[1])
-          ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+      ProjectRel($indicator=[true])
+        AggregateRel(groupCount=[0], agg#0=[COUNT()])
+          ProjectRel(EXPR$0=[1])
+            ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
 ]]>
         </Resource>
     </TestCase>
@@ -174,18 +175,20 @@ ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[
         <Resource name="plan">
             <![CDATA[
 ProjectRel(empno=[$0], name=[$1], deptno=[$2], gender=[$3], city=[$4], slacker=[$5])
-  FilterRel(condition=[OR(IS TRUE($7), IS TRUE($9))])
+  FilterRel(condition=[OR(IS TRUE($6), IS TRUE($7))])
     JoinRel(condition=[true], joinType=[left])
       JoinRel(condition=[true], joinType=[left])
         ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
-        ProjectRel(EXPR$0=[$0], $indicator=[true])
-          ProjectRel(EXPR$0=[+(1, 2)])
-            FilterRel(condition=[>($0, 10)])
-              ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
-      ProjectRel(EXPR$0=[$0], $indicator=[true])
-        ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
-          FilterRel(condition=[=($3, _ISO-8859-1'Pig')])
-            ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
+        ProjectRel($indicator=[true])
+          AggregateRel(groupCount=[0], agg#0=[COUNT()])
+            ProjectRel(EXPR$0=[+(1, 2)])
+              FilterRel(condition=[>($0, 10)])
+                ExpressionReaderRel(expression=[Java((sales.Dept[]) {sales}.depts)])
+      ProjectRel($indicator=[true])
+        AggregateRel(groupCount=[0], agg#0=[COUNT()])
+          ProjectRel(EXPR$0=[_ISO-8859-1'foo'])
+            FilterRel(condition=[=($3, _ISO-8859-1'Pig')])
+              ExpressionReaderRel(expression=[Java((sales.Emp[]) {sales}.emps)])
 ]]>
         </Resource>
     </TestCase>

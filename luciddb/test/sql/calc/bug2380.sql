@@ -20,6 +20,7 @@ insert into qrysrcnum values ( 7, 10.00 , 300.00, 50000.000000 )
 insert into qrysrcnum values ( 7, 10.00 , 300.00, 50000.000000 )
 ;
 
+-- TODO: FRG-199
 -- FRG-49, FRG-50
 -- SELECT  n1, n2, n3, n4, AVG(n1)   
 SELECT  n1, n2, n3, n4
