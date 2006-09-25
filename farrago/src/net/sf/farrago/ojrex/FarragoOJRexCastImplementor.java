@@ -862,6 +862,10 @@ public class FarragoOJRexCastImplementor
             translator.addStatement(
                 declareStackVar(outClass, outTemp, null));
 
+            boolean isLong = 
+                translator.getFarragoTypeFactory()
+                .getClassForPrimitive(lhsType) == long.class;
+
             addStatement(
                 new IfStatement(
                     new BinaryExpression(
@@ -870,10 +874,10 @@ public class FarragoOJRexCastImplementor
                         Literal.constantZero()),
                     new StatementList(
                         assign(inTemp, minus(inClass, inTemp)),
-                        assign(outTemp, round(lhsClass, inTemp)),
+                        assign(outTemp, round(lhsClass, inTemp, isLong)),
                         assign(outTemp, minus(outClass, outTemp))),
                     new StatementList(
-                        assign(outTemp, round(lhsClass, inTemp)))));
+                        assign(outTemp, round(lhsClass, inTemp, isLong)))));
             return outTemp;
         }
         
@@ -902,14 +906,23 @@ public class FarragoOJRexCastImplementor
         }
 
         /**
-         * Generates code to round an expression up and cast it. Rounding 
-         * may cause can overflow.
+         * Generates code to round an expression up and cast it. Performs a 
+         * lenient rounding. Values less than target min or max become the 
+         * min or max while, rounding (not a number) results in zero.
          * 
          * @param clazz type to cast rounded expression as
          * @param expr expression to be rounded
+         * @param isLong whether the result should have long precision
          */
-        private Expression round(OJClass clazz, Expression expr) 
+        private Expression round(
+            OJClass clazz, Expression expr, boolean isLong) 
         {
+            Expression arg = expr;
+            if (isLong) {
+                arg = new CastExpression(
+                    OJClass.forClass(double.class),
+                    expr);
+            }
             return
                 new CastExpression(
                     clazz,
@@ -918,7 +931,7 @@ public class FarragoOJRexCastImplementor
                             Literal.STRING,
                             "java.lang.Math"),
                     "round",
-                    new ExpressionList(expr)));
+                    new ExpressionList(arg)));
         }
         
         /**

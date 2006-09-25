@@ -254,11 +254,15 @@ public class RexToOJTranslator
         case SqlTypeName.Decimal_ordinal:
             BigDecimal bd = (BigDecimal) value;
             if (bd.scale() == 0) {
-                // Fit the value into an int if possible, otherwise long.
+                // Honor the requested type (if long) to prevent 
+                // unexpected overflow during arithmetic.
+                SqlTypeName type = literal.getType().getSqlTypeName();
                 long longValue = bd.longValue();
-                int intValue = (int) longValue;
-                if (longValue == intValue) {
-                    setTranslation(Literal.makeLiteral(intValue));
+                if (type == SqlTypeName.Tinyint
+                    || type == SqlTypeName.Smallint
+                    || type == SqlTypeName.Integer)
+                {
+                    setTranslation(Literal.makeLiteral((int) longValue));
                 } else {
                     setTranslation(Literal.makeLiteral(longValue));
                 }
