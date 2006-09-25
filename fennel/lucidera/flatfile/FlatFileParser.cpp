@@ -116,6 +116,13 @@ void FlatFileParser::scanRow(
         result.clear();
     }
 
+    // Scan any initial row delimiters, helps for the case when a row
+    // delimiter is multiple characters like \r\n and the delimiter
+    // characters are split between two buffers. (The previous row could
+    // be complete due to \r, and parsing could begin at \n.
+    const char *nonDelim = scanRowDelim(row, size, false);
+    offset = nonDelim - row;
+
     bool done = false;
     uint maxLength = FlatFileRowDescriptor::MAX_COLUMN_LENGTH;
     for (uint i = 0; i < maxColumns; i++) {
