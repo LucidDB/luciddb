@@ -355,7 +355,10 @@ public abstract class FarragoManagementUDR
             int i = 0;
 
             resultInserter.setLong(++i, thread.getId());
-            resultInserter.setString(++i, thread.getThreadGroup().getName());
+            final ThreadGroup threadGroup = thread.getThreadGroup();
+            resultInserter.setString(
+                ++i,
+                threadGroup == null ? "null" : threadGroup.getName());
             resultInserter.setString(++i, thread.getName());
             resultInserter.setInt(++i, thread.getPriority());
             resultInserter.setString(++i, thread.getState().toString());
