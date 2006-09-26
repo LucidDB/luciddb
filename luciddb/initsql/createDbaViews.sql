@@ -585,3 +585,16 @@ contains sql
 specific export_merged_schema_standard
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportMergedSchemas';
+
+-- Export result of a single query to a file
+-- NOTE:  query must be quoted as a string literal (TODO:  UDX or
+-- support for cursor parameter to procedures)
+create procedure export_query_to_file(
+  in query_sql varchar(65535),
+  in path_without_extension varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean)
+language java
+reads sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';

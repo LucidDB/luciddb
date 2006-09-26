@@ -161,6 +161,17 @@ create procedure export_catalog_xmi(in filename varchar(65535))
   no sql
   external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 
+-- exports query results to a delimited file (optionally with BCP control file)
+create procedure export_query_to_file(
+  in query_sql varchar(65535),
+  in path_without_extension varchar(65535),
+  in bcp boolean,
+  in delete_failed_file boolean)
+language java
+reads sql data
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+
 -- Returns session parameters
 create function session_parameters ()
 returns table(
