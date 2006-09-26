@@ -874,10 +874,6 @@ public abstract class FarragoExportSchemaUDR
         // Expand stuff like ${FARRAGO_HOME}.
         directory = FarragoProperties.instance().expandProperties(directory);
 
-        // get rid of spaces and colons in directory name
-        directory = directory.replaceAll("\\s*", "");
-        directory = directory.replaceAll(":", "");
-
         // create export csv directory
         File csvDir = new File(directory);
         if (querySql != null) {
