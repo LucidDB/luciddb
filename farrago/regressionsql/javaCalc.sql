@@ -71,9 +71,9 @@ insert into a (j, k) select 0, val from tinyint_nullable;
 -- test overflow
 insert into a (j) select * from smallint_nonnullable 
 where val > 127;
--- TODO: causes an infinite loop in MergeProjectRule
---insert into a (j) select * from smallint_nullable 
---where val > 127;
+-- used to cause an infinite loop due to FRG-215
+insert into a (j) select * from smallint_nullable 
+where val > 127;
 insert into a (j, k) select 0, val from smallint_nonnullable 
 where val > 127;
 insert into a (j, k) select 0, val from smallint_nullable 

@@ -72,9 +72,10 @@
 0: jdbc:farrago:> insert into a (j) select * from smallint_nonnullable 
 . . . . . . . . > where val > 127;
 Error: Overflow during calculation or cast. (state=,code=0)
-0: jdbc:farrago:> -- TODO: causes an infinite loop in MergeProjectRule
-0: jdbc:farrago:> --insert into a (j) select * from smallint_nullable 
-0: jdbc:farrago:> --where val > 127;
+0: jdbc:farrago:> -- used to cause an infinite loop due to FRG-215
+0: jdbc:farrago:> insert into a (j) select * from smallint_nullable 
+. . . . . . . . > where val > 127;
+Error: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:farrago:> insert into a (j, k) select 0, val from smallint_nonnullable 
 . . . . . . . . > where val > 127;
 Error: Overflow during calculation or cast. (state=,code=0)
@@ -104,14 +105,14 @@ Error: Overflow during calculation or cast. (state=,code=0)
 | 5   | 0     | 127   |
 | 6   | 0     | -128  |
 | 7   | 0     | 127   |
-| 11  | -10   |       |
-| 12  | 10    |       |
-| 13  | -20   |       |
-| 14  | 20    |       |
-| 15  | 0     | -10   |
-| 16  | 0     | 10    |
-| 17  | 0     | -20   |
-| 18  | 0     | 20    |
+| 12  | -10   |       |
+| 13  | 10    |       |
+| 14  | -20   |       |
+| 15  | 20    |       |
+| 16  | 0     | -10   |
+| 17  | 0     | 10    |
+| 18  | 0     | -20   |
+| 19  | 0     | 20    |
 +-----+-------+-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> alter system set "calcVirtualMachine"='CALCVM_AUTO';
