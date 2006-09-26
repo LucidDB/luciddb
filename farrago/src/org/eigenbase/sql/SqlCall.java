@@ -119,8 +119,7 @@ public class SqlCall
     public SqlNode clone(SqlParserPos pos)
     {
         return operator.createCall(
-                SqlNode.cloneArray(operands),
-                pos);
+            pos, SqlNode.cloneArray(operands));
     }
 
     public void unparse(

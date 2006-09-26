@@ -82,7 +82,7 @@ public class RexRangeRef
         return offset;
     }
 
-    public Object clone()
+    public RexRangeRef clone()
     {
         return new RexRangeRef(type, offset);
     }

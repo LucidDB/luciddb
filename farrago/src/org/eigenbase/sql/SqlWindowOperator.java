@@ -98,9 +98,7 @@ public class SqlWindowOperator
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         assert functionQualifier == null;
         return new SqlWindow(this, operands, pos);
@@ -127,12 +125,9 @@ public class SqlWindowOperator
         }
         return
             (SqlWindow) createCall(
-                new SqlNode[] {
-                    declName, refName, partitionList, orderList,
+                pos, declName, refName, partitionList, orderList,
                 SqlLiteral.createBoolean(isRows, rowRangePos),
-                lowerBound, upperBound
-                },
-                pos);
+                lowerBound, upperBound);
     }
 
     public <R> void acceptCall(SqlVisitor<R> visitor,
@@ -551,12 +546,12 @@ public class SqlWindowOperator
 
     public static SqlNode createFollowing(SqlLiteral literal, SqlParserPos pos)
     {
-        return followingOperator.createCall(literal, pos);
+        return followingOperator.createCall(pos, literal);
     }
 
     public static SqlNode createPreceding(SqlLiteral literal, SqlParserPos pos)
     {
-        return precedingOperator.createCall(literal, pos);
+        return precedingOperator.createCall(pos, literal);
     }
 
     public static SqlNode createBound(SqlLiteral range)

@@ -130,14 +130,14 @@ public class LcsTableMergeRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public LcsTableMergeRel clone()
     {
         LcsTableMergeRel clone =
             new LcsTableMergeRel(
                 getCluster(),
                 lcsTable,
                 getConnection(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList(),
                 updateOnly);
@@ -327,9 +327,10 @@ public class LcsTableMergeRel
 
             // create a tuple containing a single null value and convert
             // it to a base-64 string
-            List<RexNode> tuple = new ArrayList<RexNode>();
+            List<RexLiteral> tuple = new ArrayList<RexLiteral>();
             tuple.add(rexBuilder.constantNull());
-            List<List<RexNode>> compareTuple = new ArrayList<List<RexNode>>();
+            List<List<RexLiteral>> compareTuple =
+                new ArrayList<List<RexLiteral>>();
             compareTuple.add(tuple);
             RelDataType ridType =
                 typeFactory.createTypeWithNullability(
@@ -342,7 +343,7 @@ public class LcsTableMergeRel
             reshape.setTupleCompareBytesBase64(
                 FennelRelUtil.convertTuplesToBase64String(
                     ridRowType,
-                    (List) compareTuple));
+                    compareTuple));
         } else {
             assert (compOp == CompOperatorEnum.COMP_NOOP);
             reshape.setCompareOp(compOp);

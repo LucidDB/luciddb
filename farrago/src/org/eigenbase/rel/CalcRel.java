@@ -76,7 +76,7 @@ public final class CalcRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public CalcRel clone()
     {
         return
             new CalcRel(

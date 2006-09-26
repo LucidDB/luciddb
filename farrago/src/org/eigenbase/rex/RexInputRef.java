@@ -85,7 +85,7 @@ public class RexInputRef
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public RexInputRef clone()
     {
         return new RexInputRef(index, type);
     }

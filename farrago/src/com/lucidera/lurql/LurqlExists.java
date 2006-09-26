@@ -37,13 +37,13 @@ public class LurqlExists
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List selectList;
+    private final List<String> selectList;
 
     private final LurqlPathSpec pathSpec;
 
     //~ Constructors -----------------------------------------------------------
 
-    public LurqlExists(List selectList, LurqlPathSpec pathSpec)
+    public LurqlExists(List<String> selectList, LurqlPathSpec pathSpec)
     {
         this.selectList = selectList;
         this.pathSpec = pathSpec;
@@ -51,7 +51,7 @@ public class LurqlExists
 
     //~ Methods ----------------------------------------------------------------
 
-    public List getSelectList()
+    public List<String> getSelectList()
     {
         return selectList;
     }

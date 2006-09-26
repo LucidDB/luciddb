@@ -290,8 +290,7 @@ public class FarragoRelImplementor
         }
 
         // recursively ensure all inputs have also been registered
-        for (Object obj : streamDef.getInputFlow()) {
-            FemExecStreamDataFlow flow = (FemExecStreamDataFlow) obj;
+        for (FemExecStreamDataFlow flow : streamDef.getInputFlow()) {
             FemExecutionStreamDef producer = flow.getProducer();
             registerStreamDef(producer, null, rowType);
         }

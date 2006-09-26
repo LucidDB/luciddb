@@ -87,7 +87,7 @@ public class BarfingInvocationHandler
      */
     protected UnsupportedOperationException noMethod(Method method)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         final Class [] parameterTypes = method.getParameterTypes();
         for (int i = 0; i < parameterTypes.length; i++) {
             if (i > 0) {

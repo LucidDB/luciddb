@@ -161,7 +161,7 @@ public class RexCall
 
     protected String computeDigest(boolean withType)
     {
-        StringBuffer sb = new StringBuffer(op.getName());
+        StringBuilder sb = new StringBuilder(op.getName());
         if ((operands.length == 0)
             && (op.getSyntax() == SqlSyntax.FunctionId)) {
             // Don't print params for empty arg list. For example, we want
@@ -207,7 +207,7 @@ public class RexCall
         return type;
     }
 
-    public Object clone()
+    public RexCall clone()
     {
         return new RexCall(
                 type,

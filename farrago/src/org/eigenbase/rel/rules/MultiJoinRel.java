@@ -69,13 +69,13 @@ public final class MultiJoinRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public MultiJoinRel clone()
     {
         MultiJoinRel clone =
             new MultiJoinRel(
                 getCluster(),
                 RelOptUtil.clone(inputs),
-                RexUtil.clone(joinFilter),
+                joinFilter.clone(),
                 rowType);
         clone.inheritTraitsFrom(this);
         return clone;

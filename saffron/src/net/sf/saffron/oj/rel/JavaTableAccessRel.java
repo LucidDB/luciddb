@@ -46,7 +46,7 @@ public class JavaTableAccessRel
         super(cluster, new RelTraitSet(CallingConvention.JAVA), table, connection);
     }
 
-    public Object clone()
+    public JavaTableAccessRel clone()
     {
         return this;
     }

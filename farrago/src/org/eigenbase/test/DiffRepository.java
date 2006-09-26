@@ -375,7 +375,7 @@ public class DiffRepository
 
         // Otherwise return all the text under this element (including
         // whitespace).
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
             if (node instanceof Text) {

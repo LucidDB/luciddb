@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.namespace;
 
-import java.sql.*;
-
 import java.util.*;
 
 import net.sf.farrago.type.*;
@@ -52,8 +50,6 @@ public interface FarragoMedMetadataSink
      * have more specific write methods.
      *
      * @param name unqualified object name
-     * @param type object type name, from enumeration in {@link
-     * FarragoMedMetadataQuery}
      * @param remarks object description, or null for none
      * @param properties storage options
      *
@@ -63,7 +59,7 @@ public interface FarragoMedMetadataSink
         String name,
         String typeName,
         String remarks,
-        Map properties);
+        Properties properties);
 
     /**
      * Writes a descriptor for a column.
@@ -85,7 +81,7 @@ public interface FarragoMedMetadataSink
         RelDataType type,
         String remarks,
         String defaultValue,
-        Map properties);
+        Properties properties);
 
     /**
      * @return a type factory for use in creating type instances for calls such

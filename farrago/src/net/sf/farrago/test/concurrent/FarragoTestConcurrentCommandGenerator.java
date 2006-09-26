@@ -79,12 +79,12 @@ public class FarragoTestConcurrentCommandGenerator
      * Maps Integer thread IDs to a TreeMap. The TreeMap vaules map an Integer
      * execution order to a {@link FarragoTestConcurrentCommand}.
      */
-    private TreeMap threadMap;
+    private TreeMap<Integer,TreeMap<Integer,FarragoTestConcurrentCommand>> threadMap;
 
     /**
      * Maps Integer thread IDs to thread names.
      */
-    private TreeMap threadNameMap;
+    private TreeMap<Integer,String> threadNameMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -93,8 +93,8 @@ public class FarragoTestConcurrentCommandGenerator
      */
     public FarragoTestConcurrentCommandGenerator()
     {
-        threadMap = new TreeMap();
-        threadNameMap = new TreeMap();
+        threadMap = new TreeMap<Integer, TreeMap<Integer,FarragoTestConcurrentCommand>>();
+        threadNameMap = new TreeMap<Integer, String>();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -343,19 +343,17 @@ public class FarragoTestConcurrentCommandGenerator
         assert (threadId > 0);
         assert (order > 0);
 
-        Integer threadIdKey = new Integer(threadId);
-        Integer orderKey = new Integer(order);
-
-        TreeMap commandMap = (TreeMap) threadMap.get(threadIdKey);
+        TreeMap<Integer,FarragoTestConcurrentCommand> commandMap =
+            threadMap.get(threadId);
         if (commandMap == null) {
-            commandMap = new TreeMap();
-            threadMap.put(threadIdKey, commandMap);
+            commandMap = new TreeMap<Integer, FarragoTestConcurrentCommand>();
+            threadMap.put(threadId, commandMap);
         }
 
         // check for duplicate order numbers
-        assert (!commandMap.containsKey(orderKey));
+        assert (!commandMap.containsKey(order));
 
-        commandMap.put(orderKey, command);
+        commandMap.put(order, command);
         return command;
     }
 
@@ -380,11 +378,11 @@ public class FarragoTestConcurrentCommandGenerator
     void synchronizeCommandSets()
     {
         int maxCommands = 0;
-        for (Iterator i = threadMap.values().iterator(); i.hasNext();) {
-            TreeMap commands = (TreeMap) i.next();
+        for (Iterator<TreeMap<Integer,FarragoTestConcurrentCommand>> i = threadMap.values().iterator(); i.hasNext();) {
+            TreeMap<Integer,FarragoTestConcurrentCommand> commands = i.next();
 
             // Fill in missing slots with null (no-op) commands.
-            for (int j = 1; j < ((Integer) commands.lastKey()).intValue();
+            for (int j = 1; j < (commands.lastKey()).intValue();
                 j++) {
                 Integer key = new Integer(j);
                 if (!commands.containsKey(key)) {
@@ -398,8 +396,8 @@ public class FarragoTestConcurrentCommandGenerator
         }
 
         // Make sure all threads have the same number of commands.
-        for (Iterator i = threadMap.values().iterator(); i.hasNext();) {
-            TreeMap commands = (TreeMap) i.next();
+        for (Iterator<TreeMap<Integer,FarragoTestConcurrentCommand>> i = threadMap.values().iterator(); i.hasNext();) {
+            TreeMap<Integer,FarragoTestConcurrentCommand> commands = i.next();
 
             if (commands.size() < maxCommands) {
                 for (int j = commands.size() + 1; j <= maxCommands; j++) {
@@ -411,19 +409,19 @@ public class FarragoTestConcurrentCommandGenerator
         }
 
         // Interleave synchronization commands before each command.
-        for (Iterator i = threadMap.entrySet().iterator(); i.hasNext();) {
-            Map.Entry threadCommandsEntry = (Map.Entry) i.next();
+        for (Iterator<Map.Entry<Integer,TreeMap<Integer,FarragoTestConcurrentCommand>>> i = threadMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry<Integer,TreeMap<Integer,FarragoTestConcurrentCommand>> threadCommandsEntry = i.next();
 
-            TreeMap commands = (TreeMap) threadCommandsEntry.getValue();
+            TreeMap<Integer,FarragoTestConcurrentCommand> commands = threadCommandsEntry.getValue();
 
-            TreeMap synchronizedCommands = new TreeMap();
+            TreeMap<Integer,FarragoTestConcurrentCommand> synchronizedCommands = new TreeMap<Integer, FarragoTestConcurrentCommand>();
 
-            for (Iterator j = commands.entrySet().iterator(); j.hasNext();) {
-                Map.Entry commandEntry = (Map.Entry) j.next();
+            for (Iterator<Map.Entry<Integer,FarragoTestConcurrentCommand>> j = commands.entrySet().iterator(); j.hasNext();) {
+                Map.Entry<Integer,FarragoTestConcurrentCommand> commandEntry = j.next();
 
-                int orderKey = ((Integer) commandEntry.getKey()).intValue();
+                int orderKey = (commandEntry.getKey()).intValue();
                 FarragoTestConcurrentCommand command =
-                    (FarragoTestConcurrentCommand) commandEntry.getValue();
+                    commandEntry.getValue();
 
                 synchronizedCommands.put(
                     new Integer((orderKey * 2) - 1),
@@ -444,13 +442,13 @@ public class FarragoTestConcurrentCommandGenerator
     void validateSynchronization(TestCase test)
     {
         int numSyncs = -1;
-        for (Iterator i = threadMap.entrySet().iterator(); i.hasNext();) {
-            Map.Entry threadCommandsEntry = (Map.Entry) i.next();
+        for (Iterator<Map.Entry<Integer,TreeMap<Integer,FarragoTestConcurrentCommand>>> i = threadMap.entrySet().iterator(); i.hasNext();) {
+            Map.Entry<Integer,TreeMap<Integer,FarragoTestConcurrentCommand>> threadCommandsEntry = i.next();
 
-            TreeMap commands = (TreeMap) threadCommandsEntry.getValue();
+            TreeMap<Integer,FarragoTestConcurrentCommand> commands = (TreeMap<Integer,FarragoTestConcurrentCommand>) threadCommandsEntry.getValue();
 
             int numSyncsThisThread = 0;
-            for (Iterator j = commands.values().iterator(); j.hasNext();) {
+            for (Iterator<FarragoTestConcurrentCommand> j = commands.values().iterator(); j.hasNext();) {
                 if (j.next() instanceof SynchronizationCommand) {
                     numSyncsThisThread++;
                 }
@@ -459,9 +457,9 @@ public class FarragoTestConcurrentCommandGenerator
             if (numSyncs < 0) {
                 numSyncs = numSyncsThisThread;
             } else {
-                test.assertEquals(
+                Assert.assertEquals(
                     "mismatched synchronization command count (thread "
-                    + getThreadName((Integer) threadCommandsEntry.getKey())
+                    + getThreadName(threadCommandsEntry.getKey())
                     + ")",
                     numSyncs,
                     numSyncsThisThread);
@@ -472,7 +470,7 @@ public class FarragoTestConcurrentCommandGenerator
     /**
      * Returns a set of thread IDs.
      */
-    protected Set getThreadIds()
+    protected Set<Integer> getThreadIds()
     {
         return threadMap.keySet();
     }
@@ -486,7 +484,7 @@ public class FarragoTestConcurrentCommandGenerator
     protected String getThreadName(Integer threadId)
     {
         if (threadNameMap.containsKey(threadId)) {
-            return (String) threadNameMap.get(threadId);
+            return threadNameMap.get(threadId);
         } else {
             return "#" + threadId;
         }
@@ -798,8 +796,8 @@ public class FarragoTestConcurrentCommandGenerator
     private static class FetchAndCompareCommand
         extends CommandWithTimeout
     {
-        private ArrayList expected;
-        private ArrayList result;
+        private List<List<Object>> expected;
+        private List<List<Object>> result;
 
         private FetchAndCompareCommand(
             int timeout,
@@ -820,12 +818,12 @@ public class FarragoTestConcurrentCommandGenerator
 
             ResultSet rset = stmt.executeQuery();
 
-            ArrayList rows = new ArrayList();
+            List<List<Object>> rows = new ArrayList<List<Object>>();
             try {
                 int rsetColumnCount = rset.getMetaData().getColumnCount();
 
                 while (rset.next()) {
-                    ArrayList row = new ArrayList();
+                    List<Object> row = new ArrayList<Object>();
 
                     for (int i = 1; i <= rsetColumnCount; i++) {
                         Object value = rset.getObject(i);
@@ -871,10 +869,10 @@ public class FarragoTestConcurrentCommandGenerator
             final int STATE_OTHER_VALUE = 3;
             final int STATE_VALUE_END = 4;
 
-            ArrayList rows = new ArrayList();
+            List<List<Object>> rows = new ArrayList<List<Object>>();
             int state = STATE_ROW_START;
-            ArrayList row = null;
-            StringBuffer value = new StringBuffer();
+            List<Object> row = null;
+            StringBuilder value = new StringBuilder();
 
             for (int i = 0; i < expected.length(); i++) {
                 char ch = expected.charAt(i);
@@ -886,7 +884,7 @@ public class FarragoTestConcurrentCommandGenerator
                 switch (state) {
                 case STATE_ROW_START: // find start of row
                     if (ch == LEFT_BRACKET) {
-                        row = new ArrayList();
+                        row = new ArrayList<Object>();
                         state = STATE_VALUE_START;
                     }
                     break;
@@ -1181,14 +1179,14 @@ public class FarragoTestConcurrentCommandGenerator
             Iterator expectedIter = expected.iterator();
             Iterator resultIter = result.iterator();
 
-            StringBuffer fullMessage = new StringBuffer(message);
+            StringBuilder fullMessage = new StringBuilder(message);
 
             int rowNum = 1;
             while (expectedIter.hasNext() || resultIter.hasNext()) {
-                StringBuffer expectedOut = new StringBuffer();
+                StringBuilder expectedOut = new StringBuilder();
                 expectedOut.append("Row ").append(rowNum).append(" exp:");
 
-                StringBuffer resultOut = new StringBuffer();
+                StringBuilder resultOut = new StringBuilder();
                 resultOut.append("Row ").append(rowNum).append(" got:");
 
                 Iterator expectedRowIter = null;

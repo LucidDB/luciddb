@@ -107,7 +107,7 @@ public class SqlOverlapsOperator
                 i, i
             };
 
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int y = 0; y < typeNames.length; y += 2) {
             if (y > 0) {
                 ret.append(NL);

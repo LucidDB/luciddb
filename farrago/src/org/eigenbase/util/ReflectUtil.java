@@ -40,12 +40,12 @@ public abstract class ReflectUtil
 
     //~ Static fields/initializers ---------------------------------------------
 
-    private static Map primitiveToBoxingMap;
-    private static Map primitiveToByteBufferReadMethod;
-    private static Map primitiveToByteBufferWriteMethod;
+    private static Map<Class,Class> primitiveToBoxingMap;
+    private static Map<Class,Method> primitiveToByteBufferReadMethod;
+    private static Map<Class,Method> primitiveToByteBufferWriteMethod;
 
     static {
-        primitiveToBoxingMap = new HashMap();
+        primitiveToBoxingMap = new HashMap<Class, Class>();
         primitiveToBoxingMap.put(Boolean.TYPE, Boolean.class);
         primitiveToBoxingMap.put(Byte.TYPE, Byte.class);
         primitiveToBoxingMap.put(Character.TYPE, Character.class);
@@ -55,8 +55,8 @@ public abstract class ReflectUtil
         primitiveToBoxingMap.put(Long.TYPE, Long.class);
         primitiveToBoxingMap.put(Short.TYPE, Short.class);
 
-        primitiveToByteBufferReadMethod = new HashMap();
-        primitiveToByteBufferWriteMethod = new HashMap();
+        primitiveToByteBufferReadMethod = new HashMap<Class, Method>();
+        primitiveToByteBufferWriteMethod = new HashMap<Class, Method>();
         Method [] methods = ByteBuffer.class.getDeclaredMethods();
         for (int i = 0; i < methods.length; ++i) {
             Method method = methods[i];
@@ -106,7 +106,7 @@ public abstract class ReflectUtil
     public static Method getByteBufferReadMethod(Class clazz)
     {
         assert (clazz.isPrimitive());
-        return (Method) primitiveToByteBufferReadMethod.get(clazz);
+        return primitiveToByteBufferReadMethod.get(clazz);
     }
 
     /**
@@ -120,7 +120,7 @@ public abstract class ReflectUtil
     public static Method getByteBufferWriteMethod(Class clazz)
     {
         assert (clazz.isPrimitive());
-        return (Method) primitiveToByteBufferWriteMethod.get(clazz);
+        return primitiveToByteBufferWriteMethod.get(clazz);
     }
 
     /**
@@ -134,7 +134,7 @@ public abstract class ReflectUtil
     public static Class getBoxingClass(Class primitiveClass)
     {
         assert (primitiveClass.isPrimitive());
-        return (Class) primitiveToBoxingMap.get(primitiveClass);
+        return primitiveToBoxingMap.get(primitiveClass);
     }
 
     /**
@@ -170,7 +170,7 @@ public abstract class ReflectUtil
         String methodName,
         Class [] paramTypes)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(declaringClass.getName());
         sb.append(".");
         sb.append(methodName);
@@ -228,7 +228,7 @@ public abstract class ReflectUtil
         Class hierarchyRoot,
         String visitMethodName)
     {
-        Class visitorClass = visitor.getClass();
+        Class<? extends Object> visitorClass = visitor.getClass();
         Class visiteeClass = visitee.getClass();
         Method method =
             lookupVisitMethod(
@@ -249,7 +249,7 @@ public abstract class ReflectUtil
         try {
             method.invoke(
                 visitor,
-                new Object[] { visitee });
+                visitee);
         } catch (IllegalAccessException ex) {
             throw Util.newInternal(ex);
         } catch (InvocationTargetException ex) {
@@ -279,7 +279,7 @@ public abstract class ReflectUtil
      * @return method found, or null if none found
      */
     public static Method lookupVisitMethod(
-        Class visitorClass,
+        Class<? extends Object> visitorClass,
         Class visiteeClass,
         String visitMethodName)
     {
@@ -304,7 +304,7 @@ public abstract class ReflectUtil
      * @return method found, or null if none found
      */
     public static Method lookupVisitMethod(
-        Class visitorClass,
+        Class<? extends Object> visitorClass,
         Class visiteeClass,
         String visitMethodName,
         List<Class> additionalParameterTypes)

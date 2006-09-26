@@ -22,12 +22,8 @@
 */
 package org.eigenbase.rel;
 
-import java.util.*;
-
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -105,7 +101,7 @@ public class CoerceInputsRule
         if (!coerce) {
             return;
         }
-        RelNode newConsumerRel = RelOptUtil.clone(consumerRel);
+        RelNode newConsumerRel = consumerRel.clone();
         for (int i = 0; i < newInputs.length; ++i) {
             newConsumerRel.replaceInput(i, newInputs[i]);
         }

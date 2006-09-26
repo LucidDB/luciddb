@@ -96,10 +96,10 @@ public class StandardConvertletTable
                 {
                     final SqlCall expanded =
                         SqlStdOperatorTable.notOperator.createCall(
+                            SqlParserPos.ZERO,
                             SqlStdOperatorTable.likeOperator.createCall(
-                                call.getOperands(),
-                                SqlParserPos.ZERO),
-                            SqlParserPos.ZERO);
+                                SqlParserPos.ZERO,
+                                call.getOperands()));
                     return cx.convertExpression(expanded);
                 }
             });
@@ -194,10 +194,9 @@ public class StandardConvertletTable
                         if (!type.getComponentType().isStruct()) {
                             return
                                 cx.convertExpression(
-                                    SqlStdOperatorTable.elementSlicefunc
-                                    .createCall(
-                                        operand,
-                                        SqlParserPos.ZERO));
+                                    SqlStdOperatorTable.elementSlicefunc.createCall(
+                                        SqlParserPos.ZERO,
+                                        operand));
                         }
 
                         // fallback on default behavior
@@ -221,11 +220,11 @@ public class StandardConvertletTable
                         final RexNode expr =
                             cx.convertExpression(
                                 SqlStdOperatorTable.elementFunc.createCall(
-                                    operand,
-                                    SqlParserPos.ZERO));
+                                    SqlParserPos.ZERO,
+                                    operand));
                         return cx.getRexBuilder().makeFieldAccess(
-                                expr,
-                                0);
+                            expr,
+                            0);
                     }
                 });
         }
@@ -240,16 +239,11 @@ public class StandardConvertletTable
     {
         final SqlParserPos pos = SqlParserPos.ZERO;
         final SqlNode sum =
-            SqlStdOperatorTable.sumOperator.createCall(
-                arg,
-                pos);
+            SqlStdOperatorTable.sumOperator.createCall(pos, arg);
         final SqlNode count =
-            SqlStdOperatorTable.countOperator.createCall(
-                arg,
-                pos);
+            SqlStdOperatorTable.countOperator.createCall(pos, arg);
         return SqlStdOperatorTable.divideOperator.createCall(
-            new SqlNode[] {sum, count},
-            pos);
+            pos, sum, count);
     }
 
     /**
@@ -421,25 +415,22 @@ public class StandardConvertletTable
             RexNode cond = rexBuilder.makeCall(
                 SqlStdOperatorTable.greaterThanOrEqualOperator,
                 rexInterval,
-                zero
-            );
+                zero);
 
             RexNode pad = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val-1));
             RexNode cast = rexBuilder.makeCast(rexInterval.getType(), pad);
+            SqlOperator op = isFloor?
+                SqlStdOperatorTable.minusOperator:
+                SqlStdOperatorTable.plusOperator;
             RexNode sum =
-                rexBuilder.makeCall(
-                    isFloor?
-                        SqlStdOperatorTable.minusOperator:
-                        SqlStdOperatorTable.plusOperator,
-                    rexInterval,
-                    cast);
+                rexBuilder.makeCall(op, rexInterval, cast);
 
             RexNode kase =
+                isFloor ?
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.caseOperator,
-                    isFloor?
-                        new RexNode[] {cond, rexInterval, sum }:
-                        new RexNode[] {cond, sum, rexInterval } );
+                    SqlStdOperatorTable.caseOperator, cond, rexInterval, sum) :
+                rexBuilder.makeCall(
+                    SqlStdOperatorTable.caseOperator, cond, sum, rexInterval);
 
             RexNode factor = rexBuilder.makeExactLiteral(BigDecimal.valueOf(val));
             RexNode div =
@@ -510,15 +501,15 @@ public class StandardConvertletTable
             RexNode modVal =
                 rexBuilder.makeExactLiteral(BigDecimal.valueOf(val), resType);
             res = rexBuilder.makeCall(
-                    SqlStdOperatorTable.modFunc,
-                    res,
-                    modVal);
+                SqlStdOperatorTable.modFunc,
+                res,
+                modVal);
         }
 
         res = rexBuilder.makeCall(
-                SqlStdOperatorTable.divideOperator,
-                res,
-                factor);
+            SqlStdOperatorTable.divideOperator,
+            res,
+            factor);
         return res;
     }
 
@@ -650,8 +641,8 @@ public class StandardConvertletTable
                 second[0] = operands[0];
                 second[1] = operands[1];
                 operands[1] = op1.createCall(
-                        second,
-                        call.getParserPosition());
+                    call.getParserPosition(),
+                    second);
             }
             if (operands[3] instanceof SqlIntervalLiteral) {
                 // make t3 = t2 + t3 when t3 is an interval.
@@ -660,8 +651,8 @@ public class StandardConvertletTable
                 four[0] = operands[2];
                 four[1] = operands[3];
                 operands[3] = op1.createCall(
-                        four,
-                        call.getParserPosition());
+                    call.getParserPosition(),
+                    four);
             }
 
             // This captures t1 >= t2
@@ -670,8 +661,8 @@ public class StandardConvertletTable
             left[0] = operands[1];
             left[1] = operands[2];
             SqlCall call1 = op1.createCall(
-                    left,
-                    call.getParserPosition());
+                call.getParserPosition(),
+                left);
 
             // This captures t3 >= t0
             SqlOperator op2 = SqlStdOperatorTable.greaterThanOrEqualOperator;
@@ -679,8 +670,8 @@ public class StandardConvertletTable
             right[0] = operands[3];
             right[1] = operands[0];
             SqlCall call2 = op2.createCall(
-                    right,
-                    call.getParserPosition());
+                call.getParserPosition(),
+                right);
 
             // This captures t1 >= t2 and t3 >= t0
             SqlOperator and = SqlStdOperatorTable.andOperator;
@@ -688,8 +679,8 @@ public class StandardConvertletTable
             overlaps[0] = call1;
             overlaps[1] = call2;
             SqlCall call3 = and.createCall(
-                    overlaps,
-                    call.getParserPosition());
+                call.getParserPosition(),
+                overlaps);
 
             return cx.convertExpression(call3);
         }

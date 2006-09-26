@@ -22,7 +22,6 @@
 package com.lucidera.farrago.namespace.flatfile;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
 
@@ -177,7 +176,7 @@ public class FlatFileFennelRel
     }
 
     // implement RelNode
-    public Object clone()
+    public FlatFileFennelRel clone()
     {
         FlatFileFennelRel clone =
             new FlatFileFennelRel(

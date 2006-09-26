@@ -29,7 +29,6 @@ import java.util.*;
 import junit.framework.*;
 
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.db.*;
 import net.sf.farrago.fem.security.*;
 import net.sf.farrago.jdbc.engine.*;
 import net.sf.farrago.resource.*;
@@ -39,6 +38,8 @@ import net.sf.farrago.type.*;
 import org.eigenbase.rel.metadata.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.test.*;
+
+import javax.jmi.reflect.RefObject;
 
 
 /**
@@ -230,18 +231,18 @@ public class FarragoQueryTest
         String schemaName)
         throws Exception
     {
-        Map argMap = new HashMap();
+        Map<String, String> argMap = new HashMap<String, String>();
         argMap.put("tableName", tableName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
-        Collection result = session.executeLurqlQuery(
+        Collection<RefObject> result = session.executeLurqlQuery(
                 lurql,
                 argMap);
         assertEquals(
             1,
             result.size());
-        Object obj = result.iterator().next();
+        RefObject obj = result.iterator().next();
         assertTrue(obj instanceof CwmSchema);
         assertEquals(
             schemaName,
@@ -282,17 +283,16 @@ public class FarragoQueryTest
         String grantedRoleName)
         throws Exception
     {
-        Map argMap = new HashMap();
+        Map<String, String> argMap = new HashMap<String, String>();
         argMap.put("granteeName", granteeName);
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
-        Collection result = session.executeLurqlQuery(
+        Collection<RefObject> result = session.executeLurqlQuery(
                 lurql,
                 argMap);
-        Iterator iter = result.iterator();
-        while (iter.hasNext()) {
-            FemRole role = (FemRole) iter.next();
+        for (RefObject o : result) {
+            FemRole role = (FemRole) o;
             if (role.getName().equals(grantedRoleName)) {
                 return true;
             }
@@ -384,7 +384,7 @@ public class FarragoQueryTest
     {
         String sql = "create schema udx";
         stmt.executeUpdate(sql);
-        
+
         sql =
             "create function udx.digest(c cursor) " +
             "returns table(c.*, row_digest int) " +
@@ -393,11 +393,11 @@ public class FarragoQueryTest
             "no sql " +
             "external name 'class net.sf.farrago.test.FarragoTestUDR.digest'";
         stmt.executeUpdate(sql);
-            
+
         sql =
             "select * from " +
             "table(udx.digest(cursor(select * from sales.depts)))";
-        
+
         FarragoJdbcEngineConnection farragoConnection =
             (FarragoJdbcEngineConnection) connection;
         FarragoSession session = farragoConnection.getSession();
@@ -407,7 +407,7 @@ public class FarragoQueryTest
                 new FarragoTypeFactoryImpl(session.getRepos()),
                 null,
                 false);
-        
+
         Set<RelColumnOrigin> rcoSet = analyzedSql.columnOrigins.get(0);
         assertEquals(
             1,
@@ -417,7 +417,7 @@ public class FarragoQueryTest
             "DEPTS",
             "DEPTNO",
             true);
-        
+
         rcoSet = analyzedSql.columnOrigins.get(1);
         assertEquals(
             1,
@@ -427,7 +427,7 @@ public class FarragoQueryTest
             "DEPTS",
             "NAME",
             true);
-        
+
         rcoSet = analyzedSql.columnOrigins.get(2);
         assertEquals(
             0,

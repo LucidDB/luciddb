@@ -29,9 +29,10 @@ import java.sql.*;
 import java.util.*;
 
 import org.eigenbase.jmi.*;
-import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
+
+import javax.jmi.reflect.RefObject;
 
 
 /**
@@ -113,7 +114,9 @@ public class LurqlQueryProcessor
         }
 
         // implement JmiPreparedQuery
-        public Collection execute(Connection connection, Map args)
+        public Collection<RefObject> execute(
+            Connection connection,
+            Map<String,?> args)
             throws JmiQueryException
         {
             LurqlReflectiveExecutor executor =

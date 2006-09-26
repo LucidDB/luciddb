@@ -25,7 +25,6 @@ package net.sf.farrago.query;
 import java.util.*;
 
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
@@ -77,9 +76,9 @@ abstract class FarragoExecutableStmtImpl
     }
 
     // implement FarragoSessionExecutableStmt
-    public Set getReferencedObjectIds()
+    public Set<String> getReferencedObjectIds()
     {
-        return Collections.EMPTY_SET;
+        return Collections.emptySet();
     }
 
     // implement FarragoSessionExecutableStmt
@@ -91,7 +90,7 @@ abstract class FarragoExecutableStmtImpl
     // implement FarragoSessionExecutableStmt
     public Map<String, RelDataType> getResultSetTypeMap()
     {
-        return Collections.EMPTY_MAP;
+        return Collections.emptyMap();
     }
 
     // implement FarragoSessionExecutableStmt

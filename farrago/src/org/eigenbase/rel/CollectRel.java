@@ -68,12 +68,12 @@ public final class CollectRel
     //~ Methods ----------------------------------------------------------------
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public CollectRel clone()
     {
         CollectRel clone =
             new CollectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 fieldName);
         clone.inheritTraitsFrom(this);
         return clone;

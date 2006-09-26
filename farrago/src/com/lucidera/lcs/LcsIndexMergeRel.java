@@ -79,12 +79,12 @@ class LcsIndexMergeRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public LcsIndexMergeRel clone()
     {
         return
             new LcsIndexMergeRel(
                 lcsTable,
-                (LcsIndexSearchRel) RelOptUtil.clone(getChild()),
+                (LcsIndexSearchRel) getChild().clone(),
                 consumerSridParamId,
                 segmentLimitParamId,
                 ridLimitParamId);

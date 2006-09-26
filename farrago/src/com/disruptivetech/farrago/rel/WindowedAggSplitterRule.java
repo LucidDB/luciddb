@@ -71,7 +71,7 @@ public class WindowedAggSplitterRule
         if (!RexOver.containsOver(calc.getProgram())) {
             return;
         }
-        CalcRel calcClone = (CalcRel) calc.clone();
+        CalcRel calcClone = calc.clone();
         CalcRelSplitter transform = new WindowedAggRelSplitter(calcClone);
         RelNode newRel = transform.execute();
         call.transformTo(newRel);

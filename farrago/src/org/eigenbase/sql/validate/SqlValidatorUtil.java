@@ -156,7 +156,7 @@ public class SqlValidatorUtil
     {
         final SqlParserPos pos = expr.getParserPosition();
         final SqlIdentifier id = new SqlIdentifier(alias, pos);
-        return SqlStdOperatorTable.asOperator.createCall(expr, id, pos);
+        return SqlStdOperatorTable.asOperator.createCall(pos, expr, id);
     }
 
     /**

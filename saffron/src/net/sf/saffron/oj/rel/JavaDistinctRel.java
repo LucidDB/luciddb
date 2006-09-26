@@ -19,7 +19,6 @@
 
 package net.sf.saffron.oj.rel;
 
-import openjava.mop.Toolbox;
 import openjava.ptree.*;
 
 import org.eigenbase.oj.rel.*;
@@ -55,7 +54,7 @@ public class JavaDistinctRel extends SingleRel implements JavaLoopRel
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaDistinctRel clone()
     {
         JavaDistinctRel clone = new JavaDistinctRel(getCluster(), getChild());
         clone.inheritTraitsFrom(this);

@@ -87,7 +87,7 @@ public class RexFieldAccess
         return field.getType();
     }
 
-    public Object clone()
+    public RexFieldAccess clone()
     {
         return new RexFieldAccess(expr, field);
     }

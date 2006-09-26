@@ -60,13 +60,13 @@ public final class FilterRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public FilterRel clone()
     {
         FilterRel clone =
             new FilterRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
-                RexUtil.clone(getCondition()));
+                getChild().clone(),
+                getCondition().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }

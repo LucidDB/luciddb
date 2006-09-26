@@ -31,18 +31,14 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sarg.*;
 import org.eigenbase.sql.fun.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 // TODO jvs 22-Feb-2005:  combine FtrsScanToSearchRule with
@@ -135,12 +131,9 @@ class FtrsScanToSearchRule
         if (scan.index.isClustered()) {
             // if we're working with a clustered index scan, consider all of
             // the unclustered indexes as well
-            Iterator iter =
-                FarragoCatalogUtil.getTableIndexes(
-                    repos,
-                    scan.ftrsTable.getCwmColumnSet()).iterator();
-            while (iter.hasNext()) {
-                FemLocalIndex index = (FemLocalIndex) iter.next();
+            for (FemLocalIndex index : FarragoCatalogUtil.getTableIndexes(
+                repos,
+                scan.ftrsTable.getCwmColumnSet())) {
                 considerIndex(
                     index,
                     scan,
@@ -166,9 +159,8 @@ class FtrsScanToSearchRule
         FemLocalIndex index,
         CwmColumn column)
     {
-        List indexedFeatures = index.getIndexedFeature();
-        CwmIndexedFeature indexedFeature =
-            (CwmIndexedFeature) indexedFeatures.get(0);
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
+        CwmIndexedFeature indexedFeature = indexedFeatures.get(0);
         CwmColumn indexedColumn = (CwmColumn) indexedFeature.getFeature();
         if (!column.equals(indexedColumn)) {
             return false;

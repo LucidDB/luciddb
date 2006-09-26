@@ -154,7 +154,7 @@ class FtrsIndexJoinRule
         }
 
         // tell the index search how to project the key from its input
-        Integer [] inputKeyProj = new Integer[] { new Integer(leftOrdinal) };
+        Integer [] inputKeyProj = new Integer[] { leftOrdinal };
 
         RelDataTypeField [] leftFields = leftRel.getRowType().getFields();
         RelDataType leftType = leftFields[leftOrdinal].getType();
@@ -216,7 +216,7 @@ class FtrsIndexJoinRule
                     fieldNames);
 
             // key now comes from extra cast field instead
-            inputKeyProj = new Integer[] { new Integer(leftFieldCount) };
+            inputKeyProj = new Integer[] { leftFieldCount };
         }
 
         RelNode fennelInput =

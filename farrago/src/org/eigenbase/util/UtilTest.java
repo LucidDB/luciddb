@@ -25,6 +25,7 @@ package org.eigenbase.util;
 import java.io.*;
 
 import java.math.*;
+import java.util.*;
 
 import junit.framework.*;
 
@@ -343,7 +344,7 @@ public class UtilTest
      */
     private String toString(byte [] bytes)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < bytes.length; i++) {
             byte b = bytes[i];
             if (i > 0) {
@@ -353,6 +354,67 @@ public class UtilTest
             buf.append((b < 16) ? ("0" + s) : s);
         }
         return buf.toString();
+    }
+
+    /**
+     * Tests {@link CastingList} and {@link Util#cast}.
+     */
+    public void testCastingList()
+    {
+        final List<Number> numberList = new ArrayList<Number>();
+        numberList.add(new Integer(1));
+        numberList.add(null);
+        numberList.add(new Integer(2));
+        List<Integer> integerList = Util.cast(numberList, Integer.class);
+        assertEquals(3, integerList.size());
+        assertEquals(new Integer(2), integerList.get(2));
+
+        // Nulls are OK.
+        assertNull(integerList.get(1));
+
+        // Can update the underlying list.
+        integerList.set(1, 345);
+        assertEquals(new Integer(345), integerList.get(1));
+        integerList.set(1, null);
+        assertNull(integerList.get(1));
+
+        // Can add a member of the wrong type to the underlying list.
+        numberList.add(new Double(3.1415));
+        assertEquals(4, integerList.size());
+
+        // Access a member which is of the wrong type.
+        try {
+            integerList.get(3);
+            fail("expected exception");
+        } catch (ClassCastException e) {
+            // ok
+        }
+    }
+
+    public void testIterableProperties()
+    {
+        Properties properties = new Properties();
+        properties.put("foo", "george");
+        properties.put("bar", "ringo");
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, String> entry : Util.entries(properties)) {
+            sb.append(entry.getKey()).append("=").append(entry.getValue());
+            sb.append(";");
+        }
+        assertEquals("bar=ringo;foo=george;", sb.toString());
+
+        assertEquals(2, Util.entries(properties).size());
+
+        properties.put("nonString", 34);
+        try {
+            for (Map.Entry<String, String> entry : Util.entries(properties)) {
+                String s = entry.getValue();
+                Util.discard(s);
+            }
+            fail("expected exception");
+        } catch (ClassCastException e) {
+            // ok
+        }
     }
 
     /**

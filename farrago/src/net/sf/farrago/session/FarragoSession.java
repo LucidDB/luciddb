@@ -32,6 +32,9 @@ import net.sf.farrago.plugin.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.relopt.RelOptPlanner;
+
+import javax.jmi.reflect.RefObject;
 
 
 /**
@@ -281,9 +284,9 @@ public interface FarragoSession
      *
      * @return collection of RefObjects retrieved by query
      */
-    public Collection executeLurqlQuery(
+    public Collection<RefObject> executeLurqlQuery(
         String lurql,
-        Map argMap);
+        Map<String,?> argMap);
 
     /**
      * Returns a FarragoSessionInfo object which contains information on the

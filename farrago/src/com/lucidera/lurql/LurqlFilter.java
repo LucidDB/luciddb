@@ -57,7 +57,7 @@ public class LurqlFilter
 
     private final String attributeName;
 
-    private final Set values;
+    private final Set<Object> values;
 
     private final String sqlQuery;
 
@@ -69,16 +69,14 @@ public class LurqlFilter
 
     //~ Constructors -----------------------------------------------------------
 
-    public LurqlFilter(String attributeName, Set values)
+    public LurqlFilter(String attributeName, Set<Object> values)
     {
         this.attributeName = attributeName;
         this.values = Collections.unmodifiableSet(values);
         this.sqlQuery = null;
         this.setParam = null;
         this.exists = null;
-        Iterator iter = values.iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
+        for (Object obj : values) {
             if (obj instanceof LurqlDynamicParam) {
                 hasDynamicParams = true;
                 break;
@@ -166,7 +164,7 @@ public class LurqlFilter
                 setParam.unparse(pw);
                 return;
             }
-            Iterator iter = values.iterator();
+            Iterator<Object> iter = values.iterator();
             if (values.size() == 1) {
                 pw.print(" = ");
                 unparseValue(

@@ -83,7 +83,7 @@ public class RelStructuredTypeFlattener
     private final RexBuilder rexBuilder;
     private final RewriteRelVisitor visitor;
 
-    private Map oldToNewRelMap;
+    private Map<RelNode,RelNode> oldToNewRelMap;
     private RelNode currentRel;
     private int iRestructureInput;
     private RelDataType flattenedRootType;
@@ -102,7 +102,7 @@ public class RelStructuredTypeFlattener
     public RelNode rewrite(RelNode root, boolean restructure)
     {
         // Perform flattening.
-        oldToNewRelMap = new HashMap();
+        oldToNewRelMap = new HashMap<RelNode, RelNode>();
         visitor.visit(root, 0, null);
         RelNode flattened = getNewForOldRel(root);
         flattenedRootType = flattened.getRowType();
@@ -208,7 +208,7 @@ public class RelStructuredTypeFlattener
 
     protected RelNode getNewForOldRel(RelNode oldRel)
     {
-        return (RelNode) oldToNewRelMap.get(oldRel);
+        return oldToNewRelMap.get(oldRel);
     }
 
     /**
@@ -356,7 +356,7 @@ public class RelStructuredTypeFlattener
     public void rewriteRel(CorrelatorRel rel)
     {
         Iterator oldCorrelations = rel.getCorrelations().iterator();
-        ArrayList newCorrelations = new ArrayList();
+        ArrayList<CorrelatorRel.Correlation> newCorrelations = new ArrayList<CorrelatorRel.Correlation>();
         while (oldCorrelations.hasNext()) {
             CorrelatorRel.Correlation c =
                 (CorrelatorRel.Correlation) oldCorrelations.next();
@@ -517,7 +517,7 @@ public class RelStructuredTypeFlattener
 
     public void rewriteGeneric(RelNode rel)
     {
-        RelNode newRel = RelOptUtil.clone(rel);
+        RelNode newRel = rel.clone();
         RelNode [] oldInputs = rel.getInputs();
         for (int i = 0; i < oldInputs.length; ++i) {
             newRel.replaceInput(
@@ -611,7 +611,7 @@ public class RelStructuredTypeFlattener
 
                 int j = 0;
                 for (RelDataTypeField field : exp.getType().getFieldList()) {
-                    RexNode cloneCall = RexUtil.clone(exp);
+                    RexNode cloneCall = exp.clone();
                     RexNode fieldAccess =
                         rexBuilder.makeFieldAccess(
                             cloneCall,
@@ -834,8 +834,8 @@ public class RelStructuredTypeFlattener
                 RexNode comparison =
                     rexBuilder.makeCall(
                         op,
-                        (RexNode) flattenedExps.get(i),
-                        (RexNode) flattenedExps.get(i + n));
+                        flattenedExps.get(i),
+                        flattenedExps.get(i + n));
                 if (conjunction == null) {
                     conjunction = comparison;
                 } else {

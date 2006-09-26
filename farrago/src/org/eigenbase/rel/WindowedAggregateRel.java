@@ -116,7 +116,7 @@ public final class WindowedAggregateRel
         program.explainCalc(this, pw);
     }
 
-    public Object clone()
+    public WindowedAggregateRel clone()
     {
         return
             new WindowedAggregateRel(

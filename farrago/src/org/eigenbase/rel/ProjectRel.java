@@ -103,12 +103,12 @@ public final class ProjectRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public ProjectRel clone()
     {
         ProjectRel clone =
             new ProjectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 RexUtil.clone(exps),
                 rowType,
                 getFlags(),

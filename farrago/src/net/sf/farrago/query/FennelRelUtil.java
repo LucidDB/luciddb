@@ -220,7 +220,7 @@ public abstract class FennelRelUtil
     {
         Integer [] array = new Integer[n];
         for (int i = 0; i < n; ++i) {
-            array[i] = new Integer(i);
+            array[i] = i;
         }
         return array;
     }
@@ -240,7 +240,7 @@ public abstract class FennelRelUtil
     {
         Integer [] array = new Integer[n];
         for (int i = 0; i < n; ++i) {
-            array[i] = new Integer(base + i);
+            array[i] = base + i;
         }
         return array;
     }
@@ -920,8 +920,8 @@ public abstract class FennelRelUtil
     }
 
     /**
-     * Converts a list of a list of RexLiterals representing tuples into a
-     * base-64 encoded string
+     * Converts a list of a list of {@link RexLiteral}s representing tuples
+     * into a base-64 encoded string.
      *
      * @param rowType the row type of the tuples
      * @param tuples the tuples

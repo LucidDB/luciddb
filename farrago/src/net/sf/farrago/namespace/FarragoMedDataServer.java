@@ -120,7 +120,7 @@ public interface FarragoMedDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException;
 
     /**

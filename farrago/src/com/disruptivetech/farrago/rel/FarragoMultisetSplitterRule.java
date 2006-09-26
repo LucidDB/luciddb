@@ -779,20 +779,21 @@ public class FarragoMultisetSplitterRule
                 child,
                 groupCount,
                 new AggregateRel.Call[] { countCall });
-        RexNode [] whenThenElse =
-            new RexNode[] { // when
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.equalsOperator,
-                    RelOptUtil.createInputRef(aggregateRel, -1),
-                    rexBuilder.makeExactLiteral(
-                        new BigDecimal(BigInteger.ONE))), 
-                // then
-                rexBuilder.makeLiteral(true), 
-                // else
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.throwOperator,
-                    rexBuilder.makeLiteral(
-                        SqlStateCodes.CardinalityViolation.getState())) };
+        RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
+        RexNode [] whenThenElse = { // when
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.equalsOperator,
+                expr0,
+                rexBuilder.makeExactLiteral(
+                    new BigDecimal(BigInteger.ONE))),
+            // then
+            rexBuilder.makeLiteral(true),
+            // else
+            rexBuilder.makeCall(
+                SqlStdOperatorTable.throwOperator,
+                rexBuilder.makeLiteral(
+                    SqlStateCodes.CardinalityViolation.getState()))
+        };
         RexNode condition =
             rexBuilder.makeCall(
                 SqlStdOperatorTable.caseOperator,
@@ -872,15 +873,16 @@ public class FarragoMultisetSplitterRule
         } else {
             op = SqlStdOperatorTable.greaterThanOperator;
         }
+        RexNode expr0 = RelOptUtil.createInputRef(aggregateRel, -1);
         RexNode [] whenThenElse =
             new RexNode[] { // when
                 cluster.getRexBuilder().makeCall(
                     op,
-                    RelOptUtil.createInputRef(aggregateRel, -1),
+                    expr0,
                     cluster.getRexBuilder().makeExactLiteral(
-                        new BigDecimal(BigInteger.ZERO))), 
+                        new BigDecimal(BigInteger.ZERO))),
                 // then
-                cluster.getRexBuilder().makeLiteral(true), 
+                cluster.getRexBuilder().makeLiteral(true),
                 // else
                 cluster.getRexBuilder().makeLiteral(false) };
         RexNode caseRexNode =

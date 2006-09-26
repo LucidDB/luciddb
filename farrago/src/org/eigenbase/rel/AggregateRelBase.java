@@ -25,7 +25,6 @@ import java.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.util.*;
 
@@ -83,17 +82,18 @@ public abstract class AggregateRelBase
 
     public void explain(RelOptPlanWriter pw)
     {
-        ArrayList names = new ArrayList(), values = new ArrayList();
+        List<String> names = new ArrayList<String>();
+        List<Object> values = new ArrayList<Object>();
         names.add("child");
         names.add("groupCount");
-        values.add(new Integer(groupCount));
+        values.add(groupCount);
         for (int i = 0; i < aggCalls.length; i++) {
             names.add("agg#" + i);
             values.add(aggCalls[i]);
         }
         pw.explain(
             this,
-            (String []) names.toArray(new String[names.size()]),
+            names.toArray(new String[names.size()]),
             values.toArray(new Object[values.size()]));
     }
 
@@ -242,7 +242,7 @@ public abstract class AggregateRelBase
 
         public String toString()
         {
-            StringBuffer buf = new StringBuffer(aggregation.getName());
+            StringBuilder buf = new StringBuilder(aggregation.getName());
             buf.append("(");
             if (distinct) {
                 buf.append((args.length == 0) ? "DISTINCT" : "DISTINCT ");

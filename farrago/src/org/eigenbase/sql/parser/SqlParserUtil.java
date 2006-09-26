@@ -1123,7 +1123,7 @@ outer:
                             currentPos.plusAll(
                                 new SqlNode[] { leftExp, rightExp });
                         final SqlCall newExp =
-                            current.createCall(leftExp, rightExp, callPos);
+                            current.createCall(callPos, leftExp, rightExp);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced infix: " + newExp);
                         }
@@ -1157,7 +1157,7 @@ outer:
                         SqlParserPos callPos =
                             currentPos.plusAll(new SqlNode[] { leftExp });
                         final SqlCall newExp =
-                            current.createCall(leftExp, callPos);
+                            current.createCall(callPos, leftExp);
                         if (tracer.isLoggable(Level.FINE)) {
                             tracer.fine("Reduced postfix: " + newExp);
                         }

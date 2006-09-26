@@ -146,17 +146,17 @@ abstract public class FennelTupleResultSet
         wasNull = false;
         switch (columnType) {
         case Types.TINYINT: // NOTE: the JDBC spec maps this to an Integer
-            return new Byte(d.getByte());
+            return Byte.valueOf(d.getByte());
         case Types.SMALLINT: // NOTE: the JDBC spec maps this to an Integer
-            return new Short(d.getShort());
+            return Short.valueOf(d.getShort());
         case Types.INTEGER:
-            return new Integer(d.getInt());
+            return Integer.valueOf(d.getInt());
         case Types.BIGINT:
-            return new Long(d.getLong());
+            return Long.valueOf(d.getLong());
         case Types.REAL:
-            return new Float(d.getFloat());
+            return Float.valueOf(d.getFloat());
         case Types.DOUBLE:
-            return new Double(d.getDouble());
+            return Double.valueOf(d.getDouble());
         case Types.DECIMAL:
         case Types.NUMERIC:
             BigDecimal bd = BigDecimal.valueOf(d.getLong());
@@ -164,7 +164,7 @@ abstract public class FennelTupleResultSet
             return bd;
         case Types.BOOLEAN:
         case Types.BIT:
-            return new Boolean(d.getBoolean());
+            return Boolean.valueOf(d.getBoolean());
         case Types.DATE:
             return new Date(getMillis(d));
         case Types.TIME:

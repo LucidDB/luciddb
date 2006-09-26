@@ -51,8 +51,6 @@ public class CalcRexImplementorTableImpl
         SqlStdOperatorTable.instance();
     private static final CalcRexImplementorTableImpl std =
         new CalcRexImplementorTableImpl(null).initStandard();
-    private static final Integer integer0 = new Integer(0);
-    private static final Integer integer1 = new Integer(1);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -64,12 +62,14 @@ public class CalcRexImplementorTableImpl
     /**
      * Maps {@link SqlOperator} to {@link CalcRexImplementor}.
      */
-    private final Map<SqlOperator,CalcRexImplementor> operatorImplementationMap = new HashMap<SqlOperator, CalcRexImplementor>();
+    private final Map<SqlOperator,CalcRexImplementor> operatorImplementationMap =
+        new HashMap<SqlOperator, CalcRexImplementor>();
 
     /**
      * Maps {@link SqlAggFunction} to {@link CalcRexAggImplementor}.
      */
-    private final Map<SqlAggFunction,CalcRexAggImplementor> aggImplementationMap = new HashMap<SqlAggFunction, CalcRexAggImplementor>();
+    private final Map<SqlAggFunction,CalcRexAggImplementor> aggImplementationMap =
+        new HashMap<SqlAggFunction, CalcRexAggImplementor>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -450,7 +450,7 @@ public class CalcRexImplementorTableImpl
 
         register(
             SqlStdOperatorTable.castFunc,
-            new CastImplementor());
+            CastImplementor.instance);
 
         if (false) {
             // TODO eventually need an extra argument for charset, in which
@@ -734,10 +734,9 @@ public class CalcRexImplementorTableImpl
             RexToCalcTranslator translator)
         {
             List<CalcReg> regList = makeRegList(translator, call);
-            CalcReg [] regs = regList.toArray(new CalcReg[regList.size()]);
 
-            instr.add(translator.builder, regs);
-            return regs[0];
+            instr.add(translator.builder, regList);
+            return regList.get(0);
         }
 
         /**
@@ -792,8 +791,7 @@ public class CalcRexImplementorTableImpl
             if (operand.getType().isNullable()) {
                 RexNode notNullCall =
                     translator.rexBuilder.makeCall(
-                        SqlStdOperatorTable.isNotNullOperator,
-                        operand);
+                        SqlStdOperatorTable.isNotNullOperator, operand);
                 RexNode eqCall =
                     translator.rexBuilder.makeCall(
                         SqlStdOperatorTable.equalsOperator,
@@ -920,7 +918,7 @@ public class CalcRexImplementorTableImpl
             RexCall call,
             RexToCalcTranslator translator)
         {
-            call = (RexCall) call.clone();
+            call = call.clone();
             for (int i = 0; i < call.operands.length; i++) {
                 RexNode operand = call.operands[i];
                 if (!operand.getType().getSqlTypeName().equals(
@@ -953,21 +951,22 @@ public class CalcRexImplementorTableImpl
     private static class CastImplementor
         extends AbstractCalcRexImplementor
     {
-        private static DoubleKeyMap doubleKeyMap;
+        private final Map<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
+            doubleKeyMap =
+            new HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>();
+        static final CastImplementor instance = new CastImplementor();
 
-        static {
-            doubleKeyMap = new DoubleKeyMap();
-            doubleKeyMap.setEnforceUniqueness(true);
-
-            doubleKeyMap.put(
+        private CastImplementor()
+        {
+            putMM(
                 SqlTypeName.intTypes,
                 SqlTypeName.intTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.intTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.datetimeTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
@@ -976,23 +975,23 @@ public class CalcRexImplementorTableImpl
             // TODO: Replace castDateToMillis with real cast from/to interval
             //  (Okay to use castDateToMillis for now since it just
             //   stuffs one int64 value into another)
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.timeIntervalTypes,
                 SqlTypeName.Bigint,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Bigint,
                 SqlTypeName.timeIntervalTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToMillis));
 
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.booleanTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castA));
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.intTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -1013,15 +1012,15 @@ public class CalcRexImplementorTableImpl
                     }
                 });
 
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.approxTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.approxTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.approxTypes,
                 SqlTypeName.intTypes,
                 new AbstractCalcRexImplementor() {
@@ -1052,62 +1051,62 @@ public class CalcRexImplementorTableImpl
                     }
                 });
 
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.charTypes,
                 SqlTypeName.Date,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToDate));
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Date,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castDateToStr));
 
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.charTypes,
                 SqlTypeName.Time,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTime));
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Time,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimeToStr));
 
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.charTypes,
                 SqlTypeName.Timestamp,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castStrAToTimestamp));
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Timestamp,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castTimestampToStr));
 
             // Timestamp to date, time types
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Timestamp,
                 SqlTypeName.datetimeTypes,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
 
             // date, time to timestamp
-            doubleKeyMap.put(
+            put(
                 SqlTypeName.Date,
                 SqlTypeName.Timestamp,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
-            doubleKeyMap.put(
+            put(
                 SqlTypeName.Time,
                 SqlTypeName.Timestamp,
                 new UsingInstrImplementor(CalcProgramBuilder.Cast));
 
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.charTypes,
                 SqlTypeName.booleanTypes,
                 new UsingInstrImplementor(
                     ExtInstructionDefTable.castA));
 
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.charTypes,
                 SqlTypeName.intTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -1127,7 +1126,7 @@ public class CalcRexImplementorTableImpl
                         return translator.implementNode(newCall);
                     }
                 });
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.charTypes,
                 SqlTypeName.approxTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA) {
@@ -1148,21 +1147,55 @@ public class CalcRexImplementorTableImpl
                     }
                 });
 
-            doubleKeyMap.put(
+            putMM(
                 SqlTypeName.charTypes,
                 SqlTypeName.charTypes,
                 new UsingInstrImplementor(ExtInstructionDefTable.castA));
 
-            doubleKeyMap.put(
+            putSM(
                 SqlTypeName.Decimal,
                 SqlTypeName.charTypes,
                 new CastDecimalImplementor(
                     ExtInstructionDefTable.castADecimal));
-            doubleKeyMap.put(
+            putMS(
                 SqlTypeName.charTypes,
                 SqlTypeName.Decimal,
                 new CastDecimalImplementor(
                     ExtInstructionDefTable.castADecimal));
+        }
+
+        private void putMM(
+            SqlTypeName[] t1s, SqlTypeName[] t2s, CalcRexImplementor value)
+        {
+            for (int i = 0; i < t1s.length; i++) {
+                putSM(t1s[i], t2s, value);
+            }
+        }
+
+        private void putMS(
+            SqlTypeName[] t1s, SqlTypeName t2, CalcRexImplementor value)
+        {
+            for (int i = 0; i < t1s.length; i++) {
+                put(t1s[i], t2, value);
+            }
+        }
+
+        private void putSM(
+            SqlTypeName t1, SqlTypeName[] t2s, CalcRexImplementor value)
+        {
+            for (int i = 0; i < t2s.length; i++) {
+                put(t1, t2s[i], value);
+            }
+        }
+
+        private void put(
+            SqlTypeName t1, SqlTypeName t2, CalcRexImplementor value)
+        {
+            assert value != null;
+            CalcRexImplementor s = doubleKeyMap.put(
+                new Pair<SqlTypeName, SqlTypeName>(t1, t2),
+                value);
+            assert s == null : "key already existed";
         }
 
         public CalcReg implement(
@@ -1196,7 +1229,9 @@ public class CalcRexImplementorTableImpl
             SqlTypeName toTypeName = toType.getSqlTypeName();
 
             CalcRexImplementor implentor =
-                (CalcRexImplementor) doubleKeyMap.get(fromTypeName, toTypeName);
+                doubleKeyMap.get(
+                    new Pair<SqlTypeName, SqlTypeName>(
+                        fromTypeName, toTypeName));
             if (null != implentor) {
                 return implentor.implement(call, translator);
             }
@@ -1208,6 +1243,37 @@ public class CalcRexImplementorTableImpl
             throw Util.needToImplement(
                 "Cast from '" + fromType.toString()
                 + "' to '" + toType.toString() + "'");
+        }
+
+        static class Pair <T1, T2>
+        {
+            private final T1 o1;
+            private final T2 o2;
+
+            Pair(T1 o1, T2 o2)
+            {
+                this.o1 = o1;
+                this.o2 = o2;
+            }
+
+            public boolean equals(Object obj)
+            {
+                return obj instanceof Pair
+                    && Util.equal(this.o1, ((Pair) obj).o1)
+                    && Util.equal(this.o2, ((Pair) obj).o2);
+            }
+
+            public int hashCode()
+            {
+                int h1 = Util.hash(0, o1);
+                return Util.hash(h1, o2);
+            }
+        }
+
+        static class DoubleKeyMap
+            extends HashMap<Pair<SqlTypeName, SqlTypeName>, CalcRexImplementor>
+        {
+
         }
 
         /**
@@ -1801,7 +1867,7 @@ public class CalcRexImplementorTableImpl
             final CalcReg zeroReg =
                 translator.builder.newLiteral(
                     translator.getCalcRegisterDescriptor(call),
-                    integer0);
+                    0);
             CalcProgramBuilder.move.add(
                 translator.builder,
                 accumulatorRegister,
@@ -1819,7 +1885,7 @@ public class CalcRexImplementorTableImpl
             final CalcReg oneReg =
                 translator.builder.newLiteral(
                     translator.getCalcRegisterDescriptor(call),
-                    integer1);
+                    1);
 
             // If operand is null, then it is like count(*).
             // Otherwise, it is like count(x).
@@ -1891,7 +1957,7 @@ public class CalcRexImplementorTableImpl
             final CalcReg oneReg =
                 translator.builder.newLiteral(
                     translator.getCalcRegisterDescriptor(call),
-                    integer1);
+                    1);
 
             // If operand is null, then it is like count(*).
             // Otherwise, it is like count(x).
@@ -1971,7 +2037,7 @@ public class CalcRexImplementorTableImpl
             final CalcReg zeroReg =
                 translator.builder.newLiteral(
                     translator.getCalcRegisterDescriptor(call),
-                    integer0);
+                    0);
             CalcProgramBuilder.move.add(
                 translator.builder,
                 accumulatorRegister,
@@ -2296,8 +2362,6 @@ public class CalcRexImplementorTableImpl
                 regList.add(translator.implementNode(operand));
             }
 
-            CalcReg[] registers = regList.toArray(new CalcReg[regList.size()]);
-
             String notZeroLabel = translator.newLabel();
 
             CalcReg isNotZeroReg =
@@ -2314,7 +2378,7 @@ public class CalcRexImplementorTableImpl
             progBuilder.addLabelJumpTrue(notZeroLabel, isNotZeroReg);
 
             // store time func reuslt in local reg
-            instruction.add(progBuilder, registers);
+            instruction.add(progBuilder, regList);
 
             // dangling label on whatever comes next
             progBuilder.addLabel(notZeroLabel);

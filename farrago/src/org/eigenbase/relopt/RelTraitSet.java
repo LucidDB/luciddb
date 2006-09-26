@@ -235,7 +235,7 @@ public class RelTraitSet
      */
     public String toString()
     {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         for (int i = 0; i < traits.length; i++) {
             if (i > 0) {
                 s.append('.');

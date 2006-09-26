@@ -24,7 +24,6 @@ package org.eigenbase.rel;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -66,7 +65,7 @@ public class TableFunctionRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public TableFunctionRel clone()
     {
         TableFunctionRel clone =
             new TableFunctionRel(

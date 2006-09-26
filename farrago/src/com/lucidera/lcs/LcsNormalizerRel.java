@@ -60,7 +60,7 @@ public class LcsNormalizerRel
     //~ Methods ----------------------------------------------------------------
 
     // implement AbstractRelNode
-    public AbstractRelNode clone()
+    public LcsNormalizerRel clone()
     {
         LcsNormalizerRel clone = new LcsNormalizerRel(
                 getCluster(),

@@ -54,6 +54,8 @@ public abstract class JmiMemFactory
     private final Map<Class, RefObject> metaMap;
     private final Map<RefObject, RefPackage> pluginPackageMap;
     private final Map<Class, RefClass> classMap;
+    private static final Float FloatZero = Float.valueOf(0);
+    private static final Double DoubleZero = Double.valueOf(0);
 
     //~ Constructors -----------------------------------------------------------
 
@@ -579,13 +581,13 @@ public abstract class JmiMemFactory
                 if (attrClass == int.class) {
                     return new Integer(0);
                 } else if (attrClass == long.class) {
-                    return new Long(0);
+                    return Long.valueOf(0);
                 } else if (attrClass == boolean.class) {
-                    return new Boolean(false);
+                    return Boolean.FALSE;
                 } else if (attrClass == double.class) {
-                    return new Double(0);
+                    return DoubleZero;
                 } else if (attrClass == float.class) {
-                    return new Float(0);
+                    return FloatZero;
                 } else {
                     throw Util.newInternal(attrClass.getName());
                 }

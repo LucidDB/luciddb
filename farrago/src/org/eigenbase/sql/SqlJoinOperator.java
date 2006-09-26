@@ -60,9 +60,7 @@ public class SqlJoinOperator
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         assert functionQualifier == null;
         assert (operands[SqlJoin.IS_NATURAL_OPERAND] instanceof SqlLiteral);
@@ -94,12 +92,8 @@ public class SqlJoinOperator
         SqlNode condition,
         SqlParserPos pos)
     {
-        return
-            createCall(
-                new SqlNode[] {
-                    left, isNatural, joinType, right, conditionType, condition
-                },
-                pos);
+        return createCall(
+            pos, left, isNatural, joinType, right, conditionType, condition);
     }
 
     public void unparse(

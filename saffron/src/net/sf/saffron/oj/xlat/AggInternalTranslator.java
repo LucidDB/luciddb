@@ -297,7 +297,7 @@ outer:
             this.group = group;
         }
 
-        public Object clone()
+        public RexGroupVariable clone()
         {
             return new RexGroupVariable(group);
         }
@@ -323,7 +323,7 @@ outer:
             this.agg = agg;
         }
 
-        public Object clone()
+        public RexAggVariable clone()
         {
             return new RexAggVariable(agg);
         }

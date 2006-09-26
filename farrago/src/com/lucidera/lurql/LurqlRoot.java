@@ -42,14 +42,14 @@ public class LurqlRoot
 
     private final String className;
 
-    private final List filterList;
+    private final List<LurqlFilter> filterList;
 
     //~ Constructors -----------------------------------------------------------
 
     public LurqlRoot(
         String aliasName,
         String className,
-        List filterList,
+        List<LurqlFilter> filterList,
         LurqlPathSpec pathSpec)
     {
         super(aliasName, pathSpec);
@@ -64,7 +64,7 @@ public class LurqlRoot
         return className;
     }
 
-    public List getFilterList()
+    public List<LurqlFilter> getFilterList()
     {
         return filterList;
     }

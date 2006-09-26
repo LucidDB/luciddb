@@ -40,7 +40,7 @@ public class LurqlPathSpec
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List branches;
+    private final List<LurqlQueryNode> branches;
 
     private final LurqlPathSpec gatherThen;
 
@@ -49,7 +49,7 @@ public class LurqlPathSpec
     //~ Constructors -----------------------------------------------------------
 
     public LurqlPathSpec(
-        List branches,
+        List<LurqlQueryNode> branches,
         LurqlPathSpec gatherThen,
         boolean gatherParent)
     {
@@ -60,7 +60,7 @@ public class LurqlPathSpec
 
     //~ Methods ----------------------------------------------------------------
 
-    public List getBranches()
+    public List<LurqlQueryNode> getBranches()
     {
         return branches;
     }
@@ -85,14 +85,13 @@ public class LurqlPathSpec
     {
         pw.println("(");
         pw.write(StackWriter.INDENT);
-        Iterator iter = branches.iterator();
-        while (iter.hasNext()) {
-            LurqlPathBranch branch = (LurqlPathBranch) iter.next();
-            branch.unparse(pw);
-            pw.println();
-            if (iter.hasNext()) {
+        int k = 0;
+        for (LurqlQueryNode branch : branches) {
+            if (k++ > 0) {
                 pw.println("union");
             }
+            branch.unparse(pw);
+            pw.println();
         }
         pw.write(StackWriter.OUTDENT);
         pw.print(")");

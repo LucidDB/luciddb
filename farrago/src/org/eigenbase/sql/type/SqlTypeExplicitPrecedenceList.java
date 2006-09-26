@@ -46,12 +46,12 @@ public class SqlTypeExplicitPrecedenceList
      *
      * @sql.2003 Part 2 Section 9.5
      */
-    private static final Map typeNameToPrecedenceList;
+    private static final Map<SqlTypeName,SqlTypeExplicitPrecedenceList> typeNameToPrecedenceList;
 
     static {
         // NOTE jvs 25-Jan-2005:  the null entries delimit equivalence
         // classes
-        List numericList =
+        List<SqlTypeName> numericList =
             Arrays.asList(
                 new SqlTypeName[] {
                     SqlTypeName.Tinyint,
@@ -69,7 +69,7 @@ public class SqlTypeExplicitPrecedenceList
                 SqlTypeName.Float,
                 SqlTypeName.Double
                 });
-        typeNameToPrecedenceList = new HashMap();
+        typeNameToPrecedenceList = new HashMap<SqlTypeName, SqlTypeExplicitPrecedenceList>();
         addList(
             SqlTypeName.Boolean,
             new SqlTypeName[] { SqlTypeName.Boolean });
@@ -128,7 +128,7 @@ public class SqlTypeExplicitPrecedenceList
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List typeNames;
+    private final List<SqlTypeName> typeNames;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -150,14 +150,12 @@ public class SqlTypeExplicitPrecedenceList
 
     private static void addNumericList(
         SqlTypeName typeName,
-        List numericList)
+        List<SqlTypeName> numericList)
     {
         int i = getListPosition(typeName, numericList);
+        List<SqlTypeName> subList = numericList.subList(i, numericList.size());
         SqlTypeName [] array =
-            (SqlTypeName []) numericList.subList(
-                i,
-                numericList.size()).toArray(
-                SqlTypeName.EMPTY_ARRAY);
+            subList.toArray(new SqlTypeName[subList.size()]);
         addList(typeName, array);
     }
 
@@ -186,7 +184,7 @@ public class SqlTypeExplicitPrecedenceList
         return p2 - p1;
     }
 
-    private static int getListPosition(SqlTypeName type, List list)
+    private static int getListPosition(SqlTypeName type, List<SqlTypeName> list)
     {
         int i = list.indexOf(type);
         assert (i != -1);

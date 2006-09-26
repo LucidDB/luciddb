@@ -150,16 +150,11 @@ public abstract class RelOptUtil
         return vuv.variables;
     }
 
-    public static RelNode clone(RelNode rel)
-    {
-        return (RelNode) ((AbstractRelNode) rel).clone();
-    }
-
     public static RelNode [] clone(RelNode [] rels)
     {
         rels = (RelNode []) rels.clone();
         for (int i = 0; i < rels.length; i++) {
-            rels[i] = clone(rels[i]);
+            rels[i] = rels[i].clone();
         }
         return rels;
     }
@@ -261,7 +256,7 @@ public abstract class RelOptUtil
 
     public static String toString(RelNode [] a)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("{");
         for (int i = 0; i < a.length; i++) {
             if (i > 0) {
@@ -775,8 +770,7 @@ public abstract class RelOptUtil
             return
                 left.getCluster().getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
-                    (RexNode []) residualList.toArray(
-                        new RexNode[residualList.size()]));
+                    residualList);
         }
     }
 
@@ -817,8 +811,7 @@ public abstract class RelOptUtil
             return
                 joinRel.getCluster().getRexBuilder().makeCall(
                     SqlStdOperatorTable.andOperator,
-                    (RexNode []) nonEquiList.toArray(
-                        new RexNode[nonEquiList.size()]));
+                    nonEquiList);
         }
     }
 
@@ -1361,13 +1354,13 @@ public abstract class RelOptUtil
         }
         RexNode [] whenThenElse =
             {  // when x is null
-                rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, x), 
+                rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, x),
                 // then return y is [not] null
-                rexBuilder.makeCall(nullOp, y), 
+                rexBuilder.makeCall(nullOp, y),
                 // when y is null
-                rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, y), 
+                rexBuilder.makeCall(SqlStdOperatorTable.isNullOperator, y),
                 // then return x is [not] null
-                rexBuilder.makeCall(nullOp, x), 
+                rexBuilder.makeCall(nullOp, x),
                 // else return x compared to y
                 rexBuilder.makeCall(eqOp, x, y) };
         return
@@ -1387,8 +1380,7 @@ public abstract class RelOptUtil
         planWriter.setIdPrefix(false);
         rel.explain(planWriter);
         planWriter.flush();
-        String string = sw.toString();
-        return string;
+        return sw.toString();
     }
 
     /**
@@ -1551,7 +1543,7 @@ public abstract class RelOptUtil
      * are pushed are added to list passed in as input parameters.
      *
      * @param joinRel node
-     * @param nFieldsleft number of fields in the left hand join input
+     * @param nFieldsLeft number of fields in the left hand join input
      * @param filters filters to be classified
      * @param pushJoin true if filters originated from above the join node and
      * the join is an inner join

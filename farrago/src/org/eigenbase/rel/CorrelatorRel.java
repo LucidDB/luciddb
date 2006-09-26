@@ -83,13 +83,13 @@ public final class CorrelatorRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public CorrelatorRel clone()
     {
         CorrelatorRel clone =
             new CorrelatorRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
+                left.clone(),
+                right.clone(),
                 cloneCorrelations(),
                 joinType);
         clone.inheritTraitsFrom(this);

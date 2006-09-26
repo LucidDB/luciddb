@@ -73,7 +73,7 @@ class LcsDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         return new LcsTable(localName, rowType, tableProps, columnPropMap);
@@ -166,7 +166,7 @@ class LcsDataServer
         // we don't support those...yet.
         Set<CwmColumn> uncoveredColumns =
             new HashSet<CwmColumn>(
-                (List) table.getFeature());
+                Util.cast(table.getFeature(), CwmColumn.class));
         for (CwmColumn col : uncoveredColumns) {
             if (col.getType() instanceof FemSqlcollectionType) {
                 throw Util.needToImplement(
@@ -175,16 +175,14 @@ class LcsDataServer
         }
 
         // Verify that clustered indexes do not overlap
-        for (Object i : FarragoCatalogUtil.getTableIndexes(repos, table)) {
-            FemLocalIndex index = (FemLocalIndex) i;
+        for (FemLocalIndex index : FarragoCatalogUtil.getTableIndexes(repos, table)) {
             if (!index.isClustered()) {
                 continue;
             }
 
             // LCS clustered indexes are sorted on RID, not value
             index.setSorted(false);
-            for (Object f : index.getIndexedFeature()) {
-                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+            for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
                 if (!uncoveredColumns.contains(indexedFeature.getFeature())) {
                     throw FarragoResource.instance()
                     .ValidatorMultipleClusterForColumn.ex(

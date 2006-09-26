@@ -27,14 +27,9 @@ import org.eigenbase.oj.rel.JavaRel;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.convert.ConverterRel;
-import org.eigenbase.rel.convert.ConverterRule;
-import org.eigenbase.rel.convert.FactoryConverterRule;
-import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
-import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.util.Util;
 
 
 /**
@@ -78,7 +73,7 @@ public class JavaConverterRel extends ConverterRel implements JavaRel,
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaConverterRel clone()
     {
         JavaConverterRel clone =
             new JavaConverterRel(getCluster(), getChild(), convertlet);

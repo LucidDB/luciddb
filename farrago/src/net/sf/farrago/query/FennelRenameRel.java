@@ -25,12 +25,10 @@ package net.sf.farrago.query;
 import java.util.*;
 
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -78,12 +76,12 @@ public class FennelRenameRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FennelRenameRel clone()
     {
         return
             new FennelRenameRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 fieldNames,
                 cloneTraits());
     }

@@ -363,29 +363,28 @@ public class CalcProgramBuilder
      */
     private void bindReferences()
     {
-        Iterator<Instruction> it = instructions.iterator();
-        for (int i = 0; it.hasNext(); i++) {
-            //Look for instructions that have Line as operands
-            Instruction instruction = it.next();
-            instruction.setLineNumber(i);
+        int i = 0;
+        for (Instruction instruction : instructions) {
+            // Look for instructions that have Line as operands.
+            instruction.setLineNumber(i++);
             Operand [] operands = instruction.getOperands();
             for (int j = 0; (null != operands) && (j < operands.length); j++) {
                 Operand operand = operands[j];
                 if (operand instanceof Line) {
                     Line line = (Line) operand;
                     if (line.getLabel() != null) //we have a label, update the
-                                                 //line number with whats in the
-                                                 //labels map
+                    //line number with whats in the
+                    //labels map
                     {
                         compilationAssert(null == line.getLine(),
                             "Line has already been bind.");
-                        java.lang.Integer lineNumberFromLabel =
+                        Integer lineNumberFromLabel =
                             labels.get(line.getLabel());
                         if (null == lineNumberFromLabel) {
                             throw FarragoResource.instance()
-                            .ProgramCompilationError.ex(
+                                .ProgramCompilationError.ex(
                                 "Label '"
-                                + line.getLabel() + "' not defined");
+                                    + line.getLabel() + "' not defined");
                         }
                         line.setLine(lineNumberFromLabel.intValue());
                     }
@@ -675,7 +674,7 @@ public class CalcProgramBuilder
     {
         return newLiteral(
                 OpType.Int4,
-                new java.lang.Integer(i),
+                i,
                 -1);
     }
 
@@ -684,7 +683,7 @@ public class CalcProgramBuilder
     {
         return newLiteral(
                 OpType.Int8,
-                new java.lang.Integer(i),
+                i,
                 -1);
     }
 
@@ -694,7 +693,7 @@ public class CalcProgramBuilder
             "Unsigned value was found to be negative. Value=" + i);
         return newLiteral(
                 OpType.Uint4,
-                new java.lang.Integer(i),
+                i,
                 -1);
     }
 
@@ -706,7 +705,7 @@ public class CalcProgramBuilder
             "Unsigned value was found to be negative. Value=" + i);
         return newLiteral(
                 OpType.Uint8,
-                new java.lang.Integer(i),
+                i,
                 -1);
     }
 
@@ -714,7 +713,7 @@ public class CalcProgramBuilder
     {
         return newLiteral(
                 OpType.Real,
-                new java.lang.Float(f),
+                f,
                 -1);
     }
 
@@ -722,7 +721,7 @@ public class CalcProgramBuilder
     {
         return newLiteral(
                 OpType.Double,
-                new java.lang.Double(d),
+                d,
                 -1);
     }
 
@@ -1024,7 +1023,7 @@ public class CalcProgramBuilder
             )
             && (reg.getValue() != null)
             && (reg.getValue() instanceof java.lang.Integer)) {
-            compilationAssert(!reg.getValue().equals(new Integer(0)),
+            compilationAssert(!reg.getValue().equals(0),
                 "A literal register of Integer type and value=0 was found");
         }
     }
@@ -1241,7 +1240,7 @@ public class CalcProgramBuilder
         int line = instructions.size();
         labels.put(
             label,
-            new java.lang.Integer(line));
+            line);
     }
 
     // Bool related instructions----------------------
@@ -1829,7 +1828,7 @@ public class CalcProgramBuilder
 
         Line(int line)
         {
-            this.line = new java.lang.Integer(line);
+            this.line = line;
         }
 
         Line(String label)
@@ -1845,7 +1844,7 @@ public class CalcProgramBuilder
         final public void setLine(int line)
         {
             compilationAssert(null == this.line);
-            this.line = new java.lang.Integer(line);
+            this.line = line;
         }
 
         final public java.lang.Integer getLine()
@@ -2080,9 +2079,9 @@ public class CalcProgramBuilder
             this.comment = comment;
         }
 
-        public void setLineNumber(int line)
+        public void setLineNumber(int lineNumber)
         {
-            lineNumber = new Integer(line);
+            this.lineNumber = lineNumber;
         }
     }
 
@@ -2214,8 +2213,9 @@ public class CalcProgramBuilder
             CalcProgramBuilder builder,
             List<CalcReg> registers)
         {
-            add(builder,
-                (CalcReg []) registers.toArray(
+            add(
+                builder,
+                registers.toArray(
                     new CalcReg[registers.size()]));
         }
 

@@ -28,7 +28,6 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.keysindexes.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
@@ -36,16 +35,12 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
-import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -82,7 +77,7 @@ class FtrsDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         return new FtrsTable(localName, rowType, tableProps, columnPropMap);
@@ -107,11 +102,10 @@ class FtrsDataServer
         throws SQLException
     {
         // Validate that there's at most one clustered index.
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-        Iterator indexIter = indexes.iterator();
         int nClustered = 0;
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             if (index.isClustered()) {
                 nClustered++;
             }
@@ -143,11 +137,11 @@ class FtrsDataServer
                 repos,
                 table);
         assert (clusteredIndex != null);
-        for (Object obj : clusteredIndex.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) obj;
+        for (CwmIndexedFeature indexedFeature :
+            clusteredIndex.getIndexedFeature())
+        {
             FemStoredColumn col = (FemStoredColumn) indexedFeature.getFeature();
-            col.setIsNullable(
-                NullableTypeEnum.COLUMN_NO_NULLS);
+            col.setIsNullable(NullableTypeEnum.COLUMN_NO_NULLS);
         }
     }
 

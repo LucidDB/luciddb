@@ -27,7 +27,6 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-import org.eigenbase.util.*;
 import org.eigenbase.util.property.*;
 
 
@@ -222,7 +221,7 @@ public class FarragoProperties
 
         Matcher matcher = patt.matcher(value);
 
-        StringBuffer result = null;
+        StringBuilder result = null;
         int offset = 0;
         while (matcher.find()) {
             int start = matcher.start();
@@ -241,7 +240,7 @@ public class FarragoProperties
 
             if (replacement != null) {
                 if (result == null) {
-                    result = new StringBuffer(value);
+                    result = new StringBuilder(value);
                 }
 
                 result.replace(start + offset, end + offset, replacement);

@@ -54,7 +54,7 @@ class FtrsTable
         String [] localName,
         RelDataType rowType,
         Properties tableProps,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
     {
         super(localName, null, rowType, tableProps, columnPropMap);
     }

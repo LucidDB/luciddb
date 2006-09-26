@@ -134,7 +134,7 @@ public class SqlPrettyWriter
     private final SqlDialect dialect;
     private final StringWriter sw = new StringWriter();
     protected final PrintWriter pw;
-    private final Stack listStack = new Stack();
+    private final Stack<FrameImpl> listStack = new Stack<FrameImpl>();
     protected FrameImpl frame;
     private boolean needWhitespace;
     protected String nextWhitespace;
@@ -748,7 +748,7 @@ public class SqlPrettyWriter
             this.frame = null;
             assert currentIndent == 0 : currentIndent;
         } else {
-            this.frame = (FrameImpl) listStack.pop();
+            this.frame = listStack.pop();
             if (endedFrame.frameType.needsIndent()) {
                 currentIndent -= this.frame.extraIndent;
             }
@@ -1009,11 +1009,11 @@ public class SqlPrettyWriter
      */
     private static class Bean
     {
-        private final Object o;
-        private final Map getterMethods = new HashMap();
-        private final Map setterMethods = new HashMap();
+        private final SqlPrettyWriter o;
+        private final Map<String,Method> getterMethods = new HashMap<String, Method>();
+        private final Map<String,Method> setterMethods = new HashMap<String, Method>();
 
-        Bean(Object o)
+        Bean(SqlPrettyWriter o)
         {
             this.o = o;
 
@@ -1050,19 +1050,17 @@ public class SqlPrettyWriter
 
         private String stripPrefix(String name, int offset)
         {
-            String attributeName =
-                name.substring(offset, offset + 1).toLowerCase()
+            return name.substring(offset, offset + 1).toLowerCase()
                 + name.substring(offset + 1);
-            return attributeName;
         }
 
         public void set(String name, String value)
         {
-            final Method method = (Method) setterMethods.get(name);
+            final Method method = setterMethods.get(name);
             try {
                 method.invoke(
                     o,
-                    new Object[] { value });
+                    value);
             } catch (IllegalAccessException e) {
                 throw Util.newInternal(e);
             } catch (InvocationTargetException e) {
@@ -1072,7 +1070,7 @@ public class SqlPrettyWriter
 
         public Object get(String name)
         {
-            final Method method = (Method) getterMethods.get(name);
+            final Method method = getterMethods.get(name);
             try {
                 return method.invoke(
                         o,
@@ -1086,7 +1084,7 @@ public class SqlPrettyWriter
 
         public String [] getPropertyNames()
         {
-            final Set names = new HashSet();
+            final Set<String> names = new HashSet<String>();
             names.addAll(getterMethods.keySet());
             names.addAll(setterMethods.keySet());
             return (String []) names.toArray(new String[names.size()]);

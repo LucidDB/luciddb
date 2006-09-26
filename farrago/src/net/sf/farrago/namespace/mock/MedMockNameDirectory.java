@@ -23,19 +23,11 @@
 package net.sf.farrago.namespace.mock;
 
 import java.sql.*;
-
 import java.util.*;
 
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
-
-import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -121,13 +113,13 @@ class MedMockNameDirectory
                 server.getForeignSchemaName(),
                 FarragoMedMetadataQuery.OTN_SCHEMA,
                 "Mock schema",
-                Collections.EMPTY_MAP);
+                new Properties());
         } else {
             sink.writeObjectDescriptor(
                 server.getForeignTableName(),
                 FarragoMedMetadataQuery.OTN_TABLE,
                 "Mock table",
-                Collections.EMPTY_MAP);
+                new Properties());
             sink.writeColumnDescriptor(
                 server.getForeignTableName(),
                 COLUMN_NAME,
@@ -135,7 +127,7 @@ class MedMockNameDirectory
                 server.createMockColumnType(sink.getTypeFactory()),
                 "Mock column",
                 "0",
-                Collections.EMPTY_MAP);
+                new Properties());
         }
         return true;
     }

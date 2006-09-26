@@ -277,7 +277,7 @@ public class RexProgramBuilder
                 registerInput(
                     rexBuilder.makeCall(
                         SqlStdOperatorTable.andOperator,
-                        new RexNode[] { conditionRef, ref }));
+                        conditionRef, ref));
             conditionRef = andRef;
         }
     }
@@ -405,7 +405,7 @@ public class RexProgramBuilder
         // to be cloned, because RexLocalRef is immutable.
         List<RexNode> exprs = new ArrayList<RexNode>(exprList);
         for (int i = 0; i < exprList.size(); i++) {
-            exprs.set(i, (RexNode) exprList.get(i).clone());
+            exprs.set(i, exprList.get(i).clone());
         }
         return
             new RexProgram(

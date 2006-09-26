@@ -114,7 +114,7 @@ public class IteratorToFennelConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public IteratorToFennelConverter clone()
     {
         IteratorToFennelConverter clone =
             new IteratorToFennelConverter(
@@ -174,11 +174,12 @@ public class IteratorToFennelConverter
         // code with help from the tuple accessor
         RelDataTypeField [] fields = rowType.getFields();
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
-        Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
         boolean variableWidth = false;
-        for (int i = 0; i < fields.length; ++i) {
-            FemTupleAttrAccessor attrAccessor =
-                (FemTupleAttrAccessor) attrIter.next();
+        int i = -1;
+        for (FemTupleAttrAccessor attrAccessor :
+            tupleAccessor.getAttrAccessor())
+        {
+            ++i;
             if (attrAccessor.getBitValueIndex() != -1) {
                 // bit fields are already handled
                 continue;

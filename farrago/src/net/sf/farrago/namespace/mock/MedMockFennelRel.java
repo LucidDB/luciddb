@@ -22,25 +22,14 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.sql.*;
-
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.util.*;
-
-import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.rel.*;
-import org.eigenbase.oj.stmt.*;
-import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.sql.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -100,7 +89,7 @@ class MedMockFennelRel
     }
 
     // implement RelNode
-    public Object clone()
+    public MedMockFennelRel clone()
     {
         MedMockFennelRel clone =
             new MedMockFennelRel(

@@ -78,9 +78,9 @@ public interface FarragoMedMetadataQuery
      * instance of {@link FarragoMedNameDirectory}, which provides additional
      * filtering context.
      *
-     * @return Map<String, FarragoMedMetadataFilter>
+     * @return map
      */
-    public Map getFilterMap();
+    public Map<String,FarragoMedMetadataFilter> getFilterMap();
 
     /**
      * Retrieves a set of result object types to be returned by the query,
@@ -88,7 +88,7 @@ public interface FarragoMedMetadataQuery
      *
      * @return Set<String>
      */
-    public Set getResultObjectTypes();
+    public Set<String> getResultObjectTypes();
 }
 
 // End FarragoMedMetadataQuery.java

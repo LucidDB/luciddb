@@ -106,7 +106,7 @@ public abstract class ValuesRelBase
     }
 
     // override Object
-    public Object clone()
+    public ValuesRelBase clone()
     {
         // immutable with no children
         return this;

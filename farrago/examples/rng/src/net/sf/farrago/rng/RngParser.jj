@@ -307,19 +307,17 @@ SqlNode ExtendedBuiltinFunctionCall() :
             RngRandomNumberGenerator.class);
         return
         FarragoRngOperatorTable.rngInstance().nextRandomInt.createCall(
-            new SqlNode [] {
-                SqlLiteral.createExactNumeric(
-                    Integer.toString(ceiling),
-                    getPos()),
-                SqlLiteral.createCharString(
-                    FarragoCatalogUtil.getQualifiedName(rng).toString(),
-                    getPos()),
-                SqlLiteral.createCharString(
-                    FarragoProperties.instance().expandProperties(
-                        rng.getSerializedFile()),
-                    getPos())
-                }, 
-            getPos());
+            getPos(),
+            SqlLiteral.createExactNumeric(
+                Integer.toString(ceiling),
+                getPos()),
+            SqlLiteral.createCharString(
+                FarragoCatalogUtil.getQualifiedName(rng).toString(),
+                getPos()),
+            SqlLiteral.createCharString(
+                FarragoProperties.instance().expandProperties(
+                    rng.getSerializedFile()),
+                getPos()));
     }
 }
 

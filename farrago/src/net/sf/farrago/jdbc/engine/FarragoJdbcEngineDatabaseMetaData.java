@@ -25,6 +25,7 @@ package net.sf.farrago.jdbc.engine;
 import java.sql.*;
 
 import java.util.*;
+import java.io.Serializable;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.release.*;
@@ -1208,7 +1209,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         if (unique) {
             queryBuilder.addExact(
                 "non_unique",
-                new Boolean(false));
+                false);
         }
 
         // TODO jvs 22-Oct-2005:  do something with parameter "approximate"
@@ -1329,7 +1330,7 @@ public class FarragoJdbcEngineDatabaseMetaData
         if ((types != null) && (types.length == 1)) {
             queryBuilder.addExact(
                 "data_type",
-                new Integer(types[0]));
+                types[0]);
         }
 
         return queryBuilder.execute();
@@ -1461,13 +1462,13 @@ public class FarragoJdbcEngineDatabaseMetaData
      */
     protected class QueryBuilder
     {
-        protected StringBuffer sql;
-        protected List values;
+        protected StringBuilder sql;
+        protected List<Serializable> values;
 
         protected QueryBuilder(String base)
         {
-            sql = new StringBuffer(base);
-            values = new ArrayList();
+            sql = new StringBuilder(base);
+            values = new ArrayList<Serializable>();
         }
 
         void addConjunction()
@@ -1512,7 +1513,7 @@ public class FarragoJdbcEngineDatabaseMetaData
 
         void addExact(
             String colName,
-            Object value)
+            Serializable value)
         {
             if (value == null) {
                 return;

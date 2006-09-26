@@ -175,11 +175,11 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
     private Boolean disabled;
 
-    private List setupCommands = new ArrayList();
+    private List<String> setupCommands = new ArrayList<String>();
 
-    private Map threadBufferedWriters = new HashMap();
+    private Map<Integer,BufferedWriter> threadBufferedWriters = new HashMap<Integer, BufferedWriter>();
 
-    private Map threadStringWriters = new HashMap();
+    private Map<Integer,StringWriter> threadStringWriters = new HashMap<Integer, StringWriter>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -193,8 +193,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
 
         parseScript(filename);
 
-        for (Iterator i = getThreadIds().iterator(); i.hasNext();) {
-            Integer threadId = (Integer) i.next();
+        for (Iterator<Integer> i = getThreadIds().iterator(); i.hasNext();) {
+            Integer threadId = i.next();
 
             StringWriter w = new StringWriter();
             threadStringWriters.put(threadId, w);
@@ -247,8 +247,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
         }
 
         try {
-            for (Iterator i = setupCommands.iterator(); i.hasNext();) {
-                String sql = ((String) i.next()).trim();
+            for (Iterator<String> i = setupCommands.iterator(); i.hasNext();) {
+                String sql = (i.next()).trim();
 
                 storeSql(SETUP_THREAD_ID, sql);
 
@@ -556,7 +556,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
             if (state.equals(STATE_TABLE[i][0])) {
                 Object [][] stateData = (Object [][]) STATE_TABLE[i][1];
 
-                HashMap result = new HashMap();
+                Map<Object,Object> result = new HashMap<Object, Object>();
                 for (int j = 0, m = stateData.length; j < m; j++) {
                     result.put(stateData[j][0], stateData[j][1]);
                 }
@@ -651,25 +651,25 @@ public class FarragoTestConcurrentScriptedCommandGenerator
      * data is an <code>String[2]</code> containing the thread name and the
      * thread's output.
      */
-    public Map getResults()
+    public Map<Integer,String[]> getResults()
     {
-        TreeMap results = new TreeMap();
+        TreeMap<Integer,String[]> results = new TreeMap<Integer, String[]>();
 
-        TreeSet threadIds = new TreeSet(getThreadIds());
+        TreeSet<Integer> threadIds = new TreeSet<Integer>(getThreadIds());
         threadIds.add(SETUP_THREAD_ID);
 
-        for (Iterator i = threadIds.iterator(); i.hasNext();) {
-            Integer threadId = (Integer) i.next();
+        for (Iterator<Integer> i = threadIds.iterator(); i.hasNext();) {
+            Integer threadId = i.next();
             String threadName = getThreadName(threadId);
             try {
                 BufferedWriter bout =
-                    (BufferedWriter) threadBufferedWriters.get(threadId);
+                    threadBufferedWriters.get(threadId);
                 bout.flush();
             } catch (IOException e) {
                 assert (false) : "IOException via StringWriter";
             }
 
-            StringWriter out = (StringWriter) threadStringWriters.get(threadId);
+            StringWriter out = threadStringWriters.get(threadId);
 
             results.put(
                 threadId,
@@ -691,7 +691,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     public void customErrorHandler(
         FarragoTestConcurrentCommandExecutor executor)
     {
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
         Throwable cause = executor.getFailureCause();
         FarragoTestConcurrentCommand command = executor.getFailureCommand();
 
@@ -702,8 +702,8 @@ public class FarragoTestConcurrentScriptedCommandGenerator
                 message.append("\n\t").append(trace[i].toString());
             }
         } else {
-            message.append(
-                cause.getClass().getName() + ": " + cause.getMessage());
+            message.append(cause.getClass().getName()).append(": ")
+                .append(cause.getMessage());
         }
 
         storeMessage(
@@ -720,7 +720,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
     {
         assert (threadBufferedWriters.containsKey(threadId));
 
-        return (BufferedWriter) threadBufferedWriters.get(threadId);
+        return threadBufferedWriters.get(threadId);
     }
 
     /**
@@ -867,7 +867,7 @@ public class FarragoTestConcurrentScriptedCommandGenerator
      */
     private void storeSql(Integer threadId, String sql)
     {
-        StringBuffer message = new StringBuffer();
+        StringBuilder message = new StringBuilder();
 
         BufferedReader rdr = new BufferedReader(new StringReader(sql));
 

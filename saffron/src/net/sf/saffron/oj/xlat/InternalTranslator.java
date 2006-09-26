@@ -209,7 +209,7 @@ class InternalTranslator
         } else if (o instanceof Boolean) {
             rex = rexBuilder.makeLiteral(((Boolean) o).booleanValue());
         } else if (o instanceof String) {
-            rex = rexBuilder.makeLiteral(((String) o));
+            rex = rexBuilder.makeLiteral((String) o);
         } else if (o instanceof BigDecimal) {
             rex = rexBuilder.makeExactLiteral((BigDecimal) o);
         } else if (o instanceof Number) {
@@ -433,7 +433,7 @@ class InternalTranslator
             throw new UnsupportedOperationException();
         }
 
-        public Object clone()
+        public RexNode clone()
         {
             throw new UnsupportedOperationException();
         }

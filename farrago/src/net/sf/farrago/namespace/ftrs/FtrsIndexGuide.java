@@ -37,6 +37,7 @@ import net.sf.farrago.util.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -124,14 +125,14 @@ class FtrsIndexGuide
      *
      * @return List (of CwmColumn) making up an unclustered index's tuple
      */
-    List getUnclusteredCoverageColList(
+    List<FemAbstractColumn> getUnclusteredCoverageColList(
         FemLocalIndex index)
     {
         FemLocalIndex clusteredIndex =
             FarragoCatalogUtil.getClusteredIndex(
                 repos,
                 index.getSpannedClass());
-        List indexColumnList = new ArrayList();
+        List<FemAbstractColumn> indexColumnList = new ArrayList<FemAbstractColumn>();
         appendDefinedKey(indexColumnList, index);
         appendClusteredDistinctKey(clusteredIndex, indexColumnList);
         return indexColumnList;
@@ -150,15 +151,13 @@ class FtrsIndexGuide
     Integer [] getUnclusteredCoverageArray(
         FemLocalIndex index)
     {
-        List list = getUnclusteredCoverageColList(index);
+        List<FemAbstractColumn> list = getUnclusteredCoverageColList(index);
         Integer [] projection = new Integer[list.size()];
-        Iterator iter = list.iterator();
+        Iterator<FemAbstractColumn> iter = list.iterator();
         int i = 0;
         for (; iter.hasNext(); ++i) {
-            FemAbstractColumn column = (FemAbstractColumn) iter.next();
-            projection[i] = new Integer(
-                    flattenOrdinal(
-                        column.getOrdinal()));
+            FemAbstractColumn column = iter.next();
+            projection[i] = flattenOrdinal(column.getOrdinal());
         }
         return projection;
     }
@@ -179,23 +178,22 @@ class FtrsIndexGuide
         FemLocalIndex index)
     {
         assert (index.isClustered());
-        List indexColumnList = new ArrayList();
+        List<FemAbstractColumn> indexColumnList =
+            new ArrayList<FemAbstractColumn>();
         appendClusteredDistinctKey(index, indexColumnList);
         Integer [] array = new Integer[indexColumnList.size()];
         for (int i = 0; i < array.length; ++i) {
             FemAbstractColumn column =
-                (FemAbstractColumn) indexColumnList.get(i);
-            array[i] = new Integer(
-                    flattenOrdinal(
-                        column.getOrdinal()));
+                indexColumnList.get(i);
+            array[i] = flattenOrdinal(column.getOrdinal());
         }
         return array;
     }
 
-    List getDistinctKeyColList(
+    List<? extends Object> getDistinctKeyColList(
         FemLocalIndex index)
     {
-        List indexColumnList = new ArrayList();
+        List<FemAbstractColumn> indexColumnList = new ArrayList<FemAbstractColumn>();
         if (index.isClustered()) {
             appendClusteredDistinctKey(index, indexColumnList);
         } else {
@@ -244,7 +242,8 @@ class FtrsIndexGuide
         FemLocalIndex index)
     {
         if (index.isClustered()) {
-            List indexColumnList = new ArrayList();
+            List<FemAbstractColumn> indexColumnList =
+                new ArrayList<FemAbstractColumn>();
             appendClusteredDistinctKey(index, indexColumnList);
             FemTupleProjection tupleProj =
                 createTupleProjectionFromColumnList(indexColumnList);
@@ -310,7 +309,8 @@ class FtrsIndexGuide
                         flattenedRowType.getFieldList().size()));
         }
 
-        List indexColumnList = getUnclusteredCoverageColList(index);
+        List<FemAbstractColumn> indexColumnList =
+            getUnclusteredCoverageColList(index);
 
         FemTupleProjection proj =
             createTupleProjectionFromColumnList(indexColumnList);
@@ -325,14 +325,12 @@ class FtrsIndexGuide
      * @return generated FemTupleProjection
      */
     FemTupleProjection createTupleProjectionFromColumnList(
-        List indexColumnList)
+        List<FemAbstractColumn> indexColumnList)
     {
         FemTupleProjection tupleProj = repos.newFemTupleProjection();
-        Iterator indexColumnIter = indexColumnList.iterator();
-        while (indexColumnIter.hasNext()) {
-            FemAbstractColumn column =
-                (FemAbstractColumn) indexColumnIter.next();
-            FemTupleAttrProjection attrProj = repos.newFemTupleAttrProjection();
+        for (FemAbstractColumn column : indexColumnList) {
+            FemTupleAttrProjection attrProj =
+                repos.newFemTupleAttrProjection();
             tupleProj.getAttrProjection().add(attrProj);
             attrProj.setAttributeIndex(
                 flattenOrdinal(
@@ -378,12 +376,11 @@ class FtrsIndexGuide
     }
 
     private void appendConstraintColumns(
-        List list,
+        List<FemAbstractColumn> list,
         FemAbstractUniqueConstraint constraint)
     {
-        Iterator iter = constraint.getFeature().iterator();
-        while (iter.hasNext()) {
-            Object column = iter.next();
+        for (FemAbstractColumn column :
+            Util.cast(constraint.getFeature(), FemAbstractColumn.class)) {
             if (list.contains(column)) {
                 continue;
             }
@@ -392,13 +389,12 @@ class FtrsIndexGuide
     }
 
     private void appendDefinedKey(
-        List list,
+        List<FemAbstractColumn> list,
         FemLocalIndex index)
     {
-        Iterator iter = index.getIndexedFeature().iterator();
-        while (iter.hasNext()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) iter.next();
-            Object column = indexedFeature.getFeature();
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
+            FemAbstractColumn column =
+                (FemAbstractColumn) indexedFeature.getFeature();
             if (list.contains(column)) {
                 continue;
             }
@@ -408,7 +404,7 @@ class FtrsIndexGuide
 
     private void appendClusteredDistinctKey(
         FemLocalIndex clusteredIndex,
-        List indexColumnList)
+        List<FemAbstractColumn> indexColumnList)
     {
         assert (clusteredIndex.isClustered());
         appendDefinedKey(indexColumnList, clusteredIndex);
@@ -424,9 +420,7 @@ class FtrsIndexGuide
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
 
-        Iterator fieldIter = flattenedRowType.getFieldList().iterator();
-        while (fieldIter.hasNext()) {
-            RelDataTypeField field = (RelDataTypeField) fieldIter.next();
+        for (RelDataTypeField field : flattenedRowType.getFieldList()) {
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,
@@ -439,10 +433,8 @@ class FtrsIndexGuide
         FemLocalIndex index)
     {
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
-        List colList = getUnclusteredCoverageColList(index);
-        Iterator columnIter = colList.iterator();
-        while (columnIter.hasNext()) {
-            FemAbstractColumn column = (FemAbstractColumn) columnIter.next();
+        List<FemAbstractColumn> colList = getUnclusteredCoverageColList(index);
+        for (FemAbstractColumn column : colList) {
             FennelRelUtil.addTupleAttrDescriptor(
                 repos,
                 tupleDesc,

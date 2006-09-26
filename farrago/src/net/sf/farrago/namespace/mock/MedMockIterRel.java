@@ -92,7 +92,7 @@ class MedMockIterRel
     }
 
     // implement RelNode
-    public Object clone()
+    public MedMockIterRel clone()
     {
         MedMockIterRel clone =
             new MedMockIterRel(

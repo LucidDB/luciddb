@@ -32,6 +32,7 @@ import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -91,7 +92,7 @@ public class FarragoDdlGenerator
         createHeader(sb, "VIEW", stmt);
 
         sb.append(quote(view.getName()));
-        addDescription(sb, (FemAnnotatedElement) view);
+        addDescription(sb, view);
         sb.append(" AS ");
         stmt.addStmt(sb.toString());
 
@@ -123,11 +124,11 @@ public class FarragoDdlGenerator
         sb = new StringBuilder();
         addColumns(
             sb,
-            table.getFeature().iterator());
+            Util.cast(table.getFeature(), CwmColumn.class).iterator());
         addOptions(
             sb,
-            ((FemElementWithStorageOptions) table).getStorageOptions());
-        addDescription(sb, (FemAnnotatedElement) table);
+            table.getStorageOptions());
+        addDescription(sb, table);
         stmt.addStmt(sb.toString());
     }
 
@@ -143,17 +144,17 @@ public class FarragoDdlGenerator
         sb = new StringBuilder();
         addColumns(
             sb,
-            table.getFeature().iterator());
+            Util.cast(table.getFeature(), CwmColumn.class).iterator());
         sb.append(NL);
         sb.append(" SERVER ");
-        FemDataServer server = (FemDataServer) table.getServer();
+        FemDataServer server = table.getServer();
         if (server != null) {
             sb.append(quote(server.getName()));
         }
         addOptions(
             sb,
             ((FemElementWithStorageOptions) table).getStorageOptions());
-        addDescription(sb, (FemAnnotatedElement) table);
+        addDescription(sb, table);
         stmt.addStmt(sb.toString());
     }
 
@@ -175,7 +176,7 @@ public class FarragoDdlGenerator
         addOptions(
             sb,
             wrapper.getStorageOptions());
-        addDescription(sb, (FemAnnotatedElement) wrapper);
+        addDescription(sb, wrapper);
         stmt.addStmt(sb.toString());
     }
 
@@ -196,11 +197,11 @@ public class FarragoDdlGenerator
 
         sb.append(" (");
         sb.append(NL);
-        List parameters = routine.getParameter();
-        Iterator pi = parameters.iterator();
+        List<CwmParameter> parameters = routine.getParameter();
+        Iterator<CwmParameter> pi = parameters.iterator();
         if (routine.getType().equals(ProcedureTypeEnum.PROCEDURE)) {
             while (pi.hasNext()) {
-                CwmParameter p = (CwmParameter) pi.next();
+                CwmParameter p = pi.next();
                 if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
                     sb.append("  IN ");
                 } else if (p.getKind().equals(
@@ -231,7 +232,7 @@ public class FarragoDdlGenerator
             List<CwmParameter> returns = new ArrayList<CwmParameter>();
             boolean first = true;
             while (pi.hasNext()) {
-                CwmParameter p = (CwmParameter) pi.next();
+                CwmParameter p = pi.next();
 
                 //REVIEW: functions can't have INOUT or OUT parameters, right?
                 if (p.getKind().equals(ParameterDirectionKindEnum.PDK_IN)) {
@@ -241,8 +242,7 @@ public class FarragoDdlGenerator
                     } else {
                         first = false;
                     }
-                    sb.append("   " + quote(p.getName()));
-                    sb.append(" ");
+                    sb.append("   ").append(quote(p.getName())).append(" ");
                     CwmSqldataType type = (CwmSqldataType) p.getType();
                     SqlTypeName stn = getSqlTypeName(type);
                     sb.append(type.getName());
@@ -256,13 +256,13 @@ public class FarragoDdlGenerator
             sb.append(NL);
             if (returns.size() > 0) {
                 sb.append(" RETURNS");
-                Iterator ri = returns.iterator();
+                Iterator<CwmParameter> ri = returns.iterator();
                 while (ri.hasNext()) {
-                    CwmParameter p = (CwmParameter) ri.next();
+                    CwmParameter p = ri.next();
                     CwmSqldataType type = (CwmSqldataType) p.getType();
                     SqlTypeName stn = getSqlTypeName(type);
 
-                    sb.append(" " + type.getName());
+                    sb.append(" ").append(type.getName());
 
                     //REVIEW: how to get type length, precision?
                     if (ri.hasNext()) {
@@ -321,7 +321,7 @@ public class FarragoDdlGenerator
         addOptions(
             sb,
             server.getStorageOptions());
-        addDescription(sb, (FemAnnotatedElement) server);
+        addDescription(sb, server);
         stmt.addStmt(sb.toString());
     }
 
@@ -329,7 +329,7 @@ public class FarragoDdlGenerator
         CwmSchema schema,
         GeneratedDdlStmt stmt)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DROP SCHEMA ");
         sb.append(quote(schema.getName()));
         sb.append(" CASCADE");
@@ -354,7 +354,7 @@ public class FarragoDdlGenerator
         CwmTable table,
         GeneratedDdlStmt stmt)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("DROP TABLE ");
         sb.append(quote(table.getName()));
         sb.append(" CASCADE");
@@ -370,14 +370,14 @@ public class FarragoDdlGenerator
 
     protected void addColumns(
         StringBuilder sb,
-        Iterator columns)
+        Iterator<CwmColumn> columns)
     {
         addColumns(sb, columns, false, false);
     }
 
     protected void addColumns(
         StringBuilder sb,
-        Iterator columns,
+        Iterator<CwmColumn> columns,
         boolean skipDefaults,
         boolean skipNullable)
     {
@@ -388,7 +388,7 @@ public class FarragoDdlGenerator
             sb.append(" (");
             sb.append(NL);
             while (columns.hasNext()) {
-                CwmColumn col = (CwmColumn) columns.next();
+                CwmColumn col = columns.next();
 
                 if (col instanceof FemStoredColumn) {
                     if (hasPrimaryKeyConstraint((FemStoredColumn) col)) {
@@ -401,22 +401,22 @@ public class FarragoDdlGenerator
 
                 isLast = !columns.hasNext() && (pk == null);
 
-                sb.append("   " + quote(col.getName()));
+                sb.append("   ").append(quote(col.getName()));
 
                 //TODO: handle other 2 type classes
                 CwmSqldataType type = (CwmSqldataType) col.getType();
                 SqlTypeName stn = getSqlTypeName(type);
 
-                sb.append(" " + type.getName());
+                sb.append(" ").append(type.getName());
 
                 //there must be an easier way
                 Integer len = col.getLength();
                 Integer scale = col.getScale();
 
                 if ((len != null) && stn.allowsPrec()) {
-                    sb.append("(" + len);
+                    sb.append("(").append(len);
                     if ((scale != null) && stn.allowsScale()) {
-                        sb.append("," + scale);
+                        sb.append(",").append(scale);
                     }
                     sb.append(")");
                 }
@@ -466,14 +466,14 @@ public class FarragoDdlGenerator
 
     protected void addOptions(
         StringBuilder sb,
-        Collection options)
+        Collection<FemStorageOption> options)
     {
         addOptions(sb, options, 1);
     }
 
     protected void addOptions(
         StringBuilder sb,
-        Collection options,
+        Collection<FemStorageOption> options,
         int indent)
     {
         if ((options == null) || (options.size() == 0)) {
@@ -485,16 +485,15 @@ public class FarragoDdlGenerator
         }
         sb.append(" OPTIONS (");
         sb.append(NL);
-        Iterator i = options.iterator();
-        while (i.hasNext()) {
-            FemStorageOption option = (FemStorageOption) i.next();
+        int k = 0;
+        for (FemStorageOption option : options) {
             for (int j = 0; j < indent; j++) {
                 sb.append("  ");
             }
             sb.append(option.getName());
             sb.append(" ");
             sb.append(literal(option.getValue()));
-            if (i.hasNext()) {
+            if (++k < options.size()) {
                 sb.append(",");
             }
             sb.append(NL);
@@ -512,15 +511,14 @@ public class FarragoDdlGenerator
     {
         if (keyColumns != null) {
             sb.append("   PRIMARY KEY (");
-            Iterator i = keyColumns.iterator();
             boolean isFirst = true;
-            while (i.hasNext()) {
+            for (String keyColumn : keyColumns) {
                 if (!isFirst) {
                     sb.append(",");
                 } else {
                     isFirst = false;
                 }
-                sb.append(quote((String) i.next()));
+                sb.append(quote(keyColumn));
             }
             sb.append(")");
             sb.append(NL);
@@ -546,8 +544,8 @@ public class FarragoDdlGenerator
         GeneratedDdlStmt stmt)
     {
         if (e != null) {
-            StringBuffer sb = new StringBuffer();
-            sb.append("DROP " + elementType + " ");
+            StringBuilder sb = new StringBuilder();
+            sb.append("DROP ").append(elementType).append(" ");
 
             // we're already in the current schema (SET SCHEMA) so don't fully
             // qualify name

@@ -407,7 +407,7 @@ public class FarragoJdbcFennelTupleParamDef
     {
         if (datum.getCapacity() >= val.length()) {
             if (pad && (datum.getCapacity() > val.length())) {
-                StringBuffer buf = new StringBuffer(datum.getCapacity());
+                StringBuilder buf = new StringBuilder(datum.getCapacity());
                 buf.append(val);
                 for (int i = val.length(); i < datum.getCapacity(); i++) {
                     buf.append(' ');

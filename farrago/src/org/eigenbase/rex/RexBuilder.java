@@ -141,52 +141,13 @@ public class RexBuilder
     }
 
     /**
-     * Creates a call with 1 argument.
-     */
-    public RexNode makeCall(
-        RelDataType returnType,
-        SqlOperator op,
-        RexNode expr0)
-    {
-        return new RexCall(
-                returnType,
-                op,
-                new RexNode[] { expr0 });
-    }
-
-    /**
-     * Creates a call with 1 argument.
-     */
-    public RexNode makeCall(
-        SqlOperator op,
-        RexNode expr0)
-    {
-        return makeCall(
-                op,
-                new RexNode[] { expr0 });
-    }
-
-    /**
-     * Creates a call with 2 arguments.
-     */
-    public RexNode makeCall(
-        SqlOperator op,
-        RexNode expr0,
-        RexNode expr1)
-    {
-        return makeCall(
-                op,
-                new RexNode[] { expr0, expr1 });
-    }
-
-    /**
      * Creates a call with an array of arguments and a predetermined
      * type.
      */
     public RexNode makeCall(
         RelDataType returnType,
         SqlOperator op,
-        RexNode [] exprs)
+        RexNode... exprs)
     {
         return new RexCall(
             returnType,
@@ -203,7 +164,7 @@ public class RexBuilder
      */
     public RexNode makeCall(
         SqlOperator op,
-        RexNode [] exprs)
+        RexNode... exprs)
     {
         final RelDataType type = deriveReturnType(op, typeFactory, exprs);
         RexNode [] fixExprs = exprs;
@@ -234,6 +195,19 @@ public class RexBuilder
             }
         }  */
         return new RexCall(type, op, fixExprs);
+    }
+
+    /**
+     * Creates a call with a list of arguments.
+     *
+     * <p>Equivalent to
+     * <code>makeCall(op, exprList.toArray(new RexNode[exprList.size()]))</code>.
+     */
+    public final RexNode makeCall(
+        SqlOperator op,
+        List<? extends RexNode> exprList)
+    {
+        return makeCall(op, exprList.toArray(new RexNode[exprList.size()]));
     }
 
     /**

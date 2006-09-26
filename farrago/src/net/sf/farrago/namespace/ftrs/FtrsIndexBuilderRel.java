@@ -24,17 +24,14 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -72,12 +69,12 @@ class FtrsIndexBuilderRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FtrsIndexBuilderRel clone()
     {
         FtrsIndexBuilderRel clone =
             new FtrsIndexBuilderRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 index);
         clone.inheritTraitsFrom(this);
         return clone;

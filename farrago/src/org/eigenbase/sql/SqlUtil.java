@@ -89,8 +89,8 @@ public abstract class SqlUtil
         }
         return
             SqlStdOperatorTable.andOperator.createCall(
-                (SqlNode []) list.toArray(new SqlNode[list.size()]),
-                SqlParserPos.ZERO);
+                SqlParserPos.ZERO,
+                list);
     }
 
     static ArrayList<SqlNode> flatten(SqlNode node)
@@ -671,7 +671,7 @@ public abstract class SqlUtil
         String opName,
         List<? extends Object> typeList)
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         String template = op.getSignatureTemplate(typeList.size());
         if (null == template) {
             ret.append("'");
@@ -729,14 +729,14 @@ public abstract class SqlUtil
         EigenbaseContextException contextExcn =
             ((line == endLine) && (col == endCol))
             ? EigenbaseResource.instance().ValidatorContextPoint.ex(
-                new Integer(line),
-                new Integer(col),
+                line,
+                col,
                 e)
             : EigenbaseResource.instance().ValidatorContext.ex(
-                new Integer(line),
-                new Integer(col),
-                new Integer(endLine),
-                new Integer(endCol),
+                line,
+                col,
+                endLine,
+                endCol,
                 e);
         contextExcn.setPosition(line, col, endLine, endCol);
         return contextExcn;

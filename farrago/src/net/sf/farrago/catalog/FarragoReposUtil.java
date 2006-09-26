@@ -40,7 +40,6 @@ import org.netbeans.api.mdr.*;
 import org.netbeans.api.xmi.*;
 import org.netbeans.mdr.*;
 import org.netbeans.mdr.persistence.*;
-import org.netbeans.mdr.storagemodel.*;
 
 
 /**
@@ -119,7 +118,7 @@ public abstract class FarragoReposUtil
     {
         dumpRepository(new FarragoModelLoader());
     }
-    
+
     public static void dumpRepository(
         FarragoModelLoader modelLoader)
         throws Exception
@@ -159,7 +158,7 @@ public abstract class FarragoReposUtil
     {
         return isReloadNeeded(new FarragoModelLoader());
     }
-    
+
     public static boolean isReloadNeeded(FarragoModelLoader modelLoader)
     {
         File catalogDir = modelLoader.getFarragoProperties().getCatalogDir();
@@ -174,7 +173,7 @@ public abstract class FarragoReposUtil
     {
         reloadRepository(new FarragoModelLoader());
     }
-    
+
     public static void reloadRepository(FarragoModelLoader modelLoader)
         throws Exception
     {
@@ -258,10 +257,8 @@ public abstract class FarragoReposUtil
             ModelPackage modelPackage =
                 (ModelPackage) mdrRepos.getExtent(metaPackageExtentName);
             MofPackage metaPackage = null;
-            Iterator iter =
-                modelPackage.getMofPackage().refAllOfClass().iterator();
-            while (iter.hasNext()) {
-                MofPackage result = (MofPackage) iter.next();
+            for (Object o : modelPackage.getMofPackage().refAllOfClass()) {
+                MofPackage result = (MofPackage) o;
                 if (result.getName().equals(metaPackageName)) {
                     metaPackage = result;
                     break;
@@ -361,7 +358,7 @@ public abstract class FarragoReposUtil
                     parent = (RefObject) c.iterator().next();
                 }
             }
-            List nameList = new ArrayList();
+            List<String> nameList = new ArrayList<String>();
             do {
                 String name = (String) parent.refGetValue("name");
                 nameList.add(name);
@@ -375,13 +372,13 @@ public abstract class FarragoReposUtil
                 parent = (RefObject) parent.refImmediateComposite();
             } while (parent != null);
             Collections.reverse(nameList);
-            StringBuffer sb = new StringBuffer();
-            Iterator iter = nameList.iterator();
-            while (iter.hasNext()) {
-                sb.append(iter.next());
-                if (iter.hasNext()) {
+            int k = 0;
+            StringBuilder sb = new StringBuilder();
+            for (String name : nameList) {
+                if (k++ > 0) {
                     sb.append('/');
                 }
+                sb.append(name);
             }
             return
                 new XMIReferenceProvider.XMIReference(

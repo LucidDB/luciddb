@@ -81,7 +81,7 @@ class FennelMergeRel
     }
 
     // implement RelNode
-    public Object clone()
+    public FennelMergeRel clone()
     {
         FennelMergeRel clone =
             new FennelMergeRel(

@@ -59,7 +59,7 @@ public class MultisetSqlType
     //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         if (withDetail) {
             sb.append(elementType.getFullTypeString());

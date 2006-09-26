@@ -50,7 +50,7 @@ public class OJTypeFactoryImpl
 
     //~ Instance fields --------------------------------------------------------
 
-    protected final HashMap mapOJClassToType = new HashMap();
+    protected final HashMap<OJClass,RelDataType> mapOJClassToType = new HashMap<OJClass, RelDataType>();
 
     private final OJClassMap ojClassMap;
 
@@ -146,7 +146,7 @@ public class OJTypeFactoryImpl
 
     public RelDataType toType(final OJClass ojClass)
     {
-        RelDataType type = (RelDataType) mapOJClassToType.get(ojClass);
+        RelDataType type = mapOJClassToType.get(ojClass);
         if (type != null) {
             return type;
         }
@@ -175,8 +175,9 @@ public class OJTypeFactoryImpl
      * <ul>
      * <li>If the {@link OJClass} is based upon a Java class, call {@link
      * #createJavaType} instead.</li>
-     * <li>If the {@link OJClass} is synthetic, call {@link #createStructType}
-     * or {@link #createJoinType} instead.</li>
+     * <li>If the {@link OJClass} is synthetic, call
+     * {@link OJTypeFactoryImpl#createStructType}
+     * or {@link OJTypeFactoryImpl#createJoinType} instead.</li>
      * </ul>
      * </p>
      */
@@ -217,7 +218,7 @@ public class OJTypeFactoryImpl
             return toType(colType);
         }
 
-        protected void generateTypeString(StringBuffer sb, boolean withDetail)
+        protected void generateTypeString(StringBuilder sb, boolean withDetail)
         {
             sb.append("OJScalarType(");
             sb.append(ojClass);

@@ -26,7 +26,6 @@ import java.lang.reflect.*;
 
 import java.nio.*;
 
-import java.util.*;
 import java.util.List;
 
 import net.sf.farrago.catalog.*;
@@ -140,7 +139,7 @@ public class FennelToIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public FennelToIteratorConverter clone()
     {
         FennelToIteratorConverter clone =
             new FennelToIteratorConverter(
@@ -263,10 +262,11 @@ public class FennelToIteratorConverter
         RelDataTypeField [] fields = rowType.getFields();
         Variable varPrevEndOffset = null;
         assert (fields.length == tupleAccessor.getAttrAccessor().size());
-        Iterator attrIter = tupleAccessor.getAttrAccessor().iterator();
-        for (int i = 0; i < fields.length; ++i) {
-            FemTupleAttrAccessor attrAccessor =
-                (FemTupleAttrAccessor) attrIter.next();
+        int i = -1;
+        for (FemTupleAttrAccessor attrAccessor :
+            tupleAccessor.getAttrAccessor())
+        {
+            ++i;
             if (attrAccessor.getBitValueIndex() != -1) {
                 // bit fields are already handled
                 continue;

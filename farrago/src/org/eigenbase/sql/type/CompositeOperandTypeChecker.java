@@ -23,9 +23,7 @@ package org.eigenbase.sql.type;
 
 import java.util.*;
 
-import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
 
 
@@ -121,7 +119,7 @@ public class CompositeOperandTypeChecker
         if (composition == SEQUENCE) {
             throw Util.needToImplement("must override getAllowedSignatures");
         }
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int i = 0; i < allowedRules.length; i++) {
             SqlOperandTypeChecker rule = allowedRules[i];
             if (i > 0) {

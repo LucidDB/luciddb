@@ -69,7 +69,7 @@ public class SqlSubstringFunction
 
     public String getAllowedSignatures(String opName)
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         for (int i = 0; i < SqlTypeName.stringTypes.length; i++) {
             if (i > 0) {
                 ret.append(NL);

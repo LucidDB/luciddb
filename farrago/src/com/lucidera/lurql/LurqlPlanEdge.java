@@ -20,16 +20,7 @@
 */
 package com.lucidera.lurql;
 
-import java.io.*;
-
-import java.util.*;
-
-import javax.jmi.model.*;
-
 import org._3pq.jgrapht.edge.*;
-
-import org.eigenbase.jmi.*;
-
 
 /**
  * LurqlPlanEdge is a follow edge in a LURQL plan graph. (TODO: factor out
@@ -39,7 +30,7 @@ import org.eigenbase.jmi.*;
  * @version $Id$
  */
 public class LurqlPlanEdge
-    extends DirectedEdge
+    extends DirectedEdge<LurqlPlanVertex>
 {
 
     //~ Instance fields --------------------------------------------------------

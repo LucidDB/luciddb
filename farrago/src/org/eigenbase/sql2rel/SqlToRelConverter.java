@@ -645,9 +645,10 @@ public class SqlToRelConverter
         RexNode pred = RexUtil.andRexNodeList(rexBuilder, conditions);
 
         if (isNotIn) {
-            pred = 
+            pred =
                 rexBuilder.makeCall(
-                    SqlStdOperatorTable.notOperator, pred);                
+                    SqlStdOperatorTable.notOperator,
+                    pred);
         }
         return pred;
     }
@@ -798,8 +799,8 @@ public class SqlToRelConverter
                     // convert "1" to "row(1)"
                     call =
                         SqlStdOperatorTable.rowConstructor.createCall(
-                            new SqlNode[] { node },
-                            SqlParserPos.ZERO);
+                            SqlParserPos.ZERO,
+                            node);
                 }
                 unionInputs.add(convertRowConstructor(bb, call));
             }

@@ -54,13 +54,13 @@ public class MedMetadataQueryImpl
     //~ Methods ----------------------------------------------------------------
 
     // implement FarragoMedMetadataQuery
-    public Map getFilterMap()
+    public Map<String,FarragoMedMetadataFilter> getFilterMap()
     {
         return filterMap;
     }
 
     // implement FarragoMedMetadataQuery
-    public Set getResultObjectTypes()
+    public Set<String> getResultObjectTypes()
     {
         return resultObjectTypes;
     }

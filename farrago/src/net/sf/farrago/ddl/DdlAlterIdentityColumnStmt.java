@@ -63,7 +63,8 @@ public class DdlAlterIdentityColumnStmt
         FarragoSessionDdlValidator ddlValidator,
         FarragoSession session)
     {
-        CwmColumn column = (CwmColumn) getModelElement();
+        FemAbstractTypedElement column =
+            (FemAbstractTypedElement) getModelElement();
         FemSequenceGenerator sequence = null;
         if (column instanceof FemStoredColumn) {
             sequence = ((FemStoredColumn) column).getSequence();
@@ -73,8 +74,7 @@ public class DdlAlterIdentityColumnStmt
                 column.getName());
         }
         RelDataType dataType =
-            ddlValidator.getTypeFactory().createCwmElementType(
-                (FemAbstractTypedElement) column);
+            ddlValidator.getTypeFactory().createCwmElementType(column);
 
         FarragoSequenceAccessor accessor =
             session.getRepos().getSequenceAccessor(sequence.refMofId());

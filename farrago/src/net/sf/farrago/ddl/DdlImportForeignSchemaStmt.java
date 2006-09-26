@@ -31,10 +31,10 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -53,7 +53,7 @@ public class DdlImportForeignSchemaStmt
     private final FemDataServer femServer;
     private final SqlIdentifier foreignSchemaName;
     private final boolean exclude;
-    private final List roster;
+    private final List<SqlIdentifier> roster;
     private final String pattern;
 
     //~ Constructors -----------------------------------------------------------
@@ -75,7 +75,7 @@ public class DdlImportForeignSchemaStmt
         FemDataServer femServer,
         SqlIdentifier foreignSchemaName,
         boolean exclude,
-        List roster,
+        List<SqlIdentifier> roster,
         String pattern)
     {
         super(localSchema);
@@ -120,7 +120,7 @@ public class DdlImportForeignSchemaStmt
                         foreignSchemaName.getSimple()));
             }
 
-            Set requiredSet = null;
+            Set<String> requiredSet = null;
 
             // Create a metadata query to retrieve column descriptors, using
             // any table name filters requested.
@@ -176,15 +176,13 @@ public class DdlImportForeignSchemaStmt
         }
     }
 
-    private Set convertRoster()
+    private Set<String> convertRoster()
     {
         if (roster == null) {
             return null;
         }
-        Set set = new HashSet();
-        Iterator iter = roster.iterator();
-        while (iter.hasNext()) {
-            SqlIdentifier id = (SqlIdentifier) iter.next();
+        Set<String> set = new HashSet<String>();
+        for (SqlIdentifier id : roster) {
             set.add(id.getSimple());
         }
         return set;
@@ -203,7 +201,7 @@ public class DdlImportForeignSchemaStmt
     {
         private final FarragoSessionDdlValidator ddlValidator;
 
-        private final Map tableMap;
+        private final Map<String, FemBaseColumnSet> tableMap;
 
         private DdlMedHandler medHandler;
 
@@ -221,7 +219,7 @@ public class DdlImportForeignSchemaStmt
             this.ddlValidator = ddlValidator;
             this.directory = directory;
 
-            tableMap = new HashMap();
+            tableMap = new HashMap<String, FemBaseColumnSet>();
             medHandler = new DdlMedHandler(ddlValidator);
         }
 
@@ -230,7 +228,7 @@ public class DdlImportForeignSchemaStmt
             String name,
             String typeName,
             String remarks,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(name, typeName, false)) {
                 return false;
@@ -249,7 +247,7 @@ public class DdlImportForeignSchemaStmt
             RelDataType type,
             String remarks,
             String defaultValue,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(
                     tableName,
@@ -264,7 +262,7 @@ public class DdlImportForeignSchemaStmt
                 return false;
             }
 
-            FemBaseColumnSet table = (FemBaseColumnSet) tableMap.get(tableName);
+            FemBaseColumnSet table = tableMap.get(tableName);
             if (table == null) {
                 return false;
             }
@@ -299,9 +297,7 @@ public class DdlImportForeignSchemaStmt
         void dropStragglers()
         {
             // Drop all tables with no columns.
-            Iterator iter = tableMap.values().iterator();
-            while (iter.hasNext()) {
-                FemBaseColumnSet table = (FemBaseColumnSet) iter.next();
+            for (FemBaseColumnSet table : tableMap.values()) {
                 if (table.getFeature().isEmpty()) {
                     table.refDelete();
                 }
@@ -323,15 +319,13 @@ public class DdlImportForeignSchemaStmt
 
         private void setStorageOptions(
             FemElementWithStorageOptions element,
-            Map props)
+            Properties props)
         {
-            Iterator entryIter = props.entrySet().iterator();
-            while (entryIter.hasNext()) {
-                Map.Entry entry = (Map.Entry) entryIter.next();
+            for (Map.Entry<String, String> entry : Util.entries(props)) {
                 FemStorageOption opt =
                     ddlValidator.getRepos().newFemStorageOption();
-                opt.setName(entry.getKey().toString());
-                opt.setValue(entry.getValue().toString());
+                opt.setName(entry.getKey());
+                opt.setValue(entry.getValue());
                 element.getStorageOptions().add(opt);
             }
         }

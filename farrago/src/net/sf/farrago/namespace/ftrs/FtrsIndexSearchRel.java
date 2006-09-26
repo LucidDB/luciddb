@@ -25,10 +25,8 @@ package net.sf.farrago.namespace.ftrs;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -111,12 +109,12 @@ class FtrsIndexSearchRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FtrsIndexSearchRel clone()
     {
         FtrsIndexSearchRel clone =
             new FtrsIndexSearchRel(
                 scanRel,
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 isUniqueKey,
                 isOuter,
                 inputKeyProj,

@@ -78,12 +78,12 @@ public final class SortRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public SortRel clone()
     {
         SortRel clone =
             new SortRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 collations);
         clone.inheritTraitsFrom(this);
         return clone;

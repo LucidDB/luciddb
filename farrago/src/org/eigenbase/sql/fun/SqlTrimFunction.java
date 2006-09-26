@@ -93,9 +93,7 @@ public class SqlTrimFunction
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         assert functionQualifier == null;
         assert (3 == operands.length);
@@ -106,7 +104,7 @@ public class SqlTrimFunction
         if (null == operands[1]) {
             operands[1] = SqlLiteral.createCharString(" ", pos);
         }
-        return super.createCall(operands, pos, functionQualifier);
+        return super.createCall(functionQualifier, pos, operands);
     }
 
     public boolean checkOperandTypes(

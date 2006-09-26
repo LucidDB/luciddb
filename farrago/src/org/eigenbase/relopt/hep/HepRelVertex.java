@@ -59,7 +59,7 @@ public class HepRelVertex
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public HepRelVertex clone()
     {
         return this;
     }

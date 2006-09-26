@@ -29,9 +29,7 @@ import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
 import org.eigenbase.relopt.RelOptPlanner;
-import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.util.Util;
 
 
@@ -62,11 +60,11 @@ public class ForTerminatorRel extends SingleRel implements TerminatorRel,
     }
 
     // implement RelNode
-    public Object clone()
+    public ForTerminatorRel clone()
     {
         ForTerminatorRel clone = new ForTerminatorRel(
             getCluster(),
-            RelOptUtil.clone(getChild()),
+            getChild().clone(),
             (Variable) Util.clone(variable),
             Util.clone(body),
             label);

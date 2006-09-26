@@ -28,7 +28,6 @@ import java.util.Collections;
 import openjava.mop.OJClass;
 import openjava.ptree.*;
 
-import org.eigenbase.util.Util;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.oj.rel.JavaRelImplementor;
 import org.eigenbase.oj.rel.JavaRel;
@@ -36,8 +35,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.runtime.*;
 
 
@@ -56,7 +53,7 @@ public class IterOneRowRel extends OneRowRelBase implements JavaRel
 
     //~ Methods ---------------------------------------------------------------
 
-    public Object clone()
+    public IterOneRowRel clone()
     {
         return this;
     }

@@ -68,7 +68,7 @@ import org.eigenbase.rex.*;
  * @version $Id$
  * @since May 24, 2004
  */
-public interface RelNode
+public interface RelNode extends Cloneable
 {
 
     //~ Instance fields --------------------------------------------------------
@@ -308,6 +308,27 @@ public interface RelNode
      * "rel#{id}:{digest}".
      */
     String getDescription();
+
+    /**
+     * Clones this RelNode.
+     *
+     * <p>Traits of the RelNode must be explicitly cloned, using
+     * {@link AbstractRelNode#inheritTraitsFrom(AbstractRelNode)}, as
+     * the RelNode may have traits of which it has no knowledge. Example
+     * implementation:
+     *
+     * <pre>
+     *     public MyRelNode clone()
+     *     {
+     *         MyRelNode clone = new MyRelNode(...);
+     *         clone.inheritTraitsFrom(this);
+     *         return clone;
+     *     }
+     * </pre>
+     *
+     * @return a clone of this RelNode
+     */
+    RelNode clone();
 }
 
 // End RelNode.java

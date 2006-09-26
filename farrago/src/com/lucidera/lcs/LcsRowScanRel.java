@@ -121,7 +121,7 @@ public class LcsRowScanRel
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public LcsRowScanRel clone()
     {
         LcsRowScanRel clone =
             new LcsRowScanRel(

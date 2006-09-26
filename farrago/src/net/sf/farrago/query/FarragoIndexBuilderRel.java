@@ -30,7 +30,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql2rel.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -87,13 +86,13 @@ public class FarragoIndexBuilderRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FarragoIndexBuilderRel clone()
     {
         FarragoIndexBuilderRel clone =
             new FarragoIndexBuilderRel(
                 getCluster(),
                 getTable(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 index);
         clone.inheritTraitsFrom(this);
         return clone;

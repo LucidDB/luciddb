@@ -49,7 +49,7 @@ public class LucidDbSessionFactory
     }
 
     // implement FarragoSessionFactory
-    public void applyFennelExtensionParameters(Map map)
+    public void applyFennelExtensionParameters(Properties map)
     {
         super.applyFennelExtensionParameters(map);
 

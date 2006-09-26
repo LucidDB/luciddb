@@ -156,7 +156,7 @@ public class JdbcQuery
         return queryString;
     }
 
-    public Object clone()
+    public JdbcQuery clone()
     {
         JdbcQuery clone =
             new JdbcQuery(

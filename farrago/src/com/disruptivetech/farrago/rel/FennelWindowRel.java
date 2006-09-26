@@ -198,7 +198,7 @@ public class FennelWindowRel
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public FennelWindowRel clone()
     {
         FennelWindowRel clone =
             new FennelWindowRel(
@@ -575,12 +575,12 @@ public class FennelWindowRel
 
         public void computeDigest()
         {
-            final StringBuffer buf = new StringBuffer();
+            final StringBuilder buf = new StringBuilder();
             computeDigest(buf);
             this.digest = buf.toString();
         }
 
-        private void computeDigest(StringBuffer buf)
+        private void computeDigest(StringBuilder buf)
         {
             buf.append("window(");
             buf.append("order by {");
@@ -677,7 +677,7 @@ public class FennelWindowRel
             return false;
         }
 
-        private void computeDigest(StringBuffer buf)
+        private void computeDigest(StringBuilder buf)
         {
             buf.append("partition(");
             buf.append("partition by {");

@@ -69,12 +69,12 @@ class LcsIndexBuilderRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public LcsIndexBuilderRel clone()
     {
         LcsIndexBuilderRel clone =
             new LcsIndexBuilderRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 index);
         clone.inheritTraitsFrom(this);
         return clone;

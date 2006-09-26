@@ -103,12 +103,12 @@ public class FennelCalcRel
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public FennelCalcRel clone()
     {
         FennelCalcRel clone =
             new FennelCalcRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 rowType,
                 program);
         clone.inheritTraitsFrom(this);

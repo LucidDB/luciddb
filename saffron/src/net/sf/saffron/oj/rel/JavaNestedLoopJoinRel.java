@@ -63,13 +63,13 @@ public class JavaNestedLoopJoinRel
             condition, joinType, variablesStopped);
     }
 
-    public Object clone()
+    public JavaNestedLoopJoinRel clone()
     {
         JavaNestedLoopJoinRel clone = new JavaNestedLoopJoinRel(
             getCluster(),
-            RelOptUtil.clone(left),
-            RelOptUtil.clone(right),
-            RexUtil.clone(condition),
+            left.clone(),
+            right.clone(),
+            condition.clone(),
             joinType,
             variablesStopped);
         clone.inheritTraitsFrom(this);

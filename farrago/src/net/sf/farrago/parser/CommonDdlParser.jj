@@ -1751,9 +1751,9 @@ SqlNode ConstructorAssignment() :
     <EQ> expr = Expression(EXPR_ACCEPT_NONQUERY) <SEMICOLON>
     {
         return opTab.equalsOperator.createCall(
+            getPos(),
             attributeName,
-            expr,
-            getPos());
+            expr);
     }
 }
 

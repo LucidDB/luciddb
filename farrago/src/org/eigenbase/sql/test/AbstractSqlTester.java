@@ -116,7 +116,7 @@ public abstract class AbstractSqlTester
 
     public static String generateAggQuery(String expr, String [] inputValues)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("SELECT ").append(expr).append(" FROM (");
         for (int i = 0; i < inputValues.length; i++) {
             if (i > 0) {

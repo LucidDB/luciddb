@@ -88,7 +88,7 @@ public abstract class TableAccessRelBase
         return table.getCollationList();
     }
 
-    public Object clone()
+    public TableAccessRelBase clone()
     {
         return this;
     }

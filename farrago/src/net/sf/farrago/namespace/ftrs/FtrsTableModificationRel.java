@@ -28,6 +28,7 @@ import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
+import net.sf.farrago.fem.sql2003.FemAbstractColumn;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.query.*;
 
@@ -91,14 +92,14 @@ class FtrsTableModificationRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FtrsTableModificationRel clone()
     {
         FtrsTableModificationRel clone =
             new FtrsTableModificationRel(
                 getCluster(),
                 ftrsTable,
                 getConnection(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList());
         clone.inheritTraitsFrom(this);
@@ -112,15 +113,15 @@ class FtrsTableModificationRel
         return planner.makeTinyCost();
     }
 
-    private List<CwmColumn> getUpdateCwmColumnList()
+    private <E extends CwmColumn> List<E> getUpdateColumnList(Class<E> clazz)
     {
         int n = getUpdateColumnList().size();
-        List<CwmColumn> list = new ArrayList<CwmColumn>();
-        Collection<CwmColumn> columns = (List)
-            ftrsTable.getCwmColumnSet().getFeature();
+        List<E> list = new ArrayList<E>();
+        Collection<E> columns = Util.cast(
+            ftrsTable.getCwmColumnSet().getFeature(), clazz);
         for (int i = 0; i < n; i++) {
             String columnName = getUpdateColumnList().get(i);
-            CwmColumn column =
+            E column =
                 FarragoCatalogUtil.getModelElementByName(
                     columns,
                     columnName);
@@ -141,7 +142,7 @@ class FtrsTableModificationRel
         CwmTable table = (CwmTable) ftrsTable.getCwmColumnSet();
         FarragoRepos repos = FennelRelUtil.getRepos(this);
 
-        List<CwmColumn> updateCwmColumnList = null;
+        List<FemAbstractColumn> updateCwmColumnList = null;
 
         FemTableWriterDef tableWriterDef;
         switch (getOperation().getOrdinal()) {
@@ -154,7 +155,7 @@ class FtrsTableModificationRel
         case TableModificationRel.Operation.UPDATE_ORDINAL:
             FemTableUpdaterDef tableUpdaterDef = repos.newFemTableUpdaterDef();
             tableWriterDef = tableUpdaterDef;
-            updateCwmColumnList = getUpdateCwmColumnList();
+            updateCwmColumnList = getUpdateColumnList(FemAbstractColumn.class);
             tableUpdaterDef.setUpdateProj(
                 ftrsTable.getIndexGuide().createTupleProjectionFromColumnList(
                     updateCwmColumnList));
@@ -191,7 +192,7 @@ class FtrsTableModificationRel
 
             if (updateCwmColumnList != null) {
                 if (index != clusteredIndex) {
-                    List<? extends Object> coverageList =
+                    List<FemAbstractColumn> coverageList =
                         indexGuide.getUnclusteredCoverageColList(index);
                     if (!coverageList.removeAll(updateCwmColumnList)) {
                         // no intersection between update list and index

@@ -132,9 +132,9 @@ public class SqlShuttle
             if (update || alwaysCopy) {
                 return
                     call.getOperator().createCall(
-                        clonedOperands,
+                        call.getFunctionQuantifier(),
                         call.getParserPosition(),
-                        call.getFunctionQuantifier());
+                        clonedOperands);
             } else {
                 return call;
             }

@@ -82,13 +82,13 @@ class FennelCartesianProductRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FennelCartesianProductRel clone()
     {
         FennelCartesianProductRel clone =
             new FennelCartesianProductRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
+                left.clone(),
+                right.clone(),
                 joinType,
                 RelOptUtil.getFieldNameList(rowType));
         clone.inheritTraitsFrom(this);
@@ -120,7 +120,7 @@ class FennelCartesianProductRel
         pw.explain(
             this,
             new String[] { "left", "right", "leftouterjoin" },
-            new Object[] { new Boolean(isLeftOuter()) });
+            new Object[] { isLeftOuter() });
     }
 
     private boolean isLeftOuter()

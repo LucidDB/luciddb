@@ -27,18 +27,15 @@ import java.math.*;
 import java.util.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.behavioral.*;
-import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.sql2003.*;
-import net.sf.farrago.type.*;
 
 import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -81,7 +78,7 @@ public class FarragoRexBuilder
     // override RexBuilder
     public RexNode makeCall(
         SqlOperator op,
-        RexNode [] exprs)
+        RexNode... exprs)
     {
         if (op.getKind().isA(SqlKind.Comparison)) {
             return makeComparison(op, exprs);
@@ -139,14 +136,14 @@ public class FarragoRexBuilder
             // WHEN arg2 IS NULL THEN NULL
             // ...
             // ELSE invokeUDF(arg1, arg2, ...) END
-            List caseOperandList = new ArrayList();
+            List<RexNode> caseOperandList = new ArrayList<RexNode>();
             for (int i = 0; i < paramTypes.length; ++i) {
                 // REVIEW jvs 17-Jan-2005: This assumes that CAST will never
                 // convert a non-NULL value into a NULL.  If that's not true,
                 // we should be referencing the arg CAST result instead.
                 caseOperandList.add(
                     makeCall(
-                        getOpTab().isNullOperator,
+                        SqlStdOperatorTable.isNullOperator,
                         exprs[i]));
                 caseOperandList.add(
                     makeCast(
@@ -154,11 +151,9 @@ public class FarragoRexBuilder
                         constantNull()));
             }
             caseOperandList.add(returnNode);
-            RexNode [] caseOperands =
-                (RexNode []) caseOperandList.toArray(new RexNode[0]);
             RexNode nullCase = makeCall(
-                    getOpTab().caseOperator,
-                    caseOperands);
+                SqlStdOperatorTable.caseOperator,
+                caseOperandList);
             returnNode = nullCase;
         }
 
@@ -182,8 +177,7 @@ public class FarragoRexBuilder
         if (cwmType instanceof FemUserDefinedType) {
             FemUserDefinedType udt = (FemUserDefinedType) cwmType;
             assert (udt.getOrdering().size() == 1);
-            FemUserDefinedOrdering udo =
-                (FemUserDefinedOrdering) udt.getOrdering().iterator().next();
+            FemUserDefinedOrdering udo = udt.getOrdering().iterator().next();
             preparingStmt.addDependency(udo, null);
             UserDefinedOrderingCategory udoc = udo.getCategory();
             if (udoc == UserDefinedOrderingCategoryEnum.UDOC_RELATIVE) {
@@ -211,10 +205,8 @@ public class FarragoRexBuilder
         return
             super.makeCall(
                 op,
-                new RexNode[] {
-                    routineInvocation,
-                makeExactLiteral(new BigDecimal(BigInteger.ZERO))
-                });
+                routineInvocation,
+                makeExactLiteral(new BigDecimal(BigInteger.ZERO)));
     }
 
     private RexNode makeMapComparison(

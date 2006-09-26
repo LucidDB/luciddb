@@ -31,11 +31,12 @@ public class FarragoDdlLockManager
 
     //~ Instance fields --------------------------------------------------------
 
-    private ConcurrentHashMap objectsInUse = new ConcurrentHashMap();
+    private final ConcurrentHashMap<Object, Set<String>> objectsInUse =
+        new ConcurrentHashMap<Object, Set<String>>();
 
     //~ Methods ----------------------------------------------------------------
 
-    public void addObjectsInUse(Object context, Set mofIds)
+    public void addObjectsInUse(Object context, Set<String> mofIds)
     {
         if (mofIds != null) {
             objectsInUse.put(context, mofIds);
@@ -49,9 +50,7 @@ public class FarragoDdlLockManager
 
     public boolean isObjectInUse(String mofId)
     {
-        Iterator i = objectsInUse.values().iterator();
-        while (i.hasNext()) {
-            Set s = (Set) i.next();
+        for (Set<String> s : objectsInUse.values()) {
             if (s.contains(mofId)) {
                 return true;
             }

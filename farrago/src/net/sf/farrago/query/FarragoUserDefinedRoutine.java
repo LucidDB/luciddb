@@ -116,9 +116,9 @@ public class FarragoUserDefinedRoutine
     private static List<String> getRoutineParamNames(FemRoutine femRoutine)
     {
         List<String> list = new ArrayList<String>();
-        Iterator paramIter = femRoutine.getParameter().iterator();
-        while (paramIter.hasNext()) {
-            FemRoutineParameter param = (FemRoutineParameter) paramIter.next();
+        for (FemRoutineParameter param :
+            Util.cast(femRoutine.getParameter(), FemRoutineParameter.class))
+        {
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 continue;
             }

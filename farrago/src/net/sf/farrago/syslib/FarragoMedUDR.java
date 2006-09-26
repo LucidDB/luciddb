@@ -27,7 +27,6 @@ import java.util.*;
 
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.namespace.*;
-import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.runtime.*;
@@ -36,7 +35,6 @@ import net.sf.farrago.session.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -218,7 +216,7 @@ public abstract class FarragoMedUDR
             String name,
             String typeName,
             String remarks,
-            Map properties)
+            Properties properties)
         {
             if (!shouldInclude(name, typeName, false)) {
                 return false;
@@ -246,7 +244,7 @@ public abstract class FarragoMedUDR
             RelDataType type,
             String remarks,
             String defaultValue,
-            Map properties)
+            Properties properties)
         {
             return false;
         }

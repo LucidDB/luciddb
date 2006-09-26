@@ -335,9 +335,9 @@ public class SqlValidatorImpl
             if (!newAlias.equals(alias)) {
                 expanded =
                     SqlStdOperatorTable.asOperator.createCall(
+                        selectItem.getParserPosition(),
                         expanded,
-                        new SqlIdentifier(alias, SqlParserPos.ZERO),
-                        selectItem.getParserPosition());
+                        new SqlIdentifier(alias, SqlParserPos.ZERO));
                 deriveTypeImpl(scope, expanded);
             }
         }
@@ -1070,8 +1070,7 @@ public class SqlValidatorImpl
         } else {
             SqlCall testCall =
                 resolvedConstructor.createCall(
-                    call.getOperands(),
-                    call.getParserPosition());
+                    call.getParserPosition(), call.getOperands());
             RelDataType returnType =
                 resolvedConstructor.validateOperands(
                     this,
@@ -1556,7 +1555,7 @@ public class SqlValidatorImpl
             forceNullable,
             true);
     }
-    
+
     /**
      * Registers a query in a parent scope.
      *
@@ -1859,10 +1858,9 @@ public class SqlValidatorImpl
                     && listNode.isA(SqlKind.Query))
                 {
                     listNode =
-                        SqlStdOperatorTable.scalarQueryOperator
-                            .createCall(
-                                listNode,
-                                listNode.getParserPosition());
+                        SqlStdOperatorTable.scalarQueryOperator.createCall(
+                            listNode.getParserPosition(),
+                            listNode);
                     list.set(i, listNode);
                 }
                 registerSubqueries(parentScope, listNode, coerceToScalar);
@@ -1896,8 +1894,8 @@ public class SqlValidatorImpl
         {
             operand =
                 SqlStdOperatorTable.scalarQueryOperator.createCall(
-                    operand,
-                    operand.getParserPosition());
+                    operand.getParserPosition(),
+                    operand);
             call.setOperand(operandOrdinal, operand);
         }
         registerSubqueries(parentScope, operand, false);

@@ -722,8 +722,8 @@ public class SqlLiteral
         return
             new SqlNumericLiteral(
                 value,
-                new Integer(prec),
-                new Integer(scale),
+                prec,
+                scale,
                 true,
                 pos);
     }

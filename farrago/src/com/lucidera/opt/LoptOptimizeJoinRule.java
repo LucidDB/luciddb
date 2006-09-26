@@ -129,7 +129,7 @@ public class LoptOptimizeJoinRule
                 RelDataTypeField [] fields =
                     multiJoin.getJoinFactor(i).getRowType().getFields();
                 for (int j = 0; j < multiJoin.getNumFieldsInJoinFactor(i);
-                    j++) {
+                     j++) {
                     fieldNames[currField] = fields[j].getName();
                     currField++;
                 }
@@ -226,8 +226,8 @@ public class LoptOptimizeJoinRule
                     multiJoin.getJoinFactor(currFactor).getRowType()
                     .getFields();
                 for (int fieldPos = 0;
-                    fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
-                    fieldPos++) {
+                     fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
+                     fieldPos++) {
                     newProjExprs[currField] =
                         rexBuilder.makeInputRef(
                             fields[fieldPos].getType(),
@@ -306,7 +306,7 @@ public class LoptOptimizeJoinRule
             // except for the first factor, need to adjust the bits to the left
             if (i > 0) {
                 for (int bit = factorFields.nextSetBit(fieldStart);
-                    bit >= fieldStart; bit = factorFields.nextSetBit(bit + 1)) {
+                     bit >= fieldStart; bit = factorFields.nextSetBit(bit + 1)) {
                     factorFields.clear(bit);
                     factorFields.set(bit - fieldStart);
                 }
@@ -360,14 +360,14 @@ public class LoptOptimizeJoinRule
                 int bestWeight = 0;
                 Double bestCardinality = null;
                 for (int factor = factorsToAdd.nextSetBit(0); factor >= 0;
-                    factor = factorsToAdd.nextSetBit(factor + 1)) {
+                     factor = factorsToAdd.nextSetBit(factor + 1)) {
                     // determine the best weight between the current factor
                     // under consideration and the factors that have already
                     // been added to the tree
                     int dimWeight = 0;
                     for (int prevFactor = factorsAdded.nextSetBit(0);
-                        prevFactor >= 0;
-                        prevFactor = factorsAdded.nextSetBit(prevFactor + 1)) {
+                         prevFactor >= 0;
+                         prevFactor = factorsAdded.nextSetBit(prevFactor + 1)) {
                         if (factorWeights[prevFactor][factor] > dimWeight) {
                             dimWeight = factorWeights[prevFactor][factor];
                         }
@@ -433,14 +433,13 @@ public class LoptOptimizeJoinRule
      * down into one of the subtrees of the join recursively, or it is added to
      * the top of the current tree, whichever yields a better ordering.
      *
-     * @param mulitJoin join factors being optimized
+     * @param multiJoin join factors being optimized
      * @param semiJoinOpt optimal semijoins for each factor
      * @param joinTree current join tree
      * @param factorToAdd new factor to be added
      * @param factorsNeeded factors that must precede the factor to be added
      * @param filtersToAdd filters remaining to be added; filters added to the
      * new join tree are removed from the list
-     * @param nJoinFactors total number of join factors
      *
      * @return optimal join tree with the new factor added if it is possible to
      * add the factor; otherwise, null is returned
@@ -676,12 +675,12 @@ public class LoptOptimizeJoinRule
         // loop through the remaining filters to be added and pick out the
         // ones that reference only the factors in the new join tree
         RexNode condition = null;
-        ListIterator filterIter = filtersToAdd.listIterator();
+        ListIterator<RexNode> filterIter = filtersToAdd.listIterator();
         int nJoinFactors = multiJoin.getNumJoinFactors();
         RexBuilder rexBuilder =
             multiJoin.getMultiJoinRel().getCluster().getRexBuilder();
         while (filterIter.hasNext()) {
-            RexNode joinFilter = (RexNode) filterIter.next();
+            RexNode joinFilter = filterIter.next();
             BitSet filterBitmap =
                 multiJoin.getFactorsRefByJoinFilter(joinFilter);
 
@@ -780,9 +779,9 @@ public class LoptOptimizeJoinRule
                 if ((-nFieldsOld + nFieldsNew) != 0) {
                     needAdjust = true;
                     for (int i = 0;
-                        i
-                        < multiJoin.getNumFieldsInJoinFactor(
-                            newJoinOrder.get(newPos)); i++) {
+                         i
+                         < multiJoin.getNumFieldsInJoinFactor(
+                             newJoinOrder.get(newPos)); i++) {
                         // subtract off the number of fields to the left
                         // in the original join order and then add on the
                         // number of fields on the left in the new join order

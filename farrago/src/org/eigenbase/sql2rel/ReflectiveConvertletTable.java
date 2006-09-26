@@ -48,19 +48,18 @@ public class ReflectiveConvertletTable
 
     //~ Instance fields --------------------------------------------------------
 
-    private final Map map = new HashMap();
+    private final Map<Object,Object> map = new HashMap<Object, Object>();
 
     //~ Constructors -----------------------------------------------------------
 
     public ReflectiveConvertletTable()
     {
-        final Class clazz = getClass();
+        final Class<? extends Object> clazz = getClass();
         final Method [] methods = clazz.getMethods();
         for (int i = 0; i < methods.length; i++) {
             final Method method = methods[i];
             registerNodeTypeMethod(method);
             registerOpTypeMethod(method);
-            continue;
         }
     }
 
@@ -104,7 +103,8 @@ public class ReflectiveConvertletTable
                         return
                             (RexNode) method.invoke(
                                 ReflectiveConvertletTable.this,
-                                new Object[] { cx, call });
+                                cx,
+                                call);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(
                             e,
@@ -161,7 +161,9 @@ public class ReflectiveConvertletTable
                         return
                             (RexNode) method.invoke(
                                 ReflectiveConvertletTable.this,
-                                new Object[] { cx, call.getOperator(), call });
+                                cx,
+                                call.getOperator(), 
+                                call);
                     } catch (IllegalAccessException e) {
                         throw Util.newInternal(
                             e,
@@ -189,7 +191,7 @@ public class ReflectiveConvertletTable
 
         // Is there a convertlet for this class of operator
         // (e.g. SqlBinaryOperator)?
-        Class clazz = op.getClass();
+        Class<? extends Object> clazz = op.getClass();
         while (clazz != null) {
             convertlet = (SqlRexConvertlet) map.get(clazz);
             if (convertlet != null) {
@@ -243,8 +245,8 @@ public class ReflectiveConvertletTable
                         "call to wrong operator");
                     final SqlCall newCall =
                         target.createCall(
-                            call.getOperands(),
-                            SqlParserPos.ZERO);
+                            SqlParserPos.ZERO,
+                            call.getOperands());
                     return cx.convertExpression(newCall);
                 }
             });

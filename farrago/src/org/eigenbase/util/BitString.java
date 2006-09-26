@@ -203,7 +203,7 @@ public class BitString
         for (int i = 0; i < args.length; i++) {
             length += args[i].bitCount;
         }
-        StringBuffer sb = new StringBuffer(length);
+        StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < args.length; i++) {
             sb.append(args[i].bits);
         }
