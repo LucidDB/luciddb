@@ -1,0 +1,29 @@
+# the properties passed to blackhawk; modify this as needed.
+# note, command-line properties will override any values set here.
+
+testfile=test.xml
+
+# viable choices for datasize are: 
+# only reference files for 100M are available, other datasizes will fail 
+# 100M, 1G, 10G, 30G, 100G, 300G, 1000G, 3000G, 10000G, 30000G, 100000G
+datasize=100M
+
+#######################
+# bh specific filters #
+#######################
+
+# To skip known failures, set to !=true (or, set to =false,null)
+# To run only known failures, set to =true
+# To run all, leave unset (or, set to =true,false,null)
+bh.filter.knownFailures!=true
+
+# To skip not implemented tests, set to !=true (or, set to =false,null)
+# To run only not implemented tests, set to =true
+# To run all, leave unset (or, set to true,false,null)
+bh.filter.notImplemented!=true
+
+# Which tests from testfile to run: testunit.testname<.subtest-name>; leave blank to run all tests
+bh.test-names=
+
+# verbose
+bh.verbose=false

@@ -367,8 +367,6 @@ public class LoptMetadataProvider
             return
                 RelMdUtil.getJoinDistinctRowCount(
                     rel,
-                    rel.getLeft(),
-                    rel.getRight(),
                     joinType.getLogicalJoinType(),
                     groupKey,
                     predicate);
@@ -738,8 +736,7 @@ public class LoptMetadataProvider
             assert(groupKey.nextSetBit(nFieldsLeft) < 0);
             return RelMetadataQuery.getPopulationSize(rel.getRight(), groupKey);
         } else {
-            return RelMdUtil.getJoinPopulationSize(
-                rel, rel.getLeft(), rel.getRight(), groupKey);
+            return RelMdUtil.getJoinPopulationSize(rel, groupKey);
         }
     }
 

@@ -64,7 +64,9 @@ FennelResource::FennelResource(Locale locale)
       _tooManyColumns(this, "tooManyColumns"),
       _rowTextTooLong(this, "rowTextTooLong"),
       _flatfileDescribeFailed(this, "flatfileDescribeFailed"),
-      _flatfileNoHeader(this, "flatfileNoHeader")
+      _flatfileNoHeader(this, "flatfileNoHeader"),
+      _flatfileMappedRequiresLenient(this, "flatfileMappedRequiresLenient"),
+      _flatfileNoMappedColumns(this, "flatfileNoMappedColumns")
 { }
 
 string FennelResource::sysCallFailed(const std::string &p0) const
@@ -150,6 +152,14 @@ string FennelResource::flatfileDescribeFailed(const std::string &p0) const
 string FennelResource::flatfileNoHeader(const std::string &p0, const std::string &p1) const
 {
     return _flatfileNoHeader.format(p0, p1);
+}
+string FennelResource::flatfileMappedRequiresLenient() const
+{
+    return _flatfileMappedRequiresLenient.format();
+}
+string FennelResource::flatfileNoMappedColumns(const std::string &p0, const std::string &p1) const
+{
+    return _flatfileNoMappedColumns.format(p0, p1);
 }
 
 } // end namespace fennel

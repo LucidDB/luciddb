@@ -46,14 +46,14 @@ order by crc_value;
 select *
 from table(applib.generate_crc(
   cursor(select * from types, temptypes 
-    where type.c_tinyint = temptypes.c_tinyint)))
-order by *;
+    where types.c_tinyint = temptypes.c_tinyint)))
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
 
 -- join with filter
 select * 
 from table(applib.generate_crc(
   cursor(select * from types,temptypes where types.c_decimal > 0)))
-order by *;
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
 
 -- on view
 create view typeview as
@@ -62,20 +62,20 @@ select c_decimal, c_tinyint, c_smallint, c_int, c_bigint, c_char, c_varchar, c_t
 select * 
 from table(applib.generate_crc(
   cursor(select * from typeview)))
-order by *;
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
 
 -- functions
 select * 
 from table(applib.generate_crc(
   cursor(select c_smallint/2, coalesce(c_varchar, 'null') from types)))
-order by *;
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
  
 -- recursive
 select *
 from table(applib.generate_crc(
   cursor(select * from table(applib.generate_crc(
     cursor(select * from types))))))
-order by *;
+order by crc_value,1,2,3,4,5,6,7,8,9,10,11;
 
 -- cleanup
 drop view typeview cascade;

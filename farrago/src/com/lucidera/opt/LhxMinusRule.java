@@ -113,9 +113,6 @@ public class LhxMinusRule
             }
 
             Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
-            if (numBuildRows == null) {
-                numBuildRows = 10000.0;
-            }
 
             // implement minus as a "right anti" join;
             // derive cardinality of builde side(LHS) join keys.
@@ -131,8 +128,8 @@ public class LhxMinusRule
                     fennelLeft,
                     joinKeyMap);
 
-            if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-                cndBuildKey = numBuildRows;
+            if (cndBuildKey == null) {
+                cndBuildKey = -1.0;
             }
 
             // implement minus as a "right anti" join;
@@ -148,8 +145,8 @@ public class LhxMinusRule
                     rightKeys,
                     leftKeys,
                     newJoinOutputNames,
-                    numBuildRows.intValue(),
-                    cndBuildKey.intValue());
+                    numBuildRows.longValue(),
+                    cndBuildKey.longValue());
         }
         call.transformTo(leftRel);
     }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2005-2005 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -64,13 +64,24 @@
   <property name="test.orcl.classpath" refid="test.orcl.classpath"/>
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir" property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
       <then/>
       <else>
-        
-        <!-- generate sql files -->
         <copy todir="${gensql.dir}/noidx" overwrite="true">
           <fileset dir="${company.dir}" includes="*.tmpl"/>
           <filterset id="dir.filter">
@@ -140,14 +151,9 @@
   <target name="clean">
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
-    <delete>
-      <fileset dir="${company.dir}">
-        <include name="*.err"/>
-        <include name="*.bcp"/> 
-      </fileset>
-    </delete>
     <delete dir="${csv.copy.dir}"/>
-  </target>  
+    <delete file="run.properties"/>
+  </target>
 
   <!-- Experimental -->
     <target name="test-orcl" depends="gen-all-sql">
@@ -164,8 +170,8 @@
       </fileset>
       <filterchain>
         <tokenfilter>
-          <replacestring 
-            from="0: jdbc:oracle:thin:@akela.lucidera.com:1521:" 
+          <replacestring
+            from="0: jdbc:oracle:thin:@akela.lucidera.com:1521:"
             to="0: jdbc:oracle:"/>
           <replacestring
             from="Error: READ_COMMITTED and SERIALIZABLE are the only valid transaction levels (state=,code=17030)"

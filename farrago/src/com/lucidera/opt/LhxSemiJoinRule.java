@@ -167,9 +167,6 @@ public class LhxSemiJoinRule
         }
 
         Double numBuildRows = RelMetadataQuery.getRowCount(fennelRight);
-        if (numBuildRows == null) {
-            numBuildRows = 10000.0;
-        }
 
         // Derive cardinality of RHS join keys.
         Double cndBuildKey;
@@ -184,8 +181,8 @@ public class LhxSemiJoinRule
                 fennelRight,
                 joinKeyMap);
 
-        if ((cndBuildKey == null) || (cndBuildKey > numBuildRows)) {
-            cndBuildKey = numBuildRows;
+        if (cndBuildKey == null) {
+            cndBuildKey = -1.0;
         }
 
         boolean isSetop = false;
@@ -202,8 +199,8 @@ public class LhxSemiJoinRule
                 leftKeys,
                 rightKeys,
                 newJoinOutputNames,
-                numBuildRows.intValue(),
-                cndBuildKey.intValue());
+                numBuildRows.longValue(),
+                cndBuildKey.longValue());
 
         // This is a left semi join, so only fields from the left
         // side is projected. There is no need to project the new output

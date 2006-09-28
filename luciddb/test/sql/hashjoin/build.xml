@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2006-2006 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -47,7 +47,21 @@
   </path>
   <property name="test.classpath" refid="test.classpath"/>
 
-  <target name="test">
+  <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+  </target>
+
+  <target name="test" depends="gen-all-sql">
     <blackhawk.fork
       basedir="${hashjoin.dir}"
       testscript="${testfile}"
@@ -59,6 +73,7 @@
       <fileset dir="${hashjoin.dir}" includes="*.log"/>
     </delete>
     <delete dir="${bh.log.basedir}"/>
+    <delete file="run.properties"/>
   </target>
 
 </project>

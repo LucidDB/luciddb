@@ -60,7 +60,6 @@ AC_CHECK_LIB(uuid,uuid_make,[ found_new_libuuid=true ])
 if test "$found_libaio" = "true"
 then
     AC_DEFINE([HAVE_LIBAIO],[1],[Define to 1 if you have the `aio' library (-laio).])
-    LIBS="$LIBS -luuid"
 fi
 
 dnl Starting with v0.9.4, libuuid changed APIs

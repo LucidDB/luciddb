@@ -34,6 +34,7 @@ import openjava.ptree.Expression;
 import openjava.ptree.FieldAccess;
 import openjava.ptree.Variable;
 
+import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.rules.*;
@@ -465,26 +466,36 @@ public abstract class RelOptUtil
         }
 
         if (extraExpr != null) {
-            final RelDataType rowType = seekRel.getRowType();
-            final RelDataTypeField [] fields = rowType.getFields();
-            final RexNode [] expressions = new RexNode[fields.length + 1];
-            String [] fieldNames = new String[fields.length + 1];
-            final RexNode ref =
-                cluster.getRexBuilder().makeRangeReference(
-                    rowType,
+            // this should only be called for the exists case
+            // first stick an Agg on top of the subquery
+            // agg does not like no agg functions so just pretend it is
+            // doing a count
+            RelDataType returnType =
+                SqlStdOperatorTable.countOperator.getReturnType(
+                    cluster.getRexBuilder().getTypeFactory());
+            
+            final AggregateRelBase.Call countCall =
+                new AggregateRelBase.Call(
+                    SqlStdOperatorTable.countOperator,
+                    false,
+                    new int[0],
+                    returnType);
+            
+            RelNode aggRel =
+                new AggregateRel(
+                    ret.getCluster(),
+                    ret,
                     0,
-                    false);
-            for (int j = 0; j < fields.length; j++) {
-                expressions[j] =
-                    cluster.getRexBuilder().makeFieldAccess(
-                        ref,
-                        j);
-                fieldNames[j] = fields[j].getName();
-            }
-            expressions[fields.length] = extraExpr;
-            fieldNames[fields.length] =
-                Util.uniqueFieldName(fieldNames, fields.length, extraName);
-            ret = CalcRel.createProject(ret, expressions, fieldNames);
+                    new AggregateRel.Call[] {countCall});
+            
+            final RexNode [] expressions = new RexNode[1];
+            String [] fieldNames = new String[1];
+
+            expressions[0] = extraExpr;
+            fieldNames[0] =
+                Util.uniqueFieldName(fieldNames, 0, extraName);
+            ret = CalcRel.createProject(aggRel, expressions, fieldNames);            
+
         }
 
         return ret;
@@ -1542,8 +1553,7 @@ public abstract class RelOptUtil
      * from above the join), or are pushed to one of the children. Filters that
      * are pushed are added to list passed in as input parameters.
      *
-     * @param joinRel node
-     * @param nFieldsLeft number of fields in the left hand join input
+     * @param joinRel join node
      * @param filters filters to be classified
      * @param pushJoin true if filters originated from above the join node and
      * the join is an inner join
@@ -1557,7 +1567,6 @@ public abstract class RelOptUtil
      */
     public static boolean classifyFilters(
         RelNode joinRel,
-        int nFieldsLeft,
         List<RexNode> filters,
         boolean pushJoin,
         boolean pushLeft,
@@ -1571,6 +1580,7 @@ public abstract class RelOptUtil
         RelDataTypeField [] joinFields = joinRel.getRowType().getFields();
         int nTotalFields = joinFields.length;
 
+        int nFieldsLeft = joinRel.getInputs()[0].getRowType().getFieldCount();
         BitSet leftBitmap = new BitSet(nFieldsLeft);
         BitSet rightBitmap = new BitSet(nTotalFields - nFieldsLeft);
 
@@ -1822,6 +1832,48 @@ public abstract class RelOptUtil
             exps[i] = rexBuilder.makeInputRef(field.getType(), source);
         }
         return exps;
+    }
+    
+    /**
+     * Creates a new SetOpRel corresponding to an original SetOpRel with a
+     * new set of input children
+     * 
+     * @param setOpRel the original SetOpRel
+     * @param newSetOpInputs the input children
+     * 
+     * @return new SetOpRel
+     */
+    public static SetOpRel createNewSetOpRel(
+        SetOpRel setOpRel,
+        RelNode[] newSetOpInputs)
+    {
+        SetOpRel newSetOpRel = null;
+        RelOptCluster cluster = setOpRel.getCluster();
+        if (setOpRel instanceof UnionRel) {
+            newSetOpRel =
+                new UnionRel(
+                    cluster,
+                    newSetOpInputs,
+                    !setOpRel.isDistinct());
+        } else if (setOpRel instanceof IterConcatenateRel) {
+            newSetOpRel = 
+                new IterConcatenateRel(
+                    cluster,
+                    newSetOpInputs);
+        } else if (setOpRel instanceof IntersectRel) {
+            newSetOpRel =
+                new IntersectRel(
+                    cluster,
+                    newSetOpInputs,
+                    !setOpRel.isDistinct());
+        } else if (setOpRel instanceof MinusRel) {
+            newSetOpRel =
+                new MinusRel(
+                    cluster,
+                    newSetOpInputs,
+                    !setOpRel.isDistinct());
+        }
+        return newSetOpRel;
     }
     
     //~ Inner Classes ----------------------------------------------------------

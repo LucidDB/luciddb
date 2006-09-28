@@ -462,7 +462,7 @@ public class BytePointer
             return 1;
         }
         int cnt1 = bp1.getByteCount();
-        int cnt = getByteCount() - cnt1;
+        int cnt = 1 + getByteCount() - cnt1;
         for (int i = 0; i < cnt; i++) {
             boolean stillMatch = true;
             for (int j = 0; j < cnt1; j++) {

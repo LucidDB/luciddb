@@ -125,6 +125,11 @@ public:
     std::vector<uint> sizes;
     
     /**
+     * Sizes of stripped column values
+     */
+    std::vector<uint> strippedSizes;
+    
+    /**
      * Reference to the current row.
      */
     char *current;
@@ -139,6 +144,88 @@ public:
      * Ongoing count of row delimiters read
      */
     uint nRowDelimsRead;
+
+    /**
+     * Gets the number of fields read
+     */
+    uint getReadCount() 
+    {
+        return offsets.size();
+    }
+
+    /**
+     * Gets a column value. The column value may initially contain escape
+     * quote characters. These may be later be removed in place. NULL is
+     * returned when the initial column size is zero. By contrast, empty
+     * quotes ("") represents the empty string.
+     */
+    char *getColumn(uint iColumn)
+    {
+        if (sizes[iColumn] == 0) {
+            return NULL;
+        }
+        return current + offsets[iColumn];
+    }
+
+    /**
+     * Gets the size of a column, before removing escape and quote chars
+     */
+    uint getRawColumnSize(uint iColumn)
+    {
+        return sizes[iColumn];
+    }
+
+    /**
+     * Gets the size of a column, after removing escape and quote chars
+     */
+    uint getColumnSize(uint iColumn)
+    {
+        return strippedSizes[iColumn];
+    }
+
+    /**
+     * Clear the row result
+     */
+    void clear()
+    {
+        offsets.clear();
+        sizes.clear();
+    }
+
+    /**
+     * Resize the row result
+     */
+    void resize(uint nColumns)
+    {
+        offsets.resize(nColumns);
+        sizes.resize(nColumns);
+    }
+
+    /**
+     * Sets a column value in the row result
+     */ 
+    void setColumn(uint iColumn, uint offset, uint size)
+    {
+        offsets[iColumn] = offset;
+        sizes[iColumn] = size;
+    }
+
+    /**
+     * Nullifies a column value in the row result
+     */
+    void setNull(uint iColumn) 
+    {
+        setColumn(iColumn, 0, 0);
+    }
+
+    /**
+     * Pushes a column onto the end of the row result
+     */
+    void addColumn(uint offset, uint size)
+    {
+        offsets.push_back(offset);
+        sizes.push_back(size);
+    }
 };
 
 /**
@@ -166,6 +253,9 @@ public:
 class FlatFileRowDescriptor : public std::vector<FlatFileColumnDescriptor> 
 {
     bool bounded;
+    bool lenient;
+
+    std::vector<uint> columnMap;
 
 public:
     /**
@@ -195,6 +285,47 @@ public:
      * or to run in an unbounded scan mode
      */
     bool isBounded() const;
+
+    /**
+     * Sets a mapping from source column ordinal to target column ordinal.
+     * If a source column does not appear in the target, it should be mapped
+     * to -1. If no source columns are present, all values will be -1. The
+     * behavior is undefined if two source columns map to the same target.
+     */
+    void setMap(std::vector<uint> map)
+    {
+        columnMap = map;
+    }
+
+    /**
+     * Whether using a mapping from source to column ordinal
+     */
+    bool isMapped() const
+    {
+        return columnMap.size() > 0;
+    }
+
+    /**
+     * Gets the mapping from source to target column. Returns -1 if no
+     * mapping exists.
+     */
+    int getMap(uint iSource) const
+    {
+        if (iSource >= columnMap.size()) {
+            return -1;
+        }
+        return columnMap[iSource];
+    }
+
+    void setLenient(bool lenientIn)
+    {
+        lenient = lenientIn;
+    }
+
+    bool isLenient() const
+    {
+        return lenient;
+    }
 };
 
 /**
@@ -282,7 +413,23 @@ public:
     
     /**
      * Scans through buffer until the end of a row is reached, and locates
-     * columns within the row.
+     * columns within the row. The main options are a "bounded", "lenient",
+     * and "mapped".
+     *
+     * <p>
+     *
+     * If a scan is "bounded", the output must match an expected format as
+     * specified by the column descriptions. Rows with the wrong number of
+     * columns are treated as bad rows. However, if a "bounded" scan is
+     * also "lenient", the parser is forgiving. Missing values are filled
+     * in with null, and extra values are discarded. If columns are "mapped"
+     * then they default to null, and columns read are assigned to output
+     * columns according to the mapping.
+     *
+     * <p>
+     *
+     * If a scan is "unbounded", then the output may have any number of
+     * columns. The other options are not applicable to unbounded mode.
      *
      * @param[in] buffer buffer with text to be parsed
      *
@@ -331,6 +478,18 @@ public:
         uint maxLength, 
         FlatFileColumnParseResult &result);
     
+    /**
+     * Remove quoting and escape characters from a row result, saving the
+     * results into the row result.
+     *
+     * @param[in, out] the row result to be stripped
+     *
+     * @param trim[in] whether to trim columns before processing them
+     */
+    void stripQuoting(
+        FlatFileRowParseResult &rowResult,
+        bool trim);
+
     /**
      * Removes quoting and escape characters from a column value. If untrimmed
      * is set, then the value will be trimmed first. Otherwise, quoted values 

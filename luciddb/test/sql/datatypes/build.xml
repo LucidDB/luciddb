@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 // $Id$
 // LucidDB is a DBMS optimized for business intelligence.
 // Copyright (C) 2005-2005 LucidEra, Inc.
@@ -14,7 +14,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-//  
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -62,7 +62,7 @@
     <filter token="datatypes.dir" value="${datatypes.dir}"/>
 
     <!-- generate config.properties file -->
-    <copy file="prop.${prop.source}" tofile="config.properties" 
+    <copy file="prop.${prop.source}" tofile="config.properties"
       overwrite="true" filtering="true">
       <filterset>
         <filtersfile file="prop.${prop.source}"/>
@@ -107,6 +107,18 @@
   </target>
 
   <target name="gen-all-sql">
+    <!-- generate run.properties -->
+    <available file="run.properties" type="file"
+      property="run.properties.exists"/>
+    <if>
+      <isset property="run.properties.exists"/>
+      <then/>
+      <else>
+        <copy file="run.properties.tmpl" tofile="run.properties"/>
+        <property file="run.properties"/>
+      </else>
+    </if>
+    <!-- generate sql -->
     <available file="${gensql.dir}" type="dir" property="sql.generated"/>
     <if>
       <isset property="sql.generated"/>
@@ -124,7 +136,7 @@
       basedir="${datatypes.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
-  </target>  
+  </target>
 
   <target name="copy-csv">
     <sync todir="${csv.copy.dir}"
@@ -146,6 +158,8 @@
     <delete dir="${gensql.dir}"/>
     <delete dir="${bh.log.basedir}"/>
     <delete dir="${csv.copy.dir}"/>
+    <delete file="run.properties"/>
+    <delete file="config.properties"/>
   </target>
 
 </project>

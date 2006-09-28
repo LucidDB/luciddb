@@ -112,7 +112,46 @@ struct FlatFileExecStreamParams : public SingleOutputExecStreamParams
      */
     std::string calcProgram;
 
+    /**
+     * Mode in which to run the flatfile scan
+     */
     FlatFileMode mode;
+
+    /**
+     * The maximum number of errors to allow before failing. Resets when the
+     * stream is reopened. A value of -1 indicates that there is no max.
+     */
+    int errorMax;
+
+    /**
+     * The maximum number of errors to log. Resets when the stream is
+     * reopened. A value of -1 indicates that there is no max.
+     */
+    int errorLogMax;
+
+    /**
+     * Whether to be lenient when reading flatfile columns. If columns are
+     * missing at the end of a row, they are treated as null. Unexpected
+     * columns at the end of a row are ignored.
+     */
+    bool lenient;
+
+    /**
+     * Whether to trim output columns
+     */
+    bool trim;
+
+    /**
+     * Whether to map source columns to target columns by name. Requires a
+     * header, to specify source column names, and target column names.
+     * Missing columns are filled in with null.
+     */
+    bool mapped;
+
+    /**
+     * Names of the target columns.
+     */
+    std::vector<std::string> columnNames;
 
     explicit FlatFileExecStreamParams()
     {

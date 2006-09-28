@@ -110,14 +110,9 @@ public abstract class MedAbstractFennelProjectionRule
                 // there are expressions in the projection; we need to extract
                 // all input references and any special expressions from the
                 // projection
-                PushProjector pushProject = new PushProjector();
-                ProjectRel newProject =
-                    pushProject.convertProject(
-                        projRel,
-                        null,
-                        origScan,
-                        preserveExprs,
-                        defaultExpr);
+                PushProjector pushProject =
+                    new PushProjector(projRel, null, origScan, preserveExprs);
+                ProjectRel newProject = pushProject.convertProject(defaultExpr);
                 if (newProject == null) {
                     // can't do any further projection
                     return false;

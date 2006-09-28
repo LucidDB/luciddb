@@ -44,7 +44,7 @@
       </test>
 
       <test name="agg" requiresSuccess="download">
-        <!-- TODO: FRG-115, FRG-165 -->
+        <!-- unresolved issues: FRG-115, FRG-165 -->
         <!-- FRG-52 -->
         <test-metadata>
           <knownFailure>true</knownFailure>
@@ -62,7 +62,7 @@
       </test>
 
       <test name="agg_cust" requiresSuccess="download">
-        <!-- TODO: FRG 165 -->
+        <!-- unresolved issues: FRG-165, FRG-115-->
         <!-- to_number not supported yet -->
         <test-metadata>
           <knownFailure>true</knownFailure>
@@ -87,7 +87,8 @@
       </test>
 
       <test name="null" requiresSuccess="download">
-        <!-- TODO: FRG-167 DESC not implemented yet -->
+        <!-- unresolved issue: FRG-167 DESC not implemented yet -->
+        <!-- FRG-208 -->
         <test-metadata>
           <knownFailure>true</knownFailure>
         </test-metadata>
@@ -151,7 +152,7 @@
       </test>
 
       <test name="logPrec" requiresSuccess="download">
-        <junit-sql file="${open.dir}/luciddb/test/sql/company/logicalPrecedence.sql"/>
+        <junit-sql file="${open.dir}/luciddb/test/sql/company/gen/noidx/logicalPrecedence.sql"/>
       </test>
 
       <cleanup-hook>

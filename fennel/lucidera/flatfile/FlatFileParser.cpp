@@ -20,7 +20,7 @@
 */
 
 #include "fennel/common/CommonPreamble.h"
-#include "FlatFileParser.h"
+#include "fennel/lucidera/flatfile/FlatFileParser.h"
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
@@ -100,23 +100,27 @@ void FlatFileParser::scanRow(
 
     result.status = FlatFileRowParseResult::NO_STATUS;
     bool bounded = columns.isBounded();
+    bool lenient = columns.isLenient();
+    bool mapped = columns.isMapped();
+    bool strict = (bounded && (!lenient));
+
     uint maxColumns;
     if (bounded) {
         maxColumns = columns.size();
-        result.offsets.resize(maxColumns);
-        result.sizes.resize(maxColumns);
+        result.resize(maxColumns);
+        for (uint i = 0; i < maxColumns; i++) {
+            result.setNull(i);
+        }
     } else {
         maxColumns = FlatFileRowDescriptor::MAX_COLUMNS;
-        result.offsets.clear();
-        result.sizes.clear();
+        result.clear();
     }
+
     bool done = false;
-    for (uint i=0; i < maxColumns; i++) {
-        int maxLength;
+    uint maxLength = FlatFileRowDescriptor::MAX_COLUMN_LENGTH;
+    for (uint i = 0; i < maxColumns; i++) {
         if (bounded) {
             maxLength = columns[i].maxLength;
-        } else {
-            maxLength = FlatFileRowDescriptor::MAX_COLUMN_LENGTH;
         }
         scanColumn(
             row + offset,
@@ -129,7 +133,7 @@ void FlatFileParser::scanRow(
             done = true;
             break;
         case FlatFileColumnParseResult::ROW_DELIM:
-            if (bounded && (i+1 != columns.size())) {
+            if (strict && (i+1 != columns.size())) {
                 if (i == 0) {
                     result.status = FlatFileRowParseResult::NO_COLUMN_DELIM;
                 } else {
@@ -140,7 +144,7 @@ void FlatFileParser::scanRow(
             break;
         case FlatFileColumnParseResult::MAX_LENGTH:
         case FlatFileColumnParseResult::FIELD_DELIM:
-            if (bounded && (i+1 == columns.size())) {
+            if (strict && (i+1 == columns.size())) {
                 result.status = FlatFileRowParseResult::TOO_MANY_COLUMNS;
                 done = true;
             }
@@ -149,11 +153,13 @@ void FlatFileParser::scanRow(
             permAssert(false);
         }
         if (bounded) {
-            result.offsets[i] = offset;
-            result.sizes[i] = columnResult.size;
+            int target = mapped ? columns.getMap(i) : i;
+            if (target >= 0) {
+                assert (target < maxColumns);
+                result.setColumn(target, offset, columnResult.size);
+            }
         } else {
-            result.offsets.push_back(offset);
-            result.sizes.push_back(columnResult.size);            
+            result.addColumn(offset, columnResult.size);
         }
         offset = columnResult.next - row;
         if (done) break;
@@ -314,6 +320,27 @@ void FlatFileParser::scanFixedColumn(
 
     uint resultSize = read - buffer;
     result.setResult(type, const_cast<char *>(buffer), resultSize);
+}
+
+void FlatFileParser::stripQuoting(
+    FlatFileRowParseResult &rowResult,
+    bool trim)
+{
+    int nFields = rowResult.getReadCount();
+
+    if (rowResult.strippedSizes.size() < nFields) {
+        rowResult.strippedSizes.resize(nFields);
+    }
+
+    for (uint i = 0; i < nFields; i++) {
+        char *value = rowResult.getColumn(i);
+        uint newSize = 0;
+        if (value != NULL) {
+            uint oldSize = rowResult.getRawColumnSize(i);
+            newSize = stripQuoting(value, oldSize, trim);
+        }
+        rowResult.strippedSizes[i] = newSize;
+    }
 }
 
 uint FlatFileParser::stripQuoting(

@@ -833,6 +833,8 @@ public abstract class SqlOperatorTests
             "cast(.48 as varchar(10))",
             ".48",
             "VARCHAR(10) NOT NULL");
+        getTester().checkFails("cast(2.523 as char(2))", stringTruncMessage);
+
         getTester().checkString(
             "cast(-0.29 as varchar(10))",
             "-.29",
@@ -2193,6 +2195,9 @@ public abstract class SqlOperatorTests
         getTester().setFor(SqlStdOperatorTable.positionFunc);
         getTester().checkScalarExact("position('b' in 'abc')", "2");
         getTester().checkScalarExact("position('' in 'abc')", "1");
+
+        // FRG-211
+        getTester().checkScalarExact("position('tra' in 'fdgjklewrtra')", "10");
 
         getTester().checkNull("position(cast(null as varchar(1)) in '0010')");
         getTester().checkNull("position('a' in cast(null as varchar(1)))");

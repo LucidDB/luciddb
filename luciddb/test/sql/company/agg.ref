@@ -28,8 +28,8 @@
 | 1000    |
 +---------+
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> -- TODO:
-0: jdbc:luciddb:> select floor(avg(PRICE)) from SALES;
+0: jdbc:luciddb:> -- changed because rounding causes average to become 5.0
+0: jdbc:luciddb:> select floor(avg(cast(PRICE as decimal(10,4)))) from SALES;
 +---------+
 | EXPR$0  |
 +---------+

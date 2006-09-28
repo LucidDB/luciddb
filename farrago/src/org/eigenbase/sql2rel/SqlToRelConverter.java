@@ -76,7 +76,15 @@ public class SqlToRelConverter
     private boolean shouldConvertTableAccess;
     protected final RelDataTypeFactory typeFactory;
     private final SqlNodeToRexConverter exprConverter;
-
+    
+    /**
+     * Fields used in name resolution for correlated subqueries.
+     */
+    private final Map<String, DeferredLookup> mapCorrelToDeferred =
+        new HashMap<String, DeferredLookup>();
+    private int nextCorrel = 0;
+    private final String correlPrefix = "$cor";
+        
     /**
      * Stack of names of datasets requested by the <code>
      * TABLE(SAMPLE(&lt;datasetName&gt;, &lt;query&gt;))</code> construct.
@@ -215,6 +223,9 @@ public class SqlToRelConverter
         
         final RelNode result = convertQueryRecursive(query, top);
 
+        // TODO rchen 2006-08-31 decorrelate
+        // if (!mapCorVarToCorRel.isEmpty())
+        
         if (!query.getKind().isA(SqlKind.Dml)) {
             // Verify that conversion from SQL to relational algebra did
             // not perturb any type information.  (We can't do this if the
@@ -1061,6 +1072,8 @@ public class SqlToRelConverter
 
         case SqlKind.JoinORDINAL:
             final SqlJoin join = (SqlJoin) from;
+            final Blackboard fromBlackboard =
+                createBlackboard(validator.getJoinScope(from));      
             SqlNode left = join.getLeft();
             SqlNode right = join.getRight();
             boolean isNatural = join.isNatural();
@@ -1080,7 +1093,7 @@ public class SqlToRelConverter
             final JoinRelBase joinRel;
             joinRel =
                 createJoin(
-                    bb,
+                    fromBlackboard,
                     leftRel,
                     rightRel,
                     join.getCondition(),
@@ -1182,49 +1195,54 @@ public class SqlToRelConverter
         SqlJoinOperator.ConditionType conditionType,
         JoinRelType joinType)
     {
-        // REVIEW Wael: I changed the implementation of lookup:ing deffered
-        // variables. Probably this code abuses the intended api, but there
-        // seem to be saffron code depending on it and didnt want to break any
-        // intended plan, sent Julian an email.
         Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(rightRel);
+
         if (correlatedVariables.size() > 0) {
             List<CorrelatorRel.Correlation> correlations =
                 new ArrayList<CorrelatorRel.Correlation>();
-            for (String name : correlatedVariables) {
-                Map<RelOptQuery.DeferredLookup, String> mapDeferredToCorrel =
-                    cluster.getQuery().getMapDeferredToCorrel();
-                for (RelOptQuery.DeferredLookup lookup
-                    : mapDeferredToCorrel.keySet()) {
-                    String correlName = mapDeferredToCorrel.get(lookup);
-                    if (correlName.equals(name)) {
-                        RexFieldAccess correlNode = lookup.getFieldAccess(name);
-                        String corrVarName = correlNode.getField().getName();
-                        final int pos =
-                            leftRel.getRowType().getFieldOrdinal(corrVarName);
+
+            for (String correlName : correlatedVariables) {
+                DeferredLookup lookup = mapCorrelToDeferred.get(correlName);
+                RexFieldAccess fieldAccess = lookup.getFieldAccess(correlName);
+                String originalRelName = lookup.getOriginalRelName();
+                String originalFieldName = fieldAccess.getField().getName();
+                
+                int [] offsets = { -1 };
+                final SqlValidatorScope [] ancestorScopes = { null };
+                SqlValidatorNamespace foundNs =
+                    lookup.bb.scope.resolve(originalRelName, ancestorScopes,
+                                            offsets);
+                
+                assert (foundNs != null);
+
+                SqlValidatorScope ancestorScope = ancestorScopes[0];
+                boolean correlInCurrentScope = (ancestorScope == bb.scope);
+
+                if (correlInCurrentScope) {
+                    final int pos =
+                        leftRel.getRowType().getFieldOrdinal(originalFieldName);
                         
-                        /* REVIEW (rchen 2006-08-21)
-                         * leave the unbound variables to be resolved later.
-                        assert (leftRel.getRowType().getField(corrVarName).getType()
-                                == correlNode.getType());
-                        */
+                    assert (leftRel.getRowType().getField(originalFieldName).getType()
+                        == lookup.getFieldAccess(correlName).getField().getType());
                         
-                        if (pos != -1) {
-                            correlations.add(
-                                new CorrelatorRel.Correlation(
-                                    RelOptQuery.getCorrelOrdinal(correlName),
-                                    pos));
-                        }
-                    }
+                    assert (pos != -1);
+                    CorrelatorRel.Correlation newCorVar =
+                        new CorrelatorRel.Correlation(
+                            getCorrelOrdinal(correlName), pos);
+                        
+                    correlations.add(newCorVar);
                 }
             }
+            
             if (!correlations.isEmpty()) {
-            	return
+                CorrelatorRel corRel =
                     new CorrelatorRel(
                         rightRel.getCluster(),
                         leftRel,
                         rightRel,
                         correlations,
                         joinType);
+                return corRel;
             }
         }
         
@@ -2477,10 +2495,10 @@ public class SqlToRelConverter
                 // e.g. "select from emp as emp join emp.getDepts() as dept".
                 // Create a temporary expression.
                 assert isParent;
-                RelOptQuery.DeferredLookup lookup =
-                    new DeferredLookupImpl(this, offset, isParent);
-                String correlName =
-                    cluster.getQuery().createCorrelUnresolved(lookup);
+                DeferredLookup lookup =
+                    new DeferredLookup(this, name);
+                String correlName = createCorrel();
+                mapCorrelToDeferred.put(correlName, lookup);
                 final RelDataType rowType = foundNs.getRowType();
                 result = rexBuilder.makeCorrel(rowType, correlName);
             }
@@ -2501,6 +2519,11 @@ public class SqlToRelConverter
             int [] fieldOffsets = { 0 };
             RelNode rel = lookupContext.findRel(offset, fieldOffsets);
             if (isParent) {
+                /*
+                 *  REVIEW rchen 2006-08-28
+                 *  The only caller of this method has isParent == false
+                 *  Is this section required at all? 
+                 */
                 if (varName == null) {
                     varName = rel.getOrCreateCorrelVariable();
                 } else {
@@ -2745,40 +2768,42 @@ public class SqlToRelConverter
         }
     }
 
-    private static class DeferredLookupImpl
-        implements RelOptQuery.DeferredLookup
+    private static class DeferredLookup
     {
         Blackboard bb;
-        boolean isParent;
-        int offset;
+        String originalRelName;
 
-        DeferredLookupImpl(
+        DeferredLookup(
             Blackboard bb,
-            int offset,
-            boolean isParent)
+            String originalRelName)
         {
             this.bb = bb;
-            this.offset = offset;
-            this.isParent = isParent;
-        }
-
-        /**
-         * @deprecated Not currently used
-         */
-        public RexNode lookup(
-            RelNode [] inputs,
-            String varName)
-        {
-            final LookupContext lookupContext = new LookupContext(null, inputs);
-            return bb.lookup(offset, lookupContext, isParent, varName);
+            this.originalRelName = originalRelName;
         }
 
         public RexFieldAccess getFieldAccess(String name)
         {
             return (RexFieldAccess) bb.mapCorrelateVariableToRexNode.get(name);
         }
+        
+        public String getOriginalRelName()
+        {
+            return originalRelName;
+        }
     }
 
+    private String createCorrel()
+    {
+        int n = nextCorrel++;
+        return correlPrefix + n;
+    }
+
+    private int getCorrelOrdinal(String correlName)
+    {
+        assert (correlName.startsWith(correlPrefix));
+        return Integer.parseInt(correlName.substring(correlPrefix.length()));
+    }
+    
     /**
      * An implementation of DefaultValueFactory which always supplies NULL.
      */

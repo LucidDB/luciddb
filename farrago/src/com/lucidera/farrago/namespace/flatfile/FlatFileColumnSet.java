@@ -200,16 +200,10 @@ class FlatFileColumnSet
         FennelRel child, 
         RexProgram program)
     {
-        // insert a converter to force the usage of Java calc
-        RelNode iterRel =
-            new FennelToIteratorConverter(
-                cluster,
-                child);
-
         return new CalcRel(
             cluster,
             new RelTraitSet(CallingConvention.NONE),
-            iterRel,
+            child,
             program.getOutputRowType(),
             program,
             Collections.EMPTY_LIST);

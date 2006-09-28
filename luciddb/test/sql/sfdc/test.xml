@@ -11,6 +11,7 @@
       </init-hook>
 
       <test name="sanity-flatfile" nameOverride="true">
+        <!-- LER-1985 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/sfdc/gen/flatfile.sql"/>
       </test>
 

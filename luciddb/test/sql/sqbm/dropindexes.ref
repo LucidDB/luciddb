@@ -17,14 +17,16 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K10 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
-'          LcsIndexMergeRel'
-'            LcsIndexSearchRel'
-'              FennelValuesRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
+'              LcsIndexMergeRel'
+'                LcsIndexSearchRel'
+'                  FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
 . . . . . . . . > ;
@@ -36,13 +38,15 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K10 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
+'              LcsIndexSearchRel'
+'                FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K10 = 2
 . . . . . . . . > ;
@@ -55,11 +59,13 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K5 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
 . . . . . . . . > ;
@@ -71,13 +77,15 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K5 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
+'              LcsIndexSearchRel'
+'                FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K5 = 2
 . . . . . . . . > ;
@@ -90,11 +98,13 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K25 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
 . . . . . . . . > ;
@@ -106,13 +116,15 @@
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select count(*) from bench1M where K25 = 2;
 'column0'
-'IterCalcRel'
-'  FennelToIteratorConverter'
+'FennelToIteratorConverter'
+'  FennelRenameRel'
 '    FennelAggRel'
-'      FennelCalcRel'
-'        LcsRowScanRel'
-'          LcsIndexSearchRel'
-'            FennelValuesRel'
+'      IteratorToFennelConverter'
+'        IterCalcRel'
+'          FennelToIteratorConverter'
+'            LcsRowScanRel'
+'              LcsIndexSearchRel'
+'                FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> select count(*) from bench1M where K25 = 2
 . . . . . . . . > ;

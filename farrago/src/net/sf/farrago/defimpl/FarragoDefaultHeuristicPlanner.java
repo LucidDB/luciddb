@@ -157,8 +157,24 @@ public class FarragoDefaultHeuristicPlanner
         // from clause can be optimized with the rest of the query
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
-        // Push filters down past joins.
-        builder.addRuleInstance(new PushFilterPastJoinRule());
+        // Push filters.
+        builder.addGroupBegin();
+        builder.addRuleInstance(new PushFilterPastSetOpRule());
+        builder.addRuleInstance(new PushFilterPastProjectRule());
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(
+                    FilterRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(JoinRel.class, null)
+                    }),
+                "with filter above join"));
+        builder.addRuleInstance(
+            new PushFilterPastJoinRule(
+                new RelOptRuleOperand(JoinRel.class, null),
+                "without filter above join"));      
+        builder.addRuleInstance(new MergeFilterRule());
+        builder.addGroupEnd();
 
         // This rule will also get run as part of medPluginRules, but
         // we need to do it now before pushing down projections, otherwise
@@ -175,6 +191,7 @@ public class FarragoDefaultHeuristicPlanner
         // index joins don't like projections underneath the join.
         builder.addGroupBegin();
         builder.addRuleInstance(new RemoveTrivialProjectRule());
+        builder.addRuleInstance(new PushProjectPastSetOpRule());
         builder.addRuleInstance(new PushProjectPastJoinRule());
         builder.addRuleInstance(new PushProjectPastFilterRule());
         builder.addRuleInstance(new MergeProjectRule());

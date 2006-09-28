@@ -1,0 +1,34 @@
+# the properties passed to blackhawk; modify this as needed.
+# note, command-line properties will override any values set here.
+
+#testfile=test-all.xml
+testfile=tbs100test.xml
+#testfile=tbs10Ktest.xml
+#testfile=tbs10K_idxtest.xml
+#testfile=tbs100Ktest.xml
+#testfile=tbs100K_idxtest.xml
+
+#######################
+# bh specific filters #
+#######################
+
+# To skip known failures, set to !=true (or, set to =false,null)
+# To run only known failures, set to =true
+# To run all, leave unset (or, set to =true,false,null)
+bh.filter.knownFailures!=true
+
+# To skip not implemented tests, set to !=true (or, set to =false,null)
+# To run only not implemented tests, set to =true
+# To run all, leave unset (or, set to true,false,null)
+bh.filter.notImplemented!=true
+
+# To skip with index tests, set to !=true (or, set to=false,null)
+# To run only with index tests, set to =true
+# To run all, leave unset (or, set to =true,false,null)
+# bh.filter.withIndex=true
+
+# Which tests from testfile to run: testunit.testname<.subtest-name>; leave blank to run all tests
+bh.test-names=
+
+# verbose
+bh.verbose=false

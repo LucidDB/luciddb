@@ -166,8 +166,8 @@ public abstract class SqlDateTimeWithoutTZ
             assignFrom(((Long) date).longValue());
             return;
         } else if (date instanceof java.util.Date) {
-            value = ((java.util.Date) date).getTime(); // + timeZoneOffset; //
-                                                       // set tzOffset?
+            value = ((java.util.Date) date).getTime();
+            timeZoneOffset = defaultZone.getOffset(value);
             return;
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ sqlDate = (SqlDateTimeWithoutTZ) date;

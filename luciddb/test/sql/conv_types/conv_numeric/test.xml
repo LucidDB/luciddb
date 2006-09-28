@@ -1,7 +1,14 @@
 <project name="bh" default="conv_numeric">
   <target name="conv_numeric">
     <test-suite name="conv_numeric">
-      
+
+      <!-- unresolved issues: FRG-213-->
+      <!-- above issue causes errors in createsource, and thus all other -->
+      <!-- tests -->
+      <test-metadata>
+        <knownFailure>true</knownFailure>
+      </test-metadata>
+
       <init-hook>
         <test-suite name="init">
           <test-suite-call testfile="${open.dir}/luciddb/test/sql/tinit.xml">

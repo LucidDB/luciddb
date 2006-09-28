@@ -516,7 +516,7 @@ public class IterCalcRel
                 projTranslator.translateAssignment(fields[i], lhs, rhs);
 
                 int complexity = countParseTreeNodes(projMethodBody);
-                if (!Bug.Frg216Fixed || complexity < 20) {
+                if (complexity < 20) {
                     // No method needed; just append.
                     condBody.addAll(projMethodBody);
                     continue;

@@ -30,9 +30,9 @@ import org.eigenbase.sql.type.*;
 
 
 /**
- * <code>FIRST_VALUE</code> and <code>LAST_VALUE</code> aggregate functions 
- * return the first or the last value in a list of values that are input to
- * the function.
+ * <code>SINGLE_VALUE</code> aggregate function
+ * returns the input value if there is only one value in the input; Otherwise
+ * it triggers a run-time error.
  */
 public class SqlSingleValueAggFunction
     extends SqlAggFunction
@@ -50,7 +50,7 @@ public class SqlSingleValueAggFunction
         super(
             "SINGLE_VALUE",
             SqlKind.Function,
-            SqlTypeStrategies.rtiFirstArgType,
+            SqlTypeStrategies.rtiFirstArgTypeForceNullable,
             null,
             SqlTypeStrategies.otcAny,
             SqlFunctionCategory.System);

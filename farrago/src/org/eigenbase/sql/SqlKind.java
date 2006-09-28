@@ -557,7 +557,7 @@ public class SqlKind
         new SqlKind("TopLevel", TopLevelORDINAL);
 
     /**
-     * Aggregate of SQL statement types {@link #Query}, {@link #Dml}.
+     * <code>ScalarQuery</code> is an aggregate of scalar query node types.
      */
     public static final int ScalarQueryORDINAL = 305;
     public static final SqlKind ScalarQuery =

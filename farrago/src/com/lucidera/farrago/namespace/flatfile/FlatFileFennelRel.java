@@ -34,6 +34,7 @@ import org.eigenbase.rex.*;
 import org.eigenbase.util.*;
 
 import java.io.*;
+import java.util.*;
 
 
 /**
@@ -160,6 +161,16 @@ public class FlatFileFennelRel
         streamDef.setSubstituteCharacter("?");
         streamDef.setCodePage(0);
         streamDef.setTranslationRecovery(true);
+
+        streamDef.setLenient(params.getLenient());
+        streamDef.setTrim(params.getTrim());
+        streamDef.setMapped(params.getMapped());
+        java.util.List<FemColumnName> columnNames = streamDef.getColumn();
+        for (int i = 0; i < rowType.getFieldCount(); i++) {
+            FemColumnName name = repos.newFemColumnName();
+            name.setName(rowType.getFields()[i].getName());
+            columnNames.add(name);
+        }
 
         return streamDef;
     }

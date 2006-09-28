@@ -12,6 +12,7 @@
       </init-hook>
 
       <test name="crSource">
+      <!-- FRG-211 -->
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/cr_source.sql"/>
       </test>
 
@@ -51,7 +52,8 @@
         <junit-sql file="${open.dir}/luciddb/test/sql/udr/udp/export_local_incremental.sql"/>
       </test>
 
-      <test name="exportForeignInc" requiresRun="exportLocalInc">
+      <test name="exportForeignInc" requiresSuccess="crSource" 
+        requiresRun="exportLocalInc">
         <!-- TODO: FRG-176 -->
         <test-metadata>
           <knownFailure>true</knownFailure>
