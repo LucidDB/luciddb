@@ -365,6 +365,16 @@ public class HepPlanner
 
     private Iterator<HepRelVertex> getGraphIterator(HepRelVertex start)
     {
+        // Make sure there's no garbage, because topological sort
+        // doesn't start from a specific root, and rules can't
+        // deal with firing on garbage.
+        
+        // FIXME jvs 25-Sept-2006:  I had to move this earlier because
+        // of FRG-215, which is still under investigation.  Once we
+        // figure that one out, move down to location below for
+        // better optimizer performance.
+        collectGarbage();
+        
         if (currentProgram.matchOrder == HepMatchOrder.ARBITRARY) {
             return
                 new DepthFirstIterator<HepRelVertex,
@@ -375,10 +385,10 @@ public class HepPlanner
 
         assert (start == root);
 
-        // Make sure there's no garbage, because topological sort
-        // doesn't start from a specific root, and rules can't
-        // deal with firing on garbage.
+        // see above
+        /*
         collectGarbage();
+        */
 
         // TODO jvs 4-Apr-2006:  streamline JGraphT generics
 

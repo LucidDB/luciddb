@@ -30,6 +30,7 @@ import java.text.*;
 import java.util.*;
 
 import net.sf.farrago.resource.*;
+import net.sf.farrago.util.*;
 
 import org.eigenbase.util.*;
 
@@ -123,7 +124,8 @@ public abstract class FarragoExportSchemaUDR
             directory, 
             withBcp,
             deleteFailedFiles, 
-            tableNames, 
+            tableNames,
+            null,  // querySql
             conn);
     }
 
@@ -287,7 +289,8 @@ public abstract class FarragoExportSchemaUDR
             directory, 
             withBcp,
             deleteFailedFiles, 
-            tableNames, 
+            tableNames,
+            null,      // querySql
             conn);
     }
 
@@ -472,6 +475,7 @@ public abstract class FarragoExportSchemaUDR
             withBcp,
             deleteFailedFiles,
             incrTblNames,
+            null,   // querySql
             conn);
     }
 
@@ -780,7 +784,8 @@ public abstract class FarragoExportSchemaUDR
                 directory, 
                 withBcp, 
                 deleteFailedFiles,
-                tableNames, 
+                tableNames,
+                null,  // querySql
                 conn);
 
             // drop temp schema
@@ -839,6 +844,8 @@ public abstract class FarragoExportSchemaUDR
      * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      * @param tableNames HashSet with names of the table to export
+     * @param querySql SQL query to execute (if non-null, all table-related
+     * parameters should be null; and vice versa)
      * @param conn connection to the database
      */
     private static void toCsv(
@@ -853,6 +860,7 @@ public abstract class FarragoExportSchemaUDR
         boolean withBcp,
         boolean deleteFailedFiles,
         HashSet<String> tableNames,
+        String querySql,
         Connection conn)
         throws SQLException
     {
@@ -863,26 +871,36 @@ public abstract class FarragoExportSchemaUDR
         FileWriter bcpOut = null;
         FileWriter logOut = null;
 
-        // get rid of spaces and colons in directory name
-        directory = directory.replaceAll("\\s*", "");
-        directory = directory.replaceAll(":", "");
+        // Expand stuff like ${FARRAGO_HOME}.
+        directory = FarragoProperties.instance().expandProperties(directory);
 
         // create export csv directory
         File csvDir = new File(directory);
+        if (querySql != null) {
+            // If we're exporting a query, then directory is
+            // actually pathWithoutExtension, in which case
+            // we need to strip off the base filename.
+            csvDir = csvDir.getParentFile();
+        }
         try {
             csvDir.mkdirs();
-        } catch (SecurityException e) {
+        } catch (Throwable e) {
             throw FarragoResource.instance().ExportSchemaCreateDirFailed.ex(
-                directory,
+                csvDir.toString(),
                 e.getMessage(),
                 e);
         }
+        if (!csvDir.exists() || !csvDir.isDirectory()) {
+            throw FarragoResource.instance().ExportSchemaCreateDirFailed.ex(
+                csvDir.toString(), "mkdir");
+        }
 
         // create export log file
-        String logFileName =
-            directory + File.separator + LOGFILE_PREFIX + EXPORT_TYPES[expType]
-            + "_" + getTimestampString() + ".log";
-        logFile = new File(logFileName);
+        logFile = new File(
+            csvDir,
+            LOGFILE_PREFIX + EXPORT_TYPES[expType]
+            + "_" + getTimestampString() + ".log");
+        String logFileName = logFile.toString();
         try {
             logOut = new FileWriter(logFile, false);
         } catch (IOException e) {
@@ -893,7 +911,14 @@ public abstract class FarragoExportSchemaUDR
                 e);
         }
 
-        Iterator<String> tableIter = tableNames.iterator();
+        Iterator<String> tableIter;
+        if (tableNames != null) {
+            assert(querySql == null);
+            tableIter = tableNames.iterator();
+        } else {
+            assert(querySql != null);
+            tableIter = Collections.singleton("{QUERY}").iterator();
+        }
         Statement stmt = conn.createStatement();
         ResultSet tblData;
         ResultSetMetaData tblMeta;
@@ -942,15 +967,17 @@ public abstract class FarragoExportSchemaUDR
                     columnName,
                     conn);
 
-                String querySql = buildQuerySql(
-                    export,
-                    catalog,
-                    schema,
-                    tblName,
-                    lastModified,
-                    columnName,
-                    incrCatalog,
-                    incrSchema);
+                if (tableNames != null) {
+                    querySql = buildQuerySql(
+                        export,
+                        catalog,
+                        schema,
+                        tblName,
+                        lastModified,
+                        columnName,
+                        incrCatalog,
+                        incrSchema);
+                }
 
                 logOut.write(EXPORT_TYPES[export] + TAB);
 
@@ -987,8 +1014,15 @@ public abstract class FarragoExportSchemaUDR
                     ie);
             }
 
-            String csvName = directory + File.separator + tblName + ".txt";
-            String bcpName = directory + File.separator + tblName + ".bcp";
+            String csvName;
+            String bcpName;
+            if (tableNames == null) {
+                csvName = directory + ".txt";
+                bcpName = directory + ".bcp";
+            } else {
+                csvName = directory + File.separator + tblName + ".txt";
+                bcpName = directory + File.separator + tblName + ".bcp";
+            }
             boolean tableFailed = false;
             try {
                 csvFile = new File(csvName);
@@ -1169,6 +1203,54 @@ public abstract class FarragoExportSchemaUDR
                 ie);
         }
         stmt.close();
+
+        if (tableNames == null) {
+            // For a successful single-query export, delete when done
+            // to reduce clutter.
+            logFile.delete();
+        }
+    }
+
+    // TODO jvs 25-Sept-2006:  Version of below in UDX form so that
+    // querySql doesn't have to be quoted.  Or, better, enhance procedure
+    // support to take CURSOR parameters.
+
+    /**
+     * Exports results of a single query to CSV/BCP files.
+     *
+     * @param querySql query whose result is to be executed
+     * @param pathWithoutExtension location to write CSV and BCP files; this
+     * should be a directory-qualified filename without an extension
+     * (correct extension will be appended automatically)
+     * @param withBcp if true creates BCP files, if false, doesn't
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted
+     * if export fails, otherwise they may remain
+     * rowcount
+     */
+    public static void exportQueryToFile(
+        String querySql,
+        String pathWithoutExtension,
+        boolean withBcp,
+        boolean deleteFailedFiles)
+        throws SQLException
+    {
+        Connection conn =
+            DriverManager.getConnection("jdbc:default:connection");
+        
+        toCsv(
+            FULL_EXPORT,
+            null,               // catalog
+            null,               // schema
+            null,               // lastModified
+            null,               // columnName
+            null,               // incrCatalog
+            null,               // incrSchema
+            pathWithoutExtension,
+            withBcp,
+            deleteFailedFiles,
+            null,               // tableNames
+            querySql,
+            conn);
     }
 
     /**

@@ -487,11 +487,9 @@ Error: Cast function cannot convert value of type DOUBLE to type TIME (state=,co
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS timestamp) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS tinyint) FROM CST.alltypes;
-+------------+---------+
-|     T6     | EXPR$1  |
-+------------+---------+
-| 134.23321  | -122    |
-+------------+---------+
+Error: Could not calculate result column 2 for the following row:
+[134.23321]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t6, CAST (t6 AS varchar(23)) FROM CST.alltypes;
@@ -574,11 +572,9 @@ Error: Cast function cannot convert value of type DOUBLE to type TIME (state=,co
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS timestamp) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS tinyint) FROM CST.alltypes;
-+-----------+---------+
-|    T7     | EXPR$1  |
-+-----------+---------+
-| 223.1123  | -33     |
-+-----------+---------+
+Error: Could not calculate result column 2 for the following row:
+[223.1123]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type DOUBLE to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t7, CAST (t7 AS varchar(23)) FROM CST.alltypes;
@@ -647,21 +643,17 @@ Messages: Overflow during calculation or cast. (state=,code=0)
 | 1324259  | 1324259.0  |
 +----------+------------+
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS smallint) FROM CST.alltypes;
-+----------+---------+
-|    T8    | EXPR$1  |
-+----------+---------+
-| 1324259  | 13539   |
-+----------+---------+
+Error: Could not calculate result column 2 for the following row:
+[1324259]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS time) FROM CST.alltypes;
 Error: Cast function cannot convert value of type INTEGER to type TIME (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS timestamp) FROM CST.alltypes;
 Error: Cast function cannot convert value of type INTEGER to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS tinyint) FROM CST.alltypes;
-+----------+---------+
-|    T8    | EXPR$1  |
-+----------+---------+
-| 1324259  | -29     |
-+----------+---------+
+Error: Could not calculate result column 2 for the following row:
+[1324259]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type INTEGER to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t8, CAST (t8 AS varchar(23)) FROM CST.alltypes;
@@ -980,7 +972,7 @@ Error: Cast function cannot convert value of type REAL to type DATE (state=,code
 +------------+----------+
 |    T12     |  EXPR$1  |
 +------------+----------+
-| 1232.4581  | 1232.45  |
+| 1232.4581  | 1232.46  |
 +------------+----------+
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS real) FROM CST.alltypes;
 +------------+------------+
@@ -999,11 +991,9 @@ Error: Cast function cannot convert value of type REAL to type TIME (state=,code
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS timestamp) FROM CST.alltypes;
 Error: Cast function cannot convert value of type REAL to type TIMESTAMP (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS tinyint) FROM CST.alltypes;
-+------------+---------+
-|    T12     | EXPR$1  |
-+------------+---------+
-| 1232.4581  | -48     |
-+------------+---------+
+Error: Could not calculate result column 2 for the following row:
+[1232.4581]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varbinary(10)) FROM CST.alltypes;
 Error: Cast function cannot convert value of type REAL to type VARBINARY(10) (state=,code=0)
 0: jdbc:luciddb:> SELECT t12, CAST (t12 AS varchar(23)) FROM CST.alltypes;

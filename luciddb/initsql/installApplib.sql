@@ -503,6 +503,17 @@ parameter style system defined java
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.PivotColumnsToRowsUdx.execute';
 
+-- collapse rows
+create function collapse_rows(c cursor, delimiter varchar(1))
+returns table(
+  parent_value varchar(65535), 
+  concatenated_child_values varchar(65535),
+  collapsed_row_count integer)
+language java
+parameter style system defined java
+no sql
+external name 'applib.applibJar:com.lucidera.luciddb.applib.cursor.CollapseRowsUdx.execute';
+
 ----
 -- System procedures
 ----

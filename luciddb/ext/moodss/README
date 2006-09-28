@@ -1,0 +1,7 @@
+This directory contains scripts demonstrating a usable LucidDB 
+performance monitoring dashboard based on moodss
+(http://moodss.sf.net).
+
+To use it:
+
+1) Download and install moodss

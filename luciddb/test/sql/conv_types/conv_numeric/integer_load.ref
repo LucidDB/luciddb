@@ -218,10 +218,9 @@
 . . . . . . . . >   where target_type='integer'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: could not calculate results for the following row:
-[ 'integer', 'source', -4.29497e+09 ]
-Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+Error: Could not calculate result column COL for the following row:
+[-4.294967296E9]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -260,10 +259,9 @@ Messages:
 . . . . . . . . >   where target_type='integer'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: could not calculate results for the following row:
-[ 'integer', 'source', -4.29497e+09 ]
-Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+Error: Could not calculate result column COL for the following row:
+[-4.294967296E9]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
@@ -302,10 +300,9 @@ Messages:
 . . . . . . . . >   where target_type='integer'
 . . . . . . . . >     and range_for='source'
 . . . . . . . . > ;
-Error: could not calculate results for the following row:
-[ 'integer', 'source', -4.29497e+09 ]
-Messages:
-[0]:PC=12 Code=22003 (state=,code=0)
+Error: Could not calculate result column COL for the following row:
+[-4.2949673E9]
+Messages: Overflow during calculation or cast. (state=,code=0)
 0: jdbc:luciddb:> select * from datatype_target order by 1
 . . . . . . . . > ;
 +------+
