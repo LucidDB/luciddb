@@ -217,7 +217,7 @@ public class RexProgram
      */
     public RexNode [] flatten()
     {
-        final List list = new ArrayList();
+        final List<RexNode> list = new ArrayList<RexNode>();
         list.addAll(Arrays.asList(exprs));
         list.addAll(Arrays.asList(projects));
         if (condition != null) {
@@ -231,10 +231,10 @@ public class RexProgram
     {
         // Intended to produce similar output to explainCalc,
         // but without requiring a RelNode or RelOptPlanWriter.
-        List termList = new ArrayList();
-        List valueList = new ArrayList();
+        List<String> termList = new ArrayList<String>();
+        List<Object> valueList = new ArrayList<Object>();
         collectExplainTerms("", termList, valueList);
-        final StringBuffer buf = new StringBuffer("(");
+        final StringBuilder buf = new StringBuilder("(");
         for (int i = 0; i < valueList.size(); i++) {
             if (i > 0) {
                 buf.append(", ");
@@ -257,8 +257,8 @@ public class RexProgram
         RelNode rel,
         RelOptPlanWriter pw)
     {
-        List termList = new ArrayList();
-        List valueList = new ArrayList();
+        List<String> termList = new ArrayList<String>();
+        List<Object> valueList = new ArrayList<Object>();
         termList.add("child");
         collectExplainTerms("", termList, valueList, pw.getDetailLevel());
         String [] terms =
@@ -274,8 +274,8 @@ public class RexProgram
 
     public void collectExplainTerms(
         String prefix,
-        List termList,
-        List valueList)
+        List<String> termList,
+        List<Object> valueList)
     {
         collectExplainTerms(prefix, termList, valueList, 
             SqlExplainLevel.EXPPLAN_ATTRIBUTES);
@@ -291,8 +291,8 @@ public class RexProgram
      */
     public void collectExplainTerms(
         String prefix,
-        List termList,
-        List valueList,
+        List<String> termList,
+        List<Object> valueList,
         SqlExplainLevel level)
     {
         final RelDataTypeField [] inFields = inputRowType.getFields();
@@ -378,7 +378,7 @@ public class RexProgram
                 inputRowType,
                 exprs,
                 projects,
-                (condition == null) ? null : (RexLocalRef) condition.clone(),
+                (condition == null) ? null : condition.clone(),
                 outputRowType);
     }
 
@@ -648,7 +648,7 @@ loop:
      * @param expr Single expression, may be null
      */
     public static void apply(
-        RexVisitor visitor,
+        RexVisitor<Void> visitor,
         RexNode [] exprs,
         RexNode expr)
     {
@@ -662,10 +662,6 @@ loop:
 
     /**
      * Returns whether an expression is constant.
-     *
-     * @param ref
-     *
-     * @return
      */
     public boolean isConstant(RexNode ref)
     {

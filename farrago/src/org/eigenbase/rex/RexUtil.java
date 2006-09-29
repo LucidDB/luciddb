@@ -65,14 +65,6 @@ public class RexUtil
     }
 
     /**
-     * Returns a copy of a row-expression.
-     */
-    public static RexNode clone(RexNode exp)
-    {
-        return (RexNode) exp.clone();
-    }
-
-    /**
      * Returns a copy of an array of row-expressions.
      */
     public static RexNode [] clone(RexNode [] exps)
@@ -82,7 +74,7 @@ public class RexUtil
         }
         RexNode [] exps2 = new RexNode[exps.length];
         for (int i = 0; i < exps.length; i++) {
-            exps2[i] = clone(exps[i]);
+            exps2[i] = exps[i].clone();
         }
         return exps2;
     }
@@ -317,7 +309,7 @@ public class RexUtil
         Integer [] orderKeys = new Integer[rexNodes.length];
         for (int i = 0; i < orderKeys.length; i++) {
             RexLocalRef inputRef = (RexLocalRef) rexNodes[i];
-            orderKeys[i] = new Integer(inputRef.getIndex());
+            orderKeys[i] = inputRef.getIndex();
         }
         return orderKeys;
     }

@@ -54,7 +54,7 @@ public class IterOneRowRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public IterOneRowRel clone()
     {
         return this;
     }

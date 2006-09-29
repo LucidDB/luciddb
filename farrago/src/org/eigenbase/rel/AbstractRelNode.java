@@ -116,23 +116,7 @@ public abstract class AbstractRelNode
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Clones this RelNode. Traits of the RelNode must be explicitly cloned as
-     * the RelNode may have traits of which it has no knowledge. Example
-     * implementation:
-     *
-     * <pre>
-     *     public Object clone()
-     *     {
-     *         MyRelNode clone = new MyRelNode(...);
-     *         clone.inheritTraitsFrom(this);
-     *         return clone;
-     *     }
-     * </pre>
-     *
-     * @return a clone of this RelNode
-     */
-    public abstract Object clone();
+    public abstract RelNode clone();
 
     public boolean isAccessTo(RelOptTable table)
     {

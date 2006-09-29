@@ -29,6 +29,7 @@ import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.JavaRowExpression;
 import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptCost;
@@ -37,7 +38,6 @@ import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexUtil;
 import org.eigenbase.util.Util;
 
 
@@ -159,11 +159,11 @@ public class ExpressionReaderRel extends AbstractRelNode implements JavaRel
         return exp;
     }
 
-    public Object clone()
+    public ExpressionReaderRel clone()
     {
         return new ExpressionReaderRel(
             getCluster(),
-            RexUtil.clone(exp),
+            exp.clone(),
             rowType);
     }
 

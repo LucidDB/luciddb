@@ -29,7 +29,6 @@ import java.util.logging.*;
 import openjava.mop.*;
 
 import openjava.ptree.*;
-import openjava.ptree.util.*;
 
 import org.eigenbase.oj.rex.*;
 import org.eigenbase.oj.util.*;
@@ -150,12 +149,12 @@ public class IterCalcRel
         return planner.makeCost(dRows, dCpu, dIo);
     }
 
-    public Object clone()
+    public IterCalcRel clone()
     {
         IterCalcRel clone =
             new IterCalcRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 program.copy(),
                 getFlags(),
                 tag);
@@ -476,7 +475,7 @@ public class IterCalcRel
                 RexNode rexIsTrue =
                     rel.getCluster().getRexBuilder().makeCall(
                         SqlStdOperatorTable.isTrueOperator,
-                        new RexNode[] { program.getCondition() });
+                        program.getCondition());
                 Expression conditionExp =
                     translator.translateRexNode(rexIsTrue);
                 calcStmts.add(new IfStatement(conditionExp, condBody));

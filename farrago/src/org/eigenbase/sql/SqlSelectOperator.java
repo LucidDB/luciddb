@@ -70,9 +70,7 @@ public class SqlSelectOperator
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         assert functionQualifier == null;
         return new SqlSelect(this, operands, pos);
@@ -113,11 +111,8 @@ public class SqlSelectOperator
         }
         return
             (SqlSelect) createCall(
-                new SqlNode[] {
-                    keywordList, selectList, fromClause, whereClause, groupBy,
-                having, windowDecls, orderBy
-                },
-                pos);
+                pos, keywordList, selectList, fromClause, whereClause, groupBy,
+                having, windowDecls, orderBy);
     }
 
     public <R> void acceptCall(SqlVisitor<R> visitor,

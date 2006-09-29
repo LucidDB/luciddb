@@ -113,14 +113,14 @@ public class LcsTableDeleteRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public LcsTableDeleteRel clone()
     {
         LcsTableDeleteRel clone =
             new LcsTableDeleteRel(
                 getCluster(),
                 lcsTable,
                 getConnection(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList());
         clone.inheritTraitsFrom(this);

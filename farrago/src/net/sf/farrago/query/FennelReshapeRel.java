@@ -92,12 +92,12 @@ class FennelReshapeRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FennelReshapeRel clone()
     {
         FennelReshapeRel clone =
             new FennelReshapeRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 projection,
                 outputRowType,
                 compOp,
@@ -229,7 +229,7 @@ class FennelReshapeRel
             streamDef.setTupleCompareBytesBase64(
                 FennelRelUtil.convertTuplesToBase64String(
                     filterRowType,
-                    (List) compareTuple));
+                    compareTuple));
         }
         
         return streamDef;

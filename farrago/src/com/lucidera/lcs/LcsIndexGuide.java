@@ -174,8 +174,9 @@ public class LcsIndexGuide
         // Get the columns of the index
         //
         Set<CwmColumn> requiredColumns = new HashSet<CwmColumn>();
-        for (Object f : unclusteredIndex.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+        for (CwmIndexedFeature indexedFeature :
+            unclusteredIndex.getIndexedFeature())
+        {
             requiredColumns.add((CwmColumn) indexedFeature.getFeature());
         }
 
@@ -191,11 +192,13 @@ public class LcsIndexGuide
         List<FemLocalIndex> coverageIndexes = new ArrayList<FemLocalIndex>();
         for (FemLocalIndex clusteredIndex : clusteredIndexes) {
             boolean include = false;
-            for (Object f : clusteredIndex.getIndexedFeature()) {
-                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
-                if (requiredColumns.contains(indexedFeature.getFeature())) {
+            for (CwmIndexedFeature indexedFeature :
+                clusteredIndex.getIndexedFeature())
+            {
+                CwmColumn column = (CwmColumn) indexedFeature.getFeature();
+                if (requiredColumns.contains(column)) {
                     include = true;
-                    requiredColumns.remove(indexedFeature.getFeature());
+                    requiredColumns.remove(column);
                 }
             }
             if (include) {
@@ -235,16 +238,13 @@ public class LcsIndexGuide
      * </code></pre>
      *
      * @param clusteredIndexes ordered list of clusters
-     *
-     * @return mapping array created
      */
     private void createClusterMap(List<FemLocalIndex> clusteredIndexes)
     {
         clusterMap = new ArrayList<Integer>();
 
         for (FemLocalIndex index : clusteredIndexes) {
-            for (Object f : index.getIndexedFeature()) {
-                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+            for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();
                 addClusterCols(column.getOrdinal());
@@ -301,8 +301,7 @@ public class LcsIndexGuide
         int nCols = 0;
 
         assert (index.isClustered());
-        for (Object f : index.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             nCols += getNumFlattenedSubCols(column.getOrdinal());
@@ -320,8 +319,7 @@ public class LcsIndexGuide
         int nCols = 0;
 
         for (FemLocalIndex index : clusteredIndexes) {
-            for (Object f : index.getIndexedFeature()) {
-                CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+            for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
                 FemAbstractColumn column =
                     (FemAbstractColumn) indexedFeature.getFeature();
                 nCols += getNumFlattenedSubCols(column.getOrdinal());
@@ -342,8 +340,7 @@ public class LcsIndexGuide
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
         List flattenedColList = flattenedRowType.getFieldList();
 
-        for (Object f : index.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             int numSubCols = getNumFlattenedSubCols(column.getOrdinal());
@@ -415,8 +412,7 @@ public class LcsIndexGuide
         FemLocalIndex index,
         Integer [] projection)
     {
-        for (Object f : index.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             if (testColumnCoverage(column, projection)) {
@@ -530,7 +526,7 @@ public class LcsIndexGuide
      *
      * @return RID attribute projection
      *
-     * @see createClusteredBTreeTupleDesc
+     * @see #createClusteredBTreeTupleDesc
      */
     public FemTupleProjection createClusteredBTreeRidDesc()
     {
@@ -545,7 +541,7 @@ public class LcsIndexGuide
      *
      * @return PageId attribute projection
      *
-     * @see createClusteredBTreeTupleDesc
+     * @see #createClusteredBTreeTupleDesc
      */
     public FemTupleProjection createClusteredBTreePageIdDesc()
     {
@@ -573,9 +569,7 @@ public class LcsIndexGuide
         FemTupleDescriptor tupleDesc = repos.newFemTupleDescriptor();
 
         // add K1, K2, ...
-        Iterator iter = index.getIndexedFeature().iterator();
-        while (iter.hasNext()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) iter.next();
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             FennelRelUtil.addTupleAttrDescriptor(
@@ -616,7 +610,7 @@ public class LcsIndexGuide
      *
      * @return key attribute projection
      *
-     * @see createUnclusteredBTreeTupleDesc
+     * @see #createUnclusteredBTreeTupleDesc
      */
     public FemTupleProjection createUnclusteredBTreeKeyProj(
         FemLocalIndex index)
@@ -659,13 +653,13 @@ public class LcsIndexGuide
      *
      * @return row data type based on projections of an index
      *
-     * @see createUnclusteredBTreeTupleDesc
+     * @see #createUnclusteredBTreeTupleDesc
      */
     public RelDataType createUnclusteredRowType(
         FemLocalIndex index,
         Integer [] proj)
     {
-        List indexFeatures = index.getIndexedFeature();
+        List<CwmIndexedFeature> indexFeatures = index.getIndexedFeature();
         int nKeys = indexFeatures.size();
         RelDataType bitmapRowType = createUnclusteredBitmapRowType();
 
@@ -679,8 +673,7 @@ public class LcsIndexGuide
             int j = proj[i];
             if (j < nKeys) {
                 FemAbstractColumn column =
-                    (FemAbstractColumn)
-                    ((CwmIndexedFeature) indexFeatures.get(j)).getFeature();
+                    (FemAbstractColumn) indexFeatures.get(j).getFeature();
                 names[i] = column.getName();
                 types[i] = typeFactory.createCwmElementType(column);
             } else {
@@ -744,8 +737,7 @@ public class LcsIndexGuide
         // Figure out the projection covering columns contained in each index.
         //
         int i = 0;
-        for (Object f : clusterIndex.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) f;
+        for (CwmIndexedFeature indexedFeature : clusterIndex.getIndexedFeature()) {
             FemAbstractColumn column =
                 (FemAbstractColumn) indexedFeature.getFeature();
             int n = getNumFlattenedSubCols(column.getOrdinal());
@@ -831,13 +823,12 @@ public class LcsIndexGuide
         //
         // Setup projection used by unclustered index
         //
-        List indexFeatures = index.getIndexedFeature();
+        List<CwmIndexedFeature> indexFeatures = index.getIndexedFeature();
         Integer [] indexProjection = new Integer[indexFeatures.size()];
-        for (int i = 0; i < indexFeatures.size(); i++) {
-            CwmIndexedFeature feature =
-                (CwmIndexedFeature) indexFeatures.get(i);
+        int i = 0;
+        for (CwmIndexedFeature feature : indexFeatures) {
             FemAbstractColumn column = (FemAbstractColumn) feature.getFeature();
-            indexProjection[i] = new Integer(column.getOrdinal());
+            indexProjection[i++] = column.getOrdinal();
         }
         generator.setOutputProj(
             FennelRelUtil.createTupleProjection(
@@ -1381,8 +1372,8 @@ public class LcsIndexGuide
                 "upperBoundKey"
                 });
 
-        List<List<RexNode>> inputTuples = new ArrayList<List<RexNode>>();
-        List<RexNode> tuple = new ArrayList<RexNode>();
+        List<List<RexLiteral>> inputTuples = new ArrayList<List<RexLiteral>>();
+        List<RexLiteral> tuple = new ArrayList<RexLiteral>();
         RexBuilder rexBuilder = rel.getCluster().getRexBuilder();
         SargFactory sargFactory = new SargFactory(rexBuilder);
 
@@ -1417,7 +1408,7 @@ public class LcsIndexGuide
             new FennelValuesRel(
                 rel.getCluster(),
                 keyRowType,
-                (List) inputTuples);
+                inputTuples);
 
         RelNode keyInput =
             RelOptRule.mergeTraitsAndConvert(
@@ -1490,14 +1481,11 @@ public class LcsIndexGuide
         // Objective is to maximize the index key oclumns matched.
         while ((pointColumnList.size() > 0) && !matchedAll) {
             // TODO: match the shortest index with the maximum matched positions
-            Iterator iter = indexSet.iterator();
             int maxMatchedPos = 0;
             FemLocalIndex maxMatchedIndex = null;
             int matchedPos = 0;
 
-            while (iter.hasNext()) {
-                FemLocalIndex index = (FemLocalIndex) iter.next();
-
+            for (FemLocalIndex index : indexSet) {
                 if (isValid(index)) {
                     matchedPos = 0;
 
@@ -1511,7 +1499,7 @@ public class LcsIndexGuide
                     // try to match one more column from the interval column
                     // list
                     if (rangeColumnList.contains(
-                            getIndexColumn(index, matchedPos))) {
+                        getIndexColumn(index, matchedPos))) {
                         matchedPos++;
                     }
 
@@ -1553,19 +1541,19 @@ public class LcsIndexGuide
             }
         }
 
-        Iterator iter = indexSet.iterator();
+        Iterator<FemLocalIndex> iter = indexSet.iterator();
 
         // Process the columns with range predicates:
         // Simple assign the shortest index with matching first key column
         int maxMatchedPos = 1;
         while ((rangeColumnList.size() > 0) && iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+            FemLocalIndex index = iter.next();
             CwmColumn firstCol = getIndexColumn(index, maxMatchedPos - 1);
             if ((firstCol != null) && rangeColumnList.contains(firstCol)) {
                 col2IndexMap.put(firstCol, index);
                 index2PosMap.put(
                     index,
-                    new Integer(maxMatchedPos));
+                    maxMatchedPos);
                 rangeColumnList.remove(firstCol);
                 iter.remove();
             }
@@ -1574,20 +1562,19 @@ public class LcsIndexGuide
         return index2PosMap;
     }
 
-    public CwmColumn getIndexColumn(
+    public FemAbstractColumn getIndexColumn(
         FemLocalIndex index,
         int position)
     {
-        List indexedFeatures = index.getIndexedFeature();
+        List<CwmIndexedFeature> indexedFeatures = index.getIndexedFeature();
 
         if ((position < 0) || (position >= indexedFeatures.size())) {
             return null;
         }
 
-        CwmIndexedFeature indexedFeature =
-            (CwmIndexedFeature) indexedFeatures.get(position);
+        CwmIndexedFeature indexedFeature = indexedFeatures.get(position);
 
-        return ((CwmColumn) indexedFeature.getFeature());
+        return (FemAbstractColumn) indexedFeature.getFeature();
     }
 
     public boolean testIndexColumn(
@@ -1617,12 +1604,10 @@ public class LcsIndexGuide
         // loop through the indexes and either find the one that has the
         // longest matching keys, or the first one that matches all the
         // semijoin keys
-        Iterator iter = getUnclusteredIndexes().iterator();
         Integer [] bestKeyOrder = {};
         FemLocalIndex bestIndex = null;
         int maxNkeys = 0;
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
+        for (FemLocalIndex index : getUnclusteredIndexes()) {
             Integer [] keyOrder = new Integer[semiJoinKeys.size()];
             int nKeys = matchIndexKeys(index, semiJoinKeys, keyOrder);
             if (nKeys > maxNkeys) {
@@ -1661,11 +1646,11 @@ public class LcsIndexGuide
 
         for (int i = 0; i < index.getIndexedFeature().size(); i++) {
             keyOrder[i] = -1;
-            FemAbstractColumn idxCol =
-                (FemAbstractColumn) getIndexColumn(index, i);
+            FemAbstractColumn idxCol = getIndexColumn(index, i);
+            final List<FemAbstractColumn> columns =
+                Util.cast(table.getFeature(), FemAbstractColumn.class);
             for (int j = 0; j < keys.size(); j++) {
-                FemAbstractColumn keyCol =
-                    (FemAbstractColumn) table.getFeature().get(keys.get(j));
+                FemAbstractColumn keyCol = columns.get(keys.get(j));
                 if (idxCol == keyCol) {
                     keyOrder[i] = j;
                     nMatches++;
@@ -1737,7 +1722,6 @@ public class LcsIndexGuide
      *
      * @param rowScan the row scan to be satisfied
      * @param index the index which is to be projected
-     * @param rowScanProjection the projected columns to be satisfied
      *
      * @return a projection on the index that satisfies the columns of the row
      * scan and includes bitmap data, or null if a satisfying projection could
@@ -1757,20 +1741,20 @@ public class LcsIndexGuide
 
         // find available columns
         List<FemAbstractColumn> idxCols = new LinkedList<FemAbstractColumn>();
-        for (Object o : index.getIndexedFeature()) {
-            CwmIndexedFeature indexedFeature = (CwmIndexedFeature) o;
+        for (CwmIndexedFeature indexedFeature : index.getIndexedFeature()) {
             idxCols.add((FemAbstractColumn) indexedFeature.getFeature());
         }
 
         // find projection
         List<Integer> indexProj = new ArrayList<Integer>();
+        final List<FemAbstractColumn> columns =
+            Util.cast(table.getFeature(), FemAbstractColumn.class);
         for (int i = 0; i < proj.length; i++) {
             // TODO: handle lcs rid
             if (LucidDbSpecialOperators.isLcsRidColumnId(proj[i])) {
                 return null;
             }
-            FemAbstractColumn keyCol =
-                (FemAbstractColumn) table.getFeature().get(proj[i]);
+            FemAbstractColumn keyCol = columns.get(proj[i]);
             int next = idxCols.indexOf(keyCol);
             if (next == -1) {
                 return null;
@@ -1800,8 +1784,8 @@ public class LcsIndexGuide
         {
             int compRes =
                 (
-                    ((FemLocalIndex) index1).getIndexedFeature().size()
-                    - ((FemLocalIndex) index2).getIndexedFeature().size()
+                    index1.getIndexedFeature().size()
+                    - index2.getIndexedFeature().size()
                 );
 
             if (compRes == 0) {

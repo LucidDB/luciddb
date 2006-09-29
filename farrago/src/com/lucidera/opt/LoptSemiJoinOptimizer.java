@@ -70,7 +70,8 @@ public class LoptSemiJoinOptimizer
      */
     private Map<Integer, Map<Integer, SemiJoinRel>> possibleSemiJoins;
 
-    private final Comparator factorCostComparator = new FactorCostComparator();
+    private final Comparator<Integer> factorCostComparator =
+        new FactorCostComparator();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -147,9 +148,7 @@ public class LoptSemiJoinOptimizer
             // if there are potential dimension filters, determine if there
             // are appropriate indexes
             Set<Integer> dimIdxes = dimFilters.keySet();
-            Iterator dimIter = dimIdxes.iterator();
-            while (dimIter.hasNext()) {
-                Integer dimIdx = (Integer) dimIter.next();
+            for (Integer dimIdx : dimIdxes) {
                 List<RexNode> joinFilters = dimFilters.get(dimIdx);
                 if (joinFilters != null) {
                     SemiJoinRel semiJoin =
@@ -176,8 +175,6 @@ public class LoptSemiJoinOptimizer
      *
      * @param rel RelNode being examined
      * @param nFields number of fields in the RelNode
-     *
-     * @return
      */
     private LcsTable isSingleLcsTable(RelNode rel, int nFields)
     {
@@ -384,13 +381,13 @@ public class LoptSemiJoinOptimizer
             int [] adjustments = new int[multiJoin.getNumTotalFields()];
             if (leftAdjustment != 0) {
                 for (int i = -leftAdjustment;
-                    i < (-leftAdjustment + numFieldsLeftIdx); i++) {
+                     i < (-leftAdjustment + numFieldsLeftIdx); i++) {
                     adjustments[i] = leftAdjustment;
                 }
             }
             if (rightAdjustment != 0) {
                 for (int i = rightStart; i < (rightStart + numFieldsRightIdx);
-                    i++) {
+                     i++) {
                     adjustments[i] = rightAdjustment;
                 }
             }
@@ -510,9 +507,7 @@ public class LoptSemiJoinOptimizer
             // fact table and analyze the ones that have semijoins with this
             // fact table
             Set<Integer> dimIdxes = possibleDimensions.keySet();
-            Iterator dimIter = dimIdxes.iterator();
-            while (dimIter.hasNext()) {
-                Integer dimIdx = (Integer) dimIter.next();
+            for (Integer dimIdx : dimIdxes) {
                 SemiJoinRel semiJoin = possibleDimensions.get(dimIdx);
                 if (semiJoin == null) {
                     continue;

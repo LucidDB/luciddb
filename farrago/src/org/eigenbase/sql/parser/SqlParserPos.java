@@ -125,8 +125,8 @@ public class SqlParserPos
     {
         return
             EigenbaseResource.instance().ParserContext.str(
-                new Integer(lineNumber),
-                new Integer(columnNumber));
+                lineNumber,
+                columnNumber);
     }
 
     /**
@@ -174,6 +174,16 @@ public class SqlParserPos
         SqlNode [] nodes)
     {
         return sum(nodes, Integer.MAX_VALUE, Integer.MAX_VALUE, -1, -1);
+    }
+
+    /**
+     * Combines the parser positions of a list of nodes to create a position
+     * which spans from the beginning of the first to the end of the last.
+     */
+    public static SqlParserPos sum(
+        List<SqlNode> nodes)
+    {
+        return sum(nodes.toArray(new SqlNode[nodes.size()]));
     }
 
     private static SqlParserPos sum(

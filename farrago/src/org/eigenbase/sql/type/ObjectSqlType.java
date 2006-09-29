@@ -97,7 +97,7 @@ public class ObjectSqlType
     }
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         // TODO jvs 10-Feb-2005:  proper quoting; dump attributes withDetail?
         sb.append("ObjectSqlType(");

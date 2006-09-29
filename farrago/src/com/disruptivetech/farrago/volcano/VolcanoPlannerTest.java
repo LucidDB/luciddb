@@ -455,7 +455,7 @@ public class VolcanoPlannerTest
         }
 
         // implement RelNode
-        public Object clone()
+        public TestLeafRel clone()
         {
             return this;
         }
@@ -524,7 +524,7 @@ public class VolcanoPlannerTest
         }
 
         // implement RelNode
-        public Object clone()
+        public NoneSingleRel clone()
         {
             NoneSingleRel clone = new NoneSingleRel(
                     getCluster(),
@@ -588,7 +588,7 @@ public class VolcanoPlannerTest
         }
 
         // implement RelNode
-        public Object clone()
+        public PhysSingleRel clone()
         {
             PhysSingleRel clone = new PhysSingleRel(
                     getCluster(),
@@ -613,7 +613,7 @@ public class VolcanoPlannerTest
         }
 
         // implement RelNode
-        public Object clone()
+        public PhysToIteratorConverter clone()
         {
             PhysToIteratorConverter clone =
                 new PhysToIteratorConverter(

@@ -67,7 +67,7 @@ class AddFilterToQueryRule
         if (oldQuery.sql.getSelectList() != null) {
             return;
         }
-        JdbcQuery query = (JdbcQuery) oldQuery.clone();
+        JdbcQuery query = oldQuery.clone();
         SqlWriter writer = new SqlPrettyWriter(oldQuery.dialect);
         final RexToSqlTranslator translator = new RexToSqlTranslator();
         final SqlNode sqlCondition =

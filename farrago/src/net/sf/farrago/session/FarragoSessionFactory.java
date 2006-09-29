@@ -123,9 +123,8 @@ public interface FarragoSessionFactory
      * configuration parameters.
      *
      * @param map a non-null, modifiable Map where configuration parameters can
-     * be added. All map keys and values are Strings.
      */
-    public void applyFennelExtensionParameters(Map map);
+    public void applyFennelExtensionParameters(Properties map);
 
     /**
      * Allows extensions of Farrago to perform their own initialization tasks.
@@ -152,7 +151,7 @@ public interface FarragoSessionFactory
      * @param bundleList receives instances of ResourceBundle
      */
     public void defineResourceBundles(
-        List bundleList);
+        List<ResourceBundle> bundleList);
 }
 
 // End FarragoSessionFactory.java

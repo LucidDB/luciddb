@@ -54,7 +54,7 @@ public class BinaryHeap<T>
         if (isMin) {
             this.comparator = comparator;
         } else {
-            final Comparator comparator1 = comparator;
+            final Comparator<T> comparator1 = comparator;
             this.comparator = new Comparator<T>() {
                     public int compare(
                         T o1,
@@ -230,7 +230,7 @@ public class BinaryHeap<T>
                             String o1,
                             String o2)
                         {
-                            return ((Comparable) o1).compareTo(o2);
+                            return o1.compareTo(o2);
                         }
                     });
             validate(heap);
@@ -244,7 +244,7 @@ public class BinaryHeap<T>
             validate(heap);
             assertTrue(!heap.remove("0"));
             validate(heap);
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             while (!heap.isEmpty()) {
                 validate(heap);
                 final String s = heap.pop();
@@ -288,11 +288,11 @@ public class BinaryHeap<T>
             assertTrue(heap.isEmpty());
         }
 
-        void validate(BinaryHeap heap)
+        <T> void validate(BinaryHeap<T> heap)
         {
             assertTrue(heap.count <= heap.elements.length);
             for (int i = 1; i <= heap.count; i++) {
-                Object element = heap.elements[i];
+                T element = heap.elements[i];
                 assertNotNull(element);
                 int parent = i / 2;
                 if (parent > 0) {

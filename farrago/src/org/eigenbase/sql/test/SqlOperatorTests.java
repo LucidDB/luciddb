@@ -2865,17 +2865,17 @@ public abstract class SqlOperatorTests
         getTester().checkAgg(
             "COUNT(x)",
             values,
-            new Integer(3),
+            3,
             0);
         getTester().checkAgg(
             "COUNT(CASE x WHEN 0 THEN NULL ELSE -1 END)",
             values,
-            new Integer(2),
+            2,
             0);
         getTester().checkAgg(
             "COUNT(DISTINCT x)",
             values,
-            new Integer(2),
+            2,
             0);
 
         // string values -- note that empty string is not null
@@ -2884,22 +2884,22 @@ public abstract class SqlOperatorTests
         getTester().checkAgg(
             "COUNT(*)",
             stringValues,
-            new Integer(3),
+            3,
             0);
         getTester().checkAgg(
             "COUNT(x)",
             stringValues,
-            new Integer(2),
+            2,
             0);
         getTester().checkAgg(
             "COUNT(DISTINCT x)",
             stringValues,
-            new Integer(2),
+            2,
             0);
         getTester().checkAgg(
             "COUNT(DISTINCT 123)",
             stringValues,
-            new Integer(1),
+            1,
             0);
         }
     }
@@ -2925,22 +2925,22 @@ public abstract class SqlOperatorTests
         getTester().checkAgg(
             "sum(x)",
             values,
-            new Integer(4),
+            4,
             0);
         getTester().checkAgg(
             "sum(CASE x WHEN 0 THEN NULL ELSE -1 END)",
             values,
-            new Integer(-3),
+            -3,
             0);
         getTester().checkAgg(
             "sum(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
             values,
-            new Integer(-1),
+            -1,
             0);
         getTester().checkAgg(
             "sum(DISTINCT x)",
             values,
-            new Integer(2),
+            2,
             0);
         }
     }
@@ -2969,7 +2969,7 @@ public abstract class SqlOperatorTests
         getTester().checkAgg(
             "avg(DISTINCT CASE x WHEN 0 THEN NULL ELSE -1 END)",
             values,
-            new Integer(-1),
+            -1,
             0);
         }
     }

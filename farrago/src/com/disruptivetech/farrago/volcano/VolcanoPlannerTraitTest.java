@@ -20,9 +20,6 @@
 */
 package com.disruptivetech.farrago.volcano;
 
-import java.util.Iterator;
-import java.util.List;
-
 import junit.framework.*;
 
 import openjava.ptree.ParseTree;
@@ -275,10 +272,8 @@ public class VolcanoPlannerTraitTest
             RelTrait fromTrait = rel.getTraits().getTrait(this);
 
             if (conversionMap.containsKey(fromTrait)) {
-                List<Object[]> entries = conversionMap.getMulti(fromTrait);
-                for (Iterator<Object[]> i = entries.iterator(); i.hasNext();) {
-                    Object [] traitAndRule = i.next();
-
+                for (Object[] traitAndRule : conversionMap.getMulti(fromTrait))
+                {
                     RelTrait trait = (RelTrait) traitAndRule[0];
                     ConverterRule rule = (ConverterRule) traitAndRule[1];
 
@@ -286,9 +281,9 @@ public class VolcanoPlannerTraitTest
                         RelNode converted = rule.convert(rel);
                         if ((converted != null)
                             && (
-                                !planner.getCost(converted).isInfinite()
+                            !planner.getCost(converted).isInfinite()
                                 || allowInfiniteCostConverters
-                               )) {
+                        )) {
                             return converted;
                         }
                     }
@@ -304,10 +299,8 @@ public class VolcanoPlannerTraitTest
             RelTrait toTrait)
         {
             if (conversionMap.containsKey(fromTrait)) {
-                List<Object[]> entries = conversionMap.getMulti(fromTrait);
-                for (Iterator<Object[]> i = entries.iterator(); i.hasNext();) {
-                    Object [] traitAndRule = i.next();
-
+                for (Object[] traitAndRule : conversionMap.getMulti(fromTrait))
+                {
                     if (traitAndRule[0] == toTrait) {
                         return true;
                     }
@@ -354,7 +347,7 @@ public class VolcanoPlannerTraitTest
         }
 
         // implement RelNode
-        public Object clone()
+        public TestLeafRel clone()
         {
             return this;
         }
@@ -461,7 +454,7 @@ public class VolcanoPlannerTraitTest
         }
 
         // implement RelNode
-        public Object clone()
+        public NoneSingleRel clone()
         {
             NoneSingleRel clone = new NoneSingleRel(
                     getCluster(),
@@ -489,7 +482,7 @@ public class VolcanoPlannerTraitTest
             return planner.makeTinyCost();
         }
 
-        public Object clone()
+        public IterSingleRel clone()
         {
             IterSingleRel clone = new IterSingleRel(
                     getCluster(),
@@ -651,7 +644,7 @@ public class VolcanoPlannerTraitTest
         }
 
         // override Object (public, does not throw CloneNotSupportedException)
-        public Object clone()
+        public AltTraitConverter clone()
         {
             AltTraitConverter clone =
                 new AltTraitConverter(
@@ -700,7 +693,7 @@ public class VolcanoPlannerTraitTest
         }
 
         // implement RelNode
-        public Object clone()
+        public PhysToIteratorConverter clone()
         {
             PhysToIteratorConverter clone =
                 new PhysToIteratorConverter(

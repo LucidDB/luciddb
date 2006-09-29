@@ -79,9 +79,9 @@ public class SqlParseException
      * Returns a list of the token names which could have legally occurred at
      * this point.
      */
-    public Collection getExpectedTokenNames()
+    public Collection<String> getExpectedTokenNames()
     {
-        final TreeSet set = new TreeSet();
+        final TreeSet<String> set = new TreeSet<String>();
         for (int i = 0; i < expectedTokenSequences.length; i++) {
             int [] expectedTokenSequence = expectedTokenSequences[i];
             set.add(tokenImages[expectedTokenSequence[0]]);

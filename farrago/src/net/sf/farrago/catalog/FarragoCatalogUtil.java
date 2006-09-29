@@ -32,7 +32,6 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.cwm.behavioral.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
@@ -159,6 +158,19 @@ public abstract class FarragoCatalogUtil
     }
 
     /**
+     * Gets the {@link FemLocalTable} on which a {@link FemLocalIndex} is
+     * defined.
+     *
+     * @param index the index in question
+     *
+     * @return containing table
+     */
+    public static FemLocalTable getIndexTable(FemLocalIndex index)
+    {
+        return (FemLocalTable) index.getSpannedClass();
+    }
+
+    /**
      * Determines whether an index implements its table's primary key.
      *
      * @param index the index in question
@@ -213,7 +225,7 @@ public abstract class FarragoCatalogUtil
      */
     public static FemPrimaryKeyConstraint getPrimaryKey(CwmClassifier table)
     {
-        for (Object obj : table.getOwnedElement()) {
+        for (CwmModelElement obj : table.getOwnedElement()) {
             if (obj instanceof FemPrimaryKeyConstraint) {
                 return (FemPrimaryKeyConstraint) obj;
             }
@@ -391,7 +403,7 @@ public abstract class FarragoCatalogUtil
     private static String generateUniqueConstraintColumnList(
         FemAbstractUniqueConstraint constraint)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Iterator iter = constraint.getFeature().iterator();
         while (iter.hasNext()) {
             CwmColumn column = (CwmColumn) iter.next();
@@ -468,12 +480,17 @@ public abstract class FarragoCatalogUtil
     /**
      * Filters a collection for all {@link CwmModelElement}s of a given type.
      *
+     * @see Util#filter(List, java.lang.Class)
+     *
      * @param inCollection the collection to search
      * @param outCollection receives matching objects
      * @param type class which sought objects must instantiate
      */
-    public static <OutT extends CwmModelElement, AskT extends OutT> void
-    filterTypedModelElements(Collection<? extends CwmModelElement> inCollection,
+    public static <
+        OutT extends CwmModelElement,
+        AskT extends OutT>
+    void filterTypedModelElements(
+        Collection<? extends CwmModelElement> inCollection,
         Collection<OutT> outCollection,
         Class<AskT> type)
     {
@@ -557,7 +574,7 @@ public abstract class FarragoCatalogUtil
      */
     public static FemRoutine getRoutineForOrdering(FemUserDefinedOrdering udo)
     {
-        Collection deps = udo.getOwnedElement();
+        Collection<CwmModelElement> deps = udo.getOwnedElement();
         if (deps.isEmpty()) {
             return null;
         }
@@ -583,7 +600,7 @@ public abstract class FarragoCatalogUtil
             names.add(ns.getName());
         }
         Collections.reverse(names);
-        String [] nameArray = names.toArray(Util.emptyStringArray);
+        String [] nameArray = names.toArray(new String[names.size()]);
         return new SqlIdentifier(nameArray, SqlParserPos.ZERO);
     }
 
@@ -640,14 +657,9 @@ public abstract class FarragoCatalogUtil
     public static List<CwmStructuralFeature> getStructuralFeatures(
         CwmClassifier classifier)
     {
-        List<CwmStructuralFeature> structuralFeatures =
-            new ArrayList<CwmStructuralFeature>();
-        for (Object obj : classifier.getFeature()) {
-            if (obj instanceof CwmStructuralFeature) {
-                structuralFeatures.add((CwmStructuralFeature) obj);
-            }
-        }
-        return structuralFeatures;
+        return Util.filter(
+            classifier.getFeature(),
+            CwmStructuralFeature.class);
     }
 
     /**

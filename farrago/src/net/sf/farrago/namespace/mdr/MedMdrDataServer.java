@@ -26,24 +26,19 @@ import java.sql.*;
 
 import java.util.*;
 
-import javax.jmi.model.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
-
-import openjava.mop.*;
 
 import openjava.ptree.*;
 
 import org.eigenbase.oj.stmt.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.*;
 
@@ -215,7 +210,7 @@ public class MedMdrDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         assert (repository != null);

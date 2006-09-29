@@ -130,13 +130,13 @@ public class LhxJoinRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public LhxJoinRel clone()
     {
         LhxJoinRel clone =
             new LhxJoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
+                left.clone(),
+                right.clone(),
                 joinType,
                 isSetop,
                 leftKeys,

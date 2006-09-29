@@ -69,7 +69,7 @@ class FarragoExecutableJavaStmt
     private final RelDataType rowType;
     private final Method method;
     private final String xmiFennelPlan;
-    private final Set referencedObjectIds;
+    private final Set<String> referencedObjectIds;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
 
@@ -84,7 +84,7 @@ class FarragoExecutableJavaStmt
         Method method,
         String xmiFennelPlan,
         boolean isDml,
-        Set referencedObjectIds,
+        Set<String> referencedObjectIds,
         TableAccessMap tableAccessMap,
         Map<String, RelDataType> resultSetTypeMap,
         Map<String, RelDataType> iterCalcTypeMap)
@@ -112,7 +112,7 @@ class FarragoExecutableJavaStmt
     }
 
     // implement FarragoSessionExecutableStmt
-    public Set getReferencedObjectIds()
+    public Set<String> getReferencedObjectIds()
     {
         return referencedObjectIds;
     }

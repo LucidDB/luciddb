@@ -160,7 +160,7 @@ public class LcsIndexOnlyScanRel
     //~ Methods ----------------------------------------------------------------
 
     // implement AbstractRelNode
-    public AbstractRelNode clone()
+    public LcsIndexOnlyScanRel clone()
     {
         LcsIndexOnlyScanRel clone =
             new LcsIndexOnlyScanRel(

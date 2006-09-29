@@ -68,7 +68,7 @@ public class RelRecordType
         return 0;
     }
 
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         sb.append("RecordType(");
         for (int i = 0; i < fields.length; i++) {

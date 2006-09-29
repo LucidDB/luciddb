@@ -67,7 +67,7 @@ public class AbstractConverter
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public AbstractConverter clone()
     {
         return
             new AbstractConverter(

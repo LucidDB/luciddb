@@ -53,7 +53,7 @@ class LcsIndexMinusRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public LcsIndexMinusRel clone()
     {
         return
             new LcsIndexMinusRel(

@@ -198,7 +198,7 @@ public class SqlLikeOperator
             operands = new SqlNode[] { exp0, exp1 };
             end = opOrdinal + 2;
         }
-        SqlCall call = createCall(operands, SqlParserPos.ZERO);
+        SqlCall call = createCall(SqlParserPos.ZERO, operands);
         SqlParserUtil.replaceSublist(list, opOrdinal - 1, end, call);
         return opOrdinal - 1;
     }

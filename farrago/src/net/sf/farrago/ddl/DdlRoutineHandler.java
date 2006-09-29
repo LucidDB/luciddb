@@ -75,11 +75,11 @@ public class DdlRoutineHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemRoutine routine)
     {
-        Iterator iter = routine.getParameter().iterator();
         int iOrdinal = 0;
         FemRoutineParameter returnParam = null;
-        while (iter.hasNext()) {
-            FemRoutineParameter param = (FemRoutineParameter) iter.next();
+        for (FemRoutineParameter param :
+            Util.cast(routine.getParameter(), FemRoutineParameter.class))
+        {
             if (param.getKind() == ParameterDirectionKindEnum.PDK_RETURN) {
                 returnParam = param;
             } else {
@@ -336,7 +336,8 @@ public class DdlRoutineHandler
         throws Throwable
     {
         final FarragoTypeFactory typeFactory = validator.getTypeFactory();
-        final List params = routine.getParameter();
+        final List<FemRoutineParameter> params =
+            Util.cast(routine.getParameter(), FemRoutineParameter.class);
 
         RelDataType paramRowType =
             typeFactory.createStructType(new RelDataTypeFactory.FieldInfo() {
@@ -347,15 +348,13 @@ public class DdlRoutineHandler
 
                     public String getFieldName(int index)
                     {
-                        FemRoutineParameter param =
-                            (FemRoutineParameter) params.get(index);
+                        FemRoutineParameter param = params.get(index);
                         return param.getName();
                     }
 
                     public RelDataType getFieldType(int index)
                     {
-                        FemRoutineParameter param =
-                            (FemRoutineParameter) params.get(index);
+                        FemRoutineParameter param = params.get(index);
                         return typeFactory.createCwmElementType(param);
                     }
                 });
@@ -440,7 +439,7 @@ public class DdlRoutineHandler
                 validator,
                 routine.getBody().getBody(),
                 true);
-        StringBuffer newBody = new StringBuffer();
+        StringBuilder newBody = new StringBuilder();
         newBody.append("BEGIN ");
         Set<CwmModelElement> dependencies = new HashSet<CwmModelElement>();
         for (SqlNode node : nodeList) {
@@ -449,7 +448,7 @@ public class DdlRoutineHandler
             SqlNode expr = call.getOperands()[1];
             FemSqltypeAttribute attribute =
                 (FemSqltypeAttribute) FarragoCatalogUtil.getModelElementByName(
-                    (Collection<CwmFeature>) objectType.getFeature(),
+                    objectType.getFeature(),
                     lhs.getSimple());
             if (attribute == null) {
                 throw res.ValidatorConstructorAssignmentUnknown.ex(
@@ -553,7 +552,7 @@ public class DdlRoutineHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqlobjectType typeDef)
     {
-        typeDef.setTypeNumber(new Integer(Types.STRUCT));
+        typeDef.setTypeNumber(Types.STRUCT);
         validateAttributeSet(typeDef);
         validateUserDefinedType(typeDef);
     }
@@ -561,7 +560,7 @@ public class DdlRoutineHandler
     // implement FarragoSessionDdlHandler
     public void validateDefinition(FemSqldistinguishedType typeDef)
     {
-        typeDef.setTypeNumber(new Integer(Types.DISTINCT));
+        typeDef.setTypeNumber(Types.DISTINCT);
         validateUserDefinedType(typeDef);
         validateTypedElement(typeDef, typeDef);
         if (!(typeDef.getType() instanceof CwmSqlsimpleType)) {

@@ -73,7 +73,7 @@ public class RexLocalRef
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public RexLocalRef clone()
     {
         // Since refs are immutable and identity is based on value,
         // there's no point returning a copy.

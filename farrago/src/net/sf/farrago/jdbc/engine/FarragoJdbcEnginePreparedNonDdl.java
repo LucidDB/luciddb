@@ -205,7 +205,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Byte(x));
+            Byte.valueOf(x));
     }
 
     // implement PreparedStatement
@@ -216,7 +216,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Short(x));
+            Short.valueOf(x));
     }
 
     // implement PreparedStatement
@@ -227,7 +227,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Integer(x));
+            Integer.valueOf(x));
     }
 
     // implement PreparedStatement
@@ -238,7 +238,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Long(x));
+            Long.valueOf(x));
     }
 
     // implement PreparedStatement
@@ -249,7 +249,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Float(x));
+            Float.valueOf(x));
     }
 
     // implement PreparedStatement
@@ -260,7 +260,7 @@ public class FarragoJdbcEnginePreparedNonDdl
     {
         setDynamicParam(
             parameterIndex,
-            new Double(x));
+            Double.valueOf(x));
     }
 
     // implement PreparedStatement

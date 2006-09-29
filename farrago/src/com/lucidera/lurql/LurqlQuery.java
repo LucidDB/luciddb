@@ -39,13 +39,13 @@ public class LurqlQuery
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List selectList;
+    private final List<String> selectList;
 
     private final LurqlQueryNode root;
 
     //~ Constructors -----------------------------------------------------------
 
-    public LurqlQuery(List selectList, LurqlQueryNode root)
+    public LurqlQuery(List<String> selectList, LurqlQueryNode root)
     {
         this.selectList = Collections.unmodifiableList(selectList);
         this.root = root;
@@ -53,7 +53,7 @@ public class LurqlQuery
 
     //~ Methods ----------------------------------------------------------------
 
-    public List getSelectList()
+    public List<String> getSelectList()
     {
         return selectList;
     }
@@ -63,18 +63,17 @@ public class LurqlQuery
         return root;
     }
 
-    static void unparseSelectList(PrintWriter pw, List selectList)
+    static void unparseSelectList(PrintWriter pw, List<String> selectList)
     {
-        Iterator iter = selectList.iterator();
-        while (iter.hasNext()) {
-            String id = iter.next().toString();
+        int k = 0;
+        for (String id : selectList) {
+            if (k++ > 0) {
+                pw.print(", ");
+            }
             if (id.equals("*")) {
                 pw.print(id);
             } else {
                 StackWriter.printSqlIdentifier(pw, id);
-            }
-            if (iter.hasNext()) {
-                pw.print(", ");
             }
         }
     }

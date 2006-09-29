@@ -103,7 +103,7 @@ public class FarragoJavaUdxRel
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public FarragoJavaUdxRel clone()
     {
         FarragoJavaUdxRel clone =
             new FarragoJavaUdxRel(

@@ -26,7 +26,6 @@ import java.sql.*;
 
 import java.util.*;
 
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
 import net.sf.farrago.namespace.*;
@@ -36,7 +35,6 @@ import net.sf.farrago.type.*;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
 
 
 /**
@@ -119,7 +117,7 @@ class MedMockLocalDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         long nRows = getLongProperty(tableProps, PROP_ROW_COUNT, 0);

@@ -59,7 +59,7 @@ class LcsIndexIntersectRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public LcsIndexIntersectRel clone()
     {
         return
             new LcsIndexIntersectRel(

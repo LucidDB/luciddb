@@ -144,7 +144,7 @@ public abstract class TestUtil
      */
     public static String fold(String [] strings)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < strings.length; i++) {
             if (i > 0) {
                 buf.append(NL);

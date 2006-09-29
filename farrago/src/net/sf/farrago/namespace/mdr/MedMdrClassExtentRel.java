@@ -88,7 +88,7 @@ class MedMdrClassExtentRel
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public MedMdrClassExtentRel clone()
     {
         MedMdrClassExtentRel clone =
             new MedMdrClassExtentRel(

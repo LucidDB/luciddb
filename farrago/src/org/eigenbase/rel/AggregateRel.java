@@ -73,12 +73,12 @@ public final class AggregateRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public AggregateRel clone()
     {
         AggregateRel clone =
             new AggregateRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 groupCount,
                 aggCalls);
         clone.inheritTraitsFrom(this);

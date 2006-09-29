@@ -222,7 +222,7 @@ public class ObjectSchemaTest extends SaffronTestCase
                         // can be removed
                         final RexNode[] exprs = new RexNode [] {
                             rexBuilder.makeRangeReference(rel.getRowType(), 0, false),
-                            RexUtil.clone(tokens[0])
+                            tokens[0].clone()
                         };
                         RelNode project =
                             CalcRel.createProject(

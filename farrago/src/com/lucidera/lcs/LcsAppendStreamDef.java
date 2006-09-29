@@ -82,7 +82,7 @@ public class LcsAppendStreamDef
         //      def.
         //
 
-        ArrayList<FemLcsClusterAppendStreamDef> clusterAppendDefs =
+        List<FemLcsClusterAppendStreamDef> clusterAppendDefs =
             new ArrayList<FemLcsClusterAppendStreamDef>();
 
         // Get the clustered indexes associated with this table.
@@ -111,9 +111,7 @@ public class LcsAppendStreamDef
             inputStream,
             splitter);
 
-        for (Object streamDef : clusterAppendDefs) {
-            FemLcsClusterAppendStreamDef clusterAppend =
-                (FemLcsClusterAppendStreamDef) streamDef;
+        for (FemLcsClusterAppendStreamDef clusterAppend : clusterAppendDefs) {
             implementor.addDataFlowFromProducerToConsumer(
                 splitter,
                 clusterAppend);
@@ -132,9 +130,7 @@ public class LcsAppendStreamDef
         }
 
         // Update clustered index scans
-        for (Object streamDef : clusterAppendDefs) {
-            FemLcsClusterAppendStreamDef clusterAppend =
-                (FemLcsClusterAppendStreamDef) streamDef;
+        for (FemLcsClusterAppendStreamDef clusterAppend : clusterAppendDefs) {
             clusterAppend.setOutputDesc(
                 indexGuide.getUnclusteredInputDesc());
         }

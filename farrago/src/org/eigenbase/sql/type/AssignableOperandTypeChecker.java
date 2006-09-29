@@ -87,7 +87,7 @@ public class AssignableOperandTypeChecker
     // implement SqlOperandTypeChecker
     public String getAllowedSignatures(SqlOperator op, String opName)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(opName);
         sb.append("(");
         for (int i = 0; i < paramTypes.length; ++i) {

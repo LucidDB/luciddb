@@ -59,16 +59,16 @@ public class LurqlFollow
 
     //~ Instance fields --------------------------------------------------------
 
-    private final List filterList;
+    private final List<LurqlFilter> filterList;
 
-    private final Map associationFilters;
+    private final Map<String, String> associationFilters;
 
     //~ Constructors -----------------------------------------------------------
 
     public LurqlFollow(
         String aliasName,
-        Map associationFilters,
-        List filterList,
+        Map<String, String> associationFilters,
+        List<LurqlFilter> filterList,
         LurqlPathSpec thenSpec)
     {
         super(aliasName, thenSpec);
@@ -80,12 +80,12 @@ public class LurqlFollow
 
     //~ Methods ----------------------------------------------------------------
 
-    public Map getAssociationFilters()
+    public Map<String, String> getAssociationFilters()
     {
         return associationFilters;
     }
 
-    public List getFilterList()
+    public List<LurqlFilter> getFilterList()
     {
         return filterList;
     }
@@ -94,9 +94,8 @@ public class LurqlFollow
     public void unparse(PrintWriter pw)
     {
         pw.print("follow");
-        Iterator iter = associationFilters.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        for (Object o : associationFilters.entrySet()) {
+            Map.Entry entry = (Map.Entry) o;
             pw.print(" ");
             pw.print(entry.getKey());
             if (entry.getValue() != null) {

@@ -89,16 +89,16 @@ public abstract class DdlHandler
 
     public void validateAttributeSet(CwmClass cwmClass)
     {
-        List structuralFeatures =
-            FarragoCatalogUtil.getStructuralFeatures(cwmClass);
+        List<FemAbstractAttribute> attributes =
+            Util.filter(
+                cwmClass.getFeature(),
+                FemAbstractAttribute.class);
         validator.validateUniqueNames(
             cwmClass,
-            structuralFeatures,
+            attributes,
             false);
 
-        Iterator iter = structuralFeatures.iterator();
-        while (iter.hasNext()) {
-            FemAbstractAttribute attribute = (FemAbstractAttribute) iter.next();
+        for (FemAbstractAttribute attribute : attributes) {
             validateAttribute(attribute);
         }
     }
@@ -112,9 +112,7 @@ public abstract class DdlHandler
         // Foreign tables should not support constraint definitions.  Eventually
         // we may want to allow this as a hint to the optimizer, but it's not
         // standard so for now we should prevent it.
-        Iterator constraintIter = columnSet.getOwnedElement().iterator();
-        while (constraintIter.hasNext()) {
-            Object obj = constraintIter.next();
+        for (CwmModelElement obj : columnSet.getOwnedElement()) {
             if (!(obj instanceof FemAbstractKeyConstraint)) {
                 continue;
             }
@@ -203,10 +201,10 @@ public abstract class DdlHandler
 
         element.setType(type);
         if (dataType.getPrecision() >= 0) {
-            element.setPrecision(new Integer(dataType.getPrecision()));
+            element.setPrecision(dataType.getPrecision());
         }
         if (dataType.getScale() >= 0) {
-            element.setScale(new Integer(dataType.getScale()));
+            element.setScale(dataType.getScale());
         }
         if (dataType.getCharSetName() != null) {
             element.setCharacterSetName(dataType.getCharSetName());
@@ -335,10 +333,9 @@ public abstract class DdlHandler
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (Iterator columnIter = rowType.getFeature().iterator();
-                columnIter.hasNext();) {
-                FemAbstractAttribute column =
-                    (FemAbstractAttribute) columnIter.next();
+            for (FemAbstractAttribute column :
+                Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            {
                 validateAttribute(column);
             }
         } else {
@@ -481,9 +478,9 @@ public abstract class DdlHandler
             Util.permAssert(cwmType != null, "cwmType != null");
             if (typeName != null) {
                 if (typeName.allowsPrec()) {
-                    column.setPrecision(new Integer(type.getPrecision()));
+                    column.setPrecision(type.getPrecision());
                     if (typeName.allowsScale()) {
-                        column.setScale(new Integer(type.getScale()));
+                        column.setScale(type.getScale());
                     }
                 }
             } else {

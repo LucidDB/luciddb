@@ -53,7 +53,7 @@ public abstract class OneRowRelBase
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public OneRowRelBase clone()
     {
         return this;
     }

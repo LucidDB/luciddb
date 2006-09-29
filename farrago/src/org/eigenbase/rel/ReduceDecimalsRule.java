@@ -699,10 +699,9 @@ public class ReduceDecimalsRule
             RexNode thenClause,
             RexNode elseClause)
         {
-            RexNode [] operands = { condition, thenClause, elseClause };
             return builder.makeCall(
-                    SqlStdOperatorTable.caseOperator,
-                    operands);
+                SqlStdOperatorTable.caseOperator,
+                condition, thenClause, elseClause);
         }
 
         protected RexNode makeCase(
@@ -712,10 +711,9 @@ public class ReduceDecimalsRule
             RexNode thenB,
             RexNode elseClause)
         {
-            RexNode [] operands = { whenA, thenA, whenB, thenB, elseClause };
             return builder.makeCall(
-                    SqlStdOperatorTable.caseOperator,
-                    operands);
+                SqlStdOperatorTable.caseOperator,
+                whenA, thenA, whenB, thenB, elseClause);
         }
 
         protected RexNode makePlus(
@@ -723,9 +721,9 @@ public class ReduceDecimalsRule
             RexNode b)
         {
             return builder.makeCall(
-                    SqlStdOperatorTable.plusOperator,
-                    a,
-                    b);
+                SqlStdOperatorTable.plusOperator,
+                a,
+                b);
         }
 
         protected RexNode makeMinus(
@@ -733,9 +731,9 @@ public class ReduceDecimalsRule
             RexNode b)
         {
             return builder.makeCall(
-                    SqlStdOperatorTable.minusOperator,
-                    a,
-                    b);
+                SqlStdOperatorTable.minusOperator,
+                a,
+                b);
         }
 
         protected RexNode makeDivide(
@@ -743,9 +741,9 @@ public class ReduceDecimalsRule
             RexNode b)
         {
             return builder.makeCall(
-                    SqlStdOperatorTable.divideOperator,
-                    a,
-                    b);
+                SqlStdOperatorTable.divideOperator,
+                a,
+                b);
         }
 
         protected RexNode makeMultiply(
@@ -753,9 +751,9 @@ public class ReduceDecimalsRule
             RexNode b)
         {
             return builder.makeCall(
-                    SqlStdOperatorTable.multiplyOperator,
-                    a,
-                    b);
+                SqlStdOperatorTable.multiplyOperator,
+                a,
+                b);
         }
 
         protected RexNode makeIsPositive(
@@ -800,7 +798,7 @@ public class ReduceDecimalsRule
             Util.pre(operands.length == 1, "operands.length == 1");
             assert (!RexLiteral.isNullLiteral(operands[0]));
 
-            RexNode operand = RexUtil.clone(operands[0]);
+            RexNode operand = operands[0].clone();
             RelDataType fromType = operand.getType();
             RelDataType toType = call.getType();
             assert (SqlTypeUtil.isDecimal(fromType)
@@ -1360,7 +1358,7 @@ public class ReduceDecimalsRule
             RexCall subCall = (RexCall) operands[0];
             RexNode innerValue = subCall.operands[0];
             if (canSimplify(call, subCall, innerValue)) {
-                return RexUtil.clone(innerValue);
+                return innerValue.clone();
             }
             return call;
         }

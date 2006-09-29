@@ -267,7 +267,7 @@ public abstract class FarragoReposImpl
         String objectName,
         RefClass refClass)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         // TODO:  escaping
         if (refClass != null) {
@@ -326,10 +326,7 @@ public abstract class FarragoReposImpl
         FemAnnotatedElement element,
         String tagName)
     {
-        Collection tags = element.getTagAnnotation();
-        Iterator iter = tags.iterator();
-        while (iter.hasNext()) {
-            FemTagAnnotation tag = (FemTagAnnotation) iter.next();
+        for (FemTagAnnotation tag : element.getTagAnnotation()) {
             if (tag.getName().equals(tagName)) {
                 return tag;
             }
@@ -372,9 +369,8 @@ public abstract class FarragoReposImpl
     {
         Collection tags =
             getCorePackage().getTaggedElement().getTaggedValue(element);
-        Iterator iter = tags.iterator();
-        while (iter.hasNext()) {
-            CwmTaggedValue tag = (CwmTaggedValue) iter.next();
+        for (Object o : tags) {
+            CwmTaggedValue tag = (CwmTaggedValue) o;
             if (tag.getTag().equals(tagName)) {
                 return tag;
             }

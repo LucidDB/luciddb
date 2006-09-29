@@ -193,7 +193,7 @@ public abstract class FarragoAbstractServer
             int port = startNetwork(jdbcDriver);
 
             pw.println(
-                res.ServerListening.str(new Integer(port)));
+                res.ServerListening.str(port));
             success = true;
         } finally {
             if (!success) {

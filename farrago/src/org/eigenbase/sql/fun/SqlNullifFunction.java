@@ -25,7 +25,6 @@ import org.eigenbase.sql.*;
 import org.eigenbase.sql.parser.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.validate.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -74,12 +73,12 @@ public class SqlNullifFunction
         whenList.add(operands[1]);
         thenList.add(SqlLiteral.createNull(SqlParserPos.ZERO));
         return
-            SqlStdOperatorTable.caseOperator.createCall(
-                operands[0],
+            SqlStdOperatorTable.caseOperator.createSwitchedCall(
+                pos, operands[0],
                 whenList,
                 thenList,
-                operands[0].clone(operands[0].getParserPosition()),
-                pos);
+                operands[0].clone(operands[0].getParserPosition())
+            );
     }
 }
 

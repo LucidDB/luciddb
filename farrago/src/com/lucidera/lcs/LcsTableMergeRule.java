@@ -96,15 +96,15 @@ public class LcsTableMergeRule
         assert (!(updateOnly && insertOnly));
 
         // create a rid expression on the target table
-        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();      
+        RexBuilder rexBuilder = origProj.getCluster().getRexBuilder();
         int nSourceFields =
             origProj.getChild().getRowType().getFieldCount() - nTargetFields;
         RexNode ridExpr =
             LucidDbSpecialOperators.makeRidExpr(
                 rexBuilder,
                 origProj.getChild(),
-                nSourceFields);     
-        
+                nSourceFields);
+
         // The merge source currently contains a projection with the
         // insert expressions followed by the target columns and the update
         // expressions (if the statement contains an UPDATE component).
@@ -128,7 +128,7 @@ public class LcsTableMergeRule
                     ridExpr,
                     rexBuilder);
         }
-      
+
         RelNode fennelInput =
             mergeTraitsAndConvert(
                 call.rels[0].getTraits(),
@@ -150,7 +150,7 @@ public class LcsTableMergeRule
 
         call.transformTo(mergeRel);
     }
-    
+
     /**
      * Creates a RelNode that serves as the source for an insert-only MERGE.
      * A FilterRel is inserted underneath the current ProjectRel.
@@ -176,7 +176,7 @@ public class LcsTableMergeRule
                 ridExpr);
         RelNode filterRel =
             CalcRel.createFilter(origProj.getChild(), isNullExpr);
-        
+
         // recreate the original projection, but make its child the newly
         // created FilterRel
         int nTargetFields = targetFields.length;
@@ -192,7 +192,7 @@ public class LcsTableMergeRule
         return
             CalcRel.createProject(filterRel, projExprs, fieldNames);
     }
-    
+
     /**
      * Creates the source RelNode for a MERGE that contains an UPDATE
      * component.  The current ProjectRel is replaced by a FilterRel underneath
@@ -219,7 +219,7 @@ public class LcsTableMergeRule
     {
         RexNode[] origProjExprs = origProj.getProjectExps();
         int nTargetFields = targetFields.length;
-        
+
         // create a filter selecting only rows where any of the update
         // columns are different from their original column values; if there's
         // an insert component in the MERGE, then we also need to allow
@@ -271,7 +271,7 @@ public class LcsTableMergeRule
             RexUtil.orRexNodeList(rexBuilder, filterList);
         RelNode filterRel =
             CalcRel.createFilter(origProj.getChild(), nonUpdateFilter);
-   
+
         // Project out the rid and 2 null columns as well as the
         // expressions that make up a new insert target row.  The content of
         // insert target row depends on whether the rid is null or non-null.
@@ -292,7 +292,7 @@ public class LcsTableMergeRule
         fieldNames[0] = "rid";
         fieldNames[1] = "descriptor";
         fieldNames[2] = "segment";
-        
+
         // when expression used in the case expression
         RexNode whenExpr = null;
         if (!updateOnly) {
@@ -301,7 +301,7 @@ public class LcsTableMergeRule
                     SqlStdOperatorTable.isNullOperator,
                     ridExpr);
         }
-        
+
         for (int i = 0; i < nTargetFields; i++) {
             RexNode updateExpr = null;
             // determine whether a target expression was specified for the
@@ -323,15 +323,13 @@ public class LcsTableMergeRule
                 projExprs[i + 3] =
                     rexBuilder.makeCall(
                         SqlStdOperatorTable.caseOperator,
-                        new RexNode[] {
-                            whenExpr,
-                            origProjExprs[i],
-                            updateExpr
-                        });
+                        whenExpr,
+                        origProjExprs[i],
+                        updateExpr);
             }
             fieldNames[i + 3] = targetFields[i].getName();
         }
-        
+
         return CalcRel.createProject(filterRel, projExprs, fieldNames);
     }
     
@@ -386,4 +384,5 @@ public class LcsTableMergeRule
     }
 }
 
-// End LcsTableMergeRule
+// End LcsTableMergeRule.java
+

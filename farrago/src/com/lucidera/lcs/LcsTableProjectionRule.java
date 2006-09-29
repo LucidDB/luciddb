@@ -118,20 +118,17 @@ public class LcsTableProjectionRule
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
         // in the projection, then it needs to be used in the scan.
-        ArrayList<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
+        List<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
         // Test which clustered indexes are needed to cover the
         // projectedColumns.
         Integer[] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
-        Iterator iter = origScan.clusteredIndexes.iterator();
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-
+        for (FemLocalIndex index : origScan.clusteredIndexes) {
             if (!origScan.getIndexGuide().testIndexCoverage(
-                    index,
-                    projectedColumns))
+                index,
+                projectedColumns))
             {
                 continue;
             }

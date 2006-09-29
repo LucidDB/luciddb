@@ -49,6 +49,8 @@ import org.eigenbase.sql.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
 
+import javax.jmi.reflect.RefObject;
+
 
 /**
  * FarragoDbSession implements the {@link net.sf.farrago.session.FarragoSession}
@@ -686,9 +688,9 @@ public class FarragoDbSession
     }
 
     // implement FarragoSession
-    public Collection executeLurqlQuery(
+    public Collection<RefObject> executeLurqlQuery(
         String lurql,
-        Map argMap)
+        Map<String,?> argMap)
     {
         // TODO jvs 24-May-2005:  query cache
         Connection connection = null;
@@ -768,7 +770,7 @@ public class FarragoDbSession
         if (iSavepoint == -1) {
             if (savepoint.getName() == null) {
                 throw FarragoResource.instance().SessionInvalidSavepointId.ex(
-                    new Integer(savepoint.getId()));
+                    savepoint.getId());
             } else {
                 throw FarragoResource.instance().SessionInvalidSavepointName.ex(
                     repos.getLocalizedObjectName(savepoint.getName()));

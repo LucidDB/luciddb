@@ -85,7 +85,7 @@ public abstract class FarragoUtil
         String result = null;
         if (ex != null) {
             Throwable t = ex;
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             while (t != null) {
                 sb.append(t.getClass().getName());
                 sb.append(":  ");

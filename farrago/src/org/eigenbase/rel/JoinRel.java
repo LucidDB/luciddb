@@ -106,14 +106,14 @@ public final class JoinRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public JoinRel clone()
     {
         JoinRel clone =
             new JoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
-                RexUtil.clone(condition),
+                left.clone(),
+                right.clone(),
+                condition.clone(),
                 joinType,
                 new HashSet<String>(variablesStopped),
                 isSemiJoinDone(),

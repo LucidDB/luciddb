@@ -252,9 +252,9 @@ public class FarragoCalcSystemTest
 
                 operands[i] =
                     SqlStdOperatorTable.castFunc.createCall(
+                        SqlParserPos.ZERO,
                         SqlLiteral.createNull(SqlParserPos.ZERO),
-                        dt,
-                        SqlParserPos.ZERO);
+                        dt);
             }
 
             if (operands.length == 0) {
@@ -264,7 +264,7 @@ public class FarragoCalcSystemTest
                 // operator.
                 continue;
             }
-            SqlCall call = op.createCall(operands, SqlParserPos.ZERO);
+            SqlCall call = op.createCall(SqlParserPos.ZERO, operands);
 
             String sql = "SELECT " + call.toString() + " FROM (VALUES(1))";
             String testName = "NULL-TEST-" + op.getName() + "-";

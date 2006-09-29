@@ -25,9 +25,6 @@ package org.eigenbase.rel;
 import java.util.*;
 
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
-import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -67,14 +64,14 @@ public final class TableModificationRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public TableModificationRel clone()
     {
         TableModificationRel clone =
             new TableModificationRel(
                 getCluster(),
                 table,
                 connection,
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList(),
                 isFlattened());

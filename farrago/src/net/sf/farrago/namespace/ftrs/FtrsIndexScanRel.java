@@ -141,7 +141,7 @@ class FtrsIndexScanRel
     }
 
     // implement RelNode
-    public Object clone()
+    public FtrsIndexScanRel clone()
     {
         FtrsIndexScanRel clone =
             new FtrsIndexScanRel(
@@ -297,14 +297,14 @@ class FtrsIndexScanRel
         } else {
             // transform from table-relative to index-relative ordinals
             indexProjection = new Integer[projection.length];
-            List indexTableColList =
+            List<Integer> indexTableColList =
                 Arrays.asList(
                     indexGuide.getUnclusteredCoverageArray(index));
             for (int i = 0; i < projection.length; ++i) {
                 Integer iTableCol = projection[i];
                 int iIndexCol = indexTableColList.indexOf(iTableCol);
                 assert (iIndexCol != -1);
-                indexProjection[i] = new Integer(iIndexCol);
+                indexProjection[i] = iIndexCol;
             }
         }
 
@@ -328,7 +328,7 @@ class FtrsIndexScanRel
     {
         Integer [] indexedCols =
             ftrsTable.getIndexGuide().getCollationKeyArray(index);
-        List collationList = new ArrayList();
+        List<RelFieldCollation> collationList = new ArrayList<RelFieldCollation>();
         for (int i = 0; i < indexedCols.length; ++i) {
             int iCol = indexedCols[i].intValue();
             RelFieldCollation collation = null;
@@ -348,8 +348,8 @@ class FtrsIndexScanRel
             collationList.add(collation);
         }
         return
-            (RelFieldCollation []) collationList.toArray(
-                RelFieldCollation.emptyCollationArray);
+            collationList.toArray(
+                new RelFieldCollation[collationList.size()]);
     }
 }
 

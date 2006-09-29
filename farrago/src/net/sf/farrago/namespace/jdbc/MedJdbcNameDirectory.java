@@ -292,7 +292,7 @@ class MedJdbcNameDirectory
                     schemaName,
                     FarragoMedMetadataQuery.OTN_SCHEMA,
                     null,
-                    Collections.EMPTY_MAP);
+                    new Properties());
             }
         } finally {
             resultSet.close();
@@ -476,7 +476,7 @@ class MedJdbcNameDirectory
                     type,
                     remarks,
                     defaultValue,
-                    Collections.EMPTY_MAP);
+                    new Properties());
             }
         } finally {
             resultSet.close();

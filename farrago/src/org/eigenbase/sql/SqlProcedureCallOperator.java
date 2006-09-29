@@ -57,18 +57,17 @@ public class SqlProcedureCallOperator
         // once we support function calls as tables
         SqlStdOperatorTable opTab = SqlStdOperatorTable.instance();
         return
-            opTab.selectOperator.createCall(
+            SqlStdOperatorTable.selectOperator.createCall(
                 null,
                 new SqlNodeList(
                     Collections.singletonList(
                         call.getOperands()[0]),
                     SqlParserPos.ZERO),
-                opTab.valuesOperator.createCall(
-                    opTab.rowConstructor.createCall(
-                        SqlLiteral.createExactNumeric("0",
-                            SqlParserPos.ZERO),
-                        SqlParserPos.ZERO),
-                    SqlParserPos.ZERO),
+                SqlStdOperatorTable.valuesOperator.createCall(
+                    SqlParserPos.ZERO,
+                    SqlStdOperatorTable.rowConstructor.createCall(
+                        SqlParserPos.ZERO,
+                        SqlLiteral.createExactNumeric("0", SqlParserPos.ZERO))),
                 null,
                 null,
                 null,

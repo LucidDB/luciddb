@@ -34,8 +34,10 @@ import net.sf.farrago.plugin.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.cwm.core.CwmFeature;
 
 import org.eigenbase.reltype.*;
+import org.eigenbase.util.Util;
 
 
 /**
@@ -254,14 +256,13 @@ public class FarragoDataWrapperCache
 
         Properties props = getStorageOptionsAsProperties(baseColumnSet);
 
-        Map columnPropMap = new HashMap();
+        Map<String,Properties> columnPropMap = new HashMap<String, Properties>();
 
         RelDataType rowType =
             typeFactory.createStructTypeFromClassifier(baseColumnSet);
 
-        Iterator iter = baseColumnSet.getFeature().iterator();
-        while (iter.hasNext()) {
-            FemStoredColumn column = (FemStoredColumn) iter.next();
+        for (FemStoredColumn column :
+            Util.cast(baseColumnSet.getFeature(), FemStoredColumn.class)) {
             columnPropMap.put(
                 column.getName(),
                 getStorageOptionsAsProperties(column));
@@ -317,9 +318,7 @@ public class FarragoDataWrapperCache
 
         // TODO:  validate no duplicates
         String optName, optValue;
-        Iterator iter = element.getStorageOptions().iterator();
-        while (iter.hasNext()) {
-            FemStorageOption option = (FemStorageOption) iter.next();
+        for (FemStorageOption option : element.getStorageOptions()) {
             optName = option.getName();
             assert (!props.containsKey(optName));
             optValue = getRepos().expandProperties(option.getValue());

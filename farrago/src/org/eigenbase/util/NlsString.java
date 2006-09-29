@@ -148,7 +148,7 @@ public class NlsString
         boolean prefix,
         boolean suffix)
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         if (prefix && (null != charsetName)) {
             ret.append("_");
             ret.append(charsetName);
@@ -210,7 +210,7 @@ public class NlsString
             }
         }
 
-        StringBuffer sb = new StringBuffer(length);
+        StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < args.length; i++) {
             sb.append(args[i].value);
         }

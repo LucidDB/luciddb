@@ -78,7 +78,7 @@ public class SwapJoinRule
         final RelDataType rightRowType = join.getRight().getRowType();
         final VariableReplacer variableReplacer =
             new VariableReplacer(rexBuilder, leftRowType, rightRowType);
-        final RexNode oldCondition = RexUtil.clone(join.getCondition());
+        final RexNode oldCondition = join.getCondition().clone();
         RexNode condition = variableReplacer.go(oldCondition);
 
         // NOTE jvs 14-Mar-2006: We preserve attribute semiJoinDone after the

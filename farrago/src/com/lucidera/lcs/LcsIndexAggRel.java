@@ -51,7 +51,7 @@ public class LcsIndexAggRel
     //~ Methods ----------------------------------------------------------------
 
     // implement AbstractRelNode
-    public AbstractRelNode clone()
+    public LcsIndexAggRel clone()
     {
         LcsIndexAggRel clone =
             new LcsIndexAggRel(

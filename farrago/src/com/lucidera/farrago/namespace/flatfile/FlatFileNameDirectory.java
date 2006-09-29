@@ -112,7 +112,7 @@ class FlatFileNameDirectory
                     FlatFileParams.SchemaType.QUERY.getSchemaName(),
                     FarragoMedMetadataQuery.OTN_SCHEMA,
                     null,
-                    Collections.EMPTY_MAP);
+                    new Properties());
             }
         } else {
             boolean wantTables =
@@ -151,7 +151,7 @@ class FlatFileNameDirectory
                 tableName,
                 FarragoMedMetadataQuery.OTN_TABLE,
                 null,
-                Collections.EMPTY_MAP);
+                new Properties());
         }
         return true;
     }
@@ -216,7 +216,7 @@ class FlatFileNameDirectory
                             typeWithNull,
                             null,
                             null,
-                            Collections.EMPTY_MAP);
+                            new Properties());
                         ordinal++;
                     }
                 }

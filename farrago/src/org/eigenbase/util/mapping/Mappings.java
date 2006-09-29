@@ -273,7 +273,7 @@ public abstract class Mappings
          */
         public String toString()
         {
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             buf.append("[");
             int i = 0;
             for (final Iterator<IntPair> iter = iterator(); iter.hasNext();) {

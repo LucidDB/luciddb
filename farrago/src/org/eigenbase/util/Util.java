@@ -29,6 +29,7 @@ import java.io.*;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
+import java.lang.Iterable;
 
 import java.math.*;
 
@@ -480,7 +481,7 @@ public class Util
         int scale = bd.scale();
         int e = len - scale - 1;
 
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         if (bd.signum() < 0) {
             ret.append('-');
         }
@@ -525,7 +526,7 @@ public class Util
         if (found == -1) {
             return s;
         }
-        StringBuffer sb = new StringBuffer(s.length());
+        StringBuilder sb = new StringBuilder(s.length());
         int start = 0;
         for (;;) {
             for (; start < found; start++) {
@@ -646,7 +647,7 @@ public class Util
         }
 
         // Escape underscores and other undesirables.
-        StringBuffer buf = new StringBuffer(s.length() + 10);
+        StringBuilder buf = new StringBuilder(s.length() + 10);
         buf.append("ID$");
         buf.append(ordinal);
         buf.append("$");
@@ -691,9 +692,9 @@ public class Util
      *
      * @return materialized list
      */
-    public static List toList(Iterator iter)
+    public static <T> List<T> toList(Iterator<T> iter)
     {
-        List list = new ArrayList();
+        List<T> list = new ArrayList<T>();
         while (iter.hasNext()) {
             list.add(iter.next());
         }
@@ -1304,7 +1305,7 @@ public class Util
         Writer appOutput)
         throws IOException, InterruptedException
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         for (int i = 0; i < cmdarray.length; ++i) {
             if (i > 0) {
                 buf.append(" ");
@@ -1362,6 +1363,183 @@ public class Util
             logger.info("exit status=" + status + " from " + fullcmd);
         }
         return status;
+    }
+
+    /**
+     * Converts a list whose members are automatically down-cast to a given
+     * type.
+     *
+     * <p>If a member of the backing list is not an instanceof <code>E</code>,
+     * the accessing method (such as {@link List#get}) will throw a
+     * {@link ClassCastException}.
+     *
+     * <p>All modifications are automatically written to the backing list.
+     * Not synchronized.
+     *
+     * @param list Backing list.
+     * @param clazz Class to cast to.
+     * @return A list whose members are of the desired type.
+     */
+    public static <E> List<E> cast(List<? super E> list, Class<E> clazz)
+    {
+        return new CastingList<E>(list, clazz);
+    }
+
+    /**
+     * Converts a iterator whose members are automatically down-cast to a given
+     * type.
+     *
+     * <p>If a member of the backing iterator is not an instanceof
+     * <code>E</code>, {@link Iterator#next()}) will throw a
+     * {@link ClassCastException}.
+     *
+     * <p>All modifications are automatically written to the backing iterator.
+     * Not synchronized.
+     *
+     * @param iter Backing iterator.
+     * @param clazz Class to cast to.
+     * @return An iterator whose members are of the desired type.
+     */
+    public static <E> Iterator<E> cast(
+        final Iterator<?> iter,
+        final Class<E> clazz)
+    {
+        return new Iterator<E>() {
+            public boolean hasNext()
+            {
+                return iter.hasNext();
+            }
+
+            public E next()
+            {
+                return clazz.cast(iter.next());
+            }
+
+            public void remove()
+            {
+                iter.remove();
+            }
+        };
+    }
+
+    /**
+     * Converts an {@link Iterable} whose members are automatically down-cast
+     * to a given type.
+     */
+    public static <E> Iterable<E> cast(
+        final Iterable<?> iterable,
+        final Class<E> clazz)
+    {
+        return new Iterable<E>()
+        {
+            public Iterator<E> iterator()
+            {
+                return cast(iterable.iterator(), clazz);
+            }
+        };
+    }
+
+    /**
+     * Makes a collection of untyped elements appear as a list of strictly
+     * typed elements, by filtering out those which are not of the correct
+     * type.
+     *
+     * <p>The returned object is an {@link org.eigenbase.runtime.Iterable},
+     * which makes it ideal for use with the 'foreach' construct. For example,
+     *
+     * <blockquote>
+     * <code>
+     * List&lt;Number&gt; numbers = Arrays.asList(1, 2, 3.14, 4, null, 6E23);<br/>
+     * for (int myInt : filter(numbers, Integer.class)) {<br/>
+     * &nbsp;&nbsp;&nbsp;&nbsp;print(i);<br/>
+     * }
+     * </code>
+     * </blockquote>
+     *
+     * will print 1, 2, 4.
+     * @param iterable
+     * @param includeFilter
+     */
+    public static<E> Iterable<E> filter(
+        final Iterable<? extends Object> iterable,
+        final Class<E> includeFilter)
+    {
+        return new Iterable<E>()
+        {
+            public Iterator<E> iterator()
+            {
+                return new Filterator<E>(iterable.iterator(), includeFilter);
+            }
+        };
+    }
+
+    public static<E> Collection<E> filter(
+        final Collection<?> collection,
+        final Class<E> includeFilter)
+    {
+        return new AbstractCollection<E>()
+        {
+            public Iterator<E> iterator()
+            {
+                return new Filterator<E>(collection.iterator(), includeFilter);
+            }
+
+            public int size()
+            {
+                return collection.size();
+            }
+        };
+    }
+
+    /**
+     * Returns a subset of a list containing only elements of a given type.
+     *
+     * <p>Modifications to the list are NOT written back to the source list.
+     *
+     * @param list List of objects
+     * @param includeFilter Class to filter for
+     * @return List of objects of given class (or a subtype)
+     */
+    public static<E> List<E> filter(
+        final List<?> list,
+        final Class<E> includeFilter)
+    {
+        List<E> result = new ArrayList<E>();
+        for (Object o : list) {
+            if (includeFilter.isInstance(o)) {
+                result.add(includeFilter.cast(o));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Makes a {@link Properties} object iterable over (String, String) pairs.
+     *
+     * <p>This is necessary because {@link Properties} is a dinosaur class.
+     * It ought to extend <code>Map&lt;String,String&gt;</code>, but instead
+     * extends <code>Hashtable&lt;Object,Object&gt;</code>.
+     *
+     * <p>Typical usage, to iterate over a {@link Properties}:
+     *
+     * <pre>
+     * Properties properties;
+     * for (Map.Entry<String, String> entry = Util.entries(properties)) {
+     *   println("key=" + entry.getKey() + ", value=" + entry.getValue());
+     * }
+     * </pre>
+     */
+    public static Set<Map.Entry<String,String>> entries(
+        final Properties properties)
+    {
+        AbstractMap<String, String> map = new AbstractMap<String, String>()
+        {
+            public Set<Entry<String, String>> entrySet()
+            {
+                return (Set) properties.entrySet();
+            }
+        };
+        return map.entrySet();
     }
 
     //~ Inner Classes ----------------------------------------------------------
@@ -1487,6 +1665,7 @@ public class Util
             return argHandler.result();
         }
     }
+
 }
 
 // End Util.java

@@ -23,8 +23,6 @@ package org.eigenbase.test;
 
 import java.math.*;
 
-import java.util.*;
-
 import junit.framework.*;
 
 import org.eigenbase.reltype.*;
@@ -499,18 +497,18 @@ public class SargTest
                 SargSetOperator.INTERSECTION);
         intersectExpr1.addChild(complementExpr1);
         intersectExpr1.addChild(complementExpr2);
-       
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
             intersectExpr1.evaluate().toString());
-        
+
         SargSetExpr intersectExpr2 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.INTERSECTION);
         intersectExpr2.addChild(complementExpr2);
         intersectExpr2.addChild(complementExpr1);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
             intersectExpr2.evaluate().toString());
@@ -521,7 +519,7 @@ public class SargTest
                 SargSetOperator.INTERSECTION);
         intersectExpr3.addChild(complementExpr1);
         intersectExpr3.addChild(interval3);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) )",
             intersectExpr3.evaluate().toString());
@@ -532,24 +530,24 @@ public class SargTest
                 SargSetOperator.UNION);
         unionExpr1.addChild(interval1);
         unionExpr1.addChild(interval2);
-        
+
         SargSetExpr complementExpr3 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.COMPLEMENT);
         complementExpr3.addChild(unionExpr1);
-        
+
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
-            complementExpr3.evaluate().toString());        
-        
+            complementExpr3.evaluate().toString());
+
         SargSetExpr unionExpr2 =
             sargFactory.newSetExpr(
                 intType,
                 SargSetOperator.UNION);
         unionExpr2.addChild(interval2);
         unionExpr2.addChild(interval1);
-        
+
         SargSetExpr complementExpr4 =
             sargFactory.newSetExpr(
                 intType,
@@ -557,9 +555,9 @@ public class SargTest
         complementExpr4.addChild(unionExpr2);
         assertEquals(
             "UNION( (null, 7) (7, 490) (490, +infinity) )",
-            complementExpr4.evaluate().toString());        
+            complementExpr4.evaluate().toString());
     }
-    
+
     public void testUnion()
     {
         exprs = new SargIntervalExpr[11];

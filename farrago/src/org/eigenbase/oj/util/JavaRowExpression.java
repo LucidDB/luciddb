@@ -89,7 +89,7 @@ public class JavaRowExpression
         return expression;
     }
 
-    public Object clone()
+    public JavaRowExpression clone()
     {
         return new JavaRowExpression(env, type, expression);
     }

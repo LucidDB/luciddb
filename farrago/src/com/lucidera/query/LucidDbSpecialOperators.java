@@ -25,7 +25,6 @@ import com.lucidera.farrago.*;
 import java.util.*;
 
 import org.eigenbase.rel.*;
-import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;

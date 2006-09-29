@@ -347,7 +347,7 @@ public final class RemoveDistinctAggregateRule
                 distinctAgg,
                 condition,
                 JoinRelType.INNER,
-                (Set<String>) Collections.EMPTY_SET);
+                Collections.EMPTY_SET);
 
         return join;
     }

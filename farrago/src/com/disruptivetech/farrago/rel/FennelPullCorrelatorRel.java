@@ -73,13 +73,13 @@ public class FennelPullCorrelatorRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FennelPullCorrelatorRel clone()
     {
         FennelPullCorrelatorRel clone =
             new FennelPullCorrelatorRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
+                left.clone(),
+                right.clone(),
                 cloneCorrelations());
         clone.inheritTraitsFrom(this);
         return clone;

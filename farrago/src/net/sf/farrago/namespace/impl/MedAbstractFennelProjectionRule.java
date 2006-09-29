@@ -171,7 +171,7 @@ public abstract class MedAbstractFennelProjectionRule
         RexInputRef fieldAccess = (RexInputRef) exp;
         origFieldName.add(
             rowType.getFields()[fieldAccess.getIndex()].getName());
-        return new Integer(fieldAccess.getIndex());
+        return fieldAccess.getIndex();
     }
 
     /**

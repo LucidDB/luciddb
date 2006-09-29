@@ -21,8 +21,6 @@
 */
 package net.sf.farrago.namespace;
 
-import java.sql.*;
-
 import java.util.*;
 
 import net.sf.farrago.type.*;
@@ -52,12 +50,19 @@ public interface FarragoMedMetadataSink
      * have more specific write methods.
      *
      * @param name unqualified object name
-     * @param type object type name, from enumeration in {@link
-     * FarragoMedMetadataQuery}
      * @param remarks object description, or null for none
      * @param properties storage options
      *
      * @return true if object was accepted; false if object was filtered out
+     */
+    public boolean writeObjectDescriptor(
+        String name,
+        String typeName,
+        String remarks,
+        Properties properties);
+    
+    /**
+     * @deprecated Call Properties version instead
      */
     public boolean writeObjectDescriptor(
         String name,
@@ -77,6 +82,18 @@ public interface FarragoMedMetadataSink
      * @param properties storage options
      *
      * @return true if object was accepted; false if object was filtered out
+     */
+    public boolean writeColumnDescriptor(
+        String tableName,
+        String columnName,
+        int ordinal,
+        RelDataType type,
+        String remarks,
+        String defaultValue,
+        Properties properties);
+    
+    /**
+     * @deprecated Call Properties version instead
      */
     public boolean writeColumnDescriptor(
         String tableName,

@@ -133,8 +133,8 @@ public class FarragoEngineDriverTest
         // create a sample connect string with various complications.
         // note that the parser itself is tested in eigenbase.
         final int maxParams = 6;
-        HashMap ref = new HashMap();
-        StringBuffer params = new StringBuffer();
+        HashMap<String,String> ref = new HashMap<String, String>();
+        StringBuilder params = new StringBuilder();
         for (int i = 0; i < maxParams; ++i) {
             String key = "name" + i;
             String val = "value" + i;
@@ -170,7 +170,7 @@ public class FarragoEngineDriverTest
         for (int i = 0; i < maxParams; ++i) {
             String key = "name" + i;
             String val = (String) parsedProps.get(key);
-            String expval = (String) ref.get(key);
+            String expval = ref.get(key);
             assertEquals("param " + key + ", ", expval, val);
         }
 
@@ -290,9 +290,9 @@ public class FarragoEngineDriverTest
      */
     private static String toStringProperties(Properties props)
     {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         buf.append("{");
-        Enumeration enumer = props.propertyNames();
+        Enumeration<?> enumer = props.propertyNames();
         int cnt = 0;
         while (enumer.hasMoreElements()) {
             if (cnt++ > 0) {

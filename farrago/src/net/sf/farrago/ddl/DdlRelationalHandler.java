@@ -22,10 +22,6 @@
 */
 package net.sf.farrago.ddl;
 
-import java.io.*;
-
-import java.nio.charset.*;
-
 import java.sql.*;
 
 import java.util.*;
@@ -33,22 +29,17 @@ import java.util.*;
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
 import net.sf.farrago.cwm.relational.*;
-import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.query.*;
-import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
-import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.type.*;
 import org.eigenbase.util.*;
 
 
@@ -118,7 +109,7 @@ public class DdlRelationalHandler
                     index.refClass()));
         }
 
-        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (table.isTemporary()) {
             if (!validator.isCreatedObject(table)) {
                 // REVIEW: support this?  What to do about instances of the
@@ -196,14 +187,11 @@ public class DdlRelationalHandler
         // Validate unique constraints
         FemLocalIndex generatedPrimaryKeyIndex = null;
         FemPrimaryKeyConstraint primaryKey = null;
-        Iterator constraintIter = table.getOwnedElement().iterator();
-        while (constraintIter.hasNext()) {
-            Object obj = constraintIter.next();
-            if (!(obj instanceof FemAbstractUniqueConstraint)) {
-                continue;
-            }
-            FemAbstractUniqueConstraint constraint =
-                (FemAbstractUniqueConstraint) obj;
+        for (FemAbstractUniqueConstraint constraint :
+            Util.filter(
+                table.getOwnedElement(),
+                FemAbstractUniqueConstraint.class))
+        {
             if (constraint instanceof FemPrimaryKeyConstraint) {
                 if (primaryKey != null) {
                     throw res.ValidatorMultiplePrimaryKeys.ex(
@@ -293,7 +281,7 @@ public class DdlRelationalHandler
 
         RelDataType rowType = analyzedSql.resultType;
 
-        List columnList = view.getFeature();
+        List<CwmFeature> columnList = view.getFeature();
         boolean implicitColumnNames = true;
 
         if (columnList.size() != 0) {
@@ -359,9 +347,8 @@ public class DdlRelationalHandler
         index.setSorted(true);
 
         int iOrdinal = 0;
-        Iterator columnIter = constraint.getFeature().iterator();
-        while (columnIter.hasNext()) {
-            CwmColumn column = (CwmColumn) columnIter.next();
+        for (CwmStructuralFeature o : constraint.getFeature()) {
+            CwmColumn column = (CwmColumn) o;
             FemLocalIndexColumn indexColumn = repos.newFemLocalIndexColumn();
             indexColumn.setName(column.getName());
             indexColumn.setAscending(Boolean.TRUE);
@@ -376,10 +363,9 @@ public class DdlRelationalHandler
         FemAbstractUniqueConstraint constraint)
     {
         int iOrdinal = 0;
-        Iterator columnIter = constraint.getFeature().iterator();
-        while (columnIter.hasNext()) {
-            FemAbstractAttribute column =
-                (FemAbstractAttribute) columnIter.next();
+        for (FemAbstractAttribute column :
+            Util.cast(constraint.getFeature(), FemAbstractAttribute.class))
+        {
             FemKeyComponent component = repos.newFemKeyComponent();
             component.setName(column.getName());
             component.setAttribute(column);
@@ -391,7 +377,7 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateDrop(FemLocalIndex index)
     {
-        CwmTable table = FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
         if (validator.isDeletedObject(table)) {
             // This index is being deleted together with its containing table,
             // which is always OK.
@@ -417,10 +403,9 @@ public class DdlRelationalHandler
     // implement FarragoSessionDdlHandler
     public void validateTruncation(FemLocalTable table)
     {
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-        Iterator indexIter = indexes.iterator();
-        while (indexIter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) indexIter.next();
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             validator.scheduleTruncation(index);
         }
     }
@@ -437,8 +422,7 @@ public class DdlRelationalHandler
             validator.getDataWrapperCache(),
             index);
 
-        FemLocalTable table =
-            (FemLocalTable) FarragoCatalogUtil.getIndexTable(index);
+        FemLocalTable table = FarragoCatalogUtil.getIndexTable(index);
 
         if (!validator.isCreatedObject(table)) {
             indexExistingRows(table, index);

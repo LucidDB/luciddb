@@ -250,7 +250,7 @@ public class SqlCaseOperator
     {
         SqlCase caseCall = (SqlCase) callBinding.getCall();
         SqlNodeList thenList = caseCall.getThenOperands();
-        ArrayList nullList = new ArrayList();
+        ArrayList<SqlNode> nullList = new ArrayList<SqlNode>();
         RelDataType [] argTypes = new RelDataType[thenList.size() + 1];
         for (int i = 0; i < thenList.size(); i++) {
             SqlNode node = thenList.get(i);
@@ -279,7 +279,7 @@ public class SqlCaseOperator
                 EigenbaseResource.instance().IllegalMixingOfTypes.ex());
         }
         for (int i = 0; i < nullList.size(); i++) {
-            SqlNode node = (SqlNode) nullList.get(i);
+            SqlNode node = nullList.get(i);
             callBinding.getValidator().setValidatedNodeType(node, ret);
         }
         return ret;
@@ -313,31 +313,39 @@ public class SqlCaseOperator
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         assert functionQualifier == null;
         return new SqlCase(this, operands, pos);
     }
 
-    public SqlCase createCall(
+    /**
+     * Creates a call to the switched form of the case operator, viz:
+     *
+     * <blockquote><code>CASE caseIdentifier<br/>
+     * WHEN whenList[0] THEN thenList[0]<br/>
+     * WHEN whenList[1] THEN thenList[1]<br/>
+     * ...<br/>
+     * ELSE elseClause<br/>
+     * END</code></blockquote>
+     */
+    public SqlCase createSwitchedCall(
+        SqlParserPos pos,
         SqlNode caseIdentifier,
         SqlNodeList whenList,
         SqlNodeList thenList,
-        SqlNode elseClause,
-        SqlParserPos pos)
+        SqlNode elseClause)
     {
         if (null != caseIdentifier) {
             List<SqlNode> list = whenList.getList();
             for (int i = 0; i < list.size(); i++) {
-                SqlNode e = (SqlNode) list.get(i);
+                SqlNode e = list.get(i);
                 list.set(
                     i,
                     SqlStdOperatorTable.equalsOperator.createCall(
+                        pos,
                         caseIdentifier,
-                        e,
-                        pos));
+                        e));
             }
         }
 
@@ -347,8 +355,7 @@ public class SqlCaseOperator
 
         return
             (SqlCase) createCall(
-                new SqlNode[] { whenList, thenList, elseClause },
-                pos);
+                pos, whenList, thenList, elseClause);
     }
 
     public void unparse(

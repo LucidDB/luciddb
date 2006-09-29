@@ -556,7 +556,7 @@ public class RexLiteral
             && (((RexLiteral) node).value == null);
     }
 
-    public Object clone()
+    public RexLiteral clone()
     {
         return new RexLiteral(value, type, typeName);
     }

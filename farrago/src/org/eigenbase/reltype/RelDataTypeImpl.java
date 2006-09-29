@@ -50,7 +50,7 @@ public abstract class RelDataTypeImpl
     //~ Instance fields --------------------------------------------------------
 
     protected RelDataTypeField [] fields;
-    protected List fieldList;
+    protected List<RelDataTypeField> fieldList;
     protected String digest;
 
     //~ Constructors -----------------------------------------------------------
@@ -92,7 +92,7 @@ public abstract class RelDataTypeImpl
     }
 
     // implement RelDataType
-    public List getFieldList()
+    public List<RelDataTypeField> getFieldList()
     {
         assert (isStruct());
         return fieldList;
@@ -215,10 +215,9 @@ public abstract class RelDataTypeImpl
      * @param sb StringBuffer into which to generate the string
      * @param withDetail when true, all detail information needed to compute a
      * unique digest (and return from getFullTypeString) should be included;
-     * when false, less verbosity is appropriate (for return from toString)
      */
     protected abstract void generateTypeString(
-        StringBuffer sb,
+        StringBuilder sb,
         boolean withDetail);
 
     /**
@@ -227,7 +226,7 @@ public abstract class RelDataTypeImpl
      */
     protected void computeDigest()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         generateTypeString(sb, true);
         if (!isNullable()) {
             sb.append(" NOT NULL");
@@ -238,7 +237,7 @@ public abstract class RelDataTypeImpl
     // implement RelDataType
     public String toString()
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         generateTypeString(sb, false);
         return sb.toString();
     }

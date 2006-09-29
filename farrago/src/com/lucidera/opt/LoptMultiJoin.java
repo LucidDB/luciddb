@@ -251,9 +251,9 @@ public class LoptMultiJoin
     {
         fieldsRefByJoinFilter = new HashMap<RexNode, BitSet>();
         factorsRefByJoinFilter = new HashMap<RexNode, BitSet>();
-        ListIterator filterIter = joinFilters.listIterator();
+        ListIterator<RexNode> filterIter = joinFilters.listIterator();
         while (filterIter.hasNext()) {
-            RexNode joinFilter = (RexNode) filterIter.next();
+            RexNode joinFilter = filterIter.next();
 
             // ignore the literal filter; if necessary, we'll add it back
             // later

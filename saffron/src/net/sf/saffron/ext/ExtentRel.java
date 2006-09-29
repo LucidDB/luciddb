@@ -20,6 +20,7 @@
 package net.sf.saffron.ext;
 
 import org.eigenbase.rel.AbstractRelNode;
+import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptPlanWriter;
 import org.eigenbase.relopt.RelOptTable;
@@ -81,7 +82,7 @@ public class ExtentRel extends AbstractRelNode
         return true;
     }
 
-    public Object clone()
+    public ExtentRel clone()
     {
         return this;
     }

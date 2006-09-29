@@ -55,7 +55,7 @@ public abstract class MedAbstractColumnSet
     private final String [] localName;
     private final String [] foreignName;
     private Properties tableProps;
-    private Map columnPropMap;
+    private Map<String, Properties> columnPropMap;
     private FarragoPreparingStmt preparingStmt;
     private CwmNamedColumnSet cwmColumnSet;
     private SqlAccessType allowedAccess;
@@ -79,7 +79,7 @@ public abstract class MedAbstractColumnSet
         String [] foreignName,
         RelDataType rowType,
         Properties tableProps,
-        Map columnPropMap)
+        Map<String, Properties> columnPropMap)
     {
         super(null, localName[localName.length - 1], rowType);
         this.localName = localName;
@@ -125,7 +125,7 @@ public abstract class MedAbstractColumnSet
      * @return map (from column name to Properties) of column options specified
      * by CREATE FOREIGN TABLE
      */
-    public Map getColumnPropertyMap()
+    public Map<String, Properties> getColumnPropertyMap()
     {
         return columnPropMap;
     }

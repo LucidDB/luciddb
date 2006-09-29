@@ -33,7 +33,6 @@ import org.eigenbase.rel.jdbc.JdbcQuery;
 import org.eigenbase.relopt.*;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexUtil;
 
 
 /**
@@ -58,7 +57,7 @@ public class OJPlannerFactory
     {
         return (OJPlannerFactory) threadInstances.get();
     }
-    
+
     public RelOptPlanner newPlanner()
     {
         VolcanoPlanner planner = new VolcanoPlanner();
@@ -227,7 +226,7 @@ public class OJPlannerFactory
             final AggregateRel aggregate = (AggregateRel) rel;
             final RelNode javaChild =
                 mergeTraitsAndConvert(
-                    aggregate.getTraits(), CallingConvention.JAVA, 
+                    aggregate.getTraits(), CallingConvention.JAVA,
                     aggregate.getChild());
             if (javaChild == null) {
                 return null;
@@ -358,7 +357,7 @@ public class OJPlannerFactory
                 join.getCluster(),
                 convertedLeft,
                 convertedRight,
-                RexUtil.clone(join.getCondition()),
+                join.getCondition().clone(),
                 join.getJoinType(),
                 join.getVariablesStopped());
         }

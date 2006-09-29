@@ -1349,9 +1349,8 @@ public class DdlValidator
                 for (Object o : deps) {
                     if (o instanceof CwmDependency) {
                         CwmDependency dep = (CwmDependency) o;
-                        Collection c = dep.getClient();
-                        for (Object o2 : c) {
-                            CwmModelElement e = (CwmModelElement) o2;
+                        Collection<CwmModelElement> c = dep.getClient();
+                        for (CwmModelElement e : c) {
                             visit.add(e);
                         }
                     }

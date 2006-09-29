@@ -184,9 +184,7 @@ public class RelMdUtil
         if (uniqueColSets == null) {
             return null;
         }
-        Iterator it = uniqueColSets.iterator();
-        while (it.hasNext()) {
-            BitSet colSet = (BitSet) it.next();
+        for (BitSet colSet : uniqueColSets) {
             if (RelOptUtil.contains(colMask, colSet)) {
                 return true;
             }
@@ -488,8 +486,7 @@ public class RelMdUtil
      * Forms two bitmaps by splitting the columns in a bitmap according to
      * whether or not the column references the child input or is an expression
      *
-     * @param nChildFields number of inputs in the child; used to determine
-     * whether or not a column references the child
+     * @param projExprs
      * @param groupKey bitmap whose columns will be split
      * @param baseCols bitmap representing columns from the child input
      * @param projCols bitmap representing non-child columns

@@ -135,9 +135,9 @@ public class RelSubset
     }
 
     /**
-     * An <code>RelSet</code> is its own clone.
+     * A <code>RelSubSet</code> is its own clone.
      */
-    public Object clone()
+    public RelSubset clone()
     {
         return this;
     }
@@ -159,7 +159,7 @@ public class RelSubset
     // implement RelNode
     public void explain(RelOptPlanWriter pw)
     {
-        StringBuffer s = new StringBuffer();
+        StringBuilder s = new StringBuilder();
         s.append(id).append(": RelSubset(");
         for (int i = 0; i < traits.size(); i++) {
             if (i > 0) {
@@ -176,7 +176,7 @@ public class RelSubset
 
     protected String computeDigest()
     {
-        StringBuffer digest = new StringBuffer("Subset#");
+        StringBuilder digest = new StringBuilder("Subset#");
         digest.append(set.id);
         for (int i = 0; i < traits.size(); i++) {
             digest.append('.').append(traits.getTrait(i));

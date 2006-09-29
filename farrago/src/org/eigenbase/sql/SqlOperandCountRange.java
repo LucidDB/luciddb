@@ -79,7 +79,7 @@ public class SqlOperandCountRange
 
     public SqlOperandCountRange(int count)
     {
-        this(new Integer[] { new Integer(count) });
+        this(new Integer[] { count });
     }
 
     public SqlOperandCountRange(List<Integer> list)
@@ -92,7 +92,7 @@ public class SqlOperandCountRange
         int count1,
         int count2)
     {
-        this(new Integer[] { new Integer(count1), new Integer(count2) });
+        this(new Integer[] { count1, count2 });
     }
 
     public SqlOperandCountRange(
@@ -100,12 +100,7 @@ public class SqlOperandCountRange
         int count2,
         int count3)
     {
-        this(
-            new Integer[] {
-                new Integer(count1),
-            new Integer(count2),
-            new Integer(count3)
-            });
+        this(new Integer[] {count1, count2, count3});
     }
 
     //~ Methods ----------------------------------------------------------------

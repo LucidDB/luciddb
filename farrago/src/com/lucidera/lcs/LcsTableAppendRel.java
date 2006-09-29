@@ -115,14 +115,14 @@ public class LcsTableAppendRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public LcsTableAppendRel clone()
     {
         LcsTableAppendRel clone =
             new LcsTableAppendRel(
                 getCluster(),
                 lcsTable,
                 getConnection(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 getOperation(),
                 getUpdateColumnList());
         clone.inheritTraitsFrom(this);

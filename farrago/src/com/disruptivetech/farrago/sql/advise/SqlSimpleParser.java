@@ -54,7 +54,7 @@ public class SqlSimpleParser
 
     // Flags indicating precision/scale combinations
     private final String hintToken;
-    final LinkedHashSet keywords;
+    final LinkedHashSet<String> keywords;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -64,7 +64,7 @@ public class SqlSimpleParser
     public SqlSimpleParser(String hintToken)
     {
         this.hintToken = hintToken;
-        keywords = new LinkedHashSet();
+        keywords = new LinkedHashSet<String>();
         keywords.add("select");
         keywords.add("from");
         keywords.add("join");
@@ -112,7 +112,7 @@ public class SqlSimpleParser
     public String simplifySql(String sql)
     {
         // if there are subqueries, extract them and push them into a stack
-        Stack subqueries = new Stack();
+        Stack<String> subqueries = new Stack<String>();
         stackSubqueries(sql, subqueries);
 
         // retrieve the top level query from the stack and go down the stack
@@ -120,7 +120,7 @@ public class SqlSimpleParser
         if (subqueries.empty()) {
             return "";
         }
-        String topLevelQuery = (String) subqueries.pop();
+        String topLevelQuery = subqueries.pop();
         String result = handleSubQuery(topLevelQuery, subqueries);
 
         // remove the enclosing parentheses from the top level query
@@ -140,11 +140,11 @@ public class SqlSimpleParser
         return sql;
     }
 
-    private String handleSubQuery(String subquery, Stack stack)
+    private String handleSubQuery(String subquery, Stack<String> stack)
     {
         subquery = handleUnion(subquery);
-        List tokenList = tokenizeSubquery(subquery);
-        HashMap buckets = bucketByKeyword(tokenList);
+        List<String> tokenList = tokenizeSubquery(subquery);
+        Map<String,List<String>> buckets = bucketByKeyword(tokenList);
 
         //printBuckets(buckets);
         simplifyBuckets(buckets);
@@ -155,46 +155,43 @@ public class SqlSimpleParser
         Matcher m = psq.matcher(simplesq);
 
         // this stack is used to reverse the ordering of same level subqueries
-        Stack reverseStack = new Stack();
+        Stack<String> reverseStack = new Stack<String>();
         while (m.find()) {
-            String nextlevelQuery = (String) stack.pop();
+            String nextlevelQuery = stack.pop();
             nextlevelQuery = handleSubQuery(nextlevelQuery, stack);
             reverseStack.push(nextlevelQuery);
         }
 
         while (!reverseStack.empty()) {
-            String sq = (String) reverseStack.pop();
+            String sq = reverseStack.pop();
             simplesq = simplesq.replaceFirst(subqueryRegex, sq);
         }
         return "(" + simplesq.trim() + ")";
     }
 
-    private String createNewSqlClause(List members)
+    private String createNewSqlClause(List<String> members)
     {
-        Iterator i = members.iterator();
-        StringBuffer result = new StringBuffer();
-        while (i.hasNext()) {
-            result.append(i.next()).append(" ");
+        StringBuilder result = new StringBuilder();
+        for (String member : members) {
+            result.append(member).append(" ");
         }
         return result.toString();
     }
 
-    private String createNewSql(HashMap buckets)
+    private String createNewSql(Map<String,List<String>> buckets)
     {
-        Iterator i = keywords.iterator();
-        StringBuffer sql = new StringBuffer();
-        while (i.hasNext()) {
-            String keyword = (String) i.next();
-            List entries = (List) buckets.get(keyword);
+        StringBuilder sql = new StringBuilder();
+        for (String keyword : keywords) {
+            List<String> entries = buckets.get(keyword);
             if (entries != null) {
                 sql.append(keyword).append(" ").append(
-                    createNewSqlClause((List) buckets.get(keyword)));
+                    createNewSqlClause(buckets.get(keyword)));
             }
         }
         return sql.toString();
     }
 
-    private void stackSubqueries(String sql, Stack stack)
+    private void stackSubqueries(String sql, Stack<String> stack)
     {
         // we're going depth first here, so that the innermost subquery
         // and its enclosing subqueries will be pushed into the stack
@@ -239,14 +236,14 @@ public class SqlSimpleParser
     }
 
     // use StreamTokenizer to tokenize the subquery sql statement
-    private List tokenizeSubquery(String sql)
+    private List<String> tokenizeSubquery(String sql)
     {
         StreamTokenizer st = new StreamTokenizer(new StringReader(sql));
 
         boolean done = false;
         initializeSyntax(st);
 
-        ArrayList tokenList = new ArrayList();
+        ArrayList<String> tokenList = new ArrayList<String>();
         while (!done) {
             int c = StreamTokenizer.TT_EOF;
             try {
@@ -279,22 +276,20 @@ public class SqlSimpleParser
 
     // enter the tokens list into different buckets keyed by its preceding
     // SQL keyword
-    private HashMap bucketByKeyword(List tokenList)
+    private Map<String,List<String>> bucketByKeyword(List<String> tokenList)
     {
-        HashMap buckets = new HashMap();
-        Iterator i = tokenList.iterator();
+        Map<String,List<String>> buckets = new HashMap<String, List<String>>();
         String curToken = "";
-        ArrayList curList = null;
-        ArrayList nokwList = new ArrayList();
-        while (i.hasNext()) {
-            String token = (String) i.next();
+        List<String> curList = null;
+        List<String> nokwList = new ArrayList<String>();
+        for (String token : tokenList) {
             String tokenLc = token.toLowerCase();
             if (keywords.contains(tokenLc) || token.equals("<EOF>")) {
                 if (!curToken.equals("")) {
                     buckets.put(curToken, curList);
                 }
                 curToken = tokenLc;
-                curList = new ArrayList();
+                curList = new ArrayList<String>();
             } else {
                 if (curToken.equals("")) {
                     // this token does not follow any keyword
@@ -309,28 +304,24 @@ public class SqlSimpleParser
         return buckets;
     }
 
-    private void printBuckets(HashMap buckets)
+    private void printBuckets(HashMap<String,List<String>> buckets)
     {
-        Iterator keywords = buckets.keySet().iterator();
-        while (keywords.hasNext()) {
-            String keyword = (String) keywords.next();
-            ArrayList entries = (ArrayList) buckets.get(keyword);
+        for (String keyword : buckets.keySet()) {
+            List<String> entries = buckets.get(keyword);
             System.out.println("keyword = " + keyword);
             System.out.println(entries);
         }
     }
 
     // remove unnecessary (incomplete) keyword clause
-    private void simplifyBuckets(HashMap buckets)
+    private void simplifyBuckets(Map<String,List<String>> buckets)
     {
-        HashSet toRemove = new HashSet();
+        Set<String> toRemove = new HashSet<String>();
 
-        Iterator keywords = buckets.keySet().iterator();
-        while (keywords.hasNext()) {
-            String keyword = (String) keywords.next();
-            ArrayList entries = (ArrayList) buckets.get(keyword);
+        for (String keyword : buckets.keySet()) {
+            List<String> entries = buckets.get(keyword);
             SqlKw sqlkw = makeSqlKw(keyword, entries);
-            List valEntries = sqlkw.validate();
+            List<String> valEntries = sqlkw.validate();
             if (valEntries == null) {
                 toRemove.add(keyword);
             }
@@ -340,9 +331,7 @@ public class SqlSimpleParser
         }
 
         // remove keywords with an empty clause
-        Iterator i = toRemove.iterator();
-        while (i.hasNext()) {
-            String keyword = (String) i.next();
+        for (String keyword : toRemove) {
             buckets.remove(keyword);
         }
     }
@@ -371,7 +360,7 @@ public class SqlSimpleParser
         st.wordChars(95, 95);
     }
 
-    private SqlKw makeSqlKw(String keyword, List entries)
+    private SqlKw makeSqlKw(String keyword, List<String> entries)
     {
         if (keyword.equals("on")) {
             return new SqlKwOn(entries);
@@ -392,14 +381,14 @@ public class SqlSimpleParser
 
     class SqlKw
     {
-        protected List entries;
+        protected List<String> entries;
 
-        SqlKw(List entries)
+        SqlKw(List<String> entries)
         {
             this.entries = entries;
         }
 
-        List validate()
+        List<String> validate()
         {
             if (entries.isEmpty()) {
                 return null;
@@ -414,20 +403,19 @@ public class SqlSimpleParser
     {
         private String dummyOp = "dummy";
 
-        SqlKwOn(List entries)
+        SqlKwOn(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
             if (entries.isEmpty()) {
                 return null;
             }
-            ArrayList validEntries = new ArrayList();
-            StringBuffer onClause = new StringBuffer();
-            for (int i = 0; i < entries.size(); i++) {
-                String entry = (String) entries.get(i);
+            List<String> validEntries = new ArrayList<String>();
+            StringBuilder onClause = new StringBuilder();
+            for (String entry : entries) {
                 onClause.append(entry);
             }
             String [] operands = onClause.toString().split("=");
@@ -461,17 +449,17 @@ public class SqlSimpleParser
     class SqlKwList
         extends SqlKw
     {
-        SqlKwList(List entries)
+        SqlKwList(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
-            ArrayList validEntries = new ArrayList();
-            StringBuffer selectClause = new StringBuffer();
+            List<String> validEntries = new ArrayList<String>();
+            StringBuilder selectClause = new StringBuilder();
             for (int i = 0; i < entries.size(); i++) {
-                String entry = (String) entries.get(i);
+                String entry = entries.get(i);
                 selectClause.append(entry);
                 if (i < (entries.size() - 1)) {
                     selectClause.append(" ");
@@ -497,12 +485,12 @@ public class SqlSimpleParser
     class SqlKwSelect
         extends SqlKwList
     {
-        SqlKwSelect(List entries)
+        SqlKwSelect(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
             if (entries.isEmpty()) {
                 entries.add("*");
@@ -516,12 +504,12 @@ public class SqlSimpleParser
     class SqlKwFrom
         extends SqlKwList
     {
-        SqlKwFrom(List entries)
+        SqlKwFrom(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
             if (entries.isEmpty()) {
                 return null;
@@ -534,24 +522,23 @@ public class SqlSimpleParser
     class SqlKwGroupOrder
         extends SqlKwList
     {
-        SqlKwGroupOrder(List entries)
+        SqlKwGroupOrder(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
             if (entries.isEmpty()) {
                 return null;
             } else if ((entries.size() == 1)
-                && ((String) entries.get(0)).trim().equals("by")) {
+                && entries.get(0).trim().equals("by")) {
                 // a 'group' or 'order' keyword followed by 'by' but no
                 // actual Sql Identifier
                 return null;
             } else {
-                Iterator i = entries.iterator();
-                while (i.hasNext()) {
-                    if (((String) i.next()).indexOf(hintToken) >= 0) {
+                for (String entry : entries) {
+                    if (entry.indexOf(hintToken) >= 0) {
                         return super.validate();
                     }
                 }
@@ -563,16 +550,15 @@ public class SqlSimpleParser
     class SqlKwWhere
         extends SqlKwList
     {
-        SqlKwWhere(List entries)
+        SqlKwWhere(List<String> entries)
         {
             super(entries);
         }
 
-        List validate()
+        List<String> validate()
         {
-            Iterator i = entries.iterator();
-            while (i.hasNext()) {
-                if (((String) i.next()).indexOf(hintToken) >= 0) {
+            for (String entry : entries) {
+                if (entry.indexOf(hintToken) >= 0) {
                     return super.validate();
                 }
             }

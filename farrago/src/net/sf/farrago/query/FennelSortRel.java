@@ -26,7 +26,6 @@ import java.util.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.fem.fennel.*;
-import net.sf.farrago.util.*;
 
 import org.eigenbase.rel.*;
 import org.eigenbase.rel.metadata.*;
@@ -99,12 +98,12 @@ public class FennelSortRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public FennelSortRel clone()
     {
         FennelSortRel clone =
             new FennelSortRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 keyProjection,
                 discardDuplicates);
         clone.inheritTraitsFrom(this);

@@ -104,7 +104,7 @@ public class SetopOperandTypeChecker
                         field,
                         EigenbaseResource.instance().ColumnTypeMismatchInSetop
                         .ex(
-                            new Integer(i + 1), // 1-based
+                            i + 1, // 1-based
                             callBinding.getOperator().getName()));
                 } else {
                     return false;

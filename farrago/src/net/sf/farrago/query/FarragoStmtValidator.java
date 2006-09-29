@@ -231,7 +231,7 @@ public class FarragoStmtValidator
     {
         CwmColumn column = (CwmColumn)
             FarragoCatalogUtil.getModelElementByName(
-                (List) namedColumnSet.getFeature(),
+                namedColumnSet.getFeature(),
                 columnName);
         if (column == null) {
             throw newPositionalError(
@@ -820,7 +820,7 @@ public class FarragoStmtValidator
             if (precision == null) {
                 int p = typeName.getDefaultPrecision();
                 if (p != -1) {
-                    precision = new Integer(p);
+                    precision = p;
                 }
             }
             if ((precision == null) && !typeName.allowsNoPrecNoScale()) {
@@ -918,10 +918,9 @@ public class FarragoStmtValidator
             // creation
         } else if (type instanceof FemSqlrowType) {
             FemSqlrowType rowType = (FemSqlrowType) type;
-            for (Iterator columnIter = rowType.getFeature().iterator();
-                columnIter.hasNext();) {
-                FemAbstractAttribute column =
-                    (FemAbstractAttribute) columnIter.next();
+            for (FemAbstractAttribute column :
+                Util.cast(rowType.getFeature(), FemAbstractAttribute.class))
+            {
                 // TODO: Validate
             }
         } else {

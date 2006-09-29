@@ -54,7 +54,7 @@ public class NoneConverterRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public NoneConverterRel clone()
     {
         NoneConverterRel clone = new NoneConverterRel(
                 getCluster(),

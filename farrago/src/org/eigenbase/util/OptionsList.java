@@ -105,8 +105,8 @@ public class OptionsList
 
     //~ Instance fields --------------------------------------------------------
 
-    private final ArrayList optionGroups = new ArrayList();
-    private final ArrayList options = new ArrayList();
+    private final ArrayList<Group> optionGroups = new ArrayList<Group>();
+    private final ArrayList<Option> options = new ArrayList<Option>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -165,7 +165,7 @@ public class OptionsList
     public void parse(String [] args)
     {
         final Option [] options = toArray();
-        HashSet usedOptions = new HashSet();
+        Set<Option> usedOptions = new HashSet<Option>();
         for (int i = 0; i < args.length; i++) {
             for (int j = 0; j < options.length; j++) {
                 Option option = options[j];
@@ -195,7 +195,7 @@ public class OptionsList
 
         // Check inclusivity/exclusivity.
         for (int i = 0; i < optionGroups.size(); i++) {
-            Group group = (Group) optionGroups.get(i);
+            Group group = optionGroups.get(i);
             int count = 0;
             for (int j = 0; j < options.length; j++) {
                 Option option = group.options[j];
@@ -230,7 +230,7 @@ public class OptionsList
 
     public Option [] toArray()
     {
-        return (Option []) options.toArray(new Option[options.size()]);
+        return options.toArray(new Option[options.size()]);
     }
 
     //~ Inner Interfaces -------------------------------------------------------
@@ -616,7 +616,7 @@ public class OptionsList
             this.options = options;
 
             // derive description
-            StringBuffer buf = new StringBuffer("{");
+            StringBuilder buf = new StringBuilder("{");
             for (int j = 0; j < this.options.length; j++) {
                 Option option = this.options[j];
                 if (j > 0) {

@@ -23,6 +23,7 @@
 package org.eigenbase.sql;
 
 import java.util.*;
+import java.sql.DatabaseMetaData;
 
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
@@ -447,7 +448,7 @@ public class SqlJdbcFunctionCall
 
     private static String constructFuncList(String [] functionNames)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (int i = 0; i < functionNames.length; ++i) {
             String funcName = functionNames[i];
@@ -465,12 +466,10 @@ public class SqlJdbcFunctionCall
     }
 
     public SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier, SqlParserPos pos, SqlNode... operands)
     {
         thisOperands = operands;
-        return super.createCall(operands, pos, functionQualifier);
+        return super.createCall(functionQualifier, pos, operands);
     }
 
     public SqlCall getLookupCall()
@@ -523,7 +522,7 @@ public class SqlJdbcFunctionCall
             throw callBinding.newValidationError(
                 EigenbaseResource.instance().WrongNumberOfParam.ex(
                     getName(),
-                    new Integer(thisOperands.length),
+                    thisOperands.length,
                     getArgCountMismatchMsg()));
         }
 
@@ -544,7 +543,7 @@ public class SqlJdbcFunctionCall
 
     private String getArgCountMismatchMsg()
     {
-        StringBuffer ret = new StringBuffer();
+        StringBuilder ret = new StringBuilder();
         int [] possible = lookupMakeCallObj.getPossibleArgCounts();
         for (int i = 0; i < possible.length; i++) {
             if (i > 0) {
@@ -701,11 +700,9 @@ public class SqlJdbcFunctionCall
             SqlParserPos pos)
         {
             if (null == order) {
-                return operator.createCall(operands, pos);
+                return operator.createCall(pos, operands);
             }
-            return operator.createCall(
-                    reorder(operands),
-                    pos);
+            return operator.createCall(pos, reorder(operands));
         }
 
         /**
@@ -736,7 +733,7 @@ public class SqlJdbcFunctionCall
          */
         static final JdbcToInternalLookupTable instance =
             new JdbcToInternalLookupTable();
-        private final Map map = new HashMap();
+        private final Map<String,MakeCall> map = new HashMap<String, MakeCall>();
 
         private JdbcToInternalLookupTable()
         {
@@ -840,7 +837,7 @@ public class SqlJdbcFunctionCall
          */
         public MakeCall lookup(String name)
         {
-            return (MakeCall) map.get(name);
+            return map.get(name);
         }
     }
 }

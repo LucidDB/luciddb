@@ -26,8 +26,6 @@ import java.io.*;
 
 import java.net.*;
 
-import java.sql.*;
-
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.logging.*;
@@ -35,19 +33,15 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.ddl.*;
 import net.sf.farrago.fem.config.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.fennel.*;
-import net.sf.farrago.namespace.*;
 import net.sf.farrago.ojrex.*;
 import net.sf.farrago.plugin.*;
-import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
-import net.sf.farrago.trace.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.oj.rex.*;
@@ -82,7 +76,7 @@ public class FarragoDatabase
 
     // TODO jvs 11-Aug-2004:  Get rid of this once corresponding TODO in
     // FarragoDbSession.prepare is resolved.
-    public static final Object DDL_LOCK = new Integer(1994);
+    public static final Integer DDL_LOCK = new Integer(1994);
 
     //~ Instance fields --------------------------------------------------------
 
@@ -358,7 +352,7 @@ public class FarragoDatabase
 
     private void loadModelPlugins()
     {
-        List resourceBundles = new ArrayList();
+        List<ResourceBundle> resourceBundles = new ArrayList<ResourceBundle>();
         sessionFactory.defineResourceBundles(resourceBundles);
 
         modelExtensions = new ArrayList<FarragoSessionModelExtension>();
@@ -443,41 +437,45 @@ public class FarragoDatabase
         FemCmdOpenDatabase cmd = systemRepos.newFemCmdOpenDatabase();
         FemFennelConfig fennelConfig =
             systemRepos.getCurrentConfig().getFennelConfig();
-        Map attributeMap = JmiUtil.getAttributeValues(fennelConfig);
+        SortedMap<String, Object> configMap =
+            JmiUtil.getAttributeValues(fennelConfig);
 
-        sessionFactory.applyFennelExtensionParameters(attributeMap);
+        // Copy config into a properties object, then tell the session mgr
+        // about them. Note that some of the properties may be non-Strings.
+        Properties properties = new Properties();
+        properties.putAll(configMap);
+        sessionFactory.applyFennelExtensionParameters(properties);
 
-        FemDatabaseParam param;
-        Iterator iter = attributeMap.entrySet().iterator();
-        while (iter.hasNext()) {
-            Map.Entry entry = (Map.Entry) iter.next();
+        // The applyFennelExtensionParameters method may have modified the
+        // properties, so copy them back.
+        for (Map.Entry<String, String> entry : Util.entries(properties)) {
+            configMap.put(entry.getKey(), entry.getValue());
+        }
 
+        for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             String expandedValue =
                 FarragoProperties.instance().expandProperties(
                     entry.getValue().toString());
 
-            param = systemRepos.newFemDatabaseParam();
-            param.setName(entry.getKey().toString());
+            FemDatabaseParam param = systemRepos.newFemDatabaseParam();
+            param.setName(entry.getKey());
             param.setValue(expandedValue);
             cmd.getParams().add(param);
         }
 
         // databaseDir is set dynamically, allowing the catalog
         // to be moved
-        param = systemRepos.newFemDatabaseParam();
-        param.setName("databaseDir");
-        param.setValue(
+        FemDatabaseParam param1 = systemRepos.newFemDatabaseParam();
+        param1.setName("databaseDir");
+        param1.setValue(
             FarragoProperties.instance().getCatalogDir().getAbsolutePath());
-        cmd.getParams().add(param);
+        cmd.getParams().add(param1);
 
-        iter = cmd.getParams().iterator();
-        while (iter.hasNext()) {
-            param = (FemDatabaseParam) iter.next();
-
+        for (FemDatabaseParam param : cmd.getParams()) {
             // REVIEW:  use Fennel tracer instead?
             tracer.config(
                 "Fennel parameter " + param.getName() + "="
-                + param.getValue());
+                    + param.getValue());
         }
 
         cmd.setCreateDatabase(init);
@@ -764,7 +762,8 @@ public class FarragoDatabase
         SqlValidator sqlValidator = stmt.getSqlValidator();
         final SqlNode validatedSqlNode;
         if ((analyzedSql != null) && (analyzedSql.paramRowType != null)) {
-            Map nameToTypeMap = new HashMap();
+            Map<String,RelDataType> nameToTypeMap =
+                new HashMap<String, RelDataType>();
             for (RelDataTypeField field
                 : analyzedSql.paramRowType.getFieldList()) {
                 nameToTypeMap.put(
@@ -856,9 +855,10 @@ public class FarragoDatabase
             }
         } while (executableStmt == null);
 
-        // REVIEW mb: what if stmt is not cached?
         if (cacheEntry != null) {
             owner.addAllocation(cacheEntry);
+        } else {
+            owner.addAllocation(executableStmt);
         }
         return executableStmt;
     }
@@ -867,9 +867,7 @@ public class FarragoDatabase
         FarragoRepos repos,
         FarragoSessionExecutableStmt stmt)
     {
-        Iterator idIter = stmt.getReferencedObjectIds().iterator();
-        while (idIter.hasNext()) {
-            String mofid = (String) idIter.next();
+        for (String mofid : stmt.getReferencedObjectIds()) {
             RefBaseObject obj = repos.getMdrRepos().getByMofId(mofid);
             if (obj == null) {
                 // TODO jvs 17-July-2004:  Once we support ALTER TABLE, this

@@ -176,9 +176,9 @@ public class DdlAnalyzeStmt
         }
 
         // Update index page counts
-        Collection indexes = FarragoCatalogUtil.getTableIndexes(repos, table);
-        for (Object o : indexes) {
-            FemLocalIndex index = (FemLocalIndex) o;
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(repos, table))
+        {
             ddlValidator.getIndexMap().computeIndexStats(
                 ddlValidator.getDataWrapperCache(),
                 index,

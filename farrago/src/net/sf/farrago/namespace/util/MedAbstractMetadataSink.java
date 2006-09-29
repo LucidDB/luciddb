@@ -30,6 +30,7 @@ import net.sf.farrago.namespace.*;
 import net.sf.farrago.type.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.reltype.*;
 
 
 /**
@@ -141,6 +142,81 @@ public abstract class MedAbstractMetadataSink
             patternMap.put(likePattern, pattern);
         }
         return pattern;
+    }
+
+    // TODO jvs 28-Sept-2006:  Eliminate these backwards compatibility
+    // adapters once all dependencies have been removed.
+
+    public boolean writeObjectDescriptor(
+        String name,
+        String typeName,
+        String remarks,
+        Map map)
+    {
+        Properties properties = new Properties();
+        properties.putAll(map);
+        return
+            writeObjectDescriptor(
+                name,
+                typeName,
+                remarks,
+                properties);
+    }
+    
+    public boolean writeObjectDescriptor(
+        String name,
+        String typeName,
+        String remarks,
+        Properties properties)
+    {
+        return
+            writeObjectDescriptor(
+                name,
+                typeName,
+                remarks,
+                (Map) properties);
+    }
+    
+    public boolean writeColumnDescriptor(
+        String tableName,
+        String columnName,
+        int ordinal,
+        RelDataType type,
+        String remarks,
+        String defaultValue,
+        Map map)
+    {
+        Properties properties = new Properties();
+        properties.putAll(map);
+        return
+            writeColumnDescriptor(
+                tableName,
+                columnName,
+                ordinal,
+                type,
+                remarks,
+                defaultValue,
+                properties);
+    }
+    
+    public boolean writeColumnDescriptor(
+        String tableName,
+        String columnName,
+        int ordinal,
+        RelDataType type,
+        String remarks,
+        String defaultValue,
+        Properties properties)
+    {
+        return
+            writeColumnDescriptor(
+                tableName,
+                columnName,
+                ordinal,
+                type,
+                remarks,
+                defaultValue,
+                (Map) properties);
     }
 }
 

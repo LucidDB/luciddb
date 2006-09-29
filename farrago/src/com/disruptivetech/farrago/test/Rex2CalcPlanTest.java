@@ -296,7 +296,8 @@ public class Rex2CalcPlanTest extends TestCase
                             argOperand);
                 }
                 RexNode call =
-                    rexBuilder.makeCall((SqlOperator) aggCall.getAggregation(),
+                    rexBuilder.makeCall(
+                        (SqlOperator) aggCall.getAggregation(),
                         exprs);
                 programBuilder.addProject(
                     call,

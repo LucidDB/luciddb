@@ -103,7 +103,7 @@ public class RelCrossType
         return types;
     }
 
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         sb.append("CrossType(");
         for (int i = 0; i < types.length; i++) {

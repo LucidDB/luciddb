@@ -281,13 +281,11 @@ public class SqlBetweenOperator
         SqlNode exp0 = (SqlNode) list.get(opOrdinal - 1);
         SqlCall newExp =
             createCall(
-                new SqlNode[] {
-                    exp0,
+                betweenNode.getPos(),
+                exp0,
                 exp1,
                 exp2,
-                SqlLiteral.createSymbol(flag, SqlParserPos.ZERO)
-                },
-                betweenNode.getPos());
+                SqlLiteral.createSymbol(flag, SqlParserPos.ZERO));
 
         // Replace all of the matched nodes with the single reduced node.
         SqlParserUtil.replaceSublist(list,

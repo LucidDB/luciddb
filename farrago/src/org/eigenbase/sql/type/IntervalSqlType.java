@@ -63,7 +63,7 @@ public class IntervalSqlType
     //~ Methods ----------------------------------------------------------------
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         sb.append("INTERVAL ");
         sb.append(intervalQualifier.toString());

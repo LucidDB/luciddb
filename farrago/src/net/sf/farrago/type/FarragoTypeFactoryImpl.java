@@ -262,8 +262,7 @@ public class FarragoTypeFactoryImpl
             return RelDataTypeComparability.None;
         }
         assert (type.getOrdering().size() == 1);
-        FemUserDefinedOrdering udo =
-            (FemUserDefinedOrdering) type.getOrdering().iterator().next();
+        FemUserDefinedOrdering udo = type.getOrdering().iterator().next();
         if (udo.isFull()) {
             return RelDataTypeComparability.All;
         } else {
@@ -275,32 +274,32 @@ public class FarragoTypeFactoryImpl
     public RelDataType createStructTypeFromClassifier(
         CwmClassifier classifier)
     {
-        final List featureList =
-            FarragoCatalogUtil.getStructuralFeatures(classifier);
-        if (featureList.isEmpty()) {
+        final List<FemAbstractTypedElement> elementList =
+            Util.filter(
+                classifier.getFeature(),
+                FemAbstractTypedElement.class);
+        if (elementList.isEmpty()) {
             return null;
         }
         return createStructType(new RelDataTypeFactory.FieldInfo() {
-                    public int getFieldCount()
-                    {
-                        return featureList.size();
-                    }
+            public int getFieldCount()
+            {
+                return elementList.size();
+            }
 
-                    public String getFieldName(int index)
-                    {
-                        final FemAbstractTypedElement element =
-                            (FemAbstractTypedElement) featureList.get(index);
-                        return element.getName();
-                    }
+            public String getFieldName(int index)
+            {
+                final FemAbstractTypedElement element =
+                    elementList.get(index);
+                return element.getName();
+            }
 
-                    public RelDataType getFieldType(int index)
-                    {
-                        final FemAbstractTypedElement element =
-                            (FemAbstractTypedElement) featureList.get(index);
-                        RelDataType type = createCwmElementType(element);
-                        return type;
-                    }
-                });
+            public RelDataType getFieldType(int index)
+            {
+                final FemAbstractTypedElement element = elementList.get(index);
+                return createCwmElementType(element);
+            }
+        });
     }
 
     // implement FarragoTypeFactory

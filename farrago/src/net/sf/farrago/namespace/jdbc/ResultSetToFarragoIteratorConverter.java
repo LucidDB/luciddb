@@ -78,7 +78,7 @@ class ResultSetToFarragoIteratorConverter
     //~ Methods ----------------------------------------------------------------
 
     // implement RelNode
-    public Object clone()
+    public ResultSetToFarragoIteratorConverter clone()
     {
         ResultSetToFarragoIteratorConverter clone =
             new ResultSetToFarragoIteratorConverter(

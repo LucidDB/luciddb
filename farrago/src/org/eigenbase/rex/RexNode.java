@@ -56,7 +56,7 @@ public abstract class RexNode
 
     public abstract RelDataType getType();
 
-    public abstract Object clone();
+    public abstract RexNode clone();
 
     /**
      * Returns whether this expression always returns true. (Such as if this

@@ -61,7 +61,7 @@ public class FennelDbHandle
     private final FarragoMetadataFactory metadataFactory;
     private final FarragoTransientTxnContext transientTxnContext;
     private final FennelCmdExecutor cmdExecutor;
-    private Map handleAssociationsMap;
+    private Map<RefPackage, Collection<RefBaseObject>> handleAssociationsMap;
     private long dbHandle;
 
     //~ Constructors -----------------------------------------------------------
@@ -88,7 +88,8 @@ public class FennelDbHandle
         this.transientTxnContext = transientTxnContext;
         this.cmdExecutor = cmdExecutor;
 
-        handleAssociationsMap = new HashMap();
+        handleAssociationsMap =
+            new HashMap<RefPackage, Collection<RefBaseObject>>();
 
         executeCmd(cmd);
         dbHandle = cmd.getResultHandle().getLongHandle();
@@ -110,23 +111,21 @@ public class FennelDbHandle
     private synchronized Collection getHandleAssociations(
         RefPackage fennelPackage)
     {
-        Collection handleAssociations =
-            (Collection) handleAssociationsMap.get(fennelPackage);
+        Collection<RefBaseObject> handleAssociations =
+            handleAssociationsMap.get(fennelPackage);
         if (handleAssociations != null) {
             return handleAssociations;
         }
 
-        handleAssociations = new ArrayList();
+        handleAssociations = new ArrayList<RefBaseObject>();
 
         // Use JMI to find all associations between Cmds and Handles.  This
         // information is needed when executing commands.
-        Iterator assocIter = fennelPackage.refAllAssociations().iterator();
-        while (assocIter.hasNext()) {
-            RefAssociation refAssoc = (RefAssociation) assocIter.next();
+        for (Object o : fennelPackage.refAllAssociations()) {
+            RefAssociation refAssoc = (RefAssociation) o;
             Association assoc = (Association) refAssoc.refMetaObject();
-            Iterator endIter = assoc.getContents().iterator();
-            while (endIter.hasNext()) {
-                AssociationEnd assocEnd = (AssociationEnd) endIter.next();
+            for (Object o1 : assoc.getContents()) {
+                AssociationEnd assocEnd = (AssociationEnd) o1;
                 if (assocEnd.getName().endsWith("Handle")) {
                     handleAssociations.add(refAssoc);
                     handleAssociations.add(assocEnd.otherEnd());
@@ -185,7 +184,7 @@ public class FennelDbHandle
      */
     public long executeCmd(FemCmd cmd)
     {
-        List exportList = null;
+        List<RefObject> exportList = null;
         FemHandle resultHandle = null;
         String resultHandleClassName = null;
 
@@ -194,7 +193,7 @@ public class FennelDbHandle
             // Most of them get pulled in automatically via composition from
             // cmd.  Note that exportList also serves as a flag for whether
             // tracing is being performed.
-            exportList = new ArrayList();
+            exportList = new ArrayList<RefObject>();
             exportList.add(cmd);
         }
 
@@ -233,10 +232,8 @@ public class FennelDbHandle
             } else {
                 // Trace input handles.
                 if (exportList != null) {
-                    Iterator handleIter =
-                        refAssoc.refQuery(assocEnd, cmd).iterator();
-                    while (handleIter.hasNext()) {
-                        FemHandle handle = (FemHandle) handleIter.next();
+                    for (Object o : refAssoc.refQuery(assocEnd, cmd)) {
+                        FemHandle handle = (FemHandle) o;
                         exportList.add(handle);
                     }
                 }

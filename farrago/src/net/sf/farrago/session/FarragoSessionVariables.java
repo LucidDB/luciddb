@@ -158,7 +158,7 @@ public class FarragoSessionVariables
         // The SQL standard is very precise about the formatting
         SqlDialect dialect = new SqlDialect(databaseMetadata);
         SqlPrettyWriter writer = new SqlPrettyWriter(dialect);
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
         int k = 0;
         for (SqlIdentifier id : schemaSearchPath) {
             if (k++ > 0) {

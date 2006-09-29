@@ -87,7 +87,7 @@ public interface FarragoSessionExecutableStmt
     /**
      * @return Set of MOFID's of objects accessed when this stmt is executed
      */
-    public Set getReferencedObjectIds();
+    public Set<String> getReferencedObjectIds();
 
     /**
      * @return map of access modes for all tables referenced

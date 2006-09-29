@@ -135,9 +135,9 @@ public class SqlSelect
         } else {
             fromClause =
                 SqlStdOperatorTable.joinOperator.createCall(
+                    null,
                     fromClause,
-                    tableId,
-                    null);
+                    tableId);
         }
         operands[FROM_OPERAND] = fromClause;
     }

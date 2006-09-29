@@ -62,12 +62,12 @@ public class FennelAggRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public FennelAggRel clone()
     {
         FennelAggRel clone =
             new FennelAggRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 groupCount,
                 aggCalls);
         clone.inheritTraitsFrom(this);

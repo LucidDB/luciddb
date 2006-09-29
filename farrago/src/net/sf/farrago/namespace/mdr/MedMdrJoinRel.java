@@ -91,14 +91,14 @@ class MedMdrJoinRel
         return rightReference;
     }
 
-    public Object clone()
+    public MedMdrJoinRel clone()
     {
         MedMdrJoinRel clone =
             new MedMdrJoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
-                RexUtil.clone(condition),
+                left.clone(),
+                right.clone(),
+                condition.clone(),
                 joinType,
                 leftOrdinal,
                 rightReference);

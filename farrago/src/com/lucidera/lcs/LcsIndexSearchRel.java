@@ -157,7 +157,7 @@ class LcsIndexSearchRel
     }
 
     // implement Cloneable
-    public Object clone()
+    public LcsIndexSearchRel clone()
     {
         LcsIndexSearchRel clone =
             new LcsIndexSearchRel(

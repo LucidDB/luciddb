@@ -141,7 +141,7 @@ public class BasicSqlType
         Charset charset,
         SqlCollation collation)
     {
-        Util.pre(SqlTypeUtil.inCharFamily(this) == true, "Not an chartype");
+        Util.pre(SqlTypeUtil.inCharFamily(this), "Not an chartype");
         BasicSqlType ret;
         try {
             ret = (BasicSqlType) this.clone();
@@ -233,7 +233,7 @@ public class BasicSqlType
     }
 
     // implement RelDataTypeImpl
-    protected void generateTypeString(StringBuffer sb, boolean withDetail)
+    protected void generateTypeString(StringBuilder sb, boolean withDetail)
     {
         // Called to make the digest, which equals() compares;
         // so equivalent data types must produce identical type strings.

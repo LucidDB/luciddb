@@ -116,7 +116,7 @@ class VolcanoRuleMatch
 
     private String computeDigest()
     {
-        StringBuffer buf = new StringBuffer("rule [" + getRule() + "] rels [");
+        StringBuilder buf = new StringBuilder("rule [" + getRule() + "] rels [");
         for (int i = 0; i < rels.length; i++) {
             if (i > 0) {
                 buf.append(", ");

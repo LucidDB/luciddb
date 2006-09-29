@@ -22,29 +22,20 @@
 */
 package net.sf.farrago.namespace.mock;
 
-import java.lang.reflect.*;
-
 import java.sql.*;
 
 import java.util.*;
 
 import javax.sql.*;
 
-import net.sf.farrago.catalog.*;
 import net.sf.farrago.namespace.*;
 import net.sf.farrago.namespace.impl.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
-import net.sf.farrago.util.*;
 
-import org.eigenbase.rel.*;
-import org.eigenbase.rel.convert.*;
-import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
-import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -110,7 +101,7 @@ class MedMockDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         if (rowType == null) {
@@ -211,7 +202,7 @@ class MedMockDataServer
     {
         if (param instanceof Integer) {
             // Double the input.
-            return new Integer(2 * ((Integer) param).intValue());
+            return 2 * (Integer) param;
         } else {
             return null;
         }

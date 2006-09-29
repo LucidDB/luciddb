@@ -57,7 +57,7 @@ public class RexDynamicParam
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public RexDynamicParam clone()
     {
         return new RexDynamicParam(type, index);
     }

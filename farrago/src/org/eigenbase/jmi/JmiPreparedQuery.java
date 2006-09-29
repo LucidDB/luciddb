@@ -21,6 +21,7 @@
 */
 package org.eigenbase.jmi;
 
+import javax.jmi.reflect.RefObject;
 import java.sql.*;
 
 import java.util.*;
@@ -70,7 +71,9 @@ public interface JmiPreparedQuery
      * @return collection of JMI objects (instances of {@link RefObject}) found
      * by the query
      */
-    public Collection execute(Connection connection, Map args)
+    public Collection<RefObject> execute(
+        Connection connection,
+        Map<String,?> args)
         throws JmiQueryException;
 }
 

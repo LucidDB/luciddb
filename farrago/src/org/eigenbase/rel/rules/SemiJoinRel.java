@@ -80,14 +80,14 @@ public final class SemiJoinRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public SemiJoinRel clone()
     {
         SemiJoinRel clone =
             new SemiJoinRel(
                 getCluster(),
-                RelOptUtil.clone(left),
-                RelOptUtil.clone(right),
-                RexUtil.clone(condition),
+                left.clone(),
+                right.clone(),
+                condition.clone(),
                 new ArrayList<Integer>(getLeftKeys()),
                 new ArrayList<Integer>(getRightKeys()));
         clone.inheritTraitsFrom(this);

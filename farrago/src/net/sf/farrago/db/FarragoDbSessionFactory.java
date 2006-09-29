@@ -141,7 +141,7 @@ public class FarragoDbSessionFactory
     }
 
     // implement FarragoSessionFactory
-    public void applyFennelExtensionParameters(Map map)
+    public void applyFennelExtensionParameters(Properties map)
     {
     }
 
@@ -163,7 +163,7 @@ public class FarragoDbSessionFactory
 
     // implement FarragoSessionFactory
     public void defineResourceBundles(
-        List bundleList)
+        List<ResourceBundle> bundleList)
     {
         bundleList.add(FarragoResource.instance());
     }

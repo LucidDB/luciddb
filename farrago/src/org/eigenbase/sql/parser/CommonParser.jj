@@ -340,7 +340,7 @@ SqlNode OrderedQueryOrExpr(ExprContext exprContext) :
         orderBy = OrderBy(e.isA(SqlKind.Query))
         {
             pos = getPos();
-            e = SqlStdOperatorTable.orderByOperator.createCall(e,orderBy, pos);
+            e = SqlStdOperatorTable.orderByOperator.createCall(pos, e, orderBy);
         }
     ]
     {
@@ -737,7 +737,7 @@ SqlNode SqlProcedureCall() :
         EXPR_ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.procedureCallOperator.createCall(
-            routineCall, callPos);
+            callPos, routineCall);
     }
 }
 
@@ -762,8 +762,7 @@ SqlNode NamedRoutineCall(
     )
     {
         SqlNode function = createCall(
-            name, SqlParserUtil.toNodeArray(args), pos,
-            routineType, null);
+            name, pos, routineType, null, SqlParserUtil.toNodeArray(args));
         return function;
     }
 }
@@ -1022,7 +1021,7 @@ SqlNode WhenNotMatchedClause(SqlIdentifier table) :
         // actually invalid SQL; should fix unparse
         pos = getPos();
         insertValues = SqlStdOperatorTable.valuesOperator.createCall(
-            new SqlNode [ ] { rowConstructor }, pos);
+            pos, new SqlNode [ ] { rowConstructor });
         return new SqlInsert(
             SqlStdOperatorTable.insertOperator,
             new SqlNodeList(keywords, insertPos),
@@ -1066,7 +1065,7 @@ SqlNode SelectItem() :
         id = SimpleIdentifier()
         {
             pos = e.getParserPosition().plus(getPos());
-            e = SqlStdOperatorTable.asOperator.createCall(e, id,  pos);
+            e = SqlStdOperatorTable.asOperator.createCall(pos, e, id);
         }
     ]
     {
@@ -1259,7 +1258,7 @@ SqlNode TableRef() :
             if (over != null) {
                 pos = getPos();
                 tableRef = SqlStdOperatorTable.overOperator.createCall(
-                    tableRef, over, pos);
+                    pos, tableRef, over);
             }
         }
     |
@@ -1271,11 +1270,11 @@ SqlNode TableRef() :
             if (over != null) {
                 pos = getPos();
                 tableRef = SqlStdOperatorTable.overOperator.createCall(
-                    tableRef, over, pos);
+                    pos, tableRef, over);
             }
             if (isLateral) {
                 tableRef = SqlStdOperatorTable.lateralOperator.createCall(
-                    tableRef, getPos());
+                    getPos(), tableRef);
             }
         }
     |
@@ -1284,8 +1283,7 @@ SqlNode TableRef() :
         {
             pos = pos.plus(getPos());
             tableRef = SqlStdOperatorTable.unnestOperator.createCall(
-                SqlParserUtil.toNodeArray(args),
-                pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     |
         <TABLE> <LPAREN>
@@ -1304,7 +1302,7 @@ SqlNode TableRef() :
             SqlSampleSpec sampleSpec = SqlSampleSpec.createNamed(sampleName);
             SqlLiteral sampleLiteral = SqlLiteral.createSample(sampleSpec, pos);
             tableRef = SqlStdOperatorTable.sampleFunction.createCall(
-                tableRef, sampleLiteral, pos.plus(getPos()));
+                pos.plus(getPos()), tableRef, sampleLiteral);
          }
     ]
     [
@@ -1312,7 +1310,7 @@ SqlNode TableRef() :
         {
             pos = getPos();
             tableRef = SqlStdOperatorTable.asOperator.createCall(
-                tableRef, new SqlIdentifier(alias, pos), pos);
+                pos, tableRef, new SqlIdentifier(alias, pos));
         }
     ]
     {
@@ -1339,7 +1337,7 @@ SqlNode TableFunctionCall() :
     call = NamedRoutineCall(funcType, EXPR_ACCEPT_CURSOR)
     {
         return SqlStdOperatorTable.collectionTableOperator.createCall(
-            call, pos);
+            pos, call);
         
         return call;
     }
@@ -1375,7 +1373,7 @@ SqlNode ExplicitTable() :
     {
         pos = getPos();
         return SqlStdOperatorTable.explicitTableOperator.createCall(
-            tableRef, pos);
+            pos, tableRef);
     }
 }
 
@@ -1395,7 +1393,7 @@ SqlNode TableConstructor() :
     rowConstructorList = RowConstructorList(pos)
     {
         return SqlStdOperatorTable.valuesOperator.createCall(
-            rowConstructorList.toArray(), pos.plus(getPos()));
+            pos.plus(getPos()), rowConstructorList.toArray());
     }
 }
 
@@ -1461,7 +1459,7 @@ SqlNode RowConstructor() :
         // subqueries inside of ROW and row subqueries?  The standard does,
         // but the distinction seems to be purely syntactic.
         return SqlStdOperatorTable.rowConstructor.createCall(
-            SqlParserUtil.toNodeArray(valueList), pos);
+            pos, SqlParserUtil.toNodeArray(valueList));
     }
 }
 
@@ -1728,7 +1726,7 @@ SqlNode OrderItem() :
         | <DESC>
         {
             pos = getPos();
-            return SqlStdOperatorTable.descendingOperator.createCall(e, pos);
+            return SqlStdOperatorTable.descendingOperator.createCall(pos, e);
         }
         |
         {
@@ -2030,7 +2028,7 @@ SqlNode Expression3(ExprContext exprContext) :
     e = Expression3(EXPR_ACCEPT_SUBQUERY)
     {
         SqlParserPos callPos = prefixRowOpPos.plus(e.getParserPosition());
-        return op.createCall(e, callPos);
+        return op.createCall(callPos, e);
     }
     |
     {
@@ -2046,7 +2044,7 @@ SqlNode Expression3(ExprContext exprContext) :
         if (rowSeen) {
             // interpret as row constructor
             return SqlStdOperatorTable.rowConstructor.createCall(
-                SqlParserUtil.toNodeArray(list), pos);
+                pos, SqlParserUtil.toNodeArray(list));
 
         }
     }
@@ -2062,7 +2060,7 @@ SqlNode Expression3(ExprContext exprContext) :
                 }
                 list.addAll(list2);
                 return SqlStdOperatorTable.overlapsOperator.createCall(
-                    SqlParserUtil.toNodeArray(list), getPos());
+                    getPos(), SqlParserUtil.toNodeArray(list));
             }
         )
         |
@@ -2081,7 +2079,7 @@ SqlNode Expression3(ExprContext exprContext) :
                 list3.add(((SqlCall) list.get(0)).operands[1]);
                 list3.add(e);
                 return SqlStdOperatorTable.minusDateOperator.createCall(
-                    SqlParserUtil.toNodeArray(list3), getPos());
+                    getPos(), SqlParserUtil.toNodeArray(list3));
             }
         )
     ]
@@ -2092,7 +2090,7 @@ SqlNode Expression3(ExprContext exprContext) :
         } else {
             // interpret as row constructor
             return SqlStdOperatorTable.rowConstructor.createCall(
-                SqlParserUtil.toNodeArray(list), pos);
+                pos, SqlParserUtil.toNodeArray(list));
         }
     }
 }
@@ -2171,12 +2169,12 @@ SqlNode AtomicRowExpression() :
     <END>
     {
         pos = pos.plus(getPos());
-        return SqlStdOperatorTable.caseOperator.createCall(
+        return SqlStdOperatorTable.caseOperator.createSwitchedCall(
+            pos,
             caseIdentifier,
             new SqlNodeList(whenList, whenPos),
             new SqlNodeList(thenList, thenPos),
-            elseClause,
-            pos);
+            elseClause);
     }
 }
 
@@ -2352,10 +2350,9 @@ SqlNode StringLiteral(boolean strict) :
         if (nfrags == 1) {
             return (SqlLiteral) frags.get(0); // just the head fragment
         } else {
-            SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
-            SqlParserPos pos2 = SqlParserPos.sum(rands);
+            SqlParserPos pos2 = SqlParserPos.sum(frags);
             return SqlStdOperatorTable.literalChainOperator.createCall(
-                rands, pos2);
+                pos2, frags);
         }
     }
     |
@@ -2388,7 +2385,7 @@ SqlNode StringLiteral(boolean strict) :
             SqlNode[] rands = (SqlNode[]) frags.toArray(new SqlNode[nfrags]);
             SqlParserPos pos2 = SqlParserPos.sum(rands);
             return SqlStdOperatorTable.literalChainOperator.createCall(
-                rands, pos2);
+                pos2, rands);
         }
     }
 }
@@ -2461,7 +2458,7 @@ SqlNode MultisetConstructor() :
     <RPAREN>
     {
         return SqlStdOperatorTable.multisetQueryConstructor.createCall(
-            e, pos.plus(getPos()));
+            pos.plus(getPos()), e);
     }
     |
     <MULTISET> { pos = getPos(); }
@@ -2474,7 +2471,7 @@ SqlNode MultisetConstructor() :
     <RBRACKET>
     {
         return SqlStdOperatorTable.multisetValueConstructor.createCall(
-            SqlParserUtil.toNodeArray(args), pos.plus(getPos()));
+            pos.plus(getPos()), SqlParserUtil.toNodeArray(args));
     }
 }
 
@@ -2713,7 +2710,7 @@ SqlNode NewSpecification() :
         EXPR_ACCEPT_SUBQUERY)
     {
         return SqlStdOperatorTable.newOperator.createCall(
-            routineCall, callPos);
+            callPos, routineCall);
     }
 }
 
@@ -2969,7 +2966,7 @@ SqlNode CursorExpression(ExprContext exprContext) :
     e = Expression(EXPR_ACCEPT_QUERY)
     {
         return SqlStdOperatorTable.cursorConstructor.createCall(
-            e, pos);
+            pos, e);
         return e;
     }
 }
@@ -3000,7 +2997,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.castFunc.createCall(
-                SqlParserUtil.toNodeArray(args), getPos());
+                getPos(), SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3015,7 +3012,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.extractFunc.createCall(
-                SqlParserUtil.toNodeArray(args), getPos());
+                getPos(), SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3034,7 +3031,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.positionFunc.createCall(
-                SqlParserUtil.toNodeArray(args), pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3056,7 +3053,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.convertFunc.createCall(
-                SqlParserUtil.toNodeArray(args), pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3078,7 +3075,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.translateFunc.createCall(
-                SqlParserUtil.toNodeArray(args),pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3112,7 +3109,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.overlayFunc.createCall(
-                SqlParserUtil.toNodeArray(args),pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3147,7 +3144,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.substringFunc.createCall(
-                SqlParserUtil.toNodeArray(args), pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3201,7 +3198,7 @@ SqlNode BuiltinFunctionCall() :
                     args.add(null); // no trim chars
                     args.add(trimChars); // reinterpret trimChars as source
                     return SqlStdOperatorTable.trimFunc.createCall(
-                        SqlParserUtil.toNodeArray(args), pos);
+                        pos, SqlParserUtil.toNodeArray(args));
                 }
             )
         ]
@@ -3214,7 +3211,7 @@ SqlNode BuiltinFunctionCall() :
         <RPAREN>
         {
             return SqlStdOperatorTable.trimFunc.createCall(
-                SqlParserUtil.toNodeArray(args), pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
     |
@@ -3304,16 +3301,16 @@ SqlNode NamedFunctionCall() :
         ]
         {
             function = createCall(
-                qualifiedName, SqlParserUtil.toNodeArray(args),
-                pos, funcType, quantifier);
+                qualifiedName, pos, funcType, quantifier,
+                SqlParserUtil.toNodeArray(args));
 
             if (over) {
                 if (id != null) {
                     return SqlStdOperatorTable.overOperator.createCall(
-                        new SqlNode[] {function, id}, overPos);
+                        overPos, new SqlNode[] {function, id});
                 } else {
                     return SqlStdOperatorTable.overOperator.createCall(
-                        new SqlNode[] { function, e },overPos);
+                        overPos, new SqlNode[] { function, e });
                 }
             } else {
                 return function;
@@ -3354,14 +3351,14 @@ SqlNode StandardFloorCeilOptions(SqlParserPos pos, boolean floorFlag) :
             SqlStdOperatorTable.floorFunc :
             SqlStdOperatorTable.ceilFunc;
         function =  op.createCall(
-            SqlParserUtil.toNodeArray(args), pos);
+            pos, SqlParserUtil.toNodeArray(args));
         if (over) {
             if (id != null) {
                 return SqlStdOperatorTable.overOperator.createCall(
-                    new SqlNode[] {function, id}, overPos);
+                    overPos, new SqlNode[] {function, id});
             } else {
                 return SqlStdOperatorTable.overOperator.createCall(
-                    new SqlNode[] { function, e },overPos);
+                    overPos, new SqlNode[] { function, e });
             }
         } else {
             return function;
@@ -3497,7 +3494,7 @@ SqlNode JdbcFunctionCall() :
         <RBRACE>
         {
             return new SqlJdbcFunctionCall(name).createCall(
-                SqlParserUtil.toNodeArray(args), pos);
+                pos, SqlParserUtil.toNodeArray(args));
         }
     )
 }

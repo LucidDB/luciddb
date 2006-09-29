@@ -96,7 +96,7 @@ public class FennelAggRule
 
             Integer [] keyProjection = new Integer[aggRel.getGroupCount()];
             for (int i = 0; i < keyProjection.length; ++i) {
-                keyProjection[i] = new Integer(i);
+                keyProjection[i] = i;
             }
 
             boolean discardDuplicates = false;

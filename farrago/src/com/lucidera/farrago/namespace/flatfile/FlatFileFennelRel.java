@@ -187,7 +187,7 @@ public class FlatFileFennelRel
     }
 
     // implement RelNode
-    public Object clone()
+    public FlatFileFennelRel clone()
     {
         FlatFileFennelRel clone =
             new FlatFileFennelRel(

@@ -99,7 +99,7 @@ public class RexOver
         return super.computeDigest(withType) + " OVER " + window;
     }
 
-    public Object clone()
+    public RexOver clone()
     {
         return new RexOver(
                 getType(),

@@ -25,11 +25,12 @@ package org.eigenbase.sql;
 import org.eigenbase.reltype.*;
 import org.eigenbase.resource.*;
 import org.eigenbase.sql.parser.*;
-import org.eigenbase.sql.test.*;
 import org.eigenbase.sql.type.*;
 import org.eigenbase.sql.util.*;
 import org.eigenbase.sql.validate.*;
 import org.eigenbase.util.*;
+
+import java.util.*;
 
 /**
  * A <code>SqlOperator</code> is a type of node in a SQL parse tree (it is NOT a
@@ -233,48 +234,19 @@ public abstract class SqlOperator
     public abstract SqlSyntax getSyntax();
 
     /**
-     * Runs a series of tests to verify that this operator validates and
-     * executes correctly.
-     *
-     * <p>The specific implementation should call the various <code>
-     * checkXxx</code> methods in the {@link SqlTester} interface. The test
-     * harness may call the test method several times with different
-     * implementations of {@link SqlTester} -- perhaps one which uses the
-     * farrago calculator, and another which implements operators by generating
-     * Java code.
-     *
-     * <p>The default implementation does nothing.
-     *
-     * <p>An example test function for the sin operator: <blockqoute>
-     *
-     * <pre><code>void test(SqlTester tester) {
-     *     tester.checkScalar("sin(0)", "0");
-     *     tester.checkScalar("sin(1.5707)", "1");
-     * }</code></pre>
-     *
-     * </blockqoute>
-     *
-     * @param tester The tester to use.
-     */
-    public void test(SqlOperatorTests tester)
-    {
-    }
-
-    /**
      * Creates a call to this operand with an array of operands.
      *
      * <p>The position of the resulting call is the union of the <code>
      * pos</code> and the positions of all of the operands.
      *
-     * @param operands array of operands
-     * @param pos parser position of the identifier of the call
      * @param functionQualifier function qualifier (e.g. "DISTINCT"), may be
-     * null
+     * @param pos parser position of the identifier of the call
+     * @param operands array of operands
      */
     public SqlCall createCall(
-        SqlNode [] operands,
+        SqlLiteral functionQualifier,
         SqlParserPos pos,
-        SqlLiteral functionQualifier)
+        SqlNode... operands)
     {
         pos = pos.plusAll(operands);
         return new SqlCall(this, operands, pos, false, functionQualifier);
@@ -287,57 +259,37 @@ public abstract class SqlOperator
      * pos</code> and the positions of all of the operands.
      */
     public final SqlCall createCall(
-        SqlNode [] operands,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        SqlNode... operands)
     {
-        return createCall(operands, pos, null);
+        return createCall(null, pos, operands);
     }
 
     /**
-     * Creates a call to this operand with no operands.
-     */
-    public final SqlCall createCall(SqlParserPos pos)
-    {
-        return createCall(SqlNode.emptyArray, pos);
-    }
-
-    /**
-     * Creates a call to this operand with a single operand.
+     * Creates a call to this operand with a list of operands.
+     *
+     * <p>The position of the resulting call is the union of the <code>
+     * pos</code> and the positions of all of the operands.
      */
     public final SqlCall createCall(
-        SqlNode operand,
-        SqlParserPos pos)
+        SqlParserPos pos,
+        List<? extends SqlNode> operandList)
     {
         return createCall(
-                new SqlNode[] { operand },
-                pos);
+            null,
+            pos,
+            operandList.toArray(new SqlNode[operandList.size()]));
     }
 
     /**
-     * Creates a call to this operand with two operands.
+     * @deprecated Use createCall(pos, operand1, operand2) instead.
      */
     public final SqlCall createCall(
         SqlNode operand1,
         SqlNode operand2,
         SqlParserPos pos)
     {
-        return createCall(
-                new SqlNode[] { operand1, operand2 },
-                pos);
-    }
-
-    /**
-     * Creates a call to this operand with three operands.
-     */
-    public final SqlCall createCall(
-        SqlNode operand1,
-        SqlNode operand2,
-        SqlNode operand3,
-        SqlParserPos pos)
-    {
-        return createCall(
-                new SqlNode[] { operand1, operand2, operand3 },
-                pos);
+        return createCall(pos, operand1, operand2);
     }
 
     /**
@@ -619,7 +571,7 @@ public abstract class SqlOperator
         if (od.isVariadic()) {
             return;
         }
-        if (!od.getAllowedList().contains(new Integer(call.operands.length))) {
+        if (!od.getAllowedList().contains(call.operands.length)) {
             if (od.getAllowedList().size() == 1) {
                 throw validator.newValidationError(
                     call,

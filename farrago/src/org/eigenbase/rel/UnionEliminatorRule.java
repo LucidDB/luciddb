@@ -64,7 +64,7 @@ public class UnionEliminatorRule
         // And is the clone actually required here?
 
         RelNode child = union.getInputs()[0];
-        call.transformTo(RelOptUtil.clone(child));
+        call.transformTo(child.clone());
     }
 }
 

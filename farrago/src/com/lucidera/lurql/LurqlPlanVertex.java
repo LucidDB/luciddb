@@ -20,8 +20,6 @@
 */
 package com.lucidera.lurql;
 
-import java.io.*;
-
 import java.util.*;
 
 import javax.jmi.model.*;
@@ -65,17 +63,17 @@ public class LurqlPlanVertex
      * Set of JmiClassVertex references corresponding to classes which need to
      * be queried at this point in the plan.
      */
-    private Set classVertexSet;
+    private Set<JmiClassVertex> classVertexSet;
 
     /**
      * Unmodifiable counterpart to classVertexSet (for public consumption).
      */
-    private Set unmodifiableClassVertexSet;
+    private Set<JmiClassVertex> unmodifiableClassVertexSet;
 
     /**
      * All filters that apply at the given node
      */
-    private final List filters;
+    private final List<LurqlFilter> filters;
 
     /**
      * Unmodifiable counterpart to filters (for public consumption).
@@ -85,7 +83,7 @@ public class LurqlPlanVertex
     /**
      * Set of object MofIds to use as roots.
      */
-    private final Set rootObjectIds;
+    private final Set<String> rootObjectIds;
 
     /**
      * If non-null, the root of a recursive cycle. We avoid creating an explicit
@@ -98,7 +96,7 @@ public class LurqlPlanVertex
      * If non-null, a subgraph of vertices which should be executed cyclically
      * to implement dynamic recursion.
      */
-    private DirectedGraph recursionSubgraph;
+    private DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> recursionSubgraph;
 
     /**
      * True if this vertex participates in a recursion execution cycle.
@@ -116,16 +114,16 @@ public class LurqlPlanVertex
         LurqlPlan plan,
         String name,
         String alias,
-        Set rootObjectIds)
+        Set<String> rootObjectIds)
     {
         this.plan = plan;
         this.name = name;
         this.rootObjectIds = rootObjectIds;
         this.var = alias;
-        classVertexSet = new HashSet();
+        classVertexSet = new HashSet<JmiClassVertex>();
         unmodifiableClassVertexSet =
             Collections.unmodifiableSet(classVertexSet);
-        filters = new ArrayList();
+        filters = new ArrayList<LurqlFilter>();
         unmodifiableFilters = Collections.unmodifiableList(filters);
     }
 
@@ -141,7 +139,7 @@ public class LurqlPlanVertex
         return var;
     }
 
-    public DirectedGraph getRecursionSubgraph()
+    public DirectedGraph<LurqlPlanVertex,LurqlPlanEdge> getRecursionSubgraph()
     {
         return recursionSubgraph;
     }
@@ -171,23 +169,25 @@ public class LurqlPlanVertex
         stringRep = computeStringRep();
     }
 
-    DirectedGraph createReachableSubgraph(final boolean setRecursive)
+    DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> createReachableSubgraph(final boolean setRecursive)
     {
-        final DirectedGraph subgraph = new DirectedMultigraph();
+        final DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> subgraph =
+            new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>();
 
         // TODO jvs 16-May-2005:  submit to JGraphT
-        DepthFirstIterator iter = new DepthFirstIterator(
+        DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge, Object> iter =
+            new DepthFirstIterator<LurqlPlanVertex, LurqlPlanEdge, Object>(
                 plan.getGraph(),
                 this);
-        iter.addTraversalListener(new TraversalListenerAdapter() {
-                public void edgeTraversed(EdgeTraversalEvent e)
+        iter.addTraversalListener(new TraversalListenerAdapter<LurqlPlanVertex, LurqlPlanEdge>() {
+                public void edgeTraversed(EdgeTraversalEvent<LurqlPlanVertex, LurqlPlanEdge> e)
                 {
                     GraphHelper.addEdgeWithVertices(
                         subgraph,
                         e.getEdge());
                 }
 
-                public void vertexTraversed(VertexTraversalEvent e)
+                public void vertexTraversed(VertexTraversalEvent<LurqlPlanVertex> e)
                 {
                     subgraph.addVertex(e.getVertex());
                     if (setRecursive) {
@@ -217,7 +217,7 @@ public class LurqlPlanVertex
         StringBuffer sb = new StringBuffer();
         sb.append(name);
         sb.append(" { ");
-        List list = new ArrayList(classVertexSet);
+        List<Object> list = new ArrayList<Object>(classVertexSet);
         list.addAll(rootObjectIds);
         Collections.sort(
             list,
@@ -254,12 +254,12 @@ public class LurqlPlanVertex
         return unmodifiableFilters;
     }
 
-    public Set getClassVertexSet()
+    public Set<JmiClassVertex> getClassVertexSet()
     {
         return unmodifiableClassVertexSet;
     }
 
-    public Set getRootObjectIds()
+    public Set<String> getRootObjectIds()
     {
         return rootObjectIds;
     }
@@ -269,7 +269,7 @@ public class LurqlPlanVertex
         classVertexSet.add(classVertex);
     }
 
-    void addFilters(List filters)
+    void addFilters(List<LurqlFilter> filters)
     {
         this.filters.addAll(filters);
     }
@@ -277,23 +277,17 @@ public class LurqlPlanVertex
     void freeze()
     {
         // first, expand to include all subclasses
-        Set expandedSet = new HashSet();
-        Iterator iter = classVertexSet.iterator();
-        while (iter.hasNext()) {
-            JmiClassVertex vertex = (JmiClassVertex) iter.next();
+        Set<JmiClassVertex> expandedSet = new HashSet<JmiClassVertex>();
+        for (JmiClassVertex vertex : classVertexSet) {
             expandedSet.addAll(
                 plan.getModelView().getAllSubclassVertices(vertex));
         }
 
         // then, find classes to which all filters apply
-        Set filterSet = new HashSet();
-        iter = expandedSet.iterator();
-outer:
-        while (iter.hasNext()) {
-            JmiClassVertex vertex = (JmiClassVertex) iter.next();
-            Iterator filterIter = filters.iterator();
-            while (filterIter.hasNext()) {
-                LurqlFilter filter = (LurqlFilter) filterIter.next();
+        Set<JmiClassVertex> filterSet = new HashSet<JmiClassVertex>();
+        outer:
+        for (JmiClassVertex vertex : expandedSet) {
+            for (LurqlFilter filter : filters) {
                 if (filter.isMofId()) {
                     // id is always applicable
                     continue;
@@ -309,10 +303,8 @@ outer:
         }
 
         // finally, apply superclass subsumption
-        expandedSet = new HashSet();
-        iter = filterSet.iterator();
-        while (iter.hasNext()) {
-            JmiClassVertex vertex = (JmiClassVertex) iter.next();
+        expandedSet = new HashSet<JmiClassVertex>();
+        for (JmiClassVertex vertex : filterSet) {
             boolean present = expandedSet.contains(vertex);
             expandedSet.addAll(
                 plan.getModelView().getAllSubclassVertices(vertex));
@@ -321,7 +313,7 @@ outer:
             }
         }
         filterSet.removeAll(expandedSet);
-        classVertexSet = new HashSet(filterSet);
+        classVertexSet = new HashSet<JmiClassVertex>(filterSet);
         unmodifiableClassVertexSet =
             Collections.unmodifiableSet(classVertexSet);
 

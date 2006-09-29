@@ -57,11 +57,7 @@ class FarragoJdbcBooleanParamDef
                 return x;
             } else if (x instanceof Number) {
                 Number n = (Number) x;
-                if (n.longValue() == 0) {
-                    return new Boolean(false);
-                } else {
-                    return new Boolean(true);
-                }
+                return Boolean.valueOf(n.longValue() != 0);
             } else if (x instanceof String) {
                 try {
                     return ConversionUtil.toBoolean((String) x);
@@ -70,7 +66,7 @@ class FarragoJdbcBooleanParamDef
                     try {
                         String str = ((String) x).trim();
                         double d = Double.parseDouble(str);
-                        return new Boolean(d != 0);
+                        return Boolean.valueOf(d != 0);
                     } catch (NumberFormatException ex) {
                         throw newInvalidFormat(x);
                     }

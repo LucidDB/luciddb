@@ -22,15 +22,8 @@
 */
 package net.sf.farrago.query;
 
-import java.util.*;
-
-import net.sf.farrago.util.*;
-
-import openjava.ptree.*;
-
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.util.*;
 
 
 /**
@@ -79,9 +72,7 @@ public class FennelSortRule
 
         Integer [] keyProjection = new Integer[sortRel.getCollations().length];
         for (int i = 0; i < keyProjection.length; ++i) {
-            keyProjection[i] =
-                new Integer(
-                    sortRel.getCollations()[i].getFieldIndex());
+            keyProjection[i] = sortRel.getCollations()[i].getFieldIndex();
         }
 
         boolean discardDuplicates = false;

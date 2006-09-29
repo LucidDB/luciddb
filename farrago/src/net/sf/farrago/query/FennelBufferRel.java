@@ -68,12 +68,12 @@ class FennelBufferRel
     //~ Methods ----------------------------------------------------------------
 
     // implement Cloneable
-    public Object clone()
+    public FennelBufferRel clone()
     {
         FennelBufferRel clone =
             new FennelBufferRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 inMemory,
                 multiPass);
         clone.inheritTraitsFrom(this);

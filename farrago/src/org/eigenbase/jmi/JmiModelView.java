@@ -97,7 +97,7 @@ public class JmiModelView
      *
      * @return Set of JmiClassVertex
      */
-    public Set getAllSubclassVertices(JmiClassVertex vertex)
+    public Set<JmiClassVertex> getAllSubclassVertices(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).allSubclassVertices;
     }
@@ -136,7 +136,7 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set getAllOutgoingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getAllOutgoingAssocEdges(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).allOutgoingAssocEdges;
     }
@@ -149,7 +149,7 @@ public class JmiModelView
      *
      * @return Set of JmiAssocEdge
      */
-    public Set getAllIncomingAssocEdges(JmiClassVertex vertex)
+    public Set<JmiAssocEdge> getAllIncomingAssocEdges(JmiClassVertex vertex)
     {
         return getClassAttributes(vertex).allIncomingAssocEdges;
     }
@@ -239,11 +239,11 @@ public class JmiModelView
     {
         final Set allSuperclassVertices;
 
-        final Set allSubclassVertices;
+        final Set<JmiClassVertex> allSubclassVertices;
 
-        final Set allOutgoingAssocEdges;
+        final Set<JmiAssocEdge> allOutgoingAssocEdges;
 
-        final Set allIncomingAssocEdges;
+        final Set<JmiAssocEdge> allIncomingAssocEdges;
 
         final Set inheritedOutgoingAssocEdges;
 
@@ -252,9 +252,9 @@ public class JmiModelView
         ClassAttributes()
         {
             allSuperclassVertices = new HashSet();
-            allSubclassVertices = new HashSet();
-            allOutgoingAssocEdges = new HashSet();
-            allIncomingAssocEdges = new HashSet();
+            allSubclassVertices = new HashSet<JmiClassVertex>();
+            allOutgoingAssocEdges = new HashSet<JmiAssocEdge>();
+            allIncomingAssocEdges = new HashSet<JmiAssocEdge>();
             inheritedOutgoingAssocEdges = new HashSet();
             inheritedIncomingAssocEdges = new HashSet();
         }

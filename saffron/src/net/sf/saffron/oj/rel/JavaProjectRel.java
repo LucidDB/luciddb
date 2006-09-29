@@ -29,7 +29,6 @@ import org.eigenbase.oj.util.OJUtil;
 import org.eigenbase.rel.*;
 import org.eigenbase.relopt.CallingConvention;
 import org.eigenbase.relopt.RelOptCluster;
-import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexUtil;
@@ -57,11 +56,11 @@ public class JavaProjectRel
         assert (child.getConvention() == CallingConvention.JAVA);
     }
 
-    public Object clone()
+    public JavaProjectRel clone()
     {
         JavaProjectRel clone = new JavaProjectRel(
             getCluster(),
-            RelOptUtil.clone(getChild()),
+            getChild().clone(),
             RexUtil.clone(exps),
             rowType,
             getFlags());

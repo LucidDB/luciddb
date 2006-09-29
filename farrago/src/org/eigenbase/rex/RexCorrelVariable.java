@@ -51,7 +51,7 @@ public class RexCorrelVariable
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public RexCorrelVariable clone()
     {
         return new RexCorrelVariable(name, type);
     }

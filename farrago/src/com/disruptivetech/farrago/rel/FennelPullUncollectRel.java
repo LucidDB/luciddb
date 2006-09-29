@@ -87,12 +87,12 @@ public class FennelPullUncollectRel
     }
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public FennelPullUncollectRel clone()
     {
         FennelPullUncollectRel clone =
             new FennelPullUncollectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()));
+                getChild().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }

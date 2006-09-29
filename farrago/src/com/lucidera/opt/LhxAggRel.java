@@ -73,12 +73,12 @@ public class LhxAggRel
 
     //~ Methods ----------------------------------------------------------------
 
-    public Object clone()
+    public LhxAggRel clone()
     {
         LhxAggRel clone =
             new LhxAggRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()),
+                getChild().clone(),
                 groupCount,
                 aggCalls,
                 numInputRows,

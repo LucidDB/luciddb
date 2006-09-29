@@ -108,16 +108,14 @@ class FtrsTableProjectionRule
         // based on cost, since sort order and I/O may be in competition.
         final FarragoRepos repos = FennelRelUtil.getRepos(origScan);
 
-        Iterator iter =
-            FarragoCatalogUtil.getTableIndexes(
-                repos,
-                origScan.ftrsTable.getCwmColumnSet()).iterator();
         Integer[] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) iter.next();
-
+        for (FemLocalIndex index :
+            FarragoCatalogUtil.getTableIndexes(
+                repos,
+                origScan.ftrsTable.getCwmColumnSet()))
+        {
             if (origScan.isOrderPreserving && !index.equals(origScan.index)) {
                 // can't switch indexes if original scan order needs to be
                 // preserved
@@ -125,9 +123,9 @@ class FtrsTableProjectionRule
             }
 
             if (!testIndexCoverage(
-                    origScan.ftrsTable.getIndexGuide(),
-                    index,
-                    projectedColumns)) {
+                origScan.ftrsTable.getIndexGuide(),
+                index,
+                projectedColumns)) {
                 continue;
             }
 
@@ -150,8 +148,8 @@ class FtrsTableProjectionRule
                     origProject,
                     needRename,
                     newProject);
-            
-            call.transformTo(modRelNode);  
+
+            call.transformTo(modRelNode);
         }
     }
 

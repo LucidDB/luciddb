@@ -78,19 +78,19 @@ public class SqlCoalesceFunction
         for (int i = 0; (i + 1) < operands.length; ++i) {
             whenList.add(
                 SqlStdOperatorTable.isNotNullOperator.createCall(
-                    operands[i],
-                    pos));
+                    pos,
+                    operands[i]));
             thenList.add(operands[i].clone(operands[i].getParserPosition()));
         }
         SqlNode elseExpr = operands[operands.length - 1];
         assert call.getFunctionQuantifier() == null;
         final SqlCall newCall =
-            SqlStdOperatorTable.caseOperator.createCall(
-                null,
+            SqlStdOperatorTable.caseOperator.createSwitchedCall(
+                pos, null,
                 whenList,
                 thenList,
-                elseExpr,
-                pos);
+                elseExpr
+            );
         return newCall;
     }
 }

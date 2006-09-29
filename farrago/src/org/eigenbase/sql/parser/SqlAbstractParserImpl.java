@@ -335,10 +335,10 @@ public abstract class SqlAbstractParserImpl
 
     protected SqlCall createCall(
         SqlIdentifier funName,
-        SqlNode [] operands,
         SqlParserPos pos,
         SqlFunctionCategory funcType,
-        SqlLiteral functionQualifier)
+        SqlLiteral functionQualifier,
+        SqlNode [] operands)
     {
         SqlOperator fun = null;
 
@@ -363,7 +363,7 @@ public abstract class SqlAbstractParserImpl
             fun = new SqlFunction(funName, null, null, null, null, funcType);
         }
 
-        return fun.createCall(operands, pos, functionQualifier);
+        return fun.createCall(functionQualifier, pos, operands);
     }
 
     /**
@@ -580,7 +580,7 @@ public abstract class SqlAbstractParserImpl
          */
         private String constructSql92ReservedWordList()
         {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             TreeSet<String> jdbcReservedSet = new TreeSet<String>();
             jdbcReservedSet.addAll(tokenSet);
             jdbcReservedSet.removeAll(sql92ReservedWordSet);

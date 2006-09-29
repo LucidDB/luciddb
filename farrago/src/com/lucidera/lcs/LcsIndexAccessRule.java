@@ -175,7 +175,6 @@ class LcsIndexAccessRule
         RelNode [] indexRels = new RelNode[indexSet.size()];
         boolean requireIntersect = indexRels.length > 1;
 
-        Iterator iter = indexSet.iterator();
         int i = 0;
 
         if (requireIntersect) {
@@ -184,8 +183,7 @@ class LcsIndexAccessRule
             startRidParamId = relImplementor.allocateRelParamId();
         }
 
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) (iter.next());
+        for (FemLocalIndex index : indexSet) {
             int matchedPos = index2PosMap.get(index);
 
             List<SargIntervalSequence> sargSeqList =
@@ -261,7 +259,7 @@ class LcsIndexAccessRule
             new ArrayList<SargIntervalSequence>();
 
         for (int pos = 0; pos < matchedPos; pos++) {
-            CwmColumn col = indexGuide.getIndexColumn(index, pos);
+            FemAbstractColumn col = indexGuide.getIndexColumn(index, pos);
             SargIntervalSequence sargSeq = col2SeqMap.get(col);
             seqList.add(sargSeq);
         }
@@ -318,12 +316,9 @@ class LcsIndexAccessRule
             }
         }
 
-        Iterator iter = index2PosMap.keySet().iterator();
-
-        while (iter.hasNext()) {
-            FemLocalIndex index = (FemLocalIndex) (iter.next());
-
-            for (int pos = 0; pos < index2PosMap.get(index).intValue(); pos++) {
+        for (FemLocalIndex index : index2PosMap.keySet()) {
+            int maxPos = index2PosMap.get(index);
+            for (int pos = 0; pos < maxPos; pos++) {
                 int i =
                     sargColList.indexOf(indexGuide.getIndexColumn(index, pos));
                 sargBindingList.remove(i);
@@ -464,12 +459,12 @@ class LcsIndexAccessRule
         typeDescriptions[keyRowMidPoint] = "upperBoundDirective";
 
         for (int pos = 0; pos < matchedPos; pos++) {
-            CwmColumn filterColumn = indexGuide.getIndexColumn(index, pos);
+            FemAbstractAttribute filterColumn =
+                indexGuide.getIndexColumn(index, pos);
 
             RelDataType keyType =
                 typeFactory.createTypeWithNullability(
-                    typeFactory.createCwmElementType(
-                        (FemAbstractColumn) filterColumn),
+                    typeFactory.createCwmElementType(filterColumn),
                     true);
             dataTypes[lowerBoundKeyBase + pos] = keyType;
             dataTypes[upperBoundKeyBase + pos] = keyType;

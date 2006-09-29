@@ -24,6 +24,7 @@ package net.sf.farrago.catalog;
 import java.util.*;
 
 import net.sf.farrago.cwm.relational.*;
+import net.sf.farrago.cwm.core.CwmFeature;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.sql2003.*;
 
@@ -78,7 +79,7 @@ public class FarragoTableStatistics
         int ordinal,
         SargIntervalSequence predicate)
     {
-        List features = table.getFeature();
+        List<CwmFeature> features = table.getFeature();
         FemAbstractColumn column = (FemAbstractColumn) features.get(ordinal);
 
         FarragoColumnHistogram result =

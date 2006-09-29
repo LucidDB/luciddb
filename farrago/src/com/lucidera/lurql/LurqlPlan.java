@@ -25,7 +25,6 @@ import java.io.*;
 import java.util.*;
 
 import javax.jmi.model.*;
-import javax.jmi.reflect.*;
 
 import org._3pq.jgrapht.*;
 import org._3pq.jgrapht.graph.*;
@@ -48,7 +47,7 @@ public class LurqlPlan
     /**
      * Map from alias name to corresponding LurqlPathBranch
      */
-    private final Map aliasToBranchMap;
+    private final Map<String, LurqlPathBranch> aliasToBranchMap;
 
     /**
      * All variables part of a recursion
@@ -66,18 +65,18 @@ public class LurqlPlan
     private final LurqlQuery query;
 
     /**
-     * Directed acyclic graph of LurqlPlanVertexes
+     * Directed acyclic graph of {@link LurqlPlanVertex}es.
      */
-    private final DirectedGraph graph;
+    private final DirectedGraph<LurqlPlanVertex, LurqlPlanEdge> graph;
 
     /**
      * All project elements, keyed by alias
      */
-    private Set projectSet;
+    private Set<String> projectSet;
 
     private int idGen;
 
-    private Map paramMap;
+    private Map<String,Class> paramMap;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -88,11 +87,11 @@ public class LurqlPlan
     {
         this.modelView = modelView;
         this.query = query;
-        aliasToBranchMap = new LinkedHashMap();
+        aliasToBranchMap = new LinkedHashMap<String, LurqlPathBranch>();
         recVars = new LinkedHashSet();
-        graph = new DirectedMultigraph();
+        graph = new DirectedMultigraph<LurqlPlanVertex, LurqlPlanEdge>();
         idGen = 0;
-        paramMap = new LinkedHashMap();
+        paramMap = new LinkedHashMap<String, Class>();
 
         prepareQuery();
     }
@@ -116,15 +115,14 @@ public class LurqlPlan
 
     public void explain(PrintWriter pw)
     {
-        List list = new ArrayList();
+        List<Object> list = new ArrayList<Object>();
         list.addAll(graph.vertexSet());
         list.addAll(graph.edgeSet());
         Collections.sort(
             list,
             new StringRepresentationComparator());
-        Iterator iter = list.iterator();
-        while (iter.hasNext()) {
-            pw.println(iter.next());
+        for (Object o : list) {
+            pw.println(o);
         }
         pw.println();
     }
@@ -135,19 +133,19 @@ public class LurqlPlan
         if (query.getRoot() instanceof LurqlRoot) {
             prepareRoot(
                 (LurqlRoot) query.getRoot(),
-                new ArrayList());
+                new ArrayList<LurqlPlanVertex>());
         } else {
             preparePathSpec(
                 Collections.EMPTY_LIST,
                 (LurqlPathSpec) query.getRoot(),
-                new ArrayList());
+                new ArrayList<LurqlPlanVertex>());
         }
 
         if (isStar(query.getSelectList())) {
             projectSet = null;
         } else {
-            projectSet = new LinkedHashSet(query.getSelectList());
-            List list = new ArrayList(query.getSelectList());
+            projectSet = new LinkedHashSet<String>(query.getSelectList());
+            List<String> list = new ArrayList<String>(query.getSelectList());
             list.removeAll(aliasToBranchMap.keySet());
             if (!list.isEmpty()) {
                 throw newException(
@@ -158,26 +156,26 @@ public class LurqlPlan
         // TODO:  pruneQuery()?
     }
 
-    private boolean isStar(List selectList)
+    private boolean isStar(List<String> selectList)
     {
         return ((selectList.size() == 1)
                 && (selectList.get(0).equals("*")));
     }
 
-    public DirectedGraph getGraph()
+    public DirectedGraph<LurqlPlanVertex,LurqlPlanEdge> getGraph()
     {
-        return new UnmodifiableDirectedGraph(graph);
+        return new UnmodifiableDirectedGraph<LurqlPlanVertex, LurqlPlanEdge>(graph);
     }
 
-    public Map getParamMap()
+    public Map<String,Class> getParamMap()
     {
         return Collections.unmodifiableMap(paramMap);
     }
 
-    private void prepareRoot(LurqlRoot root, List leafVertexList)
+    private void prepareRoot(LurqlRoot root, List<LurqlPlanVertex> leafVertexList)
         throws JmiQueryException
     {
-        Set rootObjectIds = Collections.EMPTY_SET;
+        Set<String> rootObjectIds = Collections.emptySet();
         JmiClassVertex classVertex = findClassVertex(root.getClassName());
 
         LurqlPlanVertex planVertex = newPlanVertex(
@@ -198,7 +196,7 @@ public class LurqlPlan
 
     private LurqlPlanVertex newPlanVertex(
         LurqlPathBranch branch,
-        Set rootObjectIds)
+        Set<String> rootObjectIds)
         throws JmiQueryException
     {
         String name = validateAlias(branch);
@@ -218,9 +216,9 @@ public class LurqlPlan
     }
 
     private void preparePathSpec(
-        List parentVertexList,
+        List<LurqlPlanVertex> parentVertexList,
         LurqlPathSpec pathSpec,
-        List leafVertexList)
+        List<LurqlPlanVertex> leafVertexList)
         throws JmiQueryException
     {
         if (pathSpec == null) {
@@ -228,39 +226,37 @@ public class LurqlPlan
             return;
         }
 
-        List mergedLeaves = leafVertexList;
+        List<LurqlPlanVertex> mergedLeaves = leafVertexList;
         if (pathSpec.isGather()) {
-            mergedLeaves = new ArrayList();
+            mergedLeaves = new ArrayList<LurqlPlanVertex>();
         }
 
-        Iterator iter = pathSpec.getBranches().iterator();
-        while (iter.hasNext()) {
-            Object obj = iter.next();
-            if (obj instanceof LurqlFollow) {
+        for (LurqlQueryNode branch : pathSpec.getBranches()) {
+            if (branch instanceof LurqlFollow) {
                 if (parentVertexList.isEmpty()) {
                     throw newException(
                         "follow requires at least one parent");
                 }
-                prepareFollow((LurqlFollow) obj,
+                prepareFollow((LurqlFollow) branch,
                     parentVertexList,
                     mergedLeaves);
-            } else if (obj instanceof LurqlRoot) {
+            } else if (branch instanceof LurqlRoot) {
                 if (!parentVertexList.isEmpty()) {
                     throw newException(
                         "root cannot have a parent");
                 }
-                prepareRoot((LurqlRoot) obj, mergedLeaves);
-            } else if (obj instanceof LurqlPathSpec) {
+                prepareRoot((LurqlRoot) branch, mergedLeaves);
+            } else if (branch instanceof LurqlPathSpec) {
                 preparePathSpec(
                     parentVertexList,
-                    (LurqlPathSpec) obj,
+                    (LurqlPathSpec) branch,
                     leafVertexList);
             } else {
                 if (parentVertexList.size() != 1) {
                     throw newException(
                         "recursion must have exactly one parent");
                 }
-                prepareRecurse((LurqlRecurse) obj,
+                prepareRecurse((LurqlRecurse) branch,
                     parentVertexList,
                     mergedLeaves);
             }
@@ -283,8 +279,8 @@ public class LurqlPlan
 
     private void prepareRecurse(
         LurqlRecurse recurse,
-        List parentVertexList,
-        List leafVertexList)
+        List<LurqlPlanVertex> parentVertexList,
+        List<LurqlPlanVertex> leafVertexList)
         throws JmiQueryException
     {
         assert (parentVertexList.size() == 1);
@@ -293,9 +289,9 @@ public class LurqlPlan
         // that we can detect a model fixpoint.  The key is the class set
         // associated with a LurqlPlanVertex; the value is the LurqlPlanVertex
         // itself.
-        Map fixpointMap = new HashMap();
+        Map<Set<JmiClassVertex>,LurqlPlanVertex> fixpointMap = new HashMap<Set<JmiClassVertex>, LurqlPlanVertex>();
         for (;;) {
-            List recursionLeaves = new ArrayList();
+            List<LurqlPlanVertex> recursionLeaves = new ArrayList<LurqlPlanVertex>();
             preparePathSpec(
                 parentVertexList,
                 recurse.getPathSpec(),
@@ -308,10 +304,10 @@ public class LurqlPlan
                 break;
             }
             LurqlPlanVertex leafVertex =
-                (LurqlPlanVertex) recursionLeaves.get(0);
-            Set classVertexSet = leafVertex.getClassVertexSet();
+                recursionLeaves.get(0);
+            Set<JmiClassVertex> classVertexSet = leafVertex.getClassVertexSet();
             LurqlPlanVertex recursionVertex =
-                (LurqlPlanVertex) fixpointMap.get(classVertexSet);
+                fixpointMap.get(classVertexSet);
             if (recursionVertex != null) {
                 // We have reached a "model fixpoint"; further expansion would
                 // go into an infinite loop.  Instead, set up the structure
@@ -337,8 +333,8 @@ public class LurqlPlan
 
     private void prepareFollow(
         LurqlFollow follow,
-        List parentVertexList,
-        List leafVertexList)
+        List<LurqlPlanVertex> parentVertexList,
+        List<LurqlPlanVertex> leafVertexList)
         throws JmiQueryException
     {
         LurqlPlanVertex planVertex =
@@ -346,9 +342,7 @@ public class LurqlPlan
                 follow,
                 Collections.EMPTY_SET);
 
-        Iterator iter = parentVertexList.iterator();
-        while (iter.hasNext()) {
-            LurqlPlanVertex parentVertex = (LurqlPlanVertex) iter.next();
+        for (LurqlPlanVertex parentVertex : parentVertexList) {
             prepareFollowEdges(parentVertex, planVertex, follow);
         }
 
@@ -388,7 +382,7 @@ public class LurqlPlan
 
         // If origin and/or destination classes are specified, use them to
         // filter out associations
-        Map assocFilters = follow.getAssociationFilters();
+        Map<String, String> assocFilters = follow.getAssociationFilters();
         String originClassName =
             (String) assocFilters.get(
                 LurqlFollow.AF_ORIGIN_CLASS);
@@ -396,8 +390,8 @@ public class LurqlPlan
             (String) assocFilters.get(
                 LurqlFollow.AF_DESTINATION_CLASS);
 
-        Collection outgoingFilterEdgeSet = null;
-        Collection incomingFilterEdgeSet = null;
+        Collection<JmiAssocEdge> outgoingFilterEdgeSet = null;
+        Collection<JmiAssocEdge> incomingFilterEdgeSet = null;
         if (originClassName != null) {
             JmiClassVertex originClassVertex = findClassVertex(originClassName);
             outgoingFilterEdgeSet =
@@ -414,10 +408,10 @@ public class LurqlPlan
 
             // from the point of view of the destination, the incoming/outgoing
             // sense is reversed
-            Set outgoingFilterEdgeSet2 =
+            Set<JmiAssocEdge> outgoingFilterEdgeSet2 =
                 modelView.getAllIncomingAssocEdges(
                     destinationClassVertex);
-            Set incomingFilterEdgeSet2 =
+            Set<JmiAssocEdge> incomingFilterEdgeSet2 =
                 modelView.getAllOutgoingAssocEdges(
                     destinationClassVertex);
             if (originClassName == null) {
@@ -426,17 +420,15 @@ public class LurqlPlan
                 incomingFilterEdgeSet = incomingFilterEdgeSet2;
             } else {
                 // intersect
-                outgoingFilterEdgeSet = new ArrayList(outgoingFilterEdgeSet);
+                outgoingFilterEdgeSet = new ArrayList<JmiAssocEdge>(outgoingFilterEdgeSet);
                 outgoingFilterEdgeSet.retainAll(outgoingFilterEdgeSet2);
-                incomingFilterEdgeSet = new ArrayList(incomingFilterEdgeSet);
+                incomingFilterEdgeSet = new ArrayList<JmiAssocEdge>(incomingFilterEdgeSet);
                 incomingFilterEdgeSet.retainAll(incomingFilterEdgeSet2);
             }
         }
 
-        Iterator sourceClassIter = sourceVertex.getClassVertexSet().iterator();
-        while (sourceClassIter.hasNext()) {
-            JmiClassVertex sourceClassVertex =
-                (JmiClassVertex) sourceClassIter.next();
+        for (JmiClassVertex sourceClassVertex : sourceVertex.getClassVertexSet())
+        {
             if (forward) {
                 addTraversals(
                     sourceVertex,
@@ -462,16 +454,16 @@ public class LurqlPlan
         }
     }
 
-    private Collection filterEdgeSet(
-        Collection edgeSet,
-        Collection filterEdgeSet)
+    private Collection<JmiAssocEdge> filterEdgeSet(
+        Collection<JmiAssocEdge> edgeSet,
+        Collection<JmiAssocEdge> filterEdgeSet)
     {
         if (filterEdgeSet == null) {
             return edgeSet;
         }
 
         // intersect
-        List list = new ArrayList(edgeSet);
+        List<JmiAssocEdge> list = new ArrayList<JmiAssocEdge>(edgeSet);
         list.retainAll(filterEdgeSet);
         return list;
     }
@@ -480,23 +472,23 @@ public class LurqlPlan
         LurqlPlanVertex sourceVertex,
         LurqlPlanVertex targetVertex,
         LurqlFollow follow,
-        Collection assocEdges,
+        Collection<JmiAssocEdge> assocEdges,
         JmiClassVertex destinationClassVertex,
         int iOriginEnd)
         throws JmiQueryException
     {
-        Map assocFilters = follow.getAssociationFilters();
+        Map<String,String> assocFilters = follow.getAssociationFilters();
 
         String assocName =
-            (String) assocFilters.get(
+            assocFilters.get(
                 LurqlFollow.AF_ASSOCIATION);
 
         String originEndName =
-            (String) assocFilters.get(
+            assocFilters.get(
                 LurqlFollow.AF_ORIGIN_END);
 
         String destinationEndName =
-            (String) assocFilters.get(
+            assocFilters.get(
                 LurqlFollow.AF_DESTINATION_END);
 
         boolean composite = assocFilters.containsKey(
@@ -511,13 +503,11 @@ public class LurqlPlan
             noncomposite = true;
         }
 
-        Iterator iter = assocEdges.iterator();
-        while (iter.hasNext()) {
-            JmiAssocEdge assocEdge = (JmiAssocEdge) iter.next();
+        for (JmiAssocEdge assocEdge : assocEdges) {
             Association mofAssoc = assocEdge.getMofAssoc();
             if (!testAssocFilter(
-                    assocName,
-                    mofAssoc.getName())) {
+                assocName,
+                mofAssoc.getName())) {
                 continue;
             }
 
@@ -526,9 +516,9 @@ public class LurqlPlan
 
             if ((originEnd.getAggregation() == AggregationKindEnum.COMPOSITE)
                 || (
-                    destinationEnd.getAggregation()
+                destinationEnd.getAggregation()
                     == AggregationKindEnum.COMPOSITE
-                   )) {
+            )) {
                 if (!composite) {
                     continue;
                 }
@@ -555,8 +545,8 @@ public class LurqlPlan
                 if (destinationClassVertex == destinationEndVertex) {
                     // nothing to do
                 } else if (modelView.getAllSuperclassVertices(
-                        destinationClassVertex).contains(
-                        destinationEndVertex)) {
+                    destinationClassVertex).contains(
+                    destinationEndVertex)) {
                     // the end is a superclass of the requested class,
                     // so we'll need to filter during execution
                     destinationTypeFilter = destinationClassVertex;
@@ -625,13 +615,15 @@ public class LurqlPlan
         return new JmiQueryException(err, cause);
     }
 
-    private void addFilters(LurqlPlanVertex planVertex, List filters)
+    private void addFilters(
+        LurqlPlanVertex planVertex,
+        List<LurqlFilter> filters)
         throws JmiQueryException
     {
-        filters = new ArrayList(filters);
-        Iterator iter = filters.iterator();
+        filters = new ArrayList<LurqlFilter>(filters);
+        Iterator<LurqlFilter> iter = filters.iterator();
         while (iter.hasNext()) {
-            LurqlFilter filter = (LurqlFilter) iter.next();
+            LurqlFilter filter = iter.next();
             LurqlExists exists = filter.getExists();
             if (exists != null) {
                 prepareExists(planVertex, exists);
@@ -649,9 +641,7 @@ public class LurqlPlan
                     filter.getSetParam(),
                     Set.class);
             } else {
-                Iterator valuesIter = filter.getValues().iterator();
-                while (valuesIter.hasNext()) {
-                    Object obj = valuesIter.next();
+                for (Object obj : filter.getValues()) {
                     if (obj instanceof LurqlDynamicParam) {
                         addParam((LurqlDynamicParam) obj, String.class);
                     }
@@ -674,34 +664,34 @@ public class LurqlPlan
             new LurqlRoot(
                 null,
                 null,
-                Collections.emptyList(),
+                Collections.EMPTY_LIST,
                 null);
         LurqlPlanVertex existsRoot = newPlanVertex(
                 dummyRoot,
-                new HashSet());
+                new HashSet<String>());
 
         // Copy class set from original planVertex.
-        for (Object obj : planVertex.getClassVertexSet()) {
-            JmiClassVertex classVertex = (JmiClassVertex) obj;
+        for (JmiClassVertex classVertex : planVertex.getClassVertexSet()) {
             existsRoot.addClassVertex(classVertex);
         }
 
         // Prepare exists subgraph reachable from class set.
-        List parentVertexList = new ArrayList();
+        List<LurqlPlanVertex> parentVertexList =
+            new ArrayList<LurqlPlanVertex>();
         parentVertexList.add(existsRoot);
         preparePathSpec(
             parentVertexList,
             exists.getPathSpec(),
-            new ArrayList());
+            new ArrayList<LurqlPlanVertex>());
 
-        Set projectSet = null;
+        Set<String> projectSet = null;
 
         // Validate that all variables referenced by exists select list
         // were defined.  TODO jvs 6-July-2006:  Should also validate
         // that they were not defined outside of exists.
         if (!isStar(exists.getSelectList())) {
-            projectSet = new LinkedHashSet(exists.getSelectList());
-            List list = new ArrayList(exists.getSelectList());
+            projectSet = new LinkedHashSet<String>(exists.getSelectList());
+            List<String> list = new ArrayList<String>(exists.getSelectList());
             list.removeAll(aliasToBranchMap.keySet());
             if (!list.isEmpty()) {
                 throw newException(
@@ -710,7 +700,8 @@ public class LurqlPlan
         }
 
         // Collect subgraph nodes.
-        DirectedGraph subgraph = existsRoot.createReachableSubgraph(false);
+        DirectedGraph<LurqlPlanVertex,LurqlPlanEdge> subgraph =
+            existsRoot.createReachableSubgraph(false);
 
         // Attach new vertex with a non-follow edge
         LurqlPlanExistsEdge edge =
@@ -725,7 +716,7 @@ public class LurqlPlan
     private void addParam(LurqlDynamicParam param, Class paramType)
         throws JmiQueryException
     {
-        Object obj = paramMap.get(param.getId());
+        Class obj = paramMap.get(param.getId());
         if (obj != null) {
             if (obj != paramType) {
                 throw newException(
@@ -742,7 +733,7 @@ public class LurqlPlan
     {
         ++idGen;
         if (branch.getAliasName() != null) {
-            Object obj = aliasToBranchMap.get(branch.getAliasName());
+            LurqlPathBranch obj = aliasToBranchMap.get(branch.getAliasName());
             if ((obj != null) && (obj != branch)) {
                 throw newException(
                     "duplicate definition for alias "

@@ -122,7 +122,7 @@ class FlatFileDataServer
         Properties tableProps,
         FarragoTypeFactory typeFactory,
         RelDataType rowType,
-        Map columnPropMap)
+        Map<String,Properties> columnPropMap)
         throws SQLException
     {
         String schemaName = getSchemaName(localName);

@@ -46,7 +46,7 @@ public abstract class RelDataTypeFactoryImpl
 
     //~ Instance fields --------------------------------------------------------
 
-    private HashMap map = new HashMap();
+    private HashMap<RelDataType,RelDataType> map = new HashMap<RelDataType, RelDataType>();
 
     //~ Constructors -----------------------------------------------------------
 
@@ -267,7 +267,7 @@ public abstract class RelDataTypeFactoryImpl
      */
     protected RelDataType canonize(RelDataType type)
     {
-        RelDataType type2 = (RelDataType) map.get(type);
+        RelDataType type2 = map.get(type);
         if (type2 != null) {
             return type2;
         } else {
@@ -281,7 +281,7 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static RelDataTypeField [] getFieldArray(RelDataType [] types)
     {
-        ArrayList fieldList = new ArrayList();
+        ArrayList<RelDataTypeField> fieldList = new ArrayList<RelDataTypeField>();
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
             addFields(type, fieldList);
@@ -296,7 +296,7 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static RelDataType [] getTypeArray(RelDataType [] types)
     {
-        ArrayList typeList = new ArrayList();
+        ArrayList<RelDataType> typeList = new ArrayList<RelDataType>();
         getTypeArray(types, typeList);
         return
             (RelDataType []) typeList.toArray(new RelDataType[typeList.size()]);
@@ -304,7 +304,7 @@ public abstract class RelDataTypeFactoryImpl
 
     private static void getTypeArray(
         RelDataType [] types,
-        ArrayList typeList)
+        ArrayList<RelDataType> typeList)
     {
         for (int i = 0; i < types.length; i++) {
             RelDataType type = types[i];
@@ -321,7 +321,7 @@ public abstract class RelDataTypeFactoryImpl
      */
     private static void addFields(
         RelDataType type,
-        ArrayList fieldList)
+        ArrayList<RelDataTypeField> fieldList)
     {
         if (type instanceof RelCrossType) {
             final RelCrossType crossType = (RelCrossType) type;
@@ -345,7 +345,7 @@ public abstract class RelDataTypeFactoryImpl
     private RelDataTypeField [] fieldsOf(Class clazz)
     {
         final Field [] fields = clazz.getFields();
-        ArrayList list = new ArrayList();
+        ArrayList<RelDataTypeFieldImpl> list = new ArrayList<RelDataTypeFieldImpl>();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
             if (Modifier.isStatic(field.getModifiers())) {
@@ -446,7 +446,7 @@ public abstract class RelDataTypeFactoryImpl
             return isNullable;
         }
 
-        protected void generateTypeString(StringBuffer sb, boolean withDetail)
+        protected void generateTypeString(StringBuilder sb, boolean withDetail)
         {
             sb.append("JavaType(");
             sb.append(clazz);

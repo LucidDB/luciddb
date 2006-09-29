@@ -66,12 +66,12 @@ public final class UncollectRel
     //~ Methods ----------------------------------------------------------------
 
     // override Object (public, does not throw CloneNotSupportedException)
-    public Object clone()
+    public UncollectRel clone()
     {
         UncollectRel clone =
             new UncollectRel(
                 getCluster(),
-                RelOptUtil.clone(getChild()));
+                getChild().clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }

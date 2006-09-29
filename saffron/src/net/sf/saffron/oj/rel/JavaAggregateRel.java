@@ -103,7 +103,7 @@ public class JavaAggregateRel extends AggregateRelBase implements JavaLoopRel
     }
 
     // implement RelNode
-    public Object clone()
+    public JavaAggregateRel clone()
     {
         JavaAggregateRel clone =
             new JavaAggregateRel(
