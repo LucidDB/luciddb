@@ -39,6 +39,7 @@ from
     where
         "beebee" = 'c' and
         "yo" matches '.*UNIV.*' and
+        "mama" matches ?"wears" and
         exists * in (
             follow as "p"
         ) and

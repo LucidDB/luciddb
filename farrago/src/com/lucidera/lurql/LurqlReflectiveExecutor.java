@@ -379,12 +379,16 @@ outer:
                         value = objValue.toString();
                     }
                 }
+                Set filterValues = getFilterValues(filters[i]);
                 if (filters[i].isPattern()) {
-                    if (!filters[i].patternMatch(value)) {
+                    assert(filterValues.size() == 1);
+                    boolean match = filters[i].patternMatch(
+                        (String) filterValues.iterator().next(),
+                        value);
+                    if (!match) {
                         continue outer;
                     }
                 } else {
-                    Set filterValues = getFilterValues(filters[i]);
                     if (!filterValues.contains(value)) {
                         continue outer;
                     }

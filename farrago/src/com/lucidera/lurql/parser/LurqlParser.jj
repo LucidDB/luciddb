@@ -144,10 +144,10 @@ LurqlFilter Filter() :
             return new LurqlFilter(attributeName, values);
         }
         |
-        <MATCHES> value = StringLiteral()
+        <MATCHES> value = FilterValue()
         {
-            values = Collections.singleton(Pattern.compile(value.toString()));
-            return new LurqlFilter(attributeName, values);
+            values = Collections.singleton(value);
+            return new LurqlFilter(attributeName, values, true);
         }
         |
         <IN>

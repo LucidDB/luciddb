@@ -67,6 +67,8 @@ public class LurqlFilter
 
     private final LurqlExists exists;
 
+    private final boolean isPattern;
+
     private boolean hasDynamicParams;
 
     private Matcher matcher;
@@ -75,19 +77,25 @@ public class LurqlFilter
 
     public LurqlFilter(String attributeName, Set<Object> values)
     {
+        this(attributeName, values, false);
+    }
+    
+    public LurqlFilter(
+        String attributeName, Set<Object> values, boolean isPattern)
+    {
         this.attributeName = attributeName;
         this.values = Collections.unmodifiableSet(values);
         this.sqlQuery = null;
         this.setParam = null;
         this.exists = null;
+        this.isPattern = isPattern;
+        if (isPattern) {
+            assert(values.size() == 1);
+        }
         for (Object obj : values) {
             if (obj instanceof LurqlDynamicParam) {
                 hasDynamicParams = true;
                 break;
-            }
-            if (obj instanceof Pattern) {
-                assert(values.size() == 1);
-                matcher = ((Pattern) obj).matcher("");
             }
         }
     }
@@ -99,6 +107,7 @@ public class LurqlFilter
         this.setParam = null;
         this.sqlQuery = sqlQuery;
         this.exists = null;
+        this.isPattern = false;
     }
 
     public LurqlFilter(String attributeName, LurqlDynamicParam param)
@@ -109,6 +118,7 @@ public class LurqlFilter
         this.setParam = param;
         hasDynamicParams = true;
         this.exists = null;
+        this.isPattern = false;
     }
 
     public LurqlFilter(LurqlExists exists)
@@ -118,6 +128,7 @@ public class LurqlFilter
         this.sqlQuery = null;
         this.setParam = null;
         this.exists = exists;
+        this.isPattern = false;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -149,12 +160,17 @@ public class LurqlFilter
 
     public boolean isPattern()
     {
-        return matcher != null;
+        return isPattern;
     }
 
-    public boolean patternMatch(String value)
+    public boolean patternMatch(String patternString, String value)
     {
-        matcher.reset(value);
+        if (matcher == null) {
+            Pattern pattern = Pattern.compile(patternString);
+            matcher = pattern.matcher(value);
+        } else {
+            matcher.reset(value);
+        }
         return matcher.matches();
     }
 
@@ -186,7 +202,7 @@ public class LurqlFilter
             Iterator<Object> iter = values.iterator();
             if (values.size() == 1) {
                 Object obj = iter.next();
-                if (obj instanceof Pattern) {
+                if (isPattern) {
                     pw.print(" matches ");
                 } else {
                     pw.print(" = ");
