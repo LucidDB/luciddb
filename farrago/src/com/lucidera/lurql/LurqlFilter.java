@@ -23,6 +23,7 @@ package com.lucidera.lurql;
 import java.io.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import org.eigenbase.util.*;
 
@@ -34,6 +35,7 @@ import org.eigenbase.util.*;
  * <ul>
  * <li><code>ATTRIBUTE = 'VALUE'</code>
  * <li><code>ATTRIBUTE = ?scalar-param</code>
+ * <li><code>ATTRIBUTE MATCHES 'PATTERN'</code>
  * <li><code>ATTRIBUTE IN ('VALUE1', 'VALUE2', ...)</code>
  * <li><code>ATTRIBUTE IN ?set-param</code>
  * <li><code>ATTRIBUTE IN [SQL-QUERY]</code>
@@ -67,6 +69,8 @@ public class LurqlFilter
 
     private boolean hasDynamicParams;
 
+    private Matcher matcher;
+
     //~ Constructors -----------------------------------------------------------
 
     public LurqlFilter(String attributeName, Set<Object> values)
@@ -80,6 +84,10 @@ public class LurqlFilter
             if (obj instanceof LurqlDynamicParam) {
                 hasDynamicParams = true;
                 break;
+            }
+            if (obj instanceof Pattern) {
+                assert(values.size() == 1);
+                matcher = ((Pattern) obj).matcher("");
             }
         }
     }
@@ -139,6 +147,17 @@ public class LurqlFilter
         return attributeName.equals("mofId");
     }
 
+    public boolean isPattern()
+    {
+        return matcher != null;
+    }
+
+    public boolean patternMatch(String value)
+    {
+        matcher.reset(value);
+        return matcher.matches();
+    }
+
     public boolean hasDynamicParams()
     {
         return hasDynamicParams;
@@ -166,10 +185,15 @@ public class LurqlFilter
             }
             Iterator<Object> iter = values.iterator();
             if (values.size() == 1) {
-                pw.print(" = ");
+                Object obj = iter.next();
+                if (obj instanceof Pattern) {
+                    pw.print(" matches ");
+                } else {
+                    pw.print(" = ");
+                }
                 unparseValue(
                     pw,
-                    iter.next());
+                    obj);
             } else {
                 pw.print(" in (");
                 while (iter.hasNext()) {

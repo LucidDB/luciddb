@@ -379,9 +379,15 @@ outer:
                         value = objValue.toString();
                     }
                 }
-                Set filterValues = getFilterValues(filters[i]);
-                if (!filterValues.contains(value)) {
-                    continue outer;
+                if (filters[i].isPattern()) {
+                    if (!filters[i].patternMatch(value)) {
+                        continue outer;
+                    }
+                } else {
+                    Set filterValues = getFilterValues(filters[i]);
+                    if (!filterValues.contains(value)) {
+                        continue outer;
+                    }
                 }
             }
             for (int i = 0; i < existsEdges.length; ++i) {

@@ -20,7 +20,6 @@
 */
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
 }
 
@@ -31,6 +30,7 @@ package com.lucidera.lurql.parser;
 import com.lucidera.lurql.*;
 
 import java.util.*;
+import java.util.regex.*;
 
 import org.eigenbase.sql.parser.*;
 
@@ -141,6 +141,12 @@ LurqlFilter Filter() :
         <EQUALS> value = FilterValue()
         {
             values = Collections.singleton(value);
+            return new LurqlFilter(attributeName, values);
+        }
+        |
+        <MATCHES> value = StringLiteral()
+        {
+            values = Collections.singleton(Pattern.compile(value.toString()));
             return new LurqlFilter(attributeName, values);
         }
         |
@@ -502,6 +508,7 @@ TOKEN :
     | < WITH: "with" >
     | < PARENT: "parent" >
     | < IN: "in" >
+    | < MATCHES: "matches" >
     | < IDENTIFIER: <LETTER> (<LETTER>|<DIGIT>)* >
     | < S_QUOTED_STRING: <SQUOTE> ( (~["'","\n","\r"]) | ("''"))* <SQUOTE> >
     | < D_QUOTED_STRING: <DQUOTE> ( (~["\"","\n","\r"]) | ("\"\""))* <DQUOTE> >

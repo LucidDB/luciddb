@@ -38,6 +38,7 @@ from
     class "y" as "n"
     where
         "beebee" = 'c' and
+        "yo" matches '.*UNIV.*' and
         exists * in (
             follow as "p"
         ) and
