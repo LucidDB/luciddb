@@ -6,6 +6,10 @@
 0: jdbc:luciddb:> -- use xmlattr format so we can distinguish nulls from blanks
 0: jdbc:luciddb:> !set outputformat xmlattr
 0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- for this test, enable code cache to make sure that changes
+0: jdbc:luciddb:> -- in variables do not get ignored due to stale plan cache
+0: jdbc:luciddb:> alter system set "codeCacheMaxBytes" = max;
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- create a context
 0: jdbc:luciddb:> call applib.create_var('context1', null, 'very explicit');
 0: jdbc:luciddb:> 

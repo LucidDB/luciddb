@@ -549,6 +549,17 @@ public class LucidDbSessionPersonality
     {
         return new LucidDbRuntimeContext(params);
     }
+    
+    // override FarragoDefaultSessionPersonality
+    public FarragoSessionPreparingStmt newPreparingStmt(
+        FarragoSessionStmtContext stmtContext,
+        FarragoSessionStmtValidator stmtValidator)
+    {
+        LucidDbPreparingStmt stmt =
+            new LucidDbPreparingStmt(stmtValidator);
+        initPreparingStmt(stmt);
+        return stmt;
+    }
 }
 
 // End LucidDbSessionPersonality.java

@@ -99,7 +99,7 @@ public class FarragoPreparingStmt
     private FarragoAllocation javaCodeDir;
     protected SqlValidatorImpl sqlValidator;
     private final Set<CwmModelElement> directDependencies;
-    private final Set<CwmModelElement> allDependencies;
+    protected final Set<CwmModelElement> allDependencies;
     private final Set<URL> jarUrlSet;
     protected SqlOperatorTable sqlOperatorTable;
     private final FarragoUserDefinedRoutineLookup routineLookup;
