@@ -21,6 +21,7 @@
 options {
     STATIC = false;
     IGNORE_CASE = true;
+    UNICODE_INPUT = true;
 }
 
 PARSER_BEGIN(LurqlParser)
