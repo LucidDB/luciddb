@@ -205,10 +205,9 @@ ProjectRel(EXPR$0=[$0])
             <![CDATA[
 ProjectRel(DEPTNO=[$0], NAME=[$1])
   UncollectRel
-    ProjectRel(EXPR$0=[$0])
-      CollectRel
-        ProjectRel(DEPTNO=[$0], NAME=[$1])
-          TableAccessRel(table=[[SALES, DEPT]])
+    CollectRel
+      ProjectRel(DEPTNO=[$0], NAME=[$1])
+        TableAccessRel(table=[[SALES, DEPT]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -400,14 +399,13 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
             <![CDATA[
 ProjectRel(EXPR$0=[$0])
   UncollectRel
-    ProjectRel(EXPR$0=[$0])
-      ProjectRel(EXPR$0=[$SLICE($2)])
-        CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])
-          TableAccessRel(table=[[SALES, DEPT]])
-          CollectRel
-            UnionRel(all=[true])
-              ProjectRel(EXPR$0=[$cor0.DEPTNO])
-                OneRowRel
+    ProjectRel(EXPR$0=[$SLICE($2)])
+      CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset0]])
+        TableAccessRel(table=[[SALES, DEPT]])
+        CollectRel
+          UnionRel(all=[true])
+            ProjectRel(EXPR$0=[$cor0.DEPTNO])
+              OneRowRel
 ]]>
         </Resource>
         <Resource name="sql">

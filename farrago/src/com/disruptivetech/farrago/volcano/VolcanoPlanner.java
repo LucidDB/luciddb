@@ -752,10 +752,6 @@ public class VolcanoPlanner
                 OJRexImplementorTableImpl.instance());
     }
 
-    /**
-     * Finds the cost of a node. Similar to {@link #optimize}, but does not
-     * create any expressions.
-     */
     public RelOptCost getCost(RelNode rel)
     {
         assert rel != null : "pre-condition: rel != null";
@@ -910,17 +906,18 @@ public class VolcanoPlanner
             (RelSet []) allSets.toArray(new RelSet[allSets.size()]);
         Arrays.sort(
             sets,
-            new Comparator() {
+            new Comparator<RelSet>() {
                 public int compare(
-                    Object o1,
-                    Object o2)
+                    RelSet o1,
+                    RelSet o2)
                 {
-                    return ((RelSet) o1).id - ((RelSet) o2).id;
+                    return o1.id - o2.id;
                 }
             });
         for (int i = 0; i < sets.length; i++) {
             RelSet set = sets[i];
-            pw.println("Set#" + set.id);
+            pw.println("Set#" + set.id +
+                ", type: " + set.subsets.get(0).getRowType());
             int j = -1;
             for (RelSubset subset : set.subsets) {
                 ++j;

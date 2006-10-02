@@ -127,7 +127,7 @@ public class SelectScope
         return null;
     }
 
-    public SqlNode getNode()
+    public SqlSelect getNode()
     {
         return select;
     }

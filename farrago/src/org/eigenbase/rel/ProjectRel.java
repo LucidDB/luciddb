@@ -27,6 +27,7 @@ import java.util.*;
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
+import org.eigenbase.util.Permutation;
 
 
 /**
@@ -115,6 +116,27 @@ public final class ProjectRel
                 RelCollation.emptyList);
         clone.inheritTraitsFrom(this);
         return clone;
+    }
+
+    /**
+     * Returns a permutation, if this projection is merely a permutation of its
+     * input fields, otherwise null.
+     */
+    public Permutation getPermutation()
+    {
+        final int fieldCount = rowType.getFields().length;
+        if (fieldCount != getChild().getRowType().getFields().length) {
+            return null;
+        }
+        Permutation permutation = new Permutation(fieldCount);
+        for (int i = 0; i < fieldCount; ++i) {
+            if (exps[i] instanceof RexInputRef) {
+                permutation.set(i, ((RexInputRef) exps[i]).getIndex());
+            } else {
+                return null;
+            }
+        }
+        return permutation;
     }
 }
 

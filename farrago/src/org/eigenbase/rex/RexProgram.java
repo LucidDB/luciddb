@@ -29,6 +29,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.sql.type.*;
+import org.eigenbase.util.Permutation;
+import org.eigenbase.util.mapping.IntPair;
 
 
 /**
@@ -277,10 +279,10 @@ public class RexProgram
         List<String> termList,
         List<Object> valueList)
     {
-        collectExplainTerms(prefix, termList, valueList, 
+        collectExplainTerms(prefix, termList, valueList,
             SqlExplainLevel.EXPPLAN_ATTRIBUTES);
     }
-    
+
     /**
      * Collects the expressions in this program into a list of terms and values.
      *
@@ -312,13 +314,13 @@ public class RexProgram
         // If a lot of the fields are simply projections of the underlying
         // expression, try to be a bit less verbose.
         int trivialCount = 0;
-        
+
         // Do not use the trivialCount optimization if computing digest for the optimizer
         // (as opposed to doing an explain plan).
         if (level != SqlExplainLevel.DIGEST_ATTRIBUTES) {
             trivialCount = countTrivial(projects);
         }
-        
+
         switch (trivialCount) {
         case 0:
             break;
@@ -671,6 +673,62 @@ loop:
     public RexNode gatherExpr(RexNode expr)
     {
         return expr.accept(new Marshaller());
+    }
+
+    /**
+     * Returns the input field that an output field is populated from, or -1
+     * if it is populated from an expression.
+     */
+    public int getSourceField(int outputOrdinal)
+    {
+        assert outputOrdinal >= 0 && outputOrdinal < this.projects.length;
+        RexLocalRef project = projects[outputOrdinal];
+        int index = project.index;
+        while (true) {
+            RexNode expr = exprs[index];
+            if (expr instanceof RexLocalRef) {
+                index = ((RexLocalRef) expr).index;
+            } else if (expr instanceof RexInputRef) {
+                return ((RexInputRef) expr).index;
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    /**
+     * Returns whether this program is a permutation of its inputs.
+     */
+    public boolean isPermutation()
+    {
+        if (projects.length != inputRowType.getFields().length) {
+            return false;
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            if (getSourceField(i) < 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns a permutation, if this program is a permutation, otherwise null.
+     */
+    public Permutation getPermutation()
+    {
+        Permutation permutation = new Permutation(projects.length);
+        if (projects.length != inputRowType.getFields().length) {
+            return null;
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            int sourceField = getSourceField(i);
+            if (sourceField < 0) {
+                return null;
+            }
+            permutation.set(i, sourceField);
+        }
+        return permutation;
     }
 
     //~ Inner Classes ----------------------------------------------------------

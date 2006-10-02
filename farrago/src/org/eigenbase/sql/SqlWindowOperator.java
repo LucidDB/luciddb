@@ -509,6 +509,11 @@ public class SqlWindowOperator
         return false;
     }
 
+    /**
+     * Creates a window <code>(RANGE <i>columnName</i> CURRENT ROW)</code>.
+     *
+     * @param columnName Order column
+     */
     public SqlWindow createCurrentRowWindow(final String columnName)
     {
         return
@@ -525,6 +530,32 @@ public class SqlWindowOperator
                 true,
                 SqlParserPos.ZERO,
                 createCurrentRow(SqlParserPos.ZERO),
+                createCurrentRow(SqlParserPos.ZERO),
+                SqlParserPos.ZERO);
+    }
+
+    /**
+     * Creates a window <code>(RANGE <i>columnName</i> UNBOUNDED
+     * PRECEDING)</code>.
+     *
+     * @param columnName Order column
+     */
+    public SqlWindow createUnboundedPrecedingWindow(final String columnName)
+    {
+        return
+            createCall(
+                null,
+                null,
+                new SqlNodeList(SqlParserPos.ZERO),
+                new SqlNodeList(
+                    Collections.singletonList(
+                        new SqlIdentifier(
+                            new String[] { columnName },
+                            SqlParserPos.ZERO)),
+                    SqlParserPos.ZERO),
+                false,
+                SqlParserPos.ZERO,
+                createUnboundedPreceding(SqlParserPos.ZERO),
                 createCurrentRow(SqlParserPos.ZERO),
                 SqlParserPos.ZERO);
     }

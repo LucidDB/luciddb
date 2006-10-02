@@ -557,6 +557,21 @@ public class Permutation
             set(pair.source, pair.target);
         }
     }
+
+    /**
+     * Returns the product of this Permutation with a given Permutation.
+     * Does not modify this Permutation or <code>permutation</code>.
+     *
+     * <p>For example, perm.product(perm.inverse()) yields the identity.
+     */
+    public Permutation product(Permutation permutation)
+    {
+        Permutation product = new Permutation(sources.length);
+        for (int i = 0; i < targets.length; ++i) {
+            product.set(i, permutation.getTarget(targets[i]));
+        }
+        return product;
+    }
 }
 
 // End Permutation.java

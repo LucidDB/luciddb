@@ -227,8 +227,6 @@ public abstract class CalcRelSplitter
      * condition
      * @param exprLevels Level ordinal for each expression (output)
      * @param levelTypeOrdinals The type of each level (output)
-     *
-     * @return
      */
     private int chooseLevels(
         final RexNode [] exprs,
@@ -438,14 +436,22 @@ levelLoop:
         // exprs.
         final RexLocalRef [] projectRefs =
             new RexLocalRef[projectExprOrdinals.length];
+        final String[] fieldNames = new String[projectExprOrdinals.length];
         for (int i = 0; i < projectRefs.length; i++) {
             final int projectExprOrdinal = projectExprOrdinals[i];
             final int index = exprInverseOrdinals[projectExprOrdinal];
             assert index >= 0;
-            projectRefs[i] =
-                new RexLocalRef(
-                    index,
-                    allExprs[projectExprOrdinal].getType());
+            RexNode expr = allExprs[projectExprOrdinal];
+            projectRefs[i] = new RexLocalRef(index, expr.getType());
+
+            // Inherit meaningful field name if possible.
+            if (expr instanceof RexInputRef) {
+                int inputIndex = ((RexInputRef) expr).getIndex();
+                fieldNames[i] =
+                    child.getRowType().getFields()[inputIndex].getName();
+            } else {
+                fieldNames[i] = "$" + i;
+            }
         }
         RexLocalRef conditionRef;
         if (conditionExprOrdinal >= 0) {
@@ -468,7 +474,7 @@ levelLoop:
 
                         public String getFieldName(int index)
                         {
-                            return "$" + index;
+                            return fieldNames[index];
                         }
 
                         public RelDataType getFieldType(int index)
@@ -557,8 +563,6 @@ levelLoop:
      *
      * @param index
      * @param map
-     *
-     * @return
      */
     private static int indexOf(int index, int [] map)
     {
