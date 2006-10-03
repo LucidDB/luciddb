@@ -75,7 +75,7 @@ public class StdConvertDateUdf
      */
     private static long charToDateHelper(String format, String s)
     {
-        DateFormat df = getDateFormat(format, true);
+        DateFormat df = getDateFormat(format);
         long ret;
         try {
             ret = df.parse(s).getTime();
@@ -89,23 +89,15 @@ public class StdConvertDateUdf
     /**
      * Gets a date formatter, caching it in the Farrago runtime context
      */
-    private static DateFormat getDateFormat(String format, boolean gmt)
+    private static DateFormat getDateFormat(String format)
     {
         SimpleDateFormat sdf =
             (SimpleDateFormat) FarragoUdrRuntime.getContext();
         if (sdf == null) {
             sdf = new SimpleDateFormat(format);
-            if (gmt) {
-                sdf.setTimeZone(TimeZone.getTimeZone("GMT"));
-            }
             FarragoUdrRuntime.setContext(sdf);
         }
         return sdf;
-    }
-
-    private static DateFormat getDateFormat(String format) 
-    {
-        return getDateFormat(format, false);
     }
 }
 

@@ -451,6 +451,21 @@ public class FarragoOJRexCastImplementor
                                 Literal.makeLiteral(
                                     lhsType.getPrecision())))));
             } else {
+                // Set current_date for casting time to timestamp. If 
+                // rhsType is null then we may have to be ready for anything. 
+                // But it will be null even for current_timestamp, so the 
+                // condition below seems a bit excessive.
+                if (lhsType.getSqlTypeName() == SqlTypeName.Timestamp
+                    && (rhsType == null 
+                        || rhsType.getSqlTypeName() == SqlTypeName.Time))
+                {
+                    addStatement(
+                        new ExpressionStatement(
+                            new MethodCall(
+                                lhsExp,
+                                "setCurrentDate",
+                                new ExpressionList(getCurrentDate()))));
+                }
                 addStatement(
                     new ExpressionStatement(
                         new MethodCall(
@@ -949,6 +964,18 @@ public class FarragoOJRexCastImplementor
                 new VariableDeclarator(
                     var.toString(),
                     init));
+        }
+
+        /**
+         * Gets an expression for the current date
+         */
+        private Expression getCurrentDate()
+        {
+            // unfortunately, we hard code the method name here
+            return translator.convertVariable(
+                translator.getTypeFactory().createSqlType(SqlTypeName.Date),
+                "getContextVariable_CURRENT_DATE",
+                new ExpressionList());
         }
     }
 }

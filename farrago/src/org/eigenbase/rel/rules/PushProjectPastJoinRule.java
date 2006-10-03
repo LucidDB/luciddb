@@ -103,7 +103,7 @@ public class PushProjectPastJoinRule
         RelNode leftProjRel =
             pushProject.createProjectRefsAndExprs(
                 joinRel.getLeft(),
-                false,
+                true,
                 false);
         RelNode rightProjRel =
             pushProject.createProjectRefsAndExprs(

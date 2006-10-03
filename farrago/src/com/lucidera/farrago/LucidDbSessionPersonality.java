@@ -223,12 +223,48 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(new LcsTableDeleteRule());
         builder.addRuleInstance(new LcsTableMergeRule());
         
-        // Remove trivial projects so tables referenced in selects in the
-        // from clause can be optimized with the rest of the query
+        // Remove trivial projects first to avoid having to fire the pull
+        // projection rules below
+        builder.addRuleInstance(new RemoveTrivialProjectRule());
+        
+        // Execute rules that are needed to do proper join optimization:
+        // 1) push filters past joins
+        // 2) pull up projects above joins
+        // This ensures that ConvertMultiJoinRule can properly flatten
+        // join inputs into as few MultiJoinRels as possible
+        builder.addGroupBegin();
+        
         builder.addRuleInstance(new RemoveTrivialProjectRule());
 
+        // pull up projections above joins
+        builder.addRuleInstance(
+            new PullUpProjectsAboveJoinRule(
+                new RelOptRuleOperand(
+                    JoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(ProjectRel.class, null),
+                        new RelOptRuleOperand(ProjectRel.class, null)
+                    }),
+                "with two ProjectRel children"));
+        builder.addRuleInstance(
+            new PullUpProjectsAboveJoinRule(
+                new RelOptRuleOperand(
+                    JoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(ProjectRel.class, null)
+                    }),
+                "with ProjectRel on left"));
+        builder.addRuleInstance(
+            new PullUpProjectsAboveJoinRule(
+                new RelOptRuleOperand(
+                    JoinRel.class,
+                    new RelOptRuleOperand[] {
+                        new RelOptRuleOperand(RelNode.class, null),
+                        new RelOptRuleOperand(ProjectRel.class, null)
+                    }),
+                "with ProjectRel on right"));
+        
         // Push filters down.
-        builder.addGroupBegin();
         builder.addRuleInstance(new PushFilterPastSetOpRule());
         builder.addRuleInstance(new PushFilterPastProjectRule());
         builder.addRuleInstance(
@@ -242,7 +278,9 @@ public class LucidDbSessionPersonality
         builder.addRuleInstance(
             new PushFilterPastJoinRule(
                 new RelOptRuleOperand(JoinRel.class, null),
-                "without filter above join"));     
+                "without filter above join"));
+        
+        // merge filters
         builder.addRuleInstance(new MergeFilterRule());
         builder.addGroupEnd();
 

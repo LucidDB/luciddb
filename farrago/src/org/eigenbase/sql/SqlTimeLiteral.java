@@ -87,7 +87,7 @@ public class SqlTimeLiteral
      */
     public String toFormattedString()
     {
-        String result = new SimpleDateFormat(formatString).format(getTime());
+        String result = getFarragoTime().toString(formatString);
         final Calendar cal = getCal();
         if (precision > 0) {
             assert (precision <= 3);

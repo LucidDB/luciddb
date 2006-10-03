@@ -151,25 +151,13 @@ Messages:
 [0]:PC=0 Code=22001 (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
-+----------------------+
-|        EXPR$0        |
-+----------------------+
-| 2004-12-21 12:01:01  |
-+----------------------+
-0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as char(20));
-+-----------------------+
-|        EXPR$0         |
-+-----------------------+
-| 2004-12-21 12:01:01   |
-+-----------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> values cast('2004-12-21 12:01:01' as timestamp);
-+------------------------+
-|         EXPR$0         |
-+------------------------+
-| 2004-12-21 12:01:01.0  |
-+------------------------+
+0: jdbc:farrago:> -- FIXME: FRG-217 update Fennel timestamp convention
+0: jdbc:farrago:> -- values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
+0: jdbc:farrago:> -- values cast(timestamp '2004-12-21 12:01:01' as char(20));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- values cast('2004-12-21 12:01:01' as timestamp);
+0: jdbc:farrago:> 
 0: jdbc:farrago:> values cast('2004-12-21' as date);
 +-------------+
 |   EXPR$0    |
@@ -259,6 +247,127 @@ Messages:
 | EXPR$0  |
 +---------+
 |         |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- a few more Java Calc tests involving insertions
+0: jdbc:farrago:> alter system set "calcVirtualMachine"  = 'CALCVM_JAVA';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table d (
+. . . . . . . . >   d date primary key);
+0: jdbc:farrago:> insert into d values (
+. . . . . . . . >   date'2006-09-27');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> insert into d values (
+. . . . . . . . >   time'19:31:00');
+Error: At line 0, column 0: Cannot assign to target field 'D' of type DATE from source field 'EXPR$0' of type TIME(0) (state=,code=0)
+0: jdbc:farrago:> insert into d values (
+. . . . . . . . >   timestamp'2006-09-27 20:31:00');
+Error: At line 0, column 0: Cannot assign to target field 'D' of type DATE from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
+0: jdbc:farrago:> insert into d values (
+. . . . . . . . >   cast(timestamp'2006-09-27 20:31:00' as date));
+Error: Duplicate key detected:  [ 1159315200000 ] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from d;
++-------------+
+|      D      |
++-------------+
+| 2006-09-27  |
++-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> truncate table d;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t (
+. . . . . . . . >   t time primary key);
+0: jdbc:farrago:> insert into t values (
+. . . . . . . . >   time'19:31:00');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> insert into t values (
+. . . . . . . . >   date'2006-09-27');
+Error: At line 0, column 0: Cannot assign to target field 'T' of type TIME from source field 'EXPR$0' of type DATE (state=,code=0)
+0: jdbc:farrago:> insert into t values (
+. . . . . . . . >   timestamp'2006-09-27 19:31:00');
+Error: At line 0, column 0: Cannot assign to target field 'T' of type TIME from source field 'EXPR$0' of type TIMESTAMP(0) (state=,code=0)
+0: jdbc:farrago:> insert into t values (
+. . . . . . . . >   cast(timestamp'2006-09-27 19:31:00' as time));
+Error: Duplicate key detected:  [ 70260000 ] (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from t;
++-----------+
+|     T     |
++-----------+
+| 19:31:00  |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table ts(
+. . . . . . . . >   ts timestamp primary key);
+0: jdbc:farrago:> insert into ts values (
+. . . . . . . . >   timestamp'2006-09-27 19:31:00');
+0: jdbc:farrago:> insert into ts values (
+. . . . . . . . >   cast(date'2006-09-27' as timestamp));
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> insert into ts values (
+. . . . . . . . >   date'2006-09-27');
+Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP from source field 'EXPR$0' of type DATE (state=,code=0)
+0: jdbc:farrago:> insert into ts values (
+. . . . . . . . >   time'19:31:00');
+Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP from source field 'EXPR$0' of type TIME(0) (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from ts order by 1;
++------------------------+
+|           TS           |
++------------------------+
+| 2006-09-27 00:00:00.0  |
+| 2006-09-27 19:31:00.0  |
++------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- boundary cases
+0: jdbc:farrago:> values cast (timestamp'2006-09-27 00:00:00' as date);
++-------------+
+|   EXPR$0    |
++-------------+
+| 2006-09-27  |
++-------------+
+0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as date);
++-------------+
+|   EXPR$0    |
++-------------+
+| 2006-09-27  |
++-------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> values cast (timestamp'2006-09-27 00:00:00' as time);
++-----------+
+|  EXPR$0   |
++-----------+
+| 00:00:00  |
++-----------+
+0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as time);
++-----------+
+|  EXPR$0   |
++-----------+
+| 23:59:59  |
++-----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test comparison
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should set date to current_date
+0: jdbc:farrago:> values cast(
+. . . . . . . . >   cast(time'19:31:00' as timestamp)
+. . . . . . . . >   as date) = current_date;
++---------+
+| EXPR$0  |
++---------+
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- ensure time does not keep unecessary components
+0: jdbc:farrago:> values cast (timestamp'2006-09-27 23:59:59' as time) = time'23:59:59';
++---------+
+| EXPR$0  |
++---------+
+| true    |
 +---------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

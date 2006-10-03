@@ -770,7 +770,7 @@ public class LoptMetadataTest
         searchColumn(6, value, 0.2, 1.0);
 
         cal.clear();
-        cal.setTimeZone(new SimpleTimeZone(0, "GMT+00:00"));
+        cal.setTimeZone(TimeZone.getDefault());
         cal.set(2002, 0, 1, 12, 1, 1);
         value = rexBuilder.makeTimestampLiteral(cal, 3);
         searchColumn(7, value, 0.4, 1.0);

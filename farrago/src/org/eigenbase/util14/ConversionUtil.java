@@ -22,7 +22,10 @@
 */
 package org.eigenbase.util14;
 
+import java.sql.*;
 import java.text.*;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 import org.eigenbase.resource.*;
 
@@ -118,6 +121,110 @@ public class ConversionUtil
         } else {
             throw EigenbaseResource.instance().InvalidBoolean.ex(str);
         }
+    }
+
+    /**
+     * Converts a GmtDate to a java.sql.Date. A GmtDate has valid date 
+     * components in GMT time, while a java.sql.Date is valid for the 
+     * client time zone.
+     * 
+     * @param gmtDate a date relative to the GMT time zone
+     * @param zone the client time zone
+     * @return a Date with Jdbc semantics
+     */
+    public static Date gmtToJdbcDate(GmtDate gmtDate, TimeZone zone)
+    {
+        Calendar cal = Calendar.getInstance(DateTimeUtil.gmtZone);
+        cal.setTime(gmtDate);
+
+        int year = cal.get(Calendar.YEAR);
+        int doy = cal.get(Calendar.DAY_OF_YEAR);
+
+        cal.clear();
+        cal.setTimeZone(zone);
+        cal.set(Calendar.YEAR, year);
+        cal.set(Calendar.DAY_OF_YEAR, doy);
+        return new Date(cal.getTimeInMillis());
+    }
+
+    /**
+     * Converts a GmtTime to a java.sql.Time. A GmtTime has valid time 
+     * components in GMT time, while a java.sql.Time is valid for the 
+     * client time zone.
+     * 
+     * @param gmtTime a time relative to the GMT time zone
+     * @param zone the client time zone
+     * @return a Time with Jdbc semantics
+     */
+    public static Time gmtToJdbcTime(GmtTime gmtTime, TimeZone zone)
+    {
+        Calendar cal = Calendar.getInstance(DateTimeUtil.gmtZone);
+        cal.setTime(gmtTime);
+        
+        int hour = cal.get(Calendar.HOUR_OF_DAY);
+        int minute = cal.get(Calendar.MINUTE);
+        int second = cal.get(Calendar.SECOND);
+        int millis = cal.get(Calendar.MILLISECOND);
+
+        cal.clear();
+        cal.setTimeZone(zone);
+        cal.set(Calendar.HOUR_OF_DAY, hour);
+        cal.set(Calendar.MINUTE, minute);
+        cal.set(Calendar.SECOND, second);
+        cal.set(Calendar.MILLISECOND, millis);
+        return new Time(cal.getTimeInMillis());
+    }
+
+    /**
+     * Converts a java.util.Date to a GmtDate. A java.util.Date has valid 
+     * date components for the client time zone, while a GmtDate is valid 
+     * for the GMT time zone.
+     * 
+     * @param jdbcDate a date with Jdbc semantics
+     * @param zone the client time zone
+     * @return a Date with Farrago semanctics.
+     */
+    public static GmtDate jdbcToGmtDate(
+        java.util.Date jdbcDate, TimeZone zone)
+    {
+        long millis = jdbcDate.getTime();
+        return new GmtDate(millis + zone.getOffset(millis));
+    }
+
+    /**
+     * Converts a java.util.Time to a GmtTime. A java.util.Time has valid 
+     * time components for the client time zone, while a GmtTime is valid 
+     * for the GMT time zone.
+     * 
+     * @param jdbcTime a Time with Jdbc semantics
+     * @param zone the client time zone
+     * @return a Time with Farrago semanctics.
+     */
+    public static GmtTime jdbcToGmtTime(
+        java.util.Date jdbcTime, TimeZone zone)
+    {
+        long millis = jdbcTime.getTime();
+        return new GmtTime(millis + zone.getOffset(millis));
+    }
+
+    /**
+     * Converts a Timestamp into a Date by setting time 
+     * components to zero.
+     * 
+     * @param ts the timestamp to be converted
+     * @param zone the time zone in which to interpret the timestamp
+     * @return a date with zeroed time components
+     */
+    public static Date timestampToDate(
+        Timestamp ts, TimeZone zone)
+    {
+        Calendar cal = Calendar.getInstance(zone);
+        cal.setTime(ts);
+        cal.set(Calendar.HOUR, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return new Date(cal.getTimeInMillis());
     }
 }
 

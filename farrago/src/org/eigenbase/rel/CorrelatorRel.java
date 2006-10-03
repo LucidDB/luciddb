@@ -114,7 +114,7 @@ public final class CorrelatorRel
             });
     }
 
-    public List getCorrelations()
+    public List<Correlation> getCorrelations()
     {
         return correlations;
     }
@@ -131,7 +131,7 @@ public final class CorrelatorRel
      * identify and set dynamic variables
      */
     public static class Correlation
-        implements Cloneable
+        implements Cloneable, Comparable<Correlation>
     {
         private final int id;
         private final int offset;
@@ -156,6 +156,12 @@ public final class CorrelatorRel
         {
             return "var" + id + "=offset" + offset;
         }
+        
+        public int compareTo(Correlation other)
+        {
+            return (id - other.id);
+        }
+        
     }
 }
 

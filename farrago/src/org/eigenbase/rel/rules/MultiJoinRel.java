@@ -27,6 +27,7 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 
+import java.util.*;
 
 /**
  * A MultiJoinRel represents a join of N inputs, whereas other join relnodes
@@ -38,26 +39,40 @@ import org.eigenbase.rex.*;
 public final class MultiJoinRel
     extends AbstractRelNode
 {
-
     //~ Instance fields --------------------------------------------------------
 
     private RelNode [] inputs;
-    RexNode joinFilter;
-    RelDataType rowType;
+    private RexNode joinFilter;
+    private RelDataType rowType;
+    private boolean isFullOuterJoin;
+    private RexNode [] outerJoinConditions;
+    private JoinRelType [] joinTypes;
 
     //~ Constructors -----------------------------------------------------------
 
     /**
+     * Constructs a MultiJoinRel object
+     * 
      * @param cluster cluster that join belongs to
      * @param inputs inputs into this multirel join
      * @param joinFilters join filters applicable to this join node
      * @param rowType row type of the join result of this node
+     * @param isFullOuterJoin true if the join is a full outer join
+     * @param outerJoinConditions outer join condition associated with each
+     * join input, if the input is null-generating in a left or right outer
+     * join; null otherwise
+     * @param joinTypes the join type corresponding to each input; if an input
+     * is null-generating in a left or right outer join, the entry indicates
+     * the type of outer join; otherwise, the entry is set to INNER
      */
     public MultiJoinRel(
         RelOptCluster cluster,
         RelNode [] inputs,
         RexNode joinFilter,
-        RelDataType rowType)
+        RelDataType rowType,
+        boolean isFullOuterJoin,
+        RexNode [] outerJoinConditions,
+        JoinRelType [] joinTypes)
     {
         super(
             cluster,
@@ -65,6 +80,9 @@ public final class MultiJoinRel
         this.inputs = inputs;
         this.joinFilter = joinFilter;
         this.rowType = rowType;
+        this.isFullOuterJoin = isFullOuterJoin;
+        this.outerJoinConditions = outerJoinConditions;
+        this.joinTypes = joinTypes;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -76,22 +94,45 @@ public final class MultiJoinRel
                 getCluster(),
                 RelOptUtil.clone(inputs),
                 joinFilter.clone(),
-                rowType);
+                rowType,
+                isFullOuterJoin,
+                RexUtil.clone(outerJoinConditions),
+                joinTypes.clone());
         clone.inheritTraitsFrom(this);
         return clone;
     }
 
     public void explain(RelOptPlanWriter pw)
     {
-        String [] terms = new String[inputs.length + 1];
-        for (int i = 0; i < inputs.length; i++) {
+        int nInputs = inputs.length;
+        String [] terms = new String[nInputs + 4];
+        for (int i = 0; i < nInputs; i++) {
             terms[i] = "input#" + i;
         }
-        terms[inputs.length] = "joinFilter";
+        terms[nInputs] = "joinFilter";
+        terms[nInputs + 1] = "isFullOuterJoin";
+        terms[nInputs + 2] = "joinTypes";
+        terms[nInputs + 3] = "outerJoinConditions";
+        List<String> joinTypeNames = new ArrayList<String>();
+        for (int i = 0; i < nInputs; i++) {
+            joinTypeNames.add(joinTypes[i].name());
+        }
+        List<String> outerJoinConds = new ArrayList<String>();
+        for (int i = 0; i < nInputs; i++) {
+            if (outerJoinConditions[i] == null) {
+                outerJoinConds.add("NULL");
+            } else {
+                outerJoinConds.add(outerJoinConditions[i].toString());
+            }
+        }
         pw.explain(
             this,
             terms,
-            new Object[] {});
+            new Object[] {
+                isFullOuterJoin,
+                joinTypeNames,
+                outerJoinConds
+            });
     }
 
     public RelDataType deriveRowType()
@@ -117,11 +158,35 @@ public final class MultiJoinRel
     }
 
     /**
-     * Returns join filters associated with this MultiJoinRel
+     * @return join filters associated with this MultiJoinRel
      */
     public RexNode getJoinFilter()
     {
         return joinFilter;
+    }
+    
+    /**
+     * @return true if the MultiJoinRel corresponds to a full outer join.
+     */
+    public boolean isFullOuterJoin()
+    {
+        return isFullOuterJoin;
+    }
+    
+    /**
+     * @return outer join conditions for null-generating inputs
+     */
+    public RexNode [] getOuterJoinConditions()
+    {
+        return outerJoinConditions;
+    }
+    
+    /**
+     * @return join types of each input
+     */
+    public JoinRelType [] getJoinTypes()
+    {
+        return joinTypes;
     }
 }
 

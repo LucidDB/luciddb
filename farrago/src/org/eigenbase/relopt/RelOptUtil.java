@@ -466,36 +466,47 @@ public abstract class RelOptUtil
         }
 
         if (extraExpr != null) {
+            RexBuilder rexBuilder = cluster.getRexBuilder();
+            RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+
+            assert (extraExpr == rexBuilder.makeLiteral(true));
+        	
             // this should only be called for the exists case
             // first stick an Agg on top of the subquery
             // agg does not like no agg functions so just pretend it is
-            // doing a count
-            RelDataType returnType =
-                SqlStdOperatorTable.countOperator.getReturnType(
-                    cluster.getRexBuilder().getTypeFactory());
+            // doing a min(TRUE)
+        	
+            RexNode[] exprs = new RexNode[1];
+            exprs[0] = extraExpr;
             
-            final AggregateRelBase.Call countCall =
+            ret = CalcRel.createProject(ret, exprs, null);            
+            RelDataType[] argTypes = new RelDataType[1];
+            argTypes[0] = typeFactory.createSqlType(SqlTypeName.Boolean);
+            
+            SqlAggFunction minFunction = 
+                new SqlMinMaxAggFunction(
+                    argTypes,
+                    true,
+                        SqlMinMaxAggFunction.MINMAX_COMPARABLE);
+            
+            RelDataType returnType = minFunction.inferReturnType(typeFactory, argTypes);
+            
+            int[] pos = new int[1];
+            pos[0]=0;
+            
+            final AggregateRelBase.Call aggCall =
                 new AggregateRelBase.Call(
-                    SqlStdOperatorTable.countOperator,
+                    minFunction,
                     false,
-                    new int[0],
+                    pos,
                     returnType);
             
-            RelNode aggRel =
+            ret =
                 new AggregateRel(
                     ret.getCluster(),
                     ret,
                     0,
-                    new AggregateRel.Call[] {countCall});
-            
-            final RexNode [] expressions = new RexNode[1];
-            String [] fieldNames = new String[1];
-
-            expressions[0] = extraExpr;
-            fieldNames[0] =
-                Util.uniqueFieldName(fieldNames, 0, extraName);
-            ret = CalcRel.createProject(aggRel, expressions, fieldNames);            
-
+                    new AggregateRel.Call[] {aggCall});            
         }
 
         return ret;

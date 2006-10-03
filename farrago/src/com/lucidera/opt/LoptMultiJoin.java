@@ -68,6 +68,20 @@ public class LoptMultiJoin
     private RelNode [] joinFactors;
 
     /**
+     * If a join factor is null generating in a left or right outer join,
+     * joinTypes indicates the join type corresponding to the factor.
+     * Otherwise, it is set to INNER.
+     */
+    private JoinRelType [] joinTypes;
+    
+    /**
+     * If a join factor is null generating in a left or right outer join,
+     * the bitmap contains the non-null generating factors that the null
+     * generating factor is dependent upon
+     */
+    private BitSet [] outerJoinFactors;
+    
+    /**
      * For each join filter, associates a bitmap indicating all factors
      * referenced by the filter
      */
@@ -99,6 +113,11 @@ public class LoptMultiJoin
      * Weights of each factor combination
      */
     int [][] factorWeights;
+    
+    /**
+     * Type factory
+     */
+    RelDataTypeFactory factory;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -107,7 +126,7 @@ public class LoptMultiJoin
         this.multiJoin = multiJoin;
         joinFactors = multiJoin.getInputs();
         nJoinFactors = joinFactors.length;
-
+ 
         joinFilters = new ArrayList<RexNode>();
         RelOptUtil.decompCF(
             multiJoin.getJoinFilter(),
@@ -123,9 +142,13 @@ public class LoptMultiJoin
                 joinFactors[i].getRowType().getFields().length;
             start += nFieldsInJoinFactor[i];
         }
+        
+        setOuterJoinInfo();
 
         // determine which join factors each join filter references
-        setJoinFilterRefs(nTotalFields);
+        setJoinFilterRefs();
+        
+        factory = multiJoin.getCluster().getTypeFactory();
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -239,15 +262,82 @@ public class LoptMultiJoin
     {
         return joinStart[factIdx];
     }
+    
+    /**
+     * @param factIdx factor for which information will be returned
+     * 
+     * @return whether or not the factor corresponds to a null-generating
+     * factor in a left or right outer join
+     */
+    public boolean isNullGenerating(int factIdx)
+    {
+        return joinTypes[factIdx] != JoinRelType.INNER;
+    }
+    
+    /**
+     * @param factIdx factor for which information will be returned
+     * 
+     * @return bitmap containing the factors that a null generating factor
+     * is dependent upon, if the factor is null generating in a left or right
+     * outer join; otherwise null is returned
+     */
+    public BitSet getOuterJoinFactors(int factIdx)
+    {
+        return outerJoinFactors[factIdx];
+    }
 
+    /**
+     * Extracts outer join information from the join factors, including the
+     * type of outer join and the factors that a null-generating factor
+     * is dependent upon.
+     */
+    private void setOuterJoinInfo()
+    {
+        joinTypes = multiJoin.getJoinTypes();
+        RexNode [] outerJoinConds = multiJoin.getOuterJoinConditions();
+        outerJoinFactors = new BitSet[nJoinFactors];
+        for (int i = 0; i < nJoinFactors; i++) {
+            if (outerJoinConds[i] != null) {
+                // set a bitmap containing the factors referenced in the
+                // ON condition of the outer join; mask off the factor
+                // corresponding to the factor itself
+                BitSet dependentFactors =
+                    getJoinFilterFactorBitmap(outerJoinConds[i], false);
+                dependentFactors.clear(i);
+                outerJoinFactors[i] = dependentFactors;
+            }
+        }
+    }
+    
+    /**
+     * Returns a bitmap representing the factors referenced in a join filter
+     * 
+     * @param joinFilter the join filter
+     * @param setFields if true, add the fields referenced by the join filter
+     * into a map
+     * 
+     * @return the bitmap containing the factor references
+     */
+    private BitSet getJoinFilterFactorBitmap(
+        RexNode joinFilter,
+        boolean setFields)
+    {
+        BitSet fieldRefBitmap = new BitSet(nTotalFields);
+        joinFilter.accept(new RelOptUtil.InputFinder(fieldRefBitmap));
+        if (setFields) {
+            fieldsRefByJoinFilter.put(joinFilter, fieldRefBitmap);
+        }
+
+        BitSet factorRefBitmap = new BitSet(nJoinFactors);
+        setFactorBitmap(factorRefBitmap, fieldRefBitmap);
+        return factorRefBitmap;
+    }
+    
     /**
      * Sets bitmaps indicating which factors and fields each join filter
      * references
-     *
-     * @param nTotalFields total number of fields referenced by the MultiJoinRel
-     * being optimized
      */
-    private void setJoinFilterRefs(int nTotalFields)
+    private void setJoinFilterRefs()
     {
         fieldsRefByJoinFilter = new HashMap<RexNode, BitSet>();
         factorsRefByJoinFilter = new HashMap<RexNode, BitSet>();
@@ -260,12 +350,8 @@ public class LoptMultiJoin
             if (joinFilter.isAlwaysTrue()) {
                 filterIter.remove();
             }
-            BitSet fieldRefBitmap = new BitSet(nTotalFields);
-            joinFilter.accept(new RelOptUtil.InputFinder(fieldRefBitmap));
-            fieldsRefByJoinFilter.put(joinFilter, fieldRefBitmap);
-
-            BitSet factorRefBitmap = new BitSet(nJoinFactors);
-            setFactorBitmap(factorRefBitmap, fieldRefBitmap);
+            BitSet factorRefBitmap =
+                getJoinFilterFactorBitmap(joinFilter, true);
             factorsRefByJoinFilter.put(joinFilter, factorRefBitmap);
         }
     }
@@ -278,7 +364,8 @@ public class LoptMultiJoin
      * be set by this method
      * @param fieldRefBitmap bitmap reprepsenting fields referenced
      */
-    private void setFactorBitmap(BitSet factorRefBitmap,
+    private void setFactorBitmap(
+        BitSet factorRefBitmap,
         BitSet fieldRefBitmap)
     {
         for (int field = fieldRefBitmap.nextSetBit(0); field >= 0;
@@ -447,6 +534,28 @@ public class LoptMultiJoin
         for (int child : children) {
             childFactors.set(child);
         }
+    }
+    
+    /**
+     * Retrieves the fields corresponding to a join between a left and right
+     * tree
+     * 
+     * @param left left hand side of the join
+     * @param right right hand side of the join
+     * 
+     * @return fields of the join
+     */
+    public RelDataTypeField [] getJoinFields(
+        LoptJoinTree left,
+        LoptJoinTree right)
+    {
+        RelDataType rowType =
+            factory.createJoinType(
+                new RelDataType[] {
+                    left.getJoinTree().getRowType(),
+                    right.getJoinTree().getRowType()
+                });
+        return rowType.getFields();
     }
 }
 

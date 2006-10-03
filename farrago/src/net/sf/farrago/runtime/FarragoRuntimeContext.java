@@ -308,7 +308,6 @@ public class FarragoRuntimeContext
         if (currentTime == 0) {
             // internally, we use a psuedo local time
             currentTime = System.currentTimeMillis();
-            currentTime += TimeZone.getDefault().getOffset(currentTime);
         }
         return currentTime;
     }

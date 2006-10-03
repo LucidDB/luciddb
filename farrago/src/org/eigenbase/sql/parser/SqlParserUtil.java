@@ -36,6 +36,7 @@ import org.eigenbase.resource.*;
 import org.eigenbase.sql.*;
 import org.eigenbase.trace.*;
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -53,11 +54,11 @@ public final class SqlParserUtil
     static final Logger tracer = EigenbaseTrace.getParserTracer();
     public static final String [] emptyStringArray = new String[0];
     public static final List emptyList = Collections.EMPTY_LIST;
-    public static final String DateFormatStr = "yyyy-MM-dd";
-    public static final String TimeFormatStr = "HH:mm:ss";
+    public static final String DateFormatStr = DateTimeUtil.DateFormatStr;
+    public static final String TimeFormatStr = DateTimeUtil.TimeFormatStr;
     public static final String PrecisionTimeFormatStr = TimeFormatStr + ".S";
-    public static final String TimestampFormatStr =
-        DateFormatStr + " " + TimeFormatStr;
+    public static final String TimestampFormatStr = 
+        DateTimeUtil.TimestampFormatStr;
     public static final String PrecisionTimestampFormatStr =
         TimestampFormatStr + ".S";
 
@@ -107,6 +108,9 @@ public final class SqlParserUtil
         return new BigDecimal(s);
     }
 
+    /**
+     * @deprecated this method is not localized for Farrago standards
+     */
     public static java.sql.Date parseDate(String s)
     {
         return java.sql.Date.valueOf(s);
@@ -120,6 +124,9 @@ public final class SqlParserUtil
         return java.sql.Time.valueOf(s);
     }
 
+    /**
+     * @deprecated this method is not localized for Farrago standards
+     */
     public static java.sql.Timestamp parseTimestamp(String s)
     {
         return java.sql.Timestamp.valueOf(s);
@@ -135,121 +142,6 @@ public final class SqlParserUtil
         SimpleDateFormat df = new SimpleDateFormat(pattern);
         Util.discard(df);
     }
-
-    /**
-     * Parses a string using {@link SimpleDateFormat} and a given pattern
-     *
-     * @param s string to be parsed
-     * @param pattern {@link SimpleDateFormat} pattern
-     * @param pp position to start parsing from
-     *
-     * @return Null if parsing failed.
-     *
-     * @pre pattern != null
-     */
-    private static Calendar parseDateFormat(
-        String s,
-        String pattern,
-        TimeZone tz,
-        ParsePosition pp)
-    {
-        Util.pre(pattern != null, "pattern != null");
-        SimpleDateFormat df = new SimpleDateFormat(pattern);
-        if (tz == null) {
-            tz = new SimpleTimeZone(0, "GMT+00:00");
-        }
-        Calendar ret = Calendar.getInstance(tz);
-        df.setCalendar(ret);
-        df.setLenient(false);
-
-        Date d = df.parse(s, pp);
-        if (null == d) {
-            return null;
-        }
-        ret.setTime(d);
-        return ret;
-    }
-
-    /**
-     * Parses a string using {@link SimpleDateFormat} and a given pattern.
-     *
-     * @param s string to be parsed
-     * @param pattern {@link SimpleDateFormat} pattern
-     *
-     * @return Null if parsing failed.
-     *
-     * @pre pattern != null
-     */
-    public static Calendar parseDateFormat(
-        String s,
-        String pattern,
-        TimeZone tz)
-    {
-        Util.pre(pattern != null, "pattern != null");
-        ParsePosition pp = new ParsePosition(0);
-        Calendar ret = parseDateFormat(s, pattern, tz, pp);
-        if (pp.getIndex() != s.length()) {
-            // Didn't consume entire string - not good
-            return null;
-        }
-        return ret;
-    }
-
-    public static PrecisionTime parsePrecisionDateTimeLiteral(
-        String s,
-        String pattern,
-        TimeZone tz)
-    {
-        ParsePosition pp = new ParsePosition(0);
-        Calendar cal = parseDateFormat(s, pattern, tz, pp);
-        if (cal == null) {
-            return null; // Invalid date/time format
-        }
-
-        int p = 0;
-        if (pp.getIndex() < s.length()) {
-            // Check to see if rest is decimal portion
-            if (s.charAt(pp.getIndex()) != '.') {
-                return null;
-            }
-
-            // Skip decimal sign
-            pp.setIndex(pp.getIndex() + 1);
-
-            // Parse decimal portion
-            if (pp.getIndex() < s.length()) {
-                String secFraction = s.substring(pp.getIndex());
-                if (!secFraction.matches("\\d+")) {
-                    return null;
-                }
-                NumberFormat nf = NumberFormat.getIntegerInstance();
-                Number num = nf.parse(s, pp);
-                if ((num == null) || (pp.getIndex() != s.length())) {
-                    // Invalid decimal portion
-                    return null;
-                }
-
-                // Determine precision - only support prec 3 or lower
-                // (milliseconds) Higher precisions are quietly rounded away
-                p = Math.min(
-                        3,
-                        secFraction.length());
-
-                // Calculate milliseconds
-                int ms =
-                    (int) Math.round(
-                        num.longValue()
-                        * Math.pow(10,
-                            3 - secFraction.length()));
-                cal.add(Calendar.MILLISECOND, ms);
-            }
-        }
-
-        assert (pp.getIndex() == s.length());
-        PrecisionTime ret = new PrecisionTime(cal, p);
-        return ret;
-    }
-
 
     // TODO: angel 2006-08-27 There is duplication of logic in
     // parseIntervalValue and getIntervalValue
@@ -1260,31 +1152,6 @@ outer:
         public String getStrength()
         {
             return strength;
-        }
-    }
-
-    /**
-     * Helper class for {@link SqlParserUtil#parsePrecisionDateTimeLiteral}
-     */
-    public static class PrecisionTime
-    {
-        private final Calendar cal;
-        private final int precision;
-
-        public PrecisionTime(Calendar cal, int precision)
-        {
-            this.cal = cal;
-            this.precision = precision;
-        }
-
-        public Calendar getCalendar()
-        {
-            return cal;
-        }
-
-        public int getPrecision()
-        {
-            return precision;
         }
     }
 

@@ -76,7 +76,7 @@ public class SqlToRelConverter
     private boolean shouldConvertTableAccess;
     protected final RelDataTypeFactory typeFactory;
     private final SqlNodeToRexConverter exprConverter;
-    
+
     /**
      * Fields used in name resolution for correlated subqueries.
      */
@@ -84,7 +84,25 @@ public class SqlToRelConverter
         new HashMap<String, DeferredLookup>();
     private int nextCorrel = 0;
     private final String correlPrefix = "$cor";
-        
+
+    /**
+     * Fields used in decorrelation.
+     */
+    private final Map<String, RelNode> mapCorrelToRefRel =
+        new HashMap<String, RelNode>();
+    
+    private final SortedMap<CorrelatorRel.Correlation, CorrelatorRel> 
+        mapCorVarToCorRel =
+            new TreeMap<CorrelatorRel.Correlation, CorrelatorRel>();
+
+    private final Map<RelNode, SortedSet<CorrelatorRel.Correlation> > 
+        mapRefRelToCorVar =
+            new HashMap<RelNode, SortedSet<CorrelatorRel.Correlation> >();
+
+    private final Map<RexFieldAccess, CorrelatorRel.Correlation> 
+        mapFieldAccessToCorVar =
+            new HashMap<RexFieldAccess, CorrelatorRel.Correlation>();
+
     /**
      * Stack of names of datasets requested by the <code>
      * TABLE(SAMPLE(&lt;datasetName&gt;, &lt;query&gt;))</code> construct.
@@ -221,10 +239,11 @@ public class SqlToRelConverter
             query = validator.validate(query);
         }
         
-        final RelNode result = convertQueryRecursive(query, top);
+        RelNode result = convertQueryRecursive(query, top);
 
-        // TODO rchen 2006-08-31 decorrelate
-        // if (!mapCorVarToCorRel.isEmpty())
+        if (!mapCorVarToCorRel.isEmpty()) {
+            result = decorrelateQuery(result);
+        }
         
         if (!query.getKind().isA(SqlKind.Dml)) {
             // Verify that conversion from SQL to relational algebra did
@@ -399,9 +418,24 @@ public class SqlToRelConverter
         }
         replaceSubqueries(bb, where);
         final RexNode convertedWhere = bb.convertExpression(where);
+        
+        RelNode inputRel = bb.root;
+        Set<String> correlatedVariablesBefore = RelOptUtil.getVariablesUsed(inputRel);
+        
         bb.setRoot(
             CalcRel.createFilter(bb.root, convertedWhere),
             false);
+        
+        Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(bb.root);
+
+        correlatedVariables.removeAll(correlatedVariablesBefore);
+        
+        // A list of corralated varaibles have been gathered for the emerging
+        // filter rel. They are curently associated with the input to the filter.
+        // Update that mapping now.
+        for (String correl : correlatedVariables) {
+            mapCorrelToRefRel.put(correl, bb.root);
+        }
     }
 
     private void replaceSubqueries(
@@ -1207,22 +1241,38 @@ public class SqlToRelConverter
                 String originalRelName = lookup.getOriginalRelName();
                 String originalFieldName = fieldAccess.getField().getName();
                 
-                int [] offsets = { -1 };
+                int [] nsIndexes = { -1 };
                 final SqlValidatorScope [] ancestorScopes = { null };
                 SqlValidatorNamespace foundNs =
                     lookup.bb.scope.resolve(originalRelName, ancestorScopes,
-                                            offsets);
-                
-                assert (foundNs != null);
+                                            nsIndexes);
 
+                assert (foundNs != null);
+                assert (nsIndexes.length == 1);
+                
+                int childNamespaceIndex = nsIndexes[0];
+                
                 SqlValidatorScope ancestorScope = ancestorScopes[0];
                 boolean correlInCurrentScope = (ancestorScope == bb.scope);
 
                 if (correlInCurrentScope) {
-                    final int pos =
-                        leftRel.getRowType().getFieldOrdinal(originalFieldName);
+                    int namespaceOffset = 0;
+                    if (childNamespaceIndex > 0) {
+                        // If not the first child, need to figure out the width of output
+                        // types from all the preceding namespaces
+                        assert (ancestorScope instanceof ListScope);
+                        ListScope scope = (ListScope)ancestorScope;
                         
-                    assert (leftRel.getRowType().getField(originalFieldName).getType()
+                        for (int i = 0; i < childNamespaceIndex; i ++) {
+                            namespaceOffset += 
+                                scope.getChild(i).getRowType().getFieldCount();
+                        }
+                    }
+                    
+                    final int pos = namespaceOffset +
+                        foundNs.getRowType().getFieldOrdinal(originalFieldName);
+                        
+                    assert (foundNs.getRowType().getField(originalFieldName).getType()
                         == lookup.getFieldAccess(correlName).getField().getType());
                         
                     assert (pos != -1);
@@ -1231,6 +1281,21 @@ public class SqlToRelConverter
                             getCorrelOrdinal(correlName), pos);
                         
                     correlations.add(newCorVar);
+
+                    mapFieldAccessToCorVar.put(fieldAccess, newCorVar);
+                    
+                    RelNode refRel = mapCorrelToRefRel.get(correlName);
+                    
+                    SortedSet<CorrelatorRel.Correlation> corVarList;
+                    
+                    if (!mapRefRelToCorVar.containsKey(refRel)) {
+                        corVarList =
+                            new TreeSet<CorrelatorRel.Correlation> ();
+                    } else {
+                        corVarList = mapRefRelToCorVar.get(refRel);
+                    }
+                    corVarList.add(newCorVar);
+                    mapRefRelToCorVar.put(refRel, corVarList);
                 }
             }
             
@@ -1242,6 +1307,9 @@ public class SqlToRelConverter
                         rightRel,
                         correlations,
                         joinType);
+                for (int i = 0; i < correlations.size(); i ++) {
+                    mapCorVarToCorRel.put(correlations.get(i), corRel);
+                }
                 return corRel;
             }
         }
@@ -1388,6 +1456,7 @@ public class SqlToRelConverter
 
         // compute inputs to the aggregator
         RexNode [] preExprs = aggConverter.getPreExprs();
+        
         if (preExprs.length == 0) {
             // Special case for COUNT(*), where we can end up with no inputs at
             // all.  The rest of the system doesn't like 0-tuples, so we select
@@ -1395,13 +1464,14 @@ public class SqlToRelConverter
             preExprs = new RexNode[1];
             preExprs[0] = rexBuilder.makeLiteral(true);
         }
+        
         bb.setRoot(
             CalcRel.createProject(
                 bb.root,
                 preExprs,
                 null),
             false);
-
+        
         // add the aggregator
         final AggregateRel.Call [] aggCalls = aggConverter.getAggCalls();
         bb.setRoot(
@@ -1539,6 +1609,15 @@ public class SqlToRelConverter
         return new RelFieldCollation(ordinal, direction);
     }
 
+    protected RelNode decorrelateQuery(RelNode rootRel)
+    {
+        RelDecorrelator decorrelator =
+            new RelDecorrelator(rexBuilder, mapRefRelToCorVar,
+                mapCorVarToCorRel, mapFieldAccessToCorVar);
+        RelNode newRootRel = decorrelator.decorrelate(rootRel);
+        return newRootRel;
+    }
+        
     /**
      * Recursively converts a query to a relational expression.
      *
@@ -2092,12 +2171,21 @@ public class SqlToRelConverter
 
                     fieldNameList.add(SqlUtil.deriveAliasFromOrdinal(j));
                 }
-                joinList.set(
-                    i,
+                
+                RelNode projRel = 
                     CalcRel.createProject(
                         new OneRowRel(cluster),
                         selectList,
-                        fieldNameList));
+                        fieldNameList);
+                
+                Set<String> correlatedVariables = RelOptUtil.getVariablesUsed(projRel);
+                
+                // Associate the corralated varaibles with the new ProjectRel.
+                for (String correl : correlatedVariables) {
+                    mapCorrelToRefRel.put(correl, projRel);
+                }
+
+                joinList.set(i, projRel);
             }
         }
 

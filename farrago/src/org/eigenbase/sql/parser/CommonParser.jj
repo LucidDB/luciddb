@@ -121,12 +121,12 @@ JAVACODE SqlDateLiteral parseDateLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
     String dateStr = SqlParserUtil.strip(s, "'");
-    Calendar cal = SqlParserUtil.parseDateFormat(
-        dateStr, SqlParserUtil.DateFormatStr, null);
+    Calendar cal = DateTimeUtil.parseDateFormat(
+        dateStr, DateTimeUtil.DateFormatStr, DateTimeUtil.gmtZone);
     if (null==cal) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.IllegalLiteral.str("DATE", s, pos.toString(),
-            res.BadFormat.str(SqlParserUtil.DateFormatStr));
+            res.BadFormat.str(DateTimeUtil.DateFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createDate(cal, pos);
@@ -136,13 +136,13 @@ JAVACODE SqlTimeLiteral parseTimeLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
     String dateStr = SqlParserUtil.strip(s, "'");
-    SqlParserUtil.PrecisionTime pt =
-    SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimeFormatStr, null);
+    DateTimeUtil.PrecisionTime pt =
+    DateTimeUtil.parsePrecisionDateTimeLiteral(
+        dateStr, DateTimeUtil.TimeFormatStr, DateTimeUtil.gmtZone);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.IllegalLiteral.str("TIME", s, pos.toString(),
-            res.BadFormat.str(SqlParserUtil.TimeFormatStr));
+            res.BadFormat.str(DateTimeUtil.TimeFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTime(pt.getCalendar(), pt.getPrecision(), pos);
@@ -152,13 +152,13 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(
     String s, SqlParserPos pos) throws ParseException
 {
     String dateStr = SqlParserUtil.strip(s, "'");
-    SqlParserUtil.PrecisionTime pt =
-    SqlParserUtil.parsePrecisionDateTimeLiteral(
-        dateStr, SqlParserUtil.TimestampFormatStr, null);
+    DateTimeUtil.PrecisionTime pt =
+    DateTimeUtil.parsePrecisionDateTimeLiteral(
+        dateStr, DateTimeUtil.TimestampFormatStr, null);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.IllegalLiteral.str("TIMESTAMP", s, pos.toString(),
-            res.BadFormat.str(SqlParserUtil.TimestampFormatStr));
+            res.BadFormat.str(DateTimeUtil.TimestampFormatStr));
         throw new ParseException(msg);
     }
     return SqlLiteral.createTimestamp(pt.getCalendar(), pt.getPrecision(), pos);

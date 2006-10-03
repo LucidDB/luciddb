@@ -41,6 +41,9 @@
   <!-- directory of csv files -->
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
 
+  <!-- directory for log files -->
+  <property name="log.dir" value="${open.dir}/luciddb/testlog" />
+
   <!-- classpath for running tests via ant -->
   <path id="test.classpath">
     <pathelement path="${open.dir}/luciddb/classes"/>
@@ -67,6 +70,7 @@
       <fileset dir="${udf.dir}" includes="*.tmpl"/>
       <filterset>
         <filter token="DATADIR" value="${data.dir}"/>
+        <filter token="LOGDIR" value="${log.dir}"/>
       </filterset>
       <globmapper from="*.tmpl" to="*"/>
     </copy>

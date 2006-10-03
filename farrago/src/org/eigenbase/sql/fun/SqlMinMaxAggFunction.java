@@ -141,38 +141,6 @@ public class SqlMinMaxAggFunction
             throw Util.newInternal("bad kind: " + kind);
         }
     }
-
-    public boolean checkOperandTypes(
-        SqlCallBinding callBinding,
-        boolean throwOnFailure)
-    {
-        boolean ok = super.checkOperandTypes(callBinding, throwOnFailure);
-
-        // REVIEW (jhyde, 2006/6/13): Remove this piece of code.
-        // SqlTypeStrategies.otcComparableOrdered should be sufficient.
-        // Currently, BOOLEAN thinks it is comparable, and the following code
-        // thinks it isn't, so one of them is wrong.
-        final SqlValidator validator = callBinding.getValidator();
-        RelDataType opType = callBinding.getOperandType(0);
-        assert null != opType;
-        SqlTypeFamily typeFamily =
-            SqlTypeFamily.getFamilyForSqlType(opType.getSqlTypeName());
-        if ((typeFamily == SqlTypeFamily.Boolean)
-            || (typeFamily == SqlTypeFamily.Binary)
-            || (typeFamily == SqlTypeFamily.Multiset)) {
-            if (throwOnFailure) {
-                throw validator.newValidationError(
-                    callBinding.getCall(),
-                    EigenbaseResource.instance().MinMaxBadType.ex(
-                        getName(),
-                        opType.getSqlTypeName().getName()));
-            } else {
-                ok = false;
-            }
-        }
-
-        return ok;
-    }
 }
 
 // End SqlMinMaxAggFunction.java

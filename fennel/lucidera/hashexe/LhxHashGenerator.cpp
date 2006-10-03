@@ -163,8 +163,6 @@ uint LhxHashGenerator::hash(
 {
     uint keyLength = keyProjection.size();
 
-    assert(keyLength <= inputTuple.size());
-
     /*
      * get initial hash value of 4 bytes.
      */

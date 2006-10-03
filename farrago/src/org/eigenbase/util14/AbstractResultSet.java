@@ -25,6 +25,8 @@ package org.eigenbase.util14;
 import java.math.*;
 
 import java.sql.*;
+import java.util.Calendar;
+import java.util.TimeZone;
 
 
 /**
@@ -38,6 +40,11 @@ import java.sql.*;
 abstract public class AbstractResultSet
     implements ResultSet
 {
+
+    //~ Static fields/initializers ---------------------------------------------
+
+    static final TimeZone gmtZone = DateTimeUtil.gmtZone;
+    static final TimeZone defaultZone = DateTimeUtil.defaultZone;
 
     //~ Instance fields --------------------------------------------------------
 
@@ -490,7 +497,7 @@ abstract public class AbstractResultSet
     public java.sql.Date getDate(int columnIndex)
         throws SQLException
     {
-        return toDate(getRaw(columnIndex));
+        return toDate(getRaw(columnIndex), null);
     }
 
     /**
@@ -518,8 +525,7 @@ abstract public class AbstractResultSet
     public Date getDate(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+        return toDate(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -549,7 +555,7 @@ abstract public class AbstractResultSet
     public java.sql.Time getTime(int columnIndex)
         throws SQLException
     {
-        return toTime(getRaw(columnIndex));
+        return toTime(getRaw(columnIndex), null);
     }
 
     /**
@@ -577,8 +583,7 @@ abstract public class AbstractResultSet
     public Time getTime(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+            return toTime(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -609,7 +614,7 @@ abstract public class AbstractResultSet
     public java.sql.Timestamp getTimestamp(int columnIndex)
         throws SQLException
     {
-        return toTimestamp(getRaw(columnIndex));
+        return toTimestamp(getRaw(columnIndex), null);
     }
 
     /**
@@ -639,8 +644,7 @@ abstract public class AbstractResultSet
     public Timestamp getTimestamp(int columnIndex, java.util.Calendar cal)
         throws SQLException
     {
-        throw new UnsupportedOperationException(
-            "Operation not supported right now");
+        return toTimestamp(getRaw(columnIndex), cal.getTimeZone());
     }
 
     /**
@@ -1704,7 +1708,7 @@ abstract public class AbstractResultSet
         }
     }
 
-    private Date toDate(Object o)
+    private Date toDate(Object o, TimeZone zone)
         throws SQLException
     {
         if (o == null) {
@@ -1713,12 +1717,22 @@ abstract public class AbstractResultSet
         } else {
             wasNull = false;
         }
+        if (zone == null) {
+            zone = defaultZone;
+        }
+        // Note that dates returned as Jdbc objects already use the 
+        // apropriate conventions 
         if (o instanceof Date) {
             return (Date) o;
         } else if (o instanceof Timestamp) {
-            return new Date(((Timestamp) o).getTime());
+            return ConversionUtil.timestampToDate((Timestamp) o, zone);
         } else if (o instanceof String) {
-            return Date.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            GmtDate fd = GmtDate.parseGmt(s);
+            if (fd == null) {
+                throw newConversionError(o, Date.class);
+            }
+            return ConversionUtil.gmtToJdbcDate(fd, zone);                
         } else {
             throw newConversionError(o, Date.class);
         }
@@ -1912,7 +1926,7 @@ abstract public class AbstractResultSet
         }
     }
 
-    private Time toTime(Object o)
+    private Time toTime(Object o, TimeZone zone)
         throws SQLException
     {
         if (o == null) {
@@ -1921,26 +1935,44 @@ abstract public class AbstractResultSet
         } else {
             wasNull = false;
         }
+        if (zone == null) {
+            zone = defaultZone;
+        }
+        // Note that dates returned as Jdbc objects already use the 
+        // apropriate conventions 
         if (o instanceof Time) {
             return (Time) o;
         } else if (o instanceof Timestamp) {
             return new Time(((Timestamp) o).getTime());
         } else if (o instanceof String) {
-            return Time.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            GmtTime ft = GmtTime.parseGmt(s);
+            if (ft == null) {
+                throw newConversionError(o, Time.class);
+            }
+            return ConversionUtil.gmtToJdbcTime(ft, zone);
         } else {
             throw newConversionError(o, Time.class);
         }
     }
 
-    private Timestamp toTimestamp(Object o)
+    private Timestamp toTimestamp(Object o, TimeZone zone)
         throws SQLException
     {
+        // NOTE: ignore time zone since all timestamps are represented 
+        // as milliseconds since the epoch
+
         if (o == null) {
             wasNull = true;
             return null;
         } else {
             wasNull = false;
         }
+        if (zone == null) {
+            zone = defaultZone;
+        }
+        // Note that dates returned as Jdbc objects already use the 
+        // apropriate conventions 
         if (o instanceof Timestamp) {
             return (Timestamp) o;
         } else if (o instanceof Date) {
@@ -1948,7 +1980,12 @@ abstract public class AbstractResultSet
         } else if (o instanceof Time) {
             return new Timestamp(((Time) o).getTime());
         } else if (o instanceof String) {
-            return Timestamp.valueOf(((String) o).trim());
+            String s = ((String) o).trim();
+            Timestamp ts = DateTimeUtil.parseTimestamp(s, zone);
+            if (ts == null) {
+                throw newConversionError(o, Timestamp.class);
+            }
+            return ts;
         } else {
             throw newConversionError(o, Timestamp.class);
         }

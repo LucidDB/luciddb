@@ -344,8 +344,8 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
   FilterRel(condition=[IS TRUE($9)])
     JoinRel(condition=[true], joinType=[left])
       TableAccessRel(table=[[SALES, EMP]])
-      ProjectRel($indicator=[true])
-        AggregateRel(groupCount=[0], agg#0=[COUNT()])
+      AggregateRel(groupCount=[0], agg#0=[MIN(0)])
+        ProjectRel($f0=[true])
           ProjectRel(EXPR$0=[1])
             FilterRel(condition=[=($0, 55)])
               TableAccessRel(table=[[SALES, DEPT]])
@@ -371,14 +371,19 @@ ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], 
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8])
-  FilterRel(condition=[IS TRUE($9)])
-    CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset7]])
+  FilterRel(condition=[IS TRUE($10)])
+    JoinRel(condition=[=($7, $9)], joinType=[left])
       TableAccessRel(table=[[SALES, EMP]])
-      ProjectRel($indicator=[true])
-        AggregateRel(groupCount=[0], agg#0=[COUNT()])
-          ProjectRel(EXPR$0=[1])
-            FilterRel(condition=[=($cor0.DEPTNO, $0)])
-              TableAccessRel(table=[[SALES, DEPT]])
+      AggregateRel(groupCount=[1], agg#0=[MIN(1)])
+        ProjectRel($f0=[$1], $f0=[$0])
+          ProjectRel($f0=[true], $f0=[$1])
+            ProjectRel(EXPR$0=[1], $f0=[$2])
+              FilterRel(condition=[=($2, $0)])
+                JoinRel(condition=[true], joinType=[inner])
+                  TableAccessRel(table=[[SALES, DEPT]])
+                  AggregateRel(groupCount=[1])
+                    ProjectRel($f0=[$7])
+                      TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">
@@ -434,11 +439,15 @@ ProjectRel(EXPR$0=[$0])
         <Resource name="plan">
             <![CDATA[
 ProjectRel(EMPNO=[$0], ENAME=[$1], JOB=[$2], MGR=[$3], HIREDATE=[$4], SAL=[$5], COMM=[$6], DEPTNO=[$7], SLACKER=[$8], DEPTNO0=[$9], NAME=[$10])
-  CorrelatorRel(condition=[true], joinType=[inner], correlations=[[var0=offset7]])
+  JoinRel(condition=[=($7, $11)], joinType=[inner])
     TableAccessRel(table=[[SALES, EMP]])
-    ProjectRel(DEPTNO=[$0], NAME=[$1])
-      FilterRel(condition=[=($cor0.DEPTNO, $0)])
-        TableAccessRel(table=[[SALES, DEPT]])
+    ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])
+      FilterRel(condition=[=($2, $0)])
+        JoinRel(condition=[true], joinType=[inner])
+          TableAccessRel(table=[[SALES, DEPT]])
+          AggregateRel(groupCount=[1])
+            ProjectRel($f0=[$7])
+              TableAccessRel(table=[[SALES, EMP]])
 ]]>
         </Resource>
         <Resource name="sql">

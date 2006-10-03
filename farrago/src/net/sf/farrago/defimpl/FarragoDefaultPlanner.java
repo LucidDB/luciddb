@@ -137,6 +137,10 @@ public class FarragoDefaultPlanner
 
         planner.addRule(ReduceAggregatesRule.instance);
 
+        // NOTE zfong 9/27/06: PullUpProjectsAboveJoinRule has not been 
+        // added because together with PushProjectPastJoinRule, it causes
+        // Volcano to go into an infinite loop
+        
         planner.addRule(new PushFilterPastJoinRule());
         planner.addRule(new PushFilterPastSetOpRule());
         planner.addRule(new MergeFilterRule());

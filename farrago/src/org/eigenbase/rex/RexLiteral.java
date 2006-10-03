@@ -367,6 +367,7 @@ public class RexLiteral
             return null;
         }
 
+        TimeZone tz = null;
         switch (typeName.getOrdinal()) {
         case SqlTypeName.Char_ordinal:
             Charset charset = type.getCharset();
@@ -399,23 +400,25 @@ public class RexLiteral
             return new RexLiteral(BigDecimal.valueOf(months), type, typeName);
         case SqlTypeName.Date_ordinal:
         case SqlTypeName.Time_ordinal:
+            tz = DateTimeUtil.gmtZone;
         case SqlTypeName.Timestamp_ordinal:
             String format = getCalendarFormat(typeName);
             Calendar cal = null;
-            if (typeName.getOrdinal() == SqlTypeName.Timestamp_ordinal) {
-                SqlParserUtil.PrecisionTime ts =
-                    SqlParserUtil.parsePrecisionDateTimeLiteral(
+            if (typeName == SqlTypeName.Date) {
+                cal = DateTimeUtil.parseDateFormat(
+                    literal,
+                    format,
+                    tz);
+            } else {
+                // Allow fractional seconds for times and timestamps
+                DateTimeUtil.PrecisionTime ts =
+                    DateTimeUtil.parsePrecisionDateTimeLiteral(
                         literal,
                         format,
-                        null);
+                        tz);
                 if (ts != null) {
                     cal = ts.getCalendar();
                 }
-            } else {
-                cal = SqlParserUtil.parseDateFormat(
-                        literal,
-                        format,
-                        null);
             }
             if (cal == null) {
                 throw Util.newInternal(

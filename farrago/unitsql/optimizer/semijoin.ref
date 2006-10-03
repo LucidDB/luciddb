@@ -729,7 +729,7 @@
 '  FennelSortRel(key=[[0]], discardDuplicates=[false])'
 '    FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER PRODUCT_ID) NOT NULL])'
 '      LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])'
-'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER PRODUCT_ID) NOT NULL])'
+'        FennelReshapeRel(projection=[[0]], outputRowType=[RecordType(INTEGER $f0) NOT NULL])'
 '          LhxAggRel(groupCount=[1], agg#0=[SUM(1)])'
 '            FennelRenameRel(fieldNames=[[$f0, $f1]])'
 '              LcsRowScanRel(table=[[LOCALDB, SJ, SALES]], projection=[[1, 4]], clustered indexes=[[SYS$CLUSTERED_INDEX$SJ$SALES$PRODUCT_ID, SYS$CLUSTERED_INDEX$SJ$SALES$QUANTITY]])'

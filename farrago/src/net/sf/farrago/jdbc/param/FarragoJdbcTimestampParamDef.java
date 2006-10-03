@@ -25,7 +25,8 @@ package net.sf.farrago.jdbc.param;
 import java.sql.Timestamp;
 
 import java.util.Calendar;
-import java.util.TimeZone;
+
+import org.eigenbase.util14.*;
 
 
 /**
@@ -37,10 +38,6 @@ import java.util.TimeZone;
 class FarragoJdbcTimestampParamDef
     extends FarragoJdbcParamDef
 {
-
-    //~ Static fields/initializers ---------------------------------------------
-
-    static final TimeZone gmtZone = TimeZone.getTimeZone("GMT");
 
     //~ Constructors -----------------------------------------------------------
 
@@ -58,7 +55,7 @@ class FarragoJdbcTimestampParamDef
     {
         return scrubValue(
                 x,
-                Calendar.getInstance(gmtZone));
+                Calendar.getInstance());
     }
 
     // implement FarragoSessionStmtParamDef
@@ -71,12 +68,13 @@ class FarragoJdbcTimestampParamDef
         }
 
         if (x instanceof String) {
-            try {
-                // TODO: Does this need to take cal into account?
-                return Timestamp.valueOf((String) x);
-            } catch (IllegalArgumentException e) {
+            String s = ((String) x).trim();
+            java.util.Date ts =
+                DateTimeUtil.parseTimestamp(s, cal.getTimeZone());
+            if (ts == null) {
                 throw newInvalidFormat(x);
             }
+            return ts;
         }
 
         // Only java.sql.Date, java.sql.Timestamp are all OK.
@@ -86,11 +84,7 @@ class FarragoJdbcTimestampParamDef
         }
 
         java.util.Date timestamp = (java.util.Date) x;
-        long millis = timestamp.getTime();
-        int timeZoneOffset = cal.getTimeZone().getOffset(millis);
-
-        // shift the time into gmt
-        return new Timestamp(millis + timeZoneOffset);
+        return new Timestamp(timestamp.getTime());
     }
 }
 

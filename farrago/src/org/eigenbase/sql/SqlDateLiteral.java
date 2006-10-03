@@ -57,21 +57,6 @@ public class SqlDateLiteral
 
     //~ Methods ----------------------------------------------------------------
 
-    /**
-     * Constructs a new dateformat object for the given string. Note that
-     * DateFormat objects aren't thread-safe.
-     *
-     * @param dfString
-     *
-     * @return date format object
-     */
-    static DateFormat getDateFormat(String dfString)
-    {
-        SimpleDateFormat df = new SimpleDateFormat(dfString);
-        df.setLenient(false);
-        return df;
-    }
-
     public SqlNode clone(SqlParserPos pos)
     {
         return new SqlDateLiteral((Calendar) value, pos);
@@ -87,7 +72,7 @@ public class SqlDateLiteral
      */
     public String toFormattedString()
     {
-        return getDateFormat(formatString).format(getDate());
+        return getFarragoDate().toString(formatString);
     }
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)

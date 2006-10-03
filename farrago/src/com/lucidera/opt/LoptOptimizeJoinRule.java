@@ -70,6 +70,7 @@ public class LoptOptimizeJoinRule
         } else {
             multiJoinRel = (MultiJoinRel) call.rels[1];
         }
+        
         LoptMultiJoin multiJoin = new LoptMultiJoin(multiJoinRel);
 
         RexBuilder rexBuilder = multiJoinRel.getCluster().getRexBuilder();
@@ -152,6 +153,10 @@ public class LoptOptimizeJoinRule
 
         // generate the N join orderings
         for (int i = 0; i < nJoinFactors; i++) {
+            // first factor cannot be null generating
+            if (multiJoin.isNullGenerating(i)) {
+                continue;
+            }
             LoptJoinTree joinTree =
                 createOrdering(
                     multiJoin,
@@ -211,6 +216,7 @@ public class LoptOptimizeJoinRule
             joinTree.getTreeOrder(newJoinOrder);
             int currField = 0;
             int nJoinFactors = multiJoin.getNumJoinFactors();
+            RelDataTypeField [] fields = multiJoin.getMultiJoinFields();
             for (int currFactor = 0; currFactor < nJoinFactors; currFactor++) {
                 // locate the join factor in the new join ordering
                 int fieldStart = 0;
@@ -222,15 +228,13 @@ public class LoptOptimizeJoinRule
                         multiJoin.getNumFieldsInJoinFactor(
                             newJoinOrder.get(pos));
                 }
-                RelDataTypeField [] fields =
-                    multiJoin.getJoinFactor(currFactor).getRowType()
-                    .getFields();
+                
                 for (int fieldPos = 0;
                      fieldPos < multiJoin.getNumFieldsInJoinFactor(currFactor);
                      fieldPos++) {
                     newProjExprs[currField] =
                         rexBuilder.makeInputRef(
-                            fields[fieldPos].getType(),
+                            fields[currField].getType(),
                             fieldStart + fieldPos);
                     currField++;
                 }
@@ -251,6 +255,7 @@ public class LoptOptimizeJoinRule
                             new RelOptUtil.RexInputConverter(
                                 rexBuilder,
                                 multiJoin.getMultiJoinFields(),
+                                joinTree.getJoinTree().getRowType().getFields(),
                                 adjustments));
                 }
             } else {
@@ -354,20 +359,33 @@ public class LoptOptimizeJoinRule
             int nextFactor = -1;
             if (factorsAdded.cardinality() == 0) {
                 nextFactor = firstFactor;
-            } else {
+            } else {            
                 // iterate through the remaining factors and determine the
                 // best one to add next
                 int bestWeight = 0;
                 Double bestCardinality = null;
                 for (int factor = factorsToAdd.nextSetBit(0); factor >= 0;
-                     factor = factorsToAdd.nextSetBit(factor + 1)) {
+                    factor = factorsToAdd.nextSetBit(factor + 1))
+                {
+                    // can't add a null-generating factor if its dependent,
+                    // non-null generating factors haven't been added yet
+                    if (multiJoin.isNullGenerating(factor)) {
+                        BitSet tmp =
+                            (BitSet) multiJoin.getOuterJoinFactors(factor).
+                                clone();
+                        tmp.andNot(factorsAdded);
+                        if (tmp.cardinality() != 0) {
+                            continue;
+                        }                       
+                    }
                     // determine the best weight between the current factor
                     // under consideration and the factors that have already
                     // been added to the tree
                     int dimWeight = 0;
                     for (int prevFactor = factorsAdded.nextSetBit(0);
-                         prevFactor >= 0;
-                         prevFactor = factorsAdded.nextSetBit(prevFactor + 1)) {
+                        prevFactor >= 0;
+                        prevFactor = factorsAdded.nextSetBit(prevFactor + 1))
+                    {
                         if (factorWeights[prevFactor][factor] > dimWeight) {
                             dimWeight = factorWeights[prevFactor][factor];
                         }
@@ -385,7 +403,8 @@ public class LoptOptimizeJoinRule
                                     && (cardinalities[factor] > bestCardinality)
                                    )
                                )
-                           )) {
+                           ))
+                    {
                         nextFactor = factor;
                         bestWeight = dimWeight;
                         bestCardinality = cardinalities[factor];
@@ -422,10 +441,15 @@ public class LoptOptimizeJoinRule
      */
     private boolean isJoinTree(RelNode rel)
     {
-        // TODO - when we support outer joins, this check needs to distinguish
-        // between joins that correspond to factors as opposed to joins that
-        // that replace the MultiJoinRel
-        return (rel instanceof JoinRel);
+        // full outer joins were already optimized in a prior instantiation
+        // of this rule; therefore we should never see a join input that's
+        // a full outer join
+        if (rel instanceof JoinRel) {
+            assert(((JoinRel) rel).getJoinType() != JoinRelType.FULL);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -530,17 +554,26 @@ public class LoptOptimizeJoinRule
         int childNo = -1;
         LoptJoinTree left = joinTree.getLeft();
         LoptJoinTree right = joinTree.getRight();
+        JoinRelType joinType =
+            ((JoinRel) joinTree.getJoinTree()).getJoinType();
 
         // if there are no constraints as to which side the factor must
         // be pushed, arbitrarily push to the left
-        if (factorsNeeded.cardinality() == 0) {
+        if (factorsNeeded.cardinality() == 0 &&
+            !joinType.generatesNullsOnLeft())
+        {
             childNo = 0;
         } else {
             // push to the left if the LHS contains all factors that the
-            // current factor needs; same check for RHS
-            if (multiJoin.hasAllFactors(left, factorsNeeded)) {
+            // current factor needs and that side is not null-generating;
+            // same check for RHS
+            if (multiJoin.hasAllFactors(left, factorsNeeded) &&
+                !joinType.generatesNullsOnLeft())
+            {
                 childNo = 0;
-            } else if (multiJoin.hasAllFactors(right, factorsNeeded)) {
+            } else if (multiJoin.hasAllFactors(right, factorsNeeded) &&
+                !joinType.generatesNullsOnRight())
+            {
                 childNo = 1;
             }
             // if it couldn't be pushed down to either side, then it can
@@ -606,7 +639,13 @@ public class LoptOptimizeJoinRule
                 condition);
 
         // create the new join tree with the factor pushed down
-        return createJoinSubtree(multiJoin, left, right, condition, false);
+        return createJoinSubtree(
+            multiJoin,
+            left,
+            right,
+            condition,
+            JoinRelType.INNER,
+            false);
     }
 
     /**
@@ -640,12 +679,28 @@ public class LoptOptimizeJoinRule
                 filtersToAdd,
                 false);
 
+        // if the factor being added is null-generating, create the join
+        // as a left outer join since it's being added to the RHS side of
+        // the join; createJoinSubTree may swap the inputs and therefore
+        // convert the left outer join to a right outer join; if the original
+        // MultiJoinRel was a full outer join, these should be the only
+        // factors in the join, so create the join as a full outer join
+        JoinRelType joinType;
+        if (multiJoin.getMultiJoinRel().isFullOuterJoin()) {
+            assert(multiJoin.getNumJoinFactors() == 2);
+            joinType = JoinRelType.FULL;
+        } else if (multiJoin.isNullGenerating(factorToAdd)) {
+            joinType = JoinRelType.LEFT;
+        } else {
+            joinType = JoinRelType.INNER;
+        }
         return
             createJoinSubtree(
                 multiJoin,
                 joinTree,
                 rightTree,
                 condition,
+                joinType,
                 true);
     }
 
@@ -712,6 +767,7 @@ public class LoptOptimizeJoinRule
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
+                            multiJoin.getJoinFields(leftTree, rightTree),
                             adjustments));
             }
         }
@@ -802,6 +858,7 @@ public class LoptOptimizeJoinRule
                     new RelOptUtil.RexInputConverter(
                         rexBuilder,
                         origFields,
+                        multiJoin.getJoinFields(left, right),
                         adjustments));
         }
 
@@ -816,6 +873,7 @@ public class LoptOptimizeJoinRule
      * @param left left operand
      * @param right right operand
      * @param condition join condition
+     * @param joinType the join type
      * @param fullAdjust true if the join condition reflects the original join
      * ordering and therefore has not gone through any type of adjustment yet;
      * otherwise, the condition has already been partially adjusted and only
@@ -828,6 +886,7 @@ public class LoptOptimizeJoinRule
         LoptJoinTree left,
         LoptJoinTree right,
         RexNode condition,
+        JoinRelType joinType,
         boolean fullAdjust)
     {
         RexBuilder rexBuilder =
@@ -839,7 +898,16 @@ public class LoptOptimizeJoinRule
             right = left;
             left = tmp;
             if (!fullAdjust) {
-                condition = swapFilter(rexBuilder, right, left, condition);
+                condition = swapFilter(
+                    rexBuilder,
+                    multiJoin,
+                    right,
+                    left,
+                    condition);
+            }
+            if (joinType != JoinRelType.INNER && joinType != JoinRelType.FULL) {
+                joinType = (joinType == JoinRelType.LEFT) ?
+                    JoinRelType.RIGHT : JoinRelType.LEFT;
             }
         }
 
@@ -851,6 +919,7 @@ public class LoptOptimizeJoinRule
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
                             multiJoin.getMultiJoinFields(),
+                            multiJoin.getJoinFields(left, right),
                             adjustments));
             }
         }
@@ -861,7 +930,7 @@ public class LoptOptimizeJoinRule
                 left.getJoinTree(),
                 right.getJoinTree(),
                 condition,
-                JoinRelType.INNER,
+                joinType,
                 Collections.EMPTY_SET,
                 true,
                 true);
@@ -933,6 +1002,7 @@ public class LoptOptimizeJoinRule
      * Adjusts a filter to reflect swapping of join inputs
      *
      * @param rexBuilder rexBuilder
+     * @param multiJoin join factors being optimized
      * @param origLeft original LHS of the join tree (before swap)
      * @param origRight original RHS of the join tree (before swap)
      * @param condition original join condition
@@ -941,6 +1011,7 @@ public class LoptOptimizeJoinRule
      */
     private RexNode swapFilter(
         RexBuilder rexBuilder,
+        LoptMultiJoin multiJoin,
         LoptJoinTree origLeft,
         LoptJoinTree origRight,
         RexNode condition)
@@ -958,18 +1029,12 @@ public class LoptOptimizeJoinRule
             adjustments[i] = -nFieldsOnLeft;
         }
 
-        RelDataType joinRowType =
-            origLeft.getJoinTree().getCluster().getTypeFactory().createJoinType(
-                new RelDataType[] {
-                    origLeft.getJoinTree().getRowType(),
-                origRight.getJoinTree().getRowType()
-                });
-
         condition =
             condition.accept(
                 new RelOptUtil.RexInputConverter(
                     rexBuilder,
-                    joinRowType.getFields(),
+                    multiJoin.getJoinFields(origLeft, origRight),
+                    multiJoin.getJoinFields(origRight, origLeft),
                     adjustments));
 
         return condition;

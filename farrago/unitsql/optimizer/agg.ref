@@ -69,6 +69,22 @@
 | 20      |
 +---------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> select min(TRUE) from emps group by deptno;
++---------+
+| EXPR$0  |
++---------+
+| true    |
+| true    |
+| true    |
++---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select max(FALSE) from depts;
++---------+
+| EXPR$0  |
++---------+
+| false   |
++---------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> ------------
 0: jdbc:farrago:> -- group bys
 0: jdbc:farrago:> ------------
