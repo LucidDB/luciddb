@@ -51,6 +51,14 @@ static std::string ExecStreamBufState_names[] = {
     "EXECBUF_OVERFLOW",
     "EXECBUF_EOS"
 };
+
+static std::string ExecStreamBufState_names_short[] = {
+    "EMP",
+    "NEM",
+    "UND",
+    "OVR",
+    "EOS"
+};
     
 enum ExecStreamBufProvision
 {
@@ -74,6 +82,14 @@ static std::string ExecStreamResult_names[] = {
     "EXECRC_EOS",
     "EXECRC_QUANTUM_EXPIRED",
     "EXECRC_YIELD"
+};
+
+static std::string ExecStreamResult_names_short[] = {
+    "UND",
+    "OVR",
+    "EOS",
+    "QNT",
+    "YLD"
 };
     
 /**
