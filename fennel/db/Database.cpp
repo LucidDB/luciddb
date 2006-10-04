@@ -162,7 +162,7 @@ void Database::prepareForRecovery()
 
 void Database::openSegments()
 {
-    FENNEL_TRACE(TRACE_INFO, "opening database");
+    FENNEL_TRACE(TRACE_INFO, "opening database; process ID = " << getpid());
     
     pCheckpointThread = SharedCheckpointThread(
         new CheckpointThread(*this),
