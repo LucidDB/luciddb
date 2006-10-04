@@ -1340,6 +1340,11 @@ public class FarragoPreparingStmt
         }
     }
 
+    protected File getPackageDir()
+    {
+        return packageDir;
+    }
+    
     // override OJPreparingStmt
     protected String getClassRoot()
     {
