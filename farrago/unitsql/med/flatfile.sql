@@ -332,6 +332,15 @@ select * from flatfile_server_badbcp.BCP."toomanybcpcolumns";
 
 select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
 
+--
+-- 3.12 test column header names which include spaces
+--
+select * from flatfile_server.BCP."headerswithwhitespace";
+
+select "ONE SPACE" from flatfile_server.BCP."headerswithwhitespace";
+
+-- generating bcp file
+select * from flatfile_server.BCP."headerswithwhitespacenobcp";
 
 ---------------------------------------------------------------------------
 -- Part 4. Reading metadata from bcp files                               --

@@ -426,6 +426,39 @@ Error: Too many columns in control file unitsql/med/flatfiles/toomanybcpcolumns.
 0: jdbc:farrago:> select * from flatfile_server_badbcp.BCP."invalidbcpcolumns";
 Error: Invalid row 5 in control file unitsql/med/flatfiles/invalidbcpcolumns.bcp2 (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> --
+0: jdbc:farrago:> -- 3.12 test column header names which include spaces
+0: jdbc:farrago:> --
+0: jdbc:farrago:> select * from flatfile_server.BCP."headerswithwhitespace";
++------------+------------------+---------------------+
+| ONE SPACE  | TWO SPACES HERE  | ONE TWO THREE FOUR  |
++------------+------------------+---------------------+
+| 1 1        | 2 2              | 3 3                 |
+| a          |                  |                     |
+|            |                  |                     |
+| 3          | 2                | 1                   |
++------------+------------------+---------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select "ONE SPACE" from flatfile_server.BCP."headerswithwhitespace";
++------------+
+| ONE SPACE  |
++------------+
+| 1 1        |
+| a          |
+|            |
+| 3          |
++------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- generating bcp file
+0: jdbc:farrago:> select * from flatfile_server.BCP."headerswithwhitespacenobcp";
++------------+------------------+---------------------+
+| one space  | two spaces here  | one two three four  |
++------------+------------------+---------------------+
+| 1 1        | 2 2              | 3 3                 |
+| a          |                  |                     |
+|            |                  |                     |
+| 3          | 2                | 1                   |
++------------+------------------+---------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> ---------------------------------------------------------------------------
 0: jdbc:farrago:> -- Part 4. Reading metadata from bcp files                               --

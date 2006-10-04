@@ -23,6 +23,7 @@ package com.lucidera.farrago.namespace.flatfile;
 import java.io.*;
 
 import java.util.regex.*;
+import java.util.Vector;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.type.*;
@@ -164,7 +165,7 @@ class FlatFileBCPFile
             this.colNames = new String[row.length];
             int numCol = 0;
             for (String col : row) {
-                this.colNames[numCol] = col;
+                this.colNames[numCol] = QUOTE + col + QUOTE;
                 numCol++;
             }
         } else {
@@ -252,14 +253,8 @@ class FlatFileBCPFile
             }
             if (this.colDataType[i].equals("SQLVARCHAR")) {
                 int varcharPrec =
-                    (
-                        (
-                            (
-                                (Integer.valueOf(
-                                        this.colDataLength[i]) + 128) / 256
-                            ) + 1
-                        ) * 256
-                    );
+                    ((((Integer.valueOf(
+                            this.colDataLength[i]) + 128) / 256) + 1) * 256);
                 this.colDataLength[i] = Integer.toString(varcharPrec);
             }
             int colNo = i + 1;
@@ -391,6 +386,33 @@ class FlatFileBCPFile
                 }
 
                 String [] bcpLine = line.split("\\s+");
+                String lineCopy = line;
+
+                Vector bcpLineTmp = new Vector();
+                for (int i = 0; i < bcpLine.length; i++) {
+                    String currStr = bcpLine[i];
+                    if (!(currStr.startsWith(QUOTE))) {
+                        bcpLineTmp.add(currStr);
+                    } else {
+                        try {
+                            int fromIdx = lineCopy.indexOf(currStr) + 1;
+                            int endIdx = lineCopy.indexOf(QUOTE, fromIdx);
+                            String quotedStr =
+                                lineCopy.substring(fromIdx, endIdx);
+                            lineCopy = lineCopy.substring(endIdx);
+                            bcpLineTmp.add(quotedStr);
+                            String [] numOfSpaces = quotedStr.split("\\s+");
+                            i = i + numOfSpaces.length - 1;
+                        } catch (Exception ex) {
+                            throw newParseError(lineNumber);
+                        }
+                    }
+                }
+                Object [] bcpLineTmpArray = bcpLineTmp.toArray();
+                bcpLine = new String[bcpLineTmpArray.length];
+                for (int i = 0; i < bcpLineTmpArray.length; i++) {
+                    bcpLine[i] = (String) bcpLineTmpArray[i];
+                }
                 if (bcpLine.length < 7) {
                     throw newParseError(lineNumber);
                 }
