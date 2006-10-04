@@ -40,6 +40,10 @@
 
 #include <boost/filesystem/operations.hpp>
 
+#ifdef __MINGW32__
+#include <process.h>
+#endif
+
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 using namespace boost::filesystem;
