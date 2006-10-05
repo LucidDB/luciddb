@@ -169,7 +169,7 @@ public class FarragoDefaultSessionPersonality
         // preparing statement, because that doesn't need to be aware of its
         // context. However, custom personalities may have a use for it, which
         // is why it is provided in the interface.
-        String sql = stmtContext.getSql();
+        String sql = stmtContext == null ? "?" : stmtContext.getSql();
         FarragoPreparingStmt stmt =
             new FarragoPreparingStmt(stmtValidator, sql);
         FarragoSessionPlanner planner =
