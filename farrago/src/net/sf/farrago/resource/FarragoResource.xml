@@ -1022,6 +1022,26 @@ Messages: {1}</text>
 <text>Invalid value ''{0}'' for integer property {1}</text>
 </exception>
 
+<exception id="490001" name="PluginInvalidLongProp">
+<text>Invalid value ''{0}'' for long property {1}</text>
+</exception>
+
+<exception id="490002" name="PluginInvalidShortProp">
+<text>Invalid value ''{0}'' for short property {1}</text>
+</exception>
+
+<exception id="490003" name="PluginInvalidFloatProp">
+<text>Invalid value ''{0}'' for float property {1}</text>
+</exception>
+
+<exception id="490004" name="PluginInvalidDoubleProp">
+<text>Invalid value ''{0}'' for double property {1}</text>
+</exception>
+
+<exception id="490005" name="PluginInvalidByteProp">
+<text>Invalid value ''{0}'' for byte property {1}</text>
+</exception>
+
 <exception id="490010" name="PluginJarLoadFailed">
 <text>Failed to load plugin jar ''{0}''</text>
 </exception>
