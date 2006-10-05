@@ -868,12 +868,17 @@ public class FarragoRuntimeContext
      *   for the exception
      * @param tag an error handling tag specific to the runtime context.
      *   This parameter may also be null
+     * @param isWarning whether the error is to be treated as a warning
      * @return the status of the error handler. While the default 
      *   implementation returns null, Farrago extensions may return 
      *   more informative values, such as TupleIter.NoDataReason.
      */
     public Object handleRowError(
-        SyntheticObject row, RuntimeException ex, int columnIndex, String tag) 
+        SyntheticObject row, 
+        RuntimeException ex, 
+        int columnIndex, 
+        String tag,
+        boolean isWarning) 
     {
         EigenbaseException ex2;
         if (columnIndex == 0) {
@@ -889,6 +894,21 @@ public class FarragoRuntimeContext
         EigenbaseTrace.getStatementTracer().log(
             Level.WARNING, "java calc exception", ex2);
         return null;
+    }
+
+    /**
+     * Handles a runtime exception as an error.
+     * 
+     * @see {@link #handleRowError(SyntheticObject, RuntimeException, 
+     *   int, String, boolean)}
+     */
+    public Object handleRowError(
+        SyntheticObject row, 
+        RuntimeException ex, 
+        int columnIndex, 
+        String tag)
+    {
+        return handleRowError(row, ex, columnIndex, tag, false);
     }
 
     //~ Inner Classes ----------------------------------------------------------
