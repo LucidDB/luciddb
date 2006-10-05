@@ -72,7 +72,7 @@ public abstract class FarragoExportSchemaUDR
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Exports tables within a schema to CSV/BCP files
+     * Exports tables within a schema to flat files with BCP files
      *
      * @param catalog name of the catalog where schema resides, if null, 
      * default catalog
@@ -89,7 +89,54 @@ public abstract class FarragoExportSchemaUDR
      * BCP files will be created. If false, they will not be created
      * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
+     * @param fieldDelimiter used to delimit column fields in the flat file
+     * if null, defaults to tab separated
+     * @param fileExtension the file extension for the created flat file, if 
+     * null, defaults to .txt
      */
+    public static void exportSchemaToFile(
+        String catalog,
+        String schema,
+        boolean exclude,
+        String tableList,
+        String tablePattern,
+        String directory,
+        boolean withBcp,
+        boolean deleteFailedFiles,
+        String fieldDelimiter,
+        String fileExtension)
+        throws SQLException
+    {
+        Connection conn =
+            DriverManager.getConnection("jdbc:default:connection");
+
+        HashSet<String> tableNames = getLocalTableNames(
+            catalog, 
+            schema, 
+            exclude, 
+            tableList,
+            tablePattern,
+            conn);
+
+        // create Csv files
+        toCsv(
+            FULL_EXPORT,
+            catalog, 
+            schema, 
+            null,  // lastModified  
+            null,  // columnName
+            null,  // incrCatalog
+            null,  // incrSchema
+            directory, 
+            withBcp,
+            deleteFailedFiles,
+            fieldDelimiter,
+            fileExtension,
+            tableNames,
+            null,  // querySql
+            conn);
+    }
+
     public static void exportSchemaToCsv(
         String catalog,
         String schema,
@@ -123,7 +170,9 @@ public abstract class FarragoExportSchemaUDR
             null,  // incrSchema
             directory, 
             withBcp,
-            deleteFailedFiles, 
+            deleteFailedFiles,
+            null,  // fieldDelimiter
+            null,  //fileExtension
             tableNames,
             null,  // querySql
             conn);
@@ -289,6 +338,8 @@ public abstract class FarragoExportSchemaUDR
             directory, 
             withBcp,
             deleteFailedFiles, 
+            null,      // fieldDelimiter
+            null,      // fileExtension
             tableNames,
             null,      // querySql
             conn);
@@ -474,6 +525,8 @@ public abstract class FarragoExportSchemaUDR
             directory,
             withBcp,
             deleteFailedFiles,
+            null,   // fieldDelimiter
+            null,   // fileExtension
             incrTblNames,
             null,   // querySql
             conn);
@@ -784,6 +837,8 @@ public abstract class FarragoExportSchemaUDR
                 directory, 
                 withBcp, 
                 deleteFailedFiles,
+                null,  // fieldDelimiter
+                null,  // fileExtension
                 tableNames,
                 null,  // querySql
                 conn);
@@ -846,7 +901,7 @@ public abstract class FarragoExportSchemaUDR
      * @param tableNames HashSet with names of the table to export
      * @param querySql SQL query to execute (if non-null, all table-related
      * parameters should be null; and vice versa)
-     * @param conn connection to the database
+     * @param conn connection to the dtaabase
      */
     private static void toCsv(
         int expType,
@@ -859,6 +914,8 @@ public abstract class FarragoExportSchemaUDR
         String directory,
         boolean withBcp,
         boolean deleteFailedFiles,
+        String fieldDelimiter,
+        String fileExtension,
         HashSet<String> tableNames,
         String querySql,
         Connection conn)
@@ -947,6 +1004,15 @@ public abstract class FarragoExportSchemaUDR
                 ie);
         }
 
+        // field delimiter for data file defaults to tab
+        if ((fieldDelimiter == null) || (fieldDelimiter.contains("\\t"))) {
+            fieldDelimiter = TAB;
+        }
+        // file extension for data file defaults to .txt
+        if (fileExtension == null) {
+            fileExtension = ".txt";
+        }
+
         // loop through the tables and output data to csv/bcp files
         while (tableIter.hasNext()) {
             String tblName = tableIter.next();
@@ -1017,10 +1083,10 @@ public abstract class FarragoExportSchemaUDR
             String csvName;
             String bcpName;
             if (tableNames == null) {
-                csvName = directory + ".txt";
+                csvName = directory + fileExtension;
                 bcpName = directory + ".bcp";
             } else {
-                csvName = directory + File.separator + tblName + ".txt";
+                csvName = directory + File.separator + tblName + fileExtension;
                 bcpName = directory + File.separator + tblName + ".bcp";
             }
             boolean tableFailed = false;
@@ -1039,17 +1105,17 @@ public abstract class FarragoExportSchemaUDR
                 }
 
                 for (int i = 1; i <= numCols; i++) {
-                    // write column names to CSV, tab separated, quoted
+                    // write column names to CSV, delimited and quoted
                     csvOut.write(QUOTE + tblMeta.getColumnName(i));
                     if (i != numCols) {
-                        csvOut.write(QUOTE + TAB);
+                        csvOut.write(QUOTE + fieldDelimiter);
                     } else {
                         csvOut.write(QUOTE + NEWLINE);
                     }
 
                     // write bcp file
                     if (withBcp) {
-                        bcpOut.write(getBcpLine(i, tblMeta));
+                        bcpOut.write(getBcpLine(i, tblMeta, fieldDelimiter));
                     }
                 }
 
@@ -1063,7 +1129,7 @@ public abstract class FarragoExportSchemaUDR
                         String field = tblData.getString(i);
                         if (field == null) {
                             if (i != numCols) {
-                                csvOut.write(TAB);
+                                csvOut.write(fieldDelimiter);
                             } else {
                                 csvOut.write(NEWLINE);
                             }
@@ -1074,7 +1140,7 @@ public abstract class FarragoExportSchemaUDR
                             csvOut.write(quote(field));
 
                             if (i != numCols) {
-                                csvOut.write(QUOTE + TAB);
+                                csvOut.write(QUOTE + fieldDelimiter);
                             } else {
                                 csvOut.write(QUOTE + NEWLINE);
                             }
@@ -1248,6 +1314,8 @@ public abstract class FarragoExportSchemaUDR
             pathWithoutExtension,
             withBcp,
             deleteFailedFiles,
+            null,               // fieldDelimiter
+            null,               // fileExtension
             null,               // tableNames
             querySql,
             conn);
@@ -1262,109 +1330,118 @@ public abstract class FarragoExportSchemaUDR
      * @param colNum column number to return BCP control data for
      * @param rsmd metadata for the table
      */
-    public static String getBcpLine(int colNum, ResultSetMetaData rsmd)
+    public static String getBcpLine(
+        int colNum, ResultSetMetaData rsmd, String fieldDelim)
         throws SQLException
     {
         String literalSep;
         if (colNum == rsmd.getColumnCount()) {
             literalSep = "\"\\r\\n\"";
-        } else {
+        } else if (fieldDelim == TAB) {
             literalSep = "\"\\t\"";
+        } else {
+            literalSep = "\"" + fieldDelim + "\"";
         }
         String colStr = String.valueOf(colNum);
         int colJdbcType = rsmd.getColumnType(colNum);
+        String colName = rsmd.getColumnName(colNum);
+
+        // if spaces exist within column name, quote it
+        if (colName.contains(" ")) {
+            colName = QUOTE + colName + QUOTE;
+        }
 
         switch (colJdbcType) {
         case Types.BIGINT:
             return
                 colStr + TAB + "SQLBIGINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.BINARY:
             return
                 colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.BOOLEAN:
             return
                 colStr + TAB + "SQLBIT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.CHAR:
             return
                 colStr + TAB + "SQLCHAR" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.DATE:
             return
                 colStr + TAB + "SQLDATE" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.DECIMAL:
             return
                 colStr + TAB + "SQLDECIMAL" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + TAB
+                + TAB + colStr + TAB + colName + TAB
                 + String.valueOf(rsmd.getPrecision(colNum)) + TAB
                 + String.valueOf(rsmd.getScale(colNum)) + NEWLINE;
         case Types.DOUBLE:
             return
                 colStr + TAB + "SQLFLT8" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.FLOAT:
             return
                 colStr + TAB + "SQLFLT4" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.INTEGER:
             return
                 colStr + TAB + "SQLINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.NUMERIC:
             return
                 colStr + TAB + "SQLNUMERIC" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + TAB
+                + TAB + colStr + TAB + colName + TAB
                 + String.valueOf(rsmd.getPrecision(colNum)) + TAB
                 + String.valueOf(rsmd.getScale(colNum)) + NEWLINE;
         case Types.REAL:
             return
                 colStr + TAB + "SQLREAL" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.SMALLINT:
             return
                 colStr + TAB + "SQLSMALLINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TIME:
             return
                 colStr + TAB + "SQLTIME" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TIMESTAMP:
             return
                 colStr + TAB + "SQLTIMESTAMP" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.TINYINT:
             return
                 colStr + TAB + "SQLTINYINT" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.VARBINARY:
             return
                 colStr + TAB + "SQLBINARY" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         case Types.VARCHAR:
         default:
             return
                 colStr + TAB + "SQLVARCHAR" + TAB + "0" + TAB
                 + rsmd.getColumnDisplaySize(colNum) + TAB + literalSep
-                + TAB + colStr + TAB + rsmd.getColumnName(colNum) + NEWLINE;
+                + TAB + colStr + TAB + colName + NEWLINE;
         }
     }
 

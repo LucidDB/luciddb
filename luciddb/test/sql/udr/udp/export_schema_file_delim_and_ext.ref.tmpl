@@ -1,0 +1,98 @@
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- exports using file delimiter and file extension parameters
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema exportfdext;
+0: jdbc:luciddb:> set schema 'exportfdext';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create table example(
+. . . . . . . . >   id int,
+. . . . . . . . >   line varchar(100),
+. . . . . . . . >   charline char(100)
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> insert into example values
+. . . . . . . . > (1, 'perfectly normal text', 'perfectly normal text'),
+. . . . . . . . > (2, 'let''s see some "double""quotes" and single''ones too', 'let''s see some "double""quotes" and single''ones too'),
+. . . . . . . . > (3, 'now, how about them,,,commas,yes?', 'now, how about them,,,commas,yes?'),
+. . . . . . . . > (4, 'all,"together''",'',","now!', 'all,"together''",'',","now!'),
+. . . . . . . . > (5, 'don''t forget
+. . . . . . . . > about these wonderous,
+. . . . . . . . > carriage returns too', 'don''t forget
+. . . . . . . . > about these wonderous,
+. . . . . . . . > carriage returns too');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from example order by 1;
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| ID  |                           LINE                            |                                               CHARLINE                                                |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| 1   | perfectly normal text                                     | perfectly normal text                                                                                 |
+| 2   | let's see some "double""quotes" and single'ones too       | let's see some "double""quotes" and single'ones too                                                   |
+| 3   | now, how about them,,,commas,yes?                         | now, how about them,,,commas,yes?                                                                     |
+| 4   | all,"together'",',","now!                                 | all,"together'",',","now!                                                                             |
+| 5   | don't forget
+about these wonderous,
+carriage returns too  | don't forget
+about these wonderous,
+carriage returns too                                              |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- export with tab delimiter and .tab
+0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFDEXT', false, null, null, '@EXPDIR@/local/fdext', true, true, '\t', '.tab');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server tab_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >   directory '@EXPDIR@/local/fdext',
+. . . . . . . . >   file_extension '.tab',
+. . . . . . . . >   field_delimiter '\t',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   with_header 'yes'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from tab_server.bcp.example order by 1;
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| ID  |                           LINE                            |                                               CHARLINE                                                |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| 1   | perfectly normal text                                     | perfectly normal text                                                                                 |
+| 2   | let's see some "double""quotes" and single'ones too       | let's see some "double""quotes" and single'ones too                                                   |
+| 3   | now, how about them,,,commas,yes?                         | now, how about them,,,commas,yes?                                                                     |
+| 4   | all,"together'",',","now!                                 | all,"together'",',","now!                                                                             |
+| 5   | don't forget
+about these wonderous,
+carriage returns too  | don't forget
+about these wonderous,
+carriage returns too                                              |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- export with comma delimiter and .csv
+0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFDEXT', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server commacsv_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options(
+. . . . . . . . >   directory '@EXPDIR@/local/fdext',
+. . . . . . . . >   file_extension '.csv',
+. . . . . . . . >   field_delimiter ',',
+. . . . . . . . >   line_delimiter '\n',
+. . . . . . . . >   quote_char '"',
+. . . . . . . . >   with_header 'yes'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from commacsv_server.bcp.example order by 1;
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| ID  |                           LINE                            |                                               CHARLINE                                                |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+| 1   | perfectly normal text                                     | perfectly normal text                                                                                 |
+| 2   | let's see some "double""quotes" and single'ones too       | let's see some "double""quotes" and single'ones too                                                   |
+| 3   | now, how about them,,,commas,yes?                         | now, how about them,,,commas,yes?                                                                     |
+| 4   | all,"together'",',","now!                                 | all,"together'",',","now!                                                                             |
+| 5   | don't forget
+about these wonderous,
+carriage returns too  | don't forget
+about these wonderous,
+carriage returns too                                              |
++-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> !quit
