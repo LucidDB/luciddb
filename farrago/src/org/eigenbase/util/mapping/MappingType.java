@@ -101,7 +101,11 @@ public enum MappingType
     /**
      * An inverse function has a source for every target,
      * but a source might have 0, 1 or more targets.
-     * Similar types:<ul>
+     *
+     * <p>Obeys the constaints {@link MappingType#isMandatorySource()},
+     * {@link MappingType#isSingleSource()}.
+     *
+     * <p>Similar types:<ul>
      * <li> {@link #InverseSurjection} is stronger (a source may not have
      *      multiple targets);
      * <li>{@link #InversePartialFunction} is weaker (a target
@@ -199,24 +203,36 @@ public enum MappingType
             ) == 0;
     }
 
-    public boolean isOptionalTarget()
+    /**
+     * Constraint that every source has at least one target.
+     */
+    public boolean isMandatoryTarget()
     {
-        return (ordinal() & OptionalTarget) == OptionalTarget;
+        return !((ordinal() & OptionalTarget) == OptionalTarget);
     }
 
-    public boolean isMultipleTarget()
+    /**
+     * Constraint that every source has at most one target.
+     */
+    public boolean isSingleTarget()
     {
-        return (ordinal() & MultipleTarget) == MultipleTarget;
+        return !((ordinal() & MultipleTarget) == MultipleTarget);
     }
 
-    public boolean isOptionalSource()
+    /**
+     * Constraint that every target has at least one source.
+     */
+    public boolean isMandatorySource()
     {
-        return (ordinal() & OptionalSource) == OptionalSource;
+        return !((ordinal() & OptionalSource) == OptionalSource);
     }
 
-    public boolean isMultipleSource()
+    /**
+     * Constraint that every target has at most one source.
+     */
+    public boolean isSingleSource()
     {
-        return (ordinal() & MultipleSource) == MultipleSource;
+        return !((ordinal() & MultipleSource) == MultipleSource);
     }
 
     /**

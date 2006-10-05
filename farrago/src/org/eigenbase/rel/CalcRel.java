@@ -28,6 +28,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.util.Permutation;
+import org.eigenbase.util.mapping.Mapping;
+import org.eigenbase.util.mapping.MappingType;
 
 /**
  * A relational expression which computes project expressions and also filters.
@@ -335,6 +337,80 @@ public final class CalcRel
                 new RexLocalRef(
                     source,
                     fields[source].getType()));
+        }
+        final RexProgram program = new RexProgram(
+            rel.getRowType(),
+            exprList,
+            projectRefList,
+            null,
+            rel.getCluster().getTypeFactory().createStructType(
+                outputTypeList,
+                outputNameList));
+        return new CalcRel(
+            rel.getCluster(),
+            rel.getTraits(),
+            rel,
+            program.getOutputRowType(),
+            program,
+            RelCollation.emptyList);
+    }
+
+    /**
+     * Creates a relational expression which projects the output fields of
+     * a relational expression according to a partial mapping.
+     *
+     * <p>A partial mapping is weaker than a permutation: every target has
+     * one source, but a source may have 0, 1 or more than one targets.
+     * Usually the result will have fewer fields than the source, unless some
+     * source fields are projected multiple times.
+     *
+     * <p>This method could optimize the result as {@link #permute} does, but
+     * does not at present.
+     *
+     * @param rel Relational expression
+     * @param mapping Mapping from source fields to target fields. The mapping
+     *   type must obey the constaints {@link MappingType#isMandatorySource()}
+     *   and {@link MappingType#isSingleSource()}, as does
+     *   {@link MappingType#InverseFunction}.
+     * @param fieldNames Field names; if null, or if a particular entry is null,
+     *   the name of the permuted field is used
+     * @return relational expression which projects a subset of the input fields
+     */
+    public static RelNode projectMapping(
+        RelNode rel,
+        Mapping mapping,
+        List<String> fieldNames)
+    {
+        assert mapping.getMappingType().isSingleSource();
+        assert mapping.getMappingType().isMandatorySource();
+        if (mapping.isIdentity()) {
+            return rel;
+        }
+        final List<RelDataType> outputTypeList = new ArrayList<RelDataType>();
+        final List<String> outputNameList = new ArrayList<String>();
+        final List<RexNode> exprList = new ArrayList<RexNode>();
+        final List<RexLocalRef> projectRefList = new ArrayList<RexLocalRef>();
+        final RelDataTypeField[] fields = rel.getRowType().getFields();
+        for (int i = 0; i < fields.length; i++) {
+            final RelDataTypeField field = fields[i];
+            exprList.add(
+                rel.getCluster().getRexBuilder().makeInputRef(
+                    field.getType(), i));
+        }
+        for (int i = 0; i < mapping.getTargetCount(); i++) {
+            int source = mapping.getSource(i);
+            final RelDataTypeField sourceField = fields[source];
+            outputTypeList.add(sourceField.getType());
+            outputNameList.add(
+                fieldNames == null ||
+                    fieldNames.size() <= i ||
+                    fieldNames.get(i) == null ?
+                    sourceField.getName() :
+                    fieldNames.get(i));
+            projectRefList.add(
+                new RexLocalRef(
+                    source,
+                    sourceField.getType()));
         }
         final RexProgram program = new RexProgram(
             rel.getRowType(),

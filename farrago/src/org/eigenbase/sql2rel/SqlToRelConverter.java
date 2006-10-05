@@ -498,10 +498,10 @@ public class SqlToRelConverter
             joinType = JoinRelType.LEFT;
             SqlNodeList selectList = select.getSelectList();
             SqlNodeList groupList = select.getGroup();
-            
-            /*
-             * Check if subquery is gauranteed to produce a single value.
-             */
+
+            //
+            // Check whether subquery is guaranteed to produce a single value.
+            //
             if (selectList.size() == 1 &&
                 (groupList == null || groupList.size() == 0)) {
                 SqlNode selectExpr = selectList.get(0);
@@ -512,9 +512,9 @@ public class SqlToRelConverter
                     }
                 }
             }
-            /*
-             * If not, project SingleValueAgg.
-             */
+            //
+            // If not, project SingleValueAgg.
+            //
             converted = RelOptUtil.createSingleValueAggRel(cluster, converted);                        
             break;            
         case SqlKind.SelectORDINAL:
@@ -2127,6 +2127,10 @@ public class SqlToRelConverter
         List<RexNode> exprs = new ArrayList<RexNode>();
         Collection<String> aliases = new TreeSet<String>();
 
+        // Project any system fields. (Must be done before regular select items,
+        // because offsets may be affected.)
+        extraSelectItems(bb, select, exprs, fieldNames, aliases);
+
         // Project select clause.
         int i = -1;
         for (SqlNode expr : selectList) {
@@ -2142,9 +2146,6 @@ public class SqlToRelConverter
             exprs.add(bb.convertExpression(expr2));
             fieldNames.add(deriveAlias(expr, aliases, i));
         }
-
-        // System fields.
-        extraSelectItems(bb, select, exprs, fieldNames, aliases);
 
         SqlValidatorUtil.uniquify(fieldNames);
 
@@ -2793,6 +2794,46 @@ public class SqlToRelConverter
         public RexNode visit(SqlIntervalQualifier intervalQualifier)
         {
             return convertInterval(intervalQualifier);
+        }
+
+        /**
+         * Shifts the expressions used to reference subqueries to the right.
+         * Moves any reference &ge; <code>index</code> <code>count</code>
+         * places to the right.
+         *
+         * @param index Position where new expression was inserted
+         * @param count Number of new expressions inserted
+         */
+        public void adjustSubqueries(final int index, final int count) {
+            for (Map.Entry<SqlNode, RexNode> entry :
+                mapSubqueryToExpr.entrySet())
+            {
+                RexNode expr = entry.getValue();
+                RexShuttle shuttle = new RexShuttle() {
+                    public RexNode visitRangeRef(RexRangeRef rangeRef) {
+                        if (rangeRef.getOffset() >= index) {
+                            return rexBuilder.makeRangeReference(
+                                rangeRef.getType(),
+                                rangeRef.getOffset() + count,
+                                false);
+                        } else {
+                            return rangeRef;
+                        }
+                    }
+
+                    public RexNode visitInputRef(RexInputRef inputRef) {
+                        if (inputRef.getIndex() >= index) {
+                            return rexBuilder.makeInputRef(
+                                inputRef.getType(),
+                                inputRef.getIndex() + count);
+                        } else {
+                            return inputRef;
+                        }
+                    }
+                };
+                RexNode newExpr = expr.accept(shuttle);
+                entry.setValue(newExpr);
+            }
         }
     }
 
