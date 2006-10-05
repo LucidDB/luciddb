@@ -178,6 +178,11 @@ public interface FarragoSessionPreparingStmt
     public FarragoSession getSession();
 
     /**
+     * @return SQL text of the statement being prepared
+     */
+    public String getSql();
+
+    /**
      * Obtains an implementor for relational expressions.
      *
      * @param rexBuilder RexBuilder to use for constructing row expressions

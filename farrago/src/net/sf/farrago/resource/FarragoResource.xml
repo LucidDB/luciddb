@@ -18,7 +18,7 @@
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307  USA
@@ -739,7 +739,7 @@ Messages: {1}</text>
 </exception>
 
 <exception id="450160" name="ErrorLimitExceeded">
-<text>Exceeded limit of {0,number,#} errors. Last error was: 
+<text>Exceeded limit of {0,number,#} errors. Last error was:
 {1}</text>
 </exception>
 
@@ -963,7 +963,7 @@ Messages: {1}</text>
 </exception>
 
 <exception id="470110" name="SessionOptimizerFailed">
-<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan</text>
+<text>Optimizer failed to find a valid physical implementation for relational expression {0}, while preparing SQL ''{1}''; see trace for partially optimized plan</text>
 </exception>
 
 <exception id="470120" name="SessionNotFound">

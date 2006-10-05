@@ -25,7 +25,6 @@ import com.disruptivetech.farrago.calc.*;
 import com.disruptivetech.farrago.fennel.*;
 
 import com.lucidera.farrago.fennel.*;
-import com.lucidera.farrago.namespace.flatfile.*;
 import com.lucidera.lurql.*;
 
 import java.io.*;
@@ -35,15 +34,11 @@ import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
 import net.sf.farrago.cwm.core.*;
-import net.sf.farrago.cwm.datatypes.*;
-import net.sf.farrago.cwm.keysindexes.*;
 import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.cwm.relational.enumerations.*;
 import net.sf.farrago.db.*;
 import net.sf.farrago.ddl.*;
-import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fem.security.*;
-import net.sf.farrago.fem.sql2003.*;
 import net.sf.farrago.parser.*;
 import net.sf.farrago.query.*;
 import net.sf.farrago.resource.*;
@@ -169,11 +164,14 @@ public class FarragoDefaultSessionPersonality
         FarragoSessionStmtContext stmtContext,
         FarragoSessionStmtValidator stmtValidator)
     {
-        // NOTE: We don't use stmtContext here, and we don't pass it on to the
+        // NOTE: We don't use stmtContext here (except to obtain the SQL text),
+        // and we don't pass it on to the
         // preparing statement, because that doesn't need to be aware of its
         // context. However, custom personalities may have a use for it, which
         // is why it is provided in the interface.
-        FarragoPreparingStmt stmt = new FarragoPreparingStmt(stmtValidator);
+        String sql = stmtContext.getSql();
+        FarragoPreparingStmt stmt =
+            new FarragoPreparingStmt(stmtValidator, sql);
         FarragoSessionPlanner planner =
             stmtValidator.getSession().getPersonality().newPlanner(stmt, true);
         planner.setRuleDescExclusionFilter(

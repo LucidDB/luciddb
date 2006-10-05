@@ -92,6 +92,7 @@ public class FarragoPreparingStmt
 
     //~ Instance fields --------------------------------------------------------
 
+    private final String sql;
     private final FarragoSessionStmtValidator stmtValidator;
     private boolean needRestore;
     protected SqlToRelConverter sqlToRelConverter;
@@ -141,14 +142,18 @@ public class FarragoPreparingStmt
      * Creates a new FarragoPreparingStmt object.
      *
      * @param stmtValidator generic stmt validator
+     * @param sql SQL text of statement being prepared
      */
-    public FarragoPreparingStmt(FarragoSessionStmtValidator stmtValidator)
+    public FarragoPreparingStmt(
+        FarragoSessionStmtValidator stmtValidator,
+        String sql)
     {
         super(null);
 
         timingTracer = stmtValidator.getTimingTracer();
 
         this.stmtValidator = stmtValidator;
+        this.sql = sql;
         stmtValidator.addAllocation(this);
 
         loadedServerClassNameSet = new HashSet<String>();
@@ -718,7 +723,8 @@ public class FarragoPreparingStmt
                         SqlExplainLevel.ALL_ATTRIBUTES));
             }
             throw FarragoResource.instance().SessionOptimizerFailed.ex(
-                problemRel.toString());
+                problemRel.toString(),
+                getSql());
         }
 
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
@@ -974,6 +980,12 @@ public class FarragoPreparingStmt
     public FarragoSession getSession()
     {
         return stmtValidator.getSession();
+    }
+
+    // implement FarragoSessionPreparingStmt
+    public String getSql()
+    {
+        return sql;
     }
 
     // implement RelOptConnection
