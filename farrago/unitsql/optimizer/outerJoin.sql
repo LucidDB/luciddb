@@ -700,3 +700,20 @@ select * from t1 left outer join
     on t1.a = t2.a;
 select t1.a, t2.a, coalesce(t2.b, -99)
     from t1 left outer join t2 on t1.a = t2.a;
+
+-- LER-2181
+create table ta(a int, k int);
+create table tb(b int, k int);
+create table tc(c int, k int);
+create table td(d int, k int);
+insert into ta values (1, 1), (2, 2), (3, 3);
+insert into tb values (2, 1), (3, 2), (4, 3);
+insert into tc values (2, 1), (3, 2), (4, 3);
+insert into td values (3, 1), (4, 2), (5, 3);
+
+select a, c from
+    (select a, b from ta inner join tb on a = b)
+    left outer join
+    (select c, d from tc inner join td on c = d)
+    on a = c
+order by 1, 2;

@@ -226,7 +226,7 @@ public class PullUpProjectsAboveJoinRule
                     newExpr.accept(
                         new RelOptUtil.RexInputConverter(
                             rexBuilder,
-                            projRowType.getFields(),
+                            joinChildrenRowType.getFields(),
                             newJoinFields,
                             adjustments));
             }
