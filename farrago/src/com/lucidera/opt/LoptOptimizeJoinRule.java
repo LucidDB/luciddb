@@ -644,7 +644,7 @@ public class LoptOptimizeJoinRule
             left,
             right,
             condition,
-            JoinRelType.INNER,
+            joinType,
             false);
     }
 
