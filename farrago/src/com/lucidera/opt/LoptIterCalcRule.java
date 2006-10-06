@@ -29,7 +29,6 @@ import org.eigenbase.rel.*;
 import org.eigenbase.rel.convert.*;
 import org.eigenbase.rel.jdbc.*;
 import org.eigenbase.relopt.*;
-import org.eigenbase.reltype.*;
 
 import java.util.*;
 import java.text.*;
@@ -120,6 +119,20 @@ public abstract class LoptIterCalcRule extends RelOptRule
                         new RelOptRuleOperand[] {
                             new RelOptRuleOperand(
                                 IterCalcRel.class,
+                                null)
+                    })
+        }));
+
+    public static LoptIterCalcRule hashJoinInstance =
+        new HashJoinRule(
+            new RelOptRuleOperand(
+                IterCalcRel.class,
+                new RelOptRuleOperand[] {
+                    new RelOptRuleOperand(
+                        ConverterRel.class,
+                        new RelOptRuleOperand[] {
+                            new RelOptRuleOperand(
+                                LhxJoinRel.class,
                                 null)
                     })
         }));
@@ -246,6 +259,7 @@ public abstract class LoptIterCalcRule extends RelOptRule
     public static final String TABLE_APPEND_PREFIX = "Insert";
     public static final String TABLE_MERGE_PREFIX = "Merge";
     public static final String TABLE_DELETE_PREFIX = "Delete";
+    public static final String HASH_JOIN_PREFIX = "PostJoin";
 
     /**
      * A rule for tagging a calculator on top of a table scan.
@@ -431,6 +445,29 @@ public abstract class LoptIterCalcRule extends RelOptRule
                     replaceTagAsFennel(converter, calc, tag),
                     tableRel.getOperation(),
                     tableRel.getUpdateColumnList()));
+        }
+    }
+
+    /**
+     * A rule for tagging a calculator on top of a hash join.
+     */
+    private static class HashJoinRule extends LoptIterCalcRule
+    {
+        public HashJoinRule(RelOptRuleOperand operand)
+        {
+            super(operand);
+        }
+        
+        // implement RelOptRule
+        public void onMatch(RelOptRuleCall call)
+        {
+            IterCalcRel calc = (IterCalcRel) call.rels[0];
+            if (calc.getTag() != null) {
+                return;
+            }
+
+            String tag = HASH_JOIN_PREFIX + getDefaultTag(calc);
+            transformToTag(call, calc, tag);
         }
     }
 

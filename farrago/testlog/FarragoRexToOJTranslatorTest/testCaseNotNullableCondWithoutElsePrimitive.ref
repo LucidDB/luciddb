@@ -50,7 +50,9 @@ if (net.sf.farrago.type.runtime.CharStringComparator.compareCharStrings( ID$0$NA
             } else {
                 oj_var4.setNull( true );
                 oj_var5.isNull = oj_var4.isNull;
-                oj_var5.value = (int) oj_var4.value;
+                if (!oj_var5.isNull) {
+                    oj_var5.value = (int) oj_var4.value;
+                }
             }
         }
     }

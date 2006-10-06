@@ -30,7 +30,6 @@ import openjava.mop.*;
 
 import openjava.ptree.*;
 
-import org.eigenbase.oj.util.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.sql.type.*;
@@ -377,32 +376,51 @@ public class FarragoOJRexCastImplementor
          * <pre>
          * [NullablePrimitiveType] lhs;
          * lhs.[nullIndicator] = ...;
-         * lhs.[value] = ...;
+         * if (! lhs.[nullIndicator]) {
+         *     // check overflow ...
+         *     // round ...
+         *     lhs.[value] = ...;
+         * }
          * </pre>
          */
         private Expression castPrimitiveToNullablePrimitive()
         {
             ensureLhs();
+            boolean nullableSource = rhsType.isNullable();
             Expression rhsIsNull;
-            if (rhsType.isNullable()) {
+            if (nullableSource) {
                 rhsIsNull = getNullIndicator(rhsExp);
                 rhsExp = getValue(rhsExp);
             } else {
                 rhsIsNull = Literal.constantFalse();
             }
             
-            checkOverflow();
             addStatement(
                 assign(
                     getNullIndicator(lhsExp),
                     rhsIsNull));
-            roundAsNeeded();
-            addStatement(
-                assign(
-                    getValue(lhsExp),
-                    new CastExpression(
-                        getLhsClass(),
-                        rhsExp)));
+            StatementList setValueBlock = new StatementList();
+            StatementList oldList = borrowStmtList(setValueBlock);
+            try {
+                checkOverflow();
+                roundAsNeeded();
+                addStatement(
+                    assign(
+                        getValue(lhsExp),
+                        new CastExpression(
+                            getLhsClass(),
+                            rhsExp)));
+            } finally {
+                returnStmtList(oldList);
+            }
+            if (nullableSource) {
+                addStatement(
+                    new IfStatement(
+                        not(getNullIndicator(lhsExp)),
+                        setValueBlock));
+            } else {
+                addStatementList(setValueBlock);
+            }
             return lhsExp;
         }
 
@@ -793,6 +811,59 @@ public class FarragoOJRexCastImplementor
         }
         
         /**
+         * Adds a list of statements according to 
+         * {@link #addStatement(Statement)}
+         * 
+         * @param list list of statements to be added
+         */
+        private void addStatementList(StatementList list)
+        {
+            for (int i = 0; i < list.size(); i++) {
+                addStatement(list.get(i));
+            }
+        }
+        
+        /**
+         * Borrows the active statement list, by temporarily setting it to 
+         * the a new statement list. What is borrowed must be returned!
+         * 
+         * <p>Example:
+         * <pre>
+         * StatementList block = new StatementList();
+         * StatementList oldList = borrowStmtList(block);
+         * try {
+         *     // add statements to block
+         * } finally {
+         *     returnStmtList(oldList);
+         * }
+         * </pre>
+         * 
+         * @param newList the new statement list
+         * @return the old statement list
+         * 
+         * @see {@link #returnStmtList(StatementList)}
+         */
+        private StatementList borrowStmtList(StatementList newList)
+        {
+            StatementList oldList = stmtList;
+            stmtList = newList;
+            return oldList;
+        }
+        
+        /**
+         * Restores the active statement list. Called after borrowing a 
+         * statement list.
+         * 
+         * @param oldList the previously active statement list.
+         * 
+         * @see {@link #borrowStmtList(StatementList)}
+         */
+        private void returnStmtList(StatementList oldList)
+        {
+            stmtList = oldList;
+        }
+        
+        /**
          * Creates a simple assignment statement as in a = b.
          */
         private ExpressionStatement assign(Expression a, Expression b)
@@ -803,6 +874,14 @@ public class FarragoOJRexCastImplementor
                         a,
                         AssignmentExpression.EQUALS,
                         b));
+        }
+        
+        /**
+         * Creates a not expression as in !a.
+         */
+        private Expression not(Expression a)
+        {
+            return new UnaryExpression(UnaryExpression.NOT, a);
         }
         
         /**

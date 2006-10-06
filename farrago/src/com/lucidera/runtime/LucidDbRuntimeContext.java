@@ -194,6 +194,21 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         return null;
     }
 
+    // override FarragoRuntimeContext
+    public Object handleRowError(
+        String[] names,
+        Object[] values,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
+    {
+        ErrorLogger logger = getLogger(tag);
+        logger.log(names, values, ex, columnIndex, tag, isWarning);
+        // we don't return any status
+        return null;
+    }
+
     /**
      * Gets the logger for a given tag. If a matching logger has not been 
      * initialized yet, create a new one. Otherwise return an existing logger.
@@ -276,6 +291,17 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             boolean isWarning);
 
         /**
+         * Writes a record to a log file
+         */
+        public void log(
+            String[] names,
+            Object[] values,
+            RuntimeException ex, 
+            int columnIndex,
+            String tag,
+            boolean isWarning);
+
+        /**
          * Gets the name of the log file being written
          */
         public String getFilename();
@@ -296,6 +322,22 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
      */
     private abstract class ErrorLoggerBase implements ErrorLogger
     {
+
+        //~ Instance fields -------------------------------------------------
+
+        private int errorCount, warningCount;
+        protected int fieldCount;
+
+        // fields for logging a synthetic object
+        protected SyntheticObject row;
+        private Field[] fields;
+
+        // fields for logging a names and values
+        protected String[] names;
+        protected Object[] values;
+
+        //~ Methods ---------------------------------------------------------
+
         /**
          * Gets the name of an IterCalcRel's output column. If the rel 
          * is being used for table DML, the column name will be inferred 
@@ -317,6 +359,123 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             }
             return Integer.toString(columnIndex);
         }
+
+        // implement ErrorLogger
+        public int getErrorCount()
+        {
+            return errorCount;
+        }
+
+        // implement ErrorLogger
+        public int getWarningCount()
+        {
+            return warningCount;
+        }
+
+        /**
+         * Writes a record to a log file
+         */
+        public void log(
+            SyntheticObject row, 
+            RuntimeException ex, 
+            int columnIndex,
+            String tag,
+            boolean isWarning)
+        {
+            if (isWarning) {
+                warningCount++;
+            } else {
+                errorCount++;
+            }
+
+            this.row = row;
+            names = null;
+            values = null;
+            if (fields == null) {
+                fields = row.getFields();
+                fieldCount = fields.length;
+                if (fields[fieldCount-1].getName().startsWith("this$")) {
+                    fieldCount--;
+                }
+            }
+            log(ex, columnIndex, tag, isWarning);
+        }
+
+        /**
+         * Writes a record to a log file
+         */
+        public void log(
+            String[] names,
+            Object[] values,
+            RuntimeException ex, 
+            int columnIndex,
+            String tag,
+            boolean isWarning)
+        {
+            if (isWarning) {
+                warningCount++;
+            } else {
+                errorCount++;
+            }
+            
+            row = null;
+            if (this.names == null) {
+                this.names = names;
+                fieldCount = names.length;
+            }
+            this.values = values;
+            log(ex, columnIndex, tag, isWarning);
+        }
+
+        /**
+         * Writes the current log record
+         */
+        protected abstract void log(
+            RuntimeException ex, 
+            int columnIndex,
+            String tag,
+            boolean isWarning);
+
+        /**
+         * Gets the name of a field
+         * 
+         * @param index zero-based column index
+         */
+        protected String getName(int index)
+        {
+            if (fields != null) {
+                return fields[index].getName();
+            } else {
+                return names[index];
+            }
+        }
+
+        /**
+         * Gets the value of a field
+         * 
+         * @param index zero-based column index
+         */
+        protected Object getValue(int index)
+        throws IllegalAccessException
+        {
+            if (row != null) {
+                return fields[index].get(row);
+            } else {
+                return values[index];
+            }
+        }
+
+        /**
+         * Gets an unquoted string representation of the current record
+         */
+        protected String getRecordString()
+        {
+            if (row != null) {
+                return row.toString();
+            } else {
+                return values.toString();
+            }
+        }
     }
 
     /**
@@ -332,12 +491,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             SqlParserUtil.TimestampFormatStr;
 
         protected String filename;
-        private int errorCount, warningCount;
         private final SimpleDateFormat dateFormat;
         private PrintStream ps;
         private boolean failedInit;
-        private Field[] fields;
-        private int fieldCount;
         private Object[] args;
         private String format;
         private boolean needsHeader;
@@ -351,7 +507,6 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         protected DefaultErrorLogger(String filename, boolean hasException)
         {
             this.filename = filename;
-            errorCount = warningCount = 0;
             dateFormat = new SimpleDateFormat(timestampFormatStr);
             this.hasException = hasException;
             failedInit = false;
@@ -368,17 +523,11 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
 
         // implement ErrorLogger
         public void log(
-            SyntheticObject row, 
             RuntimeException ex, 
             int columnIndex,
             String tag,
             boolean isWarning)
         {
-            if (isWarning) {
-                warningCount++;
-            } else {
-                errorCount++;
-            }
             if (failedInit) return;
 
             if (ps == null) {
@@ -403,13 +552,6 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             }
 
             int prefixCount = hasException ? 4 : 1;
-            if (fields == null) {
-                fields = row.getFields();
-                fieldCount = fields.length;
-                if (fields[fieldCount-1].getName().startsWith("this$")) {
-                    fieldCount--;
-                }
-            }
             if (args == null) {
                 args = new Object[fieldCount+prefixCount];
             }
@@ -431,10 +573,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             for (int i = 0; i < fieldCount; i++) {
                 try {
                     args[prefixCount+i] = 
-                        quoteValue(fields[i].get(row).toString());
+                        quoteValue(getValue(i).toString());
                 } catch (IllegalAccessException ex2) {
                     tracer.severe("could not log row error field " 
-                        + fields[i].getName() + ": " + ex2);
+                        + getName(i) + ": " + ex2);
                 }
             }
             if (needsHeader) {
@@ -447,7 +589,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 }
                 for (int i = 0; i < fieldCount; i++) {
                     fieldNames[i+prefixCount] = 
-                        quoteValue(stripColumnQualifier(fields[i].getName()));
+                        quoteValue(stripColumnQualifier(getName(i)));
                 }
                 ps.printf(format, fieldNames);
                 needsHeader = false;
@@ -506,18 +648,6 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         public String getFilename()
         {
             return filename;
-        }
-
-        // implement ErrorLogger
-        public int getErrorCount()
-        {
-            return errorCount;
-        }
-
-        // implement ErrorLogger
-        public int getWarningCount()
-        {
-            return warningCount;
         }
     }
 
@@ -584,28 +714,20 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     {
         private ErrorLogger logger;
         private ErrorQuota quota;
-        int errorCount, warningCount;
         
         public ErrorQuotaLogger(ErrorLogger logger, ErrorQuota quota)
         {
             this.logger = logger;
             this.quota = quota;
-            errorCount = warningCount = 0;
         }
 
         // implement ErrorLogger
         public void log(
-            SyntheticObject o, 
             RuntimeException ex, 
             int columnIndex, 
             String tag,
             boolean isWarning)
         {
-            if (isWarning) {
-                warningCount++;
-            } else {
-                errorCount++;
-            }
             synchronized (quota) {
                 if (!isWarning) {
                     quota.errorCount++;
@@ -614,7 +736,7 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 if (quota.errorCount > quota.errorMax) {
                     EigenbaseException ex2;
                     String field = getFieldName(tag, columnIndex);
-                    String row = o.toString();
+                    String row = getRecordString();
                     String messages = Util.getMessages(ex);
                     if (columnIndex == 0) {
                         ex2 = 
@@ -636,7 +758,12 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                     throw ex2;
                 }
                 if (quota.errorCount <= quota.errorLogMax) {
-                    logger.log(o, ex, columnIndex, tag, isWarning);
+                    if (row != null) {
+                        logger.log(row, ex, columnIndex, tag, isWarning);
+                    } else {
+                        logger.log(
+                            names, values, ex, columnIndex, tag, isWarning);
+                    }
                 }
             }
         }
@@ -648,18 +775,6 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
                 return "";
             }
             return logger.getFilename();
-        }
-
-        // implement ErrorLogger
-        public int getErrorCount()
-        {
-            return errorCount;
-        }
-
-        // implement ErrorLogger
-        public int getWarningCount()
-        {
-            return warningCount;
         }
     }
 }

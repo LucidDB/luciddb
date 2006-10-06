@@ -868,7 +868,6 @@ public class FarragoRuntimeContext
      *   for the exception
      * @param tag an error handling tag specific to the runtime context.
      *   This parameter may also be null
-     * @param isWarning whether the error is to be treated as a warning
      * @return the status of the error handler. While the default 
      *   implementation returns null, Farrago extensions may return 
      *   more informative values, such as TupleIter.NoDataReason.
@@ -877,38 +876,69 @@ public class FarragoRuntimeContext
         SyntheticObject row, 
         RuntimeException ex, 
         int columnIndex, 
-        String tag,
-        boolean isWarning) 
+        String tag)
     {
-        EigenbaseException ex2;
-        if (columnIndex == 0) {
-            ex2 = FarragoResource.instance().JavaCalcConditionError.ex(
-                row.toString(),
-                Util.getMessages(ex));
-        } else {
-            ex2 = FarragoResource.instance().JavaCalcError.ex(
-                Integer.toString(columnIndex),
-                row.toString(),
-                Util.getMessages(ex));
-        }
-        EigenbaseTrace.getStatementTracer().log(
-            Level.WARNING, "java calc exception", ex2);
-        return null;
+        return handleRowError(row, ex, columnIndex, tag, false);
     }
 
     /**
-     * Handles a runtime exception as an error.
+     * Handles a runtime exception, but allows warnings as well.
      * 
      * @see {@link #handleRowError(SyntheticObject, RuntimeException, 
-     *   int, String, boolean)}
+     *   int, String)}
      */
     public Object handleRowError(
         SyntheticObject row, 
         RuntimeException ex, 
         int columnIndex, 
-        String tag)
+        String tag,
+        boolean isWarning) 
     {
-        return handleRowError(row, ex, columnIndex, tag, false);
+        return handleRowErrorHelper(
+            row.toString(), ex, columnIndex, tag, isWarning);
+    }
+
+    /**
+     * Handles a runtime exception based on an array of column values 
+     * rather than on a SyntheticObject
+     */
+    public Object handleRowError(
+        String[] columnNames,
+        Object[] columnValues,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
+    {
+        return handleRowErrorHelper(
+            columnValues.toString(), ex, columnIndex, tag, isWarning);
+    }
+
+    /**
+     * Helper for various handleRowError methods
+     * FIXME: not all exceptions are errors, not all errors are calc errors
+     */
+    private EigenbaseException handleRowErrorHelper(
+        String row,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
+    {
+        EigenbaseException ex2;
+        if (columnIndex == 0) {
+            ex2 = FarragoResource.instance().JavaCalcConditionError.ex(
+                row,
+                Util.getMessages(ex));
+        } else {
+            ex2 = FarragoResource.instance().JavaCalcError.ex(
+                Integer.toString(columnIndex),
+                row,
+                Util.getMessages(ex));
+        }
+        EigenbaseTrace.getStatementTracer().log(
+            Level.WARNING, "java calc exception", ex2);
+        return null;
     }
 
     //~ Inner Classes ----------------------------------------------------------
