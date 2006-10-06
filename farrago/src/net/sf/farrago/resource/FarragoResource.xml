@@ -963,7 +963,7 @@ Messages: {1}</text>
 </exception>
 
 <exception id="470110" name="SessionOptimizerFailed">
-<text>Optimizer failed to find a valid physical implementation for relational expression {0}, while preparing SQL ''{1}''; see trace for partially optimized plan</text>
+<text>Optimizer failed to find a valid physical implementation for relational expression {0}; see trace for partially optimized plan. Details: reason is [{1}]; while preparing statement [{2}].</text>
 </exception>
 
 <exception id="470120" name="SessionNotFound">

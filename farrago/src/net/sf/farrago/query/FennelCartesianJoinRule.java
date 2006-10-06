@@ -90,22 +90,6 @@ public class FennelCartesianJoinRule
             return;
         }
 
-        // see if it makes sense to buffer the existing RHS; if not, try
-        // the LHS, swapping the join operands if it does make sense to buffer
-        // the LHS
-        boolean swapped = false;
-        FennelBufferRel bufRel = bufferRight(leftRel, rightRel);
-        if (bufRel != null) {
-            rightRel = bufRel;
-        } else {
-            bufRel = bufferRight(rightRel, leftRel);
-            if (bufRel != null) {
-                swapped = true;
-                leftRel = rightRel;
-                rightRel = bufRel;
-            }         
-        }
-
         RelNode fennelLeft =
             mergeTraitsAndConvert(
                 joinRel.getTraits(),
@@ -122,7 +106,23 @@ public class FennelCartesianJoinRule
                 rightRel);
         if (fennelRight == null) {
             return;
-        }      
+        }
+
+        // See whether it makes sense to buffer the existing RHS; if not, try
+        // the LHS, swapping the join operands if it does make sense to buffer
+        // the LHS.
+        boolean swapped = false;
+        FennelBufferRel bufRel = bufferRight(fennelLeft, fennelRight);
+        if (bufRel != null) {
+            fennelRight = bufRel;
+        } else {
+            bufRel = bufferRight(fennelRight, fennelLeft);
+            if (bufRel != null) {
+                swapped = true;
+                fennelLeft = fennelRight;
+                fennelRight = bufRel;
+            }
+        }
         
         FennelCartesianProductRel productRel =
             new FennelCartesianProductRel(

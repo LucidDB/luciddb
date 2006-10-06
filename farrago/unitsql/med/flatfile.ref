@@ -762,7 +762,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 0: jdbc:farrago:> -- we can limit the number of errors
 0: jdbc:farrago:> alter session set "errorMax" = 1;
 0: jdbc:farrago:> select * from buggy order by 1;
-Error: Exceeded limit of 1 errors. Last error was: 
+Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
 [Gary Larsen, null, 5.00]
 Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)

@@ -708,23 +708,24 @@ public class FarragoPreparingStmt
         // Validate that plan satisfies all required trait conversions.  This
         // implicitly validates that a physical implementation was found for
         // every node.
-        RelNode problemRel = null;
         if (!allowPartialImplementation) {
-            problemRel = validatePlan(rootRel, desiredTraits);
-        }
-        if (problemRel != null) {
-            // Dump plan unless we already did above.
-            if (!dumpPlan) {
-                planDumpTracer.severe(
-                    RelOptUtil.dumpPlan(
-                        "Plan without full implementation",
-                        rootRel,
-                        false,
-                        SqlExplainLevel.ALL_ATTRIBUTES));
+            try {
+                validatePlan(rootRel, desiredTraits);
+            } catch (InvalidPlanException e) {
+                // Dump plan unless we already did above.
+                if (!dumpPlan) {
+                    planDumpTracer.severe(
+                        RelOptUtil.dumpPlan(
+                            "Plan without full implementation",
+                            rootRel,
+                            false,
+                            SqlExplainLevel.ALL_ATTRIBUTES));
+                }
+                throw FarragoResource.instance().SessionOptimizerFailed.ex(
+                    e.rel.toString(),
+                    e.getMessage(),
+                    getSql());
             }
-            throw FarragoResource.instance().SessionOptimizerFailed.ex(
-                problemRel.toString(),
-                getSql());
         }
 
         // REVIEW jvs 9-Mar-2006: Perhaps we should compute two
@@ -739,28 +740,25 @@ public class FarragoPreparingStmt
         return rootRel;
     }
 
-    private RelNode validatePlan(RelNode rel, RelTraitSet desiredTraits)
+    private void validatePlan(RelNode rel, RelTraitSet desiredTraits)
+        throws InvalidPlanException
     {
         if (!rel.getTraits().matches(desiredTraits)) {
-            return rel;
+            throw new InvalidPlanException(
+                "Node's traits (" + rel.getTraits() +
+                    ") do not match required traits (" + desiredTraits + ")",
+                rel);
         }
         if (rel instanceof ConverterRel) {
             ConverterRel converterRel = (ConverterRel) rel;
-            return
-                validatePlan(
-                    converterRel.getChild(),
-                    converterRel.getInputTraits());
+            validatePlan(
+                converterRel.getChild(),
+                converterRel.getInputTraits());
         } else {
             for (RelNode child : rel.getInputs()) {
-                RelNode problemChild = validatePlan(
-                        child,
-                        rel.getTraits());
-                if (problemChild != null) {
-                    return problemChild;
-                }
+                validatePlan(child, rel.getTraits());
             }
         }
-        return null;
     }
 
     public void finalizeRelMetadata(RelNode rootRel)
@@ -1500,6 +1498,22 @@ public class FarragoPreparingStmt
                     inputRel,
                     fieldExprs,
                     fieldNames);
+        }
+    }
+
+    /**
+     * Exception describing why a plan is invalid.
+     *
+     * <p>Not localized.
+     */
+    protected static class InvalidPlanException extends Exception
+    {
+        private final RelNode rel;
+
+        public InvalidPlanException(String message, RelNode rel)
+        {
+            super(message);
+            this.rel = rel;
         }
     }
 }
