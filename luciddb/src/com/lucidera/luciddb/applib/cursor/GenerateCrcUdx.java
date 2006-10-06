@@ -54,7 +54,7 @@ public abstract class GenerateCrcUdx
 
         assert (nOutput == nInput + 1);
 
-        Checksum checksum = new Adler32();
+        Checksum checksum = new CRC32();
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         DataOutputStream outStream = new DataOutputStream(
             new CheckedOutputStream(byteStream, checksum));
