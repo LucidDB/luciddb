@@ -27,8 +27,8 @@
 */
 options {
     STATIC = false;
-    JAVA_UNICODE_ESCAPE = true;
     IGNORE_CASE = true;
+    UNICODE_INPUT = true;
 }
 
 

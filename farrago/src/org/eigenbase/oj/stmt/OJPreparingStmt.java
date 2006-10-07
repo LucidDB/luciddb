@@ -601,9 +601,13 @@ public abstract class OJPreparingStmt
 
         if (queryString != null) {
             // use single line comments to avoid issues with */ in literals
+            queryString = queryString.replaceAll("\n", "\n// ");
+
+            // have to escape backslashes, because Java thinks
+            // backslash-u means Unicode escape (LDB-141)
+            queryString = queryString.replaceAll("\\\\", "\\\\\\\\");
             compUnit.setComment(
-                "// "
-                + queryString.replaceAll("\n", "\n// ") + "\n");
+                "// " + queryString + "\n");
         }
         String s = compUnit.toString();
         String className = decl.getName();

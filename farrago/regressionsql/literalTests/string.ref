@@ -7,6 +7,14 @@
 | unknown  |
 +----------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- LDB-141
+0: jdbc:farrago:> values 'not \u my \u problem';
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| not \u my \u problem  |
++-----------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test datatype
 0: jdbc:farrago:> create schema test;
 0: jdbc:farrago:> set schema 'test';
