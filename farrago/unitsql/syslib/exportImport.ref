@@ -1,7 +1,7 @@
 0: jdbc:farrago:> -- $Id$
 0: jdbc:farrago:> -- Test export/import functionality
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- export query results
+0: jdbc:farrago:> -- export query results as tab-delimited .txt
 0: jdbc:farrago:> call sys_boot.mgmt.export_query_to_file(
 . . . . . . . . > 'select * from sales.depts order by name',
 . . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS',
@@ -21,6 +21,39 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- run import query
 0: jdbc:farrago:> select * from flatfile_server.bcp.depts order by name;
++---------+------------+
+| DEPTNO  |    NAME    |
++---------+------------+
+| 30      | Accounts   |
+| 20      | Marketing  |
+| 10      | Sales      |
++---------+------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Again, but this time as .csv
+0: jdbc:farrago:> call sys_boot.mgmt.export_query_to_file(
+. . . . . . . . > 'select * from sales.depts order by name',
+. . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS_CSV',
+. . . . . . . . > true,
+. . . . . . . . > false,
+. . . . . . . . > ',',
+. . . . . . . . > '.csv',
+. . . . . . . . > null,
+. . . . . . . . > null,
+. . . . . . . . > null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create server csv_flatfile_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/syslib/depts_files',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     field_delimiter ',',
+. . . . . . . . >     lenient 'no');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- run import query
+0: jdbc:farrago:> select * from csv_flatfile_server.bcp.depts_csv order by name;
 +---------+------------+
 | DEPTNO  |    NAME    |
 +---------+------------+

@@ -1277,12 +1277,14 @@ public abstract class FarragoExportSchemaUDR
         }
     }
 
-    // TODO jvs 25-Sept-2006:  Version of below in UDX form so that
+    // TODO jvs 25-Sept-2006: Versions of two methods below in UDX form so that
     // querySql doesn't have to be quoted.  Or, better, enhance procedure
     // support to take CURSOR parameters.
 
     /**
      * Exports results of a single query to CSV/BCP files.
+     * (Actually currently tab-separated .txt rather than CSV; see
+     * FRG-197).
      *
      * @param querySql query whose result is to be executed
      * @param pathWithoutExtension location to write CSV and BCP files; this
@@ -1300,8 +1302,56 @@ public abstract class FarragoExportSchemaUDR
         boolean deleteFailedFiles)
         throws SQLException
     {
+        exportQueryToFile(
+            querySql,
+            pathWithoutExtension,
+            withBcp,
+            deleteFailedFiles,
+            null,               // fieldDelimiter
+            null,               // fileExtension
+            null,               // dateFormat
+            null,               // timeFormat
+            null                // timestampFormat
+            );
+    }
+    
+    /**
+     * Exports results of a single query to CSV/BCP files.
+     *
+     * @param querySql query whose result is to be executed
+     * @param pathWithoutExtension location to write CSV and BCP files; this
+     * should be a directory-qualified filename without an extension
+     * (correct extension will be appended automatically)
+     * @param withBcp if true creates BCP files, if false, doesn't
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted
+     * if export fails, otherwise they may remain
+     * rowcount
+     * @param fieldDelimiter used to delimit column fields in the flat file
+     * if null, defaults to tab separated
+     * @param fileExtension the file extension for the created flat file, if 
+     * null, defaults to .txt
+     * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
+     * @param timeFormat format for TIME fields ({@link SimpleDateFormat})
+     * @param timestampFormat format for TIMESTAMP fields ({@link
+     * SimpleDateFormat})
+     */
+    public static void exportQueryToFile(
+        String querySql,
+        String pathWithoutExtension,
+        boolean withBcp,
+        boolean deleteFailedFiles,
+        String fieldDelimiter,
+        String fileExtension,
+        String dateFormat,
+        String timeFormat,
+        String timestampFormat)
+        throws SQLException
+    {
         Connection conn =
             DriverManager.getConnection("jdbc:default:connection");
+
+        // TODO jvs 5-Oct-2006:  implement dateFormat, timeFormat,
+        // and timestampFormat
         
         toCsv(
             FULL_EXPORT,
@@ -1314,8 +1364,8 @@ public abstract class FarragoExportSchemaUDR
             pathWithoutExtension,
             withBcp,
             deleteFailedFiles,
-            null,               // fieldDelimiter
-            null,               // fileExtension
+            fieldDelimiter,
+            fileExtension,
             null,               // tableNames
             querySql,
             conn);
