@@ -62,15 +62,6 @@ public interface FarragoMedMetadataSink
         Properties properties);
     
     /**
-     * @deprecated Call Properties version instead
-     */
-    public boolean writeObjectDescriptor(
-        String name,
-        String typeName,
-        String remarks,
-        Map properties);
-
-    /**
      * Writes a descriptor for a column.
      *
      * @param tableName unqualified table name
@@ -92,18 +83,6 @@ public interface FarragoMedMetadataSink
         String defaultValue,
         Properties properties);
     
-    /**
-     * @deprecated Call Properties version instead
-     */
-    public boolean writeColumnDescriptor(
-        String tableName,
-        String columnName,
-        int ordinal,
-        RelDataType type,
-        String remarks,
-        String defaultValue,
-        Map properties);
-
     /**
      * @return a type factory for use in creating type instances for calls such
      * as {@link #writeColumnDescriptor}

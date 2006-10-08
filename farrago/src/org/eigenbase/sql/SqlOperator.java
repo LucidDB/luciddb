@@ -282,27 +282,6 @@ public abstract class SqlOperator
     }
 
     /**
-     * @deprecated Use createCall(pos, operand1, operand2) instead.
-     */
-    public final SqlCall createCall(
-        SqlNode operand1,
-        SqlNode operand2,
-        SqlParserPos pos)
-    {
-        return createCall(pos, operand1, operand2);
-    }
-
-    /**
-     * @deprecated Use createCall(pos, operand) instead.
-     */
-    public final SqlCall createCall(
-        SqlNode operand,
-        SqlParserPos pos)
-    {
-        return createCall(pos, operand);
-    }
-
-    /**
      * Rewrites a call to this operator. Some operators are implemented as
      * trivial rewrites (e.g. NULLIF becomes CASE). However, we don't do this at
      * createCall time because we want to preserve the original SQL syntax as
