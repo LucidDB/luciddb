@@ -23,6 +23,7 @@
 package net.sf.farrago.type.runtime;
 
 import java.math.*;
+import java.util.Date;
 
 import net.sf.farrago.resource.*;
 
@@ -449,6 +450,26 @@ public abstract class NullablePrimitive
         protected void setLong(long n)
         {
             value = (long) n;
+        }
+        
+        // override NullablePrimitive
+        public void assignFrom(Object o)
+        {
+            if (o == null) {
+                setNull(true);
+            } else if (o instanceof java.util.Date) {
+                java.util.Date d = (java.util.Date) o;
+                assignFrom(d.getTime());
+            } else if (o instanceof EncodedSqlInterval) {
+                EncodedSqlInterval interval = (EncodedSqlInterval) o;
+                if (interval.isNull()) {
+                    setNull(true);
+                } else {
+                    assignFrom(interval.value);
+                }
+            } else {
+                super.assignFrom(o);
+            }
         }
     }
 
