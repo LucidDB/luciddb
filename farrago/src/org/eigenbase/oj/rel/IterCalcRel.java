@@ -275,6 +275,8 @@ public class IterCalcRel
         RexProgram program,
         String tag)
     {
+        MemberDeclarationList memberList = new MemberDeclarationList();
+
         // Perform error recovery if continuing on errors or if
         // an error handling tag has been specified
         boolean errorRecovery = !abortOnError || tag != null;
@@ -375,12 +377,23 @@ public class IterCalcRel
 
         Variable varColumnIndex = null;
         if (errorRecovery && !backwardsCompatible) {
+            // NOTE jvs 7-Oct-2006:  Declare varColumnIndex as a member
+            // (rather than a local) in case in the future we want
+            // to decompose complex expressions into helper methods.
             varColumnIndex = implementor.newVariable();
-            whileBody.add(
-                new VariableDeclaration(
+            FieldDeclaration varColumnIndexDecl =
+                new FieldDeclaration(
+                    new ModifierList(ModifierList.PRIVATE),
                     OJUtil.typeNameForClass(int.class),
                     varColumnIndex.toString(),
-                    Literal.makeLiteral(0)));
+                    null);
+            memberList.add(varColumnIndexDecl);
+            whileBody.add(
+                new ExpressionStatement(
+                    new AssignmentExpression(
+                        varColumnIndex,
+                        AssignmentExpression.EQUALS,
+                        Literal.makeLiteral(0))));
         }
 
         // Calculator (projection, filtering) statements are later appended
@@ -463,14 +476,14 @@ public class IterCalcRel
                 declareInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
-        MemberDeclarationList memberList = new MemberDeclarationList();
-
         StatementList condBody;
         RexToOJTranslator translator =
             implementor.newStmtTranslator(rel, calcStmts, memberList);
         try {
             translator.pushProgram(program);
             if (program.getCondition() != null) {
+                // TODO jvs 8-Oct-2006:  move condition to its own
+                // method if big, as below for project exprs.
                 condBody = new StatementList();
                 RexNode rexIsTrue =
                     rel.getCluster().getRexBuilder().makeCall(
@@ -487,15 +500,6 @@ public class IterCalcRel
             final List<RexLocalRef> projectRefList = program.getProjectList();
             int i = -1;
             for (RexLocalRef rhs : projectRefList) {
-                if (errorRecovery && !backwardsCompatible) {
-                    condBody.add(
-                        new ExpressionStatement(
-                            new UnaryExpression(
-                                varColumnIndex,
-                                UnaryExpression.POST_INCREMENT)));
-                }
-                ++i;
-
                 // NOTE jvs 14-Sept-2006:  Put complicated project expressions
                 // into their own method, otherwise a big select list
                 // can easily blow the 64K Java limit on method bytecode
@@ -507,6 +511,16 @@ public class IterCalcRel
                 // together, sub-divide, etc.
 
                 StatementList projMethodBody = new StatementList();
+
+                if (errorRecovery && !backwardsCompatible) {
+                    projMethodBody.add(
+                        new ExpressionStatement(
+                            new UnaryExpression(
+                                varColumnIndex,
+                                UnaryExpression.POST_INCREMENT)));
+                }
+                ++i;
+                
                 RexToOJTranslator projTranslator =
                     translator.push(projMethodBody);
                 String javaFieldName = Util.toJavaId(
