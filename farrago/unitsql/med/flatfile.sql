@@ -524,3 +524,12 @@ from log_server.bcp."Summary";
 -- we can limit the number of errors
 alter session set "errorMax" = 1;
 select * from buggy order by 1;
+
+-- another case of bad options
+create server mapped_server
+foreign data wrapper sys_file_wrapper
+options (
+    directory 'testlog',
+    file_extension 'log',
+    with_header 'no',
+    mapped 'yes');

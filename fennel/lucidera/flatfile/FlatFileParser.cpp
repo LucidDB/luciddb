@@ -24,6 +24,8 @@
 
 FENNEL_BEGIN_CPPFILE("$Id$");
 
+const char SPACE_CHAR = ' ';
+
 void FlatFileColumnParseResult::setResult(
     FlatFileColumnParseResult::DelimiterType type, char *buffer, uint size)
 {
@@ -73,12 +75,13 @@ void FlatFileRowParseResult::reset()
 }
 
 FlatFileParser::FlatFileParser(
-    char fieldDelim, char rowDelim, char quote, char escape)
+    char fieldDelim, char rowDelim, char quote, char escape, bool trim)
 {
     this->fieldDelim = fieldDelim;
     this->rowDelim = rowDelim;
     this->quote = quote;
     this->escape = escape;
+    this->trim = trim;
 
     fixed = (fieldDelim == 0);
     if (fixed) {
@@ -241,7 +244,16 @@ void FlatFileParser::scanColumn(
     assert(buffer != NULL);
     const char *read = buffer;
     const char *end = buffer + size;
-    bool quoted = (size > 0 && *buffer == quote);
+
+    if (trim) {
+        while (read < end && SPACE_CHAR == *read) {
+            read++;
+        }
+    }
+    const char *start = read;
+    size = end - start;
+
+    bool quoted = (read < end && *read == quote);
     bool quoteEscape = (quoted && quote == escape);
 
     FlatFileColumnParseResult::DelimiterType type =
@@ -289,8 +301,8 @@ void FlatFileParser::scanColumn(
         }
     }
     
-    uint resultSize = read - buffer;
-    result.setResult(type, const_cast<char *>(buffer), resultSize);
+    uint resultSize = read - start;
+    result.setResult(type, const_cast<char *>(start), resultSize);
 }
 
 void FlatFileParser::scanFixedColumn(

@@ -870,6 +870,10 @@ Messages: {1}</text>
 <text>Invalid row {1} in control file {0}</text>
 </exception>
 
+<exception id="469100" name="FlatFileMappedRequiresWithHeader">
+<text>Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers.</text>
+</exception>
+
 <message name="MedFlatFile_DIRECTORY_Description">
 <text>OS directory path containing flat files</text>
 </message>

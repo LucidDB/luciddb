@@ -767,6 +767,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 +--------------------------------+------------------------------------------------+--------+
 |             AUTHOR             |                     TITLE                      |  COST  |
 +--------------------------------+------------------------------------------------+--------+
+| Henry Gray F.R.S.              | Gray's Anatomy                                 | 8.95   |
 | Robert M. Pirsig               | (too long) Zen and the Art of Motorcycle Main  | 0.30   |
 | Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
 | Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |
@@ -805,5 +806,15 @@ Error: Exceeded limit of 1 errors. Last error was:
 Could not calculate result column 2 of Read.LOCALDB.FLATFILE_SCHEMA.BUGGY for input:
 [Gary Larsen, null, 5.00]
 Messages: Target CAST($t1):VARCHAR(45) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL cannot be assigned null value (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- another case of bad options
+0: jdbc:farrago:> create server mapped_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'testlog',
+. . . . . . . . >     file_extension 'log',
+. . . . . . . . >     with_header 'no',
+. . . . . . . . >     mapped 'yes');
+Error: Mapping source columns in data files to target columns specified by control files requires column names to be provided by data file headers. (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit

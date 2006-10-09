@@ -344,6 +344,7 @@ class FlatFileParser
     char rowDelim;
     char quote;
     char escape;
+    bool trim;
 
     /**
      * Whether to perform fixed mode parsing
@@ -404,12 +405,16 @@ public:
      * @param[in] quote quote character
      *
      * @param[in] escape escape character
+     *
+     * @param[in] trim whether to trim column values before processing them.
+     *   A column value is trimmed before it is unquoted.
      */
     FlatFileParser(
         const char fieldDelim,
         const char rowDelim,
         const char quote,
-        const char escape);
+        const char escape,
+        bool trim = false);
     
     /**
      * Scans through buffer until the end of a row is reached, and locates
