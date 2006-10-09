@@ -118,6 +118,46 @@ public abstract class FarragoUdrRuntime
             FarragoRuntimeContext.getUdrInvocationFrame();
         return frame.udrContext.getSession();
     }
+
+    /**
+     * Forwards a row error to the runtime context. The runtime context 
+     * then decides how to process the error. For example, it might log 
+     * the error, send the error to a table, or cancel the statement.
+     * 
+     * @param columnNames array of column names from the input stream
+     * @param columnValues array of column values for the bad input row. 
+     *   Primitive values such as long or int should be wrapped in Objects 
+     *   such as Long or Int. Values should be printable via toString().
+     *   For example, 2006-10-08 would be preferrable to Date@1ee80a.
+     * @param ex the runtime exception to be handled
+     * @param columnIndex the 1-based index of the column with the error.
+     *   Since the value 0 is reserved for filter conditions, the value -1 
+     *   may be used when a column index is not applicable.
+     * @param tag a unique identifier for the source of the exception. It is 
+     *   helpful for the tag to include information about the source.
+     *   For example, CleanseAddress[Id] may be more useful than [Id]. 
+     *   A timestamp suffix can be informative and helps to satisfy the 
+     *   uniqueness requirement.
+     * @param isWarning whether the exception is to be treated as a warning
+     * 
+     * @return a server specific status value. A server may choose to return 
+     *   null or to return a more detailed status such as 
+     *   {@link org.eigenbase.runtime.TupleIter.NoDataReason} to indicate 
+     *   that the error could not be processed.
+     */
+    public static Object handleRowError(
+        String[] columnNames,
+        Object[] columnValues,
+        RuntimeException ex,
+        int columnIndex,
+        String tag,
+        boolean isWarning)
+    {
+        FarragoUdrInvocationFrame frame =
+            FarragoRuntimeContext.getUdrInvocationFrame();
+        return frame.context.handleRowError(
+            columnNames, columnValues, ex, columnIndex, tag, isWarning);
+    }
 }
 
 // End FarragoUdrRuntime.java

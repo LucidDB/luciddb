@@ -117,7 +117,10 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
     // override FarragoRuntimeContext
     public void closeAllocation()
     {
-        if (quota.errorCount > 0) {
+        // Print a summary message if we logged errors or warnings
+        if ((quota.errorMax > 0 && quota.errorCount > 0) 
+            || (quota.warningCount > 0)) 
+        {
             String summaryFilename = getSummaryFilename();
             SummaryLogger summary = null;
             try {
@@ -705,6 +708,11 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
          * Ongoing count of errors
          */
         int errorCount;
+
+        /**
+         * Ongoing count of warnings
+         */
+        int warningCount;
     }
 
     /**
@@ -729,7 +737,9 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
             boolean isWarning)
         {
             synchronized (quota) {
-                if (!isWarning) {
+                if (isWarning) {
+                    quota.warningCount++;
+                } else {
                     quota.errorCount++;
                 }
                 // NOTE: if an error causes an exception, do not log it
@@ -771,9 +781,6 @@ public class LucidDbRuntimeContext extends FarragoRuntimeContext
         // implement ErrorLogger
         public String getFilename()
         {
-            if (quota.errorMax == 0) {
-                return "";
-            }
             return logger.getFilename();
         }
     }
