@@ -767,7 +767,7 @@ Messages: Cannot assign '-' to a NUMERIC value: NumberFormatException (state=,co
 +--------------------------------+------------------------------------------------+--------+
 |             AUTHOR             |                     TITLE                      |  COST  |
 +--------------------------------+------------------------------------------------+--------+
-| Henry Gray F.R.S.              | Gray's Anatomy                                 | 8.95   |
+| Henry Gray F.R.S.              | Gray's Anatomy, 1901 ed.                       | 8.95   |
 | Robert M. Pirsig               | (too long) Zen and the Art of Motorcycle Main  | 0.30   |
 | Rusmore, Spangle, and Crowder  | Peninsula Trails                               | 14.95  |
 | Steve Jones                    | (leading spaces) Darwin's Ghost                | 15.00  |

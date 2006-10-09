@@ -75,13 +75,13 @@ void FlatFileRowParseResult::reset()
 }
 
 FlatFileParser::FlatFileParser(
-    char fieldDelim, char rowDelim, char quote, char escape, bool trim)
+    char fieldDelim, char rowDelim, char quote, char escape, bool doTrim)
 {
     this->fieldDelim = fieldDelim;
     this->rowDelim = rowDelim;
     this->quote = quote;
     this->escape = escape;
-    this->trim = trim;
+    this->doTrim = doTrim;
 
     fixed = (fieldDelim == 0);
     if (fixed) {
@@ -245,13 +245,12 @@ void FlatFileParser::scanColumn(
     const char *read = buffer;
     const char *end = buffer + size;
 
-    if (trim) {
+    // read past leading spaces before checking for quotes
+    if (doTrim) {
         while (read < end && SPACE_CHAR == *read) {
             read++;
         }
     }
-    const char *start = read;
-    size = end - start;
 
     bool quoted = (read < end && *read == quote);
     bool quoteEscape = (quoted && quote == escape);
@@ -301,8 +300,8 @@ void FlatFileParser::scanColumn(
         }
     }
     
-    uint resultSize = read - start;
-    result.setResult(type, const_cast<char *>(start), resultSize);
+    uint resultSize = read - buffer;
+    result.setResult(type, const_cast<char *>(buffer), resultSize);
 }
 
 void FlatFileParser::scanFixedColumn(
