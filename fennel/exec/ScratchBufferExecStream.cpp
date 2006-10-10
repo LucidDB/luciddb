@@ -64,7 +64,7 @@ void ScratchBufferExecStream::open(bool restart)
     pInAccessor->provideBufferForProduction(
         bufferLock.getPage().getWritableData(),
         bufferLock.getPage().getWritableData()
-        + bufferLock.getPage().getCache().getPageSize(),
+        + bufferLock.getPage().getCache2().getPageSize(),
         true);
 
     pLastConsumptionEnd = NULL;
