@@ -60,7 +60,7 @@ void LcsRowScanExecStream::prepareResidualFilters(
     uint realClusterStart = 0;
 
     filters.reset(new 
-        (PLcsResidualColumnFilters)[params.residualFilterCols.size()]);
+        PLcsResidualColumnFilters[params.residualFilterCols.size()]);
 
     for (uint i = 0; i < nClusters; i++) {
         uint clusterEnd = clusterStart +
