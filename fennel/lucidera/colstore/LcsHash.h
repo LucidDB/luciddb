@@ -350,6 +350,11 @@ private:
      */
     TupleDescriptor          colTupleDesc;
   
+    /**
+     * Attribute descriptor of the column
+     */
+    TupleAttributeDescriptor attrDesc;
+
 public:
 
     /**
@@ -362,12 +367,15 @@ public:
      * @param [in] colTupleDescInit reference to column tuple descriptor
      *
      * @param [in] columnIdInit which column in the cluster is being compared
+     *
+     * @param [in] attrDescInit attribute descriptor of the column
      */
     explicit LcsCompareColKeyUsingOffsetIndex(
         SharedLcsClusterNodeWriter clusterBlockWriterInit,
         LcsHashTable *hashTableInit,
         TupleDescriptor const &colTupleDescInit,
-        uint columnIdInit);
+        uint columnIdInit,
+        TupleAttributeDescriptor const &attrDesc);
 
     ~LcsCompareColKeyUsingOffsetIndex() {}
 
@@ -465,6 +473,11 @@ private:
      * The column currently begin compressed.
      */
     TupleDataWithBuffer   colTuple;
+
+    /**
+     * Attribute descriptor of the column
+     */
+    TupleAttributeDescriptor attrDesc;
 
     /**
      * The column being compared against.
@@ -569,9 +582,9 @@ public:
      *
      * @param [in] colTupleDatum column tuple to insert
      *
-     * @param[out] valOrd hash value node ordinal
+     * @param [out] valOrd hash value node ordinal
      *
-     * @param[out] undoInsert true if this insert should be undone
+     * @param [out] undoInsert true if this insert should be undone
      */
     void insert(
         TupleDatum &colTupleDatum,

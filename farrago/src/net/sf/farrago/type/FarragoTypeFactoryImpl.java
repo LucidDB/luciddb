@@ -854,12 +854,16 @@ public class FarragoTypeFactoryImpl
         RelDataType type,
         Expression expr)
     {
-        if (SqlTypeUtil.isDatetime(type)
+        if (SqlTypeUtil.isDatetime(type)) {
+            return new FieldAccess(
+                new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME),
+                SqlDateTimeWithoutTZ.INTERNAL_TIME_FIELD_NAME);
+        } else if (
             // REVIEW: angel 2006-08-27 added this for interval
             // so generated java code okay for most expression
             // but shouldn't be checking expr,
             // probably need to rules to reinterpret interval 
-            || (SqlTypeUtil.isInterval(type) &&
+            (SqlTypeUtil.isInterval(type) &&
                 (expr instanceof Variable || expr instanceof FieldAccess))
             || SqlTypeUtil.isDecimal(type)
             || ((getClassForPrimitive(type) != null) && type.isNullable())) {

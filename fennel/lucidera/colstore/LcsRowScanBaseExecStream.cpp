@@ -101,14 +101,12 @@ void LcsRowScanBaseExecStream::prepare(
         clusterStart = clusterEnd + 1;
 
         // need to select at least one column from cluster, except in the
-        // case where we're only selecting special columns; in that case,
-        // we'll just arbitrarily read the first column, but not actually
-        // project it
+        // cases where we're only selecting special columns or when there
+        // are filter columns; in the former case, we'll just arbitrarily 
+        // read the first column, but not actually project it
         if (allSpecial) {
            clusterProj.push_back(0); 
-        } else {
-            assert(clusterProj.size() > 0);
-        }
+        } 
         pClu->initColumnReaders(
             params.lcsClusterScanDefs[i].clusterTupleDesc.size(), clusterProj);
         if (!allSpecial) {
@@ -177,8 +175,10 @@ void LcsRowScanBaseExecStream::syncColumns(SharedLcsClusterReader &pScan)
 }
 
 bool LcsRowScanBaseExecStream::readColVals(
-    SharedLcsClusterReader &pScan, TupleDataWithBuffer &tupleData,
-    uint colStart)
+    SharedLcsClusterReader &pScan,
+    TupleDataWithBuffer &tupleData,
+    uint colStart,
+    TupleDescriptor tupleDesc)
 {
     if (!allSpecial) {
         for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
@@ -186,7 +186,8 @@ bool LcsRowScanBaseExecStream::readColVals(
             // Get value of each column and load it to the appropriate
             // tuple datum entry 
             PBuffer curValue = pScan->clusterCols[iCluCol].getCurrentValue();
-            tupleData[projMap[colStart + iCluCol]].loadLcsDatum(curValue);
+            uint idx = projMap[colStart + iCluCol];
+            tupleData[idx].loadLcsDatum(curValue, tupleDesc[idx]);
             if (pScan->clusterCols[iCluCol].getFilters().hasResidualFilters) {
                 if (!pScan->clusterCols[iCluCol].applyFilters(projDescriptor,
                     tupleData)) 

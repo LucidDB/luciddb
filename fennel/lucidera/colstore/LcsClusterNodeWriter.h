@@ -168,6 +168,11 @@ private:
     SharedLcsClusterDump clusterDump;
 
     /**
+     * Tuple descriptor of the columns being loaded
+     */
+    TupleDescriptor colTupleDesc;
+
+    /**
      * Associates an offset with an address, determining whether a value is
      * stored in the temporary block or the temporary value bank
      *
@@ -236,8 +241,11 @@ private:
 
 public:
     explicit LcsClusterNodeWriter(
-        BTreeDescriptor &treeDescriptorInit, SegmentAccessor &accessorInit,
-        SharedTraceTarget pTraceTargetInit, std::string nameInit);
+        BTreeDescriptor const &treeDescriptorInit,
+        SegmentAccessor const &accessorInit,
+        TupleDescriptor const &colTupleDescInit,
+        SharedTraceTarget pTraceTargetInit,
+        std::string nameInit);
 
     ~LcsClusterNodeWriter();
 

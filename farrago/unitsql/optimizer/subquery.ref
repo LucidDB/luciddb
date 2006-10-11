@@ -10,19 +10,19 @@
 0: jdbc:farrago:> -- 1.1 uncorrelated IN
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where deptno in (select deptno from depts) order by name;
-+----------------------------------------------------------------+
-|                            column0                             |
-+----------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                          |
-|   ProjectRel(NAME=[$1])                                        |
-|     FilterRel(condition=[IS TRUE(true)])                       |
-|       FilterRel(condition=[=($2, $10)])                        |
-|         JoinRel(condition=[true], joinType=[inner])            |
-|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])       |
-|           AggregateRel(groupCount=[1])                         |
-|             ProjectRel(DEPTNO=[$0])                            |
-|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+----------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                             column0                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                                           |
+|   ProjectRel(NAME=[$1])                                                                                                                                         |
+|     FilterRel(condition=[true])                                                                                                                                 |
+|       JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                                                        |
+|         ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
+|         AggregateRel(groupCount=[1])                                                                                                                            |
+|           ProjectRel(DEPTNO=[$0])                                                                                                                               |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                     |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where deptno in (select deptno from depts) order by name;
@@ -46,30 +46,80 @@
 | Wilma  |
 +--------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps
+. . . . . . . . > where (empno, deptno) in (select emps.empno, depts.deptno from emps, depts)
+. . . . . . . . > order by name;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                   column0                                                                                   |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                                                       |
+|   ProjectRel(NAME=[$1])                                                                                                                                                     |
+|     FilterRel(condition=[true])                                                                                                                                             |
+|       JoinRel(condition=[AND(=($10, $12), =($11, $13))], joinType=[inner])                                                                                                  |
+|         ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0], DEPTNO=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                    |
+|         AggregateRel(groupCount=[2])                                                                                                                                        |
+|           ProjectRel(EMPNO=[$0], DEPTNO=[$10])                                                                                                                              |
+|             JoinRel(condition=[true], joinType=[inner])                                                                                                                     |
+|               TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                               |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps
+. . . . . . . . > where (empno, deptno) in (select emps.empno, depts.deptno from emps, depts)
+. . . . . . . . > order by name;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                              |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                  |
+|     FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
+|       LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[0, 2]], joinType=[INNER])                                                                                              |
+|         LhxAggRel(groupCount=[2])                                                                                                                                      |
+|           FennelCartesianProductRel(leftouterjoin=[false])                                                                                                             |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                 |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])             |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                               |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from emps
+. . . . . . . . > where (empno, deptno) in (select emps.empno, depts.deptno from emps, depts)
+. . . . . . . . > order by name;
++--------+
+|  NAME  |
++--------+
+| Eric   |
+| Fred   |
+| Wilma  |
++--------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 1.2 correlated IN:
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps
 . . . . . . . . > where deptno in (select deptno from depts where emps.empno < depts.deptno*10)
 . . . . . . . . > order by name;
-+-------------------------------------------------------------------------+
-|                                 column0                                 |
-+-------------------------------------------------------------------------+
-| SortRel(sort0=[$0], dir0=[Ascending])                                   |
-|   ProjectRel(NAME=[$1])                                                 |
-|     FilterRel(condition=[IS TRUE(true)])                                |
-|       FilterRel(condition=[=($2, $10)])                                 |
-|         JoinRel(condition=[=($0, $11)], joinType=[inner])               |
-|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                |
-|           AggregateRel(groupCount=[2])                                  |
-|             ProjectRel(DEPTNO=[$0], $f0=[$1])                           |
-|               ProjectRel(DEPTNO=[$0], $f0=[$2])                         |
-|                 FilterRel(condition=[<($2, *($0, 10))])                 |
-|                   JoinRel(condition=[true], joinType=[inner])           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])     |
-|                     AggregateRel(groupCount=[1])                        |
-|                       ProjectRel($f0=[$0])                              |
-|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-+-------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                    column0                                                                                    |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                                                         |
+|   ProjectRel(NAME=[$1])                                                                                                                                                       |
+|     FilterRel(condition=[true])                                                                                                                                               |
+|       JoinRel(condition=[AND(=($10, $11), =($0, $12))], joinType=[inner])                                                                                                     |
+|         ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])                |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                      |
+|         AggregateRel(groupCount=[2])                                                                                                                                          |
+|           ProjectRel(DEPTNO=[$0], $f0=[$1])                                                                                                                                   |
+|             ProjectRel(DEPTNO=[$0], $f0=[$2])                                                                                                                                 |
+|               FilterRel(condition=[<($2, *($0, 10))])                                                                                                                         |
+|                 JoinRel(condition=[true], joinType=[inner])                                                                                                                   |
+|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                             |
+|                   AggregateRel(groupCount=[1])                                                                                                                                |
+|                     ProjectRel($f0=[$0])                                                                                                                                      |
+|                       ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps
@@ -81,7 +131,7 @@
 | FennelToIteratorConverter                                                                                                                                              |
 |   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                  |
 |     FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
-|       LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[0, 2]], joinType=[INNER])                                                                                              |
+|       LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 0]], joinType=[INNER])                                                                                              |
 |         LhxAggRel(groupCount=[2])                                                                                                                                      |
 |           IteratorToFennelConverter                                                                                                                                    |
 |             IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                          |
@@ -167,85 +217,243 @@
 +--------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 1.3 NOT IN
-0: jdbc:farrago:> -- only in list (and not transformed into valueRel) has correct plan and result
 0: jdbc:farrago:> explain plan for
-. . . . . . . . > select name from emps where deptno in (10, 20);
+. . . . . . . . > select name from emps where deptno not in (10, 20);
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                     column0                                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[=($t1, $t2)], expr#4=[20], expr#5=[=($t1, $t4)], expr#6=[OR($t3, $t5)], expr#7=[NOT($t6)], NAME=[$t0], $condition=[$t7])  |
+|   FennelToIteratorConverter                                                                                                                                                      |
+|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from emps where deptno not in (10, 20) order by name;
++-------+
+| NAME  |
++-------+
+| John  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- uncorrelated NOT IN
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps where deptno not in (select deptno from depts);
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                             column0                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                                                                                           |
+|   FilterRel(condition=[NOT(IS TRUE($12))])                                                                                                                      |
+|     FilterRel(condition=[IS NOT NULL($10)])                                                                                                                     |
+|       JoinRel(condition=[=($10, $11)], joinType=[left])                                                                                                         |
+|         ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                            |
+|           ProjectRel($f0=[$0], $f1=[true])                                                                                                                      |
+|             ProjectRel(DEPTNO=[$0])                                                                                                                             |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                   |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps where deptno not in (select deptno from depts);
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 |                                                                            column0                                                                            |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[=($t1, $t2)], expr#4=[20], expr#5=[=($t1, $t4)], expr#6=[OR($t3, $t5)], NAME=[$t0], $condition=[$t6])  |
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS TRUE($t3)], expr#5=[NOT($t4)], NAME=[$t0], $condition=[$t5])                                                     |
 |   FennelToIteratorConverter                                                                                                                                   |
-|     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                             |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                              |
+|       IteratorToFennelConverter                                                                                                                               |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], proj#0..1=[{exprs}], $condition=[$t2])                                                   |
+|           FennelToIteratorConverter                                                                                                                           |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                     |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                               |
+|         IteratorToFennelConverter                                                                                                                             |
+|           IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])                                                                                  |
+|             FennelToIteratorConverter                                                                                                                         |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
 +---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> select name from emps where deptno in (10, 20) order by name;
-+--------+
-|  NAME  |
-+--------+
-| Eric   |
-| Fred   |
-| Wilma  |
-+--------+
+0: jdbc:farrago:> select name from emps where deptno not in (select deptno from depts) order by name;
++-------+
+| NAME  |
++-------+
+| John  |
++-------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- wrong translation
-0: jdbc:farrago:> -- This should be the same as 1.4. Solve them together.
-0: jdbc:farrago:> explain plan without implementation for
-. . . . . . . . > select name from emps where deptno not in (select deptno from depts);
-+--------------------------------------------------------------+
-|                           column0                            |
-+--------------------------------------------------------------+
-| ProjectRel(NAME=[$1])                                        |
-|   FilterRel(condition=[IS TRUE(true)])                       |
-|     FilterRel(condition=[NOT(=($2, $10))])                   |
-|       JoinRel(condition=[true], joinType=[inner])            |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])       |
-|         AggregateRel(groupCount=[1])                         |
-|           ProjectRel(DEPTNO=[$0])                            |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+--------------------------------------------------------------+
-0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 1.4 uncorrelated NOT(x IN (sq)):
-0: jdbc:farrago:> -- incorrect translation (should be anti-semijoin)
-0: jdbc:farrago:> -- this needs to handle NULL semantics
-0: jdbc:farrago:> -- initial thinking is to translate this into not exists and use antijoin 
-0: jdbc:farrago:> -- with the value generator (with special semantics for NULL keys, they do not 
-0: jdbc:farrago:> -- belong to either matched or unmatched set)
+0: jdbc:farrago:> -- 1.4 uncorrelated NOT(x IN (subq)):
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select name from emps where not (deptno in (select deptno from depts));
-+--------------------------------------------------------------+
-|                           column0                            |
-+--------------------------------------------------------------+
-| ProjectRel(NAME=[$1])                                        |
-|   FilterRel(condition=[NOT(IS TRUE(true))])                  |
-|     FilterRel(condition=[=($2, $10)])                        |
-|       JoinRel(condition=[true], joinType=[inner])            |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])       |
-|         AggregateRel(groupCount=[1])                         |
-|           ProjectRel(DEPTNO=[$0])                            |
-|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])  |
-+--------------------------------------------------------------+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                             column0                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                                                                                           |
+|   FilterRel(condition=[NOT(IS TRUE($12))])                                                                                                                      |
+|     FilterRel(condition=[IS NOT NULL($10)])                                                                                                                     |
+|       JoinRel(condition=[=($10, $11)], joinType=[left])                                                                                                         |
+|         ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|           TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                            |
+|           ProjectRel($f0=[$0], $f1=[true])                                                                                                                      |
+|             ProjectRel(DEPTNO=[$0])                                                                                                                             |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                   |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan for
 . . . . . . . . > select name from emps where not (deptno in (select deptno from depts));
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                               column0                                                                                |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                            |
-|   FennelReshapeRel(projection=[[1]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME) NOT NULL])  |
-|     LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])                                                                                                    |
-|       LhxAggRel(groupCount=[1])                                                                                                                                      |
-|         FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])               |
-|       IteratorToFennelConverter                                                                                                                                      |
-|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[false], proj#0..1=[{exprs}], $condition=[$t2])                                                                     |
-|           FennelToIteratorConverter                                                                                                                                  |
-|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                            |
-+----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                            column0                                                                            |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[IS TRUE($t3)], expr#5=[NOT($t4)], NAME=[$t0], $condition=[$t5])                                                     |
+|   FennelToIteratorConverter                                                                                                                                   |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                              |
+|       IteratorToFennelConverter                                                                                                                               |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[IS NOT NULL($t1)], proj#0..1=[{exprs}], $condition=[$t2])                                                   |
+|           FennelToIteratorConverter                                                                                                                           |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[1, 2]], index=[EMPS_UX], preserveOrder=[false])                                     |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                               |
+|         IteratorToFennelConverter                                                                                                                             |
+|           IterCalcRel(expr#0=[{inputs}], expr#1=[true], proj#0..1=[{exprs}])                                                                                  |
+|             FennelToIteratorConverter                                                                                                                         |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])  |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- WRONG RESULTS:  should have one row for employee John
 0: jdbc:farrago:> select name from emps where not (deptno in (select deptno from depts)) order by name;
 +-------+
 | NAME  |
 +-------+
+| John  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 1.5 correlated NOT IN
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps
+. . . . . . . . > where deptno not in (select deptno from depts where emps.empno < depts.deptno*10)
+. . . . . . . . > order by name;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                      column0                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                                                             |
+|   ProjectRel(NAME=[$1])                                                                                                                                                           |
+|     FilterRel(condition=[NOT(IS TRUE($13))])                                                                                                                                      |
+|       FilterRel(condition=[IS NOT NULL($10)])                                                                                                                                     |
+|         JoinRel(condition=[AND(=($10, $11), =($0, $12))], joinType=[left])                                                                                                        |
+|           ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])                  |
+|             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                        |
+|           AggregateRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                            |
+|             ProjectRel($f0=[$0], $f0=[$2], $f1=[$1])                                                                                                                              |
+|               ProjectRel($f0=[$0], $f1=[true], $f0=[$1])                                                                                                                          |
+|                 ProjectRel(DEPTNO=[$0], $f0=[$2])                                                                                                                                 |
+|                   FilterRel(condition=[<($2, *($0, 10))])                                                                                                                         |
+|                     JoinRel(condition=[true], joinType=[inner])                                                                                                                   |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                             |
+|                       AggregateRel(groupCount=[1])                                                                                                                                |
+|                         ProjectRel($f0=[$0])                                                                                                                                      |
+|                           ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|                             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps
+. . . . . . . . > where deptno not in (select deptno from depts where emps.empno < depts.deptno*10)
+. . . . . . . . > order by name;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                   column0                                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                    |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                        |
+|     IteratorToFennelConverter                                                                                                                                                |
+|       IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS TRUE($t2)], expr#7=[NOT($t6)], NAME=[$t4], $condition=[$t7])                                                              |
+|         FennelToIteratorConverter                                                                                                                                            |
+|           LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 0]], joinType=[RIGHT])                                                                                                |
+|             LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                        |
+|               IteratorToFennelConverter                                                                                                                                      |
+|                 IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], expr#5=[true], proj#0..1=[{exprs}], $f1=[$t5], $condition=[$t4])  |
+|                   FennelToIteratorConverter                                                                                                                                  |
+|                     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                         |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])         |
+|                       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                    |
+|                         LhxAggRel(groupCount=[1])                                                                                                                            |
+|                           FennelRenameRel(fieldNames=[[$f0]])                                                                                                                |
+|                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                       |
+|             IteratorToFennelConverter                                                                                                                                        |
+|               IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], proj#0..2=[{exprs}], $condition=[$t3])                                                            |
+|                 FennelToIteratorConverter                                                                                                                                    |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from emps
+. . . . . . . . > where deptno not in (select deptno from depts where emps.empno < depts.deptno*10)
+. . . . . . . . > order by name;
++-------+
+| NAME  |
++-------+
+| Fred  |
+| John  |
++-------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 1.6 correlated NOT (x IN subq)
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps
+. . . . . . . . > where not (deptno in (select deptno from depts where emps.empno < depts.deptno*10))
+. . . . . . . . > order by name;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                      column0                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| SortRel(sort0=[$0], dir0=[Ascending])                                                                                                                                             |
+|   ProjectRel(NAME=[$1])                                                                                                                                                           |
+|     FilterRel(condition=[NOT(IS TRUE($13))])                                                                                                                                      |
+|       FilterRel(condition=[IS NOT NULL($10)])                                                                                                                                     |
+|         JoinRel(condition=[AND(=($10, $11), =($0, $12))], joinType=[left])                                                                                                        |
+|           ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])                  |
+|             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                        |
+|           AggregateRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                            |
+|             ProjectRel($f0=[$0], $f0=[$2], $f1=[$1])                                                                                                                              |
+|               ProjectRel($f0=[$0], $f1=[true], $f0=[$1])                                                                                                                          |
+|                 ProjectRel(DEPTNO=[$0], $f0=[$2])                                                                                                                                 |
+|                   FilterRel(condition=[<($2, *($0, 10))])                                                                                                                         |
+|                     JoinRel(condition=[true], joinType=[inner])                                                                                                                   |
+|                       TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                             |
+|                       AggregateRel(groupCount=[1])                                                                                                                                |
+|                         ProjectRel($f0=[$0])                                                                                                                                      |
+|                           ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO=[$2])  |
+|                             TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                        |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name from emps
+. . . . . . . . > where not (deptno in (select deptno from depts where emps.empno < depts.deptno*10))
+. . . . . . . . > order by name;
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                   column0                                                                                    |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                    |
+|   FennelSortRel(key=[[0]], discardDuplicates=[false])                                                                                                                        |
+|     IteratorToFennelConverter                                                                                                                                                |
+|       IterCalcRel(expr#0..5=[{inputs}], expr#6=[IS TRUE($t2)], expr#7=[NOT($t6)], NAME=[$t4], $condition=[$t7])                                                              |
+|         FennelToIteratorConverter                                                                                                                                            |
+|           LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 0]], joinType=[RIGHT])                                                                                                |
+|             LhxAggRel(groupCount=[2], agg#0=[MIN(2)])                                                                                                                        |
+|               IteratorToFennelConverter                                                                                                                                      |
+|                 IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], expr#5=[true], proj#0..1=[{exprs}], $f1=[$t5], $condition=[$t4])  |
+|                   FennelToIteratorConverter                                                                                                                                  |
+|                     FennelCartesianProductRel(leftouterjoin=[false])                                                                                                         |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])         |
+|                       FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                    |
+|                         LhxAggRel(groupCount=[1])                                                                                                                            |
+|                           FennelRenameRel(fieldNames=[[$f0]])                                                                                                                |
+|                             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                       |
+|             IteratorToFennelConverter                                                                                                                                        |
+|               IterCalcRel(expr#0..2=[{inputs}], expr#3=[IS NOT NULL($t2)], proj#0..2=[{exprs}], $condition=[$t3])                                                            |
+|                 FennelToIteratorConverter                                                                                                                                    |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name from emps
+. . . . . . . . > where not (deptno in (select deptno from depts where emps.empno < depts.deptno*10))
+. . . . . . . . > order by name;
++-------+
+| NAME  |
++-------+
+| Fred  |
+| John  |
 +-------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 2.1 uncorrelated exists.
@@ -1070,9 +1278,6 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 +--------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 4.1 nested correlations
-0: jdbc:farrago:> -- plan is still incorrect
-0: jdbc:farrago:> -- for the lowest filterRel above the correlatorRel, the input reference
-0: jdbc:farrago:> -- is not updated
 0: jdbc:farrago:> insert into depts2 select * from depts;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> explain plan without implementation for 
@@ -1841,54 +2046,54 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 0: jdbc:farrago:> -- 6.1.2 The following, less complex, equivalent plan is possible with OR-expansion.
 0: jdbc:farrago:> -- Note the IN lookup is required because union all does not remove duplicates.
 0: jdbc:farrago:> -- Similarly, if using union the lookup is also required because union removes duplicates.
-0: jdbc:farrago:> -- This could be a better plan than 6.1.1 because there's one fewer join.
+0: jdbc:farrago:> -- This could be a better plan than 6.1.1 because there're one fewer joins.
 0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select empno from emps where empno in (
-. . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts where depts.deptno = emps.deptno)
-. . . . . . . . > union all
-. . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts2 where depts2.deptno <> emps.empno));
-+-------------------------------------------------------------------------------------+
-|                                       column0                                       |
-+-------------------------------------------------------------------------------------+
-| ProjectRel(EMPNO=[$0])                                                              |
-|   FilterRel(condition=[IS TRUE(true)])                                              |
-|     FilterRel(condition=[=($0, $10)])                                               |
-|       JoinRel(condition=[true], joinType=[inner])                                   |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                              |
-|         AggregateRel(groupCount=[1])                                                |
-|           ProjectRel(EMPNO=[$0])                                                    |
-|             UnionRel(all=[true])                                                    |
-|               ProjectRel(EMPNO=[$0])                                                |
-|                 FilterRel(condition=[IS TRUE($11)])                                 |
-|                   JoinRel(condition=[=($2, $10)], joinType=[left])                  |
-|                     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|                     AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|                       ProjectRel($f0=[$1], $f0=[$0])                                |
-|                         ProjectRel($f0=[true], $f0=[$2])                            |
-|                           ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                             FilterRel(condition=[=($0, $2)])                        |
-|                               JoinRel(condition=[true], joinType=[inner])           |
-|                                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])     |
-|                                 AggregateRel(groupCount=[1])                        |
-|                                   ProjectRel($f0=[$2])                              |
-|                                     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-|               ProjectRel(EMPNO=[$0])                                                |
-|                 FilterRel(condition=[IS TRUE($11)])                                 |
-|                   JoinRel(condition=[=($0, $10)], joinType=[left])                  |
-|                     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|                     AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|                       ProjectRel($f0=[$1], $f0=[$0])                                |
-|                         ProjectRel($f0=[true], $f0=[$2])                            |
-|                           ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                             FilterRel(condition=[<>($0, $2)])                       |
-|                               JoinRel(condition=[true], joinType=[inner])           |
-|                                 TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])    |
-|                                 AggregateRel(groupCount=[1])                        |
-|                                   ProjectRel($f0=[$0])                              |
-|                                     TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-+-------------------------------------------------------------------------------------+
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts where depts.deptno = emps.deptno)
+. . . . . . . . >     union all
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                                                       |
+|   FilterRel(condition=[true])                                                                                                                                |
+|     JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                                                       |
+|       ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                       |
+|       AggregateRel(groupCount=[1])                                                                                                                           |
+|         ProjectRel(EMPNO=[$0])                                                                                                                               |
+|           UnionRel(all=[true])                                                                                                                               |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[=($0, $2)])                                                                                                   |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$2])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($0, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[<>($0, $2)])                                                                                                  |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                               |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$0])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 6.2 intersect
 0: jdbc:farrago:> explain plan without implementation for 
@@ -1960,46 +2165,56 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 |                                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
 +-----------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 6.2.2 This is not equivalent to 6.2.1 because intersect removes duplicates.
-0: jdbc:farrago:> explain plan without implementation for 
+0: jdbc:farrago:> -- 6.2.2 The following plan is equivalent to 6.2.1 and has one fewer joins.
+0: jdbc:farrago:> -- Note the IN lookup is required because intersect removes duplicates.
+0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts where depts.deptno = emps.deptno)
-. . . . . . . . > intersect
-. . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts2 where depts2.deptno <> emps.empno);
-+-------------------------------------------------------------------------+
-|                                 column0                                 |
-+-------------------------------------------------------------------------+
-| IntersectRel(all=[false])                                               |
-|   ProjectRel(EMPNO=[$0])                                                |
-|     FilterRel(condition=[IS TRUE($11)])                                 |
-|       JoinRel(condition=[=($2, $10)], joinType=[left])                  |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|           ProjectRel($f0=[$1], $f0=[$0])                                |
-|             ProjectRel($f0=[true], $f0=[$2])                            |
-|               ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                 FilterRel(condition=[=($0, $2)])                        |
-|                   JoinRel(condition=[true], joinType=[inner])           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])     |
-|                     AggregateRel(groupCount=[1])                        |
-|                       ProjectRel($f0=[$2])                              |
-|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-|   ProjectRel(EMPNO=[$0])                                                |
-|     FilterRel(condition=[IS TRUE($11)])                                 |
-|       JoinRel(condition=[=($0, $10)], joinType=[left])                  |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|           ProjectRel($f0=[$1], $f0=[$0])                                |
-|             ProjectRel($f0=[true], $f0=[$2])                            |
-|               ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                 FilterRel(condition=[<>($0, $2)])                       |
-|                   JoinRel(condition=[true], joinType=[inner])           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])    |
-|                     AggregateRel(groupCount=[1])                        |
-|                       ProjectRel($f0=[$0])                              |
-|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-+-------------------------------------------------------------------------+
+. . . . . . . . > where empno in (
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts where depts.deptno = emps.deptno)
+. . . . . . . . >     intersect
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                                                       |
+|   FilterRel(condition=[true])                                                                                                                                |
+|     JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                                                       |
+|       ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                       |
+|       AggregateRel(groupCount=[1])                                                                                                                           |
+|         ProjectRel(EMPNO=[$0])                                                                                                                               |
+|           IntersectRel(all=[false])                                                                                                                          |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[=($0, $2)])                                                                                                   |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$2])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($0, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[<>($0, $2)])                                                                                                  |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                               |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$0])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- 6.3 except
 0: jdbc:farrago:> explain plan without implementation for 
@@ -2071,48 +2286,58 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 |                                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
 +-----------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 6.3.2 This is not equivalent to 6.3.1 because except removes duplicates.
-0: jdbc:farrago:> explain plan without implementation for 
+0: jdbc:farrago:> -- 6.3.2 The following plan is equivalent to 6.3.1 and has one fewer joins.
+0: jdbc:farrago:> -- Note the IN lookup is required because intersect removes duplicates.
+0: jdbc:farrago:> explain plan without implementation for
 . . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts where depts.deptno = emps.deptno)
-. . . . . . . . > except
-. . . . . . . . > select empno from emps
-. . . . . . . . > where exists (select * from depts2 where depts2.deptno <> emps.empno);
-+-------------------------------------------------------------------------+
-|                                 column0                                 |
-+-------------------------------------------------------------------------+
-| MinusRel(all=[false])                                                   |
-|   ProjectRel(EMPNO=[$0])                                                |
-|     FilterRel(condition=[IS TRUE($11)])                                 |
-|       JoinRel(condition=[=($2, $10)], joinType=[left])                  |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|           ProjectRel($f0=[$1], $f0=[$0])                                |
-|             ProjectRel($f0=[true], $f0=[$2])                            |
-|               ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                 FilterRel(condition=[=($0, $2)])                        |
-|                   JoinRel(condition=[true], joinType=[inner])           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])     |
-|                     AggregateRel(groupCount=[1])                        |
-|                       ProjectRel($f0=[$2])                              |
-|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-|   ProjectRel(EMPNO=[$0])                                                |
-|     FilterRel(condition=[IS TRUE($11)])                                 |
-|       JoinRel(condition=[=($0, $10)], joinType=[left])                  |
-|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                  |
-|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                    |
-|           ProjectRel($f0=[$1], $f0=[$0])                                |
-|             ProjectRel($f0=[true], $f0=[$2])                            |
-|               ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])              |
-|                 FilterRel(condition=[<>($0, $2)])                       |
-|                   JoinRel(condition=[true], joinType=[inner])           |
-|                     TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])    |
-|                     AggregateRel(groupCount=[1])                        |
-|                       ProjectRel($f0=[$0])                              |
-|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])  |
-+-------------------------------------------------------------------------+
+. . . . . . . . > where empno in (
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts where depts.deptno = emps.deptno)
+. . . . . . . . >     except
+. . . . . . . . >     select empno from emps
+. . . . . . . . >     where exists (select * from depts2 where depts2.deptno <> emps.empno));
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                           column0                                                                            |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0])                                                                                                                                       |
+|   FilterRel(condition=[true])                                                                                                                                |
+|     JoinRel(condition=[=($10, $11)], joinType=[inner])                                                                                                       |
+|       ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], EMPNO=[$0])  |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                       |
+|       AggregateRel(groupCount=[1])                                                                                                                           |
+|         ProjectRel(EMPNO=[$0])                                                                                                                               |
+|           MinusRel(all=[false])                                                                                                                              |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[=($0, $2)])                                                                                                   |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$2])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
+|             ProjectRel(EMPNO=[$0])                                                                                                                           |
+|               FilterRel(condition=[IS TRUE($11)])                                                                                                            |
+|                 JoinRel(condition=[=($0, $10)], joinType=[left])                                                                                             |
+|                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                             |
+|                   AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                               |
+|                     ProjectRel($f0=[$1], $f0=[$0])                                                                                                           |
+|                       ProjectRel($f0=[true], $f0=[$2])                                                                                                       |
+|                         ProjectRel(DEPTNO=[$0], NAME=[$1], $f0=[$2])                                                                                         |
+|                           FilterRel(condition=[<>($0, $2)])                                                                                                  |
+|                             JoinRel(condition=[true], joinType=[inner])                                                                                      |
+|                               TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                               |
+|                               AggregateRel(groupCount=[1])                                                                                                   |
+|                                 ProjectRel($f0=[$0])                                                                                                         |
+|                                   TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                             |
++--------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- 7.1 some multiset queries are not decorrelated because it contains set ops.
+0: jdbc:farrago:> -- 7.1 some multiset queries are not decorrelated because they contain set ops.
 0: jdbc:farrago:> explain plan without implementation for 
 . . . . . . . . > select 'abc', multiset[deptno,empno] from emps;
 +---------------------------------------------------------------------------------------------------+
@@ -2145,6 +2370,586 @@ Error: At line 2, column 28: Cannot apply '$SCALAR_QUERY' to arguments of type '
 |               ProjectRel(EXPR$0=[$cor0.DEPTNO])                                           |
 |                 OneRowRel                                                                 |
 +-------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 8.1 on clause
+0: jdbc:farrago:> -- correlation from outer qb is not decorrelated
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select name from emps
+. . . . . . . . > where exists (select * from depts d1 left outer join depts2 d2 
+. . . . . . . . >               on d1.deptno = emps.deptno and d1.deptno = d2.deptno);
++----------------------------------------------------------------------------------------+
+|                                        column0                                         |
++----------------------------------------------------------------------------------------+
+| ProjectRel(NAME=[$1])                                                                  |
+|   FilterRel(condition=[IS TRUE($10)])                                                  |
+|     CorrelatorRel(condition=[true], joinType=[left], correlations=[[var0=offset2]])    |
+|       TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                   |
+|       AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                     |
+|         ProjectRel($f0=[true])                                                         |
+|           ProjectRel(DEPTNO=[$0], NAME=[$1], DEPTNO0=[$2], NAME0=[$3])                 |
+|             JoinRel(condition=[AND(=($0, $cor0.DEPTNO), =($0, $2))], joinType=[left])  |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                          |
+|               TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                         |
++----------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- non correlated scalar subq in ON clause gives parsing error
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * from emps left outer join depts
+. . . . . . . . > on emps.deptno = depts.deptno and emps.deptno = (select min(deptno) from depts2);
+Error: java.lang.AssertionError: Internal error: Not a query: SELECT MIN(`DEPTNO`)
+FROM `DEPTS2` (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- but this works
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * from emps left outer join depts
+. . . . . . . . > on emps.deptno = depts.deptno
+. . . . . . . . > where emps.deptno = (select min(deptno) from depts2);
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])  |
+|   FilterRel(condition=[=($2, $12)])                                                                                                                                    |
+|     JoinRel(condition=[true], joinType=[left])                                                                                                                         |
+|       JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                                                 |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                 |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                |
+|       ProjectRel(EXPR$0=[$0])                                                                                                                                          |
+|         AggregateRel(groupCount=[0], agg#0=[MIN(0)])                                                                                                                   |
+|           ProjectRel($f0=[$0])                                                                                                                                         |
+|             TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                                                           |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- so does this
+0: jdbc:farrago:> explain plan without implementation for
+. . . . . . . . > select * from emps left outer join depts
+. . . . . . . . > on emps.deptno = depts.deptno
+. . . . . . . . > where emps.deptno = (select min(deptno) from depts2 where depts2.deptno = depts.deptno);
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                column0                                                                                 |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| ProjectRel(EMPNO=[$0], NAME=[$1], DEPTNO=[$2], GENDER=[$3], CITY=[$4], EMPID=[$5], AGE=[$6], PUBLIC_KEY=[$7], SLACKER=[$8], MANAGER=[$9], DEPTNO0=[$10], NAME0=[$11])  |
+|   FilterRel(condition=[=($2, $12)])                                                                                                                                    |
+|     JoinRel(condition=[=($10, $13)], joinType=[left])                                                                                                                  |
+|       JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                                                 |
+|         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                                 |
+|         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                                |
+|       ProjectRel(EXPR$0=[$1], $f0=[$0])                                                                                                                                |
+|         AggregateRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                   |
+|           ProjectRel($f0=[$1], $f0=[$0])                                                                                                                               |
+|             ProjectRel($f0=[$0], $f0=[$2])                                                                                                                             |
+|               FilterRel(condition=[=($0, $2)])                                                                                                                         |
+|                 JoinRel(condition=[true], joinType=[inner])                                                                                                            |
+|                   TableAccessRel(table=[[LOCALDB, SALES, DEPTS2]])                                                                                                     |
+|                   AggregateRel(groupCount=[1])                                                                                                                         |
+|                     ProjectRel($f0=[$10])                                                                                                                              |
+|                       JoinRel(condition=[=($2, $10)], joinType=[left])                                                                                                 |
+|                         TableAccessRel(table=[[LOCALDB, SALES, EMPS]])                                                                                                 |
+|                         TableAccessRel(table=[[LOCALDB, SALES, DEPTS]])                                                                                                |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9 views built on top of correlated queries
+0: jdbc:farrago:> drop table emps2;
+0: jdbc:farrago:> drop table depts2;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table emps2 (name varchar(40), empno int, deptno int);
+0: jdbc:farrago:> create table depts2 (name varchar(40), deptno int);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> insert into emps2 select name, empno, deptno from emps;
+0: jdbc:farrago:> insert into depts2 select name, deptno from depts;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9.1 view over query with correlated IN subquery
+0: jdbc:farrago:> create view v1 (ename, empno, deptno) as
+. . . . . . . . > select name, empno, deptno from emps
+. . . . . . . . > where deptno in (select deptno from depts where emps.empno < depts.deptno*10);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, empno, deptno from emps
+. . . . . . . . > where deptno in (select deptno from depts where emps.empno < depts.deptno*10);
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                           column0                                                                                                           |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                   |
+|   FennelReshapeRel(projection=[[3, 2, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])  |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 0]], joinType=[INNER])                                                                                                                                                     |
+|       LhxAggRel(groupCount=[2])                                                                                                                                                                                             |
+|         IteratorToFennelConverter                                                                                                                                                                                           |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                 |
+|             FennelToIteratorConverter                                                                                                                                                                                       |
+|               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                              |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                              |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                                         |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                                                 |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                     |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                                            |
+|       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                                      |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from v1;
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                            column0                                                                                                            |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                     |
+|   FennelRenameRel(fieldNames=[[ENAME, EMPNO, DEPTNO]])                                                                                                                                                                        |
+|     FennelReshapeRel(projection=[[3, 2, 4]], outputRowType=[RecordType(VARCHAR(128) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NOT NULL NAME, INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])  |
+|       LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[2, 0]], joinType=[INNER])                                                                                                                                                     |
+|         LhxAggRel(groupCount=[2])                                                                                                                                                                                             |
+|           IteratorToFennelConverter                                                                                                                                                                                           |
+|             IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                 |
+|               FennelToIteratorConverter                                                                                                                                                                                       |
+|                 FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                                                              |
+|                   FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                                                              |
+|                   FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                                                         |
+|                     LhxAggRel(groupCount=[1])                                                                                                                                                                                 |
+|                       FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                     |
+|                         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                                                            |
+|         FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 1, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                                                      |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name, empno, deptno from emps
+. . . . . . . . > where deptno in (select deptno from depts where emps.empno < depts.deptno*10)
+. . . . . . . . > order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Eric   | 110    | 20      |
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v1 order by ename;
++--------+--------+---------+
+| ENAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Eric   | 110    | 20      |
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9.2 view over query with correlated EXISTS subquery
+0: jdbc:farrago:> create view v2 (ename, empno, deptno) as
+. . . . . . . . > select name, empno, deptno from emps2
+. . . . . . . . > where exists(select * from depts2 where depts2.deptno=emps2.deptno);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select name, empno, deptno from emps2
+. . . . . . . . > where exists(select * from depts2 where depts2.deptno=emps2.deptno);
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                             column0                                                                                                                             |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                       |
+|   FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])  |
+|     LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                                |
+|       LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$NAME]])                                                 |
+|       LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                                                                                 |
+|         IteratorToFennelConverter                                                                                                                                                                                                                               |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                                                                                                |
+|             FennelToIteratorConverter                                                                                                                                                                                                                           |
+|               LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                                                                                     |
+|                 LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                                                                                                |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                                                                                       |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                                           |
+|                     LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                                                                                                              |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from v2;
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                                                              column0                                                                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                                                                                         |
+|   FennelRenameRel(fieldNames=[[ENAME, EMPNO, DEPTNO]])                                                                                                                                                                                                            |
+|     FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[4]], filterTuple=[[true]], outputRowType=[RecordType(VARCHAR(40) CHARACTER SET "ISO-8859-1" COLLATE "ISO-8859-1$en_US$primary" NAME, INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])  |
+|       LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                                                                                                |
+|         LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$NAME]])                                                 |
+|         LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                                                                                                 |
+|           IteratorToFennelConverter                                                                                                                                                                                                                               |
+|             IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                                                                                                |
+|               FennelToIteratorConverter                                                                                                                                                                                                                           |
+|                 LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                                                                                                     |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                                                                                                |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                                                                                       |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                                                                                           |
+|                       LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                                                                                                              |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select name, empno, deptno from emps2
+. . . . . . . . > where exists(select * from depts2 where depts2.deptno=emps2.deptno)
+. . . . . . . . > order by name;
++--------+--------+---------+
+|  NAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Eric   | 110    | 20      |
+| Fred   | 100    | 10      |
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v2 order by ename;
++--------+--------+---------+
+| ENAME  | EMPNO  | DEPTNO  |
++--------+--------+---------+
+| Eric   | 110    | 20      |
+| Fred   | 100    | 10      |
+| Wilma  | 120    | 20      |
++--------+--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9.3 view on top of joined views, each over queries with correlations
+0: jdbc:farrago:> create view v3 (empnov1, empnov2) as
+. . . . . . . . > select v1.empno, v2.empno from v1, v2 where v1.empno = v2.empno;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select v1.empno, v2.empno from v1, v2 where v1.empno = v2.empno;
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                         column0                                                                                         |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                               |
+|   FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER EMPNO0) NOT NULL])                                                                    |
+|     LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])                                                                                                              |
+|       FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER EMPNO0) NOT NULL])                                    |
+|         LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])                                                                                                                   |
+|           FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])                      |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                               |
+|           FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO) NOT NULL])                        |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|               LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|               LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                 IteratorToFennelConverter                                                                                                                                               |
+|                   IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                     FennelToIteratorConverter                                                                                                                                           |
+|                       LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                         LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                         LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                           FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                             LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
+|       IteratorToFennelConverter                                                                                                                                                         |
+|         IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                               |
+|           FennelToIteratorConverter                                                                                                                                                     |
+|             FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                            |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                            |
+|               FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                       |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                               |
+|                   FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                   |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                          |
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from v3;
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                          column0                                                                                          |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                 |
+|   FennelRenameRel(fieldNames=[[EMPNOV1, EMPNOV2]])                                                                                                                                        |
+|     FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER EMPNO0) NOT NULL])                                                                    |
+|       LhxJoinRel(leftKeys=[[1, 0]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])                                                                                                              |
+|         FennelReshapeRel(projection=[[0, 1, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER EMPNO0) NOT NULL])                                    |
+|           LhxJoinRel(leftKeys=[[2]], rightKeys=[[0]], joinType=[INNER])                                                                                                                   |
+|             FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])                      |
+|               FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                               |
+|             FennelReshapeRel(projection=[[0]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO) NOT NULL])                        |
+|               LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|                 LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                   IteratorToFennelConverter                                                                                                                                               |
+|                     IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                       FennelToIteratorConverter                                                                                                                                           |
+|                         LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                           LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                           LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                             FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                               LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
+|         IteratorToFennelConverter                                                                                                                                                         |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                               |
+|             FennelToIteratorConverter                                                                                                                                                     |
+|               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                            |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                            |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                       |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                               |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                   |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                          |
++-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select v1.empno, v2.empno from v1, v2
+. . . . . . . . > where v1.empno = v2.empno order by v1.empno;
++--------+--------+
+| EMPNO  | EMPNO  |
++--------+--------+
+| 110    | 110    |
+| 120    | 120    |
++--------+--------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v3 order by v3.empnov1;
++----------+----------+
+| EMPNOV1  | EMPNOV2  |
++----------+----------+
+| 110      | 110      |
+| 120      | 120      |
++----------+----------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9.4 view over views that are correlated to each other.
+0: jdbc:farrago:> -- Each of the views is itself over queries with correlations.
+0: jdbc:farrago:> create view v4 (empno, deptno) as
+. . . . . . . . > select empno, deptno from v1
+. . . . . . . . > where v1.empno in (select v2.empno from v2 where v2.deptno = v1.deptno);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select empno, deptno from v1
+. . . . . . . . > where v1.empno in (select v2.empno from v2 where v2.deptno = v1.deptno);
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                   |
+|   FennelReshapeRel(projection=[[2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                               |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                                     |
+|       LhxAggRel(groupCount=[2])                                                                                                                                                             |
+|         IteratorToFennelConverter                                                                                                                                                           |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                 |
+|             FennelToIteratorConverter                                                                                                                                                       |
+|               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                              |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                              |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                         |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                 |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                     |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                            |
+|       FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                           |
+|         LhxJoinRel(leftKeys=[[2, 1]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])                                                                                                              |
+|           FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])                          |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                   |
+|           FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER NOT NULL $f0) NOT NULL])                                                                   |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                   |
+|               FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                    |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                   |
+|                   FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                             |
+|                     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                     |
+|                       LhxAggRel(groupCount=[2])                                                                                                                                             |
+|                         IteratorToFennelConverter                                                                                                                                           |
+|                           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                 |
+|                             FennelToIteratorConverter                                                                                                                                       |
+|                               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
+|                                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])              |
+|                                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                         |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                 |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                     |
+|                                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                            |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                         |
+|               FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])     |
+|                 LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|                   LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                     IteratorToFennelConverter                                                                                                                                               |
+|                       IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                         FennelToIteratorConverter                                                                                                                                           |
+|                           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                             LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                             LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                               FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from v4;
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                                   |
+|   FennelReshapeRel(projection=[[2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                               |
+|     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                                     |
+|       LhxAggRel(groupCount=[2])                                                                                                                                                             |
+|         IteratorToFennelConverter                                                                                                                                                           |
+|           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                                 |
+|             FennelToIteratorConverter                                                                                                                                                       |
+|               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                              |
+|                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                              |
+|                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                         |
+|                   LhxAggRel(groupCount=[1])                                                                                                                                                 |
+|                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                     |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                            |
+|       FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO) NOT NULL])                                                           |
+|         LhxJoinRel(leftKeys=[[2, 1]], rightKeys=[[0, 1]], joinType=[LEFTSEMI])                                                                                                              |
+|           FennelReshapeRel(projection=[[0, 1, 0]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO, INTEGER CAST($0):INTEGER) NOT NULL])                          |
+|             FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                   |
+|           FennelReshapeRel(projection=[[2, 0]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER NOT NULL $f0) NOT NULL])                                                                   |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                   |
+|               FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                    |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                   |
+|                   FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                             |
+|                     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                     |
+|                       LhxAggRel(groupCount=[2])                                                                                                                                             |
+|                         IteratorToFennelConverter                                                                                                                                           |
+|                           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                 |
+|                             FennelToIteratorConverter                                                                                                                                       |
+|                               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
+|                                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])              |
+|                                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                         |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                 |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                     |
+|                                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                            |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                         |
+|               FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])     |
+|                 LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|                   LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                     IteratorToFennelConverter                                                                                                                                               |
+|                       IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                         FennelToIteratorConverter                                                                                                                                           |
+|                           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                             LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                             LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                               FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, deptno from v1
+. . . . . . . . > where v1.empno in (select empno from v2 where v2.deptno = v1.deptno)
+. . . . . . . . > order by empno;
++--------+---------+
+| EMPNO  | DEPTNO  |
++--------+---------+
+| 110    | 20      |
+| 120    | 20      |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v4 order by empno;
++--------+---------+
+| EMPNO  | DEPTNO  |
++--------+---------+
+| 110    | 20      |
+| 120    | 20      |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- 9.5 view on top of two views that are correlated to each other, within a
+0: jdbc:farrago:> -- scalar subquery.
+0: jdbc:farrago:> create view v5 (empno, deptno) as
+. . . . . . . . > select empno, deptno from v1
+. . . . . . . . > where v1.empno = (select max(v2.empno) from v2 where v2.deptno = v1.deptno);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select empno, deptno from v1
+. . . . . . . . > where v1.empno = (select max(v2.empno) from v2 where v2.deptno = v1.deptno);
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                              |
+|   FennelToIteratorConverter                                                                                                                                                                 |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])                                                                                                                            |
+|       FennelReshapeRel(projection=[[2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO0) NOT NULL])                                                          |
+|         LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                                 |
+|           LhxAggRel(groupCount=[2])                                                                                                                                                         |
+|             IteratorToFennelConverter                                                                                                                                                       |
+|               IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                             |
+|                 FennelToIteratorConverter                                                                                                                                                   |
+|                   FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                          |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                          |
+|                     FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                     |
+|                       LhxAggRel(groupCount=[1])                                                                                                                                             |
+|                         FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                 |
+|                           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                        |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                     |
+|       FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL $f0) NOT NULL])                                                                      |
+|         LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                           |
+|           FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                     |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                   |
+|               FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                    |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                   |
+|                   FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                             |
+|                     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                     |
+|                       LhxAggRel(groupCount=[2])                                                                                                                                             |
+|                         IteratorToFennelConverter                                                                                                                                           |
+|                           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                 |
+|                             FennelToIteratorConverter                                                                                                                                       |
+|                               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
+|                                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])              |
+|                                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                         |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                 |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                     |
+|                                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                            |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                         |
+|               FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])     |
+|                 LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|                   LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                     IteratorToFennelConverter                                                                                                                                               |
+|                       IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                         FennelToIteratorConverter                                                                                                                                           |
+|                           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                             LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                             LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                               FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> explain plan for
+. . . . . . . . > select * from v5;
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                           column0                                                                                           |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| IterCalcRel(expr#0..3=[{inputs}], expr#4=[=($t0, $t2)], proj#0..1=[{exprs}], $condition=[$t4])                                                                                              |
+|   FennelToIteratorConverter                                                                                                                                                                 |
+|     LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[LEFT])                                                                                                                            |
+|       FennelReshapeRel(projection=[[2, 3]], outputRowType=[RecordType(INTEGER NOT NULL EMPNO, INTEGER NOT NULL DEPTNO0) NOT NULL])                                                          |
+|         LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                                 |
+|           LhxAggRel(groupCount=[2])                                                                                                                                                         |
+|             IteratorToFennelConverter                                                                                                                                                       |
+|               IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                             |
+|                 FennelToIteratorConverter                                                                                                                                                   |
+|                   FennelCartesianProductRel(leftouterjoin=[false])                                                                                                                          |
+|                     FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])                          |
+|                     FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                                     |
+|                       LhxAggRel(groupCount=[1])                                                                                                                                             |
+|                         FennelRenameRel(fieldNames=[[$f0]])                                                                                                                                 |
+|                           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                                        |
+|           FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                                     |
+|       FennelReshapeRel(projection=[[1, 0]], outputRowType=[RecordType(INTEGER EXPR$0, INTEGER NOT NULL $f0) NOT NULL])                                                                      |
+|         LhxAggRel(groupCount=[1], agg#0=[MAX(1)])                                                                                                                                           |
+|           FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER $f0) NOT NULL])                                                                     |
+|             LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])                                                                                                                   |
+|               FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(INTEGER NOT NULL $f0, INTEGER CAST($0):INTEGER) NOT NULL])                                                    |
+|                 LhxAggRel(groupCount=[1])                                                                                                                                                   |
+|                   FennelReshapeRel(projection=[[3]], outputRowType=[RecordType(INTEGER NOT NULL $f0) NOT NULL])                                                                             |
+|                     LhxJoinRel(leftKeys=[[0, 1]], rightKeys=[[1, 0]], joinType=[INNER])                                                                                                     |
+|                       LhxAggRel(groupCount=[2])                                                                                                                                             |
+|                         IteratorToFennelConverter                                                                                                                                           |
+|                           IterCalcRel(expr#0..1=[{inputs}], expr#2=[10], expr#3=[*($t0, $t2)], expr#4=[<($t1, $t3)], proj#0..1=[{exprs}], $condition=[$t4])                                 |
+|                             FennelToIteratorConverter                                                                                                                                       |
+|                               FennelCartesianProductRel(leftouterjoin=[false])                                                                                                              |
+|                                 FtrsIndexScanRel(table=[[LOCALDB, SALES, DEPTS]], projection=[[0]], index=[SYS$CONSTRAINT_INDEX$DEPTS$SYS$PRIMARY_KEY], preserveOrder=[false])              |
+|                                 FennelBufferRel(inMemory=[false], multiPass=[true])                                                                                                         |
+|                                   LhxAggRel(groupCount=[1])                                                                                                                                 |
+|                                     FennelRenameRel(fieldNames=[[$f0]])                                                                                                                     |
+|                                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0]], index=[EMPS_UX], preserveOrder=[false])                                            |
+|                       FtrsIndexScanRel(table=[[LOCALDB, SALES, EMPS]], projection=[[0, 2]], index=[EMPS_UX], preserveOrder=[false])                                                         |
+|               FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[true]], outputRowType=[RecordType(INTEGER EMPNO, INTEGER DEPTNO) NOT NULL])     |
+|                 LhxJoinRel(leftKeys=[[1]], rightKeys=[[0]], joinType=[LEFT])                                                                                                                |
+|                   LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[1, 2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO, SYS$CLUSTERED_INDEX$SALES$EMPS2$EMPNO]])  |
+|                   LhxAggRel(groupCount=[1], agg#0=[MIN(1)])                                                                                                                                 |
+|                     IteratorToFennelConverter                                                                                                                                               |
+|                       IterCalcRel(expr#0..1=[{inputs}], expr#2=[true], $f0=[$t1], $f0=[$t2])                                                                                                |
+|                         FennelToIteratorConverter                                                                                                                                           |
+|                           LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[INNER])                                                                                                     |
+|                             LcsRowScanRel(table=[[LOCALDB, SALES, DEPTS2]], projection=[[1]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$DEPTS2$DEPTNO]])                                |
+|                             LhxAggRel(groupCount=[1])                                                                                                                                       |
+|                               FennelRenameRel(fieldNames=[[$f0]])                                                                                                                           |
+|                                 LcsRowScanRel(table=[[LOCALDB, SALES, EMPS2]], projection=[[2]], clustered indexes=[[SYS$CLUSTERED_INDEX$SALES$EMPS2$DEPTNO]])                              |
++---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select empno, deptno from v1
+. . . . . . . . > where v1.empno = (select max(v2.empno) from v2 where v2.deptno = v1.deptno);
++--------+---------+
+| EMPNO  | DEPTNO  |
++--------+---------+
+| 120    | 20      |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from v5;
++--------+---------+
+| EMPNO  | DEPTNO  |
++--------+---------+
+| 120    | 20      |
++--------+---------+
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop view v3;
+0: jdbc:farrago:> drop view v4;
+0: jdbc:farrago:> drop view v5;
+0: jdbc:farrago:> 
+0: jdbc:farrago:> drop view v1;
+0: jdbc:farrago:> drop view v2;
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- clean up --

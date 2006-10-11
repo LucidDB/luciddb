@@ -70,11 +70,11 @@ class FarragoJdbcTimeParamDef
 
         if (x instanceof String) {
             String s = ((String) x).trim();
-            GmtTime ft = GmtTime.parseGmt(s);
-            if (ft == null) {
+            ZonelessTime zt = ZonelessTime.parse(s);
+            if (zt == null) {
                 throw newInvalidFormat(x);
             }
-            return ft;
+            return zt;
         }
 
         // Only java.sql.Time, java.sql.Timestamp are all OK.
@@ -84,7 +84,9 @@ class FarragoJdbcTimeParamDef
         }
 
         java.util.Date d = (java.util.Date) x;
-        return ConversionUtil.jdbcToGmtTime(d, cal.getTimeZone());
+        ZonelessTime zt = new ZonelessTime();
+        zt.setZonedTime(d.getTime(), DateTimeUtil.getTimeZone(cal));
+        return zt;
     }
 }
 

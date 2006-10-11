@@ -464,6 +464,18 @@ public class FarragoPreparingStmt
             Util.discard(clazz);
         }
     }
+    
+    protected boolean treeContainsJava(RelNode rootRel)
+    {
+        // if the topmost node isn't a FennelToIteratorConverter, then
+        // we know we don't have a pure Fennel plan; otherwise, check
+        // the rest of the tree, ignoring the converter, which we'll strip
+        // off later if it turns out we do have a pure Fennel plan
+        if (!(rootRel instanceof FennelToIteratorConverter)) {
+            return true;
+        }
+        return super.treeContainsJava(rootRel.getInput(0));
+    }
 
     protected FarragoSessionExecutableStmt implement(
         PreparedResult preparedResult)
@@ -473,27 +485,20 @@ public class FarragoPreparingStmt
             PreparedExecution preparedExecution =
                 (PreparedExecution) preparedResult;
             RelDataType rowType = preparedExecution.getPhysicalRowType();
-            OJClass ojRowClass =
-                OJUtil.typeToOJClass(
-                    rowType,
-                    getFarragoTypeFactory());
-            Class rowClass;
-            try {
-                String ojRowClassName = ojRowClass.getName();
-                int i = ojRowClassName.lastIndexOf('.');
-                assert (i != -1);
-                ojRowClassName = OJUtil.replaceDotWithDollar(ojRowClassName, i);
-                rowClass =
-                    Class.forName(
-                        ojRowClassName,
-                        true,
-                        javaCompiler.getClassLoader());
-            } catch (ClassNotFoundException ex) {
-                throw Util.newInternal(ex);
-            }
-
             RelDataType dynamicParamRowType = getParamRowType();
 
+            String streamName = null;
+            if (!containsJava) {
+                RelNode rootRel = preparedExecution.getRootRel();
+                if (relImplementor == null) {
+                    relImplementor = 
+                        newRelImplementor(rootRel.getCluster().getRexBuilder());
+                }
+                FemExecutionStreamDef streamDef =
+                    relImplementor.visitFennelChild((FennelRel) rootRel);
+                streamName = streamDef.getName();
+            }
+            
             String xmiFennelPlan = null;
             Set<FemExecutionStreamDef> streamDefSet =
                 relImplementor.getStreamDefSet();
@@ -508,22 +513,53 @@ public class FarragoPreparingStmt
                         Collections.singleton(cmdPrepareStream));
                 streamGraphTracer.fine(xmiFennelPlan);
             }
-
+           
             assert (tableAccessMap != null);
-            executableStmt =
-                new FarragoExecutableJavaStmt(
-                    packageDir,
-                    rowClass,
-                    javaCompiler.getClassLoader(),
-                    (originalRowType == null) ? rowType : originalRowType,
-                    dynamicParamRowType,
-                    preparedExecution.getMethod(),
-                    xmiFennelPlan,
-                    preparedResult.isDml(),
-                    getReferencedObjectIds(),
-                    tableAccessMap,
-                    resultSetTypeMap,
-                    iterCalcTypeMap);
+            if (containsJava) {
+                OJClass ojRowClass =
+                    OJUtil.typeToOJClass(
+                        rowType,
+                        getFarragoTypeFactory());
+                Class rowClass;
+                try {
+                    String ojRowClassName = ojRowClass.getName();
+                    int i = ojRowClassName.lastIndexOf('.');
+                    assert (i != -1);
+                    ojRowClassName =
+                        OJUtil.replaceDotWithDollar(ojRowClassName, i);
+                    rowClass =
+                        Class.forName(
+                            ojRowClassName,
+                            true,
+                            javaCompiler.getClassLoader());
+                } catch (ClassNotFoundException ex) {
+                    throw Util.newInternal(ex);
+                }
+                executableStmt =
+                    new FarragoExecutableJavaStmt(
+                        packageDir,
+                        rowClass,
+                        javaCompiler.getClassLoader(),
+                        (originalRowType == null) ? rowType : originalRowType,
+                        dynamicParamRowType,
+                        preparedExecution.getMethod(),
+                        xmiFennelPlan,
+                        preparedResult.isDml(),
+                        getReferencedObjectIds(),
+                        tableAccessMap,
+                        resultSetTypeMap,
+                        iterCalcTypeMap);
+            } else {
+                executableStmt =
+                    new FarragoExecutableFennelStmt(
+                        rowType,
+                        dynamicParamRowType,
+                        xmiFennelPlan,
+                        streamName,
+                        preparedResult.isDml(),
+                        getReferencedObjectIds(),
+                        tableAccessMap);
+            }
         } else {
             assert (preparedResult instanceof PreparedExplanation);
             executableStmt =

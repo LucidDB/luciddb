@@ -92,7 +92,7 @@ public class PushFilterPastJoinRule
         }
 
         List<RexNode> joinFilters = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(
+        RelOptUtil.decomposeConjunction(
             joinRel.getCondition(),
             joinFilters);
 
@@ -119,7 +119,7 @@ public class PushFilterPastJoinRule
         List<RexNode> aboveFilters = new ArrayList<RexNode>();
 
         if (filterRel != null) {
-            RelOptUtil.decompCF(
+            RelOptUtil.decomposeConjunction(
                 filterRel.getCondition(),
                 aboveFilters);
         }

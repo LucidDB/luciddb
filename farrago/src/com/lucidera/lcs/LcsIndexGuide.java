@@ -755,7 +755,8 @@ public class LcsIndexGuide
 
     protected FemLcsRowScanStreamDef newRowScan(
         LcsRowScanRel rel,
-        Integer [] projectedColumns)
+        Integer [] projectedColumns,
+        Integer [] residualColumns)
     {
         FemLcsRowScanStreamDef scanStream = repos.newFemLcsRowScanStreamDef();
 
@@ -768,10 +769,12 @@ public class LcsIndexGuide
         scanStream.setOutputProj(
             FennelRelUtil.createTupleProjection(repos, clusterProjection));
         scanStream.setFullScan(rel.isFullScan());
-        scanStream.setHasExtraFilter(rel.hasExtraFilter());
-        Integer [] residualColumns = {};
+        scanStream.setHasExtraFilter(rel.hasExtraFilter());       
+        Integer [] clusterResidualColumns =
+            computeProjectedColumns(residualColumns);
+        
         scanStream.setResidualFilterColumns(
-            FennelRelUtil.createTupleProjection(repos, residualColumns));
+            FennelRelUtil.createTupleProjection(repos, clusterResidualColumns));
         return scanStream;
     }
 

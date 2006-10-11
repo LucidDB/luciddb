@@ -59,6 +59,9 @@ void LcsRowScanExecStream::prepareResidualFilters(
     uint clusterStart = 0;
     uint realClusterStart = 0;
 
+    filters.reset(new 
+        (PLcsResidualColumnFilters)[params.residualFilterCols.size()]);
+
     for (uint i = 0; i < nClusters; i++) {
         uint clusterEnd = clusterStart +
             params.lcsClusterScanDefs[i].clusterTupleDesc.size() - 1;
@@ -74,14 +77,16 @@ void LcsRowScanExecStream::prepareResidualFilters(
                  */
                 for (uint k = 0; k < projMap.size(); k++) {
                     if (projMap[k] == valueCols[j]) {
-                        clusterPos = k - realClusterStart;
+       
+                        clusterPos = k - realClusterStart - 
+                            nonClusterCols.size();
 
                         LcsResidualColumnFilters &filter =
                             pClusters[valueClus]->
                             clusterCols[clusterPos].
                             getFilters();
 
-                        filters.push_back(&filter);
+                        filters[j] = &filter;
 
                         filter.hasResidualFilters = true;
   
@@ -185,7 +190,7 @@ bool LcsRowScanExecStream::initializeFiltersIfNeeded()
             pInAccessor->getConsumptionTupleAccessor();
         
         if (pInAccessor->getState() != EXECBUF_EOS) {
-            LcsResidualColumnFilters *filter = filters[iFilterToInitialize]; 
+            PLcsResidualColumnFilters filter = filters[iFilterToInitialize]; 
 
             while (pInAccessor->demandData()) {
                 SharedLcsResidualFilter filterData(new LcsResidualFilter);
@@ -252,6 +257,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
     for (uint i = 0; i < quantum.nTuplesMax; i++) {
 
         uint iClu;
+        bool passedFilter;
 
         while (!producePending) {
             ExecStreamResult rc;
@@ -300,7 +306,7 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             }
 
             // Then go through each cluster, forming rows and checking ranges
-            for (iClu = 0; iClu <  nClusters; iClu++) {
+            for (iClu = 0, passedFilter = true; iClu <  nClusters; iClu++) {
 
                 SharedLcsClusterReader &pScan = pClusters[iClu];
 
@@ -331,12 +337,24 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
                         opaqueToInt(rid - pScan->getCurrentRid()));
                 }
 
-                if (!readColVals(pScan, outputTupleData, prevClusterEnd)) {
+                passedFilter =
+                    readColVals(
+                        pScan,
+                        outputTupleData,
+                        prevClusterEnd,
+                        projDescriptor);
+                if (!passedFilter) {
                     break;
                 }
                 prevClusterEnd += pScan->nColsToRead;
             }
 
+            if (!passedFilter) {
+                if (isFullScan) {
+                    rid++;
+                }
+                continue;
+            }
             if (iClu == nClusters) {
                 tupleFound = true;
             }
@@ -345,8 +363,10 @@ ExecStreamResult LcsRowScanExecStream::execute(ExecStreamQuantum const &quantum)
             
         // produce tuple
         projOutputTupleData.projectFrom(outputTupleData, outputProj);
-        if (tupleFound && !pOutAccessor->produceTuple(projOutputTupleData)) {
-            return EXECRC_BUF_OVERFLOW;
+        if (tupleFound) {
+            if (!pOutAccessor->produceTuple(projOutputTupleData)) {
+                return EXECRC_BUF_OVERFLOW;
+            }
         }
         producePending = false;
         
@@ -371,7 +391,7 @@ void LcsRowScanExecStream::closeImpl()
 {
     LcsRowScanBaseExecStream::closeImpl();
 
-    for (uint i = 0; i < filters.size(); i++) {
+    for (uint i = 0; i < inAccessors.size()-1; i++) {
         filters[i]->filterData.clear();
     }
 }

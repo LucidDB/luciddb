@@ -22,6 +22,7 @@
 #ifndef Fennel_LcsRowScanExecStream_Included
 #define Fennel_LcsRowScanExecStream_Included
 
+#include <boost/scoped_array.hpp>
 #include "fennel/tuple/TupleDataWithBuffer.h"
 #include "fennel/lucidera/colstore/LcsRowScanBaseExecStream.h"
 #include "fennel/lucidera/bitmap/LbmRidReader.h"
@@ -159,7 +160,7 @@ class LcsRowScanExecStream : public LcsRowScanBaseExecStream
      * to facilitate filter data initialization
      * and memory deallocation.
      */
-    std::vector< LcsResidualColumnFilters *> filters;
+    boost::scoped_array<LcsResidualColumnFilters *> filters;
 
     /**
      * Builds outputProj from params.

@@ -38,29 +38,11 @@ import org.eigenbase.util14.*;
 
 
 /**
- * Runtime type for date/time/timestamp values. We represent all types in 
- * a canonical way (as milliseconds since the epoch in GMT). For timestamps 
- * this is identical to the java.sql convention, so we can use java.sql 
- * timestamps directly. Unfortunately, for dates and times, java.sql does 
- * not have a canonical convention (dates and times are returned relative to 
- * the default time zone). So, for dates and times, Farrago follows its own 
- * convention, and represents dates and times relative to GMT.
- *
- * <p>
- * 
- * Although all types are represented in GMT time, it is a bit tricky, 
- * because timestamps are generally interpreted with repect to the 
- * default time zone, while we have to interpret our dates and times with 
- * respect to the GMT time zone. (All java.sql types are usually interpreted 
- * with respect to the default time zone.)
- * 
- * <p>
- * 
- * To make this work, we avoid assigning timestamps to dates/times without 
- * conversion, and vice versa. We keep track of whether we are dealing with 
- * a Farrago type or a java.sql type. (It would seem safer to avoid java.sql 
- * types, but since most external data comes as java.sql data, we also want 
- * to support it here.)
+ * Runtime type for basic date/time/timestamp values without time zone 
+ * information. All of these types are represented by subclasses of 
+ * {@link ZonelessDatetime} and have a similar internal representation.
+ * This class interoperates with java.sql (Jdbc) types since they are 
+ * commonly used for external data.
  *
  * TODO: we can probably be smarter about how we allocate Java objects
  * TODO: precision and milliseconds for TIME and TIMESTAMP
@@ -70,22 +52,19 @@ import org.eigenbase.util14.*;
  * @since May 5, 2004
  */
 public abstract class SqlDateTimeWithoutTZ
-    implements AssignableValue
+    implements AssignableValue, SpecialDataValue
 {
 
     // ~ Static fields --------------------------------------------------------
     // Use same format as supported by parser (should be ISO format)
-    public static final String DateFormatStr = SqlParserUtil.DateFormatStr;
-    public static final String TimeFormatStr = SqlParserUtil.TimeFormatStr;
+    public static final String DateFormatStr = DateTimeUtil.DateFormatStr;
+    public static final String TimeFormatStr = DateTimeUtil.TimeFormatStr;
     public static final String TimestampFormatStr =
-        SqlParserUtil.TimestampFormatStr;
-    private static final TimeZone gmtZone = TimeZone.getTimeZone("GMT+0");
+        DateTimeUtil.TimestampFormatStr;
+    private static final TimeZone gmtZone = DateTimeUtil.gmtZone;
+    private static final TimeZone defaultZone = DateTimeUtil.defaultZone;
 
-    /**
-     * The default timezone for this Java VM.
-     */
-    private static final TimeZone defaultZone =
-        Calendar.getInstance().getTimeZone();
+    public static final String INTERNAL_TIME_FIELD_NAME = "internalTime";
 
     //~ Instance fields --------------------------------------------------------
 
@@ -102,34 +81,22 @@ public abstract class SqlDateTimeWithoutTZ
     private Calendar tempCal;
 
     /**
-     * Time as milliseconds since epoch (1 Jan 1970 GMT). Date and Time is 
-     * valid with respect to the GMT time zone only.
+     * The raw value of this SqlDateTimeWithoutTZ
      */
-    public long value;
+    public ZonelessDatetime value;
 
     /**
      * Whether this value is null.
      */
     public boolean isNull;
 
-    /**
-     * The current date as returned by the current_date context variable
-     */
-    protected Date currentDate;
-    // For caching
-    private long lastCurrentDate;
-
     //~ Constructors -----------------------------------------------------------
 
     /**
-     * Creates a runtime object with timezone offset set from localtime.
-     *
-     * <p>FIXME - we need the session tz, not the server tz.
+     * Constructs a runtime object
      */
     public SqlDateTimeWithoutTZ()
     {
-        value = 0;
-        isNull = false;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -154,7 +121,7 @@ public abstract class SqlDateTimeWithoutTZ
     /**
      * Gets data, casted as a Jdbc value.
      */
-    public abstract Object getData(long millisecond);
+    protected abstract Object getJdbcValue();
 
     /**
      * (Optionally) implements NullableValue
@@ -165,17 +132,28 @@ public abstract class SqlDateTimeWithoutTZ
     }
 
     /**
-     * Per the {@link NullableValue} contract, returns either null or the
-     * embedded value object. The value object is a {@link java.sql.Time JDBC
-     * Time/Date/Timestamp} in local time.
+     * Per the {@link NullableValue} contract, returns either null or 
+     * the value of this object as a Jdbc compatible value. The Jdbc value 
+     * is constructed relative to the server default time zone.
      */
     public Object getNullableData()
     {
         if (isNull()) {
             return null;
         }
+        return getJdbcValue();
+    }
 
-        return this.getData(value);
+    /**
+     * Return data to result sets as ZonelessDatetime so that it may be 
+     * properly localized by a Jdbc driver or client application.
+     */
+    public Object getSpecialData()
+    {
+        if (isNull()) {
+            return null;
+        }
+        return value;
     }
 
     /**
@@ -206,19 +184,18 @@ public abstract class SqlDateTimeWithoutTZ
         setNull(false);
         if (date instanceof Long) {
             assignFrom(((Long) date).longValue());
-        } else if (date instanceof GmtDate) {
-            assignFromDate((GmtDate) date);
-        } else if (date instanceof GmtTime) {
-            assignFromTime((GmtTime) date);
+        } else if (date instanceof ZonelessDatetime) {
+            value.setZonelessTime(((ZonelessDatetime) date).getTime());
         } else if (date instanceof java.util.Date) {
-            assignFromJdbc((java.util.Date) date);
+            value.setZonedTime(
+                ((java.util.Date) date).getTime(), defaultZone);
         } else if (date instanceof SqlDateTimeWithoutTZ) {
             SqlDateTimeWithoutTZ sqlDate = (SqlDateTimeWithoutTZ) date;
             isNull = sqlDate.isNull;
             if (isNull) {
                 return;
             }
-            assignFromRuntime(sqlDate);
+            value.setZonelessTime(sqlDate.value.getTime());
             // assuming we preserve Calendar of this object
         } else if (date instanceof String) {
             attemptParse((String) date);
@@ -243,14 +220,9 @@ public abstract class SqlDateTimeWithoutTZ
     public void assignFrom(long l)
     {
         setNull(false);
-        value = l;
+        value.setZonelessTime(l);
         // cal is synchronized during getCal and setCal
     }
-
-    protected abstract void assignFromDate(GmtDate date);
-    protected abstract void assignFromTime(GmtTime time);
-    protected abstract void assignFromJdbc(java.util.Date date);
-    protected abstract void assignFromRuntime(SqlDateTimeWithoutTZ date);
 
     /**
      * Attempts to parse the string, throwing an understandable exception 
@@ -270,6 +242,9 @@ public abstract class SqlDateTimeWithoutTZ
         }
     }
 
+    /**
+     * Assigns the value from a string.
+     */
     protected abstract void assignFromString(String s);
 
     /**
@@ -285,7 +260,7 @@ public abstract class SqlDateTimeWithoutTZ
     public Calendar getCal()
     {
         Calendar ret = Calendar.getInstance(getValueTimeZone());
-        ret.setTimeInMillis(value);
+        ret.setTimeInMillis(value.getTime());
         return ret;
     }
 
@@ -310,7 +285,7 @@ public abstract class SqlDateTimeWithoutTZ
         }
         setNull(false);
         this.cal = cal;
-        value = cal.getTimeInMillis();
+        value.setZonelessTime(cal.getTimeInMillis());
     }
 
     // TODO jvs 26-July-2004:  In order to support fractional seconds,
@@ -328,7 +303,7 @@ public abstract class SqlDateTimeWithoutTZ
     {
         SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         dateFormat.setTimeZone(getValueTimeZone());
-        return dateFormat.format(new java.util.Date(value));
+        return dateFormat.format(new java.util.Date(value.getTime()));
     }
 
     /**
@@ -353,7 +328,10 @@ public abstract class SqlDateTimeWithoutTZ
     /**
      * Returns a string in default format representing the datetime
      */
-    public abstract String toString();
+    public String toString()
+    {
+        return value.toString();
+    }
 
     /**
      * Returns the format string for this type
@@ -364,22 +342,6 @@ public abstract class SqlDateTimeWithoutTZ
      * Returns the name of this type, DATE, TIME, or TIMESTAMP
      */
     protected abstract String getTypeName();
-
-    /**
-     * Sets the current date for use by time to timestamp conversion
-     * 
-     * @param date the value of the current_date context variable
-     */
-    public void setCurrentDate(SqlDateTimeWithoutTZ date)
-    {
-        if (date.value == lastCurrentDate) {
-            return;
-        }
-        GmtDate fd = new GmtDate(date.value);
-        currentDate = 
-            ConversionUtil.gmtToJdbcDate(fd, getClientTimeZone());
-        lastCurrentDate = date.value;
-    }
 
     public void floor(int timeUnitOrdinal)
     {
@@ -402,7 +364,7 @@ public abstract class SqlDateTimeWithoutTZ
             default:
                 Util.permAssert(false, "Invalid timeunit " + timeUnitOrdinal);
         }
-        value = cal.getTimeInMillis();
+        value.setZonelessTime(cal.getTimeInMillis());
     }
 
     public void ceil(int timeUnitOrdinal)
@@ -469,7 +431,7 @@ public abstract class SqlDateTimeWithoutTZ
                 default:
                     Util.permAssert(false, "Invalid timeunit " + timeUnitOrdinal);
             }
-            value = cal.getTimeInMillis();
+            value.setZonelessTime(cal.getTimeInMillis());
         }
     }
 
@@ -482,7 +444,7 @@ public abstract class SqlDateTimeWithoutTZ
         if (tempCal == null) {
             tempCal = Calendar.getInstance(getValueTimeZone());
         }
-        tempCal.setTimeInMillis(value);
+        tempCal.setTimeInMillis(value.getTime());
         return tempCal;
     }
 
@@ -495,76 +457,28 @@ public abstract class SqlDateTimeWithoutTZ
     public static class SqlDate
         extends SqlDateTimeWithoutTZ
     {
-        // override SqlDateTimeWithoutTZ
-        public void assignFrom(Object o)
+        /**
+         * Constructs a new SqlDate
+         */
+        public SqlDate()
         {
-            super.assignFrom(o);
-            // clear the time component
-            floor(SqlIntervalQualifier.TimeUnit.Day_ordinal);
-        }
-
-        // override SqlDateTimeWithoutTZ
-        public void assignFrom(long l)
-        {
-            super.assignFrom(l);
-            // clear the time component
-            floor(SqlIntervalQualifier.TimeUnit.Day_ordinal);
+            value = new ZonelessDate();
         }
 
         // implement SqlDateTimeWithoutTZ
-        public Object getData(long millisecond)
+        protected Object getJdbcValue()
         {
-            GmtDate date = new GmtDate(millisecond);
-            TimeZone zone = getClientTimeZone();
-            return ConversionUtil.gmtToJdbcDate(date, zone);
+            return new Date(value.getJdbcDate(defaultZone));
         }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromDate(GmtDate date)
-        {
-            value = date.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromTime(GmtTime time)
-        {
-            Util.permAssert(
-                false, "SqlDateTimeWithoutTZ: cannot assign date from time");
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromJdbc(java.util.Date date)
-        {
-            TimeZone zone = getClientTimeZone();
-            GmtDate fd = ConversionUtil.jdbcToGmtDate(date, zone);
-            value = fd.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromRuntime(SqlDateTimeWithoutTZ date)
-        {
-            if (date instanceof SqlTimestamp) {
-                assignFromJdbc(new Date(date.value));
-            } else {
-                value = date.value;
-            }
-        }
-
+        
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(String s)
         {
-            GmtDate date = GmtDate.parseGmt(s);
+            ZonelessDate date = ZonelessDate.parse(s);
             if (date == null) {
                 throw new IllegalArgumentException();
             }
-            value = date.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        public String toString()
-        {
-            GmtDate date = new GmtDate(value);
-            return date.toString();
+            value = date;
         }
 
         // implement SqlDateTimeWithoutTZ
@@ -586,85 +500,28 @@ public abstract class SqlDateTimeWithoutTZ
     public static class SqlTime
         extends SqlDateTimeWithoutTZ
     {
-        // override SqlDateTimeWithoutTZ
-        public void assignFrom(Object o)
-        {
-            super.assignFrom(o);
-            clearDayComponent();
-        }
-
-        // override SqlDateTimeWithoutTZ
-        public void assignFrom(long l)
-        {
-            super.assignFrom(l);
-            clearDayComponent();
-        }
-
         /**
-         * Clears the day component of the current time value
+         * Constructs a new SqlDate
          */
-        private void clearDayComponent()
+        public SqlTime()
         {
-            Calendar cal = getTempCal();
-            cal.set(Calendar.YEAR, 1970);
-            cal.set(Calendar.DAY_OF_YEAR, 1);
-            value = cal.getTimeInMillis();
+            value = new ZonelessTime();
         }
 
         // implement SqlDateTimeWithoutTZ
-        public Object getData(long millisecond)
+        protected Object getJdbcValue()
         {
-            GmtTime time = new GmtTime(millisecond);
-            TimeZone zone = getClientTimeZone();
-            return ConversionUtil.gmtToJdbcTime(time, zone);
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromDate(GmtDate date)
-        {
-            Util.permAssert(
-                false, "SqlDateTimeWithoutTZ: cannot assign time from date");
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromTime(GmtTime time)
-        {
-            value = time.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromJdbc(java.util.Date date)
-        {
-            TimeZone zone = getClientTimeZone();
-            GmtTime fd = ConversionUtil.jdbcToGmtTime(date, zone);
-            value = fd.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromRuntime(SqlDateTimeWithoutTZ date)
-        {
-            if (date instanceof SqlTimestamp) {
-                assignFromJdbc(new Date(date.value));
-            } else {
-                value = date.value;
-            }
+            return new Time(value.getJdbcTime(defaultZone));
         }
 
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(String s)
         {
-            GmtTime time = GmtTime.parseGmt(s);
+            ZonelessTime time = ZonelessTime.parse(s);
             if (time == null) {
                 throw new IllegalArgumentException();
             }
-            value = time.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        public String toString()
-        {
-            GmtTime time = new GmtTime(value);
-            return time.toString();
+            value = time;
         }
 
         // implement SqlDateTimeWithoutTZ
@@ -686,68 +543,62 @@ public abstract class SqlDateTimeWithoutTZ
     public static class SqlTimestamp
         extends SqlDateTimeWithoutTZ
     {
-        // override SqlDateTimeWithoutTZ
-        protected TimeZone getValueTimeZone()
+        /**
+         * The current date as returned by the current_date context variable
+         */
+        protected ZonelessDate currentDate;
+
+        /**
+         * Constructs a SqlTimestamp.
+         */
+        public SqlTimestamp()
         {
-            return getClientTimeZone();
+            value = new ZonelessTimestamp();
         }
 
-        // implement SqlDateTimeWithoutTZ
-        public Object getData(long millisecond)
+        /**
+         * Sets the current date for use by time to timestamp conversion
+         * 
+         * @param date the value of the current_date context variable
+         */
+        public void setCurrentDate(SqlDateTimeWithoutTZ date)
         {
-            return new Timestamp(millisecond);
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromDate(GmtDate date)
-        {
-            TimeZone zone = getClientTimeZone();
-            Date jdbcDate = ConversionUtil.gmtToJdbcDate(date, zone);
-            value = jdbcDate.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromTime(GmtTime time)
-        {
-            assert (currentDate != null);
-            value = currentDate.getTime() + time.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromJdbc(java.util.Date date)
-        {
-            value = date.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        protected void assignFromRuntime(SqlDateTimeWithoutTZ date)
-        {
-            if (date instanceof SqlTimestamp) {
-                value = date.value;
-            } else if (date instanceof SqlDate) {
-                assignFromDate(new GmtDate(date.value));
-            } else {
-                assignFromTime(new GmtTime(date.value));
+            if (currentDate != null 
+                && date.value.getTime() == currentDate.getTime()) 
+            {
+                return;
             }
+            currentDate = new ZonelessDate();
+            currentDate.setZonelessTime(date.value.getTime());
+        }
+
+        // override SqlDateTimeWithoutTZ
+        public void assignFrom(Object o)
+        {
+            if (o instanceof SqlTime) {
+                assert (currentDate != null);
+                SqlTime time = (SqlTime) o;
+                value.setZonelessTime(
+                    currentDate.getTime() + time.value.getTime());
+            } else {
+                super.assignFrom(o);
+            }
+        }
+
+        // implement SqlDateTimeWithoutTZ
+        protected Object getJdbcValue()
+        {
+            return new Timestamp(value.getJdbcTimestamp(defaultZone));
         }
 
         // implement SqlDateTimeWithoutTZ
         protected void assignFromString(String s)
         {
-            TimeZone zone = getClientTimeZone();
-            Timestamp parsedDate = DateTimeUtil.parseTimestamp(s, zone);
+            ZonelessTimestamp parsedDate = ZonelessTimestamp.parse(s);
             if (parsedDate == null) {
                 throw new IllegalArgumentException();
             }
-            value = parsedDate.getTime();
-        }
-
-        // implement SqlDateTimeWithoutTZ
-        public String toString()
-        {
-            SimpleDateFormat sdf = new SimpleDateFormat(getFormat());
-            sdf.setTimeZone(getClientTimeZone());
-            return sdf.format(new java.util.Date(value));
+            value = parsedDate;
         }
 
         // implement SqlDateTimeWithoutTZ

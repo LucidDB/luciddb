@@ -46,10 +46,6 @@ import org.eigenbase.util.*;
  *
  * <p>NOTE: be sure to read superclass warnings before modifying this class.
  *
- * <p>TODO: another implementation, FarragoExecutableFennelStmt, which operates
- * off of a pure Fennel plan; for use when there is no Java needed in the
- * implementation
- *
  * @author John V. Sichi
  * @version $Id$
  */

@@ -25,7 +25,6 @@ package org.eigenbase.util14;
 import java.math.*;
 
 import java.sql.*;
-import java.util.Calendar;
 import java.util.TimeZone;
 
 
@@ -821,6 +820,9 @@ abstract public class AbstractResultSet
         Object o = getRaw(columnIndex);
         if (o == null) {
             wasNull = true;
+        } else if (o instanceof ZonelessDatetime) {
+            // convert into standard Jdbc types
+            o = ((ZonelessDatetime) o).toJdbcObject();
         } else {
             wasNull = false;
         }
@@ -1720,19 +1722,16 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
-        // Note that dates returned as Jdbc objects already use the 
-        // apropriate conventions 
-        if (o instanceof Date) {
-            return (Date) o;
-        } else if (o instanceof Timestamp) {
-            return ConversionUtil.timestampToDate((Timestamp) o, zone);
+        if (o instanceof ZonelessDate || o instanceof ZonelessTimestamp) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Date(zd.getJdbcDate(zone));
         } else if (o instanceof String) {
             String s = ((String) o).trim();
-            GmtDate fd = GmtDate.parseGmt(s);
-            if (fd == null) {
+            ZonelessDate zd = ZonelessDate.parse(s);
+            if (zd == null) {
                 throw newConversionError(o, Date.class);
             }
-            return ConversionUtil.gmtToJdbcDate(fd, zone);                
+            return new Date(zd.getJdbcDate(zone));
         } else {
             throw newConversionError(o, Date.class);
         }
@@ -1938,19 +1937,16 @@ abstract public class AbstractResultSet
         if (zone == null) {
             zone = defaultZone;
         }
-        // Note that dates returned as Jdbc objects already use the 
-        // apropriate conventions 
-        if (o instanceof Time) {
-            return (Time) o;
-        } else if (o instanceof Timestamp) {
-            return new Time(((Timestamp) o).getTime());
+        if (o instanceof ZonelessTime || o instanceof ZonelessTimestamp) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Time(zd.getJdbcTime(zone));
         } else if (o instanceof String) {
             String s = ((String) o).trim();
-            GmtTime ft = GmtTime.parseGmt(s);
-            if (ft == null) {
+            ZonelessTime zt = ZonelessTime.parse(s);
+            if (zt == null) {
                 throw newConversionError(o, Time.class);
             }
-            return ConversionUtil.gmtToJdbcTime(ft, zone);
+            return new Time(zt.getJdbcTime(zone));
         } else {
             throw newConversionError(o, Time.class);
         }
@@ -1973,19 +1969,16 @@ abstract public class AbstractResultSet
         }
         // Note that dates returned as Jdbc objects already use the 
         // apropriate conventions 
-        if (o instanceof Timestamp) {
-            return (Timestamp) o;
-        } else if (o instanceof Date) {
-            return new Timestamp(((Date) o).getTime());
-        } else if (o instanceof Time) {
-            return new Timestamp(((Time) o).getTime());
+        if (o instanceof ZonelessDatetime) {
+            ZonelessDatetime zd = (ZonelessDatetime) o;
+            return new Timestamp(zd.getJdbcTimestamp(zone));
         } else if (o instanceof String) {
             String s = ((String) o).trim();
-            Timestamp ts = DateTimeUtil.parseTimestamp(s, zone);
+            ZonelessTimestamp ts = ZonelessTimestamp.parse(s);
             if (ts == null) {
                 throw newConversionError(o, Timestamp.class);
             }
-            return ts;
+            return new Timestamp(ts.getJdbcTimestamp(zone));
         } else {
             throw newConversionError(o, Timestamp.class);
         }

@@ -27,76 +27,104 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 /**
- * GmtDate represents an instant in time whose date components are 
- * valid with respect to the GMT time zone. It differs from 
- * {@link java.sql.Date} whose date components are valid with respect 
- * to the default time zone. Unlike java.sql.Date, GmtDate is a 
- * canonical representation and does not vary depending on time zone
- * settings.
+ * ZonelessDate is a date value without a time zone.
  *
  * @author John Pham
  * @version $Id$
  */
-public class GmtDate extends java.util.Date
+public class ZonelessDate extends ZonelessDatetime
 {
 
-    //~ Static fields/initializers ---------------------------------------------
+    //~ Instance fields --------------------------------------------------------
 
-    private static final String format = DateTimeUtil.DateFormatStr;
-    private static final TimeZone gmtZone = DateTimeUtil.gmtZone;
-    private static final TimeZone defaultZone = DateTimeUtil.defaultZone;
+    protected Date tempDate;
 
     //~ Methods ----------------------------------------------------------------
 
     /**
-     * Constructs a GmtDate initialized with milliseconds since the epoch.
-     * This method does not perform any checks for validity.
+     * Constructs a ZonelessDate.
      */
-    public GmtDate(long millis)
+    public ZonelessDate()
     {
-        super(millis);
+    }
+
+    // override ZonelessDatetime
+    public void setZonelessTime(long value)
+    {
+        super.setZonelessTime(value);
+        clearTime();
+    }
+
+    // override ZonelessDatetime
+    public void setZonedTime(long value, TimeZone zone)
+    {
+        super.setZonedTime(value, zone);
+        clearTime();
+    }
+
+    // implement ZonelessDatetime
+    public Object toJdbcObject()
+    {
+        return getTempDate(getJdbcDate(DateTimeUtil.defaultZone));
     }
 
     /**
-     * Converts this GmtDate to a java.sql.Date and formats it via the 
+     * Converts this ZonelessDate to a java.sql.Date and formats it via the 
      * {@link java.sql.Date#toString() toString()} method of that class.
      * 
      * @return the formatted date string
      */
     public String toString()
     {
-        Date jdbcDate = ConversionUtil.gmtToJdbcDate(this, defaultZone);
+        Date jdbcDate = getTempDate(getJdbcDate(DateTimeUtil.defaultZone));
         return jdbcDate.toString();
     }
 
     /**
-     * Formats this GmtDate via a SimpleDateFormat
+     * Formats this ZonelessDate via a SimpleDateFormat
      * 
      * @param format format string, as required by {@link SimpleDateFormat}
      * @return the formatted date string
      */
     public String toString(String format)
     {
-        SimpleDateFormat sdf = new SimpleDateFormat(format);
-        sdf.setTimeZone(gmtZone);
-        return sdf.format(this);
+        DateFormat formatter = getFormatter(format);
+        Date jdbcDate = getTempDate(getTime());
+        return formatter.format(jdbcDate);
     }
 
     /**
-     * Parses a string as a GmtDate. The date will be valid for  
-     * the GMT time zone.
+     * Parses a string as a ZonelessDate.
      * 
      * @param s a string representing a date in ISO format, i.e. according 
      *   to the SimpleDateFormat string "yyyy-MM-dd"
      * @return the parsed date, or null if parsing failed
      */
-    public static GmtDate parseGmt(String s)
+    public static ZonelessDate parse(String s)
     {
-        Calendar cal = DateTimeUtil.parseDateFormat(s, format, gmtZone);
+        Calendar cal = DateTimeUtil.parseDateFormat(
+            s, 
+            DateTimeUtil.DateFormatStr, 
+            DateTimeUtil.gmtZone);
         if (cal == null) {
             return null;
         }
-        return new GmtDate(cal.getTimeInMillis());
+        ZonelessDate zd = new ZonelessDate();
+        zd.setZonelessTime(cal.getTimeInMillis());
+        return zd;
+    }
+
+    /**
+     * Gets a temporary Date object. The same object is returned every time.
+     */
+    protected Date getTempDate(long value)
+    {
+        if (tempDate == null) {
+            tempDate = new Date(value);
+        } else {
+            tempDate.setTime(value);
+        }
+        return tempDate;
     }
 }
 

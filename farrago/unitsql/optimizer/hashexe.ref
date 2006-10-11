@@ -693,10 +693,8 @@
 '  FennelSortRel(key=[[0, 1]], discardDuplicates=[false])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[0]], joinType=[RIGHT])'
 '      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS3]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS3$ENAMEB]])'
-'      IteratorToFennelConverter'
-'        IterCalcRel(expr#0=[{inputs}], expr#1=[_ISO-8859-1'A'], expr#2=[>($t0, $t1)], expr#3=[IS NULL($t0)], expr#4=[OR($t2, $t3)], ENAMEC=[$t0], $condition=[$t4])'
-'          FennelToIteratorConverter'
-'            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS4]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS4$ENAMEC]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'[', null, _ISO-8859-1']', null }, { _ISO-8859-1'(', _ISO-8859-1'A                   ', _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from lhxemps3 right outer join
 . . . . . . . . >     (select * from lhxemps4 where enameC > 'A' or enameC is null) as lhxemps4
@@ -975,8 +973,8 @@
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[2], expr#2=[<>($t0, $t1)], EMPNOA=[$t0], $condition=[$t2])'
 '          FennelToIteratorConverter'
 '            LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS5]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS5$EMPNOA]])'
-'      FennelReshapeRel(projection=[[0]], filterOp=[COMP_GT], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER EMPNOB) NOT NULL])'
-'        LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]])'
+'      LcsRowScanRel(table=[[LOCALDB, LHX, LHXEMPS6]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$LHXEMPS6$EMPNOB]], residual columns=[[0]])'
+'        FennelValuesRel(tuples=[[{ _ISO-8859-1'(', 0, _ISO-8859-1'+', null }]])'
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- filter not pushed down
 0: jdbc:farrago:> -- outer join on filter can not be evaluated as post filter

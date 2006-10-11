@@ -41,14 +41,22 @@ class LcsClusterDump : public LcsClusterAccessBase, public TraceSource
      */
     TraceLevel traceLevel;
 
+    /**
+     * Tuple descriptor for the columns in a cluster page
+     */
+    TupleDescriptor colTupleDesc;
+
     void callTrace(char *format, ...);
 
-    PBuffer fprintVal(uint idx, PBuffer pV);
+    PBuffer fprintVal(uint idx, PBuffer pV, uint col);
 
 public:
-    explicit LcsClusterDump(const BTreeDescriptor &bTreeDescriptor,
-                            TraceLevel traceLevelInit,
-                            SharedTraceTarget pTraceTarget, std::string name);
+    explicit LcsClusterDump(
+        BTreeDescriptor const &bTreeDescriptor,
+        TupleDescriptor const &colTupleDescInit,
+        TraceLevel traceLevelInit,
+        SharedTraceTarget pTraceTarget,
+        std::string name);
 
     /**
      * Dumps out a cluster page

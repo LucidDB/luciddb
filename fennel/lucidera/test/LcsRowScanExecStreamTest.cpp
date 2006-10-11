@@ -661,9 +661,9 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     valuesStreamEmbryo.getStream()->setName("ValuesExecStream");
 
     // setup the following search keys:
-    // 1. key0 >= 20 or key0 < 10
-    // 2. 5 <= key1 - nCols < 30
-    // 3  key2 - 2*nCols > 15
+    // 1. key0 >= 2000 or key0 < 1000
+    // 2. 500 <= key1 - nCols < 2999 or  (key1 - nCols) == 2999
+    // 3  key2 - 2*nCols > 1500
     //
     // where key0 corresponds to column #0, 
     // key1 corresponds to the column #nCols, and
@@ -708,7 +708,9 @@ void LcsRowScanExecStreamTest::testFilterCols(uint nRows, uint nCols,
     uint offset1 = 0;
 
     setSearchKey(
-        '[', ')', 500+nCols, 3000+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
+        '[', ')', 500+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
+    setSearchKey(
+        '[', ']', 2999+nCols, 2999+nCols, inputBuf1, offset1, inputTupleAccessor, inputTupleData1);
 
     TupleData inputTupleData2(inputTupleDesc);
     boost::shared_array<FixedBuffer> inputBuffer2;

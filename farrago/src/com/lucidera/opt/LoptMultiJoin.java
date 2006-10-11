@@ -128,7 +128,7 @@ public class LoptMultiJoin
         nJoinFactors = joinFactors.length;
  
         joinFilters = new ArrayList<RexNode>();
-        RelOptUtil.decompCF(
+        RelOptUtil.decomposeConjunction(
             multiJoin.getJoinFilter(),
             joinFilters);
 

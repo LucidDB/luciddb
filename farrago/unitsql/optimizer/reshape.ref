@@ -510,7 +510,7 @@
 0: jdbc:farrago:> explain plan for select * from d1, d2 where d1.a = d2.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 1]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 1) NOT NULL A0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[0]], rightKeys=[[1]], joinType=[INNER])'
 '      LcsRowScanRel(table=[[LOCALDB, RESHAPE, D1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$RESHAPE$D1$A]])'
 '      FennelReshapeRel(projection=[[0, 0]], outputRowType=[RecordType(DECIMAL(10, 1) NOT NULL A, DECIMAL(10, 1) CAST($0):DECIMAL(10, 1)) NOT NULL])'
@@ -518,7 +518,7 @@
 0: jdbc:farrago:> explain plan for select * from d1, d3 where d1.a = d3.a;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A) NOT NULL])'
+'  FennelReshapeRel(projection=[[0, 2]], outputRowType=[RecordType(DECIMAL(10, 1) A, DECIMAL(10, 2) NOT NULL A0) NOT NULL])'
 '    LhxJoinRel(leftKeys=[[1]], rightKeys=[[1]], joinType=[INNER])'
 '      IteratorToFennelConverter'
 '        IterCalcRel(expr#0=[{inputs}], expr#1=[Reinterpret($t0)], expr#2=[10], expr#3=[*($t1, $t2)], expr#4=[Reinterpret($t3)], A=[$t0], CAST($0):DECIMAL(11, 2)=[$t4])'

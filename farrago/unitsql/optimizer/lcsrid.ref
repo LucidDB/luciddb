@@ -350,14 +350,15 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 0: jdbc:farrago:> explain plan for select c9, c5, lcs_rid(c1), c2 from tencols where c0 = 0;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[3, 2, 4, 1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[0]], outputRowType=[RecordType(INTEGER C9, INTEGER C5, BIGINT EXPR$2, INTEGER C2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 2, 5, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+'  FennelRenameRel(fieldNames=[[C9, C5, EXPR$2, C2]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[9, 5, LCS_RID, 2]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[0]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 0, _ISO-8859-1']', 0 }]])'
 0: jdbc:farrago:> explain plan for select *, lcs_rid(c0) from tencols where c1 = 11;
 'column0'
 'FennelToIteratorConverter'
 '  FennelRenameRel(fieldNames=[[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, EXPR$10]])'
-'    FennelReshapeRel(projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]], filterOp=[COMP_EQ], filterOrdinals=[[1]], filterTuple=[[11]], outputRowType=[RecordType(INTEGER C0, INTEGER C1, INTEGER C2, INTEGER C3, INTEGER C4, INTEGER C5, INTEGER C6, INTEGER C7, INTEGER C8, INTEGER C9, BIGINT LCS_RID) NOT NULL])'
-'      LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, LCS_RID]], clustered indexes=[[I_C0, I_C1_C2, I_C3_C4_C5, I_C6_C7_C8_C9]], residual columns=[[1]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 11, _ISO-8859-1']', 11 }]])'
 0: jdbc:farrago:> explain plan for select c0 from tencols where lcs_rid(c1) > 2 order by c0;
 'column0'
 'FennelToIteratorConverter'
@@ -377,8 +378,9 @@ Error: java.lang.AssertionError: Internal error: cannot implement LCS_RID($t1) (
 . . . . . . . . >     where c6 = 26 and lcs_rid(c8) = 2;
 'column0'
 'FennelToIteratorConverter'
-'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[1, 3]], filterTuple=[[26, 2]], outputRowType=[RecordType(INTEGER C0, INTEGER C6, BIGINT EXPR$2) NOT NULL])'
-'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]])'
+'  FennelReshapeRel(projection=[[0, 1, 2]], filterOp=[COMP_EQ], filterOrdinals=[[3]], filterTuple=[[2]], outputRowType=[RecordType(INTEGER C0, INTEGER C6, BIGINT EXPR$2) NOT NULL])'
+'    LcsRowScanRel(table=[[LOCALDB, RID, TENCOLS]], projection=[[0, 6, LCS_RID, LCS_RID]], clustered indexes=[[I_C0, I_C6_C7_C8_C9]], residual columns=[[6]])'
+'      FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 26, _ISO-8859-1']', 26 }]])'
 0: jdbc:farrago:> explain plan for select * from tencols where lcs_rid(c0) = 0;
 'column0'
 'FennelToIteratorConverter'

@@ -277,7 +277,11 @@ ExecStreamResult LbmGeneratorExecStream::generateMultiKeyBitmaps(
                     pScan->advanceWithinBatch(
                         opaqueToInt(currRid - pScan->getCurrentRid()));
                 }
-                readColVals(pScan, bitmapTuple, prevClusterEnd);
+                readColVals(
+                    pScan,
+                    bitmapTuple,
+                    prevClusterEnd,
+                    bitmapTupleDesc);
                 prevClusterEnd += pScan->nColsToRead;
             }
         }
@@ -351,7 +355,7 @@ bool LbmGeneratorExecStream::generateBitmaps()
             // reset buffer before loading new value, in case previous
             // row had nulls
             bitmapTuple.resetBuffer();
-            bitmapTuple[0].loadLcsDatum(curValue);
+            bitmapTuple[0].loadLcsDatum(curValue, bitmapTupleDesc[0]);
             initRidAndBitmap(bitmapTuple, &currRid);
         }
         if (!addRidToBitmap(keyCodes[i], bitmapTuple, currRid)) {
@@ -393,8 +397,8 @@ bool LbmGeneratorExecStream::generateSingletons()
             for (uint iCluCol = 0; iCluCol < pScan->nColsToRead; iCluCol++) {
                 PBuffer curValue =
                     pScan->clusterCols[iCluCol].getCurrentValue();
-                bitmapTuple[projMap[prevClusterEnd + iCluCol]].
-                    loadLcsDatum(curValue);
+                uint idx = projMap[prevClusterEnd + iCluCol];
+                bitmapTuple[idx].loadLcsDatum(curValue, bitmapTupleDesc[idx]);
             }
             prevClusterEnd += pScan->nColsToRead;
         }

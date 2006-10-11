@@ -29,6 +29,7 @@ select * from datetime1 where timestampcol < TIMESTAMP '2004-12-21 23:00:00';
 -- simple casting (not fully supported in java calc)
 values cast(date '1994-07-08' as varchar(10));
 values cast(time '17:05:08' as varchar(10));
+// NOTE: this shows precision with Jdbc formatting
 values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
 values cast('1994-07-08 17:05:08' as timestamp);
 values cast('1994-07-08' as date);
@@ -52,9 +53,8 @@ values cast(timestamp '2004-12-21 12:01:01' as char(10));
 
 -- should succeed
 
--- FIXME: FRG-217 update Fennel timestamp convention
--- values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
--- values cast(timestamp '2004-12-21 12:01:01' as char(20));
+values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
+values cast(timestamp '2004-12-21 12:01:01' as char(20));
 
 -- values cast('2004-12-21 12:01:01' as timestamp);
 
@@ -129,6 +129,10 @@ insert into ts values (
   date'2006-09-27');
 insert into ts values (
   time'19:31:00');
+-- Note: duplicate key value changes with time
+-- insert into ts values 
+--   (current_timestamp),
+--   (cast (current_time as timestamp));
 
 select * from ts order by 1;
 

@@ -2148,13 +2148,9 @@ public class FarragoJdbcTest
                 assertEquals(
                     dateNoTime.getTime(),
                     resultSet.getDate(DATE).getTime());
-
-                // FIXME: FRG-217 
-                if (todo) {
-                    assertEquals(
-                        dateNoTime.getTime(),
-                        resultSet.getDate(TIMESTAMP).getTime());
-                }
+                assertEquals(
+                    dateNoTime.getTime(),
+                    resultSet.getDate(TIMESTAMP).getTime());
 
                 break;
             case 117:
@@ -2168,23 +2164,16 @@ public class FarragoJdbcTest
                     timeNoDate.getTime(),
                     resultSet.getTime(TIME).getTime());
 
-                // FIXME: FRG-217
+                // FIXME: FNL-54
                 // SQL Spec Part 2 Section 4.6.2 Table 3 requires 
                 // Time to Timestamp cast to set the date to current_date
                 // (currently stored in FarragoRuntimeContext)
-                if (todo) {
-                    assertEquals(
-                        timeNoDate.getTime(),
-                        resultSet.getTime(TIMESTAMP).getTime());
-                }
+                assertEquals(
+                    timeNoDate.getTime(),
+                    resultSet.getTime(TIMESTAMP).getTime());
 
                 break;
             case 118:
-                // FIXME: FRG-217 
-                if (!todo) {
-                    continue;
-                }
-
                 // TODO: Should these be timestamp with or without precision?
                 assertEquals(
                     timestampNoPrec.getTime(),
@@ -2192,14 +2181,15 @@ public class FarragoJdbcTest
                 assertEquals(
                     timestampNoPrec.getTime(),
                     resultSet.getTimestamp(VARCHAR).getTime());
-                // FIXME: Date casted to timestamp has no time component
                 assertEquals(
-                    timestamp.getTime(),
+                    dateNoTime.getTime(),
                     resultSet.getTimestamp(DATE).getTime());
                 // FIXME: See Time to Timestamp note above
-                assertEquals(
-                    timestamp.getTime(),
-                    resultSet.getTimestamp(TIME).getTime());
+                if (todo) {
+                    assertEquals(
+                        timestamp.getTime(),
+                        resultSet.getTimestamp(TIME).getTime());
+                }
                 assertEquals(
                     timestamp.getTime(),
                     resultSet.getTimestamp(TIMESTAMP).getTime());

@@ -43,6 +43,7 @@ struct TupleAttributeDescriptor
 {
     StoredTypeDescriptor const *pTypeDescriptor;
     bool isNullable;
+    bool isLcsFixedWidth;
     TupleStorageByteLength cbStorage;
 
     explicit TupleAttributeDescriptor();
@@ -61,7 +62,11 @@ struct TupleAttributeDescriptor
      * @return maximum storage length required for this attribute
      */
     inline TupleStorageByteLength getMaxLcsLength() {
-        return cbStorage + 2;
+        if (isLcsFixedWidth) {
+            return cbStorage;
+        } else {
+            return cbStorage + 2;
+        }
     }
 };
 

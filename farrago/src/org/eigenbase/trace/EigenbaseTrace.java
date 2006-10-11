@@ -126,6 +126,14 @@ public abstract class EigenbaseTrace
     }
 
     /**
+     * The "org.eigenbase.sql2rel" tracer reports parse events.
+     */
+    public static Logger getSqlToRelTracer()
+    {
+        return Logger.getLogger("org.eigenbase.sql2rel");
+    }
+
+    /**
      * The "org.eigenbase.jmi.JmiChangeSet" tracer reports JmiChangeSet events.
      */
     public static Logger getJmiChangeSetTracer()

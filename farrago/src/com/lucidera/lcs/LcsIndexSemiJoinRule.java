@@ -251,7 +251,8 @@ public class LcsIndexSemiJoinRule
                 origRowScan.getConnection(),
                 origRowScan.projectedColumns,
                 false,
-                origRowScan.hasExtraFilter);
+                origRowScan.hasExtraFilter,
+                origRowScan.residualColumns);
 
         call.transformTo(newRowScan);
     }
@@ -370,7 +371,11 @@ public class LcsIndexSemiJoinRule
                 relImplementor.allocateRelParamId());
 
         // finally create the new row scan
-        RelNode [] inputRels;
+        int inputLen = rowScan.getInputs().length;
+        if (rowScan.isFullScan) {
+            inputLen++;
+        }
+        RelNode [] inputRels = new RelNode[inputLen];
         if (needIntersect) {
             LcsIndexIntersectRel intersectRel =
                 addIntersect(
@@ -381,9 +386,16 @@ public class LcsIndexSemiJoinRule
                     merge,
                     startRidParamId,
                     rowLimitParamId);
-            inputRels = new RelNode[] { intersectRel };
+            inputRels[0] = intersectRel;
         } else {
-            inputRels = new RelNode[] { merge };
+            inputRels[0] = merge;
+        }
+        
+        if (rowScan.hasExtraFilter) {
+            System.arraycopy(
+                rowScan.getInputs(),
+                (rowScan.isFullScan) ? 0 : 1,
+                inputRels, 1, inputLen - 1);
         }
 
         return inputRels;

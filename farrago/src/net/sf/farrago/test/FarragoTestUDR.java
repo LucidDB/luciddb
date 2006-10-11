@@ -31,6 +31,7 @@ import java.util.*;
 import net.sf.farrago.runtime.*;
 
 import org.eigenbase.util.*;
+import org.eigenbase.util14.*;
 
 
 /**
@@ -232,6 +233,29 @@ public abstract class FarragoTestUDR
         ramp(
             nBoxed.intValue(),
             resultInserter);
+    }
+
+    public static void foreignTime(
+        Timestamp ts, 
+        String tsZoneId,
+        String foreignZoneId, 
+        PreparedStatement resultInserter)
+    throws SQLException
+    {
+        // convert timestamp to the specified time zone
+        // (makes this method more useful for testing)
+        TimeZone tsZone = TimeZone.getTimeZone(tsZoneId);
+        ZonelessTimestamp zts = new ZonelessTimestamp();
+        zts.setZonedTime(ts.getTime(), TimeZone.getDefault());
+        long millis = zts.getJdbcTimestamp(tsZone);
+        
+        // display the time in the foreign time zone
+        TimeZone foreignZone = TimeZone.getTimeZone(foreignZoneId);
+        Calendar cal = Calendar.getInstance(foreignZone);
+        resultInserter.setTimestamp(1, new Timestamp(millis), cal);
+        resultInserter.setDate(2, new java.sql.Date(millis), cal);
+        resultInserter.setTime(3, new Time(millis), cal);
+        resultInserter.executeUpdate();
     }
 }
 

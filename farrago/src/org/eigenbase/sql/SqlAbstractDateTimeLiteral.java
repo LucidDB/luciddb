@@ -131,19 +131,33 @@ abstract class SqlAbstractDateTimeLiteral
     }
 
     /**
-     * Converts this literal to a FarragoDate object.
+     * Converts this literal to a {@link ZonelessDate} object.
      */
-    protected GmtDate getFarragoDate()
+    protected ZonelessDate getDate()
     {
-        return new GmtDate(getCal().getTimeInMillis());
+        ZonelessDate zd = new ZonelessDate();
+        zd.setZonelessTime(getCal().getTimeInMillis());
+        return zd;
     }
 
     /**
-     * Converts this literal to a {@link java.sql.Time} object.
+     * Converts this literal to a {@link ZonelessTime} object.
      */
-    protected GmtTime getFarragoTime()
+    protected ZonelessTime getTime()
     {
-        return new GmtTime(getCal().getTimeInMillis());
+        ZonelessTime zt = new ZonelessTime();
+        zt.setZonelessTime(getCal().getTimeInMillis());
+        return zt;
+    }
+
+    /**
+     * Converts this literal to a {@link ZonelessTimestamp} object.
+     */
+    protected ZonelessTimestamp getTimestamp()
+    {
+        ZonelessTimestamp zt = new ZonelessTimestamp();
+        zt.setZonelessTime(getCal().getTimeInMillis());
+        return zt;
     }
 }
 

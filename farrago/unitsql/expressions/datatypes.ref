@@ -65,8 +65,8 @@
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- Verify that type of character string literals is CHARACTER as it should be
 0: jdbc:farrago:> 
-0: jdbc:farrago:> create view literal_view(lit1,lit2,lit3,lit4) 
-. . . . . . . . > as values ('pumpkin ','pie','','  ');
+0: jdbc:farrago:> create view literal_view(lit1,lit2,lit3,lit4,lit5) 
+. . . . . . . . > as values ('pumpkin ','pie','','  ',cast('' as varchar(0)));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select column_name,type_name,column_size
 . . . . . . . . > from sys_boot.jdbc_metadata.columns_view
@@ -79,12 +79,13 @@
 | LIT2         | CHAR       | 3            |
 | LIT3         | CHAR       | 0            |
 | LIT4         | CHAR       | 2            |
+| LIT5         | VARCHAR    | 0            |
 +--------------+------------+--------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> !set outputformat csv
 0: jdbc:farrago:> select * from literal_view;
-'LIT1','LIT2','LIT3','LIT4'
-'pumpkin ','pie','','  '
+'LIT1','LIT2','LIT3','LIT4','LIT5'
+'pumpkin ','pie','','  ',''
 0: jdbc:farrago:> !set outputformat table
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FRG-38:  boundary conditions with index on real datatype

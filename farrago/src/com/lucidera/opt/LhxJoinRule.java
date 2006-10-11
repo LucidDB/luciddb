@@ -113,12 +113,6 @@ public class LhxJoinRule
         leftRel = inputRels[0];
         rightRel = inputRels[1];
 
-        List<String> newJoinOutputNames = new ArrayList<String>();
-        newJoinOutputNames.addAll(
-            RelOptUtil.getFieldNameList(leftRel.getRowType()));
-        newJoinOutputNames.addAll(
-            RelOptUtil.getFieldNameList(rightRel.getRowType()));
-
         RelNode fennelLeft =
             mergeTraitsAndConvert(
                 joinRel.getTraits(),
@@ -167,6 +161,8 @@ public class LhxJoinRule
 
         boolean isSetop = false;
 
+        // pass in null for the fieldNameList so proper names can be derived
+        // when the left and right hand side have overlapping names
         RelNode rel =
             new LhxJoinRel(
                 joinRel.getCluster(),
@@ -176,7 +172,7 @@ public class LhxJoinRule
                 isSetop,
                 leftKeys,
                 rightKeys,
-                newJoinOutputNames,
+                null,
                 numBuildRows.longValue(),
                 cndBuildKey.longValue());
 

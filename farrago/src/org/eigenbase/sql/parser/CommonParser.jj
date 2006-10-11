@@ -154,7 +154,7 @@ JAVACODE SqlTimestampLiteral parseTimestampLiteral(
     String dateStr = SqlParserUtil.strip(s, "'");
     DateTimeUtil.PrecisionTime pt =
     DateTimeUtil.parsePrecisionDateTimeLiteral(
-        dateStr, DateTimeUtil.TimestampFormatStr, null);
+        dateStr, DateTimeUtil.TimestampFormatStr, DateTimeUtil.gmtZone);
     if (null == pt) {
         EigenbaseResource res = EigenbaseResource.instance();
         String msg = res.IllegalLiteral.str("TIMESTAMP", s, pos.toString(),

@@ -67,6 +67,7 @@
 '              LcsRowScanRel'
 '        FennelReshapeRel'
 '          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> EXPLAIN PLAN EXCLUDING ATTRIBUTES FOR
 . . . . . . . . > SELECT DEPT.DNAME
@@ -87,6 +88,7 @@
 '              LcsRowScanRel'
 '        FennelReshapeRel'
 '          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> EXPLAIN PLAN EXCLUDING ATTRIBUTES FOR
 . . . . . . . . > SELECT LOCATION.CITY
@@ -108,6 +110,7 @@
 '              LcsRowScanRel'
 '        FennelReshapeRel'
 '          LcsRowScanRel'
+'            FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- semi joins of a self join
 0: jdbc:luciddb:> explain plan excluding attributes for
@@ -215,10 +218,10 @@
 '  FennelSortRel'
 '    FennelReshapeRel'
 '      LhxJoinRel'
-'        FennelReshapeRel'
-'          LcsRowScanRel'
-'        FennelReshapeRel'
-'          LcsRowScanRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> explain plan excluding attributes for
 . . . . . . . . > select M.FNAME, M.LNAME
@@ -233,10 +236,10 @@
 '  FennelSortRel'
 '    FennelReshapeRel'
 '      LhxJoinRel'
-'        FennelReshapeRel'
-'          LcsRowScanRel'
-'        FennelReshapeRel'
-'          LcsRowScanRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
+'        LcsRowScanRel'
+'          FennelValuesRel'
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- a few ranges
 0: jdbc:luciddb:> -- a big ol' join

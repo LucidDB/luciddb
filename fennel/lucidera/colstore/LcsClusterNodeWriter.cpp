@@ -27,8 +27,11 @@
 FENNEL_BEGIN_CPPFILE("$Id$");
 
 LcsClusterNodeWriter::LcsClusterNodeWriter(
-    BTreeDescriptor &treeDescriptorInit, SegmentAccessor &accessorInit,
-    SharedTraceTarget pTraceTargetInit, std::string nameInit) :
+    BTreeDescriptor const &treeDescriptorInit,
+    SegmentAccessor const &accessorInit,
+    TupleDescriptor const &colTupleDescInit,
+    SharedTraceTarget pTraceTargetInit,
+    std::string nameInit) :
         LcsClusterAccessBase(treeDescriptorInit),
         TraceSource(pTraceTargetInit, nameInit)
 {
@@ -36,9 +39,15 @@ LcsClusterNodeWriter::LcsClusterNodeWriter(
     bufferLock.accessSegment(scratchAccessor);
     bTreeWriter = SharedBTreeWriter(
         new BTreeWriter(treeDescriptorInit, scratchAccessor, true));
-    clusterDump = SharedLcsClusterDump(
-        new LcsClusterDump(
-            treeDescriptorInit, TRACE_FINE, pTraceTargetInit, nameInit));
+    colTupleDesc = colTupleDescInit;
+    clusterDump =
+        SharedLcsClusterDump(
+            new LcsClusterDump(
+                treeDescriptorInit,
+                colTupleDesc,
+                TRACE_FINE,
+                pTraceTargetInit,
+                nameInit));
     nClusterCols = 0;
     pHdr = 0;
     hdrSize = 0;
@@ -246,11 +255,15 @@ void LcsClusterNodeWriter::describeLastBatch(
 
 uint16_t LcsClusterNodeWriter::getNextVal(uint column, uint16_t thisVal)
 {
-    if (thisVal && thisVal != szBlock)
-        return (uint16_t) (thisVal +
-            TupleDatum().getLcsLength(pBlock[column] + thisVal));
-    else
+    if (thisVal && thisVal != szBlock) {
+        return
+            (uint16_t) (thisVal +
+                TupleDatum().getLcsLength(
+                    pBlock[column] + thisVal,
+                    colTupleDesc[column]));
+    } else {
         return 0;
+    }
 }
 
 void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
@@ -276,8 +289,9 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
     origSzLeft = lastVal[column] - batchOffset[column] -
                     (batchCount[column]+2)*sizeof(LcsBatchDir);
 
-    if ((batchDirs[column].nRow > 8) || (batchDirs[column].nRow % 8) == 0)
+    if ((batchDirs[column].nRow > 8) || (batchDirs[column].nRow % 8) == 0) {
         return;
+    }
 
     if (batchDirs[column].mode == LCS_COMPRESSED) {
         // calculate the bit vector widthes
@@ -297,9 +311,13 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
         pValOffsets = (uint16_t *)(pBlock[column] + batchDirs[column].oVal);
 
         // fill up buffer with batches values
-        for (i = 0; i < batchDirs[column].nRow; i++, pBuf += len) {
-            len = TupleDatum().getLcsLength(
-                pBlock[column] + pValOffsets[rows[i]]);
+        for (i = 0; i < batchDirs[column].nRow;
+            i++, pBuf += batchDirs[column].recSize)
+        {
+            len =
+                TupleDatum().getLcsLength(
+                    pBlock[column] + pValOffsets[rows[i]],
+                    colTupleDesc[column]);
             memcpy(pBuf, pBlock[column] + pValOffsets[rows[i]], len);
         }
 
@@ -314,8 +332,13 @@ void LcsClusterNodeWriter::rollBackLastBatch(uint column, PBuffer pBuf)
         pValOffsets = (uint16_t *)(pBlock[column] + batchDirs[column].oVal);
 
         // fill up buffer with batches values
-        for (i = 0; i < batchDirs[column].nRow; i++, pBuf += len) {
-            len = TupleDatum().getLcsLength(pBlock[column] + pValOffsets[i]);
+        for (i = 0; i < batchDirs[column].nRow;
+            i++, pBuf += batchDirs[column].recSize)
+        {
+            len =
+                TupleDatum().getLcsLength(
+                    pBlock[column] + pValOffsets[i],
+                    colTupleDesc[column]);
             memcpy(pBuf, pBlock[column] + pValOffsets[i], len);
         }
     }
@@ -391,7 +414,7 @@ bool LcsClusterNodeWriter::addValue(uint column, PBuffer pVal, uint16_t *oVal)
 {
     uint16_t lastValOffset;
     int oldSzLeft = szLeft;
-    uint szVal = TupleDatum().getLcsLength(pVal);
+    uint szVal = TupleDatum().getLcsLength(pVal, colTupleDesc[column]);
     
     // if we are in forced fixed compression mode,
     // see if the maximum record size in this batch has increased.
@@ -469,7 +492,8 @@ void LcsClusterNodeWriter::undoValue(
     // added to the value list.  However, if it was the first such value for
     // the batch, addValue was called to bump-up the batch value count
     // so we still need to call undoValue
-    uint szVal = (pVal) ? TupleDatum().getLcsLength(pVal) : 0;
+    uint szVal =
+        (pVal) ? TupleDatum().getLcsLength(pVal, colTupleDesc[column]) : 0;
   
     // add back size subtracted for offset
     szLeft += (sizeof(uint16_t) + szVal) ;
@@ -527,10 +551,13 @@ void LcsClusterNodeWriter::putCompressedBatch(
         uint len;
         pOffs = (uint16_t *)(pBlock[column] + batchDirs[column].oVal);
         for (i = round8Boundary((uint32_t) batchDirs[column].nRow);
-            i < batchDirs[column].nRow; i++, pBuf += len)
+            i < batchDirs[column].nRow; i++, pBuf += batchDirs[column].recSize)
         {
             iRow = ((uint16_t *) pRows)[i];
-            len = TupleDatum().getLcsLength(pBlock[column] + pOffs[iRow]);
+            len =
+                TupleDatum().getLcsLength(
+                    pBlock[column] + pOffs[iRow],
+                    colTupleDesc[column]);
             memcpy(pBuf, pBlock[column] + pOffs[iRow], len);
         }
         batchDirs[column].nRow =
@@ -650,7 +677,8 @@ void LcsClusterNodeWriter::putFixedVarBatch(
             // the bank of from the block
             src = valueSource(localLastVal, localpValBank, localoValBank,
                                 localpBlock, pRows[i]);
-            memcpy(pVal, src, batchRecSize);
+            uint len = TupleDatum().getLcsLength(src, colTupleDesc[column]);
+            memcpy(pVal, src, len);
             pVal += batchRecSize;
         }
     }
@@ -678,9 +706,9 @@ void LcsClusterNodeWriter::putFixedVarBatch(
         // valueSource will get all the values fron the block
         src = valueSource(localLastVal, localpValBank, localoValBank,
                             localpBlock, pRows[i]);
-        uint len = TupleDatum().getLcsLength(src);
+        uint len = TupleDatum().getLcsLength(src, colTupleDesc[column]);
         memcpy(pVal, src, len);
-        pVal += len;
+        pVal += batchRecSize;
     }
 
     if (pValBank[column]) {

@@ -105,30 +105,30 @@ public class LcsTableProjectionRule
             newProject = newProjList.get(0);
         }        
 
-        // TODO jvs 13-Mar-2006:  I put this in for safety so
-        // that once residuals get implemented, we don't accidentally
-        // project away the clustered indexes needed to evaluate them;
-        // but the right thing to do is to union those with the
-        // real projection list in order to come up with the
-        // set of clustered indexes needed.
-        if (origScan.hasExtraFilter()) {
-            return;
-        }
-
         // Find all the clustered indexes that reference columns in
         // the projection list.  If the index references any column
         // in the projection, then it needs to be used in the scan.
         List<FemLocalIndex> indexList = new ArrayList<FemLocalIndex>();
 
         // Test which clustered indexes are needed to cover the
-        // projectedColumns.
+        // projectedColumns and filterColumns.
+        Integer[] readColumns =
+            projectedColumnList.toArray(
+                new Integer[projectedColumnList.size()+
+                    origScan.residualColumns.length]);
+        
+        System.arraycopy(origScan.residualColumns,
+                0, readColumns, projectedColumnList.size(),
+                origScan.residualColumns.length);
+
         Integer[] projectedColumns =
             projectedColumnList.toArray(
                 new Integer[projectedColumnList.size()]);
+
         for (FemLocalIndex index : origScan.clusteredIndexes) {
             if (!origScan.getIndexGuide().testIndexCoverage(
                 index,
-                projectedColumns))
+                readColumns))
             {
                 continue;
             }
@@ -154,7 +154,8 @@ public class LcsTableProjectionRule
                 origScan.getConnection(),
                 projectedColumns,
                 origScan.isFullScan(),
-                origScan.hasExtraFilter());
+                origScan.hasExtraFilter(),
+                origScan.residualColumns);
 
         // create new RelNodes to replace the existing ones, either
         // removing or replacing the ProjectRel and recreating the row scan

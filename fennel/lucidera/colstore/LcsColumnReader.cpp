@@ -191,13 +191,7 @@ bool LcsColumnReader::applyFilters(
         LcsResidualFilter *filter = filters.filterData[k].get();
 
         if (filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER) {
-            // REVIEW zfong 9/19/06 - This compareTuples() call, as well
-            // as the other one in this method, are incorrect.  The tuple
-            // descriptor that should be used needs to be a tuple
-            // descriptor that reflects only the projected columns.  The
-            // tuple descriptors being used here and in the other call in
-            // this method correspond to the full tuples w/o projection.
-            int c = projDescriptor.compareTuples(
+            int c = filters.inputKeyDesc.compareTuples(
                 filter->boundData, filters.lowerBoundProj,
                 outputTupleData, filters.readerKeyProj);
 
@@ -216,7 +210,7 @@ bool LcsColumnReader::applyFilters(
           return true;
        }
 
-       int c = projDescriptor.compareTuples(
+       int c = filters.inputKeyDesc.compareTuples(
            filter->boundData, filters.upperBoundProj,
            outputTupleData, filters.readerKeyProj);
 
@@ -235,7 +229,10 @@ bool LcsColumnReader::applyFilters(
 }
 
 uint LcsColumnReader::findVal(
-    uint filterPos, bool highBound, bool bStrict, TupleData &readerKeyData)
+    uint filterPos,
+    bool highBound,
+    bool bStrict,
+    TupleDataWithBuffer &readerKeyData)
 {
     // REVIEW jvs 5-Sept-2006:  It would be nice to use std::lower_bound
     // and std::upper_bound instead of reimplementing binary search.
@@ -253,17 +250,26 @@ uint LcsColumnReader::findVal(
     while (iLo < iHi) {
         uint iMid = (iLo + iHi) / 2;
 
-        readerKeyData[0].loadLcsDatum(getBatchValue(iMid));
+        readerKeyData[0].loadLcsDatum(
+            getBatchValue(iMid),
+            filters.inputKeyDesc[0]);
 
         cmp = filters.inputKeyDesc.compareTuples(
             readerKeyData, allProj,
             filters.filterData[filterPos]->boundData, boundProj);
 
+        // reset datum pointers in case tuple just read contained nulls
+        readerKeyData.resetBuffer();
+
         if (cmp == 0) {
             if (bStrict && !highBound) {
                 iResult = iMid + 1;
             } else {
-                iResult = iMid;
+                if (!bStrict && highBound) {
+                    iResult = iMid + 1;
+                } else {
+                    iResult = iMid;
+                }
             }
             return iResult;
         } else if (cmp > 0) {       
@@ -286,7 +292,10 @@ uint LcsColumnReader::findVal(
 }
 
 void LcsColumnReader::findBounds(
-    uint filterPos, uint &nLoVal, uint &nHiVal, TupleData &readerKeyData)
+    uint filterPos,
+    uint &nLoVal,
+    uint &nHiVal,
+    TupleDataWithBuffer &readerKeyData)
 {
     LcsResidualFilter *filter = filters.filterData[filterPos].get();
     bool getLowerSet = filter->lowerBoundDirective != SEARCH_UNBOUNDED_LOWER;

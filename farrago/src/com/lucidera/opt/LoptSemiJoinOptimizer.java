@@ -133,6 +133,12 @@ public class LoptSemiJoinOptimizer
                 if (dimIdx == -1) {
                     continue;
                 }
+                // if the dimension is null generating, we cannot use it
+                // to filter a fact table because we need to preserve
+                // non-matching rows from that fact table
+                if (multiJoin.isNullGenerating(dimIdx)) {
+                    continue;
+                }
 
                 // if we've already matched against this dimension factor,
                 // then add the filter to the list associated with

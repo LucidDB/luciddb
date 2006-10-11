@@ -69,8 +69,7 @@ class FarragoJdbcTimestampParamDef
 
         if (x instanceof String) {
             String s = ((String) x).trim();
-            java.util.Date ts =
-                DateTimeUtil.parseTimestamp(s, cal.getTimeZone());
+            ZonelessTimestamp ts = ZonelessTimestamp.parse(s);
             if (ts == null) {
                 throw newInvalidFormat(x);
             }
@@ -84,7 +83,9 @@ class FarragoJdbcTimestampParamDef
         }
 
         java.util.Date timestamp = (java.util.Date) x;
-        return new Timestamp(timestamp.getTime());
+        ZonelessTimestamp zt = new ZonelessTimestamp();
+        zt.setZonedTime(timestamp.getTime(), DateTimeUtil.getTimeZone(cal));
+        return zt;
     }
 }
 

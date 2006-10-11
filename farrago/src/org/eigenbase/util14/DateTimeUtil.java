@@ -22,7 +22,6 @@
 */
 package org.eigenbase.util14;
 
-import java.sql.*;
 import java.text.*;
 import java.util.Calendar;
 import java.util.TimeZone;
@@ -67,6 +66,11 @@ public class DateTimeUtil
      * the Java default time zone
      */
     public static final TimeZone defaultZone = TimeZone.getDefault();
+
+    /**
+     * The number of milliseconds in a day
+     */
+    public static long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
 
     //~ Methods ----------------------------------------------------------------
 
@@ -245,29 +249,14 @@ public class DateTimeUtil
     }
 
     /**
-     * Parses an Timestamp. This method is similar to the java.sql.Timestamp 
-     * {@link java.sql.Timestamp#valueOf(java.lang.String) valueOf(String)} 
-     * method. However, this method's parsing is strict and may parse 
-     * fractional seconds (as opposed to just milliseconds.)
-     * 
-     * @param s a string representing a date in ISO format, i.e. according 
-     *   to the SimpleDateFormat string "yyyy-MM-dd HH:mm:ss"
-     * @param zone time zone from which to interpret the string
-     * @return the parsed Timestamp, or null if parsing failed
+     * Gets the active time zone based on a Calendar argument
      */
-    public static Timestamp parseTimestamp(String s, TimeZone zone)
+    public static TimeZone getTimeZone(Calendar cal) 
     {
-        DateTimeUtil.PrecisionTime pt =
-            DateTimeUtil.parsePrecisionDateTimeLiteral(
-                s,
-                TimestampFormatStr,
-                zone);
-        if (pt == null) {
-            return null;
+        if (cal == null) {
+            return defaultZone;
         }
-
-        long millis = pt.getCalendar().getTime().getTime();
-        return new Timestamp(millis);
+        return cal.getTimeZone();
     }
 }
 

@@ -66,12 +66,13 @@
 +-----------+
 | 17:05:08  |
 +-----------+
-0: jdbc:farrago:> values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
-+----------------------+
-|        EXPR$0        |
-+----------------------+
-| 1994-07-08 17:05:08  |
-+----------------------+
+0: jdbc:farrago:> // NOTE: this shows precision with Jdbc formatting
+. . . . . . . . > values cast(timestamp '1994-07-08 17:05:08' as varchar(20));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| 1994-07-08 17:05:08.  |
++-----------------------+
 0: jdbc:farrago:> values cast('1994-07-08 17:05:08' as timestamp);
 +------------------------+
 |         EXPR$0         |
@@ -152,9 +153,18 @@ Messages:
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- should succeed
 0: jdbc:farrago:> 
-0: jdbc:farrago:> -- FIXME: FRG-217 update Fennel timestamp convention
-0: jdbc:farrago:> -- values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
-0: jdbc:farrago:> -- values cast(timestamp '2004-12-21 12:01:01' as char(20));
+0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as varchar(20));
++----------------------+
+|        EXPR$0        |
++----------------------+
+| 2004-12-21 12:01:01  |
++----------------------+
+0: jdbc:farrago:> values cast(timestamp '2004-12-21 12:01:01' as char(20));
++-----------------------+
+|        EXPR$0         |
++-----------------------+
+| 2004-12-21 12:01:01   |
++-----------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- values cast('2004-12-21 12:01:01' as timestamp);
 0: jdbc:farrago:> 
@@ -314,6 +324,10 @@ Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP
 0: jdbc:farrago:> insert into ts values (
 . . . . . . . . >   time'19:31:00');
 Error: At line 0, column 0: Cannot assign to target field 'TS' of type TIMESTAMP from source field 'EXPR$0' of type TIME(0) (state=,code=0)
+0: jdbc:farrago:> -- Note: duplicate key value changes with time
+0: jdbc:farrago:> -- insert into ts values 
+0: jdbc:farrago:> --   (current_timestamp),
+0: jdbc:farrago:> --   (cast (current_time as timestamp));
 0: jdbc:farrago:> 
 0: jdbc:farrago:> select * from ts order by 1;
 +------------------------+

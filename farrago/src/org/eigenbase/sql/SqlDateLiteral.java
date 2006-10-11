@@ -21,8 +21,6 @@
 */
 package org.eigenbase.sql;
 
-import java.text.*;
-
 import java.util.*;
 
 import org.eigenbase.reltype.*;
@@ -72,7 +70,7 @@ public class SqlDateLiteral
      */
     public String toFormattedString()
     {
-        return getFarragoDate().toString(formatString);
+        return getDate().toString(formatString);
     }
 
     public RelDataType createSqlType(RelDataTypeFactory typeFactory)

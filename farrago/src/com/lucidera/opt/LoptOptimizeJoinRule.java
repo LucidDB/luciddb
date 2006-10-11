@@ -122,26 +122,13 @@ public class LoptOptimizeJoinRule
         int nJoinFactors = multiJoin.getNumJoinFactors();
         String [] fieldNames;
         if (call.rels.length == 1) {
-            int nTotalFields = multiJoin.getNumTotalFields();
-            fieldNames = new String[nTotalFields];
-            int currField = 0;
-
-            for (int i = 0; i < nJoinFactors; i++) {
-                RelDataTypeField [] fields =
-                    multiJoin.getJoinFactor(i).getRowType().getFields();
-                for (int j = 0; j < multiJoin.getNumFieldsInJoinFactor(i);
-                     j++) {
-                    fieldNames[currField] = fields[j].getName();
-                    currField++;
-                }
-            }
+            fieldNames =
+                RelOptUtil.getFieldNames(
+                    multiJoin.getMultiJoinRel().getRowType());
         } else {
             ProjectRel project = (ProjectRel) call.rels[0];
-            int projLength = project.getProjectExps().length;
-            fieldNames = new String[projLength];
-            for (int i = 0; i < projLength; i++) {
-                fieldNames[i] = project.getRowType().getFields()[i].getName();
-            }
+            fieldNames =
+                RelOptUtil.getFieldNames(project.getRowType());
         }
 
         List<RelNode> plans = new ArrayList<RelNode>();

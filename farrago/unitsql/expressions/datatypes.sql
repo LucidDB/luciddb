@@ -29,8 +29,8 @@ select 0e0 from (values (0));
 
 -- Verify that type of character string literals is CHARACTER as it should be
 
-create view literal_view(lit1,lit2,lit3,lit4) 
-as values ('pumpkin ','pie','','  ');
+create view literal_view(lit1,lit2,lit3,lit4,lit5) 
+as values ('pumpkin ','pie','','  ',cast('' as varchar(0)));
 
 select column_name,type_name,column_size
 from sys_boot.jdbc_metadata.columns_view

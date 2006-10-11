@@ -409,16 +409,16 @@ Error: java.lang.AssertionError: Internal error: set operator EXCEPT ALL not sup
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- make sure this does not fail during physical plan generation
 0: jdbc:farrago:> explain plan for select * from s1 union all (select * from s2 where a = 1);
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-|                                                                                column0                                                                                |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| FennelToIteratorConverter                                                                                                                                             |
-|   FennelMergeRel                                                                                                                                                      |
-|     LcsRowScanRel(table=[[LOCALDB, LHX, S1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S1$A, SYS$CLUSTERED_INDEX$LHX$S1$B]])                       |
-|     FennelRenameRel(fieldNames=[[A, B]])                                                                                                                              |
-|       FennelReshapeRel(projection=[[0, 1]], filterOp=[COMP_EQ], filterOrdinals=[[0]], filterTuple=[[1]], outputRowType=[RecordType(INTEGER A, INTEGER BB) NOT NULL])  |
-|         LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S2$A, SYS$CLUSTERED_INDEX$LHX$S2$BB]])                  |
-+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+|                                                                                     column0                                                                                      |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| FennelToIteratorConverter                                                                                                                                                        |
+|   FennelMergeRel                                                                                                                                                                 |
+|     LcsRowScanRel(table=[[LOCALDB, LHX, S1]], projection=[*], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S1$A, SYS$CLUSTERED_INDEX$LHX$S1$B]])                                  |
+|     FennelRenameRel(fieldNames=[[A, B]])                                                                                                                                         |
+|       LcsRowScanRel(table=[[LOCALDB, LHX, S2]], projection=[[0, 1]], clustered indexes=[[SYS$CLUSTERED_INDEX$LHX$S2$A, SYS$CLUSTERED_INDEX$LHX$S2$BB]], residual columns=[[0]])  |
+|         FennelValuesRel(tuples=[[{ _ISO-8859-1'[', 1, _ISO-8859-1']', 1 }]])                                                                                                     |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 0: jdbc:farrago:> 
 0: jdbc:farrago:> --------------
 0: jdbc:farrago:> -- Clean up --

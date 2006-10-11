@@ -203,6 +203,16 @@ parameter style system defined java
 no sql
 external name 'class net.sf.farrago.test.FarragoTestUDR.digest';
 
+-- UDX which specifies a calendar argument
+create function foreign_time(
+  ts timestamp, tsZoneId varchar(256), foreignZoneId varchar(256))
+returns table(
+  the_timestamp timestamp, the_date date, the_time time)
+language java
+parameter style system defined java
+no sql
+external name 'class net.sf.farrago.test.FarragoTestUDR.foreignTime';
+
 create view ramp_view as select * from table(ramp(3));
 
 create view stringified_view as 
@@ -390,6 +400,10 @@ select * from stringified_view;
 select * 
 from table(digest(cursor(select * from sales.depts)))
 order by row_digest;
+
+-- udx with specified calendar
+select *
+from table(foreign_time(timestamp'2006-10-09 18:32:26.992', 'PST', 'EST'));
 
 
 set path 'crypto2';

@@ -755,7 +755,7 @@ public class RelDecorrelator
         // Change correlator rel into a join.
         // Join all the correlated variables produced by this correlator rel
         // with the values generated and propagated from the right input
-        RexNode condition = null;
+        RexNode condition = rel.getCondition();
         final RelDataTypeField [] newLeftOutput =
             newLeftRel.getRowType().getFields();
         int newLeftFieldCount = newLeftOutput.length;
@@ -776,7 +776,7 @@ public class RelDecorrelator
                     new RexInputRef(
                         newLeftFieldCount + newRightPos,
                         newRightOutput[newRightPos].getType()));
-            if (condition == null) {
+            if (condition == rexBuilder.makeLiteral(true)) {
                 condition = equi;
             } else {
                 condition =
@@ -785,7 +785,7 @@ public class RelDecorrelator
                         condition,
                         equi);
             }
-            
+
             // remove this cor var from output position mapping
             mapCorVarToOutputPos.remove(corVar);
         }
@@ -1009,25 +1009,42 @@ public class RelDecorrelator
         // override RexShuttle
         public RexNode visitFieldAccess(RexFieldAccess fieldAccess)
         {
-            assert (currentRel.getInputs().length == 1);
-            RelNode newInputRel = mapOldToNewRel.get(currentRel.getInputs()[0]);
-            assert (newInputRel != null);
+            int newInputRelOutputOffset = 0;
+            RelNode oldInputRel;
+            RelNode newInputRel;
+            Integer newInputPos;
+            for (int i = 0; i < currentRel.getInputs().length; i ++) {
+                oldInputRel = currentRel.getInputs()[i];
+                newInputRel = mapOldToNewRel.get(oldInputRel);
             
-            if (mapNewRelToMapCorVarToOutputPos.containsKey(newInputRel)) {
-                SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos =
-                    mapNewRelToMapCorVarToOutputPos.get(newInputRel);
+                if ((newInputRel != null) &&
+                    mapNewRelToMapCorVarToOutputPos.containsKey(newInputRel)) {
+                    SortedMap<CorrelatorRel.Correlation, Integer> childMapCorVarToOutputPos =
+                        mapNewRelToMapCorVarToOutputPos.get(newInputRel);
             
-                CorrelatorRel.Correlation corVar =
-                    mapFieldAccessToCorVar.get(fieldAccess);
-            
-                if (corVar != null) {
-                    assert (childMapCorVarToOutputPos != null);
-                    Integer newInputPos = childMapCorVarToOutputPos.get(corVar);
-                    assert (newInputPos != null);
-                    // fieldAccess is assumed to have the correct type info.
-                    RexInputRef newInput =
-                        new RexInputRef(newInputPos, fieldAccess.getType());
-                    return newInput;            
+                    if (childMapCorVarToOutputPos != null) {
+                        //try to find in this input rel the position of cor var
+                        CorrelatorRel.Correlation corVar =
+                            mapFieldAccessToCorVar.get(fieldAccess);
+         
+                        if (corVar != null) {
+                            newInputPos = 
+                                childMapCorVarToOutputPos.get(corVar);
+                            if (newInputPos != null) {
+                                // this input rel does produce the cor var referenced
+                                newInputPos += newInputRelOutputOffset;
+                                // fieldAccess is assumed to have the correct type info.
+                                RexInputRef newInput =
+                                    new RexInputRef(newInputPos, fieldAccess.getType());
+                                return newInput;
+                            }
+                        }
+                    }
+                    // this input rel does not produce the cor var needed 
+                    newInputRelOutputOffset += newInputRel.getRowType().getFieldCount();
+                } else {
+                    // this input rel is not rewritten
+                    newInputRelOutputOffset += oldInputRel.getRowType().getFieldCount();
                 }
             }
             return fieldAccess;

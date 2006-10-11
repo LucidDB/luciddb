@@ -31,7 +31,6 @@ import java.util.logging.*;
 import javax.jmi.reflect.*;
 
 import net.sf.farrago.catalog.*;
-import net.sf.farrago.cwm.relational.*;
 import net.sf.farrago.fem.fennel.*;
 import net.sf.farrago.fem.med.*;
 import net.sf.farrago.fennel.*;
@@ -40,14 +39,13 @@ import net.sf.farrago.namespace.util.*;
 import net.sf.farrago.resource.*;
 import net.sf.farrago.session.*;
 import net.sf.farrago.trace.*;
-import net.sf.farrago.type.*;
 import net.sf.farrago.type.runtime.*;
 import net.sf.farrago.util.*;
 
 import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.*;
-import org.eigenbase.sql.*;
+
 import org.eigenbase.util.*;
 import org.eigenbase.trace.*;
 
@@ -574,7 +572,8 @@ public class FarragoRuntimeContext
                 repos.getCurrentConfig().getFennelConfig().getCachePageSize());
     }
 
-    protected FennelStreamHandle getStreamHandle(String globalStreamName,
+    // implement FarragoSessionRuntimeContext
+    public FennelStreamHandle getStreamHandle(String globalStreamName,
         boolean isInput)
     {
         repos.beginReposTxn(true);
@@ -649,10 +648,8 @@ public class FarragoRuntimeContext
         return fennelTxnContext.getFennelDbHandle();
     }
 
-    /**
-     * @return FarragoRepos for use by extension projects
-     */
-    protected FarragoRepos getRepos()
+    // implement FarragoSessionRuntimeContext
+    public FarragoRepos getRepos()
     {
         return repos;
     }

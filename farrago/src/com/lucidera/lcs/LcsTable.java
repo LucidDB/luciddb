@@ -84,7 +84,8 @@ public class LcsTable
                 connection,
                 null,
                 true,
-                false);
+                false,
+                new Integer[0]);
     }
 
     public LcsIndexGuide getIndexGuide()
