@@ -215,19 +215,6 @@ public:
     }
 
     /**
-     * Returns the same result as getCache.
-     *
-     * Workaround for bizarre bug in gcc 3.3.6, where the getCache method
-     * returns a NULL reference even though the member is not null. Seems to
-     * be a problem with gcc's linker or handling of inline methods, and is
-     * fixed in gcc 4.1.
-     */
-    Cache &getCache2()
-    {
-        return cache;
-    }
-
-    /**
      * @return are the in-memory page contents different from those in
      * the corresponding block on disk?
      */
