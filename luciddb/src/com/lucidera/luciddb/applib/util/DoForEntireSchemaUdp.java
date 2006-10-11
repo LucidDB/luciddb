@@ -46,6 +46,7 @@ public abstract class DoForEntireSchemaUdp {
     public static void execute(String sql, String schemaName, String objTypeStr) throws SQLException {
         
         PreparedStatement ps;
+        Statement stmt;
         ResultSet rs;
         Connection conn = null;
         StringWriter sw;
@@ -54,6 +55,21 @@ public abstract class DoForEntireSchemaUdp {
 
         // set up a jdbc connection
         conn = DriverManager.getConnection("jdbc:default:connection");
+        stmt = conn.createStatement();
+
+        // TODO jvs 11-Oct-2006: Get rid of this (borrowed from
+        // FarragoManagementUDR.flushCodeCache) once code cache is brought
+        // under control.  For now, this prevents OOM's from statements like
+        // ANALYZE TABLE which use a lot of reentrant SQL.
+        rs = stmt.executeQuery(
+            "select \"codeCacheMaxBytes\" from "
+            + "sys_fem.\"Config\".\"FarragoConfig\"");
+        rs.next();
+        long savedSetting = rs.getLong(1);
+        rs.close();
+        stmt.executeUpdate(
+            "alter system set \"codeCacheMaxBytes\" = min");
+        
         
         // retrieve list of wanted type of objects in schema
         if (objTypeStr.equals("TABLES")) {
@@ -75,25 +91,39 @@ public abstract class DoForEntireSchemaUdp {
 
         // split the sql statement around token %TABLE_NAME%
         String parts[] = sql.split("%TABLE_NAME%");
+
+        try {
         
-        // execute sql statement for all tables and views
-        while (rs.next()) {
-            sw = new StringWriter();
-            stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
-            pw = new PrintWriter(stackw);
-            pw.print(parts[0]);
-            StackWriter.printSqlIdentifier(pw, rs.getString(1));
-            pw.print(".");
-            StackWriter.printSqlIdentifier(pw, rs.getString(2));
-            // don't choke on ArrayIndexOOB if %TABLE_NAME% was at the end
-            if (java.lang.reflect.Array.getLength(parts) > 1) {
-                pw.print(parts[1]);
+            // execute sql statement for all tables and views
+            while (rs.next()) {
+                sw = new StringWriter();
+                stackw = new StackWriter(sw, StackWriter.INDENT_SPACE4);
+                pw = new PrintWriter(stackw);
+                pw.print(parts[0]);
+                StackWriter.printSqlIdentifier(pw, rs.getString(1));
+                pw.print(".");
+                StackWriter.printSqlIdentifier(pw, rs.getString(2));
+                // don't choke on ArrayIndexOOB if %TABLE_NAME% was at the end
+                if (java.lang.reflect.Array.getLength(parts) > 1) {
+                    pw.print(parts[1]);
+                }
+                pw.close();
+
+                // NOTE jvs 11-Oct-2006: I changed this to use executeUpdate so
+                // that if it actually was a query, the user will get an error.
+                // Oscar's old comment was "if anyone is interested in the
+                // result set, we'll have to do a getResultSet.. thing
+                // here. Right now I'm leaving it quiet."
+            
+                stmt.executeUpdate(sw.toString());
             }
-            pw.close();
-            ps = conn.prepareStatement(sw.toString());
-            ps.execute();
-            // if anyone is interested in the result set, we'll have to do a
-            // getResultSet.. thing here. Right now I'm leaving it quiet.
+            
+        } finally {
+            // TODO jvs 11-Oct-2006:  This should go away together with
+            // the TODO above.
+            stmt.executeUpdate(
+                "alter system set \"codeCacheMaxBytes\" = "
+                + ((savedSetting == -1) ? "max" : Long.toString(savedSetting)));
         }
     }
 }

@@ -6,7 +6,7 @@ create table T1(col1 integer, col2 integer);
 create table T2(col3 varchar(255), col4 integer);
 create view V1 as select * from T2;
 create view V2 as select col2 from T1;
--- try to do a select. won't show any results, but shouldn't break either
+-- try to do a select; should fail
 call applib.do_for_entire_schema('select * from %TABLE_NAME%', 'TESTSCHEMA', 'TABLES_AND_VIEWS');
 -- connect as new user and try to do select on tables. should fail.
 !connect jdbc:luciddb: MONDRIAN_USER NOPE
