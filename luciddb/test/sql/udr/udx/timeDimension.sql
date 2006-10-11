@@ -195,3 +195,15 @@ select
   fiscal_month_number_in_year as fmiy,
   fiscal_quarter_number_in_year as fqiy
 from table (applib.time_dimension(1999,12,1,2000,2,1,2));
+
+-- LER-2227
+select 
+  time_key,
+  week_number_in_month as wim,
+  week_number_in_quarter as wiq,
+  week_number_in_year as wiy,
+  fiscal_week_number_in_month as fwim,
+  fiscal_week_number_in_quarter as fwiq,
+  fiscal_week_number_in_year as fwiy
+from table("APPLIB"."TIME_DIMENSION"(2010,11,28,2011,1,4,4));
+

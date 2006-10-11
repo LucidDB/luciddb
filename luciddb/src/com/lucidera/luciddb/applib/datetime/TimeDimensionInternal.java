@@ -42,9 +42,6 @@ public class TimeDimensionInternal extends GregorianCalendar
     private int	startDate;
     private int	numDays;
     private int fiscalYearStartMonth;
-    private int quarterStartWeek; // week in year where current quarter starts
-    private int fiscalQuarterStartWeek; // ditto, fiscal year
-    private int fiscalYearStartWeek;
 
     // day number in year when the current quarter starts
     private int quarterStartDay; 
@@ -172,7 +169,6 @@ public class TimeDimensionInternal extends GregorianCalendar
         set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
         complete();
         this.firstOfQuarterDate = new Date(getTimeInMillis());
-        this.quarterStartWeek = get(Calendar.WEEK_OF_YEAR);
         this.quarterStartDay = get(Calendar.DAY_OF_YEAR);
 
         // set first date of year
@@ -194,7 +190,6 @@ public class TimeDimensionInternal extends GregorianCalendar
         set(Calendar.DAY_OF_MONTH, getActualMinimum(Calendar.DAY_OF_MONTH));
         complete();
         this.firstOfFiscalQuarterDate = new Date(getTimeInMillis());
-        this.fiscalQuarterStartWeek = get(Calendar.WEEK_OF_YEAR);
         this.fiscalQuarterStartDay = get(Calendar.DAY_OF_YEAR);
 
         // set last date of fiscal quarter
@@ -211,7 +206,6 @@ public class TimeDimensionInternal extends GregorianCalendar
             add(Calendar.YEAR, -1);
         }
         this.firstOfFiscalYearDate = new Date(getTimeInMillis());
-        this.fiscalYearStartWeek = get(Calendar.WEEK_OF_YEAR);
         this.fiscalYearStartDay = get(Calendar.DAY_OF_YEAR);
 
         // set last date of fiscal year
@@ -304,7 +298,7 @@ public class TimeDimensionInternal extends GregorianCalendar
     }
 
     public int getWeekOfQuarter() {
-        return get(Calendar.WEEK_OF_YEAR) - this.quarterStartWeek + 1;
+        return WeekFrom(this.firstOfQuarterDate);
     }
 
     public int getWeekOfMonth() {
@@ -312,7 +306,7 @@ public class TimeDimensionInternal extends GregorianCalendar
     }
 
     public int getWeek() {
-        return get(Calendar.WEEK_OF_YEAR);
+        return WeekFrom(this.firstOfYearDate);
     }
 
     public Date getDate() {
@@ -435,7 +429,6 @@ public class TimeDimensionInternal extends GregorianCalendar
                     add(Calendar.YEAR, -1);
                 }
                 this.firstOfQuarterDate.setTime(currentTime);
-                this.quarterStartWeek = get(Calendar.WEEK_OF_YEAR);
                 this.quarterStartDay = get(Calendar.DAY_OF_YEAR);
                 add(Calendar.MONTH, 3);
                 this.lastOfQuarterDate.setTime(getTimeInMillis() - millisInADay);
@@ -446,7 +439,6 @@ public class TimeDimensionInternal extends GregorianCalendar
             if ((fMonth % 3) == 0) {
                 if (fMonth == 0) {
                     this.firstOfFiscalYearDate.setTime(currentTime);
-                    this.fiscalYearStartWeek = get(Calendar.WEEK_OF_YEAR);
                     this.fiscalYearStartDay = get(Calendar.DAY_OF_YEAR);
                     add(Calendar.YEAR, 1);
                     this.lastOfFiscalYearDate.setTime(getTimeInMillis() - millisInADay);
@@ -454,7 +446,6 @@ public class TimeDimensionInternal extends GregorianCalendar
                     
                 }
                 this.firstOfFiscalQuarterDate.setTime(currentTime);
-                this.fiscalQuarterStartWeek = get(Calendar.WEEK_OF_YEAR);
                 this.fiscalQuarterStartDay = get(Calendar.DAY_OF_YEAR);
                 add(Calendar.MONTH, 3);
                 this.lastOfFiscalQuarterDate.setTime(getTimeInMillis() - millisInADay);

@@ -53,3 +53,15 @@ select
 from table (applib.fiscal_time_dimension(1999,12,1,2000,2,1,2))
 order by time_key;
 
+-- 
+select 
+  time_key,
+  week_number_in_month as wim,
+  week_number_in_quarter as wiq,
+  week_number_in_year as wiy,
+  fiscal_week_number_in_month as fwim,
+  fiscal_week_number_in_quarter as fwiq,
+  fiscal_week_number_in_year as fwiy,
+  fiscal_year,
+  fiscal_day_number_in_year
+from table("APPLIB"."FISCAL_TIME_DIMENSION"(2010,3,27,2010,4,12,4));
