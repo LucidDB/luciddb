@@ -28,9 +28,11 @@ import java.sql.*;
 import java.text.*;
 
 import java.util.*;
+import java.util.logging.*;
 
 import net.sf.farrago.resource.*;
 import net.sf.farrago.util.*;
+import net.sf.farrago.trace.*;
 
 import org.eigenbase.util.*;
 
@@ -44,6 +46,7 @@ import org.eigenbase.util.*;
  */
 public abstract class FarragoExportSchemaUDR
 {
+    private static Logger tracer = FarragoTrace.getSyslibTracer();
 
     //~ Static fields/initializers ---------------------------------------------
 
@@ -68,7 +71,7 @@ public abstract class FarragoExportSchemaUDR
         "Incremental",
         "Merge"
     };
-    
+
     //~ Methods ----------------------------------------------------------------
 
     /**
@@ -924,9 +927,11 @@ public abstract class FarragoExportSchemaUDR
         File csvFile = null;
         File bcpFile = null;
         File logFile = null;
-        FileWriter csvOut = null;
-        FileWriter bcpOut = null;
-        FileWriter logOut = null;
+        Writer csvOut = null;
+        Writer bcpOut = null;
+        Writer logOut = null;
+
+        boolean tracing = tracer.isLoggable(Level.FINE);
 
         // Expand stuff like ${FARRAGO_HOME}.
         directory = FarragoProperties.instance().expandProperties(directory);
@@ -967,6 +972,7 @@ public abstract class FarragoExportSchemaUDR
                 e.getMessage(),
                 e);
         }
+        logOut = new BufferedWriter(logOut);
 
         Iterator<String> tableIter;
         if (tableNames != null) {
@@ -1093,11 +1099,13 @@ public abstract class FarragoExportSchemaUDR
             try {
                 csvFile = new File(csvName);
                 csvOut = new FileWriter(csvFile, false);
+                csvOut = new BufferedWriter(csvOut);
                 int numCols = tblMeta.getColumnCount();
                 if (withBcp) {
                     // write BCP header
                     bcpFile = new File(bcpName);
                     bcpOut = new FileWriter(bcpFile, false);
+                    bcpOut = new BufferedWriter(bcpOut);
 
                     // version using BroadBase
                     bcpOut.write("6.0" + NEWLINE);
@@ -1123,6 +1131,8 @@ public abstract class FarragoExportSchemaUDR
                     bcpOut.flush();
                 }
 
+                long nRows = 0;
+
                 // write the csv file
                 while (tblData.next()) {
                     for (int i = 1; i <= numCols; i++) {
@@ -1145,6 +1155,22 @@ public abstract class FarragoExportSchemaUDR
                                 csvOut.write(QUOTE + NEWLINE);
                             }
                         }
+                    }
+
+                    if (tracing) {
+                        if ((nRows % 100) == 0) {
+                            // When trace is on, be nice to the poor little
+                            // Windows users, otherwise they can't see anything
+                            // until the very end because the file size only
+                            // gets updated on explicit flush.  Do this on row
+                            // 1 so that they'll know something's happening if
+                            // it takes a long time to compute the rest.
+                            // Normally, don't do any explicit flushing because
+                            // it's bad for performance.
+                            csvOut.flush();
+                            tracer.fine("Exported row #" + nRows);
+                        }
+                        ++nRows;
                     }
                 }
 
