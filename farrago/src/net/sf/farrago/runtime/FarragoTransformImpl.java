@@ -102,7 +102,7 @@ public abstract class FarragoTransformImpl
             }
 
             // See note re: quantum as unsigned int.
-            if (++tupleCount < quantum) {
+            if (++tupleCount >= quantum) {
                 next = null;
                 break;
             }
