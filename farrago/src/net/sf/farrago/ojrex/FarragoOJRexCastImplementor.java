@@ -390,7 +390,7 @@ public class FarragoOJRexCastImplementor
             Expression rhsIsNull;
             if (nullableSource) {
                 rhsIsNull = getNullIndicator(rhsExp);
-                rhsExp = getValue(rhsExp);
+                rhsExp = getValue(rhsType, rhsExp);
             } else {
                 rhsIsNull = Literal.constantFalse();
             }
@@ -406,7 +406,7 @@ public class FarragoOJRexCastImplementor
                 roundAsNeeded();
                 addStatement(
                     assign(
-                        getValue(lhsExp),
+                        getValue(lhsType, lhsExp),
                         new CastExpression(
                             getLhsClass(),
                             rhsExp)));
@@ -457,7 +457,7 @@ public class FarragoOJRexCastImplementor
                 // sometimes the Integer got slipped by.
                 if (rhsType.isNullable()
                     && (!SqlTypeUtil.isDecimal(rhsType))) {
-                    rhsExp = getValue(rhsExp);
+                    rhsExp = getValue(rhsType, rhsExp);
                 }
                 addStatement(
                     new ExpressionStatement(
@@ -601,7 +601,7 @@ public class FarragoOJRexCastImplementor
                 SqlTypeUtil.isDatetime(rhsType) ||
                 SqlTypeUtil.isInterval(rhsType)) 
             {
-                rhsExp = getValue(rhsExp);
+                rhsExp = getValue(rhsType, rhsExp);
             }
 
             // Get the name of the numeric class such as Byte, Short, etc.
@@ -897,11 +897,11 @@ public class FarragoOJRexCastImplementor
         /**
          * Creates a field access, as in expr.[value]
          */
-        private FieldAccess getValue(Expression expr) {
-            return 
-                new FieldAccess(
-                    expr, 
-                    NullablePrimitive.VALUE_FIELD_NAME);
+        private Expression getValue(RelDataType type, Expression expr) 
+        {
+            FarragoTypeFactory factory = 
+                (FarragoTypeFactory) translator.getTypeFactory();
+            return factory.getValueAccessExpression(type, expr);
         }
         
         /**
