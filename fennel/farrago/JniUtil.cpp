@@ -220,7 +220,7 @@ jint JniUtil::init(JavaVM *pVmInit)
         classFarragoTransform, "init", 
         "(Lnet/sf/farrago/runtime/FarragoRuntimeContext;Ljava/lang/String;[Lnet/sf/farrago/runtime/FarragoTransform$InputBinding;)V");
     methFarragoTransformExecute = pEnv->GetMethodID(
-        classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;)I");
+        classFarragoTransform, "execute", "(Ljava/nio/ByteBuffer;J)I");
     methFarragoTransformRestart = pEnv->GetMethodID(
         classFarragoTransform, "restart", "()V");
     methFarragoTransformInputBindingCons =

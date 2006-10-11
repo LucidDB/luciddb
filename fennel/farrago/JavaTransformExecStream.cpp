@@ -243,12 +243,15 @@ ExecStreamResult JavaTransformExecStream::execute(
         }
     }
     
+    jlong jquantum = static_cast<jlong>(quantum.nTuplesMax);
+
     JniEnvAutoRef pEnv;
     assert(farragoTransform);
     int cb = pEnv->CallIntMethod(
         farragoTransform,
         JniUtil::methFarragoTransformExecute, 
-        outputByteBuffer);
+        outputByteBuffer,
+        jquantum);
 
     FENNEL_TRACE(TRACE_FINER, "read " << cb << " bytes");
 
