@@ -918,6 +918,30 @@ Messages: {1}</text>
 <text>OS directory path for writing log files</text>
 </message>
 
+<message name="MedFlatFile_TRIM_Description">
+<text>Whether to trim column values</text>
+</message>
+
+<message name="MedFlatFile_LENIENT_Description">
+<text>Whether to fill in missing columns at the end of rows with null and discard extra columns</text>
+</message>
+
+<message name="MedFlatFile_MAPPED_Description">
+<text>Whether to match source columns in a data file with target columns specified by a control file or foreign table definition. If true, then the data file must have a header and the server must be lenient. Any target columns that are not in a data file will be filled in with nulls.</text>
+</message>
+
+<message name="MedFlatFile_DATE_FORMAT_Description">
+<text>A custom datetime format for date columns</text>
+</message>
+
+<message name="MedFlatFile_TIME_FORMAT_Description">
+<text>A custom datetime format for time columns</text>
+</message>
+
+<message name="MedFlatFile_TIMESTAMP_FORMAT_Description">
+<text>A custom datetime format for timestamp columns</text>
+</message>
+
 <!-- ====================================================================== -->
 <!-- Database/Session resources 470,000 - 480,000 -->
 <!-- ====================================================================== -->
