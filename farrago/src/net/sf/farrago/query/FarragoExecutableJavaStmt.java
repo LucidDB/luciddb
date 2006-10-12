@@ -68,6 +68,7 @@ class FarragoExecutableJavaStmt
     private final Set<String> referencedObjectIds;
     private final Map<String, RelDataType> resultSetTypeMap;
     private final Map<String, RelDataType> iterCalcTypeMap;
+    private final int totalByteCodeSize;
 
     //~ Constructors -----------------------------------------------------------
 
@@ -83,7 +84,8 @@ class FarragoExecutableJavaStmt
         Set<String> referencedObjectIds,
         TableAccessMap tableAccessMap,
         Map<String, RelDataType> resultSetTypeMap,
-        Map<String, RelDataType> iterCalcTypeMap)
+        Map<String, RelDataType> iterCalcTypeMap,
+        int totalByteCodeSize)
     {
         super(dynamicParamRowType, isDml, tableAccessMap);
 
@@ -95,6 +97,7 @@ class FarragoExecutableJavaStmt
         this.referencedObjectIds = referencedObjectIds;
         this.resultSetTypeMap = resultSetTypeMap;
         this.iterCalcTypeMap = iterCalcTypeMap;
+        this.totalByteCodeSize = totalByteCodeSize;
 
         rowType = preparedRowType;
     }
@@ -168,14 +171,7 @@ class FarragoExecutableJavaStmt
         // class overhead (e.g. constants and reflection info), type
         // descriptor, JIT code size, and "this" object and fields such as
         // packageDir/referencedObjectIds.
-        long nBytes = 0;
-        File [] files = packageDir.listFiles();
-        for (int i = 0; i < files.length; ++i) {
-            if (!files[i].getName().endsWith(".class")) {
-                continue;
-            }
-            nBytes += files[i].length();
-        }
+        long nBytes = totalByteCodeSize;
 
         if (xmiFennelPlan != null) {
             nBytes += FarragoUtil.getStringMemoryUsage(xmiFennelPlan);

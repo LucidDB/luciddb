@@ -162,7 +162,7 @@ public class RexToOJTranslator
         return implementor;
     }
 
-    protected RelNode getContextRel()
+    public RelNode getContextRel()
     {
         return contextRel;
     }

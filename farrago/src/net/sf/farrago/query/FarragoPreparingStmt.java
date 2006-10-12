@@ -27,6 +27,7 @@ import java.io.*;
 import java.net.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.List;
 import java.util.logging.*;
 
@@ -89,6 +90,10 @@ public class FarragoPreparingStmt
         FarragoTrace.getPreparedStreamGraphTracer();
     private static final Logger planDumpTracer =
         FarragoTrace.getPlanDumpTracer();
+
+    // REVIEW jvs 11-Oct-2006:  For debugging it would be handier to
+    // use the db-level stmt ID here.
+    private static final AtomicLong idGen = new AtomicLong();
 
     //~ Instance fields --------------------------------------------------------
 
@@ -400,31 +405,20 @@ public class FarragoPreparingStmt
 
     private void definePackageName()
     {
-        // TODO:  once and only once
+        String packageNameUnqualified = "stmt" + idGen.incrementAndGet();
+        
+        // NOTE:  we're not actually creating the directory here, because
+        // we might decide we don't actually need any Java compilation;
+        // but we need to know its name during preparation in case it
+        // turns out that we are going to compile something
         packageDir = classesRoot;
         packageDir = new File(packageDir, "net");
         packageDir = new File(packageDir, "sf");
         packageDir = new File(packageDir, "farrago");
         packageDir = new File(packageDir, "dynamic");
-        try {
-            packageDir.mkdirs();
-            packageDir = File.createTempFile("stmt", "", packageDir);
-        } catch (IOException ex) {
-            throw Util.newInternal(ex);
-        }
-        packageName = "net.sf.farrago.dynamic." + packageDir.getName();
+        packageDir = new File(packageDir, packageNameUnqualified);
 
-        // Normally, we want to make sure all generated code gets cleaned up.
-        // To disable this for debugging, you can explicitly set
-        // net.sf.farrago.dynamic.level=FINE.  (This is not inherited via
-        // parent logger.)
-        if (!shouldAlwaysWriteJavaFile()) {
-            javaCodeDir = new FarragoFileAllocation(packageDir);
-        }
-
-        // createTempFile created a normal file; we want a directory
-        packageDir.delete();
-        packageDir.mkdir();
+        packageName = "net.sf.farrago.dynamic." + packageNameUnqualified;
     }
 
     // Override OJPreparingStmt
@@ -433,6 +427,22 @@ public class FarragoPreparingStmt
         ParseTree parseTree,
         Argument [] arguments)
     {
+        if (packageDir.exists()) {
+            // Blow away existing package; could be left over from
+            // a previous run.
+            new FarragoFileAllocation(packageDir).closeAllocation();
+        }
+        
+        // Normally, we want to make sure all generated code gets cleaned up.
+        // To disable this for debugging, you can explicitly set
+        // net.sf.farrago.dynamic.level=FINE.  (This is not inherited via
+        // parent logger.)
+        if (!shouldAlwaysWriteJavaFile()) {
+            javaCodeDir = new FarragoFileAllocation(packageDir);
+        }
+
+        packageDir.mkdir();
+        
         BoundMethod boundMethod =
             super.compileAndBind(decl, parseTree, arguments);
 
@@ -548,7 +558,8 @@ public class FarragoPreparingStmt
                         getReferencedObjectIds(),
                         tableAccessMap,
                         resultSetTypeMap,
-                        iterCalcTypeMap);
+                        iterCalcTypeMap,
+                        javaCompiler.getTotalByteCodeSize());
             } else {
                 executableStmt =
                     new FarragoExecutableFennelStmt(

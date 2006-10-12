@@ -210,35 +210,51 @@ public class FarragoRexToOJTranslator
             return null;
         }
 
-        // Create a constant member.
+        // Create a constant member.  Note that it can't be static
+        // because we might be generating code inside of an anonymous
+        // inner class.  And it can't be final because we can't initialize
+        // it until first use.
         Variable variable = getRelImplementor().newVariable();
         final TypeName typeName = OJUtil.toTypeName(
                 type,
                 getTypeFactory());
         memberList.add(
             new FieldDeclaration(
-                new ModifierList(ModifierList.STATIC | ModifierList.FINAL),
+                new ModifierList(ModifierList.PRIVATE),
                 typeName,
                 variable.toString(),
-                new AllocationExpression(
-                    typeName,
-                    null,
-                    null)));
+                null));
 
-        // Generate initialization code, and add it as a static initializer.
-        // TODO: Static initializers are painful! We should generate
-        //  constructors so that all SQL types can be initialized using an
-        //  expression.
-        final StatementList statementList = new StatementList();
+        // Generate initialization code, and add it inside of
+        // an if block to be executed first time through.  Use
+        // null to represent uninitialized.  For better performance,
+        // we should do this in a constructor or a top-level
+        // static initializer.
+        
+        final StatementList initStmtList = new StatementList();
+        initStmtList.add(
+            new ExpressionStatement(
+                new AssignmentExpression(
+                    variable,
+                    AssignmentExpression.EQUALS,
+                    new AllocationExpression(
+                        typeName,
+                        null,
+                        null))));
         castImplementor.convertCastToAssignableValue(
             this,
-            statementList,
+            initStmtList,
             type,
             type,
             variable,
             getTranslation());
-        assert !statementList.isEmpty();
-        memberList.add(new MemberInitializer(statementList, true));
+        assert !initStmtList.isEmpty();
+
+        addStatement(
+            new IfStatement(
+                isNull(variable),
+                initStmtList));
+        
         return setTranslation(variable);
     }
 
