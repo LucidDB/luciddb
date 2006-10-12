@@ -700,3 +700,26 @@ select * from t1 left outer join
     on t1.a = t2.a;
 select t1.a, t2.a, coalesce(t2.b, -99)
     from t1 left outer join t2 on t1.a = t2.a;
+
+-- testcase to ensure that predicates are appropriately converted before being
+-- passed into metadata queries; in this particular case, the left outer join
+-- is converted into a right outer join because there's a filter on y; there's
+-- also a filter on x, but because x is null generating, that filter is not
+-- pushed down; as a result, the outer join becomes a right outer join and the
+-- columns returned from that outer join are returned in reverse order;
+-- therefore the filter on x needs to be adjusted accordingly before its
+-- passed into metadata queries on the new outer join node; otherwise, the
+-- metadata routines will try to manipulate a filter that compares an integer
+-- against a varchar column
+create table x(x0 int);
+create table y(y0 varchar(10), y1 int);
+create table z(z0 varchar(10), z1 int);
+!set outputformat csv
+explain plan for
+select distinct x0, y0, z0
+    from
+        y left outer join x on y1 = x0,
+        z
+    where
+        x0 = z1 and y1 = 1 and x0 > 0;
+
