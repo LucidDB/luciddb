@@ -136,7 +136,7 @@ public class IterCalcRel
         return
             FilterRel.estimateFilteredRows(
                 getChild(),
-                program.getCondition());
+                program);
     }
 
     public RelOptCost computeSelfCost(RelOptPlanner planner)

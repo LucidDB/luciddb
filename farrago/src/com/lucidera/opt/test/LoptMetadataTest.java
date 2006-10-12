@@ -502,9 +502,11 @@ public class LoptMetadataTest
         RelOptCost cost = RelMetadataQuery.getCumulativeCost(rootRel);
 
         // Cumulative cost is full table access plus the filtered rowcount for
-        // the sort.
+        // the sort.  Note the filter cost uses the default equality selectivity
+        // because the filter expression effectively becomes
+        // upper(name) = 'ZELDA', which isn't sargable
         double tableRowCount = COLSTORE_EMPS_ROWCOUNT;
-        double sortRowCount = tableRowCount * .005;
+        double sortRowCount = tableRowCount * DEFAULT_EQUAL_SELECTIVITY;
         checkCost(
             tableRowCount + sortRowCount,
             cost);

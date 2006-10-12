@@ -133,7 +133,7 @@ public class FennelCalcRel
         return
             FilterRel.estimateFilteredRows(
                 getChild(),
-                program.getCondition());
+                program);
     }
 
     // implement RelNode

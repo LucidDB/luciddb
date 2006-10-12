@@ -2000,6 +2000,50 @@ public abstract class RelOptUtil
         return newSetOpRel;
     }
     
+    /**
+     * Converts a filter to the new filter that would result if the
+     * filter is pushed past a ProjectRel that it currently is referencing.
+     * 
+     * @param filter the filter to be converted
+     * @param projRel project rel underneath the filter
+     * 
+     * @return converted filter
+     */
+    public static RexNode pushFilterPastProject(
+        RexNode filter,
+        ProjectRelBase projRel)
+    {
+        // use RexPrograms to merge the filter and ProjectRel into a
+        // single program so we can convert the FilterRel condition to
+        // directly reference the ProjectRel's child
+        RexBuilder rexBuilder = projRel.getCluster().getRexBuilder();
+        RexProgram bottomProgram =
+            RexProgram.create(
+                projRel.getChild().getRowType(),
+                projRel.getProjectExps(),
+                null,
+                projRel.getRowType(),
+                rexBuilder);
+
+        RexProgramBuilder topProgramBuilder =
+            new RexProgramBuilder(
+                projRel.getRowType(),
+                rexBuilder);
+        topProgramBuilder.addIdentity();
+        topProgramBuilder.addCondition(filter);
+        RexProgram topProgram = topProgramBuilder.getProgram();
+
+        RexProgram mergedProgram =
+            RexProgramBuilder.mergePrograms(
+                topProgram,
+                bottomProgram,
+                rexBuilder);
+
+        return
+            mergedProgram.expandLocalRef(
+                mergedProgram.getCondition());
+    }
+    
     //~ Inner Classes ----------------------------------------------------------
 
     private static class VariableSetVisitor
@@ -2149,7 +2193,8 @@ public abstract class RelOptUtil
         /**
          * @param rexBuilder builder for creating new RexInputRefs
          * @param srcFields fields where the RexInputRefs originally originated
-         * from
+         * from; if null, a new RexInputRef is always created, referencing
+         * the input from destFields corresponding to its current index value
          * @param destFields fields that the new RexInputRefs will be
          * referencing; if null, the types of the srcFields are the same as the
          * destFields
@@ -2189,8 +2234,9 @@ public abstract class RelOptUtil
             } else {
                 type = destFields[destIndex].getType();
             }
-            if ((adjustments[srcIndex] != 0)
-                || (type != srcFields[srcIndex].getType())) {
+            if ((adjustments[srcIndex] != 0) || srcFields == null ||
+                (type != srcFields[srcIndex].getType()))
+            {
                 return rexBuilder.makeInputRef(type, destIndex);
             } else {
                 return var;

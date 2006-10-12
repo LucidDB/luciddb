@@ -56,35 +56,9 @@ public class PushFilterPastProjectRule
         FilterRel filterRel = (FilterRel) call.rels[0];
         ProjectRel projRel = (ProjectRel) call.rels[1];
 
-        // use RexPrograms to merge the FilterRel and ProjectRel into a
-        // single program so we can convert the FilterRel condition to
-        // directly reference the ProjectRel's child
-        RexBuilder rexBuilder = filterRel.getCluster().getRexBuilder();
-        RexProgram bottomProgram =
-            RexProgram.create(
-                projRel.getChild().getRowType(),
-                projRel.getProjectExps(),
-                null,
-                projRel.getRowType(),
-                rexBuilder);
-
-        RexProgramBuilder topProgramBuilder =
-            new RexProgramBuilder(
-                filterRel.getRowType(),
-                rexBuilder);
-        topProgramBuilder.addIdentity();
-        topProgramBuilder.addCondition(filterRel.getCondition());
-        RexProgram topProgram = topProgramBuilder.getProgram();
-
-        RexProgram mergedProgram =
-            RexProgramBuilder.mergePrograms(
-                topProgram,
-                bottomProgram,
-                rexBuilder);
-
+        // convert the filter to one that references the child of the project
         RexNode newCondition =
-            mergedProgram.expandLocalRef(
-                mergedProgram.getCondition());
+            RelOptUtil.pushFilterPastProject(filterRel.getCondition(), projRel);
         
         FilterRel newFilterRel =
             new FilterRel(
