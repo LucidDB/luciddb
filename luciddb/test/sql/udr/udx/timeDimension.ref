@@ -107,7 +107,7 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . > select * 
 . . . . . . . . > from table(applib.time_dimension(1997, 1, 1, 1997, 2, 1, 1));
 0: jdbc:luciddb:> 
-0: jdbc:luciddb:> select * from td1;
+0: jdbc:luciddb:> select * from td1 order by time_key;
 +---------------+-------------+--------------+----------+---------------------+----------------------+---------------------+---------------------+------------------+-----------------------+-------------------------+----------------------+----------------------+-------------+--------------------------+-----------------------+-----------------------+----------+-------+-------------------+------------------+----------------+-------------------+-----------------+---------------------+-------------------+------------------+----------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
 | TIME_KEY_SEQ  |  TIME_KEY   | DAY_OF_WEEK  | WEEKEND  | DAY_NUMBER_IN_WEEK  | DAY_NUMBER_IN_MONTH  | DAY_NUMBER_IN_YEAR  | DAY_NUMBER_OVERALL  | DAY_FROM_JULIAN  | WEEK_NUMBER_IN_MONTH  | WEEK_NUMBER_IN_QUARTER  | WEEK_NUMBER_IN_YEAR  | WEEK_NUMBER_OVERALL  | MONTH_NAME  | MONTH_NUMBER_IN_QUARTER  | MONTH_NUMBER_IN_YEAR  | MONTH_NUMBER_OVERALL  | QUARTER  |  YR   | CALENDAR_QUARTER  | WEEK_START_DATE  | WEEK_END_DATE  | MONTH_START_DATE  | MONTH_END_DATE  | QUARTER_START_DATE  | QUARTER_END_DATE  | YEAR_START_DATE  | YEAR_END_DATE  | FISCAL_WEEK_START_DATE  | FISCAL_WEEK_END_DATE  | FISCAL_WEEK_NUMBER_IN_MONTH  | FISCAL_WEEK_NUMBER_IN_QUARTER  | FISCAL_WEEK_NUMBER_IN_YEAR  | FISCAL_MONTH_START_DATE  | FISCAL_MONTH_END_DATE  | FISCAL_MONTH_NUMBER_IN_QUARTER  | FISCAL_MONTH_NUMBER_IN_YEAR  | FISCAL_QUARTER_START_DATE  | FISCAL_QUARTER_END_DATE  | FISCAL_QUARTER_NUMBER_IN_YEAR  | FISCAL_YEAR_START_DATE  | FISCAL_YEAR_END_DATE  |
 +---------------+-------------+--------------+----------+---------------------+----------------------+---------------------+---------------------+------------------+-----------------------+-------------------------+----------------------+----------------------+-------------+--------------------------+-----------------------+-----------------------+----------+-------+-------------------+------------------+----------------+-------------------+-----------------+---------------------+-------------------+------------------+----------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
@@ -312,7 +312,8 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . >   fiscal_quarter_number_in_year,
 . . . . . . . . >   fiscal_year_start_date,
 . . . . . . . . >   fiscal_year_end_date
-. . . . . . . . > from table(applib.time_dimension(2005,12,18,2006,4,2,12));
+. . . . . . . . > from table(applib.time_dimension(2005,12,18,2006,4,2,12))
+. . . . . . . . > order by time_key;
 +-------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
 |  TIME_KEY   | FISCAL_WEEK_START_DATE  | FISCAL_WEEK_END_DATE  | FISCAL_WEEK_NUMBER_IN_MONTH  | FISCAL_WEEK_NUMBER_IN_QUARTER  | FISCAL_WEEK_NUMBER_IN_YEAR  | FISCAL_MONTH_START_DATE  | FISCAL_MONTH_END_DATE  | FISCAL_MONTH_NUMBER_IN_QUARTER  | FISCAL_MONTH_NUMBER_IN_YEAR  | FISCAL_QUARTER_START_DATE  | FISCAL_QUARTER_END_DATE  | FISCAL_QUARTER_NUMBER_IN_YEAR  | FISCAL_YEAR_START_DATE  | FISCAL_YEAR_END_DATE  |
 +-------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
@@ -443,7 +444,8 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . >   fiscal_quarter_number_in_year,
 . . . . . . . . >   fiscal_year_start_date,
 . . . . . . . . >   fiscal_year_end_date
-. . . . . . . . > from table(applib.time_dimension(2005,12,18,2006,4,2,1));
+. . . . . . . . > from table(applib.time_dimension(2005,12,18,2006,4,2,1))
+. . . . . . . . > order by time_key;
 +-------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
 |  TIME_KEY   | FISCAL_WEEK_START_DATE  | FISCAL_WEEK_END_DATE  | FISCAL_WEEK_NUMBER_IN_MONTH  | FISCAL_WEEK_NUMBER_IN_QUARTER  | FISCAL_WEEK_NUMBER_IN_YEAR  | FISCAL_MONTH_START_DATE  | FISCAL_MONTH_END_DATE  | FISCAL_MONTH_NUMBER_IN_QUARTER  | FISCAL_MONTH_NUMBER_IN_YEAR  | FISCAL_QUARTER_START_DATE  | FISCAL_QUARTER_END_DATE  | FISCAL_QUARTER_NUMBER_IN_YEAR  | FISCAL_YEAR_START_DATE  | FISCAL_YEAR_END_DATE  |
 +-------------+-------------------------+-----------------------+------------------------------+--------------------------------+-----------------------------+--------------------------+------------------------+---------------------------------+------------------------------+----------------------------+--------------------------+--------------------------------+-------------------------+-----------------------+
@@ -567,7 +569,8 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . >   fiscal_month_number_in_quarter as fmiq,
 . . . . . . . . >   fiscal_month_number_in_year as fmiy,
 . . . . . . . . >   fiscal_quarter_number_in_year as fqiy
-. . . . . . . . > from table (applib.time_dimension(2000,1,1,2001,1,1,2));
+. . . . . . . . > from table (applib.time_dimension(2000,1,1,2001,1,1,2))
+. . . . . . . . > order by time_key;
 +-------------+------------+-------+-------+-------+-------+-------+-------+
 |  TIME_KEY   |    DOW     | FWIM  | FWIQ  | FWIY  | FMIQ  | FMIY  | FQIY  |
 +-------------+------------+-------+-------+-------+-------+-------+-------+
@@ -958,7 +961,8 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . >   fiscal_month_number_in_quarter as fmiq,
 . . . . . . . . >   fiscal_month_number_in_year as fmiy,
 . . . . . . . . >   fiscal_quarter_number_in_year as fqiy
-. . . . . . . . > from table (applib.time_dimension(1999,12,1,2000,2,1,2));
+. . . . . . . . > from table (applib.time_dimension(1999,12,1,2000,2,1,2))
+. . . . . . . . > order by time_key;
 +-------------+------------+-------+-------+-------+-------+-------+-------+
 |  TIME_KEY   |    DOW     | FWIM  | FWIQ  | FWIY  | FMIQ  | FMIY  | FQIY  |
 +-------------+------------+-------+-------+-------+-------+-------+-------+
@@ -1036,7 +1040,8 @@ First month must be between 1 and 12 (state=,code=0)
 . . . . . . . . >   fiscal_week_number_in_month as fwim,
 . . . . . . . . >   fiscal_week_number_in_quarter as fwiq,
 . . . . . . . . >   fiscal_week_number_in_year as fwiy
-. . . . . . . . > from table("APPLIB"."TIME_DIMENSION"(2010,11,28,2011,1,4,4));
+. . . . . . . . > from table("APPLIB"."TIME_DIMENSION"(2010,11,28,2011,1,4,4))
+. . . . . . . . > order by time_key;
 +-------------+------+------+------+-------+-------+-------+
 |  TIME_KEY   | WIM  | WIQ  | WIY  | FWIM  | FWIQ  | FWIY  |
 +-------------+------+------+------+-------+-------+-------+

@@ -418,7 +418,7 @@
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoManagementUDR.exportCatalog';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Export schema to file UDP, field delimiter and file extension can be 
-0: jdbc:luciddb:> -- specified by used
+0: jdbc:luciddb:> -- specified by user
 0: jdbc:luciddb:> create procedure export_schema_to_file(
 . . . . . . . . >   in cat varchar(128),
 . . . . . . . . >   in schma varchar(128),
@@ -432,8 +432,32 @@
 . . . . . . . . >   in file_extension varchar(5)) 
 . . . . . . . . > language java
 . . . . . . . . > reads sql data
+. . . . . . . . > specific export_schema_to_file
 . . . . . . . . > called on null input
 . . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- Export schema to file UDP with field delimiter, file extention and
+0: jdbc:luciddb:> -- datetime formats
+0: jdbc:luciddb:> create procedure export_schema_to_file(
+. . . . . . . . >   in cat varchar(128),
+. . . . . . . . >   in schma varchar(128),
+. . . . . . . . >   in exclude boolean, 
+. . . . . . . . >   in tlist varchar(65535),
+. . . . . . . . >   in tpattern varchar(65535),
+. . . . . . . . >   in dir varchar(65535),
+. . . . . . . . >   in bcp boolean,
+. . . . . . . . >   in delete_failed_file boolean,
+. . . . . . . . >   in field_delimiter varchar(2),
+. . . . . . . . >   in file_extension varchar(5),
+. . . . . . . . >   in date_format varchar(50),
+. . . . . . . . >   in time_format varchar(50),
+. . . . . . . . >   in timestamp_format varchar(50))
+. . . . . . . . > language java
+. . . . . . . . > reads sql data
+. . . . . . . . > specific export_schema_to_file_2
+. . . . . . . . > called on null input
+. . . . . . . . > external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportSchemaToFile';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- Export schema to csv files UDP. Standard version always creates bcp files
 0: jdbc:luciddb:> -- and deletes incomplete files for a failed table export. 

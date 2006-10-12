@@ -64,4 +64,5 @@ select
   fiscal_week_number_in_year as fwiy,
   fiscal_year,
   fiscal_day_number_in_year
-from table("APPLIB"."FISCAL_TIME_DIMENSION"(2010,3,27,2010,4,12,4));
+from table("APPLIB"."FISCAL_TIME_DIMENSION"(2010,3,27,2010,4,12,4))
+order by time_key;

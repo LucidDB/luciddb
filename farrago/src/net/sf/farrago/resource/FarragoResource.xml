@@ -1349,6 +1349,14 @@ Messages: {1}</text>
 <text>Tables differ in schemas to be merged</text>
 </exception>
 
+<exception id="520013" name="InvalidDateString">
+<text>Date format ''{0}'' could not be applied to string ''{1}''</text>
+</exception>
+
+<exception id="520014" name="InvalidConvertDatetimeCaller">
+<text>Caller type ''{0}'' for datetime conversion functions is unknown</text>
+</exception>
+
 <!-- End of last error section ============================================ -->
 
 </resourceBundle>

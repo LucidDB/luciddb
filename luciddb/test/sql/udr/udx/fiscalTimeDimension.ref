@@ -761,7 +761,8 @@
 . . . . . . . . >   fiscal_week_number_in_year as fwiy,
 . . . . . . . . >   fiscal_year,
 . . . . . . . . >   fiscal_day_number_in_year
-. . . . . . . . > from table("APPLIB"."FISCAL_TIME_DIMENSION"(2010,3,27,2010,4,12,4));
+. . . . . . . . > from table("APPLIB"."FISCAL_TIME_DIMENSION"(2010,3,27,2010,4,12,4))
+. . . . . . . . > order by time_key;
 +-------------+------+------+------+-------+-------+-------+--------------+----------------------------+
 |  TIME_KEY   | WIM  | WIQ  | WIY  | FWIM  | FWIQ  | FWIY  | FISCAL_YEAR  | FISCAL_DAY_NUMBER_IN_YEAR  |
 +-------------+------+------+------+-------+-------+-------+--------------+----------------------------+

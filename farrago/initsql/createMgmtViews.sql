@@ -761,3 +761,53 @@ parameter style system defined java
 no sql
 external name 
 'class net.sf.farrago.syslib.FarragoMedUDR.browseForeignSchemas';
+
+--
+-- Datetime conversion functions
+--
+
+-- converts a string to a date, according to the specified format string
+create function char_to_date(format varchar(50), dateString varchar(128))
+returns date
+language java
+specific std_char_to_date
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_date';
+
+create function char_to_time(format varchar(50), timeString varchar(128))
+returns time
+language java
+specific std_char_to_time
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_time';
+
+create function char_to_timestamp(
+     format varchar(50), timestampString varchar(128))
+returns timestamp
+language java
+specific std_char_to_timestamp
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.char_to_timestamp';
+
+-- formats a string as a date, according to the specified format string
+create function date_to_char(format varchar(50), d date)
+returns varchar(128)
+language java
+specific std_date_to_char
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.date_to_char';
+
+create function time_to_char(format varchar(50), t time)
+returns varchar(128)
+language java
+specific std_time_to_char
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.time_to_char';
+
+create function timestamp_to_char(format varchar(50), ts timestamp)
+returns varchar(128)
+language java
+specific std_timestamp_to_char
+no sql
+external name 'class net.sf.farrago.syslib.FarragoConvertDatetimeUDR.timestamp_to_char';
+

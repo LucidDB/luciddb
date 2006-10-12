@@ -1,9 +1,9 @@
+0: jdbc:luciddb:> create schema exportfile;
+0: jdbc:luciddb:> set schema 'exportfile';
+0: jdbc:luciddb:> 
 0: jdbc:luciddb:> --
 0: jdbc:luciddb:> -- exports using file delimiter and file extension parameters
 0: jdbc:luciddb:> --
-0: jdbc:luciddb:> 
-0: jdbc:luciddb:> create schema exportfdext;
-0: jdbc:luciddb:> set schema 'exportfdext';
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create table example(
 . . . . . . . . >   id int,
@@ -38,7 +38,7 @@ carriage returns too                                              |
 +-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export with tab delimiter and .tab
-0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFDEXT', false, null, null, '@EXPDIR@/local/fdext', true, true, '\t', '.tab');
+0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, '\t', '.tab');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server tab_server
 . . . . . . . . > foreign data wrapper "FLAT FILE"
@@ -67,7 +67,7 @@ carriage returns too                                              |
 +-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> -- export with comma delimiter and .csv
-0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFDEXT', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
+0: jdbc:luciddb:> call sys_root.export_schema_to_file(null, 'EXPORTFILE', false, null, null, '@EXPDIR@/local/fdext', true, true, ',', '.csv');
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> create server commacsv_server
 . . . . . . . . > foreign data wrapper "FLAT FILE"
@@ -94,5 +94,64 @@ carriage returns too  | don't forget
 about these wonderous,
 carriage returns too                                              |
 +-----+-----------------------------------------------------------+-------------------------------------------------------------------------------------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup
+0: jdbc:luciddb:> drop server tab_server cascade;
+0: jdbc:luciddb:> drop server commacsv_server cascade;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> -- exports using datetime format parameters
+0: jdbc:luciddb:> --
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server flatfile_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory '@DIR@',
+. . . . . . . . >     file_extension 'csv',
+. . . . . . . . >     date_format 'MM/dd/yyyy',
+. . . . . . . . >     time_format 'hh:mm:ss a',
+. . . . . . . . >     timestamp_format 'MM/dd/yyyy hh:mm:ss a'
+. . . . . . . . >     );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema bcp limit to ("dates")
+. . . . . . . . > from server flatfile_server into exportfile;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- export into csv files with datetime formats
+0: jdbc:luciddb:> call sys_root.export_schema_to_file('LOCALDB', 'EXPORTFILE', false, 'dates', null, '@EXPDIR@/local/dt', true, false, ',', '.csv', 'MM/dd/yyyy', 'hh:mm:ss a', 'MM/dd/yyyy hh:mm:ss a');
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create server exp_server
+. . . . . . . . > foreign data wrapper "FLAT FILE"
+. . . . . . . . > options (
+. . . . . . . . >   directory '@EXPDIR@/local/dt',
+. . . . . . . . >   log_directory '@EXPDIR@/local/dt',
+. . . . . . . . >   file_extension 'csv',
+. . . . . . . . >   date_format 'MM/dd/yyyy',
+. . . . . . . . >   time_format 'hh:mm:ss a',
+. . . . . . . . >   timestamp_format 'MM/dd/yyyy hh:mm:ss a'
+. . . . . . . . > );
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from exp_server.bcp."dates" order by 1,2,3;
++-------------+-------------+------------------------+
+| START_DATE  | START_TIME  |     ACTIVITY_TIME      |
++-------------+-------------+------------------------+
+| 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00.0  |
+| 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59.0  |
+| 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
++-------------+-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> select * from exportfile."dates" order by 1,2,3;
++-------------+-------------+------------------------+
+| START_DATE  | START_TIME  |     ACTIVITY_TIME      |
++-------------+-------------+------------------------+
+| 1980-01-01  | 00:00:00    | 1980-01-01 00:00:00.0  |
+| 1980-12-31  | 23:59:59    | 1980-12-31 11:59:59.0  |
+| 2004-02-29  | 12:00:00    | 2004-02-29 12:00:00.0  |
++-------------+-------------+------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- cleanup 
+0: jdbc:luciddb:> drop server flatfile_server cascade;
+0: jdbc:luciddb:> drop server exp_server cascade;
+0: jdbc:luciddb:> drop schema exportfile cascade;
 0: jdbc:luciddb:> 
 0: jdbc:luciddb:> !quit

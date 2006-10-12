@@ -62,4 +62,54 @@
 | 10      | Sales      |
 +---------+------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- set up table with datetimes
+0: jdbc:farrago:> create schema dt;
+0: jdbc:farrago:> set schema 'dt';
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table dates (d date primary key, t time, ts timestamp);
+0: jdbc:farrago:> insert into dates values
+. . . . . . . . > (date'2001-4-14', time'3:34:08', timestamp'2002-12-20 19:10:10'),
+. . . . . . . . > (date'1970-11-2', time'1:59:59', timestamp'1999-2-19 21:17:00');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- export query with date formatting
+0: jdbc:farrago:> call sys_boot.mgmt.export_query_to_file(
+. . . . . . . . > 'select * from dt.dates order by d',
+. . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/dates_files/DATES',
+. . . . . . . . > true,
+. . . . . . . . > false,
+. . . . . . . . > null,
+. . . . . . . . > null,
+. . . . . . . . > 'EEE, MMM dd, yyyy',
+. . . . . . . . > 'hh:mm:ss a',
+. . . . . . . . > 'EEE, MMM dd, yyyy hh:mm:ss a');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create or replace server flatfile_server
+. . . . . . . . > foreign data wrapper sys_file_wrapper
+. . . . . . . . > options (
+. . . . . . . . >     directory 'unitsql/syslib/dates_files',
+. . . . . . . . >     file_extension 'txt',
+. . . . . . . . >     with_header 'yes', 
+. . . . . . . . >     log_directory 'testlog/',
+. . . . . . . . >     field_delimiter '\t',
+. . . . . . . . >     lenient 'no',
+. . . . . . . . >     date_format 'EEE, MMM dd, yyyy',
+. . . . . . . . >     time_format 'hh:mm:ss a',
+. . . . . . . . >     timestamp_format 'EEE, MMM dd, yyyy hh:mm:ss a');
+0: jdbc:farrago:> 
+0: jdbc:farrago:> select * from flatfile_server.bcp.dates order by d;
++-------------+-----------+------------------------+
+|      D      |     T     |           TS           |
++-------------+-----------+------------------------+
+| 1970-11-02  | 01:59:59  | 1999-02-19 21:17:00.0  |
+| 2001-04-14  | 03:34:08  | 2002-12-20 19:10:10.0  |
++-------------+-----------+------------------------+
+0: jdbc:farrago:> select * from flatfile_server.sample.dates order by 1,2,3;
++--------------------+--------------+--------------------------------+
+|        COL1        |     COL2     |              COL3              |
++--------------------+--------------+--------------------------------+
+| D                  | T            | TS                             |
+| Mon, Nov 02, 1970  | 01:59:59 AM  | Fri, Feb 19, 1999 09:17:00 PM  |
+| Sat, Apr 14, 2001  | 03:34:08 AM  | Fri, Dec 20, 2002 07:10:10 PM  |
++--------------------+--------------+--------------------------------+
+0: jdbc:farrago:> 
 0: jdbc:farrago:> !quit
