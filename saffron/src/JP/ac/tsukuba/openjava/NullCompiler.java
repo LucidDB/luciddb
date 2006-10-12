@@ -22,6 +22,11 @@ public class NullCompiler implements JavaCompiler
     public static void main(String[] args) {
     }
 
+    public int getTotalByteCodeSize()
+    {
+        return 0;
+    }
+    
 	public void compile() {
 	}
 
