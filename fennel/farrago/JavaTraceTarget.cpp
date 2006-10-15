@@ -121,6 +121,21 @@ void JavaTraceTarget::writeCounter(std::string name, uint value)
         name, TRACE_PERFCOUNTER_UPDATE, s);
 }
 
+void JavaTraceTarget::onTimerStart()
+{
+    JniEnvAutoRef pEnv;
+    // We want to stay attached for the duration of the timer thread,
+    // so suppress detach here and do it explicitly in onTimerStop
+    // instead.  See comments on suppressDetach about the need for a
+    // cleaner approach to attaching native-spawned threads.
+    pEnv.suppressDetach();
+}
+
+void JavaTraceTarget::onTimerStop()
+{
+    JniUtil::detachJavaEnv();
+}
+
 FENNEL_END_CPPFILE("$Id$");
 
 // End JavaTraceTarget.cpp

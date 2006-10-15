@@ -44,9 +44,19 @@ public:
     virtual uint getTimerIntervalMillis() = 0;
 
     /**
+     * Receives notification that the TimerThread has started.
+     */
+    virtual void onTimerStart();
+
+    /**
      * Receives notification from TimerThread that interval has elapsed.
      */
     virtual void onTimerInterval() = 0;
+
+    /**
+     * Receives notification that the TimerThread is ending.
+     */
+    virtual void onTimerStop();
 };
 
 /**

@@ -36,6 +36,16 @@ public:
     virtual ~StatsTarget();
 
     /**
+     * Receives notification that stats polling is starting via a TimerThread.
+     */
+    virtual void onTimerStart();
+    
+    /**
+     * Receives notification that stats polling via a TimerThread is ending.
+     */
+    virtual void onTimerStop();
+    
+    /**
      * Begins recording a snapshot.  Called before all writeCounter invocations
      * for the snapshot.
      */

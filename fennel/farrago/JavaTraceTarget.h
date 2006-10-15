@@ -72,6 +72,8 @@ public:
     virtual void beginSnapshot();
     virtual void endSnapshot();
     virtual void writeCounter(std::string name,uint value);
+    virtual void onTimerStart();
+    virtual void onTimerStop();
 };
 
 FENNEL_END_NAMESPACE
