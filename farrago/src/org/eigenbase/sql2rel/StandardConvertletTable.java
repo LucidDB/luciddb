@@ -358,7 +358,7 @@ public class StandardConvertletTable
                         intervalQualifier,
                         node.getParserPosition());
             }
-            return cx.convertExpression(node);
+            return castToValidatedType(cx, call, cx.convertExpression(node));
         }
         SqlDataTypeSpec dataType = (SqlDataTypeSpec) call.operands[1];
         if (SqlUtil.isNullLiteral(call.operands[0], false)) {
@@ -805,6 +805,24 @@ public class StandardConvertletTable
 
         SqlLiteral sum = SqlLiteralChainOperator.concatenateOperands(call);
         return cx.convertLiteral(sum);
+    }
+
+    /**
+     * Casts a RexNode value to the validated type of a SqlCall. If the 
+     * value was already of the validated type, then the value is returned 
+     * without an additional cast.
+     */
+    public RexNode castToValidatedType(
+        SqlRexContext cx,
+        SqlCall call,
+        RexNode value)
+    {
+        final RelDataType resType =
+            cx.getValidator().getValidatedNodeType(call);
+        if (value.getType() == resType) {
+            return value;
+        }
+        return cx.getRexBuilder().makeCast(resType, value);
     }
 }
 

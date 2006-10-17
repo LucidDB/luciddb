@@ -457,15 +457,19 @@ public abstract class NullablePrimitive
         {
             if (o == null) {
                 setNull(true);
-            } else if (o instanceof java.util.Date) {
-                java.util.Date d = (java.util.Date) o;
-                assignFrom(d.getTime());
+            } else if (o instanceof SqlDateTimeWithoutTZ) {
+                SqlDateTimeWithoutTZ datetime = (SqlDateTimeWithoutTZ) o;
+                if (datetime.isNull()) {
+                    setNull(true);
+                } else {
+                    setLong(datetime.value.getTime());
+                }
             } else if (o instanceof EncodedSqlInterval) {
                 EncodedSqlInterval interval = (EncodedSqlInterval) o;
                 if (interval.isNull()) {
                     setNull(true);
                 } else {
-                    assignFrom(interval.value);
+                    setLong(interval.value);
                 }
             } else {
                 super.assignFrom(o);
