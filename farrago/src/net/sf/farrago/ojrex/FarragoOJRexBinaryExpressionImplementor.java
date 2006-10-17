@@ -124,18 +124,22 @@ public class FarragoOJRexBinaryExpressionImplementor
         assert (nullTest != null);
 
         // TODO:  generalize to stuff other than NullablePrimitive
+        Expression varResultValue =
+            FarragoOJRexUtil.getValueAccessExpression(
+                translator,
+                call.getType(),
+                varResult);
+
         Statement assignmentStmt =
             new ExpressionStatement(
                 new AssignmentExpression(
-                    new FieldAccess(varResult,
-                        NullablePrimitive.VALUE_FIELD_NAME),
+                    varResultValue,
                     AssignmentExpression.EQUALS,
                     implementNotNull(translator, call, valueOperands)));
 
         Statement overflowStmt =
             checkOverflow(
-                new FieldAccess(varResult,
-                    NullablePrimitive.VALUE_FIELD_NAME),
+                varResultValue,
                 call.getType());
         StatementList stmtList =
             new StatementList(
