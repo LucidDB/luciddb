@@ -864,7 +864,8 @@ public class FarragoTypeFactoryImpl
             // but shouldn't be checking expr,
             // probably need to rules to reinterpret interval 
             (SqlTypeUtil.isInterval(type) &&
-                (expr instanceof Variable || expr instanceof FieldAccess))
+                (expr instanceof Variable || expr instanceof FieldAccess
+                    || expr instanceof MethodCall))
             || SqlTypeUtil.isDecimal(type)
             || ((getClassForPrimitive(type) != null) && type.isNullable())) {
             return new FieldAccess(expr, NullablePrimitive.VALUE_FIELD_NAME);

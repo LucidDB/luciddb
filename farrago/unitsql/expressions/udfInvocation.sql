@@ -158,6 +158,14 @@ no sql
 not deterministic
 external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
 
+-- alias to avoid common subexpression elimination
+create function generate_random_number2(seed bigint)
+returns bigint
+language java
+no sql
+not deterministic
+external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+
 -- test UDF which depends on FarragoUdrRuntime, with
 -- ClosableAllocation support
 create function gargle()
@@ -349,12 +357,12 @@ select generate_random_number(42) as rng from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- identical sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(42) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify that the two instances produce
 -- different sequences independently (no interference)
-select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+select generate_random_number(42) as rng1, generate_random_number2(43) as rng2
 from sales.depts order by 1;
 
 -- runtime context:  verify closeAllocation

@@ -79,6 +79,11 @@ public class RexProgram
     private final List<RexLocalRef> projectReadOnlyList;
     private final List<RexNode> exprReadOnlyList;
 
+    /**
+     * Reference counts, computed on demand.
+     */
+    private int [] refCounts;
+
     //~ Constructors -----------------------------------------------------------
 
     /**
@@ -146,6 +151,10 @@ public class RexProgram
 
     //~ Methods ----------------------------------------------------------------
 
+    // REVIEW jvs 16-Oct-2006:  The description below is confusing.  I
+    // think it means "none of the entries are null, there may be none,
+    // and there is no further reduction into smaller common subexpressions
+    // possible"?
     /**
      * Returns the common sub-expressions of this program. Never null, may be
      * empty, and never contain common sub-expressions.
@@ -640,6 +649,32 @@ loop:
     }
 
     /**
+     * Gets reference counts for each expression in the program, where the
+     * references are detected from later expressions in the same program, as
+     * well as the project list and condition.  Expressions with references
+     * counts greater than 1 are true common subexpressions.
+     *
+     * @return array of reference counts; the ith element in the returned array
+     * is the number of references to getExprList()[i]
+     */
+    public int [] getReferenceCounts()
+    {
+        if (refCounts != null) {
+            return refCounts;
+        }
+        refCounts = new int[exprs.length];
+        ReferenceCounter refCounter = new ReferenceCounter();
+        apply(refCounter, exprs, null);
+        if (condition != null) {
+            refCounter.visitLocalRef(condition);
+        }
+        for (int i = 0; i < projects.length; ++i) {
+            refCounter.visitLocalRef(projects[i]);
+        }
+        return refCounts;
+    }
+
+    /**
      * Applies a visitor to an array of expressions and, if specified, a single
      * expression.
      *
@@ -888,6 +923,25 @@ loop:
             return new RexFieldAccess(
                     referenceExpr,
                     fieldAccess.getField());
+        }
+    }
+
+    /**
+     * Visitor which marks which expressions are used.
+     */
+    private class ReferenceCounter
+        extends RexVisitorImpl<Void>
+    {
+        ReferenceCounter()
+        {
+            super(true);
+        }
+
+        public Void visitLocalRef(RexLocalRef localRef)
+        {
+            final int index = localRef.getIndex();
+            refCounts[index]++;
+            return null;
         }
     }
 }

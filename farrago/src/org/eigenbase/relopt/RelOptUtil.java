@@ -1469,6 +1469,13 @@ public abstract class RelOptUtil
         } else {
             ret = isDistinctFromInternal(rexBuilder, x, y, neg);
         }
+
+        // The result of IS DISTINCT FROM is NOT NULL because it can
+        // only return TRUE or FALSE.
+        ret = rexBuilder.makeCast(
+            rexBuilder.getTypeFactory().createSqlType(SqlTypeName.Boolean),
+            ret);
+        
         return ret;
     }
 

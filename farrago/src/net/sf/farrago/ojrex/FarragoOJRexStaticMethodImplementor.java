@@ -54,16 +54,54 @@ public class FarragoOJRexStaticMethodImplementor
 
     private final RelDataType returnType;
 
+    private final Class declaringClass;
+
+    private final String methodName;
+
     //~ Constructors -----------------------------------------------------------
 
+    /**
+     * Creates an implementor for a call to a user-defined routine (UDR)
+     * implemented as an external Java static method.
+     *
+     * @param method UDR implementation
+     *
+     * @param allowSql whether to allow reentrant invocation of SQL from
+     * within the called method
+     *
+     * @param returnType SQL type to impose on returned Java value
+     */
     public FarragoOJRexStaticMethodImplementor(
         Method method,
         boolean allowSql,
         RelDataType returnType)
     {
+        assert(Modifier.isStatic(method.getModifiers()));
+
         this.method = method;
         this.allowSql = allowSql;
         this.returnType = returnType;
+        this.declaringClass = method.getDeclaringClass();
+        this.methodName = method.getName();
+    }
+
+    /**
+     * Creates an implementor for a call to a system-provided static method.
+     *
+     * @param declaringClass class which declares method
+     *
+     * @param methodName name of static method; overload resolution happens
+     * implicitly based on operand types in each invocation
+     */
+    public FarragoOJRexStaticMethodImplementor(
+        Class declaringClass,
+        String methodName)
+    {
+        this.method = null;
+        this.allowSql = false;
+        this.returnType = null;
+        this.declaringClass = declaringClass;
+        this.methodName = methodName;
     }
 
     //~ Methods ----------------------------------------------------------------
@@ -74,6 +112,11 @@ public class FarragoOJRexStaticMethodImplementor
         RexCall call,
         Expression [] operands)
     {
+        if (method == null) {
+            // system-defined
+            return implementSystemCall(translator, call, operands);
+        }
+        
         ExpressionList exprList = new ExpressionList();
         Class [] javaParams = method.getParameterTypes();
         for (int i = 0; i < operands.length; ++i) {
@@ -96,12 +139,12 @@ public class FarragoOJRexStaticMethodImplementor
 
         Expression callExpr =
             new MethodCall(
-                OJClass.forClass(method.getDeclaringClass()),
-                method.getName(),
+                OJClass.forClass(declaringClass),
+                methodName,
                 exprList);
 
         String invocationId =
-            method.getName()
+            methodName
             + ":"
             + translator.getRelImplementor().generateVariableId();
 
@@ -151,7 +194,7 @@ public class FarragoOJRexStaticMethodImplementor
                                 new ExpressionList(
                                     varException,
                                     Literal.makeLiteral(
-                                        method.getName()))))))));
+                                        methodName))))))));
 
         tryStmt.setFinallyBody(
             new StatementList(
@@ -196,6 +239,21 @@ public class FarragoOJRexStaticMethodImplementor
                         callExpr))));
         translator.addStatement(tryStmt);
         return varResult;
+    }
+
+    private Expression implementSystemCall(
+        FarragoRexToOJTranslator translator,
+        RexCall call,
+        Expression [] operands)
+    {
+        ExpressionList exprList = new ExpressionList();
+        for (int i = 0; i < operands.length; ++i) {
+            exprList.add(operands[i]);
+        }
+        return new MethodCall(
+            OJClass.forClass(declaringClass),
+            methodName,
+            exprList);
     }
 }
 

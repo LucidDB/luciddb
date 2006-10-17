@@ -228,16 +228,8 @@ public class LcsTableMergeRule
         // rows where the target rid is null; note also that since the
         // expression comparing the original and new values doesn't handle
         // nulls, we need to also explicitly add checks for nulls
-        RelNode child;
-        if (targetFields.length > 20) {
-            // FIXME jvs 8-Oct-2006: I have temporarily disabled the changed
-            // row optimization for wide tables, because the generated
-            // expression is too big for the Java calc to handle given the way
-            // we currently generate code (combined with the method size limits
-            // imposed by the Java classfile format).
-            child = origProj.getChild();
-        } else {
-            child = createChangeFilterRel(
+        RelNode child = 
+            createChangeFilterRel(
                 origProj,
                 targetFields,
                 updateList,
@@ -245,7 +237,6 @@ public class LcsTableMergeRule
                 ridExpr,
                 rexBuilder,
                 nInsertFields);
-        }
 
         // Project out the rid and 2 null columns as well as the
         // expressions that make up a new insert target row.  The content of
@@ -309,7 +300,14 @@ public class LcsTableMergeRule
     }
 
     /**
-     * Creates the filter expression used to detect changed rows.
+     * Creates the filter expression used to detect changed rows.  The
+     * expression looks like (ROW(O1, O2, ...) IS DISTINCT FROM ROW(N1, N2,
+     * ...))  where the O references are the old values and the N references
+     * are the new values.  We rely on a custom implementation of the row-wise
+     * IS DISTINCT FROM operator in the Java calc to evaluate this efficiently
+     * and without exceeding the Java calc limit on method bytecode size.  (As
+     * opposed to {@link RelOptUtil.isDistinctFrom}, which generates a deeply
+     * nested tree.)
      *
      * @param origProj the original projection being replaced
      *
@@ -343,6 +341,10 @@ public class LcsTableMergeRule
         }
         
         int nTargetFields = targetFields.length;
+
+        List<RexNode> oldVals = new ArrayList<RexNode>();
+        List<RexNode> newVals = new ArrayList<RexNode>();
+        
         for (int i = 0; i < updateList.size(); i++) {
 
             // TODO jvs 7-Oct-2006:  avoid O(n^2) with a HashMap
@@ -358,31 +360,38 @@ public class LcsTableMergeRule
                 }
             }
             assert(targetColno < nTargetFields);
-            
-            // create null filters on the original and new values, accounting
-            // for the case where both are null
+
+            // build up row lists
             RexNode origValue = origProjExprs[nInsertFields + targetColno];
             RexNode newValue = origProjExprs[nInsertFields + nTargetFields + i];
-            createNullFilterAndIsNotNullFilter(
-                rexBuilder,
-                origValue,
-                newValue,
-                filterList);           
-            createNullFilterAndIsNotNullFilter(
-                rexBuilder,
-                newValue,
-                origValue,
-                filterList);
+
+            if (newValue.getType() != origValue.getType()) {
+                // comparison has to be done on result of cast from new value
+                // to type of original value (which allows nulls, due to outer
+                // join, even if target field does not)
+                newValue = rexBuilder.makeCast(
+                    origValue.getType(),
+                    newValue);
+            }
             
-            // create the != expression, comparing the original value
-            // against the new
-            RexNode filter =
-                rexBuilder.makeCall(
-                    SqlStdOperatorTable.notEqualsOperator, origValue, newValue);
-            filterList.add(filter);
+            oldVals.add(origValue);
+            newVals.add(newValue);
         }
+
+        RexNode oldRow = rexBuilder.makeCall(
+            SqlStdOperatorTable.rowConstructor,
+            oldVals);
+        RexNode newRow = rexBuilder.makeCall(
+            SqlStdOperatorTable.rowConstructor,
+            newVals);
+        RexNode distinctTest = rexBuilder.makeCall(
+            SqlStdOperatorTable.isDifferentFromOperator,
+            oldRow,
+            newRow);
+        filterList.add(distinctTest);
         RexNode nonUpdateFilter =
             RexUtil.orRexNodeList(rexBuilder, filterList);
+        
         RelNode filterRel =
             CalcRel.createFilter(origProj.getChild(), nonUpdateFilter);
         return filterRel;
@@ -404,37 +413,6 @@ public class LcsTableMergeRule
         RexNode filter = rexBuilder.makeCall(
             SqlStdOperatorTable.isNullOperator,
             expr);
-        filterList.add(filter);
-    }
-    
-    /**
-     * Creates an expression AND'ing together an IS NULL expression on one
-     * expression and a IS NOT NULL expression on a second, and adds it to a
-     * list of filter
-     * 
-     * @param rexBuilder rex builder
-     * @param nullExpr expression that the IS NULL will be created on
-     * @param notNullExpr expression that the IS NOT NULL expression will be
-     * created on
-     * @param filterList list of filters
-     */
-    private void createNullFilterAndIsNotNullFilter(
-        RexBuilder rexBuilder,
-        RexNode nullExpr,
-        RexNode notNullExpr,
-        List<RexNode> filterList)
-    {
-    	RexNode nullFilter = rexBuilder.makeCall(
-            SqlStdOperatorTable.isNullOperator,
-            nullExpr);
-    	RexNode notNullFilter = rexBuilder.makeCall(
-            SqlStdOperatorTable.isNotNullOperator,
-            notNullExpr);
-        RexNode filter = rexBuilder.makeCall(
-            SqlStdOperatorTable.andOperator,
-            nullFilter,
-            notNullFilter);
-    	
         filterList.add(filter);
     }
 }

@@ -87,6 +87,12 @@ public class SqlRowOperator
     {
         SqlUtil.unparseFunctionSyntax(this, writer, operands, true, null);
     }
+
+    // override SqlOperator
+    public boolean requiresDecimalExpansion()
+    {
+        return false;
+    }
 }
 
 // End SqlRowOperator.java

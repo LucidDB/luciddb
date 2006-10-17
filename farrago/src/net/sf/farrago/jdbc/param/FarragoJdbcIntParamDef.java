@@ -82,6 +82,8 @@ class FarragoJdbcIntParamDef
     {
         if (value instanceof Number) {
             Number n = (Number) value;
+            // REVIEW jvs 13-Oct-2006:  going through double could lose
+            // precision for a very big long, right?
             return NumberUtil.round(n.doubleValue());
         } else if (value instanceof Boolean) {
             return (((Boolean) value).booleanValue() ? 1 : 0);

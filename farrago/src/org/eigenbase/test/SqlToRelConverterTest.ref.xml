@@ -657,7 +657,7 @@ ProjectRel(DEPTNO=[$7])
     <TestCase name="testIsDistinctFrom">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))])
+ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), <>(1, 2))):BOOLEAN NOT NULL])
   ProjectRel(EXPR$0=[$0])
     ProjectRel(EXPR$0=[true])
       OneRowRel
@@ -678,7 +678,7 @@ ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NOT NULL(2), IS NULL(2), IS NOT NULL(1), 
     <TestCase name="testIsNotDistinctFrom">
         <Resource name="plan">
             <![CDATA[
-ProjectRel(EXPR$0=[CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))])
+ProjectRel(EXPR$0=[CAST(CASE(IS NULL(1), IS NULL(2), IS NULL(2), IS NULL(1), =(1, 2))):BOOLEAN NOT NULL])
   ProjectRel(EXPR$0=[$0])
     ProjectRel(EXPR$0=[true])
       OneRowRel

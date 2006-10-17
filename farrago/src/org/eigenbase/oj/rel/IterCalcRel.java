@@ -308,7 +308,14 @@ public class IterCalcRel
 
         Variable varOutputRow = implementor.newVariable();
 
-        FieldDeclaration rowVarDecl =
+        FieldDeclaration inputRowVarDecl =
+            new FieldDeclaration(
+                new ModifierList(ModifierList.PRIVATE),
+                TypeName.forOJClass(inputRowClass),
+                varInputRow.toString(),
+                null);
+        
+        FieldDeclaration outputRowVarDecl =
             new FieldDeclaration(
                 new ModifierList(ModifierList.PRIVATE),
                 TypeName.forOJClass(outputRowClass),
@@ -340,7 +347,7 @@ public class IterCalcRel
         //         if (varInputObj instanceof TupleIter.NoDataReason) {
         //             return varInputObj;
         //         }
-        //         InputRowClass varInputRow = (InputRowClass) varInputObj;
+        //         varInputRow = (InputRowClass) varInputObj;
         //         int columnIndex = 0;
         //         [calculation statements]
         //     }
@@ -372,7 +379,7 @@ public class IterCalcRel
         // input row is available to the error handler
         if (! backwardsCompatible) {
             whileBody.add(
-                declareInputRow(inputRowClass, varInputRow, varInputObj));
+                assignInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
         Variable varColumnIndex = null;
@@ -473,7 +480,7 @@ public class IterCalcRel
 
         if (backwardsCompatible) {
             calcStmts.add(
-                declareInputRow(inputRowClass, varInputRow, varInputObj));
+                assignInputRow(inputRowClass, varInputRow, varInputObj));
         }
 
         StatementList condBody;
@@ -529,7 +536,7 @@ public class IterCalcRel
                 Expression lhs = new FieldAccess(varOutputRow, javaFieldName);
                 projTranslator.translateAssignment(fields[i], lhs, rhs);
 
-                int complexity = countParseTreeNodes(projMethodBody);
+                int complexity = OJUtil.countParseTreeNodes(projMethodBody);
                 if (complexity < 20) {
                     // No method needed; just append.
                     condBody.addAll(projMethodBody);
@@ -540,22 +547,13 @@ public class IterCalcRel
                 
                 String projMethodName =
                     "calc_" + varOutputRow.toString() + "_f_" + i;
-                ParameterList paramList = new ParameterList();
-                paramList.add(
-                    new Parameter(
-                        TypeName.forOJClass(inputRowClass),
-                        varInputRow.toString()));
-                paramList.add(
-                    new Parameter(
-                        TypeName.forOJClass(outputRowClass),
-                        varOutputRow.toString()));
                 MemberDeclaration projMethodDecl =
                     new MethodDeclaration(
                         new ModifierList(
                             ModifierList.PRIVATE | ModifierList.FINAL),
                         TypeName.forOJClass(OJSystem.VOID),
                         projMethodName,
-                        paramList,
+                        new ParameterList(),
                         null,
                         projMethodBody);
                 memberList.add(projMethodDecl);
@@ -563,7 +561,7 @@ public class IterCalcRel
                     new ExpressionStatement(
                         new MethodCall(
                             projMethodName,
-                            new ExpressionList(varInputRow, varOutputRow))));
+                            new ExpressionList())));
             }
         } finally {
             translator.popProgram(program);
@@ -593,7 +591,8 @@ public class IterCalcRel
             // declare refinement of restart() and add to member list...
         }
 
-        memberList.add(rowVarDecl);
+        memberList.add(inputRowVarDecl);
+        memberList.add(outputRowVarDecl);
         memberList.add(fetchNextMethodDecl);
         Expression newTupleIterExp =
             new AllocationExpression(
@@ -602,32 +601,6 @@ public class IterCalcRel
                 memberList);
 
         return newTupleIterExp;
-    }
-
-    private static int countParseTreeNodes(ParseTree parseTree)
-    {
-        int n = 1;
-        if (parseTree instanceof NonLeaf) {
-            Object [] contents = ((NonLeaf) parseTree).getContents();
-            for (Object obj : contents) {
-                if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
-                } else {
-                    n += 1;
-                }
-            }
-        } else if (parseTree instanceof openjava.ptree.List) {
-            Enumeration e = ((openjava.ptree.List) parseTree).elements();
-            while (e.hasMoreElements()) {
-                Object obj = (Object) e.nextElement();
-                if (obj instanceof ParseTree) {
-                    n += countParseTreeNodes((ParseTree) obj);
-                } else {
-                    n += 1;
-                }
-            }
-        }
-        return n;
     }
 
     public ParseTree implement(JavaRelImplementor implementor)
@@ -664,15 +637,16 @@ public class IterCalcRel
         return tag;
     }
 
-    private static Statement declareInputRow(
+    private static Statement assignInputRow(
         OJClass inputRowClass, Variable varInputRow, Variable varInputObj)
     {
-        return new VariableDeclaration(
-            TypeName.forOJClass(inputRowClass),
-            varInputRow.toString(),
-            new CastExpression(
-                TypeName.forOJClass(inputRowClass),
-                varInputObj));
+        return new ExpressionStatement(
+            new AssignmentExpression(
+                varInputRow,
+                AssignmentExpression.EQUALS,
+                new CastExpression(
+                    TypeName.forOJClass(inputRowClass),
+                    varInputObj)));
     }
 }
 

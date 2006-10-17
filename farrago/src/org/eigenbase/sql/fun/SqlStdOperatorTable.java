@@ -199,7 +199,7 @@ public class SqlStdOperatorTable
             SqlKind.Other,
             30,
             true,
-            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
 
@@ -212,7 +212,22 @@ public class SqlStdOperatorTable
             SqlKind.Other,
             30,
             true,
-            SqlTypeStrategies.rtiNullableBoolean,
+            SqlTypeStrategies.rtiBoolean,
+            SqlTypeStrategies.otiFirstKnown,
+            SqlTypeStrategies.otcComparableUnorderedX2);
+
+    /**
+     * The internal <code>$IS_DIFFERENT_FROM</code> operator is the same as the
+     * user-level {@link #isDistinctFromOperator} in all respects except that
+     * the test for equality on character datatypes treats trailing spaces
+     * as significant.
+     */
+    public static final SqlBinaryOperator isDifferentFromOperator =
+        new SqlBinaryOperator("$IS_DIFFERENT_FROM",
+            SqlKind.Other,
+            30,
+            true,
+            SqlTypeStrategies.rtiBoolean,
             SqlTypeStrategies.otiFirstKnown,
             SqlTypeStrategies.otcComparableUnorderedX2);
 

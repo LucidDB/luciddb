@@ -176,6 +176,7 @@ public class FarragoCalcSystemTest
         exclude.add(SqlStdOperatorTable.histogramMinFunction);
         exclude.add(SqlStdOperatorTable.histogramFirstValueFunction);
         exclude.add(SqlStdOperatorTable.histogramLastValueFunction);
+        exclude.add(SqlStdOperatorTable.isDifferentFromOperator);
 
         // Eventually need to include these when cast is working
         exclude.add(SqlStdOperatorTable.overlapsOperator);

@@ -32,6 +32,7 @@ import org.eigenbase.reltype.*;
 import org.eigenbase.runtime.RestartableIterator;
 import org.eigenbase.util.*;
 
+import java.util.*;
 
 /**
  * Static utilities for manipulating OpenJava expressions.
@@ -393,6 +394,39 @@ public abstract class OJUtil
         } catch (Exception e) {
             throw Util.newInternal(e, "while deriving type for '" + exp + "'");
         }
+    }
+
+    /**
+     * Counts the number of nodes in a parse tree.
+     *
+     * @param parseTree tree to walk
+     *
+     * @return count of nodes
+     */
+    public static int countParseTreeNodes(ParseTree parseTree)
+    {
+        int n = 1;
+        if (parseTree instanceof NonLeaf) {
+            Object [] contents = ((NonLeaf) parseTree).getContents();
+            for (Object obj : contents) {
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        } else if (parseTree instanceof openjava.ptree.List) {
+            Enumeration e = ((openjava.ptree.List) parseTree).elements();
+            while (e.hasMoreElements()) {
+                Object obj = (Object) e.nextElement();
+                if (obj instanceof ParseTree) {
+                    n += countParseTreeNodes((ParseTree) obj);
+                } else {
+                    n += 1;
+                }
+            }
+        }
+        return n;
     }
 
     //~ Inner Classes ----------------------------------------------------------

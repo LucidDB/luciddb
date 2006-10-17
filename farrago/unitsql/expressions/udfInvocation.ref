@@ -159,6 +159,14 @@ Error: Result expression type VARCHAR(128) from routine "UDFTEST"."BAD_ATOI" doe
 . . . . . . . . > not deterministic
 . . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- alias to avoid common subexpression elimination
+0: jdbc:farrago:> create function generate_random_number2(seed bigint)
+. . . . . . . . > returns bigint
+. . . . . . . . > language java
+. . . . . . . . > no sql
+. . . . . . . . > not deterministic
+. . . . . . . . > external name 'class net.sf.farrago.test.FarragoTestUDR.generateRandomNumber';
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- test UDF which depends on FarragoUdrRuntime, with
 0: jdbc:farrago:> -- ClosableAllocation support
 0: jdbc:farrago:> create function gargle()
@@ -524,7 +532,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
 0: jdbc:farrago:> -- identical sequences independently (no interference)
-0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(42) as rng2
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number2(42) as rng2
 . . . . . . . . > from sales.depts order by 1;
 +-----------------------+-----------------------+
 |         RNG1          |         RNG2          |
@@ -536,7 +544,7 @@ Error: java.lang.NullPointerException: null (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- runtime context:  verify that the two instances produce
 0: jdbc:farrago:> -- different sequences independently (no interference)
-0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number(43) as rng2
+0: jdbc:farrago:> select generate_random_number(42) as rng1, generate_random_number2(43) as rng2
 . . . . . . . . > from sales.depts order by 1;
 +-----------------------+-----------------------+
 |         RNG1          |         RNG2          |

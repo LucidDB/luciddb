@@ -22,10 +22,15 @@
 package net.sf.farrago.query;
 
 import net.sf.farrago.runtime.*;
+import net.sf.farrago.resource.*;
+import net.sf.farrago.catalog.*;
 
 import openjava.mop.*;
 
 import openjava.ptree.*;
+
+import java.util.*;
+import java.util.List;
 
 import org.eigenbase.oj.rel.*;
 import org.eigenbase.oj.util.*;
@@ -34,7 +39,8 @@ import org.eigenbase.relopt.*;
 import org.eigenbase.reltype.*;
 import org.eigenbase.rex.*;
 import org.eigenbase.runtime.*;
-
+import org.eigenbase.sql.*;
+import org.eigenbase.sql.parser.*;
 
 /**
  * FarragoJavaUdxRel is the implementation for a {@link TableFunctionRel} which
@@ -51,6 +57,93 @@ public class FarragoJavaUdxRel
     //~ Instance fields --------------------------------------------------------
 
     private final String serverMofId;
+
+    /**
+     * Constructs a new instance of {@link FarragoJavaUdxRel} via a lookup from
+     * the catalog.  This is intended for use by optimizer rules which need to
+     * insert system-defined UDX invocations into a plan.
+     *
+     * @param preparingStmt statement being prepared
+     * @param rowType type descriptor for UDX output row
+     * @param udxSpecificName specific name with which the UDX was created
+     * (either via the SPECIFIC keyword or the invocation name if SPECIFIC was
+     * not specified); this can be a qualified name, possibly with quoted
+     * identifiers, e.g. x.y.z or x."y".z
+     * @param serverMofId if not null, the invoked UDX can access a
+     * SQL/MED data server with the given MOFID at runtime via {@link
+     * FarragoUdrRuntime.getDataServerRuntimeSupport}
+     * @param args arguments to UDX invocation
+     * @param relInputs relational inputs
+     */
+    public static RelNode newUdxRel(
+        FarragoPreparingStmt preparingStmt,
+        RelDataType rowType,
+        String udxSpecificName,
+        String serverMofId,
+        RexNode [] args,
+        RelNode [] relInputs)
+    {
+        // Parse the specific name of the UDX.
+        SqlIdentifier udxId;
+        try {
+            SqlParser parser = new SqlParser(udxSpecificName);
+            SqlNode parsedId = parser.parseExpression();
+            udxId = (SqlIdentifier) parsedId;
+        } catch (Exception ex) {
+            throw FarragoResource.instance().MedInvalidUdxId.ex(
+                udxSpecificName,
+                ex);
+        }
+
+        // Look up the UDX in the catalog.
+        List<SqlOperator> list =
+            preparingStmt.getSqlOperatorTable().lookupOperatorOverloads(
+                udxId,
+                SqlFunctionCategory.UserDefinedSpecificFunction,
+                SqlSyntax.Function);
+        FarragoUserDefinedRoutine udx = null;
+        if (list.size() == 1) {
+            SqlOperator obj = list.get(0);
+            if (obj instanceof FarragoUserDefinedRoutine) {
+                udx = (FarragoUserDefinedRoutine) obj;
+                if (!FarragoCatalogUtil.isTableFunction(udx.getFemRoutine())) {
+                    // Not a UDX.
+                    udx = null;
+                }
+            }
+        }
+        if (udx == null) {
+            throw FarragoResource.instance().MedUnknownUdx.ex(
+                udxId.toString());
+        }
+
+        // UDX wants all types nullable, so construct a corresponding
+        // type descriptor for the result of the call.
+        RelOptCluster cluster = preparingStmt.getRelOptCluster();
+        RexBuilder rexBuilder = cluster.getRexBuilder();
+        RelDataTypeFactory typeFactory = rexBuilder.getTypeFactory();
+        RelDataType resultType =
+            typeFactory.createTypeWithNullability(
+                rowType,
+                true);
+
+        // Create a relational algebra expression for invoking the UDX.
+        RexNode rexCall = rexBuilder.makeCall(udx, args);
+        RelNode udxRel =
+            new FarragoJavaUdxRel(
+                cluster,
+                rexCall,
+                resultType,
+                serverMofId,
+                relInputs);
+
+        // Optimizer wants us to preserve original types,
+        // so cast back for the final result.
+        return RelOptUtil.createCastRel(
+                udxRel,
+                rowType,
+                true);
+    }
 
     //~ Constructors -----------------------------------------------------------
 

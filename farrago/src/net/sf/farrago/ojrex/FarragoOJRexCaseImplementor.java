@@ -91,8 +91,8 @@ public class FarragoOJRexCaseImplementor
             Expression cond = operands[i];
             Expression value = operands[i + 1];
             boolean isCondNullable = call.operands[i].getType().isNullable();
-            StatementList caseCondStmtList = translator.getCaseStmtList(i);
-            StatementList stmtList = translator.getCaseStmtList(i + 1);
+            StatementList caseCondStmtList = translator.getSubStmtList(i);
+            StatementList stmtList = translator.getSubStmtList(i + 1);
             if (stmtList == null) {
                 stmtList = new StatementList();
             }
@@ -141,7 +141,7 @@ public class FarragoOJRexCaseImplementor
 
             if (bHasElseAndLastOne) {
                 StatementList elseStmtList =
-                    translator.getCaseStmtList(operands.length - 1);
+                    translator.getSubStmtList(operands.length - 1);
                 translator.convertCastOrAssignmentWithStmtList(
                     elseStmtList,
                     call.toString(),
