@@ -1,0 +1,177 @@
+0: jdbc:luciddb:> -- datetime addition and subtraction functions
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> create schema dtas;
+0: jdbc:luciddb:> set schema 'dtas';
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- basic positive tests
+0: jdbc:luciddb:> values(applib.days_diff(date'2010-2-20', date'2010-3-10'));
++---------+
+| EXPR$0  |
++---------+
+| -18     |
++---------+
+0: jdbc:luciddb:> values(applib.days_diff(timestamp'2010-2-28 23:59:00',
+. . . . . . . . >   timestamp'2010-3-1 4:50:00'));
++---------+
+| EXPR$0  |
++---------+
+| 0       |
++---------+
+0: jdbc:luciddb:> values(applib.hours_diff(timestamp'2010-2-28 20:20:00',
+. . . . . . . . >   timestamp'2010-3-1 1:00:00'));
++---------+
+| EXPR$0  |
++---------+
+| -4      |
++---------+
+0: jdbc:luciddb:> values(applib.add_days(date'2010-12-29', 5));
++-------------+
+|   EXPR$0    |
++-------------+
+| 2011-01-03  |
++-------------+
+0: jdbc:luciddb:> values(applib.add_days(timestamp'2010-3-2 12:11:11', -10));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 2010-02-20 12:11:11.0  |
++------------------------+
+0: jdbc:luciddb:> values(applib.add_hours(timestamp'2010-12-30 1:59:04', 60));
++------------------------+
+|         EXPR$0         |
++------------------------+
+| 2011-01-01 13:59:04.0  |
++------------------------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- nested
+0: jdbc:luciddb:> values(applib.days_diff(applib.add_days(current_date, 180), current_date));
++---------+
+| EXPR$0  |
++---------+
+| 180     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> values(applib.days_diff(applib.add_days(current_timestamp, 180), 
+. . . . . . . . >   current_timestamp));
++---------+
+| EXPR$0  |
++---------+
+| 180     |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- TODO: unresolved issue LER-1909
+0: jdbc:luciddb:> values(applib.hours_diff(applib.add_hours(current_timestamp, 91),
+. . . . . . . . >   current_timestamp));
++---------+
+| EXPR$0  |
++---------+
+| 91      |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- null input
+0: jdbc:luciddb:> values(applib.days_diff(current_date, cast(null as DATE)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values(applib.days_diff(cast(null as TIMESTAMP), current_timestamp));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values(applib.hours_diff(current_timestamp, cast(null as TIMESTAMP)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values(applib.add_days(cast(null as timestamp), 3));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values(applib.add_days(current_timestamp, cast(null as INTEGER)));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> values(applib.add_hours(cast(null as TIMESTAMP), 5));
++---------+
+| EXPR$0  |
++---------+
+|         |
++---------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> import foreign schema BCP 
+. . . . . . . . > limit to ("dates")
+. . . . . . . . > from server flatfile_server
+. . . . . . . . > into dtas;
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- multiple function calls 
+0: jdbc:luciddb:> select 
+. . . . . . . . >   start_date, 
+. . . . . . . . >   applib.add_days(start_date, -3) as sd_minus_3d,
+. . . . . . . . >   applib.add_days(start_date, 9) as sd_plus_9d,
+. . . . . . . . >   applib.days_diff(start_date, date'2000-11-29') as sd_dd,
+. . . . . . . . >   activity_time,
+. . . . . . . . >   applib.add_days(activity_time, 5) as at_plus_5d,
+. . . . . . . . >   applib.days_diff(activity_time, timestamp'2000-11-29 12:00:01') as at_dd,
+. . . . . . . . >   applib.add_hours(activity_time, 9) as at_plus_9h,
+. . . . . . . . >   applib.hours_diff(activity_time, timestamp'2000-11-29 12:00:01') as at_hd
+. . . . . . . . > from
+. . . . . . . . >   dtas."dates"
+. . . . . . . . > order by start_date;
++-------------+--------------+-------------+--------+------------------------+------------------------+--------+------------------------+----------+
+| START_DATE  | SD_MINUS_3D  | SD_PLUS_9D  | SD_DD  |     ACTIVITY_TIME      |       AT_PLUS_5D       | AT_DD  |       AT_PLUS_9H       |  AT_HD   |
++-------------+--------------+-------------+--------+------------------------+------------------------+--------+------------------------+----------+
+| 1980-01-01  | 1979-12-29   | 1980-01-10  | -7638  | 1980-01-01 00:00:00.0  | 1980-01-06 00:00:00.0  | -7638  | 1980-01-01 09:00:00.0  | -183324  |
+| 1980-12-31  | 1980-12-28   | 1981-01-09  | -7273  | 1980-12-31 11:59:59.0  | 1981-01-05 11:59:59.0  | -7273  | 1980-12-31 20:59:59.0  | -174552  |
+| 2004-02-29  | 2004-02-26   | 2004-03-09  | 1187   | 2004-02-29 12:00:00.0  | 2004-03-05 12:00:00.0  | 1186   | 2004-02-29 21:00:00.0  | 28487    |
++-------------+--------------+-------------+--------+------------------------+------------------------+--------+------------------------+----------+
+0: jdbc:luciddb:> 
+0: jdbc:luciddb:> -- from UDX
+0: jdbc:luciddb:> select
+. . . . . . . . >   time_key,
+. . . . . . . . >   week_start_date as wsd,
+. . . . . . . . >   fiscal_quarter_start_date as fqsd,
+. . . . . . . . >   fiscal_year_start_date as fysd,
+. . . . . . . . >   applib.add_days(week_start_date, -10) as wsd_minus_10,
+. . . . . . . . >   applib.days_diff(
+. . . . . . . . >     week_start_date, fiscal_quarter_start_date) as wsd_minus_fqsd,
+. . . . . . . . >   applib.days_diff(
+. . . . . . . . >     fiscal_year_start_date, fiscal_quarter_start_date) as fysd_minus_fqsd,
+. . . . . . . . >   applib.days_diff(
+. . . . . . . . >     fiscal_quarter_start_date, time_key) as fqsd_minus_tk
+. . . . . . . . > from
+. . . . . . . . >   table(applib.time_dimension(2001, 2, 20, 2001, 3, 11, 3))
+. . . . . . . . > order by time_key;
++-------------+-------------+-------------+-------------+---------------+-----------------+------------------+----------------+
+|  TIME_KEY   |     WSD     |    FQSD     |    FYSD     | WSD_MINUS_10  | WSD_MINUS_FQSD  | FYSD_MINUS_FQSD  | FQSD_MINUS_TK  |
++-------------+-------------+-------------+-------------+---------------+-----------------+------------------+----------------+
+| 2001-02-20  | 2001-02-18  | 2000-12-01  | 2000-03-01  | 2001-02-08    | 79              | -275             | -81            |
+| 2001-02-21  | 2001-02-18  | 2000-12-01  | 2000-03-01  | 2001-02-08    | 79              | -275             | -82            |
+| 2001-02-22  | 2001-02-18  | 2000-12-01  | 2000-03-01  | 2001-02-08    | 79              | -275             | -83            |
+| 2001-02-23  | 2001-02-18  | 2000-12-01  | 2000-03-01  | 2001-02-08    | 79              | -275             | -84            |
+| 2001-02-24  | 2001-02-18  | 2000-12-01  | 2000-03-01  | 2001-02-08    | 79              | -275             | -85            |
+| 2001-02-25  | 2001-02-25  | 2000-12-01  | 2000-03-01  | 2001-02-15    | 86              | -275             | -86            |
+| 2001-02-26  | 2001-02-25  | 2000-12-01  | 2000-03-01  | 2001-02-15    | 86              | -275             | -87            |
+| 2001-02-27  | 2001-02-25  | 2000-12-01  | 2000-03-01  | 2001-02-15    | 86              | -275             | -88            |
+| 2001-02-28  | 2001-02-25  | 2000-12-01  | 2000-03-01  | 2001-02-15    | 86              | -275             | -89            |
+| 2001-03-01  | 2001-02-25  | 2001-03-01  | 2001-03-01  | 2001-02-15    | -4              | 0                | 0              |
+| 2001-03-02  | 2001-02-25  | 2001-03-01  | 2001-03-01  | 2001-02-15    | -4              | 0                | -1             |
+| 2001-03-03  | 2001-02-25  | 2001-03-01  | 2001-03-01  | 2001-02-15    | -4              | 0                | -2             |
+| 2001-03-04  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -3             |
+| 2001-03-05  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -4             |
+| 2001-03-06  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -5             |
+| 2001-03-07  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -6             |
+| 2001-03-08  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -7             |
+| 2001-03-09  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -8             |
+| 2001-03-10  | 2001-03-04  | 2001-03-01  | 2001-03-01  | 2001-02-22    | 3               | 0                | -9             |
+| 2001-03-11  | 2001-03-11  | 2001-03-01  | 2001-03-01  | 2001-03-01    | 10              | 0                | -10            |
++-------------+-------------+-------------+-------------+---------------+-----------------+------------------+----------------+
+0: jdbc:luciddb:> !quit

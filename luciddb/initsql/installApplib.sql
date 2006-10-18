@@ -270,6 +270,62 @@ specific applib_std_timestamp_to_char
 no sql
 external name 'applib.applibJar:com.lucidera.luciddb.applib.datetime.StdConvertDateUdf.timestamp_to_char';
 
+-- adds n number of days to a date
+create function applib.add_days(d date, n int)
+returns date
+specific add_days_date
+contains sql
+return (
+  d + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+);
+
+-- adds n number of days to a timestamp
+create function applib.add_days(ts timestamp, n int)
+returns timestamp
+specific add_days_timestamp
+contains sql
+return (
+  ts + cast(cast(n as bigint)*24*60*60*1000 as interval day)
+);
+
+-- adds n number of hours to a timestamp
+create function applib.add_hours(ts timestamp, n int)
+returns timestamp
+specific add_hours_timestamp
+contains sql
+return (
+  ts + cast(cast(n as bigint)*60*60*1000 as interval day to hour));
+
+-- returns the difference in units of days between two dates
+create function applib.days_diff(d1 date, d2 date)
+returns bigint
+specific days_diff_dates
+contains sql
+return (
+  extract( day from ((d1 - d2) day) )
+);
+
+-- returns the difference in units of days between two timestamps. Note that
+-- partial days that are less than 24 hours will not count as a day.
+create function applib.days_diff(ts1 timestamp, ts2 timestamp)
+returns bigint
+specific days_diff_timestamps
+contains sql
+return (
+  extract( day from ((ts1 - ts2) day) )
+);
+
+-- returns the difference in units of hours between two timestamps. Note that 
+-- partial hours that are less than 60 minutes will not count as an hour.
+create function applib.hours_diff(ts1 timestamp, ts2 timestamp)
+returns bigint
+specific hours_diff_timestamps
+contains sql
+return (
+  extract( day from ((ts1 - ts2) day)) * 24  +
+  extract( hour from ((ts1 - ts2) hour))
+);
+
 -- define dayFromJulianStart
 -- 2440588 is the number of days from the Julian Calendar start date to 
 -- the epoch Jan 1, 1970 

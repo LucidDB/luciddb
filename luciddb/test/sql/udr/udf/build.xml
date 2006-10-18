@@ -39,6 +39,7 @@
   <property name="bh.log.basedir" value="${udf.dir}/testlog" />
 
   <!-- directory of csv files -->
+  <property name="csv.copy.dir" value="${udf.dir}/csv-copy" />
   <property name="data.dir" value="${open.dir}/luciddb/test/data" />
 
   <!-- directory for log files -->
@@ -70,7 +71,7 @@
     <copy todir="${udf.dir}" overwrite="true">
       <fileset dir="${udf.dir}" includes="*.tmpl"/>
       <filterset>
-        <filter token="DATADIR" value="${data.dir}"/>
+        <filter token="DATADIR" value="${csv.copy.dir}"/>
         <filter token="LOGDIR" value="${log.dir}"/>
       </filterset>
       <globmapper from="*.tmpl" to="*"/>
@@ -82,6 +83,17 @@
       basedir="${udf.dir}"
       testscript="${testfile}"
       classpathref="test.classpath"/>
+  </target>
+
+  <target name="copy-csv">
+    <sync todir="${csv.copy.dir}"
+      overwrite="true"
+      verbose="true"
+      failonerror="true">
+      <fileset dir="${data.dir}">
+        <include name="dates.*"/>
+      </fileset>
+    </sync>
   </target>
 
   <target name="clean">
