@@ -127,12 +127,14 @@ public class FennelWindowRel
      * <p>Each {@link Window} has a set of {@link Partition} objects, and each
      * {@link Partition} object has a set of {@link RexOver} objects.
      *
-     * @param cluster
-     * @param child
-     * @param rowType
-     * @param inputProgram
-     * @param windows
-     * @param outputProgram
+     * @param cluster Cluster
+     * @param child Input relational expression
+     * @param rowType Output row type
+     * @param inputProgram Program which computes input expressions for all
+     *                     windows
+     * @param windows Windows
+     * @param outputProgram Program which computes output row from input
+     *                      columns and all windows
      *
      * @pre inputProgram.getCondition() == null
      */
@@ -466,7 +468,8 @@ public class FennelWindowRel
         RexProgram bottomProgram,
         List<RexWinAggCall> overList)
     {
-        assert bottomProgram.getCondition() == null : "pre: bottomPogram.getCondition() == null";
+        assert bottomProgram.getCondition() == null :
+            "pre: bottomPogram.getCondition() == null";
         assert bottomProgram.isValid(true);
 
         final RexBuilder rexBuilder = getCluster().getRexBuilder();
@@ -711,7 +714,8 @@ public class FennelWindowRel
             RexNode [] clonedOperands = operands.clone();
             for (int i = 0; i < operands.length; i++) {
                 RexLocalRef operand = (RexLocalRef) operands[i];
-                List<RexLocalRef> projectList = programBuilder.getProjectList();
+                List<RexLocalRef> projectList =
+                    programBuilder.getProjectList();
                 int index = projectList.indexOf(operand);
                 if (index < 0) {
                     index = projectList.size();
