@@ -1632,11 +1632,11 @@ public abstract class SqlOperatorTests
         // Intervals
         getTester().checkScalar(
             "interval '2' day - interval '1' day",
-            "+01 00:00:00",
+            "+1 00:00:00",
             "INTERVAL DAY NOT NULL");
         getTester().checkScalar(
             "interval '2' day - interval '1' minute",
-            "+01 23:59:00",
+            "+1 23:59:00",
             "INTERVAL DAY TO MINUTE NOT NULL");
         getTester().checkScalar(
             "interval '2' year - interval '1' month",
@@ -1675,7 +1675,7 @@ public abstract class SqlOperatorTests
             "INTERVAL MINUTE NOT NULL");
         getTester().checkScalar(
             "(timestamp '2004-05-01 12:03:34' - timestamp '2004-04-29 11:57:23') day to hour",
-            "+02 00:06:11",
+            "+2 00:06:11",
             "INTERVAL DAY TO HOUR NOT NULL");
         getTester().checkScalar(
             "(date '2004-12-02' - date '2003-12-01') day",
@@ -1857,15 +1857,15 @@ public abstract class SqlOperatorTests
         // Intervals
         getTester().checkScalar(
             "interval '2' day + interval '1' day",
-            "+03 00:00:00",
+            "+3 00:00:00",
             "INTERVAL DAY NOT NULL");
         getTester().checkScalar(
             "interval '2' day + interval '1' minute",
-            "+02 00:01:00",
+            "+2 00:01:00",
             "INTERVAL DAY TO MINUTE NOT NULL");
         getTester().checkScalar(
             "interval '2' day + interval '5' minute + interval '-3' second",
-            "+02 00:04:57",
+            "+2 00:04:57",
             "INTERVAL DAY TO SECOND NOT NULL");
         getTester().checkScalar(
             "interval '2' year + interval '1' month",
@@ -2398,7 +2398,7 @@ public abstract class SqlOperatorTests
         // Intervals
         getTester().checkScalar(
             "abs(interval '-2' day)",
-            "+02 00:00:00",
+            "+2 00:00:00",
             "INTERVAL DAY NOT NULL");
         getTester().checkScalar(
             "abs(interval '-5-03' year to month)",
@@ -2460,7 +2460,7 @@ public abstract class SqlOperatorTests
         );
         getTester().checkScalar(
             "nullif(interval '2 5' day to hour, interval '5' second)",
-            "+02 05:00:00",
+            "+2 05:00:00",
             "INTERVAL DAY TO HOUR"
         );
         getTester().checkNull(

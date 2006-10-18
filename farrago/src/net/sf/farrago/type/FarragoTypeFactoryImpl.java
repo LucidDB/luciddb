@@ -772,12 +772,39 @@ public class FarragoTypeFactoryImpl
         OJClass declarer,
         RelDataType type)
     {
+        SqlIntervalQualifier qualifier = type.getIntervalQualifier();
+        TypeName timeUnitType =
+            OJUtil.typeNameForClass(SqlIntervalQualifier.TimeUnit.class);
+
+        MemberDeclarationList memberDecls = new MemberDeclarationList();
+        memberDecls.add(
+            generateGetter(
+                timeUnitType,
+                EncodedSqlInterval.GET_START_UNIT_METHOD_NAME,
+                lookupTimeUnit(qualifier.getStartUnit())));
+
         return
             newHolderOJClass(
                 superclass,
-                new MemberDeclarationList(),
+                memberDecls,
                 declarer,
                 type);
+    }
+
+    /**
+     * Generates an expression for a TimeUnit
+     */
+    private Expression lookupTimeUnit(SqlIntervalQualifier.TimeUnit timeUnit)
+    {
+        TypeName timeUnitType =
+            OJUtil.typeNameForClass(SqlIntervalQualifier.TimeUnit.class);
+
+        return new MethodCall(
+            timeUnitType,
+            SqlIntervalQualifier.TimeUnit.GET_VALUE_METHOD_NAME,
+            new ExpressionList(
+                Literal.makeLiteral(
+                    timeUnit.getOrdinal())));
     }
 
     private OJClass newStringOJClass(
@@ -847,6 +874,30 @@ public class FarragoTypeFactoryImpl
             ojClass.getName(),
             ojClass);
         return ojClass;
+    }
+
+    /**
+     * Generates a protected getter method
+     * 
+     * @param returnType type of value returned by the getter method
+     * @param methodName the name of the getter method
+     * @param value the value to be returned by the getter method
+     * 
+     * @return getter method declaration
+     */
+    private MethodDeclaration generateGetter(
+        TypeName returnType,
+        String methodName,
+        Expression value)
+    {
+        return new MethodDeclaration(
+            new ModifierList(ModifierList.PROTECTED),
+            returnType,
+            methodName,
+            new ParameterList(),
+            new TypeName[0],
+            new StatementList(
+                new ReturnStatement(value)));
     }
 
     // implement FarragoTypeFactory
