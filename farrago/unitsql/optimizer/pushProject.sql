@@ -27,6 +27,8 @@ explain plan for
     select lower(ve.name), ve.doubleage/2
         from vemps ve, vdepts vd
         where ve.deptno = vd.deptno;
+explain plan for
+    select count(*) from vemps;
         
 !set outputformat table
 select ve.name, ve.doubleage, vd.name
@@ -35,6 +37,7 @@ select ve.name, ve.doubleage, vd.name
 select lower(ve.name), ve.doubleage/2
     from vemps ve, vdepts vd
     where ve.deptno = vd.deptno order by 1;
+select count(*) from vemps;
 
 --------------------------------------------------------------------
 -- run a query through Volcano to exercise the rules more thoroughly
@@ -67,9 +70,10 @@ create view vemps(eno, name, deptno, doubleage)
 create view vdepts(name, deptno)
     as select upper(name), deptno from lcsdepts;
 create view vuemps(eno, name, deptno, age) as
-    select * from vemps union select empno, name, deptno, age from sales.emps;
+    select * from vemps union all
+        select empno, name, deptno, age from sales.emps;
 create view vunion(id, name, number) as
-    select 'emps', name, eno from vemps union
+    select 'emps', name, eno from vemps union all
     select 'depts', name, deptno from vdepts;
 
 explain plan for
@@ -84,6 +88,8 @@ explain plan for
     select name from vuemps where eno = 110;
 explain plan for select id, lcs_rid(name) from vunion;
 explain plan for select id, lcs_rid(name) from vunion where number in (20, 120);
+explain plan for select count(*) from vuemps;
+explain plan for select count(*) from vunion;
         
 !set outputformat table
 select ve.name, ve.doubleage, vd.name
@@ -95,6 +101,8 @@ select lower(ve.name), ve.doubleage
 select name from vuemps where eno = 110 order by 1;
 select id, lcs_rid(name) from vunion order by 1, 2;
 select id, lcs_rid(name) from vunion where number in (20, 120) order by 1;
+select count(*) from vuemps;
+select count(*) from vunion;
 
 create table t1(t1a int, t1b int, t1c int);
 create table t2(t2a int, t2b int, t2c int, t2d int);
@@ -130,3 +138,11 @@ explain plan for select vjc/1000, vja/10, vjb/100 from vjoin order by 1;
 explain plan for select count(*) from vjoin;
 explain plan for select lcs_rid(vja) from vjoin order by 1;
 explain plan for select 2*vjb, lcs_rid(vja) from vjoin order by 2;
+
+-- negative case -- can't push project past a distinct union
+create view vudemps(eno, name, deptno, age) as
+    select * from vemps union
+        select empno, name, deptno, age from sales.emps;
+explain plan for select count(*) from vudemps;
+!set outputformat table
+select count(*) from vudemps;
