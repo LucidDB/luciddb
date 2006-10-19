@@ -721,6 +721,9 @@ public class FarragoPreparingStmt
         }
         originalRowType = rowType;
         rootRel = flattenTypes(rootRel, true);
+        if (timingTracer != null) {
+            timingTracer.traceTime("end type flattening and view expansion");
+        }
         if (dumpPlan) {
             planDumpTracer.fine(
                 RelOptUtil.dumpPlan(

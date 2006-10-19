@@ -174,8 +174,6 @@ public class JaninoCompiler
             super(
                 parentClassLoader, sourceFinder,
                 optionalCharacterEncoding, debuggingInformation);
-
-            nBytes = 0;
         }
 
         int getTotalByteCodeSize()
@@ -184,11 +182,22 @@ public class JaninoCompiler
         }
 
         // override JavaSourceClassLoader
-        protected Class defineBytecode(
-            String className, byte[] ba) throws ClassFormatError
+        protected Map generateBytecodes(String name)
+            throws ClassNotFoundException
         {
-            nBytes += ba.length;
-            return super.defineBytecode(className, ba);
+            Map map = super.generateBytecodes(name);
+            if (map == null) {
+                return map;
+            }
+            // NOTE jvs 18-Oct-2006:  Janino has actually compiled everything
+            // to bytecode even before all of the classes have actually
+            // been loaded.  So we intercept their sizes here just
+            // after they've been compiled.
+            for (Object obj : map.values()) {
+                byte [] bytes = (byte []) obj;
+                nBytes += bytes.length;
+            }
+            return map;
         }
     }
 }

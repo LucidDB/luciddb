@@ -575,18 +575,15 @@ public abstract class OJPreparingStmt
                 "Before compile, parse tree",
                 new Object[] { parseTree });
         }
-        ClassCollector classCollector = new ClassCollector(env);
-        Util.discard(OJUtil.go(classCollector, parseTree));
-        OJClass [] classes = classCollector.getClasses();
-        OJSyntheticClass.addMembers(decl, classes);
 
         // NOTE jvs 14-Jan-2004:  DynamicJava doesn't correctly handle
         // the FINAL modifier on parameters.  So I made the codegen
         // for the method body copy the parameter to a final local
         // variable instead.  The only side-effect is that the parameter
         // names in the method signature is different.
-        // TODO jvs 28-June-2004:  get rid of this if DynamicJava
-        // gets tossed
+        // TODO jvs 18-Oct-2006:  get rid of this since we tossed DynamicJava
+        // long ago
+        
         // form parameter list
         String [] parameterNames = new String[arguments.length];
         String [] javaParameterNames = new String[arguments.length];
