@@ -658,3 +658,23 @@ reads sql data
 specific export_query_to_file_2
 called on null input
 external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';
+
+-- Export result of a single query to a file, with control over field
+-- delimiter, datafile extension, date/time formatting, and whether
+-- to even export data at all
+create procedure export_query_to_file(
+  in query_sql varchar(65535),
+  in path_without_extension varchar(65535),
+  in bcp boolean,
+  in include_data boolean,
+  in delete_failed_file boolean,
+  in field_delimiter varchar(2),
+  in file_extension varchar(5),
+  in date_format varchar(128),
+  in time_format varchar(128),
+  in timestamp_format varchar(128))
+language java
+reads sql data
+specific export_query_to_file_3
+called on null input
+external name 'class net.sf.farrago.syslib.FarragoExportSchemaUDR.exportQueryToFile';

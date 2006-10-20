@@ -52,6 +52,9 @@ import org.eigenbase.util.*;
 
 import org.netbeans.api.mdr.events.*;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+import org.jgrapht.alg.*;
 
 /**
  * DdlValidator validates the process of applying a DDL statement to the
@@ -1329,19 +1332,24 @@ public class DdlValidator
     private boolean containsCycle(
         CwmModelElement rootElement)
     {
-        HashSet<CwmModelElement> visited = new HashSet<CwmModelElement>();
-        HashSet<CwmModelElement> visit = new HashSet<CwmModelElement>();
+        Set<CwmModelElement> visited = new HashSet<CwmModelElement>();
+        Set<CwmModelElement> queue = new HashSet<CwmModelElement>();
+        DirectedGraph<CwmModelElement, DefaultEdge> graph =
+            new DefaultDirectedGraph<CwmModelElement, DefaultEdge>(
+                DefaultEdge.class);
 
         DependencySupplier depSupplier =
             getRepos().getCorePackage().getDependencySupplier();
 
-        visit.add(rootElement);
-        while (!visit.isEmpty()) {
-            CwmModelElement element = visit.iterator().next();
-            visit.remove(element);
+        // First, build the graph
+        queue.add(rootElement);
+        while (!queue.isEmpty()) {
+            CwmModelElement element = queue.iterator().next();
+            queue.remove(element);
             if (visited.contains(element)) {
-                return true;
+                continue;
             }
+            graph.addVertex(element);
             visited.add(element);
             Collection deps = depSupplier.getSupplierDependency(element);
 
@@ -1351,13 +1359,20 @@ public class DdlValidator
                         CwmDependency dep = (CwmDependency) o;
                         Collection<CwmModelElement> c = dep.getClient();
                         for (CwmModelElement e : c) {
-                            visit.add(e);
+                            queue.add(e);
+                            graph.addVertex(e);
+                            graph.addEdge(element, e);
                         }
                     }
                 }
             }
         }
-        return false;
+
+        // Then, check for cycles (TODO jvs 19-Oct-2006: now that we're using
+        // JGraphT, we can do better error reporting on names of objects
+        // participating in the cycle.)
+        return new CycleDetector<CwmModelElement, DefaultEdge>(
+            graph).detectCycles();
     }
 
     private void scheduleRevalidation(Set<CwmModelElement> elements)

@@ -18,6 +18,14 @@ Error: Multiple PRIMARY KEY constraints not allowed on table "MISC"."DUP_PK" (st
 . . . . . . . . >     j int not null constraint charlie unique);
 Error: DDL validation error near line 3, column 39: Duplicate definition for UNIQUE constraint "CHARLIE" within table "MISC"."DUP_CONSTRAINTS"; earlier definition was near line 2, column 47 (state=,code=0)
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- test schema-wide index name uniqueness
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t1(i int not null primary key)
+. . . . . . . . > create index xxx on t1(i);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t2(i int not null primary key)
+. . . . . . . . > create index xxx on t2(i);
+Error: DDL validation error near line 2, column 14: Target schema "LOCALDB"."MISC" already contains index "XXX" with same name (state=,code=0)
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FTRS-specific table validation rules
 0: jdbc:farrago:> 

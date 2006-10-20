@@ -16,6 +16,13 @@ create table dup_constraints(
     i int not null constraint charlie primary key,
     j int not null constraint charlie unique);
 
+-- test schema-wide index name uniqueness
+
+create table t1(i int not null primary key)
+create index xxx on t1(i);
+
+create table t2(i int not null primary key)
+create index xxx on t2(i);
 
 -- FTRS-specific table validation rules
 

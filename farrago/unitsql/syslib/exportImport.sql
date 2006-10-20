@@ -6,7 +6,13 @@ call sys_boot.mgmt.export_query_to_file(
 'select * from sales.depts order by name',
 '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS',
 true,
-false);
+true,
+false,
+'\t',
+'.txt',
+null,
+null,
+null);
 
 -- set up a flat file reader to verify export
 create server flatfile_server
@@ -28,6 +34,20 @@ call sys_boot.mgmt.export_query_to_file(
 'select * from sales.depts order by name',
 '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS_CSV',
 true,
+true,
+false,
+',',
+'.csv',
+null,
+null,
+null);
+
+-- Once more, this time omitting data
+call sys_boot.mgmt.export_query_to_file(
+'select * from sales.depts order by name',
+'${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS_NO_CSV',
+true,
+false,
 false,
 ',',
 '.csv',
@@ -48,6 +68,9 @@ options (
 -- run import query
 select * from csv_flatfile_server.bcp.depts_csv order by name;
 
+-- attempt import without data:  should fail
+select * from csv_flatfile_server.bcp.depts_no_csv order by name;
+
 -- set up table with datetimes
 create schema dt;
 set schema 'dt';
@@ -61,6 +84,7 @@ insert into dates values
 call sys_boot.mgmt.export_query_to_file(
 'select * from dt.dates order by d',
 '${FARRAGO_HOME}/unitsql/syslib/dates_files/DATES',
+true,
 true,
 false,
 null,

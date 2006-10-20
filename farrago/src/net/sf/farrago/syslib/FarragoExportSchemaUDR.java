@@ -138,6 +138,7 @@ public abstract class FarragoExportSchemaUDR
             null,  // incrSchema
             directory, 
             withBcp,
+            true,
             deleteFailedFiles,
             fieldDelimiter,
             fileExtension,
@@ -259,6 +260,7 @@ public abstract class FarragoExportSchemaUDR
             null,  // incrSchema
             directory, 
             withBcp,
+            true,
             deleteFailedFiles,
             null,  // fieldDelimiter
             null,  //fileExtension
@@ -429,6 +431,7 @@ public abstract class FarragoExportSchemaUDR
             null,      // incrSchema
             directory, 
             withBcp,
+            true,
             deleteFailedFiles, 
             null,      // fieldDelimiter
             null,      // fileExtension
@@ -619,6 +622,7 @@ public abstract class FarragoExportSchemaUDR
             incrSchema,
             directory,
             withBcp,
+            true,
             deleteFailedFiles,
             null,   // fieldDelimiter
             null,   // fileExtension
@@ -933,7 +937,8 @@ public abstract class FarragoExportSchemaUDR
                 null,  // incrCatalog
                 null,  // incrSchema
                 directory, 
-                withBcp, 
+                withBcp,
+                true,
                 deleteFailedFiles,
                 null,  // fieldDelimiter
                 null,  // fileExtension
@@ -997,6 +1002,7 @@ public abstract class FarragoExportSchemaUDR
      * incremental data
      * @param directory location to write CSV and BCP files
      * @param withBcp if true creates BCP files, if false, doesn't
+     * @param withData if true creates data files, if false, doesn't
      * @param deleteFailedFiles if true, csv and bcp files for tables which
      * fail during export will be deleted, otherwise they will remain
      * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
@@ -1018,6 +1024,7 @@ public abstract class FarragoExportSchemaUDR
         String incrSchema,
         String directory,
         boolean withBcp,
+        boolean withData,
         boolean deleteFailedFiles,
         String fieldDelimiter,
         String fileExtension,
@@ -1202,9 +1209,11 @@ public abstract class FarragoExportSchemaUDR
             }
             boolean tableFailed = false;
             try {
-                csvFile = new File(csvName);
-                csvOut = new FileWriter(csvFile, false);
-                csvOut = new BufferedWriter(csvOut);
+                if (withData) {
+                    csvFile = new File(csvName);
+                    csvOut = new FileWriter(csvFile, false);
+                    csvOut = new BufferedWriter(csvOut);
+                }
                 int numCols = tblMeta.getColumnCount();
                 if (withBcp) {
                     // write BCP header
@@ -1218,12 +1227,14 @@ public abstract class FarragoExportSchemaUDR
                 }
 
                 for (int i = 1; i <= numCols; i++) {
-                    // write column names to CSV, delimited and quoted
-                    csvOut.write(QUOTE + tblMeta.getColumnName(i));
-                    if (i != numCols) {
-                        csvOut.write(QUOTE + fieldDelimiter);
-                    } else {
-                        csvOut.write(QUOTE + NEWLINE);
+                    if (withData) {
+                        // write column names to CSV, delimited and quoted
+                        csvOut.write(QUOTE + tblMeta.getColumnName(i));
+                        if (i != numCols) {
+                            csvOut.write(QUOTE + fieldDelimiter);
+                        } else {
+                            csvOut.write(QUOTE + NEWLINE);
+                        }
                     }
 
                     // write bcp file
@@ -1239,7 +1250,7 @@ public abstract class FarragoExportSchemaUDR
                 long nRows = 0;
 
                 // write the csv file
-                while (tblData.next()) {
+                while (withData && tblData.next()) {
                     for (int i = 1; i <= numCols; i++) {
                         String field;
 
@@ -1300,8 +1311,8 @@ public abstract class FarragoExportSchemaUDR
                             csvOut.flush();
                             tracer.fine("Exported row #" + nRows);
                         }
-                        ++nRows;
                     }
+                    ++nRows;
                 }
 
                 // log success
@@ -1450,6 +1461,8 @@ public abstract class FarragoExportSchemaUDR
      * @param deleteFailedFiles if true, csv and bcp files will be deleted
      * if export fails, otherwise they may remain
      * rowcount
+     *
+     * @deprecated Use widest version instead.
      */
     public static void exportQueryToFile(
         String querySql,
@@ -1490,11 +1503,61 @@ public abstract class FarragoExportSchemaUDR
      * @param timeFormat format for TIME fields ({@link SimpleDateFormat})
      * @param timestampFormat format for TIMESTAMP fields ({@link
      * SimpleDateFormat})
+     *
+     * @deprecated Use widest version instead.
      */
     public static void exportQueryToFile(
         String querySql,
         String pathWithoutExtension,
         boolean withBcp,
+        boolean deleteFailedFiles,
+        String fieldDelimiter,
+        String fileExtension,
+        String dateFormat,
+        String timeFormat,
+        String timestampFormat)
+        throws SQLException
+    {
+        exportQueryToFile(
+            querySql,
+            pathWithoutExtension,
+            withBcp,
+            true,
+            deleteFailedFiles,
+            null,               // fieldDelimiter
+            null,               // fileExtension
+            null,               // dateFormat
+            null,               // timeFormat
+            null                // timestampFormat
+            );
+    }
+    
+    /**
+     * Exports results of a single query to CSV/BCP files.
+     *
+     * @param querySql query whose result is to be executed
+     * @param pathWithoutExtension location to write CSV and BCP files; this
+     * should be a directory-qualified filename without an extension
+     * (correct extension will be appended automatically)
+     * @param withBcp if true creates BCP file, if false, doesn't
+     * @param withData if true creates data file, if false, doesn't
+     * @param deleteFailedFiles if true, csv and bcp files will be deleted
+     * if export fails, otherwise they may remain
+     * rowcount
+     * @param fieldDelimiter used to delimit column fields in the flat file
+     * if null, defaults to tab separated
+     * @param fileExtension the file extension for the created flat file, if 
+     * null, defaults to .txt
+     * @param dateFormat format for DATE fields ({@link SimpleDateFormat})
+     * @param timeFormat format for TIME fields ({@link SimpleDateFormat})
+     * @param timestampFormat format for TIMESTAMP fields ({@link
+     * SimpleDateFormat})
+     */
+    public static void exportQueryToFile(
+        String querySql,
+        String pathWithoutExtension,
+        boolean withBcp,
+        boolean withData,
         boolean deleteFailedFiles,
         String fieldDelimiter,
         String fileExtension,
@@ -1519,6 +1582,7 @@ public abstract class FarragoExportSchemaUDR
             null,               // incrSchema
             pathWithoutExtension,
             withBcp,
+            withData,
             deleteFailedFiles,
             fieldDelimiter,
             fileExtension,

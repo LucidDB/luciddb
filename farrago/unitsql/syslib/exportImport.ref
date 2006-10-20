@@ -6,7 +6,13 @@
 . . . . . . . . > 'select * from sales.depts order by name',
 . . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS',
 . . . . . . . . > true,
-. . . . . . . . > false);
+. . . . . . . . > true,
+. . . . . . . . > false,
+. . . . . . . . > '\t',
+. . . . . . . . > '.txt',
+. . . . . . . . > null,
+. . . . . . . . > null,
+. . . . . . . . > null);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set up a flat file reader to verify export
 0: jdbc:farrago:> create server flatfile_server
@@ -35,6 +41,20 @@
 . . . . . . . . > 'select * from sales.depts order by name',
 . . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS_CSV',
 . . . . . . . . > true,
+. . . . . . . . > true,
+. . . . . . . . > false,
+. . . . . . . . > ',',
+. . . . . . . . > '.csv',
+. . . . . . . . > null,
+. . . . . . . . > null,
+. . . . . . . . > null);
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- Once more, this time omitting data
+0: jdbc:farrago:> call sys_boot.mgmt.export_query_to_file(
+. . . . . . . . > 'select * from sales.depts order by name',
+. . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/depts_files/DEPTS_NO_CSV',
+. . . . . . . . > true,
+. . . . . . . . > false,
 . . . . . . . . > false,
 . . . . . . . . > ',',
 . . . . . . . . > '.csv',
@@ -62,6 +82,10 @@
 | 10      | Sales      |
 +---------+------------+
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- attempt import without data:  should fail
+0: jdbc:farrago:> select * from csv_flatfile_server.bcp.depts_no_csv order by name;
+Error: From line 1, column 15 to line 1, column 50: Table 'CSV_FLATFILE_SERVER.BCP.DEPTS_NO_CSV' not found (state=,code=0)
+0: jdbc:farrago:> 
 0: jdbc:farrago:> -- set up table with datetimes
 0: jdbc:farrago:> create schema dt;
 0: jdbc:farrago:> set schema 'dt';
@@ -75,6 +99,7 @@
 0: jdbc:farrago:> call sys_boot.mgmt.export_query_to_file(
 . . . . . . . . > 'select * from dt.dates order by d',
 . . . . . . . . > '${FARRAGO_HOME}/unitsql/syslib/dates_files/DATES',
+. . . . . . . . > true,
 . . . . . . . . > true,
 . . . . . . . . > false,
 . . . . . . . . > null,

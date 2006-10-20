@@ -641,6 +641,7 @@ FemLocalIndex IndexDefinition(CwmTable table) :
         }
         index.setSorted(true);
         index.setUnique(false);
+        index.setNamespace(table.getNamespace());
     }
     <LPAREN> columnNameList = SimpleIdentifierCommaList() <RPAREN>
     {

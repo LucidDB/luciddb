@@ -51,6 +51,13 @@ create view loop2 as select * from loop1;
 -- this should fail
 create or replace view loop1 as select * from loop2;
 
+-- but a diamond should be OK
+create view diamond0 as select * from foo;
+create view diamond1 as select * from diamond0;
+create view diamond2 as select * from diamond0;
+create view diamond3 as select * from diamond1,diamond2;
+create or replace view diamond0 as select * from foo;
+
 --
 -- Index (disallowed)
 --
