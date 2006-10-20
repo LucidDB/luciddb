@@ -351,7 +351,7 @@ public class SqlDataTypeSpec
                 break;
 
             default:
-                Util.permAssert(false, "should never come here");
+                throw Util.newInternal("should never come here");
             }
         }
 

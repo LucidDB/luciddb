@@ -250,22 +250,22 @@ public abstract class SqlDateTimeWithoutTZ
     {
         cal.setTimeInMillis(value);
         switch (timeUnitOrdinal) {
-            // Fall through
-            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
-                cal.set(Calendar.MONTH, 0);
-            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
-                cal.set(Calendar.DAY_OF_MONTH, 1);
-            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
-                cal.set(Calendar.HOUR_OF_DAY, 0);
-            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
-                cal.set(Calendar.MINUTE, 0);
-            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
-                cal.set(Calendar.SECOND, 0);
-            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
-                cal.set(Calendar.MILLISECOND, 0);
-                break;
-            default:
-                Util.permAssert(false, "Invalid timeunit " + timeUnitOrdinal);
+        // Fall through
+        case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+            cal.set(Calendar.MONTH, 0);
+        case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+            cal.set(Calendar.DAY_OF_MONTH, 1);
+        case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+        case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+            cal.set(Calendar.MINUTE, 0);
+        case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+            cal.set(Calendar.SECOND, 0);
+        case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+            cal.set(Calendar.MILLISECOND, 0);
+            break;
+        default:
+            throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
         }
         value = cal.getTimeInMillis();
         timeZoneOffset = defaultZone.getOffset(value);
@@ -276,64 +276,64 @@ public abstract class SqlDateTimeWithoutTZ
         boolean incNeeded = false;
         cal.setTimeInMillis(value);
         switch (timeUnitOrdinal) {
-            // Fall through
-            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
-                if (cal.get(Calendar.MONTH) >= 0) {
-                    cal.set(Calendar.MONTH, 0);
-                    incNeeded = true;
-                }
-            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
-                if (cal.get(Calendar.DAY_OF_MONTH) > 0) {
-                    cal.set(Calendar.DAY_OF_MONTH, 1);
-                    incNeeded = true;
-                }
-            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
-                if (cal.get(Calendar.HOUR_OF_DAY) > 0) {
-                    cal.set(Calendar.HOUR_OF_DAY, 0);
-                    incNeeded = true;
-                }
-            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
-                if (cal.get(Calendar.MINUTE) > 0) {
-                    cal.set(Calendar.MINUTE, 0);
-                    incNeeded = true;
-                }
-            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
-                if (cal.get(Calendar.SECOND) > 0) {
-                    cal.set(Calendar.SECOND, 0);
-                    incNeeded = true;
-                }
-            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
-                if (cal.get(Calendar.MILLISECOND) > 0) {
-                    cal.set(Calendar.MILLISECOND, 0);
-                    incNeeded = true;
-                }
-                break;
-            default:
-                Util.permAssert(false, "Invalid timeunit " + timeUnitOrdinal);
+        // Fall through
+        case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+            if (cal.get(Calendar.MONTH) >= 0) {
+                cal.set(Calendar.MONTH, 0);
+                incNeeded = true;
+            }
+        case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+            if (cal.get(Calendar.DAY_OF_MONTH) > 0) {
+                cal.set(Calendar.DAY_OF_MONTH, 1);
+                incNeeded = true;
+            }
+        case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+            if (cal.get(Calendar.HOUR_OF_DAY) > 0) {
+                cal.set(Calendar.HOUR_OF_DAY, 0);
+                incNeeded = true;
+            }
+        case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+            if (cal.get(Calendar.MINUTE) > 0) {
+                cal.set(Calendar.MINUTE, 0);
+                incNeeded = true;
+            }
+        case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+            if (cal.get(Calendar.SECOND) > 0) {
+                cal.set(Calendar.SECOND, 0);
+                incNeeded = true;
+            }
+        case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+            if (cal.get(Calendar.MILLISECOND) > 0) {
+                cal.set(Calendar.MILLISECOND, 0);
+                incNeeded = true;
+            }
+            break;
+        default:
+            throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
         }
 
         if (incNeeded) {
             switch (timeUnitOrdinal) {
-                case SqlIntervalQualifier.TimeUnit.Year_ordinal:
-                    cal.add(Calendar.YEAR, 1);
-                    break;
-                case SqlIntervalQualifier.TimeUnit.Month_ordinal:
-                    cal.add(Calendar.MONTH, 1);
-                    break;
-                case SqlIntervalQualifier.TimeUnit.Day_ordinal:
-                    cal.add(Calendar.DAY_OF_MONTH, 1);
-                    break;
-                case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
-                    cal.add(Calendar.HOUR_OF_DAY, 1);
-                    break;
-                case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
-                    cal.add(Calendar.MINUTE, 1);
-                    break;
-                case SqlIntervalQualifier.TimeUnit.Second_ordinal:
-                    cal.add(Calendar.SECOND, 1);
-                    break;
-                default:
-                    Util.permAssert(false, "Invalid timeunit " + timeUnitOrdinal);
+            case SqlIntervalQualifier.TimeUnit.Year_ordinal:
+                cal.add(Calendar.YEAR, 1);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Month_ordinal:
+                cal.add(Calendar.MONTH, 1);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Day_ordinal:
+                cal.add(Calendar.DAY_OF_MONTH, 1);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Hour_ordinal:
+                cal.add(Calendar.HOUR_OF_DAY, 1);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Minute_ordinal:
+                cal.add(Calendar.MINUTE, 1);
+                break;
+            case SqlIntervalQualifier.TimeUnit.Second_ordinal:
+                cal.add(Calendar.SECOND, 1);
+                break;
+            default:
+                throw Util.newInternal("Invalid timeunit " + timeUnitOrdinal);
             }
             value = cal.getTimeInMillis();
             timeZoneOffset = defaultZone.getOffset(value);

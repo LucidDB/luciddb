@@ -536,7 +536,7 @@ public class FarragoDefaultSessionPersonality
                 o = dir.getPath();
                 break;
             default:
-                Util.permAssert(false, "invalid param type");
+                throw Util.newInternal("invalid param type");
             }
             return o.toString();
         }

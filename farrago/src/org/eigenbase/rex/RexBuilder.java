@@ -324,6 +324,28 @@ public class RexBuilder
     }
 
     /**
+     * Makes an expression which converts a value of type T to a value of type
+     * T NOT NULL, or throws if the value is NULL. If the expression is already
+     * NOT NULL, does nothing.
+     */
+    public RexNode makeNotNullCast(RexNode expr)
+    {
+        RelDataType type = expr.getType();
+        if (!type.isNullable()) {
+            return expr;
+        }
+        RelDataType typeNotNull =
+            getTypeFactory().createTypeWithNullability(type, false);
+        return new RexCall(
+            typeNotNull,
+            SqlStdOperatorTable.castFunc,
+            new RexNode[] {
+                expr
+            }
+        );
+    }
+
+    /**
      * Creates a reference to all the fields in the row. That is, the whole row
      * as a single record object.
      *
