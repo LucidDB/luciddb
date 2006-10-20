@@ -1067,10 +1067,26 @@ public class SqlStdOperatorTable
     /**
      * The SQL <code>CAST</code> operator.
      *
-     * <p/>The target type is simply stored as the return type, not an explicit
+     * <p>The SQL syntax is
+     *
+     * <blockquote>
+     * <code>CAST(<i>expression</i> AS <i>type</i>)</code>
+     * </blockqoute>
+     *
+     * <p>When the CAST operator is applies as a {@link SqlCall}, it has
+     * two arguments: the expression and the type. The type must not include
+     * a constraint, so <code>CAST(x AS INTEGER NOT NULL)</code>, for instance,
+     * is invalid.</p>
+     *
+     * <p>When the CAST operator is applied as a <code>RexCall</code>, the
+     * target type is simply stored as the return type, not an explicit
      * operand. For example, the expression <code>CAST(1 + 2 AS DOUBLE)</code>
      * will become a call to <code>CAST</code> with the expression <code>1 +
-     * 2</code> as its only operand.
+     * 2</code> as its only operand.</p>
+     *
+     * <p>The <code>RexCall</code> form can also have a type which contains a
+     * <code>NOT NULL</code> constraint. When this expression is implemented,
+     * if the value is NULL, an exception will be thrown.</p>
      */
     public static final SqlFunction castFunc = new SqlCastFunction();
 
