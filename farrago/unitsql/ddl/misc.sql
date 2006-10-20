@@ -21,8 +21,16 @@ create table dup_constraints(
 create table t1(i int not null primary key)
 create index xxx on t1(i);
 
+-- should fail
 create table t2(i int not null primary key)
 create index xxx on t2(i);
+
+-- likewise for constraint name uniqueness
+
+create table t1(i int not null constraint lucy primary key);
+
+-- should fail
+create table t2(i int not null constraint lucy primary key);
 
 -- FTRS-specific table validation rules
 

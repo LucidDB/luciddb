@@ -23,9 +23,18 @@ Error: DDL validation error near line 3, column 39: Duplicate definition for UNI
 0: jdbc:farrago:> create table t1(i int not null primary key)
 . . . . . . . . > create index xxx on t1(i);
 0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
 0: jdbc:farrago:> create table t2(i int not null primary key)
 . . . . . . . . > create index xxx on t2(i);
 Error: DDL validation error near line 2, column 14: Target schema "LOCALDB"."MISC" already contains index "XXX" with same name (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- likewise for constraint name uniqueness
+0: jdbc:farrago:> 
+0: jdbc:farrago:> create table t1(i int not null constraint lucy primary key);
+Error: DDL validation error near line 1, column 14: Target schema "LOCALDB"."MISC" already contains table "T1" with same name (state=,code=0)
+0: jdbc:farrago:> 
+0: jdbc:farrago:> -- should fail
+0: jdbc:farrago:> create table t2(i int not null constraint lucy primary key);
 0: jdbc:farrago:> 
 0: jdbc:farrago:> -- FTRS-specific table validation rules
 0: jdbc:farrago:> 
